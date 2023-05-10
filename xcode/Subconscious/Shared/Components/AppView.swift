@@ -174,9 +174,9 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Sync current sphere state with database state
     /// Sphere always wins.
-    case syncSphereWithDatabase
-    case succeedSyncSphereWithDatabase(version: String)
-    case failSyncSphereWithDatabase(String)
+    case indexOurSphere
+    case succeedIndexOurSphere(version: String)
+    case failIndexOurSphere(String)
     
     /// Sync database with file system.
     /// File system always wins.
@@ -648,19 +648,19 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .syncSphereWithDatabase:
-            return syncSphereWithDatabase(
+        case .indexOurSphere:
+            return indexOurSphere(
                 state: state,
                 environment: environment
             )
-        case let .succeedSyncSphereWithDatabase(version):
-            return succeedSyncSphereWithDatabase(
+        case let .succeedIndexOurSphere(version):
+            return succeedIndexOurSphere(
                 state: state,
                 environment: environment,
                 version: version
             )
-        case let .failSyncSphereWithDatabase(error):
-            return failSyncSphereWithDatabase(
+        case let .failIndexOurSphere(error):
+            return failIndexOurSphere(
                 state: state,
                 environment: environment,
                 error: error
@@ -1283,7 +1283,7 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .syncSphereWithDatabase,
+            action: .indexOurSphere,
             environment: environment
         )
     }
@@ -1300,21 +1300,21 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .syncSphereWithDatabase,
+            action: .indexOurSphere,
             environment: environment
         )
     }
     
-    static func syncSphereWithDatabase(
+    static func indexOurSphere(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabasePublisher().map({
+        let fx: Fx<AppAction> = environment.data.indexOurSpherePublisher().map({
             version in
-            AppAction.succeedSyncSphereWithDatabase(version: version)
+            AppAction.succeedIndexOurSphere(version: version)
         }).catch({ error in
             Just(
-                AppAction.failSyncSphereWithDatabase(error.localizedDescription)
+                AppAction.failIndexOurSphere(error.localizedDescription)
             )
         }).eraseToAnyPublisher()
         
@@ -1323,13 +1323,13 @@ struct AppModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
-    static func succeedSyncSphereWithDatabase(
+    static func succeedIndexOurSphere(
         state: AppModel,
         environment: AppEnvironment,
         version: String
     ) -> Update<AppModel> {
         let identity = state.sphereIdentity ?? "unknown"
-        logger.log("Database synced to sphere \(identity) @ \(version)")
+        logger.log("Database indexed sphere \(identity) @ \(version)")
         
         var model = state
         model.sphereSyncStatus = .succeeded
@@ -1341,7 +1341,7 @@ struct AppModel: ModelProtocol {
         )
     }
     
-    static func failSyncSphereWithDatabase(
+    static func failIndexOurSphere(
         state: AppModel,
         environment: AppEnvironment,
         error: String

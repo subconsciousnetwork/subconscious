@@ -601,7 +601,7 @@ class Tests_DatabaseService: XCTestCase {
     func testReadBacklinksWithoutOwner() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-
+        
         // Add some entries to DB
         let now = Date.now
         
@@ -645,11 +645,11 @@ class Tests_DatabaseService: XCTestCase {
                 slug: Slug("foo")!
             )
         )
-
+        
         let slashlinks = Set(
             stubs.map({ stub in stub.address })
         )
-
+        
         XCTAssertEqual(slashlinks.count, 1)
         XCTAssertTrue(
             slashlinks.contains(
@@ -659,6 +659,105 @@ class Tests_DatabaseService: XCTestCase {
                 )
             ),
             "Has link, appears in results"
+        )
+    }
+    
+    func testPurgeSphere() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let did = Did("did:key:abc123")!
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: did,
+                slug: Slug("foo")!
+            ),
+            memo: foo
+        )
+        
+        // Contains link, should show up in results
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar /foo should appear in results"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("bar")!
+            ),
+            memo: bar,
+            size: bar.toHeaderSubtext().size()!
+        )
+        
+        // Contains link, should show up in results
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz /foo should appear in results"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: did,
+                slug: Slug("baz")!
+            ),
+            memo: baz
+        )
+        
+        // Does not contain link, should not show up in results
+        let bing = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bing"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: did,
+                slug: Slug("bing")!
+            ),
+            memo: bing
+        )
+        
+        // Write fake sphere sync info so we can purge it
+        try service.writeSphereSyncInfo(
+            sphereIdentity: did,
+            version: "bafyxyz123"
+        )
+        
+        try service.purgeSphere(did: did)
+        
+        let syncInfo = try service.readSphereSyncInfo(sphereIdentity: did)
+        XCTAssertNil(syncInfo)
+        
+        let recent = try service.listRecentMemos(owner: did)
+        XCTAssertEqual(recent.count, 1)
+        XCTAssertEqual(
+            recent.first?.address,
+            Slashlink(
+                peer: Peer.did(Did.local),
+                slug: Slug("bar")!
+            )
         )
     }
 }
