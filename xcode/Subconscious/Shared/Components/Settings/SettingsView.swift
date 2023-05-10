@@ -118,17 +118,19 @@ struct SettingsView: View {
                                 }
                             )
                             
-                            Button(
-                                action: {
-                                    app.send(.syncSphereWithGateway)
-                                },
-                                label: {
-                                    GatewaySyncLabel(
-                                        status: app.state.lastGatewaySyncStatus
-                                    )
-                                }
-                            )
-                            .disabled(app.state.gatewayURL.count == 0)
+                            if app.state.gatewayProvisioningStatus != .pending {
+                                Button(
+                                    action: {
+                                        app.send(.syncSphereWithGateway)
+                                    },
+                                    label: {
+                                        GatewaySyncLabel(
+                                            status: app.state.lastGatewaySyncStatus
+                                        )
+                                    }
+                                )
+                                .disabled(app.state.gatewayURL.count == 0)
+                            }
                         }, header: {
                             Text("Gateway")
                         }, footer: {
