@@ -22,11 +22,9 @@ struct FirstRunView: View {
                 )
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
-                    Text("Welcome to the Subconscious Beta.")
+                    Text("Subconscious is a place to garden thoughts and share them with others.")
                     
-                    Text("Subconscious is a place to garden thoughts and share with others.")
-                    
-                    Text("It's powered by a decentralized note graph, so your data belongs to you.")
+                    Text("It’s powered by Noosphere, a decentralized protocol, so your data belongs to you.")
                 }
                 .foregroundColor(.secondary)
                 .font(.callout)

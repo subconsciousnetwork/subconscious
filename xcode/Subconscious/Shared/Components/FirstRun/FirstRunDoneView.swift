@@ -17,7 +17,7 @@ struct FirstRunDoneView: View {
             VStack(spacing: AppTheme.padding * 4) {
                 Spacer()
                 VStack(spacing: AppTheme.padding * 4) {
-                    Text("Your sphere connects you to the Noosphere where you can discover, explore and follow other spheres.")
+                    Text("Thanks to Noosphere, you can discover, explore and follow other spheres.")
                         .foregroundColor(.secondary)
                     StackedGlowingImage(image: {
                         AnyView(
@@ -39,7 +39,7 @@ struct FirstRunDoneView: View {
                     }, width: 128, height: 64)
                 }
                 Spacer()
-                Text("Ready?")
+                Text("Welcome to Subconscious.")
                     .foregroundColor(.secondary)
                 Spacer()
                 Button(

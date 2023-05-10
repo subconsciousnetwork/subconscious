@@ -28,7 +28,7 @@ struct FirstRunProfileView: View {
                 }, width: 180, height: 180)
                 
                 
-                Text("This is your sphere, it holds your data.")
+                Text("This is your sphere. It stores your notes.")
                     .foregroundColor(.secondary)
                 Spacer()
                 Text("What should we name it?")
