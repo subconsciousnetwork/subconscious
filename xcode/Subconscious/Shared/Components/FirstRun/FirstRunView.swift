@@ -9,14 +9,18 @@ import SwiftUI
 
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         NavigationStack {
             VStack(spacing: AppTheme.padding * 2) {
                 Spacer()
-                Image("sub_logo")
-                    .resizable()
-                    .frame(width: 128, height: 128)
+                StackedGlowingImage(
+                    image: Image("sub_logo"),
+                    width: AppTheme.onboarding.heroIconSize,
+                    height: AppTheme.onboarding.heroIconSize
+                )
+                Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
                     Text("Welcome to the Subconscious Beta.")
                     
@@ -76,11 +80,14 @@ struct FirstRunView: View {
                     )
                 }
             }
-            .navigationTitle("Welcome")
+            .navigationTitle("Welcome to Subconscious")
             .navigationBarTitleDisplayMode(.inline)
             .padding()
+            .background(
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
+            )
         }
-        .background(.background)
     }
 }
 

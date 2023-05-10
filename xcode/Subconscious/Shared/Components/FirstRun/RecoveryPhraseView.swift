@@ -22,6 +22,7 @@ struct RecoveryPhraseView: View {
                 Spacer()
             }
             .padding()
+            .background(.background)
             Button(
                 action: {
                     send(.copy)

@@ -53,6 +53,9 @@
 		B5CFC7FF29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
 		B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
 		B5D769CC29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
+		B5F68F602A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */; };
+		B5F68F612A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */; };
+		B5F68F632A0B1E6900CE4DD7 /* OnboardingTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F68F622A0B1E6900CE4DD7 /* OnboardingTheme.swift */; };
 		B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */; };
 		B5F6ADCC29C1323900690DE4 /* Tests_FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */; };
 		B5FB9D9429D5176100D64988 /* GhostPillButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FB9D9329D5176100D64988 /* GhostPillButtonStyle.swift */; };
@@ -456,6 +459,8 @@
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
 		B5D769CA29F770440015385A /* GenerativeProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerativeProfilePic.swift; sourceTree = "<group>"; };
 		B5D8D30029AF1F9B0011D820 /* Did.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Did.swift; sourceTree = "<group>"; };
+		B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackedGlowingImage.swift; sourceTree = "<group>"; };
+		B5F68F622A0B1E6900CE4DD7 /* OnboardingTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTheme.swift; sourceTree = "<group>"; };
 		B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookService.swift; sourceTree = "<group>"; };
 		B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FormField.swift; sourceTree = "<group>"; };
 		B5FB9D9329D5176100D64988 /* GhostPillButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostPillButtonStyle.swift; sourceTree = "<group>"; };
@@ -1111,6 +1116,7 @@
 				B831BDBD2825BA6900C4CE92 /* Parsers */,
 				B8879E9B26F8F3BD00A0B4FF /* Services */,
 				B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */,
+				B5F68F622A0B1E6900CE4DD7 /* OnboardingTheme.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -1177,6 +1183,7 @@
 				B87288E1299C02BA00EF7E07 /* Notebook */,
 				B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */,
 				B88B1CDC298DE65E0062CB7F /* Settings */,
+				B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1581,6 +1588,7 @@
 				B86F1AB728C77E8C00DA264E /* Search.swift in Sources */,
 				B8B3EE75297AEE6600779B7F /* FirstRunCreateSphereView.swift in Sources */,
 				B8A59D6C28B692A00010DB2F /* Story.swift in Sources */,
+				B5F68F632A0B1E6900CE4DD7 /* OnboardingTheme.swift in Sources */,
 				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */,
@@ -1619,6 +1627,7 @@
 				B57C0AE929D2782C00D352E3 /* PetnameView.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
+				B5F68F602A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */,
 				B58862C829F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B58A46AF29D3C62B00491E43 /* StoryEntryView.swift in Sources */,
@@ -1790,6 +1799,7 @@
 				B8616DF929C3877F001C666A /* TranscludeButtonStyle.swift in Sources */,
 				B8EB2A2026F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B81A535D27275138001A6268 /* Tape.swift in Sources */,
+				B5F68F612A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */,
 				B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B8E00A312992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,

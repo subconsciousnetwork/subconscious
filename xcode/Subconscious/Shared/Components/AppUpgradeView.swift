@@ -11,30 +11,6 @@ import ObservableStore
 
 /// Displays information to the user when app migration / rebuild happening.
 struct AppUpgradeView: View {
-    private let bgGradientLight = LinearGradient(
-        gradient: Gradient(
-            colors: [.brandBgTan, .brandBgGrey, .brandBgBlush]
-        ),
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    private let bgGradientDark = LinearGradient(
-        gradient: Gradient(
-            colors: [.brandBgBlack, .brandBgSlate, .brandBgPurple]
-        ),
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    private var bgGradient: LinearGradient {
-        switch colorScheme {
-        case .dark:
-            return bgGradientDark
-        default:
-            return bgGradientLight
-        }
-    }
-
     private var shadow: Color {
         switch colorScheme {
         case .dark:
@@ -45,7 +21,7 @@ struct AppUpgradeView: View {
     }
 
     private let spinnerSize: CGFloat = 256
-    private let logoSize: CGFloat = 180
+    private let logoSize: CGFloat = AppTheme.onboarding.heroIconSize
     // Duration of certain completion transition animations
     private let transitionDuration: CGFloat = 1
 
@@ -86,12 +62,13 @@ struct AppUpgradeView: View {
                     isComplete: state.isComplete,
                     size: spinnerSize
                 ) {
-                    Image("sub_logo")
-                        .resizable()
-                        .frame(width: logoSize, height: logoSize)
-                        .animation(.none, value: colorScheme)
+                    StackedGlowingImage(
+                        image: Image("sub_logo"),
+                        width: logoSize,
+                        height: logoSize
+                    )
+                    .animation(.none, value: colorScheme)
                 }
-                .shadow(color: shadow, radius: 72)
                 Spacer().frame(height: AppTheme.unit * 12)
                 if !state.isComplete {
                     Text(verbatim: state.progressMessage)
@@ -127,7 +104,10 @@ struct AppUpgradeView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(bgGradient)
+        .background(
+            AppTheme.onboarding
+                .appBackgroundGradient(colorScheme)
+        )
     }
 }
 

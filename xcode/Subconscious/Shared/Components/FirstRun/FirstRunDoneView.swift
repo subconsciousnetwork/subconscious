@@ -9,16 +9,19 @@ import SwiftUI
 
 struct FirstRunDoneView: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
                 VStack(spacing: AppTheme.unit3) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 96))
-                        .foregroundColor(.accentColor)
-                    Text("All set!")
+                    StackedGlowingImage(
+                        image: Image("ns_logo"),
+                        width: AppTheme.onboarding.heroIconSize,
+                        height: AppTheme.onboarding.heroIconSize
+                    )
+                    Text("Welcome to the Noosphere!")
                         .foregroundColor(.secondary)
                 }
                 Spacer()
@@ -27,12 +30,16 @@ struct FirstRunDoneView: View {
                         app.send(.persistFirstRunComplete(true))
                     }
                 ) {
-                    Text("Continue")
+                    Text("Begin")
                 }
                 .buttonStyle(PillButtonStyle())
                 .disabled(app.state.sphereIdentity == nil)
             }
             .padding()
+            .background(
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
+            )
         }
     }
 }

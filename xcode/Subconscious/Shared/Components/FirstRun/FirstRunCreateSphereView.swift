@@ -9,14 +9,15 @@ import SwiftUI
 
 struct FirstRunCreateSphereView: View {
     @ObservedObject var app: Store<AppModel>
-
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(alignment: .center, spacing: AppTheme.unit4) {
-                    Text("Recovery Phrase")
-                        .font(.headline)
+                VStack(alignment: .center, spacing: AppTheme.padding * 2) {
+                    Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
+                        .foregroundColor(.secondary)
                     RecoveryPhraseView(
                         state: app.state.recoveryPhrase,
                         send: Address.forward(
@@ -24,10 +25,14 @@ struct FirstRunCreateSphereView: View {
                             tag: AppRecoveryPhraseCursor.tag
                         )
                     )
+                    .shadow(
+                        color: AppTheme.onboarding
+                            .shadow(colorScheme).opacity(0.5),
+                        radius: AppTheme.onboarding.shadowSize
+                    )
+                    
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                        Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
-                            .foregroundColor(.secondary)
-                        Text("This is for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
+                        Text("It's for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
                             .foregroundColor(.secondary)
                     }
                 }
@@ -43,6 +48,10 @@ struct FirstRunCreateSphereView: View {
                 .buttonStyle(PillButtonStyle())
             }
             .padding()
+            .background(
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
+            )
         }
         .navigationTitle("Recovery Phrase")
         .navigationBarTitleDisplayMode(.inline)

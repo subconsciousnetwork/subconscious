@@ -10,7 +10,8 @@ import ObservableStore
 
 struct FirstRunProfileView: View {
     @ObservedObject var app: Store<AppModel>
-
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -29,6 +30,11 @@ struct FirstRunProfileView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                    .shadow(
+                        color: AppTheme.onboarding
+                            .shadow(colorScheme).opacity(0.5),
+                        radius: AppTheme.onboarding.shadowSize
+                    )
                 }
                 Spacer()
                 NavigationLink(
@@ -48,6 +54,10 @@ struct FirstRunProfileView: View {
             .padding()
             .navigationTitle("Your Profile")
             .navigationBarTitleDisplayMode(.inline)
+            .background(
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
+            )
         }
     }
 }
