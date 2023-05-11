@@ -19,6 +19,7 @@ struct ValidatedTextField: View {
     var axis: Axis = .horizontal
     var submitLabel: SubmitLabel = .return
     var onSubmit: () -> Void = { }
+    var autoFocus: Bool = false
     @FocusState var focused: Bool
     
     var backgroundColor = Color.background
@@ -57,6 +58,11 @@ struct ValidatedTextField: View {
                 .submitLabel(submitLabel)
                 .onSubmit {
                     onSubmit()
+                }
+                .task {
+                    if autoFocus {
+                        self.focused = true
+                    }
                 }
             }
             Text(caption)
@@ -104,7 +110,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 ValidatedTextField(
                     placeholder: "nickname",
                     text: .constant(""),
-                    caption: "Lowercase letters and numbers only."
+                    caption: "Lowercase letters and numbers only.",
+                    autoFocus: true
                 )
                 .formField()
                 ValidatedTextField(
