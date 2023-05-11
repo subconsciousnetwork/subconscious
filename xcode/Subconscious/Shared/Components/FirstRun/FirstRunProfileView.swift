@@ -31,7 +31,8 @@ struct FirstRunProfileView: View {
                             app.send(.nicknameFormField(.focusChange(focused: focused)))
                         },
                         caption: "Lowercase letters, numbers and dashes only.",
-                        hasError: !app.state.isNicknameFormFieldValid
+                        hasError: !app.state.isNicknameFormFieldValid,
+                        autoFocus: true
                     )
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
