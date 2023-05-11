@@ -1024,8 +1024,10 @@
 				B59D556229BBFF56007915E2 /* FormField.swift */,
 				B8EA3EE72915C23200B92C2E /* HeaderSubtext.swift */,
 				B86BC75329B143CD005B5833 /* Identified.swift */,
+				B56C3D3D2A01E5020071EF70 /* InviteCode.swift */,
 				B8CAA6CA2A02FA7000F4A0F6 /* Link.swift */,
 				B86DFF3427C07438002E57ED /* LinkSuggestion.swift */,
+				B81A1A6C29DF267200B4CD1C /* LoadingState.swift */,
 				B8C7E8BD2809F19500E439DC /* Markup.swift */,
 				B8B4251428FDE8570081B8D5 /* Memo.swift */,
 				B8B4251728FDE8AA0081B8D5 /* MemoData.swift */,
@@ -1044,8 +1046,6 @@
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B58A46B429D3CE9700491E43 /* StoryUser.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
-				B81A1A6C29DF267200B4CD1C /* LoadingState.swift */,
-				B56C3D3D2A01E5020071EF70 /* InviteCode.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
