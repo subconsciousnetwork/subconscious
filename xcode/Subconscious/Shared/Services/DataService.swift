@@ -31,10 +31,16 @@ enum DataServiceError: Error, LocalizedError {
     }
 }
 
-/// Record of a successful move transaction
+/// Receipt for a successful move transaction
 struct MoveReceipt: Hashable {
     var from: Slashlink
     var to: Slashlink
+}
+
+/// Receipt for a successful sphere->database index
+struct IndexSphereReceipt: Hashable {
+    var identity: Did
+    var version: Cid
 }
 
 // MARK: SERVICE
@@ -111,7 +117,7 @@ actor DataService {
     /// This internal helper just exposes the basics
     private func indexSphere<Spherelike: SphereProtocol>(
         _ sphere: Spherelike
-    ) async throws -> String {
+    ) async throws -> IndexSphereReceipt {
         let identity = try await sphere.identity()
         let version = try await sphere.version()
         let since = try? database.readSphereSyncInfo(sphereIdentity: identity)
@@ -147,15 +153,16 @@ actor DataService {
             try database.rollback(savepoint)
             throw error
         }
-        return version
+        return IndexSphereReceipt(identity: identity, version: version)
     }
     
     /// Index our sphere
-    func indexOurSphere() async throws -> String {
+    func indexOurSphere() async throws -> IndexSphereReceipt {
         try await indexSphere(noosphere)
     }
     
-    nonisolated func indexOurSpherePublisher() -> AnyPublisher<String, Error> {
+    nonisolated func indexOurSpherePublisher(
+    ) -> AnyPublisher<IndexSphereReceipt, Error> {
         Future.detached(priority: .utility) {
             try await self.indexOurSphere()
         }
@@ -163,7 +170,7 @@ actor DataService {
     }
 
     /// Index the contents of a sphere, referenced by petname
-    func indexSphere(petname: Petname) async throws -> String {
+    func indexSphere(petname: Petname) async throws -> IndexSphereReceipt {
         let sphere = try await noosphere.traverse(petname: petname)
         return try await indexSphere(sphere)
     }
@@ -171,7 +178,7 @@ actor DataService {
     /// Index the contents of a sphere, referenced by petname
     nonisolated func indexSpherePublisher(
         petname: Petname
-    ) -> AnyPublisher<String, Error> {
+    ) -> AnyPublisher<IndexSphereReceipt, Error> {
         Future.detached(priority: .utility) {
             try await self.indexSphere(petname: petname)
         }
@@ -182,15 +189,16 @@ actor DataService {
     ///
     /// Gets did for petname, then purges everything belonging to did
     /// from Database.
-    func purgeSphere(petname: Petname) async throws {
+    func purgeSphere(petname: Petname) async throws -> Did {
         let did = try await noosphere.getPetname(petname: petname)
         try database.purgeSphere(did: did)
+        return did
     }
     
     /// Purge sphere from database with the given petname.
     nonisolated func purgeSpherePublisher(
         petname: Petname
-    ) -> AnyPublisher<Void, Error> {
+    ) -> AnyPublisher<Did, Error> {
         Future.detached(priority: .utility) {
             try await self.purgeSphere(petname: petname)
         }

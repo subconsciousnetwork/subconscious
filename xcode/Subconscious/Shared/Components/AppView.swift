@@ -1311,8 +1311,8 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = environment.data.indexOurSpherePublisher().map({
-            version in
-            AppAction.succeedIndexOurSphere(version: version)
+            receipt in
+            AppAction.succeedIndexOurSphere(version: receipt.version)
         }).catch({ error in
             Just(
                 AppAction.failIndexOurSphere(error.localizedDescription)
