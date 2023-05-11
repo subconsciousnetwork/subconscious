@@ -62,12 +62,14 @@ struct AppUpgradeView: View {
                     isComplete: state.isComplete,
                     size: spinnerSize
                 ) {
-                    StackedGlowingImage(
-                        image: Image("sub_logo"),
+                    StackedGlowingImage() {
+                        Image("sub_logo").resizable()
+                    }
+                    .animation(.none, value: colorScheme)
+                    .frame(
                         width: logoSize,
                         height: logoSize
                     )
-                    .animation(.none, value: colorScheme)
                 }
                 Spacer().frame(height: AppTheme.unit * 12)
                 if !state.isComplete {

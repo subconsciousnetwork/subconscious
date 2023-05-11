@@ -8,11 +8,47 @@
 import SwiftUI
 import ObservableStore
 
-struct GatewayProvisionLabel: View {
-    var status: ResourceStatus
+struct PendingSyncBadge: View {
     @State var spin = false
     
-    func label(status: ResourceStatus) -> String {
+    var body: some View {
+        Image(systemName: "arrow.triangle.2.circlepath")
+            .rotationEffect(.degrees(spin ? 360 : 0))
+            .animation(Animation.linear
+                .repeatForever(autoreverses: false)
+                .speed(0.4), value: spin)
+            .task{
+                self.spin = true
+            }
+    }
+}
+
+struct ResourceSyncBadge: View {
+    var status: ResourceStatus
+
+    var body: some View {
+        switch status {
+        case .initial:
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .foregroundColor(.secondary)
+        case .pending:
+            PendingSyncBadge()
+                .foregroundColor(.secondary)
+        case .succeeded:
+            Image(systemName: "checkmark.circle")
+                .foregroundColor(.secondary)
+        case .failed:
+            Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+                .foregroundColor(.red)
+        }
+    }
+}
+
+
+struct GatewayProvisionLabel: View {
+    var status: ResourceStatus
+    
+    var label: String {
         switch status {
         case .initial:
             return "Provision Gateway"
@@ -25,7 +61,7 @@ struct GatewayProvisionLabel: View {
         }
     }
     
-    private func labelColor(status: ResourceStatus) -> Color {
+    var color: Color {
         switch status {
         case .failed:
             return .red
@@ -35,34 +71,12 @@ struct GatewayProvisionLabel: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Label(title: {
-                Text(label(status: status))
-                    .foregroundColor(labelColor(status: status))
-            }, icon: {
-                switch status {
-                case .initial:
-                    Image(systemName: "icloud.and.arrow.up")
-                        .foregroundColor(.secondary)
-                case .pending:
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundColor(.accentColor)
-                        .rotationEffect(.degrees(spin ? 360 : 0))
-                        .animation(Animation.linear
-                            .repeatForever(autoreverses: false)
-                            .speed(0.4), value: spin)
-                        .onAppear() {
-                            self.spin = true
-                        }
-                case .succeeded:
-                    Image(systemName: "checkmark.icloud")
-                        .foregroundColor(.secondary)
-                case .failed:
-                    Image(systemName: "exclamationmark.icloud")
-                        .foregroundColor(.red)
-                }
-            })
-        }
+        Label(title: {
+            Text(label)
+        }, icon: {
+            ResourceSyncBadge(status: status)
+        })
+        .foregroundColor(color)
     }
 }
 

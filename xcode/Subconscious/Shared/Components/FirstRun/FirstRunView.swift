@@ -10,34 +10,47 @@ import SwiftUI
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
-
+    
     var body: some View {
         NavigationStack {
-            VStack(spacing: AppTheme.padding * 2) {
+            VStack(spacing: AppTheme.padding) {
                 Spacer()
-                StackedGlowingImage(
-                    image: Image("sub_logo"),
-                    width: AppTheme.onboarding.heroIconSize,
-                    height: AppTheme.onboarding.heroIconSize
-                )
-                Spacer()
-                VStack(alignment: .leading, spacing: AppTheme.unit3) {
-                    Text("Welcome to the Subconscious Beta.")
-                    
-                    Text("Subconscious is a place to garden thoughts and share with others.")
-                    
-                    Text("It's powered by a decentralized note graph, so your data belongs to you.")
+                StackedGlowingImage() {
+                    Image("sub_logo").resizable()
                 }
-                .foregroundColor(.secondary)
-                .font(.callout)
+                .aspectRatio(contentMode: .fit)
+                .frame(
+                    minWidth: 32,
+                    maxWidth: AppTheme.onboarding.heroIconSize,
+                    minHeight: 32,
+                    maxHeight: AppTheme.onboarding.heroIconSize
+                )
+                
+                Spacer()
+                
+                Text("Subconscious is a place to garden thoughts and share them with others.")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
+                    
+                Text("It’s powered by Noosphere, a decentralized protocol, so your data belongs to you.")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
+                
+                Spacer()
                 
                 ValidatedTextField(
+                    alignment: .center,
                     placeholder: "Enter your invite code",
                     text: Binding(
                         get: { app.state.inviteCodeFormField.value },
                         send: app.send,
                         tag: AppAction.setInviteCode
                     ),
+                    onFocusChanged: { focused in
+                        app.send(.inviteCodeFormField(.focusChange(focused: focused)))
+                    },
                     caption: "Look for this in your welcome email.",
                     hasError: app.state.inviteCodeFormField.hasError
                 )
@@ -45,26 +58,9 @@ struct FirstRunView: View {
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 
-                Spacer()
                 
-                NavigationLink(
-                    destination: {
-                        FirstRunProfileView(
-                            app: app
-                        )
-                    },
-                    label: {
-                        Text("Get Started")
-                    }
-                )
-                .buttonStyle(PillButtonStyle())
-                .disabled(!app.state.inviteCodeFormField.isValid)
-                    
-                // MARK: Use Offline
-                VStack(spacing: AppTheme.unit) {
-                    Text("No invite code?")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                if !app.state.inviteCodeFormField.hasFocus {
+                    Spacer()
                     
                     NavigationLink(
                         destination: {
@@ -73,12 +69,45 @@ struct FirstRunView: View {
                             )
                         },
                         label: {
-                            
+                            Text("Get Started")
+                        }
+                    )
+                    .buttonStyle(PillButtonStyle())
+                    .disabled(!app.state.inviteCodeFormField.isValid)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        app.send(.createSphere)
+                    })
+                        
+                }
+                
+                // MARK: Use Offline
+                HStack(spacing: AppTheme.unit) {
+                    Text("No invite code?")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    NavigationLink(
+                        destination: {
+                            FirstRunProfileView(
+                                app: app
+                            )
+                        },
+                        label: {
                             Text("Use offline")
                                 .font(.caption)
                         }
                     )
+                    .simultaneousGesture(TapGesture().onEnded {
+                        app.send(.createSphere)
+                    })
                 }
+                .padding(
+                    .init(
+                        top: 0,
+                        leading: 0,
+                        bottom: AppTheme.tightPadding,
+                        trailing: 0
+                    )
+                )
             }
             .navigationTitle("Welcome to Subconscious")
             .navigationBarTitleDisplayMode(.inline)
