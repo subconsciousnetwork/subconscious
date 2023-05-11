@@ -33,62 +33,55 @@ struct UserProfileView: View {
     var body: some View {
         let columnRecent = TabbedColumnItem(
             label: "Recent",
-            view: Group {
+            view: ScrollView {
                 if let user = state.user {
-                    List(state.recentEntries) { entry in
-                        VStack {
-                            StoryEntryView(
-                                story: StoryEntry(
-                                    author: user,
-                                    entry: entry
-                                ),
-                                action: { address, _ in onNavigateToNote(address) }
-                            )
-                            ThickDividerView()
-                        }
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
-                    }
-                    .listStyle(.plain)
-                    .refreshable {
-                        send(.refresh)
+                    ForEach(state.recentEntries) { entry in
+                        StoryEntryView(
+                            story: StoryEntry(
+                                author: user,
+                                entry: entry
+                            ),
+                            action: { address, _ in onNavigateToNote(address) }
+                        )
                     }
                 }
+                
+                if state.recentEntries.count == 0 {
+                    EmptyStateView()
+                }
+            }
+            .refreshable {
+                send(.refresh)
             }
         )
         
         let columnTop = TabbedColumnItem(
             label: "Top",
-            view: VStack(spacing: AppTheme.unit * 2) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 48))
-                    Text("Coming Soon...")
-                }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .foregroundColor(Color.secondary)
-                .background(Color.background)
+            view: ScrollView {
+                EmptyStateView()
+            }
+            .refreshable {
+                send(.refresh)
+            }
         )
          
         let columnFollowing = TabbedColumnItem(
             label: "Following",
-            view: Group {
-                List(state.following) { follow in
-                    VStack {
-                        StoryUserView(
-                            story: follow,
-                            action: { _, _ in onNavigateToUser(follow.user) },
-                            profileAction: onProfileAction
-                        )
-                        ThickDividerView()
-                    }
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
+            view: ScrollView {
+                ForEach(state.following) { follow in
+                    StoryUserView(
+                        story: follow,
+                        action: { _, _ in onNavigateToUser(follow.user) },
+                        profileAction: onProfileAction
+                    )
                 }
-                .listStyle(.plain)
-                .refreshable {
-                    send(.refresh)
+                
+                if state.following.count == 0 {
+                    EmptyStateView()
                 }
+            }
+            .refreshable {
+                send(.refresh)
             }
         )
         
