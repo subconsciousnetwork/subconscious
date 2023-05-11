@@ -48,7 +48,7 @@ struct FirstRunProfileView: View {
                 if !app.state.nicknameFormField.hasFocus {
                     NavigationLink(
                         destination: {
-                            FirstRunCreateSphereView(app: app)
+                            FirstRunSphereView(app: app)
                         },
                         label: {
                             Text("Continue")

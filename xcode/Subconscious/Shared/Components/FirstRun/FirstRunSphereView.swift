@@ -7,7 +7,7 @@
 import ObservableStore
 import SwiftUI
 
-struct FirstRunCreateSphereView: View {
+struct FirstRunSphereView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
@@ -19,8 +19,8 @@ struct FirstRunCreateSphereView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(spacing: AppTheme.unit4) {
-                    if let name = app.state.nicknameFormField.validated ?? Petname("ben") {
+                VStack(spacing: AppTheme.padding) {
+                    if let name = app.state.nicknameFormField.validated  {
                         HStack(spacing: 0) {
                             Text("Hi, ")
                                 .foregroundColor(.secondary)
@@ -40,42 +40,25 @@ struct FirstRunCreateSphereView: View {
                                 size: 80
                             )
                         }
+                        .padding(AppTheme.padding)
                     }
                     
                     Text("This is your sphere. It stores your data.")
                         .foregroundColor(.secondary)
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .center, spacing: AppTheme.padding ) {
-                    Text("If you ever lose access to it, you can use your secret recovery phrase to recover your data.")
-                        .foregroundColor(.secondary)
-                    RecoveryPhraseView(
-                        state: app.state.recoveryPhrase,
-                        send: Address.forward(
-                            send: app.send,
-                            tag: AppRecoveryPhraseCursor.tag
-                        )
-                    )
-                    .shadow(
-                        color: AppTheme.onboarding
-                            .shadow(colorScheme).opacity(0.5),
-                        radius: AppTheme.onboarding.shadowSize
-                    )
                     
-                    VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                        Text("It's for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
-                            .foregroundColor(.secondary)
-                    }
+                    Text("Your sphere connects to Noosphere allowing you to explore and follow other spheres.")
+                        .foregroundColor(.secondary)
                 }
+                .multilineTextAlignment(.center)
+                
                 Spacer()
+                
                 NavigationLink(
                     destination: {
-                        FirstRunDoneView(app: app)
+                        FirstRunRecoveryView(app: app)
                     },
                     label: {
-                        Text("Ok, I wrote it down")
+                        Text("Got it")
                     }
                 )
                 .buttonStyle(PillButtonStyle())
@@ -91,9 +74,9 @@ struct FirstRunCreateSphereView: View {
     }
 }
 
-struct FirstRunCreateSphereView_Previews: PreviewProvider {
+struct FirstRunSphereView_Previews: PreviewProvider {
     static var previews: some View {
-        FirstRunCreateSphereView(
+        FirstRunSphereView(
             app: Store(
                 state: AppModel(),
                 environment: AppEnvironment()
