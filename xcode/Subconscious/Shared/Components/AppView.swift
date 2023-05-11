@@ -60,6 +60,7 @@ struct AppView: View {
             )
         ) {
             SettingsView(app: store)
+                .presentationDetents([.fraction(0.999)]) // https://stackoverflow.com/a/74631815
         }
         .onAppear {
             store.send(.appear)
