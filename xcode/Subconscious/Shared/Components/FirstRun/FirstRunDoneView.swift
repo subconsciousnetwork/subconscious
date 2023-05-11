@@ -63,10 +63,7 @@ struct FirstRunDoneView: View {
                 Spacer()
                 Text(statusLabel)
                 .foregroundColor(.secondary)
-                StackedGlowingImage(
-                    width: 128,
-                    height: 64
-                ) {
+                StackedGlowingImage() {
                     HStack(
                         alignment: .center,
                         spacing: AppTheme.unit2

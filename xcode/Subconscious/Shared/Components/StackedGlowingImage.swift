@@ -10,9 +10,6 @@ import SwiftUI
 
 struct StackedGlowingImage<Content: View>: View {
     @Environment(\.colorScheme) var colorScheme
-    
-    var width: CGFloat
-    var height: CGFloat
     @ViewBuilder var content: () -> Content
     
     private var blendMode: BlendMode {

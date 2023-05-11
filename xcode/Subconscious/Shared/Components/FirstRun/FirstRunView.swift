@@ -15,10 +15,7 @@ struct FirstRunView: View {
         NavigationStack {
             VStack(spacing: AppTheme.padding) {
                 Spacer()
-                StackedGlowingImage(
-                    width: AppTheme.onboarding.heroIconSize,
-                    height: AppTheme.onboarding.heroIconSize
-                ) {
+                StackedGlowingImage() {
                     Image("sub_logo").resizable()
                 }
                 .aspectRatio(contentMode: .fit)

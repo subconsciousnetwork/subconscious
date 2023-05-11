@@ -31,10 +31,7 @@ struct FirstRunSphereView: View {
                     }
                     
                     if let did = did {
-                        StackedGlowingImage(
-                            width: 80,
-                            height: 80
-                        ) {
+                        StackedGlowingImage() {
                             GenerativeProfilePic(
                                 did: did,
                                 size: 80
