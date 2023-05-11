@@ -185,6 +185,16 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
     case failSyncLocalFilesWithDatabase(String)
     
+    /// Index the contents of a sphere in the database
+    case indexSphere(_ petname: Petname)
+    case succeedIndexSphere(_ receipt: IndexSphereReceipt)
+    case failIndexSphere(_ message: String)
+
+    /// Purge the contents of a sphere from the database
+    case purgeSphere(_ petname: Petname)
+    case succeedPurgeSphere(_ identity: Did)
+    case failPurgeSphere(_ message: String)
+
     case followDefaultGeist
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
@@ -679,6 +689,42 @@ struct AppModel: ModelProtocol {
             )
         case let .failSyncLocalFilesWithDatabase(message):
             return failSyncLocalFilesWithDatabase(
+                state: state,
+                environment: environment,
+                message: message
+            )
+        case .indexSphere(let petname):
+            return indexSphere(
+                state: state,
+                environment: environment,
+                petname: petname
+            )
+        case .succeedIndexSphere(let receipt):
+            return succeedIndexSphere(
+                state: state,
+                environment: environment,
+                receipt: receipt
+            )
+        case .failIndexSphere(let message):
+            return failIndexSphere(
+                state: state,
+                environment: environment,
+                message: message
+            )
+        case .purgeSphere(let petname):
+            return purgeSphere(
+                state: state,
+                environment: environment,
+                petname: petname
+            )
+        case .succeedPurgeSphere(let identity):
+            return succeedPurgeSphere(
+                state: state,
+                environment: environment,
+                identity: identity
+            )
+        case .failPurgeSphere(let message):
+            return failPurgeSphere(
                 state: state,
                 environment: environment,
                 message: message
@@ -1413,6 +1459,76 @@ struct AppModel: ModelProtocol {
             action: .setAppUpgradeComplete(model.isSyncAllResolved),
             environment: environment
         )
+    }
+
+    /// Index a sphere to the database
+    static func indexSphere(
+        state: Self,
+        environment: Environment,
+        petname: Petname
+    ) -> Update<Self> {
+        let fx: Fx<Action> = environment.data.indexSpherePublisher(
+            petname: petname
+        ).map({ receipt in
+            Action.succeedIndexSphere(receipt)
+        }).recover({ error in
+            Action.failIndexSphere(error.localizedDescription)
+        }).eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedIndexSphere(
+        state: Self,
+        environment: Environment,
+        receipt: IndexSphereReceipt
+    ) -> Update<Self> {
+        logger.log("Indexed sphere: \(receipt.identity) @ \(receipt.version)")
+        return Update(state: state)
+    }
+    
+    static func failIndexSphere(
+        state: Self,
+        environment: Environment,
+        message: String
+    ) -> Update<Self> {
+        logger.log("Failed to index sphere: \(message)")
+        return Update(state: state)
+    }
+    
+    static func purgeSphere(
+        state: Self,
+        environment: Environment,
+        petname: Petname
+    ) -> Update<Self> {
+        let fx: Fx<Action> = environment.data.purgeSpherePublisher(
+            petname: petname
+        )
+        .map({ identity in
+            Action.succeedPurgeSphere(identity)
+        })
+        .recover({ error in
+            Action.failPurgeSphere(error.localizedDescription)
+        })
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedPurgeSphere(
+        state: Self,
+        environment: Environment,
+        identity: Did
+    ) -> Update<Self> {
+        logger.log("Purged sphere from database: \(identity)")
+        return Update(state: state)
+    }
+    
+    static func failPurgeSphere(
+        state: Self,
+        environment: Environment,
+        message: String
+    ) -> Update<Self> {
+        logger.log("Failed to purge sphere from database: \(message)")
+        return Update(state: state)
     }
 
     static func presentSettingsSheet(
