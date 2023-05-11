@@ -69,7 +69,7 @@ struct FirstRunSphereView: View {
                     .appBackgroundGradient(colorScheme)
             )
         }
-        .navigationTitle("Recovery Phrase")
+        .navigationTitle("Your Sphere")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

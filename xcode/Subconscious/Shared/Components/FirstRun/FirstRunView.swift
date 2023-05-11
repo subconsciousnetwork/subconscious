@@ -7,17 +7,13 @@
 import ObservableStore
 import SwiftUI
 
-enum FirstRunViewDestination {
-    case profileView
-}
-
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: AppTheme.padding ) {
+            VStack(spacing: AppTheme.padding) {
                 Spacer()
                 StackedGlowingImage(
                     width: AppTheme.onboarding.heroIconSize,
@@ -59,12 +55,7 @@ struct FirstRunView: View {
                         app.send(.inviteCodeFormField(.focusChange(focused: focused)))
                     },
                     caption: "Look for this in your welcome email.",
-                    hasError: app.state.inviteCodeFormField.hasError,
-                    submitLabel: .continue,
-                    onSubmit: {
-                        // TODO: push a view onto the stack
-                        // need to refactor so we can drive navigation by store
-                    }
+                    hasError: app.state.inviteCodeFormField.hasError
                 )
                 .textFieldStyle(.roundedBorder)
                 .textInputAutocapitalization(.never)
@@ -113,16 +104,6 @@ struct FirstRunView: View {
                     })
                 }
                 .padding(AppTheme.padding)
-            }
-            .navigationDestination(
-                for: FirstRunViewDestination.self
-            ) { destination in
-                switch (destination) {
-                case .profileView:
-                    FirstRunProfileView(
-                        app: app
-                    )
-                }
             }
             .navigationTitle("Welcome to Subconscious")
             .navigationBarTitleDisplayMode(.inline)

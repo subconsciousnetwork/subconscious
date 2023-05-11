@@ -17,8 +17,6 @@ struct ValidatedTextField: View {
     var caption: String
     var hasError: Bool = false
     var axis: Axis = .horizontal
-    var submitLabel: SubmitLabel = .return
-    var onSubmit: () -> Void = { }
     var autoFocus: Bool = false
     @FocusState var focused: Bool
     
@@ -54,10 +52,6 @@ struct ValidatedTextField: View {
                 }
                 .onChange(of: focused) { focused in
                     onFocusChanged(focused)
-                }
-                .submitLabel(submitLabel)
-                .onSubmit {
-                    onSubmit()
                 }
                 .task {
                     if autoFocus {
