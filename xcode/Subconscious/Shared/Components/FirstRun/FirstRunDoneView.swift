@@ -26,50 +26,69 @@ struct FirstRunDoneView: View {
             .frame(width: 24)
     }
     
-    private var did: Did {
+    private var did: Did? {
         Did(app.state.sphereIdentity ?? "")
-            ?? Config.default.subconsciousGeistDid
+    }
+    
+    var statusLabel: String {
+        switch (status) {
+        case .pending:
+            return "Creating your sphere..."
+        case .succeeded:
+            return "Connected!"
+        case .initial:
+            // Shown if the user skips the invite code step
+            return "You are offline."
+        case .failed:
+            return "Failed to create sphere."
+        }
+    }
+    
+    var guidanceLabel: String {
+        switch (status) {
+        case .pending:
+            return "You can start exploring the app offline."
+        case .succeeded:
+            return "Welcome to Subconscious."
+            
+        // Shown if the user skips the invite code step OR we fail to provision
+        case .initial, .failed:
+            return "Don't worry, you can still explore the app."
+        }
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: AppTheme.padding * 4) {
                 Spacer()
-                VStack(spacing: AppTheme.padding * 2) {
-                    Text(
-                        status == .succeeded
-                        ? "Connected!"
-                        : "Connecting to Noosphere..."
-                    )
-                    .foregroundColor(.secondary)
-                    StackedGlowingImage(
-                        width: 128,
-                        height: 64
+                Text(statusLabel)
+                .foregroundColor(.secondary)
+                StackedGlowingImage(
+                    width: 128,
+                    height: 64
+                ) {
+                    HStack(
+                        alignment: .center,
+                        spacing: AppTheme.unit2
                     ) {
-                        HStack(
-                            alignment: .center,
-                            spacing: AppTheme.unit2
-                        ) {
+                        if let did = did {
                             GenerativeProfilePic(
                                 did: did,
                                 size: 64
                             )
-                            dottedLine
-                            GatewayProvisionBadge(status: status)
-                            dottedLine
-                            Image("ns_logo")
-                                .resizable()
-                                .frame(width: 80, height: 80)
-                                .offset(x: -5) // account for padding in image
                         }
+                        dottedLine
+                        ResourceSyncBadge(status: status)
+                        dottedLine
+                        Image("ns_logo")
+                            .resizable()
+                            .frame(width: 80, height: 80)
+                            .offset(x: -5) // account for padding in image
                     }
+                    .frame(height: 64)
                 }
-                Text(
-                    status == .succeeded
-                    ? "Welcome to Subconscious."
-                    : "You can start exploring the app offline."
-                )
-                .foregroundColor(.secondary)
+                Text(guidanceLabel)
+                    .foregroundColor(.secondary)
                 Spacer()
                 Button(
                     action: {
@@ -87,15 +106,6 @@ struct FirstRunDoneView: View {
                     .appBackgroundGradient(colorScheme)
             )
         }
-    }
-}
-
-struct Line: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: 0, y: 0))
-        path.addLine(to: CGPoint(x: rect.width, y: 0))
-        return path
     }
 }
 

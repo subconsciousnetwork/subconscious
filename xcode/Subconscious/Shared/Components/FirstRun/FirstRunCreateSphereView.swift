@@ -11,12 +11,45 @@ struct FirstRunCreateSphereView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
+    var did: Did? {
+        Did(app.state.sphereIdentity ?? "")
+    }
+    
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(alignment: .center, spacing: AppTheme.padding * 2) {
-                    Text("This is your secret recovery phrase. You can use it to recover your sphere if you lose access.")
+                VStack(spacing: AppTheme.unit4) {
+                    if let name = app.state.nicknameFormField.validated ?? Petname("ben") {
+                        HStack(spacing: 0) {
+                            Text("Hi, ")
+                                .foregroundColor(.secondary)
+                            PetnameView(petname: name)
+                            Text(".")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    if let did = did {
+                        StackedGlowingImage(
+                            width: 80,
+                            height: 80
+                        ) {
+                            GenerativeProfilePic(
+                                did: did,
+                                size: 80
+                            )
+                        }
+                    }
+                    
+                    Text("This is your sphere. It stores your data.")
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .center, spacing: AppTheme.padding ) {
+                    Text("If you ever lose access to it, you can use your secret recovery phrase to recover your data.")
                         .foregroundColor(.secondary)
                     RecoveryPhraseView(
                         state: app.state.recoveryPhrase,

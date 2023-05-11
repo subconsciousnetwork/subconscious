@@ -12,6 +12,7 @@
 		B508957129E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
+		B540F8BA2A0C748C00876256 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = B540F8B92A0C748C00876256 /* Line.swift */; };
 		B54187B829EF5CA00056E4A9 /* FollowUserFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */; };
 		B5432B8329F8BAED003BBB23 /* Tests_UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */; };
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
@@ -427,6 +428,7 @@
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
+		B540F8B92A0C748C00876256 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserFormSheet.swift; sourceTree = "<group>"; };
 		B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserProfileService.swift; sourceTree = "<group>"; };
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
@@ -752,6 +754,14 @@
 				B8616DF729C38775001C666A /* TranscludeButtonStyle.swift */,
 			);
 			path = Transclude;
+			sourceTree = "<group>";
+		};
+		B540F8B82A0C748100876256 /* Shapes */ = {
+			isa = PBXGroup;
+			children = (
+				B540F8B92A0C748C00876256 /* Line.swift */,
+			);
+			path = Shapes;
 			sourceTree = "<group>";
 		};
 		B57C0AEC29D280AC00D352E3 /* Layout */ = {
@@ -1226,6 +1236,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B540F8B82A0C748100876256 /* Shapes */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -1705,6 +1716,7 @@
 				B5CA12A029FF732A00860E9E /* GatewayProvisioningService.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
 				B89E30772911B51A00A4721F /* Migration.swift in Sources */,
+				B540F8BA2A0C748C00876256 /* Line.swift in Sources */,
 				B8B4D7EC27EA890B00633B5F /* ShadowStyle.swift in Sources */,
 				B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B85DF78C29B660C60042D725 /* Prose.swift in Sources */,

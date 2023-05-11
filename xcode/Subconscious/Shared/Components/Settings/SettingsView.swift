@@ -10,9 +10,8 @@ import ObservableStore
 
 struct GatewaySyncLabel: View {
     var status: ResourceStatus
-    @State var spin = false
     
-    func label(status: ResourceStatus) -> String {
+    private var label: String {
         switch status {
         case .initial:
             return "Sync with Gateway"
@@ -25,7 +24,7 @@ struct GatewaySyncLabel: View {
         }
     }
     
-    private func labelColor(status: ResourceStatus) -> Color {
+    private var color: Color {
         switch status {
         case .failed:
             return .red
@@ -35,34 +34,12 @@ struct GatewaySyncLabel: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Label(title: {
-                Text(label(status: status))
-                    .foregroundColor(labelColor(status: status))
-            }, icon: {
-                switch status {
-                case .initial:
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundColor(.secondary)
-                case .pending:
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundColor(.accentColor)
-                        .rotationEffect(.degrees(spin ? 360 : 0))
-                        .animation(Animation.linear
-                            .repeatForever(autoreverses: false)
-                            .speed(0.4), value: spin)
-                        .onAppear() {
-                            self.spin = true
-                        }
-                case .succeeded:
-                    Image(systemName: "checkmark.circle")
-                        .foregroundColor(.secondary)
-                case .failed:
-                    Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
-                        .foregroundColor(.red)
-                }
-            })
-        }
+        Label(title: {
+            Text(label)
+        }, icon: {
+            ResourceSyncBadge(status: status)
+        })
+        .foregroundColor(color)
     }
 }
 

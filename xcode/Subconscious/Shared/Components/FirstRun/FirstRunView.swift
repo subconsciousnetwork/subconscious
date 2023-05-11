@@ -7,13 +7,17 @@
 import ObservableStore
 import SwiftUI
 
+enum FirstRunViewDestination {
+    case profileView
+}
+
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
-
+    
     var body: some View {
         NavigationStack {
-            VStack(spacing: AppTheme.padding * 2) {
+            VStack(spacing: AppTheme.padding ) {
                 Spacer()
                 StackedGlowingImage(
                     width: AppTheme.onboarding.heroIconSize,
@@ -21,52 +25,54 @@ struct FirstRunView: View {
                 ) {
                     Image("sub_logo").resizable()
                 }
+                .aspectRatio(contentMode: .fit)
+                .frame(
+                    minWidth: 100,
+                    maxWidth: AppTheme.onboarding.heroIconSize,
+                    minHeight: 100,
+                    maxHeight: AppTheme.onboarding.heroIconSize
+                )
+                
                 Spacer()
-                VStack(alignment: .leading, spacing: AppTheme.unit3) {
-                    Text("Subconscious is a place to garden thoughts and share them with others.")
+                
+                Text("Subconscious is a place to garden thoughts and share them with others.")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
                     
-                    Text("It’s powered by Noosphere, a decentralized protocol, so your data belongs to you.")
-                }
-                .foregroundColor(.secondary)
-                .font(.callout)
+                Text("It’s powered by Noosphere, a decentralized protocol, so your data belongs to you.")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
+                
+                Spacer()
                 
                 ValidatedTextField(
+                    alignment: .center,
                     placeholder: "Enter your invite code",
                     text: Binding(
                         get: { app.state.inviteCodeFormField.value },
                         send: app.send,
                         tag: AppAction.setInviteCode
                     ),
+                    onFocusChanged: { focused in
+                        app.send(.inviteCodeFormField(.focusChange(focused: focused)))
+                    },
                     caption: "Look for this in your welcome email.",
-                    hasError: app.state.inviteCodeFormField.hasError
+                    hasError: app.state.inviteCodeFormField.hasError,
+                    submitLabel: .continue,
+                    onSubmit: {
+                        // TODO: push a view onto the stack
+                        // need to refactor so we can drive navigation by store
+                    }
                 )
                 .textFieldStyle(.roundedBorder)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 
-                Spacer()
                 
-                NavigationLink(
-                    destination: {
-                        FirstRunProfileView(
-                            app: app
-                        )
-                    },
-                    label: {
-                        Text("Get Started")
-                    }
-                )
-                .buttonStyle(PillButtonStyle())
-                .disabled(!app.state.inviteCodeFormField.isValid)
-                .simultaneousGesture(TapGesture().onEnded {
-                    app.send(.createSphere)
-                })
-                    
-                // MARK: Use Offline
-                VStack(spacing: AppTheme.unit) {
-                    Text("No invite code?")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                if !app.state.inviteCodeFormField.hasFocus {
+                    Spacer()
                     
                     NavigationLink(
                         destination: {
@@ -75,7 +81,29 @@ struct FirstRunView: View {
                             )
                         },
                         label: {
-                            
+                            Text("Get Started")
+                        }
+                    )
+                    .buttonStyle(PillButtonStyle())
+                    .disabled(!app.state.inviteCodeFormField.isValid)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        app.send(.createSphere)
+                    })
+                        
+                }
+                
+                // MARK: Use Offline
+                HStack(spacing: AppTheme.unit) {
+                    Text("No invite code?")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    NavigationLink(
+                        destination: {
+                            FirstRunProfileView(
+                                app: app
+                            )
+                        },
+                        label: {
                             Text("Use offline")
                                 .font(.caption)
                         }
@@ -83,6 +111,17 @@ struct FirstRunView: View {
                     .simultaneousGesture(TapGesture().onEnded {
                         app.send(.createSphere)
                     })
+                }
+                .padding(AppTheme.padding)
+            }
+            .navigationDestination(
+                for: FirstRunViewDestination.self
+            ) { destination in
+                switch (destination) {
+                case .profileView:
+                    FirstRunProfileView(
+                        app: app
+                    )
                 }
             }
             .navigationTitle("Welcome to Subconscious")

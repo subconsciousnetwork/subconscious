@@ -13,34 +13,24 @@ struct FirstRunProfileView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        let did = Did(app.state.sphereIdentity ?? "") ?? Config.default.subconsciousGeistDid
         NavigationStack {
             VStack(spacing: AppTheme.padding) {
                 Spacer()
-                StackedGlowingImage(
-                    width: 180,
-                    height: 180
-                ) {
-                    GenerativeProfilePic(
-                        did: did,
-                        size: 180
-                    )
-                }
-                
-                Text("This is your sphere. It stores your notes.")
+                Text("What should we call you?")
                     .foregroundColor(.secondary)
-                Spacer()
-                Text("What should we name it?")
-                        .foregroundColor(.secondary)
                 VStack(alignment: .leading, spacing: AppTheme.unit4) {
                     ValidatedTextField(
-                        placeholder: "my-nickname",
+                        alignment: .center,
+                        placeholder: "nickname",
                         text: Binding(
                             get: { app.state.nicknameFormFieldValue },
                             send: app.send,
                             tag: AppAction.setNickname
                         ),
-                        caption: "This is how others will see you. Lowercase letters, numbers and dashes only.",
+                        onFocusChanged: { focused in
+                            app.send(.nicknameFormField(.focusChange(focused: focused)))
+                        },
+                        caption: "Lowercase letters, numbers and dashes only.",
                         hasError: !app.state.isNicknameFormFieldValid
                     )
                     .textFieldStyle(.roundedBorder)
@@ -48,21 +38,25 @@ struct FirstRunProfileView: View {
                     .disableAutocorrection(true)
                     .shadow(
                         color: AppTheme.onboarding
-                            .shadow(colorScheme).opacity(0.5),
+                            .shadow(colorScheme).opacity(1),
                         radius: AppTheme.onboarding.shadowSize
                     )
                 }
+                
                 Spacer()
-                NavigationLink(
-                    destination: {
-                        FirstRunCreateSphereView(app: app)
-                    },
-                    label: {
-                        Text("Continue")
-                    }
-                )
-                .buttonStyle(PillButtonStyle())
-                .disabled(!app.state.isNicknameFormFieldValid)
+                
+                if !app.state.nicknameFormField.hasFocus {
+                    NavigationLink(
+                        destination: {
+                            FirstRunCreateSphereView(app: app)
+                        },
+                        label: {
+                            Text("Continue")
+                        }
+                    )
+                    .buttonStyle(PillButtonStyle())
+                    .disabled(!app.state.isNicknameFormFieldValid)
+                }
             }
             .padding()
             .navigationTitle("Your Profile")

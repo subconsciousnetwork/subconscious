@@ -23,7 +23,6 @@ struct StackedGlowingImage<Content: View>: View {
     
     private var img: some View {
         content()
-            .frame(width: width, height: height)
     }
     
     var body: some View {
