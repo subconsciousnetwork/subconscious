@@ -35,14 +35,23 @@ struct UserProfileView: View {
             label: "Recent",
             view: Group {
                 if let user = state.user {
-                    ForEach(state.recentEntries) { entry in
-                        StoryEntryView(
-                            story: StoryEntry(
-                                author: user,
-                                entry: entry
-                            ),
-                            action: { address, _ in onNavigateToNote(address) }
-                        )
+                    List(state.recentEntries) { entry in
+                        VStack {
+                            StoryEntryView(
+                                story: StoryEntry(
+                                    author: user,
+                                    entry: entry
+                                ),
+                                action: { address, _ in onNavigateToNote(address) }
+                            )
+                            ThickDividerView()
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
+                    }
+                    .listStyle(.plain)
+                    .refreshable {
+                        send(.refresh)
                     }
                 }
             }
@@ -64,12 +73,21 @@ struct UserProfileView: View {
         let columnFollowing = TabbedColumnItem(
             label: "Following",
             view: Group {
-                ForEach(state.following) { follow in
-                    StoryUserView(
-                        story: follow,
-                        action: { _, _ in onNavigateToUser(follow.user) },
-                        profileAction: onProfileAction
-                    )
+                List(state.following) { follow in
+                    VStack {
+                        StoryUserView(
+                            story: follow,
+                            action: { _, _ in onNavigateToUser(follow.user) },
+                            profileAction: onProfileAction
+                        )
+                        ThickDividerView()
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
+                }
+                .listStyle(.plain)
+                .refreshable {
+                    send(.refresh)
                 }
             }
         )
