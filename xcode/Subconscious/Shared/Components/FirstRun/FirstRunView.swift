@@ -20,9 +20,9 @@ struct FirstRunView: View {
                 }
                 .aspectRatio(contentMode: .fit)
                 .frame(
-                    minWidth: 100,
+                    minWidth: 32,
                     maxWidth: AppTheme.onboarding.heroIconSize,
-                    minHeight: 100,
+                    minHeight: 32,
                     maxHeight: AppTheme.onboarding.heroIconSize
                 )
                 
@@ -100,7 +100,14 @@ struct FirstRunView: View {
                         app.send(.createSphere)
                     })
                 }
-                .padding(AppTheme.padding)
+                .padding(
+                    .init(
+                        top: 0,
+                        leading: 0,
+                        bottom: AppTheme.tightPadding,
+                        trailing: 0
+                    )
+                )
             }
             .navigationTitle("Welcome to Subconscious")
             .navigationBarTitleDisplayMode(.inline)
