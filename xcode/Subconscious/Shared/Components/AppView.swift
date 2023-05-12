@@ -1413,8 +1413,8 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: SphereSnapshot
     ) -> Update<AppModel> {
-        let name = receipt.petname?.description ?? "(ours)"
-        logger.log("Indexed sphere. petname=\(name) identity=\(receipt.identity) version=\(receipt.version)")
+        let petname = receipt.petname?.description ?? "(ours)"
+        logger.log("Indexed sphere. petname=\(petname) identity=\(receipt.identity) version=\(receipt.version)")
         
         var model = state
         model.sphereSyncStatus = .succeeded
