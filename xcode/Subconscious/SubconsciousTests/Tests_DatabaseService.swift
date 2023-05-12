@@ -666,7 +666,7 @@ class Tests_DatabaseService: XCTestCase {
         let service = try createDatabaseService()
         _ = try service.migrate()
         
-        let source = SphereSyncInfo(
+        let source = SphereSnapshot(
             identity: Did("did:key:abc123")!,
             version: "bafyfakefakefake",
             petname: Petname("alice")!
@@ -689,7 +689,7 @@ class Tests_DatabaseService: XCTestCase {
         _ = try service.migrate()
         
         let petname = Petname("alice")!
-        let source = SphereSyncInfo(
+        let source = SphereSnapshot(
             identity: Did("did:key:abc123")!,
             version: "bafyfakefakefake",
             petname: petname

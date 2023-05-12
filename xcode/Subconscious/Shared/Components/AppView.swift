@@ -176,7 +176,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Sync current sphere state with database state.
     /// Sphere always wins.
     case indexOurSphere
-    case succeedIndexOurSphere(SphereIndexReceipt)
+    case succeedIndexOurSphere(SphereSnapshot)
     case failIndexOurSphere(String)
     
     /// Index content of spheres that we follow.
@@ -193,12 +193,12 @@ enum AppAction: CustomLogStringConvertible {
     
     /// Index the contents of a sphere in the database
     case indexSphere(_ petname: Petname)
-    case succeedIndexSphere(_ receipt: SphereIndexReceipt)
+    case succeedIndexSphere(_ snapshot: SphereSnapshot)
     case failIndexSphere(_ message: String)
 
     /// Purge the contents of a sphere from the database
     case purgeSphere(_ petname: Petname)
-    case succeedPurgeSphere(_ identity: Did)
+    case succeedPurgeSphere(_ snapshot: SphereSnapshot)
     case failPurgeSphere(_ message: String)
 
     case followDefaultGeist
@@ -727,11 +727,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 petname: petname
             )
-        case .succeedIndexSphere(let receipt):
+        case .succeedIndexSphere(let snapshot):
             return succeedIndexSphere(
                 state: state,
                 environment: environment,
-                receipt: receipt
+                snapshot: snapshot
             )
         case .failIndexSphere(let message):
             return failIndexSphere(
@@ -745,11 +745,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 petname: petname
             )
-        case .succeedPurgeSphere(let identity):
+        case .succeedPurgeSphere(let snapshot):
             return succeedPurgeSphere(
                 state: state,
                 environment: environment,
-                identity: identity
+                snapshot: snapshot
             )
         case .failPurgeSphere(let message):
             return failPurgeSphere(
@@ -1308,7 +1308,7 @@ struct AppModel: ModelProtocol {
         do {
             let sphereIdentity = try state.sphereIdentity.unwrap()
             let did = try Did(sphereIdentity).unwrap()
-            let info: SphereSyncInfo? = try environment.database.readSphereSyncInfo(
+            let info: SphereSnapshot? = try environment.database.readSphereSyncInfo(
                 identity: did
             ).unwrap()
             let identity = info?.identity.description ?? "unknown"
@@ -1411,7 +1411,7 @@ struct AppModel: ModelProtocol {
     static func succeedIndexOurSphere(
         state: AppModel,
         environment: AppEnvironment,
-        receipt: SphereIndexReceipt
+        receipt: SphereSnapshot
     ) -> Update<AppModel> {
         let name = receipt.petname?.description ?? "(ours)"
         logger.log("Indexed sphere. petname=\(name) identity=\(receipt.identity) version=\(receipt.version)")
@@ -1539,8 +1539,8 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         let fx: Fx<Action> = environment.data.indexSpherePublisher(
             petname: petname
-        ).map({ receipt in
-            Action.succeedIndexSphere(receipt)
+        ).map({ snapshot in
+            Action.succeedIndexSphere(snapshot)
         }).recover({ error in
             Action.failIndexSphere(error.localizedDescription)
         }).eraseToAnyPublisher()
@@ -1551,10 +1551,10 @@ struct AppModel: ModelProtocol {
     static func succeedIndexSphere(
         state: Self,
         environment: Environment,
-        receipt: SphereIndexReceipt
+        snapshot: SphereSnapshot
     ) -> Update<Self> {
-        let name = receipt.petname?.description ?? "(ours)"
-        logger.log("Indexed sphere petname=\(name) identity=\(receipt.identity) version=\(receipt.version)")
+        let petname = snapshot.petname?.description ?? "(ours)"
+        logger.log("Indexed sphere petname=\(petname) identity=\(snapshot.identity) version=\(snapshot.version)")
         return Update(state: state)
     }
     
@@ -1574,8 +1574,8 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         let fx: Fx<Action> = environment.data.purgeSpherePublisher(
             petname: petname
-        ).map({ identity in
-            Action.succeedPurgeSphere(identity)
+        ).map({ snapshot in
+            Action.succeedPurgeSphere(snapshot)
         }).recover({ error in
             Action.failPurgeSphere(error.localizedDescription)
         }).eraseToAnyPublisher()
@@ -1586,9 +1586,10 @@ struct AppModel: ModelProtocol {
     static func succeedPurgeSphere(
         state: Self,
         environment: Environment,
-        identity: Did
+        snapshot: SphereSnapshot
     ) -> Update<Self> {
-        logger.log("Purged sphere from database: \(identity)")
+        let petname = snapshot.petname?.description ?? "(ours)"
+        logger.log("Purged sphere from database. petname=\(petname) identity=\(snapshot.identity) version=\(snapshot.version)")
         return Update(state: state)
     }
     

@@ -14,6 +14,7 @@ enum DataServiceError: Error, LocalizedError {
     case sphereExists(_ sphereIdentity: String)
     case cannotEditSphere(Did)
     case cannotWriteToSphere(Did)
+    case unknownPetname(Petname)
     
     var errorDescription: String? {
         switch self {
@@ -27,6 +28,8 @@ enum DataServiceError: Error, LocalizedError {
             return "Cannot edit sphere \(did)"
         case .cannotWriteToSphere(let did):
             return "Cannot write to sphere \(did)"
+        case .unknownPetname(let petname):
+            return "No sphere in index with petname \(petname)"
         }
     }
 }
@@ -37,23 +40,13 @@ struct MoveReceipt: Hashable {
     var to: Slashlink
 }
 
-/// Receipt for a successful sphere->database index
-struct SphereIndexReceipt: Hashable {
-    /// Identity of sphere indexed
-    var identity: Did
-    /// Version we indexed
-    var version: Cid
-    /// Petname of sphere. If nil, it's our sphere.
-    var petname: Petname?
-}
-
 /// Kinds of receipt for sphere index changes.
 /// Used when returning a list of changes made during a sync.
 enum SphereIndexChangeReceipt {
     /// Sphere was successfully indexed to DB
-    case index(SphereIndexReceipt)
+    case index(SphereSnapshot)
     /// Sphere was successfully purged from DB
-    case purge(Did)
+    case purge(SphereSnapshot)
 }
 
 // MARK: SERVICE
@@ -131,7 +124,7 @@ actor DataService {
     private func indexSphere<Spherelike: SphereProtocol>(
         sphere: Spherelike,
         petname: Petname?
-    ) async throws -> SphereIndexReceipt {
+    ) async throws -> SphereSnapshot {
         let identity = try await sphere.identity()
         let version = try await sphere.version()
         let info = try? database.readSphereSyncInfo(identity: identity)
@@ -172,7 +165,7 @@ actor DataService {
             logger.log("Failed to index sphere. Rolling back. petname=\(name) identity=\(identity) version=\(version)")
             throw error
         }
-        return SphereIndexReceipt(
+        return SphereSnapshot(
             identity: identity,
             version: version,
             petname: petname
@@ -180,7 +173,7 @@ actor DataService {
     }
         
     /// Index our sphere
-    func indexOurSphere() async throws -> SphereIndexReceipt {
+    func indexOurSphere() async throws -> SphereSnapshot {
         try await indexSphere(
             sphere: noosphere,
             petname: nil
@@ -188,7 +181,7 @@ actor DataService {
     }
     
     nonisolated func indexOurSpherePublisher(
-    ) -> AnyPublisher<SphereIndexReceipt, Error> {
+    ) -> AnyPublisher<SphereSnapshot, Error> {
         Future.detached(priority: .utility) {
             try await self.indexOurSphere()
         }
@@ -196,7 +189,7 @@ actor DataService {
     }
 
     /// Index the contents of a sphere, referenced by petname
-    func indexSphere(petname: Petname) async throws -> SphereIndexReceipt {
+    func indexSphere(petname: Petname) async throws -> SphereSnapshot {
         let sphere = try await noosphere.traverse(petname: petname)
         return try await indexSphere(
             sphere: sphere,
@@ -207,7 +200,7 @@ actor DataService {
     /// Index the contents of a sphere, referenced by petname
     nonisolated func indexSpherePublisher(
         petname: Petname
-    ) -> AnyPublisher<SphereIndexReceipt, Error> {
+    ) -> AnyPublisher<SphereSnapshot, Error> {
         Future.detached(priority: .utility) {
             try await self.indexSphere(petname: petname)
         }
@@ -218,17 +211,22 @@ actor DataService {
     ///
     /// Gets did for petname, then purges everything belonging to did
     /// from Database.
-    func purgeSphere(petname: Petname) async throws -> Did {
+    func purgeSphere(petname: Petname) async throws -> SphereSnapshot {
         let did = try await noosphere.getPetname(petname: petname)
-        try database.purgeSphere(did: did)
-        logger.log("Purged sphere \(did)")
-        return did
+        let snapshot = try database.readSphereSyncInfo(
+            petname: petname
+        ).unwrap(
+            DataServiceError.unknownPetname(petname)
+        )
+        try database.purgeSphere(did: snapshot.identity)
+        logger.log("Purged sphere petname=\(petname) identity=\(snapshot.identity) version=\(snapshot.version)")
+        return snapshot
     }
     
     /// Purge sphere from database with the given petname.
     nonisolated func purgeSpherePublisher(
         petname: Petname
-    ) -> AnyPublisher<Did, Error> {
+    ) -> AnyPublisher<SphereSnapshot, Error> {
         Future.detached(priority: .utility) {
             try await self.purgeSphere(petname: petname)
         }
@@ -246,14 +244,17 @@ actor DataService {
         let petnames = try await noosphere.getPetnameChanges(since: since)
         var receipts: [SphereIndexChangeReceipt] = []
         for petname in petnames {
-            if let did = try? await noosphere.getPetname(petname: petname) {
-                let receipt = try await indexSphere(petname: petname)
+            let did = try? await noosphere.getPetname(petname: petname)
+            if did != nil {
+                let snapshot = try await indexSphere(petname: petname)
                 receipts.append(
-                    SphereIndexChangeReceipt.index(receipt)
+                    SphereIndexChangeReceipt.index(snapshot)
                 )
             } else {
-                // TODO figure out how to get did of removed petnames
-                // so we can purge them
+                let snapshot = try await purgeSphere(petname: petname)
+                receipts.append(
+                    SphereIndexChangeReceipt.index(snapshot)
+                )
             }
             // Allow other work to occur between sphere syncs
             await Task.yield()

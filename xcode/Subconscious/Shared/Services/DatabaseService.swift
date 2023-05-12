@@ -121,7 +121,7 @@ final class DatabaseService {
     }
 
     /// Given a sphere did, read the sync info from the database (if any).
-    func readSphereSyncInfo(identity: Did) throws -> SphereSyncInfo? {
+    func readSphereSyncInfo(identity: Did) throws -> SphereSnapshot? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -136,7 +136,7 @@ final class DatabaseService {
             return nil
         }
         let petname = row.col(1)?.toString()?.toPetname()
-        return SphereSyncInfo(
+        return SphereSnapshot(
             identity: identity,
             version: version,
             petname: petname
@@ -144,7 +144,7 @@ final class DatabaseService {
     }
 
     /// Given a sphere petname, read the sync info from the database (if any).
-    func readSphereSyncInfo(petname: Petname) throws -> SphereSyncInfo? {
+    func readSphereSyncInfo(petname: Petname) throws -> SphereSnapshot? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -165,7 +165,7 @@ final class DatabaseService {
         guard let version = row.col(1)?.toString() else {
             return nil
         }
-        return SphereSyncInfo(
+        return SphereSnapshot(
             identity: identity,
             version: version,
             petname: petname
