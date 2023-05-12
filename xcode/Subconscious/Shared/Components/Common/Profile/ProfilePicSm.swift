@@ -15,7 +15,7 @@ struct ProfilePicSmImage: View {
         image
             .resizable()
             .aspectRatio(contentMode: .fill)
-            .frame(width: 24, height: 24)
+            .frame(width: 32, height: 32)
             .overlay(
                 Circle()
                     .stroke(Color.separator, lineWidth: 1)
@@ -31,8 +31,8 @@ struct ProfilePicSm: View {
     var body: some View {
         switch pfp {
         case .none(let did):
-            GenerativeProfilePic(did: did, size: 24)
-                .frame(width: 24, height: 24)
+            GenerativeProfilePic(did: did, size: 32)
+                .frame(width: 32, height: 32)
                 .clipShape(Circle())
                 .overlay(Circle().stroke(Color.separator, lineWidth: 1))
         case .url(let url):
@@ -40,7 +40,7 @@ struct ProfilePicSm: View {
                 ProfilePicSmImage(image: image, border: border)
             } placeholder: {
                 ProgressView()
-                    .frame(width: 24, height: 24)
+                    .frame(width: 32, height: 32)
                     .overlay(
                         Circle()
                             .stroke(border, lineWidth: 1)
