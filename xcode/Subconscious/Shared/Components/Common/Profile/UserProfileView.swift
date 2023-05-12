@@ -21,70 +21,114 @@ struct ProfileStatisticView: View {
     }
 }
 
+struct RecentTabView: View {
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
+    var onNavigateToNote: (Slashlink) -> Void
+    
+    var body: some View {
+        ScrollView {
+            if let user = state.user {
+                ForEach(state.recentEntries) { entry in
+                    StoryEntryView(
+                        story: StoryEntry(
+                            author: user,
+                            entry: entry
+                        ),
+                        action: { address, _ in onNavigateToNote(address) }
+                    )
+                }
+            }
+            
+            if state.recentEntries.count == 0 {
+                EmptyStateView()
+            }
+        }
+        .refreshable {
+            send(.refresh)
+        }
+    }
+}
+
+struct TopTabView: View {
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
+    
+    var body: some View {
+        ScrollView {
+            EmptyStateView()
+        }
+        .refreshable {
+            send(.refresh)
+        }
+    }
+}
+
+struct FollowTabView: View {
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
+    var onNavigateToUser: (UserProfile) -> Void
+    var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    
+    var body: some View {
+        ScrollView {
+            ForEach(state.following) { follow in
+                StoryUserView(
+                    story: follow,
+                    action: { _, _ in onNavigateToUser(follow.user) },
+                    profileAction: onProfileAction
+                )
+            }
+            
+            if state.following.count == 0 {
+                EmptyStateView()
+            }
+        }
+        .refreshable {
+            send(.refresh)
+        }
+    }
+}
+
 struct UserProfileView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
     
-    let onNavigateToNote: (Slashlink) -> Void
-    let onNavigateToUser: (UserProfile) -> Void
+    var onNavigateToNote: (Slashlink) -> Void
+    var onNavigateToUser: (UserProfile) -> Void
     
-    let onProfileAction: (UserProfile, UserProfileAction) -> Void
+    var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    
+    var columnRecent: TabbedColumnItem<RecentTabView> {
+        TabbedColumnItem(
+            label: "Recent",
+            view: RecentTabView(
+                state: state,
+                send: send,
+                onNavigateToNote: onNavigateToNote
+            )
+        )
+    }
+    var columnTop: TabbedColumnItem<TopTabView> {
+        TabbedColumnItem(
+            label: "Top",
+            view: TopTabView(state: state, send: send)
+        )
+    }
+        
+    var columnFollowing: TabbedColumnItem<FollowTabView> {
+        TabbedColumnItem(
+            label: "Following",
+            view: FollowTabView(
+                state: state,
+                send: send,
+                onNavigateToUser: onNavigateToUser,
+                onProfileAction: onProfileAction
+            )
+        )
+    }
     
     var body: some View {
-        let columnRecent = TabbedColumnItem(
-            label: "Recent",
-            view: ScrollView {
-                if let user = state.user {
-                    ForEach(state.recentEntries) { entry in
-                        StoryEntryView(
-                            story: StoryEntry(
-                                author: user,
-                                entry: entry
-                            ),
-                            action: { address, _ in onNavigateToNote(address) }
-                        )
-                    }
-                }
-                
-                if state.recentEntries.count == 0 {
-                    EmptyStateView()
-                }
-            }
-            .refreshable {
-                send(.refresh)
-            }
-        )
-        
-        let columnTop = TabbedColumnItem(
-            label: "Top",
-            view: ScrollView {
-                EmptyStateView()
-            }
-            .refreshable {
-                send(.refresh)
-            }
-        )
-         
-        let columnFollowing = TabbedColumnItem(
-            label: "Following",
-            view: ScrollView {
-                ForEach(state.following) { follow in
-                    StoryUserView(
-                        story: follow,
-                        action: { _, _ in onNavigateToUser(follow.user) },
-                        profileAction: onProfileAction
-                    )
-                }
-                
-                if state.following.count == 0 {
-                    EmptyStateView()
-                }
-            }
-            .refreshable {
-                send(.refresh)
-            }
-        )
-        
         VStack(alignment: .leading, spacing: 0) {
             switch (state.loadingState) {
             case .loading:
