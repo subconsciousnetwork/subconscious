@@ -198,4 +198,9 @@ class Tests_Petname: XCTestCase {
         XCTAssertEqual(path.description, "bob.alice")
         XCTAssertEqual(path.verbatim, "BOB.alice")
     }
+    
+    func testStringToPetname() throws {
+        XCTAssertEqual("alice".toPetname(), Petname("alice")!)
+        XCTAssertNil("$EVE".toPetname())
+    }
 }

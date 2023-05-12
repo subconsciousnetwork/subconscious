@@ -116,3 +116,9 @@ public struct Petname:
         return Petname(petnames: [petname, self])
     }
 }
+
+extension String {
+    func toPetname() -> Petname? {
+        Petname(self)
+    }
+}
