@@ -258,7 +258,7 @@ actor DataService {
     /// time you synced with database.
     ///
     /// Publisher is run in a background task.
-    func indexOurFollows(
+    func indexOurFollowsPublisher(
     ) async throws -> AnyPublisher<[SphereIndexChangeReceipt], Error> {
         Future.detached(priority: .background) {
             try await self.indexOurFollows()
