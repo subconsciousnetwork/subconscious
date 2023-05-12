@@ -173,12 +173,18 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncSphereWithGateway(version: String)
     case failSyncSphereWithGateway(String)
 
-    /// Sync current sphere state with database state
+    /// Sync current sphere state with database state.
     /// Sphere always wins.
     case indexOurSphere
     case succeedIndexOurSphere(version: String)
     case failIndexOurSphere(String)
     
+    /// Index content of spheres that we follow.
+    /// Noosphere is source of truth, and always wins.
+    case indexOurFollows
+    case succeedIndexOurFollows([SphereIndexChangeReceipt])
+    case failIndexOurFollows(_ message: String)
+
     /// Sync database with file system.
     /// File system always wins.
     case syncLocalFilesWithDatabase
@@ -680,6 +686,23 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case .indexOurFollows:
+            return indexOurFollows(
+                state: state,
+                environment: environment
+            )
+        case let .succeedIndexOurFollows(changes):
+            return succeedIndexOurFollows(
+                state: state,
+                environment: environment,
+                changes: changes
+            )
+        case let .failIndexOurFollows(message):
+            return failIndexOurFollows(
+                state: state,
+                environment: environment,
+                message: message
             )
         case .syncLocalFilesWithDatabase:
             return syncLocalFilesWithDatabase(
@@ -1343,7 +1366,7 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .indexOurSphere,
+            actions: [.indexOurSphere, .indexOurFollows],
             environment: environment
         )
     }
@@ -1360,7 +1383,7 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .indexOurSphere,
+            actions: [.indexOurSphere, .indexOurFollows],
             environment: environment
         )
     }
@@ -1418,6 +1441,38 @@ struct AppModel: ModelProtocol {
         )
     }
     
+    static func indexOurFollows(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        logger.log("Syncing follows")
+        let fx: Fx<Action> = environment.data
+            .indexOurFollowsPublisher().map({ changes in
+                Action.succeedIndexOurFollows(changes)
+            }).recover({ error in
+                Action.failIndexOurFollows(error.localizedDescription)
+            }).eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedIndexOurFollows(
+        state: Self,
+        environment: Environment,
+        changes: [SphereIndexChangeReceipt]
+    ) -> Update<Self> {
+        logger.log("Synced follows")
+        return Update(state: state)
+    }
+
+    static func failIndexOurFollows(
+        state: Self,
+        environment: Environment,
+        message: String
+    ) -> Update<Self> {
+        logger.log("Failed to sync follows: \(message)")
+        return Update(state: state)
+    }
+
     /// Start file sync
     static func syncLocalFilesWithDatabase(
         state: AppModel,
