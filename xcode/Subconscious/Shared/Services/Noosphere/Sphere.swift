@@ -74,8 +74,15 @@ extension SphereProtocol {
             return slashlink
         case .petname(let petname):
             // Get did for petname
-            let sphere = try await self.traverse(petname: petname)
-            let did = try await sphere.identity()
+            let did = try await Func.run {
+                do {
+                    return try await self.getPetname(petname: petname)
+                } catch {
+                    let sphere = try await self.traverse(petname: petname)
+                    return try await sphere.identity()
+                }
+            }
+            
             // Return new slashlink with did root
             return Slashlink(
                 peer: .did(did),
