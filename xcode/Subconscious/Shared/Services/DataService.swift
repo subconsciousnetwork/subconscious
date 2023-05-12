@@ -38,9 +38,18 @@ struct MoveReceipt: Hashable {
 }
 
 /// Receipt for a successful sphere->database index
-struct IndexSphereReceipt: Hashable {
+struct SphereIndexReceipt: Hashable {
     var identity: Did
     var version: Cid
+}
+
+/// Kinds of receipt for sphere index changes.
+/// Used when returning a list of changes made during a sync.
+enum SphereIndexChangeReceipt {
+    /// Sphere was successfully indexed to DB
+    case index(SphereIndexReceipt)
+    /// Sphere was successfully purged from DB
+    case purge(Did)
 }
 
 // MARK: SERVICE
@@ -117,7 +126,7 @@ actor DataService {
     /// This internal helper just exposes the basics
     private func indexSphere<Spherelike: SphereProtocol>(
         _ sphere: Spherelike
-    ) async throws -> IndexSphereReceipt {
+    ) async throws -> SphereIndexReceipt {
         let identity = try await sphere.identity()
         let version = try await sphere.version()
         let since = try? database.readSphereSyncInfo(sphereIdentity: identity)
@@ -153,16 +162,16 @@ actor DataService {
             try database.rollback(savepoint)
             throw error
         }
-        return IndexSphereReceipt(identity: identity, version: version)
+        return SphereIndexReceipt(identity: identity, version: version)
     }
     
     /// Index our sphere
-    func indexOurSphere() async throws -> IndexSphereReceipt {
+    func indexOurSphere() async throws -> SphereIndexReceipt {
         try await indexSphere(noosphere)
     }
     
     nonisolated func indexOurSpherePublisher(
-    ) -> AnyPublisher<IndexSphereReceipt, Error> {
+    ) -> AnyPublisher<SphereIndexReceipt, Error> {
         Future.detached(priority: .utility) {
             try await self.indexOurSphere()
         }
@@ -170,7 +179,7 @@ actor DataService {
     }
 
     /// Index the contents of a sphere, referenced by petname
-    func indexSphere(petname: Petname) async throws -> IndexSphereReceipt {
+    func indexSphere(petname: Petname) async throws -> SphereIndexReceipt {
         let sphere = try await noosphere.traverse(petname: petname)
         return try await indexSphere(sphere)
     }
@@ -178,13 +187,13 @@ actor DataService {
     /// Index the contents of a sphere, referenced by petname
     nonisolated func indexSpherePublisher(
         petname: Petname
-    ) -> AnyPublisher<IndexSphereReceipt, Error> {
+    ) -> AnyPublisher<SphereIndexReceipt, Error> {
         Future.detached(priority: .utility) {
             try await self.indexSphere(petname: petname)
         }
         .eraseToAnyPublisher()
     }
-    
+
     /// Purge sphere from database with the given petname.
     ///
     /// Gets did for petname, then purges everything belonging to did
@@ -205,6 +214,57 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
+    /// Index content from spheres you are following, since a given CID.
+    ///
+    /// This is a potentially heavy operation, so it is best to run it within
+    /// a low-priority task. We yield after every sphere sync to give other
+    /// jobs a chance to run between sphere syncs.
+    private func indexFollowing(
+        since: Cid
+    ) async throws -> [SphereIndexChangeReceipt] {
+        let petnames = try await noosphere.getPetnameChanges(since: since)
+        var receipts: [SphereIndexChangeReceipt] = []
+        for petname in petnames {
+            if let did = try? await noosphere.getPetname(petname: petname) {
+                let receipt = try await indexSphere(petname: petname)
+                receipts.append(
+                    SphereIndexChangeReceipt.index(receipt)
+                )
+            } else {
+                // TODO figure out how to get did of removed petnames
+                // so we can purge them
+            }
+            // Allow other work to occur between sphere syncs
+            await Task.yield()
+        }
+        return receipts
+    }
+    
+    /// Index content from spheres you are following, since the last
+    /// time you synced with database.
+    ///
+    /// This is a potentially heavy operation, so it is best to run it within
+    /// a low-priority task. We yield after every sphere sync to give other
+    /// jobs a chance to run between sphere syncs.
+    func indexFollowing() async throws -> [SphereIndexChangeReceipt] {
+        let identity = try await noosphere.identity()
+        let since = try database
+            .readSphereSyncInfo(sphereIdentity: identity)
+            .unwrap()
+        return try await indexFollowing(since: since)
+    }
+    
+    /// Index content from spheres you are following, since the last
+    /// time you synced with database.
+    ///
+    /// Publisher is run in a background task.
+    func indexFollowingPublisher(
+    ) async throws -> AnyPublisher<[SphereIndexChangeReceipt], Error> {
+        Future.detached(priority: .background) {
+            try await self.indexFollowing()
+        }.eraseToAnyPublisher()
+    }
+
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.

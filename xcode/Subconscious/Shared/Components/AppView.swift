@@ -187,7 +187,7 @@ enum AppAction: CustomLogStringConvertible {
     
     /// Index the contents of a sphere in the database
     case indexSphere(_ petname: Petname)
-    case succeedIndexSphere(_ receipt: IndexSphereReceipt)
+    case succeedIndexSphere(_ receipt: SphereIndexReceipt)
     case failIndexSphere(_ message: String)
 
     /// Purge the contents of a sphere from the database
@@ -1494,7 +1494,7 @@ struct AppModel: ModelProtocol {
     static func succeedIndexSphere(
         state: Self,
         environment: Environment,
-        receipt: IndexSphereReceipt
+        receipt: SphereIndexReceipt
     ) -> Update<Self> {
         logger.log("Indexed sphere: \(receipt.identity) @ \(receipt.version)")
         return Update(state: state)
