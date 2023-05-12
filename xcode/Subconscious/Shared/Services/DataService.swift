@@ -158,8 +158,10 @@ actor DataService {
                 version: version
             )
             try database.release(savepoint)
+            logger.log("Indexed sphere \(identity) @ \(version)")
         } catch {
             try database.rollback(savepoint)
+            logger.log("Failed to index sphere \(identity) @ \(version). Rolling back.")
             throw error
         }
         return SphereIndexReceipt(identity: identity, version: version)
@@ -201,6 +203,7 @@ actor DataService {
     func purgeSphere(petname: Petname) async throws -> Did {
         let did = try await noosphere.getPetname(petname: petname)
         try database.purgeSphere(did: did)
+        logger.log("Purged sphere \(did)")
         return did
     }
     
