@@ -16,32 +16,14 @@ struct PetnameView: View {
         if let address = address?.petname {
             VStack(alignment: .leading) {
                 Text(petname.description)
-                Text("\(address.markup)")
+                Text(address.markup)
                     .foregroundColor(.secondary)
                     .fontWeight(.regular)
                     .font(.caption)
             }
         } else {
-            let parts = petname.parts()
-
-            HStack(alignment: .lastTextBaseline, spacing: 0) {
-                let first = parts[0]
-                
-                Text(first.markup)
-                    // Fixed size to ensure truncation trims path preferentially
-                    .fixedSize(horizontal: true, vertical: false)
-                    .lineLimit(1)
-                
-                let rest = parts[1...]
-                    .map { p in p.description }
-                    .joined(separator: ".")
-                
-                if rest.count > 0 {
-                    // Particular structure to ensure truncation trims the path and never the name
-                    Text(".\(rest)")
-                        .lineLimit(1)
-                }
-            }
+            Text(petname.markup)
+                .lineLimit(1)
         }
     }
 }
