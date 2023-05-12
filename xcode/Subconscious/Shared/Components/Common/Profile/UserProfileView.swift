@@ -141,6 +141,13 @@ struct UserProfileView: View {
                         isFollowingUser: state.isFollowingUser,
                         action: { action in
                             onProfileAction(user, action)
+                        },
+                        onTapStatistics: {
+                            send(
+                                .tabIndexSelected(
+                                    UserProfileDetailModel.followingTabIndex
+                                )
+                            )
                         }
                     )
                     .padding(AppTheme.padding)
