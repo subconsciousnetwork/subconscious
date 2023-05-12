@@ -21,6 +21,8 @@ struct UserProfileHeaderView: View {
     var action: (UserProfileAction) -> Void = { _ in }
     var hideActionButton: Bool = false
     
+    var onTapStatistics: () -> Void = { }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
@@ -61,14 +63,21 @@ struct UserProfileHeaderView: View {
             }
             
             if let statistics = statistics {
-                HStack(spacing: AppTheme.unit2) {
-                    ProfileStatisticView(label: "Notes", count: statistics.noteCount)
-                    // TODO: put this back when we have backlink count
-                    // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
-                    ProfileStatisticView(label: "Following", count: statistics.followingCount)
-                }
-                .font(.caption)
-                .foregroundColor(.primary)
+                Button(
+                    action: {
+                        onTapStatistics()
+                    },
+                    label: {
+                        HStack(spacing: AppTheme.unit2) {
+                            ProfileStatisticView(label: "Notes", count: statistics.noteCount)
+                            // TODO: put this back when we have backlink count
+                            // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
+                            ProfileStatisticView(label: "Following", count: statistics.followingCount)
+                        }
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                    }
+                )
             }
             
             if user.bio.count > 0 {

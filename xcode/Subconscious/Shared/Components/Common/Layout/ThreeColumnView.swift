@@ -18,9 +18,7 @@ struct ThreeColumnView<A: View, B: View, C: View>: View {
         VStack {
             GeometryReader { geometry in
                 HStack(alignment: .top, spacing: 0) {
-                    ScrollView {
-                        columnA.view
-                    }
+                    columnA.view
                     .frame(width: geometry.size.width)
                     // Ensures you cannot peek at neighbouring columns in landscape
                     .opacity(focusedColumnIndex == 0 ? 1 : 0)
@@ -29,9 +27,7 @@ struct ThreeColumnView<A: View, B: View, C: View>: View {
                     .frame(width: geometry.size.width)
                     .opacity(focusedColumnIndex == 1 ? 1 : 0)
                     
-                    ScrollView {
-                        columnC.view
-                    }
+                    columnC.view
                     .frame(width: geometry.size.width)
                     .opacity(focusedColumnIndex == 2 ? 1 : 0)
                 }
