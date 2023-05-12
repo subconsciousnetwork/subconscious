@@ -742,12 +742,13 @@ class Tests_DatabaseService: XCTestCase {
         // Write fake sphere sync info so we can purge it
         try service.writeSphereSyncInfo(
             sphereIdentity: did,
-            version: "bafyxyz123"
+            version: "bafyxyz123",
+            petname: nil
         )
         
         try service.purgeSphere(did: did)
         
-        let syncInfo = try service.readSphereSyncInfo(sphereIdentity: did)
+        let syncInfo = try service.readSphereSyncInfo(identity: did)
         XCTAssertNil(syncInfo)
         
         let recent = try service.listRecentMemos(owner: did)

@@ -122,20 +122,37 @@ final class DatabaseService {
 
     /// Geven a sphere did, read the last known version that the database has
     /// synced to (if any).
-    func readSphereSyncInfo(sphereIdentity: Did) throws -> String? {
+    func readSphereSyncInfo(identity: Did) throws -> SphereSyncInfo? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT version FROM sphere_sync_info WHERE did = ?",
-            parameters: [.text(sphereIdentity.description)]
+            sql: "SELECT version, petname FROM sphere_sync_info WHERE did = ?",
+            parameters: [.text(identity.description)]
         )
-        let version = rows.first?.col(0)?.toString()
-        return version
+        guard let row = rows.first else {
+            return nil
+        }
+        guard let version = row.col(0)?.toString() else {
+            return nil
+        }
+        let petname = row.col(1)?.toString()?.toPetname()
+        return SphereSyncInfo(
+            identity: identity,
+            version: version,
+            petname: petname
+        )
     }
 
     /// Write database metadata at string key
-    func writeSphereSyncInfo(sphereIdentity: Did, version: String) throws {
+    /// - Parameters:
+    ///   - sphereIdentity: the DID for this sphere
+    ///   -
+    func writeSphereSyncInfo(
+        sphereIdentity: Did,
+        version: String,
+        petname: Petname?
+    ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -143,11 +160,16 @@ final class DatabaseService {
             sql: """
             INSERT OR REPLACE INTO sphere_sync_info (
                 did,
-                version
+                version,
+                petname
             )
-            VALUES (?, ?)
+            VALUES (?, ?, ?)
             """,
-            parameters: [.text(sphereIdentity.description), .text(version)]
+            parameters: [
+                .text(sphereIdentity.description),
+                .text(version),
+                .text(petname?.description)
+            ]
         )
     }
     
@@ -854,14 +876,15 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-04T09:13:00")!,
+            version: Int.from(iso8601String: "2023-05-12T14:33:00")!,
             sql: """
             /*
             A table that tracks sphere->database sync info.
             */
             CREATE TABLE sphere_sync_info (
                 did TEXT PRIMARY KEY,
-                version TEXT NOT NULL
+                version TEXT NOT NULL,
+                petname TEXT
             );
             
             /* History of user search queries */

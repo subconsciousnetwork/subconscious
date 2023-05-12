@@ -356,6 +356,7 @@
 		B8D7F04027A4AD130042C7CF /* SuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */; };
 		B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */; };
 		B8D7F04327A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */; };
+		B8D96C1F2A0EC7A5002BBD2C /* SphereSyncInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D96C1E2A0EC7A5002BBD2C /* SphereSyncInfo.swift */; };
 		B8DA32B529CB999500EA166E /* AppUpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DA32B429CB999500EA166E /* AppUpgradeView.swift */; };
 		B8DA32B629CB999500EA166E /* AppUpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DA32B429CB999500EA166E /* AppUpgradeView.swift */; };
 		B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */; };
@@ -663,6 +664,7 @@
 		B8D328B929A69D2D00850A37 /* Tests_URLUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_URLUtilities.swift; sourceTree = "<group>"; };
 		B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionViewModifier.swift; sourceTree = "<group>"; };
+		B8D96C1E2A0EC7A5002BBD2C /* SphereSyncInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereSyncInfo.swift; sourceTree = "<group>"; };
 		B8DA32B429CB999500EA166E /* AppUpgradeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpgradeView.swift; sourceTree = "<group>"; };
 		B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationToolbar.swift; sourceTree = "<group>"; };
 		B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGroupView.swift; sourceTree = "<group>"; };
@@ -800,6 +802,7 @@
 				B508956D29E7862A0048106B /* Tests_AddressBookService.swift */,
 				B884565229D2102D00DBCD39 /* Tests_App.swift */,
 				B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */,
+				B840CCC62A0C1F840000C025 /* Tests_Audience.swift */,
 				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
 				B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */,
 				B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */,
@@ -813,6 +816,7 @@
 				B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */,
 				B8925B2A29C0FA43001F9503 /* Tests_Func.swift */,
 				B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */,
+				B80890A92A0693C40087E091 /* Tests_HeaderSubtext.swift */,
 				B8CAA6CC2A02FF9B00F4A0F6 /* Tests_Link.swift */,
 				B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */,
 				B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */,
@@ -843,8 +847,6 @@
 				B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */,
 				B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */,
 				B5908BEA29DAB05B00225B1A /* TestUtilities.swift */,
-				B80890A92A0693C40087E091 /* Tests_HeaderSubtext.swift */,
-				B840CCC62A0C1F840000C025 /* Tests_Audience.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -1040,6 +1042,7 @@
 				B826B27427B5D95F003D3C03 /* SaveState.swift */,
 				B8A6171F2971D3000054D410 /* Slashlink.swift */,
 				B8E2B02A29AD0E4D004A78B3 /* Slug.swift */,
+				B8D96C1E2A0EC7A5002BBD2C /* SphereSyncInfo.swift */,
 				B8A59D6B28B692A00010DB2F /* Story.swift */,
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
 				B58A46B029D3C6B300491E43 /* StoryEntry.swift */,
@@ -1672,6 +1675,7 @@
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8A59D6928B692900010DB2F /* StoryPrompt.swift in Sources */,
 				B84AD8E3281073CE006B3153 /* InlineFormattingBarView.swift in Sources */,
+				B8D96C1F2A0EC7A5002BBD2C /* SphereSyncInfo.swift in Sources */,
 				B8616DF829C38775001C666A /* TranscludeButtonStyle.swift in Sources */,
 				B5FB9D9429D5176100D64988 /* GhostPillButtonStyle.swift in Sources */,
 				B8CE40E728D2707D00819064 /* QueryPromptGeist.swift in Sources */,

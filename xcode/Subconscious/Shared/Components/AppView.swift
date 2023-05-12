@@ -176,7 +176,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Sync current sphere state with database state.
     /// Sphere always wins.
     case indexOurSphere
-    case succeedIndexOurSphere(version: String)
+    case succeedIndexOurSphere(SphereIndexReceipt)
     case failIndexOurSphere(String)
     
     /// Index content of spheres that we follow.
@@ -675,11 +675,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .succeedIndexOurSphere(version):
+        case let .succeedIndexOurSphere(receipt):
             return succeedIndexOurSphere(
                 state: state,
                 environment: environment,
-                version: version
+                receipt: receipt
             )
         case let .failIndexOurSphere(error):
             return failIndexOurSphere(
@@ -1308,10 +1308,12 @@ struct AppModel: ModelProtocol {
         do {
             let sphereIdentity = try state.sphereIdentity.unwrap()
             let did = try Did(sphereIdentity).unwrap()
-            let sphereVersion = try environment.database.readSphereSyncInfo(
-                sphereIdentity: did
+            let info: SphereSyncInfo? = try environment.database.readSphereSyncInfo(
+                identity: did
             ).unwrap()
-            logger.log("Database last-known sphere state: \(sphereIdentity) @ \(sphereVersion)")
+            let identity = info?.identity.description ?? "unknown"
+            let version = info?.version.description ?? "unknown"
+            logger.log("Database last-known index for our sphere petname=(ours) identity=\(identity) version=\(version)")
         } catch {
             logger.log("Database last-known sphere state: unknown")
         }
@@ -1392,14 +1394,14 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data.indexOurSpherePublisher().map({
-            receipt in
-            AppAction.succeedIndexOurSphere(version: receipt.version)
-        }).catch({ error in
-            Just(
-                AppAction.failIndexOurSphere(error.localizedDescription)
-            )
-        }).eraseToAnyPublisher()
+        let fx: Fx<AppAction> = environment.data
+            .indexOurSpherePublisher().map({ receipt in
+                AppAction.succeedIndexOurSphere(receipt)
+            }).catch({ error in
+                Just(
+                    AppAction.failIndexOurSphere(error.localizedDescription)
+                )
+            }).eraseToAnyPublisher()
         
         var model = state
         model.sphereSyncStatus = .pending
@@ -1409,10 +1411,10 @@ struct AppModel: ModelProtocol {
     static func succeedIndexOurSphere(
         state: AppModel,
         environment: AppEnvironment,
-        version: String
+        receipt: SphereIndexReceipt
     ) -> Update<AppModel> {
-        let identity = state.sphereIdentity ?? "unknown"
-        logger.log("Database indexed sphere \(identity) @ \(version)")
+        let name = receipt.petname?.description ?? "(ours)"
+        logger.log("Indexed sphere. petname=\(name) identity=\(receipt.identity) version=\(receipt.version)")
         
         var model = state
         model.sphereSyncStatus = .succeeded
@@ -1463,7 +1465,7 @@ struct AppModel: ModelProtocol {
         logger.log("Synced follows")
         return Update(state: state)
     }
-
+    
     static func failIndexOurFollows(
         state: Self,
         environment: Environment,
@@ -1551,7 +1553,8 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         receipt: SphereIndexReceipt
     ) -> Update<Self> {
-        logger.log("Indexed sphere: \(receipt.identity) @ \(receipt.version)")
+        let name = receipt.petname?.description ?? "(ours)"
+        logger.log("Indexed sphere petname=\(name) identity=\(receipt.identity) version=\(receipt.version)")
         return Update(state: state)
     }
     

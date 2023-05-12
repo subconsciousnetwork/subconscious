@@ -39,8 +39,12 @@ struct MoveReceipt: Hashable {
 
 /// Receipt for a successful sphere->database index
 struct SphereIndexReceipt: Hashable {
+    /// Identity of sphere indexed
     var identity: Did
+    /// Version we indexed
     var version: Cid
+    /// Petname of sphere. If nil, it's our sphere.
+    var petname: Petname?
 }
 
 /// Kinds of receipt for sphere index changes.
@@ -125,12 +129,13 @@ actor DataService {
     ///
     /// This internal helper just exposes the basics
     private func indexSphere<Spherelike: SphereProtocol>(
-        _ sphere: Spherelike
+        sphere: Spherelike,
+        petname: Petname?
     ) async throws -> SphereIndexReceipt {
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        let since = try? database.readSphereSyncInfo(sphereIdentity: identity)
-        let changes = try await noosphere.changes(since: since)
+        let info = try? database.readSphereSyncInfo(identity: identity)
+        let changes = try await noosphere.changes(since: info?.version)
         let savepoint = "sync"
         try database.savepoint(savepoint)
         do {
@@ -155,21 +160,31 @@ actor DataService {
             }
             try database.writeSphereSyncInfo(
                 sphereIdentity: identity,
-                version: version
+                version: version,
+                petname: petname
             )
             try database.release(savepoint)
-            logger.log("Indexed sphere \(identity) @ \(version)")
+            let name = petname?.description ?? "(ours)"
+            logger.log("Indexed sphere. petname=\(name) identity=\(identity) version=\(version)")
         } catch {
             try database.rollback(savepoint)
-            logger.log("Failed to index sphere \(identity) @ \(version). Rolling back.")
+            let name = petname?.description ?? "ours"
+            logger.log("Failed to index sphere. Rolling back. petname=\(name) identity=\(identity) version=\(version)")
             throw error
         }
-        return SphereIndexReceipt(identity: identity, version: version)
+        return SphereIndexReceipt(
+            identity: identity,
+            version: version,
+            petname: petname
+        )
     }
-    
+        
     /// Index our sphere
     func indexOurSphere() async throws -> SphereIndexReceipt {
-        try await indexSphere(noosphere)
+        try await indexSphere(
+            sphere: noosphere,
+            petname: nil
+        )
     }
     
     nonisolated func indexOurSpherePublisher(
@@ -183,7 +198,10 @@ actor DataService {
     /// Index the contents of a sphere, referenced by petname
     func indexSphere(petname: Petname) async throws -> SphereIndexReceipt {
         let sphere = try await noosphere.traverse(petname: petname)
-        return try await indexSphere(sphere)
+        return try await indexSphere(
+            sphere: sphere,
+            petname: petname
+        )
     }
 
     /// Index the contents of a sphere, referenced by petname
@@ -223,7 +241,7 @@ actor DataService {
     /// a low-priority task. We yield after every sphere sync to give other
     /// jobs a chance to run between sphere syncs.
     private func indexOurFollows(
-        since: Cid
+        since: Cid?
     ) async throws -> [SphereIndexChangeReceipt] {
         let petnames = try await noosphere.getPetnameChanges(since: since)
         var receipts: [SphereIndexChangeReceipt] = []
@@ -251,10 +269,8 @@ actor DataService {
     /// jobs a chance to run between sphere syncs.
     func indexOurFollows() async throws -> [SphereIndexChangeReceipt] {
         let identity = try await noosphere.identity()
-        let since = try database
-            .readSphereSyncInfo(sphereIdentity: identity)
-            .unwrap()
-        return try await indexOurFollows(since: since)
+        let info = try database.readSphereSyncInfo(identity: identity)
+        return try await indexOurFollows(since: info?.version)
     }
     
     /// Index content from spheres you are following, since the last
@@ -393,7 +409,8 @@ actor DataService {
         // Write new sphere version to database
         try database.writeSphereSyncInfo(
             sphereIdentity: identity,
-            version: version
+            version: version,
+            petname: nil
         )
     }
 
@@ -445,7 +462,8 @@ actor DataService {
             // Write new sphere version to database
             try database.writeSphereSyncInfo(
                 sphereIdentity: identity,
-                version: version
+                version: version,
+                petname: nil
             )
             return
         default:

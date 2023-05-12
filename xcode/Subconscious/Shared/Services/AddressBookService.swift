@@ -297,7 +297,8 @@ actor AddressBookService {
         let version = try await noosphere.save()
         try database.writeSphereSyncInfo(
             sphereIdentity: ourIdentity,
-            version: version
+            version: version,
+            petname: nil
         )
         await self.addressBook.invalidateCache()
         
@@ -329,7 +330,8 @@ actor AddressBookService {
         let version = try await self.noosphere.save()
         try database.writeSphereSyncInfo(
             sphereIdentity: ourIdentity,
-            version: version
+            version: version,
+            petname: nil
         )
         await self.addressBook.invalidateCache()
     }

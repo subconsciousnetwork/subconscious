@@ -7,6 +7,9 @@
 
 import Foundation
 
-struct SphereSyncInfoRecord {
-    
+/// Model for databasesphere sync info
+struct SphereSyncInfo: Hashable, Codable {
+    var identity: Did
+    var version: Cid
+    var petname: Petname?
 }
