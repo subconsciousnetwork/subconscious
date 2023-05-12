@@ -20,7 +20,12 @@ private struct RectangleCroppedTopRightCorner: Shape {
 
         path.move(to: CGPoint(x: rect.minX, y: rect.minY))
         path.addLine(to: CGPoint(x: rect.maxX - Self.margin.width, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX - Self.margin.width, y: rect.minY + Self.margin.height))
+        path.addLine(
+            to: CGPoint(
+                x: rect.maxX - Self.margin.width,
+                y: rect.minY + Self.margin.height
+            )
+        )
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + Self.margin.height))
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
@@ -136,7 +141,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     ),
                     isFollowingUser: false
                 ),
-                action: { link, fallback in }
+                action: { _, _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -150,7 +155,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     ),
                     isFollowingUser: true
                 ),
-                action: { link, fallback in }
+                action: { _, _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -164,7 +169,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     ),
                     isFollowingUser: false
                 ),
-                action: { link, fallback in }
+                action: { _, _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -178,7 +183,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     ),
                     isFollowingUser: false
                 ),
-                action: { link, fallback in }
+                action: { _, _ in }
             )
             Spacer()
         }

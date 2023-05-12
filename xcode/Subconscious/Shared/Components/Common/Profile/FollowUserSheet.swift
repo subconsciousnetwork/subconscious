@@ -99,8 +99,8 @@ struct FollowUserSheetModel: ModelProtocol {
                         .petnameField(.setValue(input: petname.verbatim))
                     )
                 }
-                .catch { error in
-                    Just(FollowUserSheetAction.failToFindUniquePetname)
+                .recover { _ in
+                    FollowUserSheetAction.failToFindUniquePetname
                 }
                 .eraseToAnyPublisher()
             

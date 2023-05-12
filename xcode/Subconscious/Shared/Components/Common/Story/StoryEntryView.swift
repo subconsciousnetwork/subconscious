@@ -19,41 +19,42 @@ struct StoryEntryView: View {
                     story.entry.address,
                     story.entry.excerpt
                 )
-            }
-        ) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .center, spacing: AppTheme.unit) {
-                    BylineSmView(
-                        pfp: story.author.pfp,
-                        slashlink: Slashlink(
-                            peer: .petname(story.author.nickname),
-                            slug: story.entry.address.slug
+            },
+            label: {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .center, spacing: AppTheme.unit) {
+                        BylineSmView(
+                            pfp: story.author.pfp,
+                            slashlink: Slashlink(
+                                peer: .petname(story.author.nickname),
+                                slug: story.entry.address.slug
+                            )
                         )
-                    )
-                    
-                    Spacer()
-                    
-                    Text(
-                        NiceDateFormatter.shared.string(
-                            from: story.entry.modified,
-                            relativeTo: Date.now
+                        
+                        Spacer()
+                        
+                        Text(
+                            NiceDateFormatter.shared.string(
+                                from: story.entry.modified,
+                                relativeTo: Date.now
+                            )
                         )
-                    )
-                    .foregroundColor(.secondary)
-                    .font(.caption)
-                    
-                }
-                .padding(AppTheme.tightPadding)
-                .frame(height: AppTheme.unit * 12)
-                
-                Divider()
-                
-                Text(story.entry.excerpt)
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                        
+                    }
                     .padding(AppTheme.tightPadding)
-            }
-            .background(Color.background)
-            .contentShape(Rectangle())
-        }
+                    .frame(height: AppTheme.unit * 12)
+                    
+                    Divider()
+                    
+                    Text(story.entry.excerpt)
+                        .padding(AppTheme.tightPadding)
+                }
+                .background(Color.background)
+                .contentShape(Rectangle())
+                }
+        )
         .buttonStyle(.plain)
     }
 }
@@ -81,10 +82,7 @@ struct StoryPlainView_Previews: PreviewProvider {
                     )
                 )
             ),
-            action: { link, fallback in }
+            action: { _, _ in }
         )
     }
 }
-
-
-import Foundation
