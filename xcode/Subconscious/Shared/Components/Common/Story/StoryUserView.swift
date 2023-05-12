@@ -40,12 +40,15 @@ struct StoryUserView: View {
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit3) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 ProfilePicSm(pfp: story.user.pfp)
-                PetnameView(petname: story.user.nickname)
-                    .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
+                PetnameView(
+                    petname: story.user.nickname,
+                    address: story.user.address
+                )
+                .fontWeight(.medium)
+                .foregroundColor(.accentColor)
                 
                 Spacer()
                 
@@ -66,24 +69,26 @@ struct StoryUserView: View {
                             Button(
                                 action: {
                                     profileAction(story.user, .requestUnfollow)
+                                },
+                                label: {
+                                    Label(
+                                        title: { Text("Unfollow \(story.user.nickname.markup)") },
+                                        icon: { Image(systemName: "person.fill.xmark") }
+                                    )
                                 }
-                            ) {
-                                Label(
-                                    title: { Text("Unfollow \(story.user.nickname.markup)") },
-                                    icon: { Image(systemName: "person.fill.xmark") }
-                                )
-                            }
+                            )
                         } else {
                             Button(
                                 action: {
                                     profileAction(story.user, .requestFollow)
+                                },
+                                label: {
+                                    Label(
+                                        title: { Text("Follow \(story.user.nickname.markup)") },
+                                        icon: { Image(systemName: "person.badge.plus") }
+                                    )
                                 }
-                            ) {
-                                Label(
-                                    title: { Text("Follow \(story.user.nickname.markup)") },
-                                    icon: { Image(systemName: "person.badge.plus") }
-                                )
-                            }
+                            )
                         }
                        
                     },
@@ -91,15 +96,19 @@ struct StoryUserView: View {
                         Image(systemName: "ellipsis")
                             .frame(width: AppTheme.minTouchSize, height: AppTheme.minTouchSize)
                             .background(.background)
+                            .foregroundColor(.secondary)
                     }
                 )
             }
+            .padding(AppTheme.tightPadding)
+            .frame(height: AppTheme.unit * 13)
             
             if story.user.bio.count > 0 {
+                Divider()
                 Text(verbatim: story.user.bio)
+                    .padding(AppTheme.tightPadding)
             }
         }
-        .padding(AppTheme.tightPadding)
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
             action(
@@ -114,11 +123,12 @@ struct StoryUserView: View {
 struct StoryUserView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
+            Spacer()
             StoryUserView(
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        nickname: Petname("ben.gordon.chris.bob")!,
+                        nickname: Petname("ben")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
@@ -156,6 +166,23 @@ struct StoryUserView_Previews: PreviewProvider {
                 ),
                 action: { link, fallback in }
             )
+            StoryUserView(
+                story: StoryUser(
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        nickname: Petname("ben.gordon.chris.bob")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        pfp: .image("pfp-dog"),
+                        bio: "",
+                        category: .you
+                    ),
+                    isFollowingUser: false
+                ),
+                action: { link, fallback in }
+            )
+            Spacer()
         }
+        .background(.secondary)
+        .frame(maxHeight: .infinity)
     }
 }

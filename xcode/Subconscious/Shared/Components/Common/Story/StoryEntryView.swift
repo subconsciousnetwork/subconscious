@@ -22,25 +22,29 @@ struct StoryEntryView: View {
             }
         ) {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .lastTextBaseline, spacing: AppTheme.unit) {
+                HStack(alignment: .center, spacing: AppTheme.unit) {
                     BylineSmView(
                         pfp: story.author.pfp,
-                        slashlink: story.entry.address
-                    )
-                    Group {
-                        Text(
-                            NiceDateFormatter.shared.string(
-                                from: story.entry.modified,
-                                relativeTo: Date.now
-                            )
+                        slashlink: Slashlink(
+                            peer: .petname(story.author.nickname),
+                            slug: story.entry.address.slug
                         )
-                        .foregroundColor(Color.secondary)
-                    }
-                    .font(.caption)
+                    )
+                    
                     Spacer()
+                    
+                    Text(
+                        NiceDateFormatter.shared.string(
+                            from: story.entry.modified,
+                            relativeTo: Date.now
+                        )
+                    )
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                    
                 }
                 .padding(AppTheme.tightPadding)
-                .frame(height: AppTheme.unit * 11)
+                .frame(height: AppTheme.unit * 12)
                 
                 Divider()
                 
