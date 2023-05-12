@@ -219,7 +219,7 @@ actor DataService {
     /// This is a potentially heavy operation, so it is best to run it within
     /// a low-priority task. We yield after every sphere sync to give other
     /// jobs a chance to run between sphere syncs.
-    private func indexFollowing(
+    private func indexOurFollows(
         since: Cid
     ) async throws -> [SphereIndexChangeReceipt] {
         let petnames = try await noosphere.getPetnameChanges(since: since)
@@ -246,22 +246,22 @@ actor DataService {
     /// This is a potentially heavy operation, so it is best to run it within
     /// a low-priority task. We yield after every sphere sync to give other
     /// jobs a chance to run between sphere syncs.
-    func indexFollowing() async throws -> [SphereIndexChangeReceipt] {
+    func indexOurFollows() async throws -> [SphereIndexChangeReceipt] {
         let identity = try await noosphere.identity()
         let since = try database
             .readSphereSyncInfo(sphereIdentity: identity)
             .unwrap()
-        return try await indexFollowing(since: since)
+        return try await indexOurFollows(since: since)
     }
     
     /// Index content from spheres you are following, since the last
     /// time you synced with database.
     ///
     /// Publisher is run in a background task.
-    func indexFollowingPublisher(
+    func indexOurFollows(
     ) async throws -> AnyPublisher<[SphereIndexChangeReceipt], Error> {
         Future.detached(priority: .background) {
-            try await self.indexFollowing()
+            try await self.indexOurFollows()
         }.eraseToAnyPublisher()
     }
 
