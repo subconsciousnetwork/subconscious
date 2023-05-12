@@ -212,7 +212,6 @@ actor DataService {
     /// Gets did for petname, then purges everything belonging to did
     /// from Database.
     func purgeSphere(petname: Petname) async throws -> SphereSnapshot {
-        let did = try await noosphere.getPetname(petname: petname)
         let snapshot = try database.readSphereSyncInfo(
             petname: petname
         ).unwrap(
