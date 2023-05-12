@@ -95,6 +95,7 @@ actor DataService {
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
         // Set sphere identity on NoosphereService
         await noosphere.resetSphere(sphereReceipt.identity)
+        logger.log("User sphere created and persisted ownerKeyName=\(ownerKeyName) identity=\(sphereReceipt.identity)")
         return sphereReceipt
     }
     
