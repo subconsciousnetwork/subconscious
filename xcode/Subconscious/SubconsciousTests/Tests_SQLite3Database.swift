@@ -65,4 +65,24 @@ final class Tests_SQLite3Database: XCTestCase {
         let version = try database.getUserVersion()
         XCTAssertEqual(version, 0)
     }
+    
+    func testTextOptional() throws {
+        let value = SQLite3Database.Value.text(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
+    }
+    
+    func testIntegerOptional() throws {
+        let value = SQLite3Database.Value.integer(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
+    }
+    
+    func testRealOptional() throws {
+        let value = SQLite3Database.Value.real(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
+    }
+    
+    func testBlobOptional() throws {
+        let value = SQLite3Database.Value.blob(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
+    }
 }

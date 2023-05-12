@@ -93,7 +93,7 @@ final class SQLite3Database {
     }
 
     /// Column data types for SQLite
-    public enum Value {
+    public enum Value: Hashable {
         case null
         case text(String)
         case integer(Int)
@@ -127,7 +127,36 @@ final class SQLite3Database {
         public static func bool(_ bool: Bool) -> Self {
             .integer(bool ? 1 : 0)
         }
-
+        
+        /// Create optional text value
+        public static func text(_ string: String?) -> Value {
+            guard let string = string else {
+                return .null
+            }
+            return .text(string)
+        }
+        
+        public static func integer(_ int: Int?) -> Value {
+            guard let int = int else {
+                return .null
+            }
+            return .integer(int)
+        }
+        
+        public static func real(_ double: Double?) -> Value {
+            guard let double = double else {
+                return .null
+            }
+            return .real(double)
+        }
+        
+        public static func blob(_ data: Data?) -> Value {
+            guard let data = data else {
+                return .null
+            }
+            return .blob(data)
+        }
+        
         /// Encode a structure to JSON and wrap as a `.text` value.
         /// - Returns a `Value.text` if successful, `or` fallback otherwise.
         public static func json<T: Encodable>(
