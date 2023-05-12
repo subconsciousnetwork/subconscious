@@ -130,7 +130,7 @@ struct UserProfileView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            switch (state.loadingState) {
+            switch state.loadingState {
             case .loading:
                 ProgressView()
             case .loaded:
@@ -143,11 +143,13 @@ struct UserProfileView: View {
                             onProfileAction(user, action)
                         },
                         onTapStatistics: {
-                            send(
-                                .tabIndexSelected(
-                                    UserProfileDetailModel.followingTabIndex
+                            withAnimation {
+                                send(
+                                    .tabIndexSelected(
+                                        UserProfileDetailModel.followingTabIndex
+                                    )
                                 )
-                            )
+                            }
                         }
                     )
                     .padding(AppTheme.padding)
@@ -309,7 +311,6 @@ private struct FollowModifier: ViewModifier {
     }
 }
 
-
 private struct UnfollowModifier: ViewModifier {
   let state: UserProfileDetailModel
   let send: (UserProfileDetailAction) -> Void
@@ -346,7 +347,6 @@ private struct UnfollowModifier: ViewModifier {
       }
   }
 }
-
 
 private struct EditProfileSheetModifier: ViewModifier {
     let state: UserProfileDetailModel
@@ -431,7 +431,7 @@ struct UserProfileView_Previews: PreviewProvider {
             send: { _ in },
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") },
-            onProfileAction: { user, action in print("profile action") }
+            onProfileAction: { _, _ in print("profile action") }
         )
     }
 }
