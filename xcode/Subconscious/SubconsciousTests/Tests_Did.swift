@@ -18,7 +18,7 @@ class Tests_Did: XCTestCase {
         let did = Did("did:web:example.com")
         XCTAssertNotNil(did)
     }
-
+    
     func testEmptyDid() throws {
         let did = Did("")
         XCTAssertNil(did)
@@ -37,5 +37,12 @@ class Tests_Did: XCTestCase {
     func testPlausibleDid() throws {
         let did = Did("did:key:helloworld")
         XCTAssertNotNil(did)
+    }
+    
+    func testStringToDid() throws {
+        XCTAssertEqual(
+            "did:key:abc123".toDid(),
+            Did("did:key:abc123")!
+        )
     }
 }
