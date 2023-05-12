@@ -149,7 +149,7 @@ final class DatabaseService {
     ///   - sphereIdentity: the DID for this sphere
     ///   -
     func writeSphereSyncInfo(
-        sphereIdentity: Did,
+        identity: Did,
         version: String,
         petname: Petname?
     ) throws {
@@ -166,7 +166,7 @@ final class DatabaseService {
             VALUES (?, ?, ?)
             """,
             parameters: [
-                .text(sphereIdentity.description),
+                .text(identity.description),
                 .text(version),
                 .text(petname?.description)
             ]

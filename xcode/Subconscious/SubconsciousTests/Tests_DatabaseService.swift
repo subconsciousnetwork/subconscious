@@ -741,7 +741,7 @@ class Tests_DatabaseService: XCTestCase {
         
         // Write fake sphere sync info so we can purge it
         try service.writeSphereSyncInfo(
-            sphereIdentity: did,
+            identity: did,
             version: "bafyxyz123",
             petname: nil
         )

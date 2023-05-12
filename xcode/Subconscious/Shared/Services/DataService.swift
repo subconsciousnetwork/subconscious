@@ -159,7 +159,7 @@ actor DataService {
                 }
             }
             try database.writeSphereSyncInfo(
-                sphereIdentity: identity,
+                identity: identity,
                 version: version,
                 petname: petname
             )
@@ -408,7 +408,7 @@ actor DataService {
         )
         // Write new sphere version to database
         try database.writeSphereSyncInfo(
-            sphereIdentity: identity,
+            identity: identity,
             version: version,
             petname: nil
         )
@@ -461,7 +461,7 @@ actor DataService {
             try database.removeMemo(link)
             // Write new sphere version to database
             try database.writeSphereSyncInfo(
-                sphereIdentity: identity,
+                identity: identity,
                 version: version,
                 petname: nil
             )
