@@ -662,6 +662,51 @@ class Tests_DatabaseService: XCTestCase {
         )
     }
     
+    func testReadWriteSyncInfoDid() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        let source = SphereSyncInfo(
+            identity: Did("did:key:abc123")!,
+            version: "bafyfakefakefake",
+            petname: Petname("alice")!
+        )
+        
+        // Write
+        try service.writeSphereSyncInfo(
+            identity: source.identity,
+            version: source.version,
+            petname: source.petname
+        )
+
+        let out = try service.readSphereSyncInfo(identity: source.identity)
+        
+        XCTAssertEqual(out, source)
+    }
+    
+    func testReadWriteSyncInfoPetname() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        let petname = Petname("alice")!
+        let source = SphereSyncInfo(
+            identity: Did("did:key:abc123")!,
+            version: "bafyfakefakefake",
+            petname: petname
+        )
+        
+        // Write
+        try service.writeSphereSyncInfo(
+            identity: source.identity,
+            version: source.version,
+            petname: petname
+        )
+
+        let out = try service.readSphereSyncInfo(petname: petname)
+        
+        XCTAssertEqual(out, source)
+    }
+
     func testPurgeSphere() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()

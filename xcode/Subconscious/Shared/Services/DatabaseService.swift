@@ -120,8 +120,7 @@ final class DatabaseService {
         try self.database.rollback(savepoint)
     }
 
-    /// Geven a sphere did, read the last known version that the database has
-    /// synced to (if any).
+    /// Given a sphere did, read the sync info from the database (if any).
     func readSphereSyncInfo(identity: Did) throws -> SphereSyncInfo? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
@@ -144,6 +143,35 @@ final class DatabaseService {
         )
     }
 
+    /// Given a sphere petname, read the sync info from the database (if any).
+    func readSphereSyncInfo(petname: Petname) throws -> SphereSyncInfo? {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        let rows = try database.execute(
+            sql: """
+            SELECT did, version
+            FROM sphere_sync_info
+            WHERE petname = ?
+            """,
+            parameters: [.text(petname.description)]
+        )
+        guard let row = rows.first else {
+            return nil
+        }
+        guard let identity = row.col(0)?.toString()?.toDid() else {
+            return nil
+        }
+        guard let version = row.col(1)?.toString() else {
+            return nil
+        }
+        return SphereSyncInfo(
+            identity: identity,
+            version: version,
+            petname: petname
+        )
+    }
+    
     /// Write database metadata at string key
     /// - Parameters:
     ///   - sphereIdentity: the DID for this sphere
