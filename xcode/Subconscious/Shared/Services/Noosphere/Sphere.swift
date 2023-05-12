@@ -55,7 +55,7 @@ public protocol SphereProtocol {
     
     func listPetnames() async throws -> [Petname]
     
-    func getPetnameChanges(since: Cid) async throws -> [Petname]
+    func getPetnameChanges(since: Cid?) async throws -> [Petname]
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
@@ -143,7 +143,7 @@ public protocol SpherePublisherProtocol {
     func listPetnamesPublisher() -> AnyPublisher<[Petname], Error>
     
     func getPetnameChangesPublisher(
-        since: Cid
+        since: Cid?
     ) -> AnyPublisher<[Petname], Error>
     
     /// Attempt to retrieve the sphere of a recorded petname, this can
@@ -611,7 +611,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// in some way. It is up to you to read them to find out what happend
     /// (deletion, update, etc).
     /// - Returns an array of `Petname`
-    public func getPetnameChanges(since cid: Cid) throws -> [Petname] {
+    public func getPetnameChanges(since cid: Cid?) throws -> [Petname] {
         let changes = try Noosphere.callWithError(
             ns_sphere_petname_changes,
             noosphere.noosphere,
@@ -634,7 +634,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// (deletion, update, etc).
     /// - Returns an `AnyPublisher` for array of `Petname`
     nonisolated public func getPetnameChangesPublisher(
-        since cid: Cid
+        since cid: Cid?
     ) -> AnyPublisher<[Petname], Error> {
         Future.detached {
             try await self.getPetnameChanges(since: cid)
