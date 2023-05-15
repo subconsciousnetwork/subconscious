@@ -23,35 +23,13 @@ struct RecoveryPhraseView: View {
             }
             .padding()
             .background(.background)
-            Button(
-                action: {
-                    send(.copy)
-                },
-                label: {
-                    if !state.didCopy {
-                        HStack {
-                            Image(systemName: "doc.on.doc")
-                            Text("Copy to clipboard")
-                        }
-                        .transition(
-                            .asymmetric(
-                                insertion: .identity,
-                                removal: .move(
-                                    edge: .top
-                                ).combined(
-                                    with: .opacity
-                                )
-                            )
-                        )
-                    } else {
-                        HStack {
-                            Image(systemName: "checkmark.circle")
-                            Text("Copied!")
-                        }
-                        .transition(.opacity)
-                    }
-                }
-            )
+            
+            ShareLink(item: state.phrase) {
+                Label(
+                    "Share",
+                    systemImage: "square.and.arrow.up"
+                )
+            }
             .buttonStyle(BarButtonStyle())
         }
         .clipShape(
@@ -66,12 +44,10 @@ struct RecoveryPhraseView: View {
 
 enum RecoveryPhraseAction: Hashable {
     case setPhrase(_ phrase: String)
-    case copy
 }
 
 struct RecoveryPhraseModel: ModelProtocol {
     var phrase: String = ""
-    var didCopy: Bool = false
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -88,22 +64,11 @@ struct RecoveryPhraseModel: ModelProtocol {
             var model = state
             model.phrase = phrase
             return Update(state: model)
-        case .copy:
-            // Copy to clipboard
-            environment.pasteboard.string = state.phrase
-            logger.log("Copied recovery phrase to clipboard")
-            var model = state
-            model.didCopy = true
-            return Update(state: model)
-                .animation(.default)
         }
     }
 }
 
-struct RecoveryPhraseEnvironment {
-    // Pasteboard is defined as a protocol. This allows us to mock for testing.
-    var pasteboard: PasteboardProtocol = UIPasteboard.general
-}
+typealias RecoveryPhraseEnvironment = Void
 
 struct RecoveryPhraseView_Previews: PreviewProvider {
     struct TestView: View {
