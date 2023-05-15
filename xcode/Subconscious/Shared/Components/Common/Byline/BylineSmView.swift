@@ -14,7 +14,7 @@ struct BylineSmView: View {
     
     var body: some View {
         HStack {
-            ProfilePic(pfp: pfp, size: .medium)
+            ProfilePic(pfp: pfp, size: .small)
             SlashlinkDisplayView(slashlink: slashlink)
         }
     }
