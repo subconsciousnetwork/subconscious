@@ -143,13 +143,11 @@ struct UserProfileView: View {
                             onProfileAction(user, action)
                         },
                         onTapStatistics: {
-                            withAnimation {
-                                send(
-                                    .tabIndexSelected(
-                                        UserProfileDetailModel.followingTabIndex
-                                    )
+                            send(
+                                .tabIndexSelected(
+                                    UserProfileDetailModel.followingTabIndex
                                 )
-                            }
+                            )
                         }
                     )
                     .padding(AppTheme.padding)
