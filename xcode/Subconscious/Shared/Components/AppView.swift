@@ -1174,7 +1174,11 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.firstRunComplete = isComplete
         var model = state
         model.isFirstRunComplete = isComplete
-        model.firstRunPath = []
+        
+        // Reset navigation
+        if !isComplete {
+            model.firstRunPath = []
+        }
         
         return Update(state: model).animation(.default)
     }
