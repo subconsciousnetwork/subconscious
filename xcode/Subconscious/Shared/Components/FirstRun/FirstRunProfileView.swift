@@ -34,7 +34,9 @@ struct FirstRunProfileView: View {
                     autoFocus: true,
                     submitLabel: .continue,
                     onSubmit: {
-                        app.send(.pushFirstRunStep(.sphere))
+                        if app.state.nicknameFormField.isValid {
+                            app.send(.pushFirstRunStep(.sphere))
+                        }
                     }
                 )
                 .textFieldStyle(.roundedBorder)

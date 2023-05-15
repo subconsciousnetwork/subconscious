@@ -61,7 +61,9 @@ struct FirstRunView: View {
                     hasError: app.state.inviteCodeFormField.hasError,
                     submitLabel: .continue,
                     onSubmit: {
-                        app.send(.pushFirstRunStep(.nickname))
+                        if app.state.inviteCodeFormField.isValid {
+                            app.send(.pushFirstRunStep(.nickname))
+                        }
                     }
                 )
                 .textFieldStyle(.roundedBorder)
