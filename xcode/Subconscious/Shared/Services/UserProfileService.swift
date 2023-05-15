@@ -328,13 +328,8 @@ actor UserProfileService {
     
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
     func requestOurProfile() async throws -> UserProfileContentResponse {
-        guard let nickname = AppDefaults.standard.nickname,
-              let nickname = Petname(nickname) else {
-                  throw UserProfileServiceError.missingPreferredPetname
-        }
-        
         let address = Slashlink.ourProfile
-        return try await loadProfileData(address: address, fallbackPetname: nickname)
+        return try await loadProfileData(address: address, fallbackPetname: Petname.unknown)
     }
     
     nonisolated func requestOwnProfilePublisher(

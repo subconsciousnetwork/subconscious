@@ -111,6 +111,10 @@ enum AppAction: CustomLogStringConvertible {
     case succeedCreateInitialProfile
     case failCreateInitialProfile(_ message: String)
     
+    case fetchNicknameFromProfile
+    case succeedFetchNicknameFromProfile(_ nickname: Petname)
+    case failFetchNicknameFromProfile(_ message: String)
+    
     case setInviteCode(_ inviteCode: String)
 
     /// Set gateway URL
@@ -495,53 +499,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isUpgraded: isUpgraded
             )
-        case let .setNickname(nickname):
-            return setNickname(
-                state: state,
-                environment: environment,
-                text: nickname
-            )
-        case let .persistNickname(nickname):
-            return persistNickname(
-                state: state,
-                environment: environment,
-                text: nickname
-            )
-        case let .requestCreateInitialProfile(nickname):
-            return requestCreateInitialProfile(
-                state: state,
-                environment: environment,
-                nickname: nickname
-            )
-        case .succeedCreateInitialProfile:
-            logger.log("Wrote initial profile memo")
-            return Update(state: state)
-        case let .failCreateInitialProfile(message):
-            logger.log("Failed to write initial profile memo: \(message)")
-            return Update(state: state)
         case let .setInviteCode(inviteCode):
             return setInviteCode(
                 state: state,
                 environment: environment,
                 text: inviteCode
-            )
-        case let .setGatewayURLTextField(text):
-            return setGatewayURLTextField(
-                state: state,
-                environment: environment,
-                text: text
-            )
-        case let .submitGatewayURL(gateway):
-            return submitGatewayURL(
-                state: state,
-                environment: environment,
-                gatewayURL: gateway
-            )
-        case let .succeedResetGatewayURL(url):
-            return succeedResetGatewayURL(
-                state: state,
-                environment: environment,
-                url: url
             )
         case .createSphere:
             return createSphere(
@@ -579,6 +541,59 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case let .setNickname(nickname):
+            return setNickname(
+                state: state,
+                environment: environment,
+                text: nickname
+            )
+        case let .persistNickname(nickname):
+            return persistNickname(
+                state: state,
+                environment: environment,
+                text: nickname
+            )
+        case let .requestCreateInitialProfile(nickname):
+            return requestCreateInitialProfile(
+                state: state,
+                environment: environment,
+                nickname: nickname
+            )
+        case .succeedCreateInitialProfile:
+            logger.log("Wrote initial profile memo")
+            return Update(state: state)
+        case let .failCreateInitialProfile(message):
+            logger.log("Failed to write initial profile memo: \(message)")
+            return Update(state: state)
+        case .fetchNicknameFromProfile:
+            return fetchNicknameFromProfileMemo(state: state, environment: environment)
+        case let .succeedFetchNicknameFromProfile(nickname):
+            return update(
+                state: state,
+                action: .setNickname(nickname.verbatim),
+                environment: environment
+            )
+        case let .failFetchNicknameFromProfile(message):
+            logger.log("Failed to read nickname from profile: \(message)")
+            return Update(state: state)
+        case let .setGatewayURLTextField(text):
+            return setGatewayURLTextField(
+                state: state,
+                environment: environment,
+                text: text
+            )
+        case let .submitGatewayURL(gateway):
+            return submitGatewayURL(
+                state: state,
+                environment: environment,
+                gatewayURL: gateway
+            )
+        case let .succeedResetGatewayURL(url):
+            return succeedResetGatewayURL(
+                state: state,
+                environment: environment,
+                url: url
             )
         case let .persistNoosphereEnabled(isEnabled):
             return persistNoosphereEnabled(
@@ -780,9 +795,10 @@ struct AppModel: ModelProtocol {
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
                 ),
-                .setNickname(
-                    AppDefaults.standard.nickname ?? state.nickname
-                )
+                .fetchNicknameFromProfile
+//                .setNickname(
+//                    AppDefaults.standard.nickname ?? state.nickname
+//                )
             ],
             environment: environment
         ).mergeFx(fx)
@@ -864,11 +880,10 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         // Persist any valid value
         if let validated = state.nicknameFormField.validated {
-            AppDefaults.standard.nickname = validated.description
-            logger.log("Nickname saved: \(validated)")
-
             var model = state
             model.nickname = validated.description
+            logger.log("Nickname saved: \(validated)")
+            
             return update(
                 state: state,
                 action: .requestCreateInitialProfile(text),
@@ -898,6 +913,22 @@ struct AppModel: ModelProtocol {
         }
         .recover { error in
             return AppAction.failCreateInitialProfile(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func fetchNicknameFromProfileMemo(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = Future.detached {
+            let response = try await environment.userProfile.requestOurProfile()
+            return AppAction.succeedFetchNicknameFromProfile(response.profile.nickname)
+        }
+        .recover { error in
+            AppAction.failFetchNicknameFromProfile(error.localizedDescription)
         }
         .eraseToAnyPublisher()
         

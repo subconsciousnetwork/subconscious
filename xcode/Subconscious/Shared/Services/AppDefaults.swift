@@ -14,10 +14,6 @@ struct AppDefaults {
     /// Are Noosphere features enabled for end-users?
     @UserDefaultsProperty(forKey: "isNoosphereEnabled")
     var isNoosphereEnabled = false
-
-    /// The user/sphere nickname.
-    @UserDefaultsProperty(forKey: "nickname")
-    var nickname: String? = nil
     
     @UserDefaultsProperty(forKey: "sphereIdentity")
     var sphereIdentity: String? = nil
