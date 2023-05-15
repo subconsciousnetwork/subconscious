@@ -796,9 +796,6 @@ struct AppModel: ModelProtocol {
                     AppDefaults.standard.firstRunComplete
                 ),
                 .fetchNicknameFromProfile
-//                .setNickname(
-//                    AppDefaults.standard.nickname ?? state.nickname
-//                )
             ],
             environment: environment
         ).mergeFx(fx)
