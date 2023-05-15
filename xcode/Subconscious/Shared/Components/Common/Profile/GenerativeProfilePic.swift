@@ -96,7 +96,7 @@ extension GenerativeProfilePicParams {
 
 struct GenerativeProfilePic: View {
     var did: Did
-    var size: CGFloat = 48
+    var size: CGFloat = AppTheme.lgPfpSize
     
     @Environment(\.colorScheme) var colorScheme
     

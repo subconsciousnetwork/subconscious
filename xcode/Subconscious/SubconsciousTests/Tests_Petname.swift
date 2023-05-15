@@ -198,4 +198,26 @@ class Tests_Petname: XCTestCase {
         XCTAssertEqual(path.description, "bob.alice")
         XCTAssertEqual(path.verbatim, "BOB.alice")
     }
+    
+    func testLeaf() throws {
+        let a = Petname("alice.bob.charlie")!
+        XCTAssertEqual(a.leaf, Petname("alice")!)
+        
+        let b = Petname("bob.charlie")!
+        XCTAssertEqual(b.leaf, Petname("bob")!)
+        
+        let c = Petname("charlie")!
+        XCTAssertEqual(c.leaf, Petname("charlie")!)
+    }
+    
+    func testRoot() throws {
+        let a = Petname("alice.bob.charlie")!
+        XCTAssertEqual(a.root, Petname("charlie")!)
+        
+        let b = Petname("charlie.bob")!
+        XCTAssertEqual(b.root, Petname("bob")!)
+        
+        let c = Petname("charlie")!
+        XCTAssertEqual(c.root, Petname("charlie")!)
+    }
 }

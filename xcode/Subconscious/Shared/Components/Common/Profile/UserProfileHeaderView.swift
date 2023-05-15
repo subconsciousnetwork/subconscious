@@ -26,11 +26,14 @@ struct UserProfileHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
-                ProfilePic(pfp: user.pfp)
+                ProfilePic(pfp: user.pfp, size: .large)
             
-                PetnameView(petname: user.nickname)
-                    .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
+                PetnameView(
+                    nickname: user.nickname,
+                    petname: user.address.petname
+                )
+                .fontWeight(.medium)
+                .foregroundColor(.accentColor)
                 
                 Spacer()
                 

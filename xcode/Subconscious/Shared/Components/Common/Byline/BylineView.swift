@@ -16,7 +16,7 @@ struct BylineView: View {
     
     var body: some View {
         HStack(spacing: AppTheme.unit3) {
-            ProfilePic(pfp: pfp)
+            ProfilePic(pfp: pfp, size: .large)
             VStack(alignment: .leading) {
                 Text(verbatim: name)
                     .foregroundColor(.buttonText)

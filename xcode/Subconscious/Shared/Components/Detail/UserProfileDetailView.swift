@@ -310,7 +310,7 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.selectedTabIndex = index
             
-            return Update(state: model)
+            return Update(state: model).animation(.default)
             
         // MARK: Presentation
         case .presentMetaSheet(let presented):

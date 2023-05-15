@@ -63,6 +63,14 @@ public struct Petname:
         "@\(self.verbatim)"
     }
     
+    public var leaf: Petname {
+        self.parts().first ?? self
+    }
+    
+    public var root: Petname {
+        self.parts().last ?? self
+    }
+    
     public init?(_ description: String) {
         guard description.wholeMatch(of: Self.petnameRegex) != nil else {
             return nil

@@ -17,7 +17,7 @@ enum FollowUserSheetAction: Equatable {
     case fetchPetnameCollisionStatus(Petname)
     case populatePetnameCollisionStatus(Petname, Bool)
     case attemptToFindUniquePetname(Petname)
-    case failToFindUniquePetname
+    case failToFindUniquePetname(String)
 }
 
 struct FollowUserSheetEnvironment {
@@ -53,8 +53,8 @@ struct FollowUserSheetModel: ModelProtocol {
                 state: model,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: user.nickname.verbatim))),
-                    .fetchPetnameCollisionStatus(user.nickname)
+                    .followUserForm(.petnameField(.setValue(input: user.nickname.leaf.verbatim))),
+                    .fetchPetnameCollisionStatus(user.nickname.leaf)
                 ],
                 environment: environment
             )
@@ -99,18 +99,18 @@ struct FollowUserSheetModel: ModelProtocol {
                         .petnameField(.setValue(input: petname.verbatim))
                     )
                 }
-                .catch { error in
-                    Just(FollowUserSheetAction.failToFindUniquePetname)
+                .recover { error in
+                    FollowUserSheetAction.failToFindUniquePetname(error.localizedDescription)
                 }
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
             
-        case .failToFindUniquePetname:
+        case .failToFindUniquePetname(let error):
             // This is a no-op at the moment, if we failed to find a unique name the user
             // will be unable to submit the form anyway so adding an extra error message
             // seems redundant.
-            logger.warning("Failed to find a unique petname")
+            logger.warning("Failed to find a unique petname: \(error)")
             return Update(state: state)
         }
     }
@@ -166,7 +166,7 @@ struct FollowUserSheet: View {
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
             if let user = state.user {
-                ProfilePic(pfp: user.pfp)
+                ProfilePic(pfp: user.pfp, size: .large)
                 
                 Text(user.did.did)
                     .font(.caption.monospaced())
