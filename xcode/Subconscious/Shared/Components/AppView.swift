@@ -202,6 +202,9 @@ enum AppAction: CustomLogStringConvertible {
     case beginProvisionGateway(String)
     case completeProvisionGateway(URL)
     case failProvisionGateway(String)
+    
+    case setFirstRunPath([FirstRunStep])
+    case pushFirstRunStep(FirstRunStep)
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
@@ -329,6 +332,13 @@ enum AppDatabaseState {
     case ready
 }
 
+enum FirstRunStep {
+    case nickname
+    case sphere
+    case recovery
+    case connect
+}
+
 // MARK: Model
 struct AppModel: ModelProtocol {
     /// Is Noosphere enabled?
@@ -351,6 +361,7 @@ struct AppModel: ModelProtocol {
     /// update both the model property (triggering a view re-render)
     /// and persist the new value to UserDefaults.
     var isFirstRunComplete = false
+    var firstRunPath: [FirstRunStep] = []
 
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
@@ -493,6 +504,16 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case let .setFirstRunPath(path):
+            var model = state
+            model.firstRunPath = path
+            
+            return Update(state: model)
+        case let .pushFirstRunStep(step):
+            var model = state
+            model.firstRunPath.append(step)
+            
+            return Update(state: model)
         case let .setAppUpgraded(isUpgraded):
             return setAppUpgraded(
                 state: state,
@@ -1145,6 +1166,7 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.firstRunComplete = isComplete
         var model = state
         model.isFirstRunComplete = isComplete
+        model.firstRunPath = []
         
         return Update(state: model).animation(.default)
     }

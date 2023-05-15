@@ -17,47 +17,43 @@ struct FirstRunRecoveryView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: AppTheme.padding) {
-                Spacer()
+        VStack(spacing: AppTheme.padding) {
+            Spacer()
+        
+            Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
             
-                Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                
-                RecoveryPhraseView(
-                    state: app.state.recoveryPhrase,
-                    send: Address.forward(
-                        send: app.send,
-                        tag: AppRecoveryPhraseCursor.tag
-                    )
+            RecoveryPhraseView(
+                state: app.state.recoveryPhrase,
+                send: Address.forward(
+                    send: app.send,
+                    tag: AppRecoveryPhraseCursor.tag
                 )
-                .shadow(
-                    color: AppTheme.onboarding
-                        .shadow(colorScheme).opacity(0.5),
-                    radius: AppTheme.onboarding.shadowSize
-                )
-                
-                Text("It's for your eyes only. We don't store it.\n Write it down or add it to your password manager. Keep it secret, keep it safe.")
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                Spacer()
-                NavigationLink(
-                    destination: {
-                        FirstRunDoneView(app: app)
-                    },
-                    label: {
-                        Text("Ok, I wrote it down")
-                    }
-                )
-                .buttonStyle(PillButtonStyle())
-            }
-            .padding()
-            .background(
-                AppTheme.onboarding
-                    .appBackgroundGradient(colorScheme)
             )
+            .shadow(
+                color: AppTheme.onboarding
+                    .shadow(colorScheme).opacity(0.5),
+                radius: AppTheme.onboarding.shadowSize
+            )
+            
+            Text("It's for your eyes only. We don't store it.\n Write it down or add it to your password manager. Keep it secret, keep it safe.")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            Spacer()
+            NavigationLink(
+                value: FirstRunStep.connect,
+                label: {
+                    Text("Ok, I wrote it down")
+                }
+            )
+            .buttonStyle(PillButtonStyle())
         }
+        .padding()
+        .background(
+            AppTheme.onboarding
+                .appBackgroundGradient(colorScheme)
+        )
         .navigationTitle("Recovery Phrase")
         .navigationBarTitleDisplayMode(.inline)
     }

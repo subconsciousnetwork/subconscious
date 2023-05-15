@@ -58,51 +58,51 @@ struct FirstRunDoneView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: AppTheme.padding * 4) {
-                Spacer()
-                Text(statusLabel)
+        VStack(spacing: AppTheme.padding * 4) {
+            Spacer()
+            Text(statusLabel)
                 .foregroundColor(.secondary)
-                StackedGlowingImage() {
-                    HStack(
-                        alignment: .center,
-                        spacing: AppTheme.unit2
-                    ) {
-                        if let did = did {
-                            GenerativeProfilePic(
-                                did: did,
-                                size: 64
-                            )
-                        }
-                        dottedLine
-                        ResourceSyncBadge(status: status)
-                        dottedLine
-                        Image("ns_logo")
-                            .resizable()
-                            .frame(width: 80, height: 80)
-                            .offset(x: -5) // account for padding in image
-                    }
-                    .frame(height: 64)
-                }
-                Text(guidanceLabel)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Button(
-                    action: {
-                        app.send(.persistFirstRunComplete(true))
-                    }
+            StackedGlowingImage() {
+                HStack(
+                    alignment: .center,
+                    spacing: AppTheme.unit2
                 ) {
-                    Text("Begin")
+                    if let did = did {
+                        GenerativeProfilePic(
+                            did: did,
+                            size: 64
+                        )
+                    }
+                    dottedLine
+                    ResourceSyncBadge(status: status)
+                    dottedLine
+                    Image("ns_logo")
+                        .resizable()
+                        .frame(width: 80, height: 80)
+                        .offset(x: -5) // account for padding in image
                 }
-                .buttonStyle(PillButtonStyle())
-                .disabled(app.state.sphereIdentity == nil)
+                .frame(height: 64)
             }
-            .padding()
-            .background(
-                AppTheme.onboarding
-                    .appBackgroundGradient(colorScheme)
-            )
+            Text(guidanceLabel)
+                .foregroundColor(.secondary)
+            Spacer()
+            Button(
+                action: {
+                    app.send(.persistFirstRunComplete(true))
+                }
+            ) {
+                Text("Begin")
+            }
+            .buttonStyle(PillButtonStyle())
+            .disabled(app.state.sphereIdentity == nil)
         }
+        .padding()
+        .navigationTitle("Done")
+        .navigationBarTitleDisplayMode(.inline)
+        .background(
+            AppTheme.onboarding
+                .appBackgroundGradient(colorScheme)
+        )
     }
 }
 

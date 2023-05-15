@@ -12,7 +12,13 @@ struct FirstRunView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(
+            path: Binding(
+                get: { app.state.firstRunPath },
+                send: app.send,
+                tag: AppAction.setFirstRunPath
+            )
+        ) {
             VStack(spacing: AppTheme.padding) {
                 Spacer()
                 StackedGlowingImage() {
@@ -52,7 +58,11 @@ struct FirstRunView: View {
                         app.send(.inviteCodeFormField(.focusChange(focused: focused)))
                     },
                     caption: "Look for this in your welcome email.",
-                    hasError: app.state.inviteCodeFormField.hasError
+                    hasError: app.state.inviteCodeFormField.hasError,
+                    submitLabel: .continue,
+                    onSubmit: {
+                        app.send(.pushFirstRunStep(.nickname))
+                    }
                 )
                 .textFieldStyle(.roundedBorder)
                 .textInputAutocapitalization(.never)
@@ -63,17 +73,14 @@ struct FirstRunView: View {
                     Spacer()
                     
                     NavigationLink(
-                        destination: {
-                            FirstRunProfileView(
-                                app: app
-                            )
-                        },
+                        value: FirstRunStep.nickname,
                         label: {
                             Text("Get Started")
                         }
                     )
                     .buttonStyle(PillButtonStyle())
                     .disabled(!app.state.inviteCodeFormField.isValid)
+                    // TODO: do this in the model
                     .simultaneousGesture(TapGesture().onEnded {
                         app.send(.createSphere)
                     })
@@ -85,17 +92,15 @@ struct FirstRunView: View {
                     Text("No invite code?")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                    
                     NavigationLink(
-                        destination: {
-                            FirstRunProfileView(
-                                app: app
-                            )
-                        },
+                        value: FirstRunStep.nickname,
                         label: {
                             Text("Use offline")
                                 .font(.caption)
                         }
                     )
+                    // TODO: do this in the model
                     .simultaneousGesture(TapGesture().onEnded {
                         app.send(.createSphere)
                     })
@@ -116,6 +121,20 @@ struct FirstRunView: View {
                 AppTheme.onboarding
                     .appBackgroundGradient(colorScheme)
             )
+            .navigationDestination(
+                for: FirstRunStep.self
+            ) { step in
+                switch step {
+                case .nickname:
+                    FirstRunProfileView(app: app)
+                case .sphere:
+                    FirstRunSphereView(app: app)
+                case .recovery:
+                    FirstRunRecoveryView(app: app)
+                case .connect:
+                    FirstRunDoneView(app: app)
+                }
+            }
         }
     }
 }
