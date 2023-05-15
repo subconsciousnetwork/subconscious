@@ -305,7 +305,6 @@ actor UserProfileService {
             address: address,
             slugs: notes
         )
-        let topEntries = entries
         let recentEntries = sortEntriesByModified(entries: entries)
         
         let profile = try await self.loadProfileFromMemo(

@@ -106,6 +106,11 @@ enum AppAction: CustomLogStringConvertible {
     case setNickname(_ nickname: String)
     case persistNickname(_ nickname: String)
     
+    /// Write to `Slashlink.ourProfile` during onboarding
+    case requestCreateInitialProfile(_ nickname: String)
+    case succeedCreateInitialProfile
+    case failCreateInitialProfile(_ message: String)
+    
     case setInviteCode(_ inviteCode: String)
 
     /// Set gateway URL
@@ -502,6 +507,18 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 text: nickname
             )
+        case let .requestCreateInitialProfile(nickname):
+            return requestCreateInitialProfile(
+                state: state,
+                environment: environment,
+                nickname: nickname
+            )
+        case .succeedCreateInitialProfile:
+            logger.log("Wrote initial profile memo")
+            return Update(state: state)
+        case let .failCreateInitialProfile(message):
+            logger.log("Failed to write initial profile memo: \(message)")
+            return Update(state: state)
         case let .setInviteCode(inviteCode):
             return setInviteCode(
                 state: state,
@@ -852,10 +869,39 @@ struct AppModel: ModelProtocol {
 
             var model = state
             model.nickname = validated.description
-            return Update(state: model)
+            return update(
+                state: state,
+                action: .requestCreateInitialProfile(text),
+                environment: environment
+            )
         }
+        
         // Otherwise, just return state
         return Update(state: state)
+    }
+    
+    static func requestCreateInitialProfile(
+        state: AppModel,
+        environment: AppEnvironment,
+        nickname: String
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = Future.detached {
+            let profile =
+                UserProfileEntry(
+                    nickname: nickname,
+                    bio: nil,
+                    profilePictureUrl: nil
+                )
+            
+            try await environment.userProfile.writeOurProfile(profile: profile)
+            return AppAction.succeedCreateInitialProfile
+        }
+        .recover { error in
+            return AppAction.failCreateInitialProfile(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func setInviteCode(
