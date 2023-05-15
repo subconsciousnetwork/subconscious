@@ -121,6 +121,7 @@ struct GatewayURLSettingsView: View {
                     .onDisappear {
                         app.send(.setInviteCode(app.state.inviteCodeFormField.value))
                     }
+                    .disabled(app.state.gatewayProvisioningStatus == .pending)
                     
                     Button(
                         action: {
