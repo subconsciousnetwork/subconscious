@@ -19,6 +19,8 @@ public struct Petname:
     private static let petnameRegex = /([\w\d\-]+)(\.[\w\d\-]+)*/
     private static let numberedSuffixRegex = /^(?<petname>(.*?))(?<separator>-+)?(?<suffix>(\d+))?$/
     
+    public static let unknown = Petname("unknown")!
+    
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
     }

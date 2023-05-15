@@ -13,8 +13,6 @@ final class Tests_UserProfileService: XCTestCase {
         let tmp = try TestUtilities.createTmpDir()
         let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
-        AppDefaults.standard.nickname = "test"
-        
         let memoA = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -65,8 +63,6 @@ final class Tests_UserProfileService: XCTestCase {
     func testFollowingListAddresses() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
-        
-        AppDefaults.standard.nickname = "test"
         
         let _ = try await data.addressBook.followUser(
             did: Did("did:key:123")!,
