@@ -17,7 +17,7 @@ enum FollowUserSheetAction: Equatable {
     case fetchPetnameCollisionStatus(Petname)
     case populatePetnameCollisionStatus(Petname, Bool)
     case attemptToFindUniquePetname(Petname)
-    case failToFindUniquePetname
+    case failToFindUniquePetname(String)
 }
 
 struct FollowUserSheetEnvironment {
@@ -99,18 +99,18 @@ struct FollowUserSheetModel: ModelProtocol {
                         .petnameField(.setValue(input: petname.verbatim))
                     )
                 }
-                .recover { _ in
-                    FollowUserSheetAction.failToFindUniquePetname
+                .recover { error in
+                    FollowUserSheetAction.failToFindUniquePetname(error.localizedDescription)
                 }
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
             
-        case .failToFindUniquePetname:
+        case .failToFindUniquePetname(let error):
             // This is a no-op at the moment, if we failed to find a unique name the user
             // will be unable to submit the form anyway so adding an extra error message
             // seems redundant.
-            logger.warning("Failed to find a unique petname")
+            logger.warning("Failed to find a unique petname: \(error)")
             return Update(state: state)
         }
     }
