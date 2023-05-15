@@ -19,25 +19,6 @@ enum ProfilePicSize {
     case large
 }
 
-fileprivate struct ProfilePicFrameViewModifier: ViewModifier {
-    let size: CGFloat
-    let lineWidth: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .aspectRatio(contentMode: .fill)
-            .frame(width: size, height: size)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color.separator, lineWidth: lineWidth))
-    }
-}
-
-extension View {
-    fileprivate func profilePicFrame(size: CGFloat, lineWidth: CGFloat) -> some View {
-        self.modifier(ProfilePicFrameViewModifier(size: size, lineWidth: lineWidth))
-    }
-}
-
 struct ProfilePic: View {
     var pfp: ProfilePicVariant
     var size: ProfilePicSize

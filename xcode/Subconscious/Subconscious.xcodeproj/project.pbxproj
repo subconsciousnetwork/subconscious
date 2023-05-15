@@ -40,6 +40,8 @@
 		B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B429D3CE9700491E43 /* StoryUser.swift */; };
 		B58A46B729D3D09500491E43 /* UserProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */; };
 		B58A46BA29D4004B00491E43 /* UserProfileDetailMetaSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */; };
+		B58C1FBA2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */; };
+		B58C1FBB2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */; };
 		B58C73A729DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
 		B58C73A829DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
 		B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48928DED93F00E000CC /* ComboGeist.swift */; };
@@ -451,6 +453,7 @@
 		B58A46B429D3CE9700491E43 /* StoryUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryUser.swift; sourceTree = "<group>"; };
 		B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileHeaderView.swift; sourceTree = "<group>"; };
 		B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileDetailMetaSheet.swift; sourceTree = "<group>"; };
+		B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFrameViewModifier.swift; sourceTree = "<group>"; };
 		B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		B58FE48928DED93F00E000CC /* ComboGeist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComboGeist.swift; sourceTree = "<group>"; };
 		B58FE48B28DED9B600E000CC /* StoryCombo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCombo.swift; sourceTree = "<group>"; };
@@ -787,14 +790,15 @@
 			isa = PBXGroup;
 			children = (
 				B569971529B6A0DF003204FC /* DidQrCodeView.swift */,
+				B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */,
+				B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */,
 				B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */,
 				B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */,
+				B5D769CA29F770440015385A /* GenerativeProfilePic.swift */,
 				B85EC45F296F099700558761 /* ProfilePic.swift */,
+				B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */,
 				B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */,
 				B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */,
-				B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */,
-				B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */,
-				B5D769CA29F770440015385A /* GenerativeProfilePic.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -1764,6 +1768,7 @@
 				B82D145429EF157B009E21FF /* SubtextView.swift in Sources */,
 				B8A59D6028B51D000010DB2F /* TranscludeView.swift in Sources */,
 				B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */,
+				B58C1FBA2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */,
 				B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B839029F28CA246A007A3A3F /* CustomLogStringConvertible.swift in Sources */,
@@ -1796,6 +1801,7 @@
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
+				B58C1FBB2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */,
 				B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B89E30782911B51A00A4721F /* Migration.swift in Sources */,
 				B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */,
