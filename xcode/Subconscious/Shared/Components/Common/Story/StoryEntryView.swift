@@ -53,7 +53,7 @@ struct StoryEntryView: View {
                 }
                 .background(Color.background)
                 .contentShape(Rectangle())
-                }
+            }
         )
         .buttonStyle(.plain)
     }
