@@ -82,11 +82,6 @@ struct FirstRunView: View {
                     )
                     .buttonStyle(PillButtonStyle())
                     .disabled(!app.state.inviteCodeFormField.isValid)
-                    // TODO: do this in the model
-                    .simultaneousGesture(TapGesture().onEnded {
-                        app.send(.createSphere)
-                    })
-                        
                 }
                 
                 // MARK: Use Offline
@@ -102,10 +97,6 @@ struct FirstRunView: View {
                                 .font(.caption)
                         }
                     )
-                    // TODO: do this in the model
-                    .simultaneousGesture(TapGesture().onEnded {
-                        app.send(.createSphere)
-                    })
                 }
                 .padding(
                     .init(
