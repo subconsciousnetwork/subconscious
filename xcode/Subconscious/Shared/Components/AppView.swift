@@ -1546,7 +1546,7 @@ struct AppEnvironment {
     var data: DataService
     var feed: FeedService
     
-    var recoveryPhrase = RecoveryPhraseEnvironment()
+    var recoveryPhrase: RecoveryPhraseEnvironment = RecoveryPhraseEnvironment()
     
     var addressBook: AddressBookService
     var userProfile: UserProfileService
