@@ -128,6 +128,9 @@ struct FirstRunView: View {
                     FirstRunDoneView(app: app)
                 }
             }
+            .onAppear {
+                app.send(.createSphere)
+            }
         }
     }
 }

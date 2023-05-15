@@ -507,15 +507,6 @@ struct AppModel: ModelProtocol {
         case let .setFirstRunPath(path):
             var model = state
             model.firstRunPath = path
-            
-            if path.last == .nickname  {
-                return update(
-                    state: model,
-                    action: .createSphere,
-                    environment: environment
-                )
-            }
-            
             return Update(state: model)
         case let .pushFirstRunStep(step):
             var model = state
