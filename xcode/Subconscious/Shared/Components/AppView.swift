@@ -885,7 +885,7 @@ struct AppModel: ModelProtocol {
             logger.log("Nickname saved: \(validated)")
             
             return update(
-                state: state,
+                state: model,
                 action: .requestCreateInitialProfile(text),
                 environment: environment
             )
