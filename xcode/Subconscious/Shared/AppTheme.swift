@@ -35,6 +35,10 @@ extension AppTheme {
     static let cornerRadius: Double = 8
     static let cornerRadiusLg: Double = 16
     
+    static let smPfpSize: CGFloat = 24
+    static let mdPfpSize: CGFloat = 32
+    static let lgPfpSize: CGFloat = 48
+    
     static let brandMark = Image("sub_logo")
     
     static let onboarding = OnboardingTheme()

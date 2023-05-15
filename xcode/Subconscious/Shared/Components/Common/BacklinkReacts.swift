@@ -23,7 +23,7 @@ where
                 .foregroundColor(.secondary)
             HStack(spacing: -8) {
                 ForEach(data.prefix(6)) { element in
-                    ProfilePicSm(pfp: content(element))
+                    ProfilePic(pfp: content(element), size: .small)
                 }
             }
             Text("\(data.count)")

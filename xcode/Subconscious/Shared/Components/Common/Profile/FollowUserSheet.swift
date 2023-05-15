@@ -166,7 +166,7 @@ struct FollowUserSheet: View {
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
             if let user = state.user {
-                ProfilePic(pfp: user.pfp)
+                ProfilePic(pfp: user.pfp, size: .large)
                 
                 Text(user.did.did)
                     .font(.caption.monospaced())

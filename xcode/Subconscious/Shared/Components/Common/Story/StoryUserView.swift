@@ -47,7 +47,7 @@ struct StoryUserView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
-                ProfilePicSm(pfp: story.user.pfp)
+                ProfilePic(pfp: story.user.pfp, size: .medium)
                 PetnameView(
                     petname: story.user.nickname,
                     address: story.user.address
