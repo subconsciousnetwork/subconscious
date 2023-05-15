@@ -136,19 +136,16 @@ actor DataService {
             for change in changes {
                 let link = Link(did: identity, slug: change)
                 let slashlink = Slashlink(slug: change)
-                // If memo does exist, write it to database
-                // Sphere content is always public right now
-                if let memo = try? await noosphere
-                    .read(slashlink: slashlink)
-                    .toMemo()
-                {
+                // If memo does exist, write it to database.
+                // If memo does not exist, that means change was a remove.
+                 if let memo = try? await noosphere.read(
+                    slashlink: slashlink
+                ).toMemo() {
                     try database.writeMemo(
                         link: link,
                         memo: memo
                     )
-                }
-                // If memo does not exist, that means change was a remove
-                else {
+                } else {
                     try database.removeMemo(link)
                 }
             }
