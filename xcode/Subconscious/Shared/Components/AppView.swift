@@ -1471,7 +1471,7 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         message: String
     ) -> Update<Self> {
-        logger.log("Failed to sync follows: \(message)")
+        logger.log("Failed to index follows: \(message)")
         return Update(state: state)
     }
 
