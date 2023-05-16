@@ -30,8 +30,8 @@ final class Tests_URLUtilities: XCTestCase {
         XCTAssertEqual(url?.absoluteString, urlString)
     }
     
-    func testPreservesQueryAndFragment() {
-        let urlString = "https://example.com/image.jpg?q=123#hello"
+    func testPreservesUrlComponents() {
+        let urlString = "https://example.com:8080/image.jpg?q=123#hello"
         let url = URL(validating: urlString)
         XCTAssertNotNil(url)
         XCTAssertEqual(url?.absoluteString, urlString)
@@ -65,6 +65,13 @@ final class Tests_URLUtilities: XCTestCase {
     
     func testMissingPath() {
         let urlString = "https://example.com"
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testPort() {
+        let urlString = "https://example.com:8080"
         let url = URL(validating: urlString)
         XCTAssertNotNil(url)
         XCTAssertEqual(url?.absoluteString, urlString)
