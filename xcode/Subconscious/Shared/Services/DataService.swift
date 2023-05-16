@@ -42,11 +42,11 @@ struct MoveReceipt: Hashable {
 
 /// Kinds of receipt for sphere index changes.
 /// Used when returning a list of changes made during a sync.
-enum SphereIndexChangeReceipt {
+enum PeerChangeReceipt {
     /// Sphere was successfully indexed to DB
-    case index(SphereSnapshot)
+    case index(PeerRecord)
     /// Sphere was successfully purged from DB
-    case purge(SphereSnapshot)
+    case purge(PeerRecord)
 }
 
 // MARK: SERVICE
@@ -114,24 +114,49 @@ actor DataService {
         }
         .eraseToAnyPublisher()
     }
+
+    /// Get the peer changes in our sphere `since` a given version,
+    /// and index the latest info on those peers in the database.
+    func indexPeers(since: Cid) async throws {
+        let changes = try await noosphere.getPeerChanges(since: since)
+        let savepoint = "index_peers"
+        try database.savepoint(savepoint)
+        for change in changes {
+            switch change {
+            case let .update(petname, identity, version):
+                try database.writePeer(
+                    petname: petname,
+                    identity: identity,
+                    version: version
+                )
+            case let .remove(petname):
+                // If we have a peer under this petname,
+                // purge its contents from the db.
+                if let peer = try? database.readPeer(petname: petname) {
+                    try database.purgePeer(did: peer.identity)
+                }
+            }
+        }
+        try database.release(savepoint)
+    }
     
-    /// Index a sphere's content in our database.
+    /// Index a peer sphere's content in our database.
     ///
     /// - If sphere has been indexed before, we retreive the last-indexed
     ///   version, and use it to get changes since.
     /// - If sphere has not been indexed, we get everything, and update
     ///
     /// This internal helper just exposes the basics
-    private func indexSphere<Spherelike: SphereProtocol>(
-        sphere: Spherelike,
-        petname: Petname?
-    ) async throws -> SphereSnapshot {
+    private func indexPeer(
+        petname: Petname
+    ) async throws -> PeerRecord {
+        let sphere = try await noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        let info = try? database.readSphereIndexInfo(identity: identity)
-        // FIXME
+        let info = try? database.readPeer(identity: identity)
+        // Get changes since the last time we indexed this peer
         let changes = try await sphere.changes(since: info?.version)
-        let savepoint = "sync"
+        let savepoint = "index_peer"
         try database.savepoint(savepoint)
         do {
             for change in changes {
@@ -152,150 +177,143 @@ actor DataService {
                     try database.removeMemo(link)
                 }
             }
-            try database.writeSphereIndexInfo(
+            try database.writePeer(
+                petname: petname,
                 identity: identity,
-                version: version,
-                petname: petname
+                version: version
             )
             try database.release(savepoint)
-            let name = petname?.description ?? "(ours)"
             logger.log([
-                "msg": "Indexed sphere",
-                "petname": name,
+                "msg": "Indexed peer",
+                "petname": petname.description,
                 "identity": identity.description,
                 "version": version
             ])
         } catch {
             try database.rollback(savepoint)
-            let name = petname?.description ?? "ours"
             logger.log([
-                "msg": "Failed to index sphere. Rolling back.",
-                "petname": name,
+                "msg": "Failed to index peer. Rolling back.",
+                "petname": petname.description,
                 "identity": identity.description,
                 "version": version
             ])
             throw error
         }
-        return SphereSnapshot(
+        return PeerRecord(
+            petname: petname,
             identity: identity,
-            version: version,
-            petname: petname
+            version: version
         )
     }
-        
-    /// Index our sphere
-    func indexOurSphere() async throws -> SphereSnapshot {
-        try await indexSphere(
-            sphere: noosphere,
-            petname: nil
+
+    /// Index the contents of a sphere, referenced by petname
+    nonisolated func indexPeerPublisher(
+        petname: Petname
+    ) -> AnyPublisher<PeerRecord, Error> {
+        Future.detached(priority: .utility) {
+            try await self.indexPeer(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+
+    /// Index our sphere's content in our database.
+    ///
+    /// - If sphere has been indexed before, we retreive the last-indexed
+    ///   version, and use it to get changes since.
+    /// - If sphere has not been indexed, we get everything, and update
+    ///
+    /// This internal helper just exposes the basics
+    private func indexOurSphere() async throws -> OurSphereRecord {
+        let sphere = noosphere
+        let identity = try await sphere.identity()
+        let version = try await sphere.version()
+        let info = try? database.readOurSphere()
+        // Get changes since the last time we indexed this peer
+        let changes = try await sphere.changes(since: info?.version)
+        let savepoint = "index_sphere"
+        try database.savepoint(savepoint)
+        do {
+            for change in changes {
+                let link = Link(did: identity, slug: change)
+                // FIXME
+                let slashlink = Slashlink(slug: change)
+                // If memo does exist, write it to database.
+                // If memo does not exist, that means change was a remove.
+                // FIXME should I be reading form my own sphere?
+                if let memo = try? await sphere.read(
+                    slashlink: slashlink
+                ).toMemo() {
+                    try database.writeMemo(
+                        link: link,
+                        memo: memo
+                    )
+                } else {
+                    try database.removeMemo(link)
+                }
+            }
+            try database.writeOurSphere(
+                identity: identity,
+                version: version
+            )
+            try database.release(savepoint)
+            logger.log([
+                "msg": "Indexed our sphere",
+                "identity": identity.description,
+                "version": version
+            ])
+        } catch {
+            try database.rollback(savepoint)
+            logger.log([
+                "msg": "Failed to index our sphere. Rolling back.",
+                "identity": identity.description,
+                "version": version
+            ])
+            throw error
+        }
+        return OurSphereRecord(
+            identity: identity,
+            version: version
         )
     }
-    
+
     nonisolated func indexOurSpherePublisher(
-    ) -> AnyPublisher<SphereSnapshot, Error> {
+    ) -> AnyPublisher<OurSphereRecord, Error> {
         Future.detached(priority: .utility) {
             try await self.indexOurSphere()
         }
         .eraseToAnyPublisher()
     }
-
-    /// Index the contents of a sphere, referenced by petname
-    func indexSphere(petname: Petname) async throws -> SphereSnapshot {
-        let sphere = try await noosphere.traverse(petname: petname)
-        return try await indexSphere(
-            sphere: sphere,
-            petname: petname
-        )
-    }
-
-    /// Index the contents of a sphere, referenced by petname
-    nonisolated func indexSpherePublisher(
-        petname: Petname
-    ) -> AnyPublisher<SphereSnapshot, Error> {
-        Future.detached(priority: .utility) {
-            try await self.indexSphere(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-
+    
     /// Purge sphere from database with the given petname.
     ///
     /// Gets did for petname, then purges everything belonging to did
     /// from Database.
-    func purgeSphere(petname: Petname) async throws -> SphereSnapshot {
-        let snapshot = try database.readSphereIndexInfo(
+    func purgePeer(petname: Petname) async throws -> PeerRecord {
+        let peer = try database.readPeer(
             petname: petname
         ).unwrap(
             DataServiceError.unknownPetname(petname)
         )
-        try database.purgeSphere(did: snapshot.identity)
-        logger.log("Purged sphere petname=\(petname) identity=\(snapshot.identity) version=\(snapshot.version)")
-        return snapshot
+        try database.purgePeer(did: peer.identity)
+        logger.log([
+            "msg": "Purged peer from database",
+            "petname": petname.description,
+            "identity": peer.identity.description,
+            "version": peer.version ?? "nil"
+        ])
+        return peer
     }
     
     /// Purge sphere from database with the given petname.
-    nonisolated func purgeSpherePublisher(
+    nonisolated func purgePeerPublisher(
         petname: Petname
-    ) -> AnyPublisher<SphereSnapshot, Error> {
+    ) -> AnyPublisher<PeerRecord, Error> {
         Future.detached(priority: .utility) {
-            try await self.purgeSphere(petname: petname)
+            try await self.purgePeer(petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
-    /// Index content from spheres you are following, since a given CID.
-    ///
-    /// This is a potentially heavy operation, so it is best to run it within
-    /// a low-priority task. We yield after every sphere sync to give other
-    /// jobs a chance to run between sphere syncs.
-    private func indexOurFollows(
-        since: Cid
-    ) async throws -> [SphereIndexChangeReceipt] {
-        let petnames = try await noosphere.getPetnameChanges(since: since)
-        var receipts: [SphereIndexChangeReceipt] = []
-        for petname in petnames {
-            let did = try? await noosphere.getPetname(petname: petname)
-            if did != nil {
-                let snapshot = try await indexSphere(petname: petname)
-                receipts.append(
-                    SphereIndexChangeReceipt.index(snapshot)
-                )
-            } else {
-                let snapshot = try await purgeSphere(petname: petname)
-                receipts.append(
-                    SphereIndexChangeReceipt.index(snapshot)
-                )
-            }
-            // Allow other work to occur between sphere syncs
-            await Task.yield()
-        }
-        return receipts
-    }
-    
-    /// Index content from spheres you are following, since the last
-    /// time you synced with database.
-    ///
-    /// This is a potentially heavy operation, so it is best to run it within
-    /// a low-priority task. We yield after every sphere sync to give other
-    /// jobs a chance to run between sphere syncs.
-    func indexOurFollows() async throws -> [SphereIndexChangeReceipt] {
-        let identity = try await noosphere.identity()
-        let info = try database.readSphereIndexInfo(identity: identity)
-            .unwrap()
-        return try await indexOurFollows(since: info.version)
-    }
-    
-    /// Index content from spheres you are following, since the last
-    /// time you synced with database.
-    ///
-    /// Publisher is run in a background task.
-    nonisolated func indexOurFollowsPublisher(
-    ) -> AnyPublisher<[SphereIndexChangeReceipt], Error> {
-        Future.detached(priority: .background) {
-            try await self.indexOurFollows()
-        }.eraseToAnyPublisher()
-    }
-
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
@@ -419,10 +437,9 @@ actor DataService {
             memo: memo
         )
         // Write new sphere version to database
-        try database.writeSphereIndexInfo(
+        try database.writeOurSphere(
             identity: identity,
-            version: version,
-            petname: nil
+            version: version
         )
     }
 
@@ -472,10 +489,9 @@ actor DataService {
             let version = try await noosphere.save()
             try database.removeMemo(link)
             // Write new sphere version to database
-            try database.writeSphereIndexInfo(
+            try database.writeOurSphere(
                 identity: identity,
-                version: version,
-                petname: nil
+                version: version
             )
             return
         default:
