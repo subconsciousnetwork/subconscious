@@ -20,6 +20,9 @@ struct ValidatedTextField: View {
     var autoFocus: Bool = false
     @FocusState var focused: Bool
     
+    var submitLabel: SubmitLabel = .return
+    var onSubmit: () -> Void = { }
+    
     var backgroundColor = Color.background
     
     /// When appearing in a form the background colour of a should change
@@ -52,6 +55,10 @@ struct ValidatedTextField: View {
                 }
                 .onChange(of: focused) { focused in
                     onFocusChanged(focused)
+                }
+                .submitLabel(submitLabel)
+                .onSubmit {
+                    onSubmit()
                 }
                 .task {
                     if autoFocus {
