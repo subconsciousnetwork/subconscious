@@ -910,19 +910,6 @@ struct NotebookModel: ModelProtocol {
         slashlink: Slashlink,
         fallback: String
     ) -> Update<NotebookModel> {
-        // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
-        // to find in local or sphere content and then push editor detail.
-        guard slashlink.peer != nil else {
-            return update(
-                state: state,
-                action: .findAndPushMemoEditorDetail(
-                    slug: slashlink.toSlug(),
-                    fallback: fallback
-                ),
-                environment: environment
-            )
-        }
-        
         if AppDefaults.standard.isNoosphereEnabled {
             // Intercept profile visits and use the correct view
             guard !slashlink.slug.isProfile else {
@@ -953,6 +940,19 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         } else {
+            // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
+            // to find in local or sphere content and then push editor detail.
+            guard slashlink.peer != nil else {
+                return update(
+                    state: state,
+                    action: .findAndPushMemoEditorDetail(
+                        slug: slashlink.toSlug(),
+                        fallback: fallback
+                    ),
+                    environment: environment
+                )
+            }
+        
             // Otherwise debug log and do nothing.
             logger.debug(
                 "Slashlink to other sphere requested, but viewing other sphere content is disabled. Doing nothing."
