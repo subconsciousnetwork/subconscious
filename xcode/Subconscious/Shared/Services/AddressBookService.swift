@@ -323,6 +323,39 @@ actor AddressBookService {
         }
     }
     
+    private func checkForPetnameResolution(
+        petname: Petname
+    ) async throws -> Cid {
+        return try await self.noosphere.resolvePetname(petname: petname)
+    }
+    
+    func waitForPetnameResolution(
+        petname: Petname
+    ) async throws -> Cid? {
+        let maxAttempts = 10 // 1+2+4+8+16+32+32+32+32+32 = 191 seconds
+        return try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
+            Self.logger.log("""
+            Check for petname resolution, \
+            attempt \(attempts) of \(maxAttempts)
+            """)
+            
+            let _ = try await self.noosphere.sync()
+            
+            return try await self.checkForPetnameResolution(petname: petname)
+        }
+    }
+    
+    nonisolated func waitForPetnameResolutionPublisher(
+        petname: Petname
+    ) -> AnyPublisher<Cid?, Error> {
+        Future.detached {
+            try await self.waitForPetnameResolution(
+                petname: petname
+            )
+        }
+        .eraseToAnyPublisher()
+    }
+    
     /// Associates the passed DID with the passed petname within the sphere,
     /// clears the cache, saves the changes and updates the database.
     nonisolated func followUserPublisher(

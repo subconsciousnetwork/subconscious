@@ -110,7 +110,8 @@ enum UserProfileDetailAction {
     case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow
+    case succeedFollow(Petname)
+    case failResolveFollowedUser(_ message: String)
     
     case requestUnfollow(UserProfile)
     case attemptUnfollow
@@ -401,7 +402,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
-                    UserProfileDetailAction.succeedFollow
+                    UserProfileDetailAction.succeedFollow(petname)
                 })
                 .catch { error in
                     Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
@@ -410,7 +411,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedFollow:
+        case let .succeedFollow(petname):
             var actions: [UserProfileDetailAction] = [
                 .presentFollowSheet(false),
                 .presentFollowNewUserFormSheet(false),
@@ -425,11 +426,21 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
             }
             
+            let fx: Fx<UserProfileDetailAction> = environment.addressBook
+                .waitForPetnameResolutionPublisher(petname: petname)
+                .map { _ in
+                    .refresh
+                }
+                .recover { error in
+                    .failResolveFollowedUser(error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
             return update(
                 state: state,
                 actions: actions,
                 environment: environment
-            )
+            ).mergeFx(fx)
             
         case .failFollow(error: let error):
             var model = state
@@ -440,6 +451,10 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.failFollowErrorMessage = nil
             return Update(state: model)
+            
+        case .failResolveFollowedUser(let message):
+            logger.log("Failed to resolve followed user: \(message)")
+            return Update(state: state)
             
         // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):
