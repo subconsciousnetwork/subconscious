@@ -329,16 +329,16 @@ struct UserProfileDetailModel: ModelProtocol {
             model.user = content.profile
             model.statistics = content.statistics
             model.recentEntries = content.recentEntries
-            model.following = content.following.map { f in
-                if let petname = f.user.address.petname,
+            model.following = content.following.map { follow in
+                if let petname = follow.user.address.petname,
                    model.pendingFollows.contains(petname) {
                     
-                    var user = f
+                    var user = follow
                     user.resolutionStatus = .pending
                     return user
                 }
                 
-                return f
+                return follow
             }
             model.isFollowingUser = content.isFollowingUser
             model.loadingState = .loaded
@@ -470,19 +470,18 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return update(state: model, action: .refresh, environment: environment)
-                .mergeFx(fx)
+            return Update(state: model, fx: fx)
         case let .succeedResolveFollowedUser(petname):
             var model = state
-            model.pendingFollows.removeAll { f in
-                f == petname
+            model.pendingFollows.removeAll { follow in
+                follow == petname
             }
             
             return update(state: model, action: .refresh, environment: environment)
         case let .failResolveFollowedUser(petname, message):
             var model = state
-            model.pendingFollows.removeAll { f in
-                f == petname
+            model.pendingFollows.removeAll { follow in
+                follow == petname
             }
             
             logger.log("Failed to resolve followed user: \(message)")

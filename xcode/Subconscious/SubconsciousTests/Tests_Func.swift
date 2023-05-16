@@ -68,7 +68,7 @@ final class Tests_Func: XCTestCase {
             }
             
             if attempt == 2 {
-                throw FuncError.cancelledRetry
+                throw RetryError.cancelled
             }
             
             return "hello world"

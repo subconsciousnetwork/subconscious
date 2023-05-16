@@ -7,8 +7,8 @@
 
 import Foundation
 
-enum FuncError: Error {
-    case cancelledRetry
+enum RetryError: Error {
+    case cancelled
 }
 
 struct Func {
@@ -62,7 +62,7 @@ struct Func {
     ) async throws -> T? {
         do {
             return try await perform(attempts)
-        } catch FuncError.cancelledRetry {
+        } catch RetryError.cancelled {
             return nil
         } catch {
             

@@ -339,7 +339,7 @@ actor AddressBookService {
                 let _ = try await self.noosphere.getPetname(petname: petname)
             } catch {
                 // Stop waiting, the petname is not in our addressbook anymore (unfollowed)
-                throw FuncError.cancelledRetry
+                throw RetryError.cancelled
             }
             
             return try await self.noosphere.resolvePetname(petname: petname)
