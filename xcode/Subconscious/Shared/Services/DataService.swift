@@ -128,17 +128,20 @@ actor DataService {
     ) async throws -> SphereSnapshot {
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        let info = try? database.readSphereSyncInfo(identity: identity)
-        let changes = try await noosphere.changes(since: info?.version)
+        let info = try? database.readSphereIndexInfo(identity: identity)
+        // FIXME
+        let changes = try await sphere.changes(since: info?.version)
         let savepoint = "sync"
         try database.savepoint(savepoint)
         do {
             for change in changes {
                 let link = Link(did: identity, slug: change)
+                // FIXME
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
                 // If memo does not exist, that means change was a remove.
-                 if let memo = try? await noosphere.read(
+                // FIXME should I be reading form my own sphere?
+                if let memo = try? await sphere.read(
                     slashlink: slashlink
                 ).toMemo() {
                     try database.writeMemo(
@@ -149,18 +152,28 @@ actor DataService {
                     try database.removeMemo(link)
                 }
             }
-            try database.writeSphereSyncInfo(
+            try database.writeSphereIndexInfo(
                 identity: identity,
                 version: version,
                 petname: petname
             )
             try database.release(savepoint)
             let name = petname?.description ?? "(ours)"
-            logger.log("Indexed sphere. petname=\(name) identity=\(identity) version=\(version)")
+            logger.log([
+                "msg": "Indexed sphere",
+                "petname": name,
+                "identity": identity.description,
+                "version": version
+            ])
         } catch {
             try database.rollback(savepoint)
             let name = petname?.description ?? "ours"
-            logger.log("Failed to index sphere. Rolling back. petname=\(name) identity=\(identity) version=\(version)")
+            logger.log([
+                "msg": "Failed to index sphere. Rolling back.",
+                "petname": name,
+                "identity": identity.description,
+                "version": version
+            ])
             throw error
         }
         return SphereSnapshot(
@@ -210,7 +223,7 @@ actor DataService {
     /// Gets did for petname, then purges everything belonging to did
     /// from Database.
     func purgeSphere(petname: Petname) async throws -> SphereSnapshot {
-        let snapshot = try database.readSphereSyncInfo(
+        let snapshot = try database.readSphereIndexInfo(
             petname: petname
         ).unwrap(
             DataServiceError.unknownPetname(petname)
@@ -267,7 +280,7 @@ actor DataService {
     /// jobs a chance to run between sphere syncs.
     func indexOurFollows() async throws -> [SphereIndexChangeReceipt] {
         let identity = try await noosphere.identity()
-        let info = try database.readSphereSyncInfo(identity: identity)
+        let info = try database.readSphereIndexInfo(identity: identity)
         return try await indexOurFollows(since: info?.version)
     }
     
@@ -405,7 +418,7 @@ actor DataService {
             memo: memo
         )
         // Write new sphere version to database
-        try database.writeSphereSyncInfo(
+        try database.writeSphereIndexInfo(
             identity: identity,
             version: version,
             petname: nil
@@ -458,7 +471,7 @@ actor DataService {
             let version = try await noosphere.save()
             try database.removeMemo(link)
             // Write new sphere version to database
-            try database.writeSphereSyncInfo(
+            try database.writeSphereIndexInfo(
                 identity: identity,
                 version: version,
                 petname: nil

@@ -1308,14 +1308,19 @@ struct AppModel: ModelProtocol {
         do {
             let sphereIdentity = try state.sphereIdentity.unwrap()
             let did = try Did(sphereIdentity).unwrap()
-            let info: SphereSnapshot? = try environment.database.readSphereSyncInfo(
+            let info: SphereSnapshot? = try environment.database.readSphereIndexInfo(
                 identity: did
             ).unwrap()
             let identity = info?.identity.description ?? "unknown"
             let version = info?.version.description ?? "unknown"
-            logger.log("Database last-known index for our sphere petname=(ours) identity=\(identity) version=\(version)")
+            logger.log([
+                "msg": "Database last-known index for our sphere",
+                "petname": "(ours)",
+                "identity": identity,
+                "version": version
+            ])
         } catch {
-            logger.log("Database last-known sphere state: unknown")
+            logger.log(["msg": "Database last-known sphere state: unknown"])
         }
         // For now, we just sync everything on ready.
         return update(
@@ -1346,7 +1351,10 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.lastGatewaySyncStatus = .pending
-        logger.log("Syncing with gateway: \(model.gatewayURL)")
+        logger.log([
+            "msg": "Syncing with gateway",
+            "url": model.gatewayURL
+        ])
         let fx: Fx<AppAction> = environment.noosphere.syncPublisher(
         ).map({ version in
             AppAction.succeedSyncSphereWithGateway(version: version)
@@ -1361,7 +1369,10 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         version: String
     ) -> Update<AppModel> {
-        logger.log("Sphere synced with gateway @ \(version)")
+        logger.log([
+            "msg": "Synced our sphere with gateway",
+            "version": version
+        ])
         
         var model = state
         model.lastGatewaySyncStatus = .succeeded
@@ -1378,7 +1389,10 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.log("Sphere failed to sync with gateway: \(error)")
+        logger.log([
+            "msg": "Sphere failed to sync with gateway",
+            "error": error
+        ])
         
         var model = state
         model.lastGatewaySyncStatus = .failed(error)
@@ -1414,7 +1428,12 @@ struct AppModel: ModelProtocol {
         receipt: SphereSnapshot
     ) -> Update<AppModel> {
         let petname = receipt.petname?.description ?? "(ours)"
-        logger.log("Indexed sphere. petname=\(petname) identity=\(receipt.identity) version=\(receipt.version)")
+        logger.log([
+            "msg": "Indexed sphere",
+            "petname": petname,
+            "identity": receipt.identity.description,
+            "version": receipt.version
+        ])
         
         var model = state
         model.sphereSyncStatus = .succeeded
@@ -1431,7 +1450,10 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.log("Database failed to sync with sphere: \(error)")
+        logger.log([
+            "msg": "Failed to index sphere to database",
+            "error": error
+        ])
         
         var model = state
         model.sphereSyncStatus = .failed(error)
@@ -1447,7 +1469,7 @@ struct AppModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
-        logger.log("Syncing follows")
+        logger.log(["msg": "Indexing follows"])
         let fx: Fx<Action> = environment.data
             .indexOurFollowsPublisher().map({ changes in
                 Action.succeedIndexOurFollows(changes)
@@ -1462,7 +1484,7 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         changes: [SphereIndexChangeReceipt]
     ) -> Update<Self> {
-        logger.log("Synced follows")
+        logger.log(["msg": "Indexed follows"])
         return Update(state: state)
     }
     
@@ -1471,7 +1493,10 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         message: String
     ) -> Update<Self> {
-        logger.log("Failed to index follows: \(message)")
+        logger.log([
+            "msg": "Failed to index follows",
+            "error": message
+        ])
         return Update(state: state)
     }
 
@@ -1544,7 +1569,10 @@ struct AppModel: ModelProtocol {
         }).recover({ error in
             Action.failIndexSphere(error.localizedDescription)
         }).eraseToAnyPublisher()
-        logger.log("Indexing sphere \(petname)")
+        logger.log([
+            "msg": "Indexing sphere",
+            "petname": petname.description
+        ])
         return Update(state: state, fx: fx)
     }
     
@@ -1554,7 +1582,12 @@ struct AppModel: ModelProtocol {
         snapshot: SphereSnapshot
     ) -> Update<Self> {
         let petname = snapshot.petname?.description ?? "(ours)"
-        logger.log("Indexed sphere petname=\(petname) identity=\(snapshot.identity) version=\(snapshot.version)")
+        logger.log([
+            "msg": "Indexed sphere",
+            "petname": petname.description,
+            "identity": snapshot.identity.description,
+            "version": snapshot.version
+        ])
         return Update(state: state)
     }
     
@@ -1563,7 +1596,10 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         message: String
     ) -> Update<Self> {
-        logger.log("Failed to index sphere: \(message)")
+        logger.log([
+            "msg": "Failed to index sphere",
+            "error": message
+        ])
         return Update(state: state)
     }
     
@@ -1579,7 +1615,10 @@ struct AppModel: ModelProtocol {
         }).recover({ error in
             Action.failPurgeSphere(error.localizedDescription)
         }).eraseToAnyPublisher()
-        logger.log("Purging sphere \(petname)")
+        logger.log([
+            "msg": "Purging sphere",
+            "petname": petname.description
+        ])
         return Update(state: state, fx: fx)
     }
     
@@ -1589,7 +1628,12 @@ struct AppModel: ModelProtocol {
         snapshot: SphereSnapshot
     ) -> Update<Self> {
         let petname = snapshot.petname?.description ?? "(ours)"
-        logger.log("Purged sphere from database. petname=\(petname) identity=\(snapshot.identity) version=\(snapshot.version)")
+        logger.log([
+            "msg": "Purged sphere from database",
+            "petname": petname,
+            "identity": snapshot.identity.description,
+            "version": snapshot.version
+        ])
         return Update(state: state)
     }
     
@@ -1598,7 +1642,10 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         message: String
     ) -> Update<Self> {
-        logger.log("Failed to purge sphere from database: \(message)")
+        logger.log([
+            "msg": "Failed to purge sphere from database",
+            "error": message
+        ])
         return Update(state: state)
     }
     

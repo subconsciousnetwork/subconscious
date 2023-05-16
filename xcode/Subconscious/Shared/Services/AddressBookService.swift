@@ -295,7 +295,7 @@ actor AddressBookService {
         
         try await noosphere.setPetname(did: did, petname: petname)
         let version = try await noosphere.save()
-        try database.writeSphereSyncInfo(
+        try database.writeSphereIndexInfo(
             identity: ourIdentity,
             version: version,
             petname: nil
@@ -328,7 +328,7 @@ actor AddressBookService {
         let ourIdentity = try await noosphere.identity()
         try await self.addressBook.unsetPetname(petname: petname)
         let version = try await self.noosphere.save()
-        try database.writeSphereSyncInfo(
+        try database.writeSphereIndexInfo(
             identity: ourIdentity,
             version: version,
             petname: nil

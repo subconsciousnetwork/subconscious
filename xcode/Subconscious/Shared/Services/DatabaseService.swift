@@ -121,12 +121,12 @@ final class DatabaseService {
     }
 
     /// Given a sphere did, read the sync info from the database (if any).
-    func readSphereSyncInfo(identity: Did) throws -> SphereSnapshot? {
+    func readSphereIndexInfo(identity: Did) throws -> SphereSnapshot? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT version, petname FROM sphere_sync_info WHERE did = ?",
+            sql: "SELECT version, petname FROM sphere_index_info WHERE did = ?",
             parameters: [.text(identity.description)]
         )
         guard let row = rows.first else {
@@ -144,14 +144,14 @@ final class DatabaseService {
     }
 
     /// Given a sphere petname, read the sync info from the database (if any).
-    func readSphereSyncInfo(petname: Petname) throws -> SphereSnapshot? {
+    func readSphereIndexInfo(petname: Petname) throws -> SphereSnapshot? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
             sql: """
             SELECT did, version
-            FROM sphere_sync_info
+            FROM sphere_index_info
             WHERE petname = ?
             """,
             parameters: [.text(petname.description)]
@@ -176,7 +176,7 @@ final class DatabaseService {
     /// - Parameters:
     ///   - sphereIdentity: the DID for this sphere
     ///   -
-    func writeSphereSyncInfo(
+    func writeSphereIndexInfo(
         identity: Did,
         version: String,
         petname: Petname?
@@ -186,7 +186,7 @@ final class DatabaseService {
         }
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO sphere_sync_info (
+            INSERT OR REPLACE INTO sphere_index_info (
                 did,
                 version,
                 petname
@@ -221,7 +221,7 @@ final class DatabaseService {
             // Remove sync info
             try database.execute(
                 sql: """
-                DELETE FROM sphere_sync_info WHERE did = ?
+                DELETE FROM sphere_index_info WHERE did = ?
                 """,
                 parameters: [.text(did.description)]
             )
@@ -904,12 +904,12 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-12T14:33:00")!,
+            version: Int.from(iso8601String: "2023-05-16T10:34:00")!,
             sql: """
             /*
             A table that tracks sphere->database sync info.
             */
-            CREATE TABLE sphere_sync_info (
+            CREATE TABLE sphere_index_info (
                 did TEXT PRIMARY KEY,
                 version TEXT NOT NULL,
                 petname TEXT

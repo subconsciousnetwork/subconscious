@@ -673,13 +673,13 @@ class Tests_DatabaseService: XCTestCase {
         )
         
         // Write
-        try service.writeSphereSyncInfo(
+        try service.writeSphereIndexInfo(
             identity: source.identity,
             version: source.version,
             petname: source.petname
         )
 
-        let out = try service.readSphereSyncInfo(identity: source.identity)
+        let out = try service.readSphereIndexInfo(identity: source.identity)
         
         XCTAssertEqual(out, source)
     }
@@ -696,13 +696,13 @@ class Tests_DatabaseService: XCTestCase {
         )
         
         // Write
-        try service.writeSphereSyncInfo(
+        try service.writeSphereIndexInfo(
             identity: source.identity,
             version: source.version,
             petname: petname
         )
 
-        let out = try service.readSphereSyncInfo(petname: petname)
+        let out = try service.readSphereIndexInfo(petname: petname)
         
         XCTAssertEqual(out, source)
     }
@@ -785,7 +785,7 @@ class Tests_DatabaseService: XCTestCase {
         )
         
         // Write fake sphere sync info so we can purge it
-        try service.writeSphereSyncInfo(
+        try service.writeSphereIndexInfo(
             identity: did,
             version: "bafyxyz123",
             petname: nil
@@ -793,7 +793,7 @@ class Tests_DatabaseService: XCTestCase {
         
         try service.purgeSphere(did: did)
         
-        let syncInfo = try service.readSphereSyncInfo(identity: did)
+        let syncInfo = try service.readSphereIndexInfo(identity: did)
         XCTAssertNil(syncInfo)
         
         let recent = try service.listRecentMemos(owner: did)
