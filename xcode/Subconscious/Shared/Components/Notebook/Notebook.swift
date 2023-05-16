@@ -910,8 +910,8 @@ struct NotebookModel: ModelProtocol {
         slashlink: Slashlink,
         fallback: String
     ) -> Update<NotebookModel> {
+        // Intercept profile visits and use the correct view if noosphere is enabled
         if AppDefaults.standard.isNoosphereEnabled {
-            // Intercept profile visits and use the correct view
             guard !slashlink.slug.isProfile else {
                 return update(
                     state: state,
@@ -925,7 +925,22 @@ struct NotebookModel: ModelProtocol {
                     environment: environment
                 )
             }
-            
+        }
+        
+        // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
+        // to find in local or sphere content and then push editor detail.
+        guard slashlink.peer != nil else {
+            return update(
+                state: state,
+                action: .findAndPushMemoEditorDetail(
+                    slug: slashlink.toSlug(),
+                    fallback: fallback
+                ),
+                environment: environment
+            )
+        }
+        
+        if AppDefaults.standard.isNoosphereEnabled {
             // If Noosphere is enabled, and slashlink pointing to other sphere,
             // dispatch action for viewer.
             return update(
@@ -940,19 +955,6 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         } else {
-            // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
-            // to find in local or sphere content and then push editor detail.
-            guard slashlink.peer != nil else {
-                return update(
-                    state: state,
-                    action: .findAndPushMemoEditorDetail(
-                        slug: slashlink.toSlug(),
-                        fallback: fallback
-                    ),
-                    environment: environment
-                )
-            }
-        
             // Otherwise debug log and do nothing.
             logger.debug(
                 "Slashlink to other sphere requested, but viewing other sphere content is disabled. Doing nothing."
