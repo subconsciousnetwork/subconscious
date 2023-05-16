@@ -666,20 +666,20 @@ class Tests_DatabaseService: XCTestCase {
         let service = try createDatabaseService()
         _ = try service.migrate()
         
-        let source = SphereSnapshot(
+        let source = PeerRecord(
             identity: Did("did:key:abc123")!,
             version: "bafyfakefakefake",
             petname: Petname("alice")!
         )
         
         // Write
-        try service.writeSphereIndexInfo(
+        try service.writeSphere(
             identity: source.identity,
             version: source.version,
             petname: source.petname
         )
 
-        let out = try service.readSphereIndexInfo(identity: source.identity)
+        let out = try service.readPeer(identity: source.identity)
         
         XCTAssertEqual(out, source)
     }
@@ -689,20 +689,20 @@ class Tests_DatabaseService: XCTestCase {
         _ = try service.migrate()
         
         let petname = Petname("alice")!
-        let source = SphereSnapshot(
+        let source = PeerRecord(
             identity: Did("did:key:abc123")!,
             version: "bafyfakefakefake",
             petname: petname
         )
         
         // Write
-        try service.writeSphereIndexInfo(
+        try service.writeSphere(
             identity: source.identity,
             version: source.version,
             petname: petname
         )
 
-        let out = try service.readSphereIndexInfo(petname: petname)
+        let out = try service.readSphere(petname: petname)
         
         XCTAssertEqual(out, source)
     }
@@ -785,7 +785,7 @@ class Tests_DatabaseService: XCTestCase {
         )
         
         // Write fake sphere sync info so we can purge it
-        try service.writeSphereIndexInfo(
+        try service.writePeer(
             identity: did,
             version: "bafyxyz123",
             petname: nil
@@ -793,7 +793,7 @@ class Tests_DatabaseService: XCTestCase {
         
         try service.purgeSphere(did: did)
         
-        let syncInfo = try service.readSphereIndexInfo(identity: did)
+        let syncInfo = try service.readPeer(identity: did)
         XCTAssertNil(syncInfo)
         
         let recent = try service.listRecentMemos(owner: did)

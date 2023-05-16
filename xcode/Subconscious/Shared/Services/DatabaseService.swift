@@ -121,37 +121,40 @@ final class DatabaseService {
     }
 
     /// Given a sphere did, read the sync info from the database (if any).
-    func readSphereIndexInfo(identity: Did) throws -> SphereSnapshot? {
+    func readPeer(identity: Did) throws -> PeerRecord? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT version, petname FROM sphere_index_info WHERE did = ?",
+            sql: "SELECT version, petname FROM peer WHERE did = ?",
             parameters: [.text(identity.description)]
         )
         guard let row = rows.first else {
             return nil
         }
-        guard let version = row.col(0)?.toString() else {
-            return nil
+        guard let petname = row.col(1)?.toString()?.toPetname() else {
+            throw CodingError.decodingError(
+                message: "Could not decode petname"
+            )
         }
-        let petname = row.col(1)?.toString()?.toPetname()
-        return SphereSnapshot(
+        let version = row.col(0)?.toString()
+        return PeerRecord(
+            petname: petname,
             identity: identity,
-            version: version,
-            petname: petname
+            version: version
         )
     }
 
-    /// Given a sphere petname, read the sync info from the database (if any).
-    func readSphereIndexInfo(petname: Petname) throws -> SphereSnapshot? {
+    /// Given a sphere petname, read the indexed info from the
+    /// database (if any).
+    func readPeer(petname: Petname) throws -> PeerRecord? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
             sql: """
             SELECT did, version
-            FROM sphere_index_info
+            FROM peer
             WHERE petname = ?
             """,
             parameters: [.text(petname.description)]
@@ -160,43 +163,72 @@ final class DatabaseService {
             return nil
         }
         guard let identity = row.col(0)?.toString()?.toDid() else {
-            return nil
+            throw CodingError.decodingError(
+                message: "Failed to decode sphere identity"
+            )
         }
-        guard let version = row.col(1)?.toString() else {
-            return nil
-        }
-        return SphereSnapshot(
+        let version = row.col(1)?.toString()
+        return PeerRecord(
+            petname: petname,
             identity: identity,
-            version: version,
-            petname: petname
+            version: version
         )
     }
     
+    func readOurSphere() throws -> OurSphereRecord {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        let row = try database
+            .execute(
+                sql: """
+                SELECT did, version
+                FROM our_sphere
+                """
+            )
+            .first
+            .unwrap()
+        guard let identity = row.col(0)?.toString()?.toDid() else {
+            throw CodingError.decodingError(
+                message: "Failed to decode sphere identity"
+            )
+        }
+        guard let version = row.col(1)?.toString() else {
+            throw CodingError.decodingError(
+                message: "Failed to decode sphere version"
+            )
+        }
+        return OurSphereRecord(
+            identity: identity,
+            version: version
+        )
+    }
+
     /// Write database metadata at string key
     /// - Parameters:
     ///   - sphereIdentity: the DID for this sphere
     ///   -
-    func writeSphereIndexInfo(
+    func writePeer(
+        petname: Petname,
         identity: Did,
-        version: String,
-        petname: Petname?
+        version: Cid?
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO sphere_index_info (
+            INSERT OR REPLACE INTO sphere (
+                petname,
                 did,
-                version,
-                petname
+                version
             )
             VALUES (?, ?, ?)
             """,
             parameters: [
+                .text(petname.description),
                 .text(identity.description),
-                .text(version),
-                .text(petname?.description)
+                .text(version)
             ]
         )
     }
@@ -221,7 +253,7 @@ final class DatabaseService {
             // Remove sync info
             try database.execute(
                 sql: """
-                DELETE FROM sphere_index_info WHERE did = ?
+                DELETE FROM peer WHERE did = ?
                 """,
                 parameters: [.text(did.description)]
             )
@@ -904,19 +936,25 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-16T11:48:00")!,
+            version: Int.from(iso8601String: "2023-05-16T12:30:00")!,
             sql: """
-            /*
-            A table that tracks sphere->database sync info.
-            Columns:
-            - Did: the identity of the sphere
-            - Version: the last resolved CID for the sphere (may be null)
-            - Petname: The petname for the sphere (null means our sphere)
-            */
-            CREATE TABLE sphere_index_info (
+            CREATE TABLE our_sphere (
                 did TEXT PRIMARY KEY,
-                version TEXT,
-                petname TEXT
+                version TEXT NOT NULL
+            );
+            
+            /*
+            A table that tracks sphere->database indexing info for peers.
+            Columns:
+            - Petname: The petname for the peer sphere
+            - Did: the identity of the peer sphere
+            - Version: the last resolved CID for the sphere (may be null if we
+              have not yet managed to find the sphere)
+            */
+            CREATE TABLE peer (
+                petname TEXT PRIMARY KEY,
+                did TEXT NOT NULL,
+                version TEXT
             );
             
             /* History of user search queries */

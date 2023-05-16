@@ -8,12 +8,11 @@
 import Foundation
 
 /// Describes a sphere identity and petname at a specific version
-struct SphereSnapshot: Hashable, Codable {
+struct PeerRecord: Hashable, Codable {
+    /// Petname assigned to sphere
+    var petname: Petname
     /// DID of sphere
     var identity: Did
     /// Sphere version
-    var version: Cid
-    /// Petname assigned to sphere (if any).
-    /// In practical use, we often use `nil` to mean "our sphere"
-    var petname: Petname?
+    var version: Cid?
 }
