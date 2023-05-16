@@ -22,4 +22,36 @@ final class Tests_URLUtilities: XCTestCase {
         let urlD = URL(string: "file://example.com")!
         XCTAssertFalse(urlD.isHTTP())
     }
+    
+    func testValidURL() {
+        let urlString = "https://example.com/image.jpg"
+        let url = URL(validatedString: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testInvalidURL() {
+        let urlString = "not a url"
+        let url = URL(validatedString: urlString)
+        XCTAssertNil(url)
+    }
+    
+    func testInvalidScheme() {
+        let urlString = "ftp://example.com/image.jpg"
+        let url = URL(validatedString: urlString)
+        XCTAssertNil(url)
+    }
+    
+    func testMissingHost() {
+        let urlString = "https:///image.jpg"
+        let url = URL(validatedString: urlString)
+        XCTAssertNil(url)
+    }
+    
+    func testMissingPath() {
+        let urlString = "https://example.com"
+        let url = URL(validatedString: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString + "/")
+    }
 }
