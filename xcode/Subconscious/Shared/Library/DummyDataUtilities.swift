@@ -84,7 +84,8 @@ extension StoryUser: DummyData {
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
-            isFollowingUser: Bool.dummyData()
+            isFollowingUser: Bool.dummyData(),
+            isResolved: Bool.dummyData()
         )
     }
     
@@ -98,7 +99,8 @@ extension StoryUser: DummyData {
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
-            isFollowingUser: Bool.dummyData()
+            isFollowingUser: Bool.dummyData(),
+            isResolved: Bool.dummyData()
         )
     }
 }

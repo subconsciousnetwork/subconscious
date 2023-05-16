@@ -47,26 +47,34 @@ struct StoryUserView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
-                ProfilePic(pfp: story.user.pfp, size: .medium)
-                PetnameView(
-                    nickname: story.user.nickname,
-                    petname: story.user.address.petname
-                )
-                .fontWeight(.medium)
-                .foregroundColor(.accentColor)
-                
-                Spacer()
-                
-                switch (story.isFollowingUser, story.user.category) {
-                case (true, _):
-                    Image.from(appIcon: .following)
-                        .foregroundColor(.secondary)
-                case (_, .you):
-                    Image.from(appIcon: .you(colorScheme))
-                        .foregroundColor(.secondary)
-                case (_, _):
-                    EmptyView()
+                Group {
+                    ProfilePic(pfp: story.user.pfp, size: .medium)
+                    PetnameView(
+                        nickname: story.user.nickname,
+                        petname: story.user.address.petname
+                    )
+                    .fontWeight(.medium)
+                    .foregroundColor(.accentColor)
+                        
+                    Spacer()
+                    
+                    if !story.isResolved {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.secondary)
+                    } else {
+                        switch (story.isFollowingUser, story.user.category) {
+                        case (true, _):
+                            Image.from(appIcon: .following)
+                                .foregroundColor(.secondary)
+                        case (_, .you):
+                            Image.from(appIcon: .you(colorScheme))
+                                .foregroundColor(.secondary)
+                        case (_, _):
+                            EmptyView()
+                        }
+                    }
                 }
+                .disabled(!story.isResolved)
                 
                 Menu(
                     content: {
@@ -77,7 +85,7 @@ struct StoryUserView: View {
                                 },
                                 label: {
                                     Label(
-                                        title: { Text("Unfollow \(story.user.nickname.markup)") },
+                                        title: { Text("Unfollow") },
                                         icon: { Image(systemName: "person.fill.xmark") }
                                     )
                                 }
@@ -89,7 +97,7 @@ struct StoryUserView: View {
                                 },
                                 label: {
                                     Label(
-                                        title: { Text("Follow \(story.user.nickname.markup)") },
+                                        title: { Text("Follow") },
                                         icon: { Image(systemName: "person.badge.plus") }
                                     )
                                 }
@@ -116,6 +124,10 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
+            guard story.isResolved else {
+                return
+            }
+            
             action(
                 story.user.address,
                 story.user.bio.text
@@ -139,9 +151,10 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human
                     ),
-                    isFollowingUser: false
+                    isFollowingUser: false,
+                    isResolved: false
                 ),
-                action: { _, _ in }
+                action: { _, _ in print("ok") }
             )
             StoryUserView(
                 story: StoryUser(
@@ -153,9 +166,10 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human
                     ),
-                    isFollowingUser: true
+                    isFollowingUser: true,
+                    isResolved: true
                 ),
-                action: { _, _ in }
+                action: { _, _ in print("ok") }
             )
             StoryUserView(
                 story: StoryUser(
@@ -167,7 +181,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .you
                     ),
-                    isFollowingUser: false
+                    isFollowingUser: false,
+                    isResolved: false
                 ),
                 action: { _, _ in }
             )
@@ -181,7 +196,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio.empty,
                         category: .you
                     ),
-                    isFollowingUser: false
+                    isFollowingUser: false,
+                    isResolved: true
                 ),
                 action: { _, _ in }
             )

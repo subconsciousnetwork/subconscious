@@ -9,9 +9,15 @@ import os
 import Foundation
 import Combine
 
+enum AddressBookEntryStatus {
+    case unresolved
+    case resolved
+}
+
 struct AddressBookEntry: Equatable {
     var petname: Petname
     var did: Did
+    var status: AddressBookEntryStatus
 }
 
 enum AddressBookError: Error {
@@ -77,11 +83,20 @@ actor AddressBook<Sphere: SphereProtocol> {
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
             let did = try await sphere.getPetname(petname: petname)
+            let status = await Func.run {
+                do {
+                    let cid = try await sphere.resolvePetname(petname: petname)
+                    return AddressBookEntryStatus.resolved
+                } catch {
+                    return AddressBookEntryStatus.unresolved
+                }
+            }
             
             addressBook.append(
                 AddressBookEntry(
                     petname: petname,
-                    did: did
+                    did: did,
+                    status: status
                 )
             )
         }

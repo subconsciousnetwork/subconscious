@@ -257,7 +257,8 @@ actor UserProfileService {
             following.append(
                 StoryUser(
                     user: user,
-                    isFollowingUser: weAreFollowingListedUser
+                    isFollowingUser: weAreFollowingListedUser,
+                    isResolved: entry.status == .resolved
                 )
             )
         }
