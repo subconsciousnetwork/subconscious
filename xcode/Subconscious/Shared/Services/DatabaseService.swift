@@ -120,6 +120,55 @@ final class DatabaseService {
         try self.database.rollback(savepoint)
     }
 
+    /// Read sphere information for our sphere
+    func readOurSphere() throws -> OurSphereRecord? {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        guard let row = try database.execute(
+            sql: """
+            SELECT did, version
+            FROM our_sphere
+            """
+        ).first else {
+            return nil
+        }
+        guard let identity = row.col(0)?.toString()?.toDid() else {
+            throw CodingError.decodingError(
+                message: "Failed to decode sphere identity"
+            )
+        }
+        guard let version = row.col(1)?.toString() else {
+            throw CodingError.decodingError(
+                message: "Failed to decode sphere version"
+            )
+        }
+        return OurSphereRecord(
+            identity: identity,
+            version: version
+        )
+    }
+
+    /// Write sphere information for one of our spheres into the database
+    func writeOurSphere(
+        identity: Did,
+        version: Cid
+    ) throws {
+        try database.execute(
+            sql: """
+            INSERT OR REPLACE INTO our_sphere (
+                did,
+                version
+            )
+            VALUES (?, ?)
+            """,
+            parameters: [
+                .text(identity.description),
+                .text(version)
+            ]
+        )
+    }
+    
     /// Given a sphere did, read the sync info from the database (if any).
     func readPeer(identity: Did) throws -> PeerRecord? {
         guard self.state == .ready else {
@@ -144,7 +193,7 @@ final class DatabaseService {
             version: version
         )
     }
-
+    
     /// Given a sphere petname, read the indexed info from the
     /// database (if any).
     func readPeer(petname: Petname) throws -> PeerRecord? {
@@ -174,35 +223,6 @@ final class DatabaseService {
             version: version
         )
     }
-    
-    func readOurSphere() throws -> OurSphereRecord {
-        guard self.state == .ready else {
-            throw DatabaseServiceError.notReady
-        }
-        let row = try database
-            .execute(
-                sql: """
-                SELECT did, version
-                FROM our_sphere
-                """
-            )
-            .first
-            .unwrap()
-        guard let identity = row.col(0)?.toString()?.toDid() else {
-            throw CodingError.decodingError(
-                message: "Failed to decode sphere identity"
-            )
-        }
-        guard let version = row.col(1)?.toString() else {
-            throw CodingError.decodingError(
-                message: "Failed to decode sphere version"
-            )
-        }
-        return OurSphereRecord(
-            identity: identity,
-            version: version
-        )
-    }
 
     /// Write database metadata at string key
     /// - Parameters:
@@ -218,7 +238,7 @@ final class DatabaseService {
         }
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO sphere (
+            INSERT OR REPLACE INTO peer (
                 petname,
                 did,
                 version
@@ -237,7 +257,7 @@ final class DatabaseService {
     ///
     /// This does not delete the content from file system or sphere,
     /// only removes knowledge of it from the database.
-    func purgeSphere(did: Did) throws {
+    func purgePeer(identity: Did) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -248,14 +268,14 @@ final class DatabaseService {
                 sql: """
                 DELETE FROM memo WHERE did = ?
                 """,
-                parameters: [.text(did.description)]
+                parameters: [.text(identity.description)]
             )
             // Remove sync info
             try database.execute(
                 sql: """
                 DELETE FROM peer WHERE did = ?
                 """,
-                parameters: [.text(did.description)]
+                parameters: [.text(identity.description)]
             )
             try database.release(savepoint)
         } catch {
