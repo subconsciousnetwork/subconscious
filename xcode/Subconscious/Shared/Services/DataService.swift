@@ -249,7 +249,7 @@ actor DataService {
     /// a low-priority task. We yield after every sphere sync to give other
     /// jobs a chance to run between sphere syncs.
     private func indexOurFollows(
-        since: Cid?
+        since: Cid
     ) async throws -> [SphereIndexChangeReceipt] {
         let petnames = try await noosphere.getPetnameChanges(since: since)
         var receipts: [SphereIndexChangeReceipt] = []
@@ -281,7 +281,8 @@ actor DataService {
     func indexOurFollows() async throws -> [SphereIndexChangeReceipt] {
         let identity = try await noosphere.identity()
         let info = try database.readSphereIndexInfo(identity: identity)
-        return try await indexOurFollows(since: info?.version)
+            .unwrap()
+        return try await indexOurFollows(since: info.version)
     }
     
     /// Index content from spheres you are following, since the last

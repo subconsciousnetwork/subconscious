@@ -393,17 +393,23 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
     
-    func getPetnameChanges(since cid: Cid?) async throws -> [Petname] {
+    func getPetnameChanges(since cid: Cid) async throws -> [Petname] {
         try await self.sphere().getPetnameChanges(since: cid)
     }
     
     nonisolated func getPetnameChangesPublisher(
-        since cid: String?
+        since cid: String
     ) -> AnyPublisher<[Petname], Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.getPetnameChangesPublisher(since: cid)
         })
         .eraseToAnyPublisher()
+    }
+
+    func getPeerChanges(
+        since version: Cid
+    ) async throws -> [Sphere.PeerChange] {
+        try await self.sphere().getPeerChanges(since: version)
     }
 
     func traverse(petname: Petname) async throws -> Sphere {

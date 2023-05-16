@@ -55,7 +55,9 @@ public protocol SphereProtocol {
     
     func listPetnames() async throws -> [Petname]
     
-    func getPetnameChanges(since: Cid?) async throws -> [Petname]
+    func getPetnameChanges(since: Cid) async throws -> [Petname]
+    
+    func getPeerChanges(since: Cid) async throws -> [Sphere.PeerChange]
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
@@ -143,7 +145,7 @@ public protocol SpherePublisherProtocol {
     func listPetnamesPublisher() -> AnyPublisher<[Petname], Error>
     
     func getPetnameChangesPublisher(
-        since: Cid?
+        since: Cid
     ) -> AnyPublisher<[Petname], Error>
     
     /// Attempt to retrieve the sphere of a recorded petname, this can
@@ -174,6 +176,18 @@ enum SphereError: Error, LocalizedError {
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
 public actor Sphere: SphereProtocol, SpherePublisherProtocol {
+    /// Describes a peer change in our address book
+    public enum PeerChange: Hashable {
+        /// Petname was added or updated within address book
+        case update(
+            petname: Petname,
+            identity: Did,
+            version: Cid?
+        )
+        /// Petname was removed from address book
+        case remove(petname: Petname)
+    }
+    
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "Sphere"
@@ -527,7 +541,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             did?.description
         )
     }
-        
+    
     /// Set petname for DID
     /// - Returns `AnyPublisher` for Void (success), or error
     nonisolated public func setPetnamePublisher(
@@ -611,12 +625,12 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// in some way. It is up to you to read them to find out what happend
     /// (deletion, update, etc).
     /// - Returns an array of `Petname`
-    public func getPetnameChanges(since cid: Cid?) throws -> [Petname] {
+    public func getPetnameChanges(since version: Cid) throws -> [Petname] {
         let changes = try Noosphere.callWithError(
             ns_sphere_petname_changes,
             noosphere.noosphere,
             sphere,
-            cid
+            version
         )
         defer {
             ns_string_array_free(changes)
@@ -629,12 +643,37 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         })
     }
     
+    /// Get array of peer changes since last version.
+    public func getPeerChanges(
+        since version: Cid
+    ) throws -> [PeerChange] {
+        let petnames = try getPetnameChanges(since: version)
+        var changes: [PeerChange] = []
+        for petname in petnames {
+            // If we can get petname did, then change was an upsert.
+            // If we can't, then change was a remove.
+            if let identity = try? getPetname(petname: petname) {
+                let version = try? resolvePetname(petname: petname)
+                changes.append(
+                    .update(
+                        petname: petname,
+                        identity: identity,
+                        version: version
+                    )
+                )
+            } else {
+                changes.append(.remove(petname: petname))
+            }
+        }
+        return changes
+    }
+
     /// Get all petname changes since a CID. Returned petnames were changed
     /// in some way. It is up to you to read them to find out what happend
     /// (deletion, update, etc).
     /// - Returns an `AnyPublisher` for array of `Petname`
     nonisolated public func getPetnameChangesPublisher(
-        since cid: Cid?
+        since cid: Cid
     ) -> AnyPublisher<[Petname], Error> {
         Future.detached {
             try await self.getPetnameChanges(since: cid)
