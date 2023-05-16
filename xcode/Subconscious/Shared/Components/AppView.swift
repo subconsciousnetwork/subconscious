@@ -1132,13 +1132,6 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.isFirstRunComplete = isComplete
-        if isComplete {
-            return update(
-                state: model,
-                action: .fetchNicknameFromProfile,
-                environment: environment
-            )
-        }
         return Update(state: model)
     }
     
