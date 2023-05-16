@@ -25,41 +25,55 @@ final class Tests_URLUtilities: XCTestCase {
     
     func testValidURL() {
         let urlString = "https://example.com/image.jpg"
-        let url = URL(validatedString: urlString)
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testPreservesQueryAndFragment() {
+        let urlString = "https://example.com/image.jpg?q=123#hello"
+        let url = URL(validating: urlString)
         XCTAssertNotNil(url)
         XCTAssertEqual(url?.absoluteString, urlString)
     }
     
     func testSchemeOnly() {
-        let a = URL(validatedString: "http:")
+        let a = URL(validating: "http:")
         XCTAssertNil(a)
         
-        let b = URL(validatedString: "https:")
+        let b = URL(validating: "https:")
         XCTAssertNil(b)
     }
     
     func testInvalidURL() {
         let urlString = "not a url"
-        let url = URL(validatedString: urlString)
+        let url = URL(validating: urlString)
         XCTAssertNil(url)
     }
     
     func testInvalidScheme() {
         let urlString = "ftp://example.com/image.jpg"
-        let url = URL(validatedString: urlString)
+        let url = URL(validating: urlString)
         XCTAssertNil(url)
     }
     
     func testMissingHost() {
         let urlString = "https:///image.jpg"
-        let url = URL(validatedString: urlString)
+        let url = URL(validating: urlString)
         XCTAssertNil(url)
     }
     
     func testMissingPath() {
         let urlString = "https://example.com"
-        let url = URL(validatedString: urlString)
+        let url = URL(validating: urlString)
         XCTAssertNotNil(url)
-        XCTAssertEqual(url?.absoluteString, urlString + "/")
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testIpAddress() {
+        let urlString = "https://127.0.0.1"
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
     }
 }

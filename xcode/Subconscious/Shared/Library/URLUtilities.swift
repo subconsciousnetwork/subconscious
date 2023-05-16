@@ -10,33 +10,20 @@ import Foundation
 extension URL {
     /// Attempt to construct a URL from the passed string and validate its components
     /// This will only allow http & https URLs with a full hostname
-    init?(validatedString string: String) {
+    init?(validating string: String) {
         guard let url = URL(string: string) else {
             return nil
         }
         
-        var components = URLComponents()
-        components.scheme = url.scheme
-        components.host = url.host
-        components.path = url.path
-        
-        guard let scheme = components.scheme,
-              ["http", "https"].contains(scheme.lowercased()) else {
-            return nil
-        }
-        guard components.host != nil else {
+        guard url.isHTTP() else {
             return nil
         }
         
-        if components.path.isEmpty {
-            components.path = "/"
-        }
-        
-        guard let validatedUrl = components.url else {
+        guard (url.host ?? "").count > 0 else {
             return nil
         }
         
-        self = validatedUrl
+        self = url
     }
     
     /// Check if URL is HTTP or HTTPs
