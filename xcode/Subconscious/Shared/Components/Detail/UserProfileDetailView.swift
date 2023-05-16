@@ -170,9 +170,9 @@ extension Store<UserProfileDetailModel> {
         }
         
         // Ensure updates are sent on the main thread
-        let send = { action in
-            DispatchQueue.main.async {
-                self.send(action)
+        let send = { (action) -> Void in
+            Task {
+                @MainActor in self.send(action)
             }
         }
         
