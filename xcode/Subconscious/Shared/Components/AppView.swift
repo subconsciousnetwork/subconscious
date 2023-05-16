@@ -794,8 +794,7 @@ struct AppModel: ModelProtocol {
                 ),
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
-                ),
-                .fetchNicknameFromProfile
+                )
             ],
             environment: environment
         ).mergeFx(fx)
@@ -837,7 +836,8 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .migrateDatabase,
-                .refreshSphereVersion
+                .refreshSphereVersion,
+                .fetchNicknameFromProfile
             ],
             environment: environment
         )
@@ -1132,6 +1132,13 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.isFirstRunComplete = isComplete
+        if isComplete {
+            return update(
+                state: model,
+                action: .fetchNicknameFromProfile,
+                environment: environment
+            )
+        }
         return Update(state: model)
     }
     
