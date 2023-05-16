@@ -30,6 +30,14 @@ final class Tests_URLUtilities: XCTestCase {
         XCTAssertEqual(url?.absoluteString, urlString)
     }
     
+    func testSchemeOnly() {
+        let a = URL(validatedString: "http:")
+        XCTAssertNil(a)
+        
+        let b = URL(validatedString: "https:")
+        XCTAssertNil(b)
+    }
+    
     func testInvalidURL() {
         let urlString = "not a url"
         let url = URL(validatedString: urlString)
