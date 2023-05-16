@@ -111,7 +111,10 @@ enum UserProfileDetailAction {
     case failFollow(error: String)
     case dismissFailFollowError
     case succeedFollow(Petname)
-    case failResolveFollowedUser(_ message: String)
+    
+    case requestWaitForPetnameResolution(_ petname: Petname)
+    case succeedResolveFollowedUser(_ petname: Petname)
+    case failResolveFollowedUser(_ petname: Petname, _ message: String)
     
     case requestUnfollow(UserProfile)
     case attemptUnfollow
@@ -257,6 +260,8 @@ struct UserProfileDetailModel: ModelProtocol {
     var statistics: UserProfileStatistics? = nil
     
     var unfollowCandidate: UserProfile? = nil
+    
+    var pendingFollows: [Petname] = []
     
     static func update(
         state: Self,
@@ -415,7 +420,8 @@ struct UserProfileDetailModel: ModelProtocol {
             var actions: [UserProfileDetailAction] = [
                 .presentFollowSheet(false),
                 .presentFollowNewUserFormSheet(false),
-                .refresh
+                .refresh,
+                .requestWaitForPetnameResolution(petname)
             ]
             
             // Refresh our profile & show the following list if we followed someone new
@@ -425,36 +431,51 @@ struct UserProfileDetailModel: ModelProtocol {
                     actions.append(.tabIndexSelected(Self.followingTabIndex))
                 }
             }
-            
-            let fx: Fx<UserProfileDetailAction> = environment.addressBook
-                .waitForPetnameResolutionPublisher(petname: petname)
-                .map { _ in
-                    .refresh
-                }
-                .recover { error in
-                    .failResolveFollowedUser(error.localizedDescription)
-                }
-                .eraseToAnyPublisher()
-            
+
             return update(
                 state: state,
                 actions: actions,
                 environment: environment
-            ).mergeFx(fx)
-            
+            )
         case .failFollow(error: let error):
             var model = state
             model.failFollowErrorMessage = error
             return Update(state: model)
-            
         case .dismissFailFollowError:
             var model = state
             model.failFollowErrorMessage = nil
             return Update(state: model)
             
-        case .failResolveFollowedUser(let message):
+        case let .requestWaitForPetnameResolution(petname):
+            var model = state
+            model.pendingFollows.append(petname)
+            
+            let fx: Fx<UserProfileDetailAction> = environment.addressBook
+                .waitForPetnameResolutionPublisher(petname: petname)
+                .map { _ in
+                    .succeedResolveFollowedUser(petname)
+                }
+                .recover { error in
+                    .failResolveFollowedUser(petname, error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case let .succeedResolveFollowedUser(petname):
+            var model = state
+            model.pendingFollows.removeAll { f in
+                f == petname
+            }
+            
+            return update(state: model, action: .refresh, environment: environment)
+        case let .failResolveFollowedUser(petname, message):
+            var model = state
+            model.pendingFollows.removeAll { f in
+                f == petname
+            }
+            
             logger.log("Failed to resolve followed user: \(message)")
-            return Update(state: state)
+            return Update(state: model)
             
         // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):
