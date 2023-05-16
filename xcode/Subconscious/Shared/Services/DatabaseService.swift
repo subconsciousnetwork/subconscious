@@ -904,14 +904,18 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-16T10:34:00")!,
+            version: Int.from(iso8601String: "2023-05-16T11:48:00")!,
             sql: """
             /*
             A table that tracks sphere->database sync info.
+            Columns:
+            - Did: the identity of the sphere
+            - Version: the last resolved CID for the sphere (may be null)
+            - Petname: The petname for the sphere (null means our sphere)
             */
             CREATE TABLE sphere_index_info (
                 did TEXT PRIMARY KEY,
-                version TEXT NOT NULL,
+                version TEXT,
                 petname TEXT
             );
             
