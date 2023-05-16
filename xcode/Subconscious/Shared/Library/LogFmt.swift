@@ -9,6 +9,10 @@ import Foundation
 import os
 
 struct LogFmt {
+    private static func escapeValuePart(_ value: String) -> String {
+        value.replacingOccurrences(of: #"""#, with: #"\""#)
+    }
+    
     /// Format a dictionary of parameters as a LogFmt string.
     ///
     /// Example of LogFmt style:
@@ -18,7 +22,10 @@ struct LogFmt {
     /// See https://brandur.org/logfmt
     static func format(_ parameters: KeyValuePairs<String, String>) -> String {
         parameters
-            .map({ pair in #"\#(pair.key)="\#(pair.value)""#})
+            .map({ pair in
+                let value = Self.escapeValuePart(pair.value)
+                return #"\#(pair.key)="\#(value)""#
+            })
             .joined(separator: " ")
     }
 }
