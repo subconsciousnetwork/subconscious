@@ -85,7 +85,7 @@ extension StoryUser: DummyData {
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
             isFollowingUser: Bool.dummyData(),
-            isResolved: Bool.dummyData()
+            resolutionStatus: .unresolved
         )
     }
     
@@ -100,7 +100,7 @@ extension StoryUser: DummyData {
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
             isFollowingUser: Bool.dummyData(),
-            isResolved: Bool.dummyData()
+            resolutionStatus: .unresolved
         )
     }
 }

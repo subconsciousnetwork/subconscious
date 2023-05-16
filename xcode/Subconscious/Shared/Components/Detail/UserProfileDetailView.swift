@@ -329,7 +329,17 @@ struct UserProfileDetailModel: ModelProtocol {
             model.user = content.profile
             model.statistics = content.statistics
             model.recentEntries = content.recentEntries
-            model.following = content.following
+            model.following = content.following.map { f in
+                if let petname = f.user.address.petname,
+                   model.pendingFollows.contains(petname) {
+                    
+                    var user = f
+                    user.resolutionStatus = .pending
+                    return user
+                }
+                
+                return f
+            }
             model.isFollowingUser = content.isFollowingUser
             model.loadingState = .loaded
             
@@ -460,7 +470,8 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return update(state: model, action: .refresh, environment: environment)
+                .mergeFx(fx)
         case let .succeedResolveFollowedUser(petname):
             var model = state
             model.pendingFollows.removeAll { f in

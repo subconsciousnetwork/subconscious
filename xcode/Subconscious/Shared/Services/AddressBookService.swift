@@ -9,12 +9,13 @@ import os
 import Foundation
 import Combine
 
-enum AddressBookEntryStatus {
+enum AddressBookEntryStatus: Equatable, Hashable, Codable {
     case unresolved
+    case pending
     case resolved
 }
 
-struct AddressBookEntry: Equatable {
+struct AddressBookEntry: Equatable, Hashable, Codable {
     var petname: Petname
     var did: Did
     var status: AddressBookEntryStatus
@@ -315,12 +316,6 @@ actor AddressBookService {
             version: version
         )
         await self.addressBook.invalidateCache()
-        
-        do {
-            let _ = try await self.noosphere.sync()
-        } catch {
-            Self.logger.error("Failed to sync after following user: \(error.localizedDescription)")
-        }
     }
     
     private func checkForPetnameResolution(
@@ -333,7 +328,7 @@ actor AddressBookService {
         petname: Petname
     ) async throws -> Cid? {
         let maxAttempts = 10 // 1+2+4+8+16+32+32+32+32+32 = 191 seconds
-        return try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
+        let cid = try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
             Self.logger.log("""
             Check for petname resolution, \
             attempt \(attempts) of \(maxAttempts)
@@ -349,6 +344,8 @@ actor AddressBookService {
             
             return try await self.noosphere.resolvePetname(petname: petname)
         }
+        
+        return cid
     }
     
     nonisolated func waitForPetnameResolutionPublisher(

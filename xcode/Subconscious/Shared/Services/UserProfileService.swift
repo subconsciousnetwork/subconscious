@@ -229,7 +229,7 @@ actor UserProfileService {
         
         let localAddressBook = AddressBook(sphere: sphere)
         
-        let entries = try await localAddressBook.listEntries(refetch: true)
+        let entries = try await localAddressBook.listEntries()
         
         for entry in entries {
             let noosphereIdentity = try await noosphere.identity()
@@ -258,7 +258,7 @@ actor UserProfileService {
                 StoryUser(
                     user: user,
                     isFollowingUser: weAreFollowingListedUser,
-                    isResolved: entry.status == .resolved
+                    resolutionStatus: entry.status
                 )
             )
         }

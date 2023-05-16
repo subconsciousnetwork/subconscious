@@ -58,10 +58,14 @@ struct StoryUserView: View {
                         
                     Spacer()
                     
-                    if !story.isResolved {
+                    switch (story.resolutionStatus) {
+                    case .unresolved:
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.secondary)
-                    } else {
+                    case .pending:
+                        PendingSyncBadge()
+                            .foregroundColor(.secondary)
+                    case .resolved:
                         switch (story.isFollowingUser, story.user.category) {
                         case (true, _):
                             Image.from(appIcon: .following)
@@ -73,8 +77,9 @@ struct StoryUserView: View {
                             EmptyView()
                         }
                     }
+                    
                 }
-                .disabled(!story.isResolved)
+                .disabled(story.resolutionStatus != .resolved)
                 
                 Menu(
                     content: {
@@ -124,7 +129,7 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            guard story.isResolved else {
+            guard story.resolutionStatus == .resolved else {
                 return
             }
             
@@ -152,7 +157,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .human
                     ),
                     isFollowingUser: false,
-                    isResolved: false
+                    resolutionStatus: .unresolved
                 ),
                 action: { _, _ in print("ok") }
             )
@@ -167,7 +172,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .human
                     ),
                     isFollowingUser: true,
-                    isResolved: true
+                    resolutionStatus: .pending
                 ),
                 action: { _, _ in print("ok") }
             )
@@ -182,7 +187,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .you
                     ),
                     isFollowingUser: false,
-                    isResolved: false
+                    resolutionStatus: .resolved
                 ),
                 action: { _, _ in }
             )
@@ -197,7 +202,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .you
                     ),
                     isFollowingUser: false,
-                    isResolved: true
+                    resolutionStatus: .pending
                 ),
                 action: { _, _ in }
             )
