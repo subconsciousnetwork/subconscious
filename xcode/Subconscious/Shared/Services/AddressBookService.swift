@@ -85,7 +85,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             let did = try await sphere.getPetname(petname: petname)
             let status = await Func.run {
                 do {
-                    let cid = try await sphere.resolvePetname(petname: petname)
+                    let _ = try await sphere.resolvePetname(petname: petname)
                     return AddressBookEntryStatus.resolved
                 } catch {
                     return AddressBookEntryStatus.unresolved
@@ -340,8 +340,14 @@ actor AddressBookService {
             """)
             
             let _ = try await self.noosphere.sync()
+            do {
+                let _ = try await self.noosphere.getPetname(petname: petname)
+            } catch {
+                // Stop waiting, the petname is not in our addressbook anymore (unfollowed)
+                throw FuncError.cancelledRetry
+            }
             
-            return try await self.checkForPetnameResolution(petname: petname)
+            return try await self.noosphere.resolvePetname(petname: petname)
         }
     }
     

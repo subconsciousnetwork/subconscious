@@ -55,6 +55,29 @@ final class Tests_Func: XCTestCase {
         XCTAssertEqual(result, "hello world")
     }
     
+    func testCancelRetry() async throws {
+        var counter = 0
+        
+        let result = try await Func.retryWithBackoff(
+            maxAttempts: 5,
+            maxWaitSeconds: 1
+        ) { attempt in
+            counter += 1
+            guard attempt > 1 else {
+                throw TestError.error
+            }
+            
+            if attempt == 2 {
+                throw FuncError.cancelledRetry
+            }
+            
+            return "hello world"
+        }
+        
+        XCTAssertEqual(counter, 3)
+        XCTAssertNil(result)
+    }
+    
     func testGiveUpAfterMaxRetries() async throws {
         let result = try await Func.retryWithBackoff(
             maxAttempts: 5,
