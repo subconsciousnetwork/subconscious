@@ -229,7 +229,7 @@ actor UserProfileService {
         
         let localAddressBook = AddressBook(sphere: sphere)
         
-        let entries = try await localAddressBook.listEntries()
+        let entries = try await localAddressBook.listEntries(refetch: true)
         
         for entry in entries {
             let noosphereIdentity = try await noosphere.identity()
