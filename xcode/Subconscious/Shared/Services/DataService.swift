@@ -133,7 +133,7 @@ actor DataService {
                 // If we have a peer under this petname,
                 // purge its contents from the db.
                 if let peer = try? database.readPeer(petname: petname) {
-                    try database.purgePeer(did: peer.identity)
+                    try database.purgePeer(identity: peer.identity)
                 }
             }
         }
@@ -294,7 +294,7 @@ actor DataService {
         ).unwrap(
             DataServiceError.unknownPetname(petname)
         )
-        try database.purgePeer(did: peer.identity)
+        try database.purgePeer(identity: peer.identity)
         logger.log([
             "msg": "Purged peer from database",
             "petname": petname.description,

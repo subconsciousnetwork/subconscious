@@ -791,7 +791,7 @@ class Tests_DatabaseService: XCTestCase {
             petname: nil
         )
         
-        try service.purgeSphere(did: did)
+        try service.purgePeer(identity: did)
         
         let syncInfo = try service.readPeer(identity: did)
         XCTAssertNil(syncInfo)
