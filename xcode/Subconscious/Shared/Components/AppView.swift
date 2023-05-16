@@ -1588,7 +1588,8 @@ struct AppModel: ModelProtocol {
             state: model,
             actions: [
                 .submitGatewayURL(url.absoluteString),
-                .syncSphereWithGateway
+                .syncSphereWithGateway,
+                .inviteCodeFormField(.reset)
             ],
             environment: environment
         )
@@ -1602,7 +1603,12 @@ struct AppModel: ModelProtocol {
         logger.error("Failed to provision gateway: \(error)")
         var model = state
         model.gatewayProvisioningStatus = .failed(error)
-        return Update(state: model)
+        
+        return update(
+            state: model,
+            action: .inviteCodeFormField(.reset),
+            environment: environment
+        )
     }
 }
 
