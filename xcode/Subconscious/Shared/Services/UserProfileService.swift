@@ -332,7 +332,7 @@ actor UserProfileService {
         return try await loadProfileData(address: address, fallbackPetname: Petname.unknown)
     }
     
-    nonisolated func requestOwnProfilePublisher(
+    nonisolated func requestOurProfilePublisher(
     ) -> AnyPublisher<UserProfileContentResponse, Error> {
         Future.detached {
             try await self.requestOurProfile()

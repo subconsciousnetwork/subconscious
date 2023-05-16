@@ -53,7 +53,8 @@ struct UserProfileDetailView: View {
             send: store.send,
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser,
-            onProfileAction: self.onProfileAction
+            onProfileAction: self.onProfileAction,
+            onRefresh: store.refresh
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -162,6 +163,47 @@ struct EditProfileSheetCursor: CursorProtocol {
     }
 }
 
+extension Store<UserProfileDetailModel> {
+    func refresh() async {
+        guard let address = state.user?.address else {
+            return
+        }
+        
+        // Ensure updates are sent on the main thread
+        let send = { (action) -> Void in
+            Task {
+                @MainActor in self.send(action)
+            }
+        }
+        
+        do {
+            let res = try await Self.Model.refresh(
+                address: address,
+                environment: self.environment
+            )
+            
+            send(.populate(res))
+        } catch {
+            send(.failedToPopulate(error.localizedDescription))
+        }
+    }
+}
+
+extension UserProfileDetailModel {
+     static func refresh(
+        address: Slashlink,
+        environment: UserProfileDetailModel.Environment
+    ) async throws -> UserProfileContentResponse {
+        return try await Func.run {
+            if let petname = address.toPetname() {
+                return try await environment.userProfile.requestUserProfile(petname: petname)
+            } else {
+                return try await environment.userProfile.requestOurProfile()
+            }
+        }
+    }
+}
+
 // MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
@@ -262,17 +304,9 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.initialTabIndex = initialTabIndex
             
-            let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
-            Func.run {
-                if let petname = address.toPetname() {
-                    return environment.userProfile.requestUserProfilePublisher(petname: petname)
-                } else {
-                    return environment.userProfile.requestOwnProfilePublisher()
+            let fx: Fx<UserProfileDetailAction> = Future.detached {
+                    try await Self.refresh(address: address, environment: environment)
                 }
-            }
-            
-            let fx: Fx<UserProfileDetailAction> =
-            fxRoot
                 .map { content in
                     UserProfileDetailAction.populate(content)
                 }

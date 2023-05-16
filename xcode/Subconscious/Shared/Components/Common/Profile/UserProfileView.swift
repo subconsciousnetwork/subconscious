@@ -25,6 +25,7 @@ struct RecentTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
     var onNavigateToNote: (Slashlink) -> Void
+    var onRefresh: () async -> Void
     
     var body: some View {
         ScrollView {
@@ -45,7 +46,7 @@ struct RecentTabView: View {
             }
         }
         .refreshable {
-            send(.refresh)
+            await onRefresh()
         }
     }
 }
@@ -53,13 +54,14 @@ struct RecentTabView: View {
 struct TopTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
+    var onRefresh: () async -> Void
     
     var body: some View {
         ScrollView {
             EmptyStateView()
         }
         .refreshable {
-            send(.refresh)
+            await onRefresh()
         }
     }
 }
@@ -69,6 +71,7 @@ struct FollowTabView: View {
     var send: (UserProfileDetailAction) -> Void
     var onNavigateToUser: (UserProfile) -> Void
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    var onRefresh: () async -> Void
     
     var body: some View {
         ScrollView {
@@ -85,7 +88,7 @@ struct FollowTabView: View {
             }
         }
         .refreshable {
-            send(.refresh)
+            await onRefresh()
         }
     }
 }
@@ -98,6 +101,7 @@ struct UserProfileView: View {
     var onNavigateToUser: (UserProfile) -> Void
     
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    var onRefresh: () async -> Void
     
     var columnRecent: TabbedColumnItem<RecentTabView> {
         TabbedColumnItem(
@@ -105,14 +109,19 @@ struct UserProfileView: View {
             view: RecentTabView(
                 state: state,
                 send: send,
-                onNavigateToNote: onNavigateToNote
+                onNavigateToNote: onNavigateToNote,
+                onRefresh: onRefresh
             )
         )
     }
     var columnTop: TabbedColumnItem<TopTabView> {
         TabbedColumnItem(
             label: "Top",
-            view: TopTabView(state: state, send: send)
+            view: TopTabView(
+                state: state,
+                send: send,
+                onRefresh: onRefresh
+            )
         )
     }
         
@@ -123,7 +132,8 @@ struct UserProfileView: View {
                 state: state,
                 send: send,
                 onNavigateToUser: onNavigateToUser,
-                onProfileAction: onProfileAction
+                onProfileAction: onProfileAction,
+                onRefresh: onRefresh
             )
         )
     }
@@ -429,7 +439,8 @@ struct UserProfileView_Previews: PreviewProvider {
             send: { _ in },
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") },
-            onProfileAction: { _, _ in print("profile action") }
+            onProfileAction: { user, action in print("profile action") },
+            onRefresh: { }
         )
     }
 }
