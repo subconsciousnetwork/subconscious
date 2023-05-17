@@ -112,7 +112,7 @@ enum UserProfileDetailAction {
     case dismissFailFollowError
     case succeedFollow(Petname)
     
-    case requestWaitForPetnameResolution(_ petname: Petname)
+    case requestWaitForFollowedUserResolution(_ petname: Petname)
     case succeedResolveFollowedUser(_ petname: Petname)
     case failResolveFollowedUser(_ petname: Petname, _ message: String)
     
@@ -442,7 +442,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 .presentFollowSheet(false),
                 .presentFollowNewUserFormSheet(false),
                 .refresh,
-                .requestWaitForPetnameResolution(petname)
+                .requestWaitForFollowedUserResolution(petname)
             ]
             
             // Refresh our profile & show the following list if we followed someone new
@@ -467,7 +467,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.failFollowErrorMessage = nil
             return Update(state: model)
             
-        case let .requestWaitForPetnameResolution(petname):
+        case let .requestWaitForFollowedUserResolution(petname):
             var model = state
             model.pendingFollows.append(petname)
             
