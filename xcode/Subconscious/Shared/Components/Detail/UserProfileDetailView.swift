@@ -240,9 +240,7 @@ struct UserProfileDetailModel: ModelProtocol {
     private var selectedTabIndex: Int? = nil
     
     var currentTabIndex: Int {
-        get {
-            selectedTabIndex ?? initialTabIndex
-        }
+        selectedTabIndex ?? initialTabIndex
     }
     
     var isMetaSheetPresented = false
