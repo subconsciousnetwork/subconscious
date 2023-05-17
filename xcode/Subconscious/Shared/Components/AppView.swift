@@ -1540,20 +1540,21 @@ struct AppModel: ModelProtocol {
         }.eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
+    
     /// Index a sphere to the database
     static func succeedCollectPeersToIndex(
         state: Self,
         environment: Environment,
         peers: [PeerRecord]
     ) -> Update<Self> {
+        // Transform list of peers into fx publisher of actions.
         let fx: Fx<Action> = peers
             .map({ peer in Action.indexPeer(peer.petname) })
             .publisher
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
+    
     /// Index a sphere to the database
     static func failCollectPeersToIndex(
         state: Self,
@@ -1566,7 +1567,7 @@ struct AppModel: ModelProtocol {
         ])
         return Update(state: state)
     }
-
+    
     /// Index a sphere to the database
     static func indexPeer(
         state: Self,
