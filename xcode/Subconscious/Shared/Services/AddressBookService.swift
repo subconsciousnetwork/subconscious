@@ -98,7 +98,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             let did = try await sphere.getPetname(petname: petname)
             let status = await Func.run {
                 do {
-                    let _ = try await sphere.resolvePetname(petname: petname)
+                    _ = try await sphere.resolvePetname(petname: petname)
                     return PetnameResolutionStatus.resolved
                 } catch {
                     return PetnameResolutionStatus.unresolved
@@ -139,10 +139,15 @@ actor AddressBook<Sphere: SphereProtocol> {
     /// This method is designed not to throw for a quick check.
     func hasEntryForPetname(petname: Petname) async -> Bool {
         do {
-            let _  = try await self.sphere.getPetname(petname: petname)
+            _  = try await self.sphere.getPetname(petname: petname)
             return true
         } catch {
-            logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
+            logger.error(
+                """
+                An error occurred checking for \(petname.markup), returning false. \
+                Reason: \(error.localizedDescription)
+                """
+            )
             return false
         }
     }
@@ -263,9 +268,7 @@ actor AddressBookService {
     private var addressBook: AddressBook<NoosphereService>
     
     var localAddressBook: AddressBook<NoosphereService> {
-        get {
-            addressBook
-        }
+        addressBook
     }
     
     /// must be defined here not on `AddressBook` because
@@ -340,9 +343,9 @@ actor AddressBookService {
             attempt \(attempts) of \(maxAttempts)
             """)
             
-            let _ = try await self.noosphere.sync()
+            _ = try await self.noosphere.sync()
             do {
-                let _ = try await self.noosphere.getPetname(petname: petname)
+                _ = try await self.noosphere.getPetname(petname: petname)
             } catch {
                 // Stop waiting, the petname is not in our addressbook anymore (unfollowed)
                 throw RetryError.cancelled
@@ -397,10 +400,8 @@ actor AddressBookService {
     func unfollowUser(did: Did) async throws {
         let entries = try await listEntries()
         
-        for entry in entries {
-            if entry.did == did {
-                try await unfollowUser(petname: entry.petname)
-            }
+        for entry in entries where entry.did == did {
+            try await unfollowUser(petname: entry.petname)
         }
     }
     
@@ -455,7 +456,9 @@ actor AddressBookService {
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
     /// This can fail if `maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
-    nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
+    nonisolated func findAvailablePetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Petname, Error> {
         Future.detached {
             try await self.addressBook.findAvailablePetname(petname: petname)
         }

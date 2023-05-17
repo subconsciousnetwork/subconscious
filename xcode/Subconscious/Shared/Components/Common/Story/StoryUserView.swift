@@ -58,7 +58,7 @@ struct StoryUserView: View {
                         
                     Spacer()
                     
-                    switch (story.resolutionStatus) {
+                    switch story.resolutionStatus {
                     case .unresolved:
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.secondary)
