@@ -14,14 +14,8 @@ class Tests_UserProfileBio: XCTestCase {
         XCTAssertEqual(bio, UserProfileBio(bio).text)
     }
     
-    func testExtendedUnicode() throws {
-        let bio = "豈 更 車ぁ あ ぃ✁ ✂ ✃☀ ☁ ☂ก ข ฃ"
-        
-        XCTAssertEqual(bio, UserProfileBio(bio).text)
-    }
-    
-    func testEmoji() throws {
-        let bio = "🧠🤝🤖"
+    func testUnicode() throws {
+        let bio = "🧠🤝🤖豈 更 車ぁ あ ぃ✁ ✂ ✃☀ ☁ ☂ก ข ฃ"
         
         XCTAssertEqual(bio, UserProfileBio(bio).text)
     }
