@@ -11,21 +11,19 @@ import Foundation
 public struct UserProfileBio:
     Hashable,
     Equatable,
-    Identifiable,
     Codable {
     
     public static let empty = UserProfileBio("")
     private static let visibleContentRegex = /[^\s]/
     
-    public let verbatim: String
-    public var id: String { verbatim }
+    public let text: String
     
     public var hasVisibleContent: Bool {
-        verbatim.contains(Self.visibleContentRegex)
+        text.contains(Self.visibleContentRegex)
     }
 
     public init(_ description: String) {
-        self.verbatim = description
+        self.text = description
             // Turn all whitespace into spaces
             .replacingOccurrences(
                 of: "\\s+",

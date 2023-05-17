@@ -110,7 +110,7 @@ struct StoryUserView: View {
             
             if story.user.bio.hasVisibleContent {
                 Divider()
-                Text(verbatim: story.user.bio.verbatim)
+                Text(verbatim: story.user.bio.text)
                     .padding(AppTheme.tightPadding)
             }
         }
@@ -118,7 +118,7 @@ struct StoryUserView: View {
         .onTapGesture {
             action(
                 story.user.address,
-                story.user.bio.verbatim
+                story.user.bio.text
             )
         }
         .background(.background)

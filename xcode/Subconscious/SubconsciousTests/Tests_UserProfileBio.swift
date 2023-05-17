@@ -11,19 +11,19 @@ import XCTest
 class Tests_UserProfileBio: XCTestCase {
     func testUnchanged() throws {
         let bio = "This is a nice bio."
-        XCTAssertEqual(bio, UserProfileBio(bio).verbatim)
+        XCTAssertEqual(bio, UserProfileBio(bio).text)
     }
     
     func testExtendedUnicode() throws {
         let bio = "豈 更 車ぁ あ ぃ✁ ✂ ✃☀ ☁ ☂ก ข ฃ"
         
-        XCTAssertEqual(bio, UserProfileBio(bio).verbatim)
+        XCTAssertEqual(bio, UserProfileBio(bio).text)
     }
     
     func testEmoji() throws {
         let bio = "🧠🤝🤖"
         
-        XCTAssertEqual(bio, UserProfileBio(bio).verbatim)
+        XCTAssertEqual(bio, UserProfileBio(bio).text)
     }
     
     func testWhitespace() throws {
@@ -32,7 +32,7 @@ class Tests_UserProfileBio: XCTestCase {
         nice bio.
         """
         
-        XCTAssertEqual("This is a nice bio.", UserProfileBio(bio).verbatim)
+        XCTAssertEqual("This is a nice bio.", UserProfileBio(bio).text)
     }
     
     func testTruncation() throws {
@@ -52,6 +52,6 @@ class Tests_UserProfileBio: XCTestCase {
                   layer of creamy, organic butt
                   """
         
-        XCTAssertEqual(expected, UserProfileBio(bio).verbatim)
+        XCTAssertEqual(expected, UserProfileBio(bio).text)
     }
 }
