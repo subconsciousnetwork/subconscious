@@ -263,17 +263,17 @@ final class DatabaseService {
             SELECT petname, did, version FROM peer;
             """
         ).map({ row in
-            guard let petname = row.get(0)?.toString()?.toPetname() else {
+            guard let petname = row.col(0)?.toString()?.toPetname() else {
                 throw CodingError.decodingError(
                     message: "Failed to decode petname from row"
                 )
             }
-            guard let identity = row.get(1)?.toString()?.toDid() else {
+            guard let identity = row.col(1)?.toString()?.toDid() else {
                 throw CodingError.decodingError(
                     message: "Failed to decode did from row"
                 )
             }
-            let version = row.get(2)?.toString()
+            let version = row.col(2)?.toString()
             return PeerRecord(
                 petname: petname,
                 identity: identity,
