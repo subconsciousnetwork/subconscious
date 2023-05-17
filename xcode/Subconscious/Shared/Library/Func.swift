@@ -65,7 +65,6 @@ struct Func {
         } catch RetryError.cancelled {
             return nil
         } catch {
-            
             let attempts = attempts + 1
             guard attempts < maxAttempts else {
                 return nil

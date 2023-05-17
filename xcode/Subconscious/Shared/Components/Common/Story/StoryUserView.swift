@@ -159,7 +159,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     isFollowingUser: false,
                     resolutionStatus: .unresolved
                 ),
-                action: { _, _ in print("ok") }
+                action: { _, _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -174,7 +174,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     isFollowingUser: true,
                     resolutionStatus: .pending
                 ),
-                action: { _, _ in print("ok") }
+                action: { _, _ in }
             )
             StoryUserView(
                 story: StoryUser(

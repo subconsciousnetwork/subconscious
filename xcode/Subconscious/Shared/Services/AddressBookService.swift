@@ -9,16 +9,10 @@ import os
 import Foundation
 import Combine
 
-enum AddressBookEntryStatus: Equatable, Hashable, Codable {
-    case unresolved
-    case pending
-    case resolved
-}
-
 struct AddressBookEntry: Equatable, Hashable, Codable {
     var petname: Petname
     var did: Did
-    var status: AddressBookEntryStatus
+    var status: PetnameResolutionStatus
 }
 
 enum AddressBookError: Error {
@@ -34,17 +28,35 @@ extension AddressBookError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cannotFollowYourself:
-            return String(localized: "You cannot follow yourself.", comment: "Address Book error description")
+            return String(
+                localized: "You cannot follow yourself.",
+                comment: "Address Book error description"
+            )
         case .alreadyFollowing:
-            return String(localized: "You are already following {}.", comment: "Address Book error description")
+            return String(
+                localized: "You are already following {}.",
+                comment: "Address Book error description"
+            )
         case .failedToIncrementPetname:
-            return String(localized: "Failed to increment a petname's suffix.", comment: "Address Book error description")
+            return String(
+                localized: "Failed to increment a petname's suffix.",
+                comment: "Address Book error description"
+            )
         case .exhaustedUniquePetnameRange:
-            return String(localized: "Failed to find an available petname.", comment: "Address Book error description")
+            return String(
+                localized: "Failed to find an available petname.",
+                comment: "Address Book error description"
+            )
         case .invalidAttemptToOverwitePetname:
-            return String(localized: "This petname is already in use.", comment: "Address Book error description")
+            return String(
+                localized: "This petname is already in use.",
+                comment: "Address Book error description"
+            )
         case .other(let msg):
-            return String(localized: "An unknown error occurred: \(msg)", comment: "Unknown Address Book error description")
+            return String(
+                localized: "An unknown error occurred: \(msg)",
+                comment: "Unknown Address Book error description"
+            )
         }
     }
 }
@@ -87,9 +99,9 @@ actor AddressBook<Sphere: SphereProtocol> {
             let status = await Func.run {
                 do {
                     let _ = try await sphere.resolvePetname(petname: petname)
-                    return AddressBookEntryStatus.resolved
+                    return PetnameResolutionStatus.resolved
                 } catch {
-                    return AddressBookEntryStatus.unresolved
+                    return PetnameResolutionStatus.unresolved
                 }
             }
             
@@ -316,12 +328,6 @@ actor AddressBookService {
             version: version
         )
         await self.addressBook.invalidateCache()
-    }
-    
-    private func checkForPetnameResolution(
-        petname: Petname
-    ) async throws -> Cid {
-        return try await self.noosphere.resolvePetname(petname: petname)
     }
     
     func waitForPetnameResolution(
