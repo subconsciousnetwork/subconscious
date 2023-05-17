@@ -287,6 +287,7 @@ struct FollowUserFormView: View {
 enum FollowUserFormAction: Equatable {
     case didField(FormFieldAction<String>)
     case petnameField(FormFieldAction<String>)
+    case reset
 }
 
 // MARK: Model
@@ -330,6 +331,15 @@ struct FollowUserFormModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
+            )
+        case .reset:
+            return update(
+                state: state,
+                actions: [
+                    .didField(.reset),
+                    .petnameField(.reset)
+                ],
+                environment: environment
             )
         }
     }

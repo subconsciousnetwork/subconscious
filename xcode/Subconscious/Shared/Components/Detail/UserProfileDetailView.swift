@@ -373,6 +373,17 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentFollowNewUserFormSheet(let presented):
             var model = state
             model.isFollowNewUserFormSheetPresented = presented
+            
+            if presented {
+                return update(
+                    state: model,
+                    actions: [
+                        .followNewUserFormSheet(.form(.reset))
+                    ],
+                    environment: environment
+                )
+            }
+            
             return Update(state: model)
             
         case .presentFollowSheet(let presented):
