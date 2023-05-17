@@ -22,4 +22,65 @@ final class Tests_URLUtilities: XCTestCase {
         let urlD = URL(string: "file://example.com")!
         XCTAssertFalse(urlD.isHTTP())
     }
+    
+    func testValidURL() {
+        let urlString = "https://example.com/image.jpg"
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testPreservesUrlComponents() {
+        let urlString = "https://example.com:8080/image.jpg?q=123#hello"
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testSchemeOnly() {
+        let a = URL(validating: "http:")
+        XCTAssertNil(a)
+        
+        let b = URL(validating: "https:")
+        XCTAssertNil(b)
+    }
+    
+    func testInvalidURL() {
+        let urlString = "not a url"
+        let url = URL(validating: urlString)
+        XCTAssertNil(url)
+    }
+    
+    func testInvalidScheme() {
+        let urlString = "ftp://example.com/image.jpg"
+        let url = URL(validating: urlString)
+        XCTAssertNil(url)
+    }
+    
+    func testMissingHost() {
+        let urlString = "https:///image.jpg"
+        let url = URL(validating: urlString)
+        XCTAssertNil(url)
+    }
+    
+    func testMissingPath() {
+        let urlString = "https://example.com"
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testPort() {
+        let urlString = "https://example.com:8080"
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
+    
+    func testIpAddress() {
+        let urlString = "https://127.0.0.1"
+        let url = URL(validating: urlString)
+        XCTAssertNotNil(url)
+        XCTAssertEqual(url?.absoluteString, urlString)
+    }
 }

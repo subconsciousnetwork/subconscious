@@ -95,7 +95,7 @@ struct EditProfileSheetModel: ModelProtocol {
     var pfpUrlField: FormField<String, URL> = FormField(
         value: "",
         validate: { value in
-            URL(string: value)
+            URL(validating: value)
         }
     )
     
