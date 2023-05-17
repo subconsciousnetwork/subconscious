@@ -84,7 +84,7 @@ struct UserProfileHeaderView: View {
             }
             
             if user.bio.hasVisibleContent {
-                Text(verbatim: user.bio.bio)
+                Text(verbatim: user.bio.verbatim)
             }
         }
     }

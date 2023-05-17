@@ -17,11 +17,11 @@ public struct UserProfileBio:
     public static let empty = UserProfileBio("")
     private static let visibleContentRegex = /[^\s]/
     
-    public let bio: String
-    public var id: String { bio }
+    public let verbatim: String
+    public var id: String { verbatim }
     
     public var hasVisibleContent: Bool {
-        bio.contains(Self.visibleContentRegex)
+        verbatim.contains(Self.visibleContentRegex)
     }
 
     public init(_ description: String) {
@@ -33,6 +33,6 @@ public struct UserProfileBio:
             options: .regularExpression
         )
 
-        self.bio = cleanedBio
+        self.verbatim = cleanedBio
     }
 }

@@ -476,7 +476,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let profile = UserProfileEntry(
                 nickname: state.user?.nickname.verbatim,
-                bio: state.user?.bio.bio,
+                bio: state.user?.bio.verbatim,
                 profilePictureUrl: pfp?.absoluteString
             )
             return update(
