@@ -253,6 +253,35 @@ final class DatabaseService {
         )
     }
     
+    /// List all peers in database
+    func listPeers() throws -> [PeerRecord] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        return try database.execute(
+            sql: """
+            SELECT petname, did, version FROM peer;
+            """
+        ).map({ row in
+            guard let petname = row.get(0)?.toString()?.toPetname() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode petname from row"
+                )
+            }
+            guard let identity = row.get(1)?.toString()?.toDid() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode did from row"
+                )
+            }
+            let version = row.get(2)?.toString()
+            return PeerRecord(
+                petname: petname,
+                identity: identity,
+                version: version
+            )
+        })
+    }
+
     /// Purge all content of sphere with given DID from the database.
     ///
     /// This does not delete the content from file system or sphere,

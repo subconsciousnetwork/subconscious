@@ -186,15 +186,22 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
     case failSyncLocalFilesWithDatabase(String)
     
+    /// Begin indexing peer content one-by-one.
+    /// Should be called _after_ indexing our own sphere (which updates the
+    /// peers information in our address book).
+    case collectPeersToIndex
+    case succeedCollectPeersToIndex([PeerRecord])
+    case failCollectPeersToIndex(_ error: String)
+
     /// Index the contents of a sphere in the database
     case indexPeer(_ petname: Petname)
     case succeedIndexPeer(_ peer: PeerRecord)
-    case failIndexPeer(_ message: String)
+    case failIndexPeer(_ error: String)
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ petname: Petname)
     case succeedPurgePeer(_ peer: PeerRecord)
-    case failPurgePeer(_ message: String)
+    case failPurgePeer(_ error: String)
 
     case followDefaultGeist
     case succeedFollowDefaultGeist
@@ -665,7 +672,7 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case let .indexOurSphere:
+        case .indexOurSphere:
             return indexOurSphere(
                 state: state,
                 environment: environment
@@ -698,6 +705,23 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 message: message
+            )
+        case .collectPeersToIndex:
+            return collectPeersToIndex(
+                state: state,
+                environment: environment
+            )
+        case .succeedCollectPeersToIndex(let peers):
+            return succeedCollectPeersToIndex(
+                state: state,
+                environment: environment,
+                peers: peers
+            )
+        case .failCollectPeersToIndex(let error):
+            return failCollectPeersToIndex(
+                state: state,
+                environment: environment,
+                error: error
             )
         case .indexPeer(let petname):
             return indexPeer(
@@ -1413,7 +1437,10 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .setAppUpgradeComplete(model.isSyncAllResolved),
+            actions: [
+                .setAppUpgradeComplete(model.isSyncAllResolved),
+                .collectPeersToIndex
+            ],
             environment: environment
         )
     }
@@ -1494,6 +1521,52 @@ struct AppModel: ModelProtocol {
         )
     }
     
+    /// Index a sphere to the database
+    static func collectPeersToIndex(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        logger.log([
+            "msg": "Collecting peers to index"
+        ])
+        let fx: Fx<Action> = Future.detached {
+            do {
+                let peers = try environment.database.listPeers()
+                return Action.succeedCollectPeersToIndex(peers)
+            } catch {
+                return Action.failIndexPeer(error.localizedDescription)
+            }
+            
+        }.eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Index a sphere to the database
+    static func succeedCollectPeersToIndex(
+        state: Self,
+        environment: Environment,
+        peers: [PeerRecord]
+    ) -> Update<Self> {
+        let fx: Fx<Action> = peers
+            .map({ peer in Action.indexPeer(peer.petname) })
+            .publisher
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Index a sphere to the database
+    static func failCollectPeersToIndex(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log([
+            "msg": "Failed to collect peers to index",
+            "error": error
+        ])
+        return Update(state: state)
+    }
+
     /// Index a sphere to the database
     static func indexPeer(
         state: Self,
