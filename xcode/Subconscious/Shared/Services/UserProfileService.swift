@@ -277,7 +277,7 @@ actor UserProfileService {
             body: data
         )
         
-        let _ = try await self.noosphere.save()
+        _ = try await self.noosphere.save()
         
         do {
             _ = try await self.noosphere.sync()
