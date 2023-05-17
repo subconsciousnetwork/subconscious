@@ -250,7 +250,6 @@ struct EditProfileSheet: View {
                             axis: .vertical
                         )
                         .formField()
-                        .lineLimit(3)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                     }
