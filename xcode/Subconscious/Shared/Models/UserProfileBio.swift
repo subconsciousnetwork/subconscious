@@ -25,14 +25,16 @@ public struct UserProfileBio:
     }
 
     public init(_ description: String) {
-        let bio = description.prefix(280)
-        // Turn all whitespace into spaces
-        let cleanedBio = bio.replacingOccurrences(
-            of: "\\s",
-            with: " ",
-            options: .regularExpression
-        )
-
-        self.verbatim = cleanedBio
+        self.verbatim = description
+            // Turn all whitespace into spaces
+            .replacingOccurrences(
+                of: "\\s+",
+                with: " ",
+                options: .regularExpression
+            )
+            // Catch leading spaces
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .prefix(280)
+            .toString()
     }
 }
