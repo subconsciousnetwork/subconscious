@@ -329,7 +329,8 @@ struct UserProfileDetailModel: ModelProtocol {
             model.recentEntries = content.recentEntries
             model.following = content.following.map { follow in
                 if let petname = follow.user.address.petname,
-                   model.pendingFollows.contains(petname) {
+                   model.pendingFollows.contains(petname),
+                   follow.resolutionStatus != .resolved {
                     
                     var user = follow
                     user.resolutionStatus = .pending
