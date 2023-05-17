@@ -62,21 +62,15 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
     
     /// Attempt to validate the input and produce the backing type
     var validated: Output? {
-        get {
-            validate(value)
-        }
+        validate(value)
     }
     /// Is the current value valid?
     var isValid: Bool {
-        get {
-            validated != nil
-        }
+        validated != nil
     }
     /// Should this field visually display an error?
     var hasError: Bool {
-        get {
-            !isValid && touched
-        }
+        !isValid && touched
     }
     
     static func update(

@@ -25,6 +25,12 @@ extension Did: DummyData {
     }
 }
 
+extension UserProfileBio: DummyData {
+    static func dummyData() -> UserProfileBio {
+        UserProfileBio(String.dummyDataMedium())
+    }
+}
+
 extension Petname: DummyData {
     static func dummyData() -> Petname {
         let options = [
@@ -75,7 +81,7 @@ extension StoryUser: DummyData {
                 nickname: petname,
                 address: Slashlink(petname: petname),
                 pfp: .image(String.dummyProfilePicture()),
-                bio: String.dummyDataMedium(),
+                bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
             isFollowingUser: Bool.dummyData()
@@ -89,7 +95,7 @@ extension StoryUser: DummyData {
                 nickname: petname,
                 address: Slashlink(petname: petname),
                 pfp: .image(String.dummyProfilePicture()),
-                bio: String.dummyDataMedium(),
+                bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
             isFollowingUser: Bool.dummyData()
@@ -154,7 +160,7 @@ extension UserProfile: DummyData {
             nickname: petname,
             address: Slashlink(petname: petname),
             pfp: .image(String.dummyProfilePicture()),
-            bio: String.dummyDataMedium(),
+            bio: UserProfileBio.dummyData(),
             category: .human
         )
     }

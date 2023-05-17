@@ -89,7 +89,7 @@ struct EditProfileSheetModel: ModelProtocol {
     var bioField: FormField<String, String> = FormField(
         value: "",
         validate: { value in
-            value.count >= 280 ? nil : value
+            value.count > 280 ? nil : value
         }
     )
     var pfpUrlField: FormField<String, URL> = FormField(
@@ -174,7 +174,7 @@ struct EditProfileSheet: View {
             nickname: nickname,
             address: user.address,
             pfp: pfp,
-            bio: state.bioField.validated ?? "",
+            bio: UserProfileBio(state.bioField.validated ?? ""),
             category: .you
         )
     }

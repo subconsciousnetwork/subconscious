@@ -168,7 +168,7 @@ actor UserProfileService {
             nickname: Petname(userProfileData?.nickname ?? "") ?? fallbackPetname,
             address: address,
             pfp: pfp,
-            bio: userProfileData?.bio ?? "",
+            bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: address.isOurProfile ? .you : .human
         )
         
