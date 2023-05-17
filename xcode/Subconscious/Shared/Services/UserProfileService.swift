@@ -71,7 +71,7 @@ struct UserProfileEntry: Codable, Equatable {
     init(nickname: String?, bio: String?, profilePictureUrl: String?) {
         self.version = Self.currentVersion
         self.nickname = nickname
-        self.bio = bio
+        self.bio = UserProfileBio(bio ?? "").bio
         self.profilePictureUrl = profilePictureUrl
     }
     
