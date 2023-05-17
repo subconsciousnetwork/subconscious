@@ -377,9 +377,7 @@ struct UserProfileDetailModel: ModelProtocol {
             if presented {
                 return update(
                     state: model,
-                    actions: [
-                        .followNewUserFormSheet(.form(.reset))
-                    ],
+                    action: .followNewUserFormSheet(.form(.reset)),
                     environment: environment
                 )
             }
