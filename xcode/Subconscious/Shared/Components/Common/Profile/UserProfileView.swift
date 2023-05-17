@@ -405,7 +405,9 @@ private struct EditProfileSheetModifier: ViewModifier {
                 }
             }
             .onReceive(store.actions) { action in
-                switch(action) {
+                switch action {
+                case .refresh:
+                    app.send(.syncAll)
                 case .succeedEditProfile:
                     app.send(.fetchNicknameFromProfile)
                 case _:
