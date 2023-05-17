@@ -173,18 +173,18 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncSphereWithGateway(version: String)
     case failSyncSphereWithGateway(String)
 
+    /// Update sphere index for our sphere, and our immediate peers to the
+    /// latest version.
+    case indexPeers(since: Cid)
+    case succeedIndexPeers(since: Cid, changes: [Sphere.PeerChange])
+    case failIndexPeers(_ error: String)
+
     /// Sync current sphere state with database state.
     /// Sphere always wins.
     case indexOurSphere
-    case succeedIndexOurSphere(SphereSnapshot)
+    case succeedIndexOurSphere(OurSphereRecord)
     case failIndexOurSphere(String)
     
-    /// Index content of spheres that we follow.
-    /// Noosphere is source of truth, and always wins.
-    case indexOurFollows
-    case succeedIndexOurFollows([SphereIndexChangeReceipt])
-    case failIndexOurFollows(_ message: String)
-
     /// Sync database with file system.
     /// File system always wins.
     case syncLocalFilesWithDatabase
@@ -192,14 +192,14 @@ enum AppAction: CustomLogStringConvertible {
     case failSyncLocalFilesWithDatabase(String)
     
     /// Index the contents of a sphere in the database
-    case indexSphere(_ petname: Petname)
-    case succeedIndexSphere(_ snapshot: SphereSnapshot)
-    case failIndexSphere(_ message: String)
+    case indexPeerMemos(_ petname: Petname)
+    case succeedIndexPeerMemos(_ peer: PeerRecord)
+    case failIndexPeerMemos(_ message: String)
 
     /// Purge the contents of a sphere from the database
-    case purgeSphere(_ petname: Petname)
-    case succeedPurgeSphere(_ snapshot: SphereSnapshot)
-    case failPurgeSphere(_ message: String)
+    case purgePeer(_ petname: Petname)
+    case succeedPurgePeer(_ peer: PeerRecord)
+    case failPurgePeer(_ message: String)
 
     case followDefaultGeist
     case succeedFollowDefaultGeist
@@ -670,6 +670,25 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
+        case .indexPeers(let since):
+            return indexPeers(
+                state: state,
+                environment: environment,
+                since: since
+            )
+        case let .succeedIndexPeers(since, changes):
+            return succeedIndexPeers(
+                state: state,
+                environment: environment,
+                since: since,
+                changes: changes
+            )
+        case let .failIndexPeers(error):
+            return failIndexPeers(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .indexOurSphere:
             return indexOurSphere(
                 state: state,
@@ -686,23 +705,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
-            )
-        case .indexOurFollows:
-            return indexOurFollows(
-                state: state,
-                environment: environment
-            )
-        case let .succeedIndexOurFollows(changes):
-            return succeedIndexOurFollows(
-                state: state,
-                environment: environment,
-                changes: changes
-            )
-        case let .failIndexOurFollows(message):
-            return failIndexOurFollows(
-                state: state,
-                environment: environment,
-                message: message
             )
         case .syncLocalFilesWithDatabase:
             return syncLocalFilesWithDatabase(
@@ -721,41 +723,41 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 message: message
             )
-        case .indexSphere(let petname):
-            return indexSphere(
+        case .indexPeerMemos(let petname):
+            return indexPeerMemos(
                 state: state,
                 environment: environment,
                 petname: petname
             )
-        case .succeedIndexSphere(let snapshot):
-            return succeedIndexSphere(
+        case .succeedIndexPeerMemos(let peer):
+            return succeedIndexPeerMemos(
                 state: state,
                 environment: environment,
-                snapshot: snapshot
+                peer: peer
             )
-        case .failIndexSphere(let message):
-            return failIndexSphere(
+        case .failIndexPeerMemos(let error):
+            return failIndexPeerMemos(
                 state: state,
                 environment: environment,
-                message: message
+                error: error
             )
-        case .purgeSphere(let petname):
-            return purgeSphere(
+        case .purgePeer(let petname):
+            return purgePeer(
                 state: state,
                 environment: environment,
                 petname: petname
             )
-        case .succeedPurgeSphere(let snapshot):
-            return succeedPurgeSphere(
+        case .succeedPurgePeer(let snapshot):
+            return succeedPurgePeer(
                 state: state,
                 environment: environment,
-                snapshot: snapshot
+                peer: snapshot
             )
-        case .failPurgeSphere(let message):
-            return failPurgeSphere(
+        case .failPurgePeer(let error):
+            return failPurgePeer(
                 state: state,
                 environment: environment,
-                message: message
+                error: error
             )
         case let .presentSettingsSheet(isPresented):
             return presentSettingsSheet(
@@ -1308,19 +1310,16 @@ struct AppModel: ModelProtocol {
         do {
             let sphereIdentity = try state.sphereIdentity.unwrap()
             let did = try Did(sphereIdentity).unwrap()
-            let info: SphereSnapshot? = try environment.database.readSphereIndexInfo(
-                identity: did
-            ).unwrap()
-            let identity = info?.identity.description ?? "unknown"
-            let version = info?.version.description ?? "unknown"
+            let info: OurSphereRecord = try environment.database
+                .readOurSphere()
+                .unwrap()
             logger.log([
-                "msg": "Database last-known index for our sphere",
-                "petname": "(ours)",
-                "identity": identity,
-                "version": version
+                "msg": "Last-known index for our sphere",
+                "identity": info.identity.description,
+                "version": info.version
             ])
         } catch {
-            logger.log(["msg": "Database last-known sphere state: unknown"])
+            logger.log(["msg": "Last-known for our sphere: unknown"])
         }
         // For now, we just sync everything on ready.
         return update(
@@ -1379,7 +1378,7 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            actions: [.indexOurSphere, .indexOurFollows],
+            actions: [.indexOurSphere],
             environment: environment
         )
     }
@@ -1399,11 +1398,75 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            actions: [.indexOurSphere, .indexOurFollows],
+            actions: [.indexOurSphere],
             environment: environment
         )
     }
     
+    static func indexPeers(
+        state: Self,
+        environment: Environment,
+        since: Cid
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            do {
+                let changes = try await environment.data.indexPeers(
+                    since: since
+                )
+                return Action.succeedIndexPeers(
+                    since: since,
+                    changes: changes
+                )
+            } catch {
+                return Action.failIndexPeers(error.localizedDescription)
+            }
+        }.eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedIndexPeers(
+        state: Self,
+        environment: Environment,
+        since: Cid,
+        changes: [Sphere.PeerChange]
+    ) -> Update<Self> {
+        logger.log([
+            "msg": "Indexed peer info",
+            "since": since
+        ])
+        for change in changes {
+            switch change {
+            case let .update(petname, identity, version):
+                logger.log([
+                    "msg": "Indexed peer",
+                    "type": "change",
+                    "petname": petname.description,
+                    "identity": identity.description,
+                    "version": version ?? "nil"
+                ])
+            case .remove(let petname):
+                logger.log([
+                    "msg": "Indexed peer",
+                    "type": "remove",
+                    "petname": petname.description
+                ])
+            }
+        }
+        return Update(state: state)
+    }
+
+    static func failIndexPeers(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log([
+            "msg": "Failed to index peers",
+            "error": error
+        ])
+        return Update(state: state)
+    }
+
     static func indexOurSphere(
         state: AppModel,
         environment: AppEnvironment
@@ -1425,12 +1488,10 @@ struct AppModel: ModelProtocol {
     static func succeedIndexOurSphere(
         state: AppModel,
         environment: AppEnvironment,
-        receipt: SphereSnapshot
+        receipt: OurSphereRecord
     ) -> Update<AppModel> {
-        let petname = receipt.petname?.description ?? "(ours)"
         logger.log([
-            "msg": "Indexed sphere",
-            "petname": petname,
+            "msg": "Indexed our sphere",
             "identity": receipt.identity.description,
             "version": receipt.version
         ])
@@ -1451,7 +1512,7 @@ struct AppModel: ModelProtocol {
         error: String
     ) -> Update<AppModel> {
         logger.log([
-            "msg": "Failed to index sphere to database",
+            "msg": "Failed to index our sphere to database",
             "error": error
         ])
         
@@ -1465,41 +1526,6 @@ struct AppModel: ModelProtocol {
         )
     }
     
-    static func indexOurFollows(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        logger.log(["msg": "Indexing follows"])
-        let fx: Fx<Action> = environment.data
-            .indexOurFollowsPublisher().map({ changes in
-                Action.succeedIndexOurFollows(changes)
-            }).recover({ error in
-                Action.failIndexOurFollows(error.localizedDescription)
-            }).eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
-    
-    static func succeedIndexOurFollows(
-        state: Self,
-        environment: Environment,
-        changes: [SphereIndexChangeReceipt]
-    ) -> Update<Self> {
-        logger.log(["msg": "Indexed follows"])
-        return Update(state: state)
-    }
-    
-    static func failIndexOurFollows(
-        state: Self,
-        environment: Environment,
-        message: String
-    ) -> Update<Self> {
-        logger.log([
-            "msg": "Failed to index follows",
-            "error": message
-        ])
-        return Update(state: state)
-    }
-
     /// Start file sync
     static func syncLocalFilesWithDatabase(
         state: AppModel,
@@ -1557,94 +1583,92 @@ struct AppModel: ModelProtocol {
     }
     
     /// Index a sphere to the database
-    static func indexSphere(
+    static func indexPeerMemos(
         state: Self,
         environment: Environment,
         petname: Petname
     ) -> Update<Self> {
-        let fx: Fx<Action> = environment.data.indexSpherePublisher(
+        let fx: Fx<Action> = environment.data.indexPeerPublisher(
             petname: petname
-        ).map({ snapshot in
-            Action.succeedIndexSphere(snapshot)
+        ).map({ peer in
+            Action.succeedIndexPeerMemos(peer)
         }).recover({ error in
-            Action.failIndexSphere(error.localizedDescription)
+            Action.failIndexPeerMemos(error.localizedDescription)
         }).eraseToAnyPublisher()
         logger.log([
-            "msg": "Indexing sphere",
+            "msg": "Indexing peer",
             "petname": petname.description
         ])
         return Update(state: state, fx: fx)
     }
     
-    static func succeedIndexSphere(
+    static func succeedIndexPeerMemos(
         state: Self,
         environment: Environment,
-        snapshot: SphereSnapshot
+        peer: PeerRecord
     ) -> Update<Self> {
-        let petname = snapshot.petname?.description ?? "(ours)"
         logger.log([
-            "msg": "Indexed sphere",
-            "petname": petname.description,
-            "identity": snapshot.identity.description,
-            "version": snapshot.version
+            "msg": "Indexed peer",
+            "petname": peer.petname.description,
+            "identity": peer.identity.description,
+            "version": peer.version ?? "nil"
         ])
         return Update(state: state)
     }
     
-    static func failIndexSphere(
+    static func failIndexPeerMemos(
         state: Self,
         environment: Environment,
-        message: String
+        error: String
     ) -> Update<Self> {
         logger.log([
-            "msg": "Failed to index sphere",
-            "error": message
+            "msg": "Failed to index peer",
+            "error": error
         ])
         return Update(state: state)
     }
     
-    static func purgeSphere(
+    static func purgePeer(
         state: Self,
         environment: Environment,
         petname: Petname
     ) -> Update<Self> {
-        let fx: Fx<Action> = environment.data.purgeSpherePublisher(
+        let fx: Fx<Action> = environment.data.purgePeerPublisher(
             petname: petname
-        ).map({ snapshot in
-            Action.succeedPurgeSphere(snapshot)
+        ).map({ peer in
+            Action.succeedPurgePeer(peer)
         }).recover({ error in
-            Action.failPurgeSphere(error.localizedDescription)
+            Action.failPurgePeer(error.localizedDescription)
         }).eraseToAnyPublisher()
         logger.log([
-            "msg": "Purging sphere",
+            "msg": "Purging peer",
             "petname": petname.description
         ])
         return Update(state: state, fx: fx)
     }
     
-    static func succeedPurgeSphere(
+    static func succeedPurgePeer(
         state: Self,
         environment: Environment,
-        snapshot: SphereSnapshot
+        peer: PeerRecord
     ) -> Update<Self> {
-        let petname = snapshot.petname?.description ?? "(ours)"
         logger.log([
-            "msg": "Purged sphere from database",
-            "petname": petname,
-            "identity": snapshot.identity.description,
-            "version": snapshot.version
+            "msg": "Purged peer from database",
+            "petname": peer.petname.description,
+            "identity": peer.identity.description,
+            "version": peer.version ?? "nil"
         ])
         return Update(state: state)
     }
     
-    static func failPurgeSphere(
+    static func failPurgePeer(
         state: Self,
         environment: Environment,
-        message: String
+        error: String
     ) -> Update<Self> {
         logger.log([
-            "msg": "Failed to purge sphere from database",
-            "error": message
+            "msg": "Failed to purge peer from database",
+            "error": error
         ])
         return Update(state: state)
     }
@@ -1773,7 +1797,7 @@ struct AppModel: ModelProtocol {
         logger.log("Notify followed \(petname) with identity \(identity)")
         return update(
             state: state,
-            action: .indexSphere(petname),
+            action: .indexPeerMemos(petname),
             environment: environment
         )
     }
@@ -1787,7 +1811,7 @@ struct AppModel: ModelProtocol {
         logger.log("Notify unfollowed \(petname) with identity \(identity)")
         return update(
             state: state,
-            action: .purgeSphere(petname),
+            action: .purgePeer(petname),
             environment: environment
         )
     }

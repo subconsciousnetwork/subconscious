@@ -295,11 +295,7 @@ actor AddressBookService {
         
         try await noosphere.setPetname(did: did, petname: petname)
         let version = try await noosphere.save()
-        try database.writeSphereIndexInfo(
-            identity: ourIdentity,
-            version: version,
-            petname: nil
-        )
+        try database.writeOurSphere(identity: ourIdentity, version: version)
         await self.addressBook.invalidateCache()
         
         do {
@@ -328,11 +324,7 @@ actor AddressBookService {
         let ourIdentity = try await noosphere.identity()
         try await self.addressBook.unsetPetname(petname: petname)
         let version = try await self.noosphere.save()
-        try database.writeSphereIndexInfo(
-            identity: ourIdentity,
-            version: version,
-            petname: nil
-        )
+        try database.writeOurSphere(identity: ourIdentity, version: version)
         await self.addressBook.invalidateCache()
     }
     

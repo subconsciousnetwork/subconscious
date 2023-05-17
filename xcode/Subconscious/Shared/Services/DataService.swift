@@ -40,15 +40,6 @@ struct MoveReceipt: Hashable {
     var to: Slashlink
 }
 
-/// Kinds of receipt for sphere index changes.
-/// Used when returning a list of changes made during a sync.
-enum PeerChangeReceipt {
-    /// Sphere was successfully indexed to DB
-    case index(PeerRecord)
-    /// Sphere was successfully purged from DB
-    case purge(PeerRecord)
-}
-
 // MARK: SERVICE
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
@@ -117,7 +108,7 @@ actor DataService {
 
     /// Get the peer changes in our sphere `since` a given version,
     /// and index the latest info on those peers in the database.
-    func indexPeers(since: Cid) async throws {
+    func indexPeers(since: Cid) async throws -> [Sphere.PeerChange] {
         let changes = try await noosphere.getPeerChanges(since: since)
         let savepoint = "index_peers"
         try database.savepoint(savepoint)
@@ -138,6 +129,7 @@ actor DataService {
             }
         }
         try database.release(savepoint)
+        return changes
     }
     
     /// Index a peer sphere's content in our database.
