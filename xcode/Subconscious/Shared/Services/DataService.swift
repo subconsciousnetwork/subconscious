@@ -230,15 +230,13 @@ actor DataService {
             await Task.yield()
             
             // Then index memo changes from our sphere.
-            let changes = try await sphere.changes(since: since)
+            let memoChanges = try await sphere.changes(since: since)
 
-            for change in changes {
+            for change in memoChanges {
                 let link = Link(did: identity, slug: change)
-                // FIXME
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
                 // If memo does not exist, that means change was a remove.
-                // FIXME should I be reading form my own sphere?
                 if let memo = try? await sphere.read(
                     slashlink: slashlink
                 ).toMemo() {
@@ -260,6 +258,11 @@ actor DataService {
                 "identity": identity.description,
                 "version": version
             ])
+
+            return OurSphereRecord(
+                identity: identity,
+                version: version
+            )
         } catch {
             try database.rollback(savepoint)
             logger.log([
@@ -269,10 +272,6 @@ actor DataService {
             ])
             throw error
         }
-        return OurSphereRecord(
-            identity: identity,
-            version: version
-        )
     }
 
     /// Purge sphere from database with the given petname.
