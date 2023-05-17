@@ -406,12 +406,6 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
 
-    func getPeerChanges(
-        since version: Cid
-    ) async throws -> [Sphere.PeerChange] {
-        try await self.sphere().getPeerChanges(since: version)
-    }
-
     func traverse(petname: Petname) async throws -> Sphere {
         try await self.sphere().traverse(petname: petname)
     }

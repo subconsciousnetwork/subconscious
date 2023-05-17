@@ -12,6 +12,24 @@ import os
 
 public typealias Cid = String
 
+/// Describes a peer change in our address book
+public enum PeerChange: Hashable {
+    /// Petname was added or updated within address book
+    case update(PeerRecord)
+    /// Petname was removed from address book
+    case remove(petname: Petname)
+}
+
+/// Describes a sphere petname and identity at a specific version
+public struct PeerRecord: Hashable, Codable {
+    /// Petname assigned to sphere
+    public var petname: Petname
+    /// DID of sphere
+    public var identity: Did
+    /// Sphere version
+    public var version: Cid?
+}
+
 /// Describes a Sphere.
 /// See `Sphere` for a concrete implementation.
 public protocol SphereProtocol {
@@ -57,8 +75,6 @@ public protocol SphereProtocol {
     
     func getPetnameChanges(since: Cid) async throws -> [Petname]
     
-    func getPeerChanges(since: Cid) async throws -> [Sphere.PeerChange]
-    
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
     ///
@@ -89,6 +105,49 @@ extension SphereProtocol {
                 slug: slashlink.slug
             )
         }
+    }
+    
+    /// Given a petname, get the corresponding peer record, which includes
+    /// did and version information.
+    public func getPeer(_ petname: Petname) async -> PeerRecord? {
+        guard let identity = try? await getPetname(petname: petname) else {
+            return nil
+        }
+        let version = try? await resolvePetname(petname: petname)
+        return PeerRecord(
+            petname: petname,
+            identity: identity,
+            version: version
+        )
+    }
+    
+    /// Get array of peer changes since last version.
+    /// If CID is given, will calculate changes since CID.
+    /// If CID is nil, will list all petnames from current version as updates.
+    public func getPeerChanges(
+        since version: Cid?
+    ) async throws -> [PeerChange] {
+        guard let version = version else {
+            let petnames = try await listPetnames()
+            var changes: [PeerChange] = []
+            for petname in petnames {
+                let peer = try await getPeer(petname).unwrap()
+                changes.append(.update(peer))
+            }
+            return changes
+        }
+        let petnames = try await getPetnameChanges(since: version)
+        var changes: [PeerChange] = []
+        for petname in petnames {
+            // If we can get petname did, then change was an upsert.
+            // If we can't, then change was a remove.
+            if let peer = await getPeer(petname) {
+                changes.append(.update(peer))
+            } else {
+                changes.append(.remove(petname: petname))
+            }
+        }
+        return changes
     }
 }
 
@@ -176,18 +235,6 @@ enum SphereError: Error, LocalizedError {
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
 public actor Sphere: SphereProtocol, SpherePublisherProtocol {
-    /// Describes a peer change in our address book
-    public enum PeerChange: Hashable {
-        /// Petname was added or updated within address book
-        case update(
-            petname: Petname,
-            identity: Did,
-            version: Cid?
-        )
-        /// Petname was removed from address book
-        case remove(petname: Petname)
-    }
-    
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "Sphere"
@@ -643,31 +690,6 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         })
     }
     
-    /// Get array of peer changes since last version.
-    public func getPeerChanges(
-        since version: Cid
-    ) throws -> [PeerChange] {
-        let petnames = try getPetnameChanges(since: version)
-        var changes: [PeerChange] = []
-        for petname in petnames {
-            // If we can get petname did, then change was an upsert.
-            // If we can't, then change was a remove.
-            if let identity = try? getPetname(petname: petname) {
-                let version = try? resolvePetname(petname: petname)
-                changes.append(
-                    .update(
-                        petname: petname,
-                        identity: identity,
-                        version: version
-                    )
-                )
-            } else {
-                changes.append(.remove(petname: petname))
-            }
-        }
-        return changes
-    }
-
     /// Get all petname changes since a CID. Returned petnames were changed
     /// in some way. It is up to you to read them to find out what happend
     /// (deletion, update, etc).

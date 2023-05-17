@@ -106,32 +106,6 @@ actor DataService {
         .eraseToAnyPublisher()
     }
 
-    /// Get the peer changes in our sphere `since` a given version,
-    /// and index the latest info on those peers in the database.
-    func indexPeers(since: Cid) async throws -> [Sphere.PeerChange] {
-        let changes = try await noosphere.getPeerChanges(since: since)
-        let savepoint = "index_peers"
-        try database.savepoint(savepoint)
-        for change in changes {
-            switch change {
-            case let .update(petname, identity, version):
-                try database.writePeer(
-                    petname: petname,
-                    identity: identity,
-                    version: version
-                )
-            case let .remove(petname):
-                // If we have a peer under this petname,
-                // purge its contents from the db.
-                if let peer = try? database.readPeer(petname: petname) {
-                    try database.purgePeer(identity: peer.identity)
-                }
-            }
-        }
-        try database.release(savepoint)
-        return changes
-    }
-    
     /// Index a peer sphere's content in our database.
     ///
     /// - If sphere has been indexed before, we retreive the last-indexed
@@ -139,7 +113,7 @@ actor DataService {
     /// - If sphere has not been indexed, we get everything, and update
     ///
     /// This internal helper just exposes the basics
-    private func indexPeer(
+    func indexPeer(
         petname: Petname
     ) async throws -> PeerRecord {
         let sphere = try await noosphere.traverse(petname: petname)
@@ -198,33 +172,66 @@ actor DataService {
         )
     }
 
-    /// Index the contents of a sphere, referenced by petname
-    nonisolated func indexPeerPublisher(
-        petname: Petname
-    ) -> AnyPublisher<PeerRecord, Error> {
-        Future.detached(priority: .utility) {
-            try await self.indexPeer(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-
     /// Index our sphere's content in our database.
+    ///
+    /// The notion is that when our sphere's state advances (content and peers)
+    /// we also atomically advance the state of the database.
     ///
     /// - If sphere has been indexed before, we retreive the last-indexed
     ///   version, and use it to get changes since.
     /// - If sphere has not been indexed, we get everything, and update
     ///
-    /// This internal helper just exposes the basics
-    private func indexOurSphere() async throws -> OurSphereRecord {
+    /// If there is a failure, we roll back the database, so that the next
+    /// time we try, it will pick back up from the previous `since`, and
+    /// correctly replay everything since the last successful index.
+    func indexOurSphere() async throws -> OurSphereRecord {
         let sphere = noosphere
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        let info = try? database.readOurSphere()
-        // Get changes since the last time we indexed this peer
-        let changes = try await sphere.changes(since: info?.version)
-        let savepoint = "index_sphere"
+
+        let since = try database.readOurSphere()?.version
+        let savepoint = "index_our_sphere"
+        // Save database state so we can roll back on error
         try database.savepoint(savepoint)
+
         do {
+            // First index peers
+            let peerChanges = try await noosphere.getPeerChanges(since: since)
+            for change in peerChanges {
+                switch change {
+                case let .update(peer):
+                    try database.writePeer(
+                        petname: peer.petname,
+                        identity: peer.identity,
+                        version: peer.version
+                    )
+                    logger.log([
+                        "msg": "Indexed peer",
+                        "petname": peer.petname.description,
+                        "identity": peer.identity.description,
+                        "version": peer.version ?? "nil"
+                    ])
+                case let .remove(petname):
+                    // If we have a peer under this petname,
+                    // purge its contents from the db.
+                    if let peer = try? database.readPeer(petname: petname) {
+                        try database.purgePeer(identity: peer.identity)
+                        logger.log([
+                            "msg": "Purged peer",
+                            "petname": peer.petname.description,
+                            "identity": peer.identity.description,
+                            "version": peer.version ?? "nil"
+                        ])
+                    }
+                }
+            }
+            
+            // Give others a chance to do stuff for a bit.
+            await Task.yield()
+            
+            // Then index memo changes from our sphere.
+            let changes = try await sphere.changes(since: since)
+
             for change in changes {
                 let link = Link(did: identity, slug: change)
                 // FIXME
@@ -268,14 +275,6 @@ actor DataService {
         )
     }
 
-    nonisolated func indexOurSpherePublisher(
-    ) -> AnyPublisher<OurSphereRecord, Error> {
-        Future.detached(priority: .utility) {
-            try await self.indexOurSphere()
-        }
-        .eraseToAnyPublisher()
-    }
-    
     /// Purge sphere from database with the given petname.
     ///
     /// Gets did for petname, then purges everything belonging to did
