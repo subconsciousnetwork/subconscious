@@ -23,6 +23,8 @@ extension Character {
 }
 
 extension String {
+    private static let visibleContentRegex = /[^\s]/
+    
     /// Truncate string to max length, appending ellipsis if truncated.
     func truncate(
         maxLength: Int = 256,
@@ -48,6 +50,14 @@ extension String {
         self.prefix(while: { character in
             !character.isSentenceEndingPunctuation
         })
+    }
+    
+    var hasVisibleContent: Bool {
+        self.contains(Self.visibleContentRegex)
+    }
+    
+    var fitsInUserBio: Bool {
+        self.count <= UserProfileBio.maxLength
     }
 
     /// Derive title from string.

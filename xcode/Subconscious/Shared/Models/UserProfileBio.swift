@@ -14,12 +14,12 @@ public struct UserProfileBio:
     Codable {
     
     public static let empty = UserProfileBio("")
-    private static let visibleContentRegex = /[^\s]/
+    public static let maxLength = 280
     
     public let text: String
     
     public var hasVisibleContent: Bool {
-        text.contains(Self.visibleContentRegex)
+        text.hasVisibleContent
     }
 
     public init(_ description: String) {
@@ -32,7 +32,7 @@ public struct UserProfileBio:
             )
             // Catch leading spaces
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .prefix(280)
+            .prefix(Self.maxLength)
             .toString()
     }
 }

@@ -89,7 +89,7 @@ struct EditProfileSheetModel: ModelProtocol {
     var bioField: FormField<String, String> = FormField(
         value: "",
         validate: { value in
-            value.count > 280 ? nil : value
+            value.fitsInUserBio ? value : nil
         }
     )
     var pfpUrlField: FormField<String, URL> = FormField(
@@ -120,7 +120,7 @@ struct EditProfileSheetModel: ModelProtocol {
                     .pfpUrlField(.reset),
                     .nicknameField(.setValue(input: user?.nickname ?? "")),
                     .bioField(.setValue(input: user?.bio ?? "")),
-                    .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? "")),
+                    .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? ""))
                 ],
                 environment: environment
             )
