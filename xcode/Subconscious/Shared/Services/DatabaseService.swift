@@ -138,21 +138,20 @@ final class DatabaseService {
                 message: "Failed to decode did from column: did"
             )
         }
-        guard let version = row.col(1)?.toString() else {
+        guard let since = row.col(1)?.toString() else {
             throw CodingError.decodingError(
                 message: "Failed to decode cid from column: since"
             )
         }
         return OurSphereRecord(
             identity: identity,
-            version: version
+            since: since
         )
     }
 
     /// Write sphere information for one of our spheres into the database
     func writeOurSphere(
-        identity: Did,
-        version: Cid
+        _ record: OurSphereRecord
     ) throws {
         try database.execute(
             sql: """
@@ -163,8 +162,8 @@ final class DatabaseService {
             VALUES (?, ?)
             """,
             parameters: [
-                .text(identity.description),
-                .text(version)
+                .text(record.identity.description),
+                .text(record.since)
             ]
         )
     }
@@ -255,7 +254,7 @@ final class DatabaseService {
         }
         return try database.execute(
             sql: """
-            SELECT petname, did, version FROM peer;
+            SELECT petname, did, since FROM peer;
             """
         ).map({ row in
             guard let petname = row.col(0)?.toString()?.toPetname() else {
@@ -980,7 +979,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-18T12:33:00")!,
+            version: Int.from(iso8601String: "2023-05-18T16:39:00")!,
             sql: """
             /*
             A table that tracks sphere->database indexing info for our sphere.

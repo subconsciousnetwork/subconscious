@@ -10,6 +10,6 @@ import Foundation
 struct OurSphereRecord: Hashable {
     /// Sphere identity
     var identity: Did
-    /// Sphere version
-    var version: Cid
+    /// Last indexed sphere version
+    var since: Cid
 }

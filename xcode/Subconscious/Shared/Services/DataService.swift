@@ -210,7 +210,7 @@ actor DataService {
         let identity = try await sphere.identity()
         let version = try await sphere.version()
 
-        let since = try database.readOurSphere()?.version
+        let since = try database.readOurSphere()?.since
         let savepoint = "index_our_sphere"
         // Save database state so we can roll back on error
         try database.savepoint(savepoint)
@@ -278,7 +278,6 @@ actor DataService {
             
             // Then index memo changes from our sphere.
             let memoChanges = try await sphere.changes(since: since)
-
             for change in memoChanges {
                 let link = Link(did: identity, slug: change)
                 let slashlink = Slashlink(slug: change)
@@ -296,8 +295,10 @@ actor DataService {
                 }
             }
             try database.writeOurSphere(
-                identity: identity,
-                version: version
+                OurSphereRecord(
+                    identity: identity,
+                    since: version
+                )
             )
             try database.release(savepoint)
             logger.log([
@@ -308,7 +309,7 @@ actor DataService {
 
             return OurSphereRecord(
                 identity: identity,
-                version: version
+                since: version
             )
         } catch {
             try database.rollback(savepoint)
@@ -475,8 +476,10 @@ actor DataService {
         )
         // Write new sphere version to database
         try database.writeOurSphere(
-            identity: identity,
-            version: version
+            OurSphereRecord(
+                identity: identity,
+                since: version
+            )
         )
     }
 
@@ -527,8 +530,10 @@ actor DataService {
             try database.removeMemo(link)
             // Write new sphere version to database
             try database.writeOurSphere(
-                identity: identity,
-                version: version
+                OurSphereRecord(
+                    identity: identity,
+                    since: version
+                )
             )
             return
         default:

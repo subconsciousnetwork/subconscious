@@ -1315,7 +1315,7 @@ struct AppModel: ModelProtocol {
             logger.log([
                 "msg": "Last-known index for our sphere",
                 "identity": info.identity.description,
-                "version": info.version
+                "version": info.since
             ])
         } catch {
             logger.log(["msg": "Last-known for our sphere: unknown"])
@@ -1428,7 +1428,7 @@ struct AppModel: ModelProtocol {
         logger.log([
             "msg": "Indexed our sphere",
             "identity": receipt.identity.description,
-            "version": receipt.version
+            "version": receipt.since
         ])
         
         var model = state
