@@ -910,6 +910,23 @@ struct NotebookModel: ModelProtocol {
         slashlink: Slashlink,
         fallback: String
     ) -> Update<NotebookModel> {
+        // Intercept profile visits and use the correct view if noosphere is enabled
+        if AppDefaults.standard.isNoosphereEnabled {
+            guard !slashlink.slug.isProfile else {
+                return update(
+                    state: state,
+                    action: .pushDetail(
+                        .profile(
+                            UserProfileDetailDescription(
+                                address: slashlink
+                            )
+                        )
+                    ),
+                    environment: environment
+                )
+            }
+        }
+        
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
         guard slashlink.peer != nil else {
@@ -924,21 +941,6 @@ struct NotebookModel: ModelProtocol {
         }
         
         if AppDefaults.standard.isNoosphereEnabled {
-            // Intercept profile visits and use the correct view
-            guard !slashlink.slug.isProfile else {
-                return update(
-                    state: state,
-                    action: .pushDetail(
-                        .profile(
-                            UserProfileDetailDescription(
-                                address: slashlink
-                            )
-                        )
-                    ),
-                    environment: environment
-                )
-            }
-            
             // If Noosphere is enabled, and slashlink pointing to other sphere,
             // dispatch action for viewer.
             return update(

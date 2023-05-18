@@ -814,8 +814,7 @@ struct AppModel: ModelProtocol {
                 ),
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
-                ),
-                .fetchNicknameFromProfile
+                )
             ],
             environment: environment
         ).mergeFx(fx)
@@ -857,7 +856,8 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .migrateDatabase,
-                .refreshSphereVersion
+                .refreshSphereVersion,
+                .fetchNicknameFromProfile
             ],
             environment: environment
         )

@@ -13,6 +13,7 @@ import Combine
 /// Display a user profile detail view.
 /// Used to browse users entries and list of petnames.
 struct UserProfileDetailView: View {
+    @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: UserProfileDetailModel(),
         environment: AppEnvironment.default
@@ -49,8 +50,8 @@ struct UserProfileDetailView: View {
 
     var body: some View {
         UserProfileView(
-            state: store.state,
-            send: store.send,
+            app: app,
+            store: store,
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser,
             onProfileAction: self.onProfileAction,

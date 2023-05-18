@@ -94,8 +94,15 @@ struct FollowTabView: View {
 }
 
 struct UserProfileView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
+    @ObservedObject var app: Store<AppModel>
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    
+    private var state: UserProfileDetailModel {
+        store.state
+    }
+    private var send: (UserProfileDetailAction) -> Void {
+        store.send
+    }
     
     var onNavigateToNote: (Slashlink) -> Void
     var onNavigateToUser: (UserProfile) -> Void
@@ -211,7 +218,7 @@ struct UserProfileView: View {
         .metaSheet(state: state, send: send)
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
-        .editProfile(state: state, send: send)
+        .editProfile(app: app, store: store)
         .followNewUser(state: state, send: send)
     }
 }
@@ -222,35 +229,35 @@ private extension View {
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(UnfollowModifier(state: state, send: send))
+        self.modifier(UnfollowModifier(state: state, send: send))
     }
     
     func follow(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(FollowModifier(state: state, send: send))
+        self.modifier(FollowModifier(state: state, send: send))
     }
     
     func metaSheet(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(MetaSheetModifier(state: state, send: send))
+        self.modifier(MetaSheetModifier(state: state, send: send))
     }
     
     func editProfile(
-        state: UserProfileDetailModel,
-        send: @escaping (UserProfileDetailAction) -> Void
+        app: Store<AppModel>,
+        store: Store<UserProfileDetailModel>
     ) -> some View {
-      self.modifier(EditProfileSheetModifier(state: state, send: send))
+        self.modifier(EditProfileSheetModifier(app: app, store: store))
     }
     
     func followNewUser(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(FollowNewUserSheetModifier(state: state, send: send))
+        self.modifier(FollowNewUserSheetModifier(state: state, send: send))
     }
 }
 
@@ -357,8 +364,14 @@ private struct UnfollowModifier: ViewModifier {
 }
 
 private struct EditProfileSheetModifier: ViewModifier {
-    let state: UserProfileDetailModel
-    let send: (UserProfileDetailAction) -> Void
+    @ObservedObject var app: Store<AppModel>
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    private var state: UserProfileDetailModel {
+        store.state
+    }
+    private var send: (UserProfileDetailAction) -> Void {
+        store.send
+    }
     
     func body(content: Content) -> some View {
         content
@@ -389,6 +402,14 @@ private struct EditProfileSheetModifier: ViewModifier {
                             send(.dismissEditProfileError)
                         }
                     )
+                }
+            }
+            .onReceive(store.actions) { action in
+                switch(action) {
+                case .succeedEditProfile:
+                    app.send(.fetchNicknameFromProfile)
+                case _:
+                    break
                 }
             }
     }
@@ -435,8 +456,11 @@ private struct FollowNewUserSheetModifier: ViewModifier {
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
         UserProfileView(
-            state: UserProfileDetailModel(),
-            send: { _ in },
+            app: Store(state: AppModel(), environment: AppEnvironment()),
+            store: Store(
+                state: UserProfileDetailModel(),
+                environment: UserProfileDetailModel.Environment()
+            ),
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") },
             onProfileAction: { user, action in print("profile action") },

@@ -82,6 +82,7 @@ struct NotebookNavigationView: View {
                     )
                 case .profile(let description):
                     UserProfileDetailView(
+                        app: app,
                         description: description,
                         notify: Address.forward(
                             send: store.send,
