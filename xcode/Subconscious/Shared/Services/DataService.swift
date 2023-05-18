@@ -118,20 +118,18 @@ actor DataService {
     ) async throws -> PeerRecord {
         let sphere = try await noosphere.traverse(petname: petname)
         logger.debug([
-            "msg": "Traversed to peer \(petname)",
+            "msg": "Traversed to peer",
+            "petname": petname.description
         ])
         let identity = try await sphere.identity()
-        logger.debug([
-            "msg": "Peer identity \(identity)"
-        ])
         let version = try await sphere.version()
-        logger.debug([
-            "msg": "Peer version \(version)",
-        ])
         let info = try? database.readPeer(identity: identity)
         logger.debug([
-            "msg": #"Reading peer "since" version from database"#,
-            "version": info?.version ?? "null"
+            "msg": "Indexing peer",
+            "petname": petname.description,
+            "identity": identity.description,
+            "version": version,
+            "since": info?.version ?? "nil"
         ])
         // Get changes since the last time we indexed this peer
         let changes = try await sphere.changes(since: info?.version)
@@ -172,7 +170,8 @@ actor DataService {
                 "msg": "Indexed peer",
                 "petname": petname.description,
                 "identity": identity.description,
-                "version": version
+                "version": version,
+                "since": info?.version ?? "nil"
             ])
         } catch {
             try database.rollback(savepoint)
@@ -180,7 +179,8 @@ actor DataService {
                 "msg": "Failed to index peer. Rolling back.",
                 "petname": petname.description,
                 "identity": identity.description,
-                "version": version
+                "version": version,
+                "since": info?.version ?? "nil"
             ])
             throw error
         }
