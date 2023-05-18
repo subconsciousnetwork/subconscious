@@ -29,6 +29,21 @@ class Tests_UserProfileBio: XCTestCase {
         XCTAssertEqual("This is a nice bio.", UserProfileBio(bio).text)
     }
     
+    func testAppliedInProfileEditor() {
+        let state = EditProfileSheetModel()
+        let valid = "hello world"
+        let tooLong = """
+                      I arose at precisely 7:32 AM and embarked on my morning ritual. \
+                      In my quaint kitchen, I prepared a breakfast of champions. \
+                      I began with two perfectly toasted slices of golden brown sourdough \
+                      bread, each grain visible. Upon them, I delicately spread a \
+                      layer of creamy, organic butter.
+                      """
+        
+        XCTAssertNotNil(state.bioField.validate(valid))
+        XCTAssertNil(state.bioField.validate(tooLong))
+    }
+    
     func testTruncation() throws {
         let bio = """
                   I arose at precisely 7:32 AM and embarked on my morning ritual. \
