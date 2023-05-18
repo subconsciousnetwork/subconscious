@@ -108,9 +108,9 @@ struct StoryUserView: View {
             .padding(AppTheme.tightPadding)
             .frame(height: AppTheme.unit * 13)
             
-            if story.user.bio.count > 0 {
+            if story.user.bio.hasVisibleContent {
                 Divider()
-                Text(verbatim: story.user.bio)
+                Text(verbatim: story.user.bio.text)
                     .padding(AppTheme.tightPadding)
             }
         }
@@ -118,7 +118,7 @@ struct StoryUserView: View {
         .onTapGesture {
             action(
                 story.user.address,
-                story.user.bio
+                story.user.bio.text
             )
         }
         .background(.background)
@@ -136,7 +136,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         nickname: Petname("ben")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
-                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human
                     ),
                     isFollowingUser: false
@@ -150,7 +150,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
-                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human
                     ),
                     isFollowingUser: true
@@ -164,7 +164,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
-                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .you
                     ),
                     isFollowingUser: false
@@ -178,7 +178,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
-                        bio: "",
+                        bio: UserProfileBio.empty,
                         category: .you
                     ),
                     isFollowingUser: false

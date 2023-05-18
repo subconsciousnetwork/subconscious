@@ -71,7 +71,7 @@ struct UserProfileEntry: Codable, Equatable {
     init(nickname: String?, bio: String?, profilePictureUrl: String?) {
         self.version = Self.currentVersion
         self.nickname = nickname
-        self.bio = bio
+        self.bio = UserProfileBio(bio ?? "").text
         self.profilePictureUrl = profilePictureUrl
     }
     
@@ -168,7 +168,7 @@ actor UserProfileService {
             nickname: Petname(userProfileData?.nickname ?? "") ?? fallbackPetname,
             address: address,
             pfp: pfp,
-            bio: userProfileData?.bio ?? "",
+            bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: address.isOurProfile ? .you : .human
         )
         
@@ -277,7 +277,7 @@ actor UserProfileService {
             body: data
         )
         
-        let _ = try await self.noosphere.save()
+        _ = try await self.noosphere.save()
         
         do {
             _ = try await self.noosphere.sync()

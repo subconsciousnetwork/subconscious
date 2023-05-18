@@ -140,7 +140,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let nickname: Petname
     let address: Slashlink
     let pfp: ProfilePicVariant
-    let bio: String
+    let bio: UserProfileBio
     let category: UserCategory
 }
 
@@ -510,7 +510,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let profile = UserProfileEntry(
                 nickname: state.user?.nickname.verbatim,
-                bio: state.user?.bio,
+                bio: state.user?.bio.text,
                 profilePictureUrl: pfp?.absoluteString
             )
             return update(

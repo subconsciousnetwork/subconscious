@@ -83,8 +83,8 @@ struct UserProfileHeaderView: View {
                 )
             }
             
-            if user.bio.count > 0 {
-                Text(verbatim: user.bio)
+            if user.bio.hasVisibleContent {
+                Text(verbatim: user.bio.text)
             }
         }
     }
@@ -99,7 +99,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     nickname: Petname("ben")!,
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
+                    bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human
                 ),
                 isFollowingUser: false
@@ -110,7 +110,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     nickname: Petname("ben")!,
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
+                    bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist
                 ),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
@@ -122,7 +122,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     nickname: Petname("ben")!,
                     address: Slashlink.ourProfile,
                     pfp: .image("pfp-dog"),
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
+                    bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .you
                 ),
                 isFollowingUser: false
