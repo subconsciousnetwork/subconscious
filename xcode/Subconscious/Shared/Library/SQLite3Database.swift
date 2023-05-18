@@ -447,16 +447,26 @@ final class SQLite3Database {
             return rows
         }
 
+        /// Execute query, returning first row.
+        /// Note that your query should limit the number of results to one.
+        public func first(
+            sql: String,
+            parameters: [Value] = []
+        ) throws -> Row? {
+            try execute(sql: sql, parameters: parameters).first
+        }
+
         /// Get user_version as integer
         public func getUserVersion() throws -> Int {
-            let rows = try execute(sql: "PRAGMA user_version")
-            if let version: Int = rows.first?.get(0) {
-                return version
-            } else {
+            guard let version = try first(sql: "PRAGMA user_version")?
+                .col(0)?
+                .toInt()
+            else {
                 throw SQLite3DatabaseError.value(
                     "Could not read user_version"
                 )
             }
+            return version
         }
 
         /// Create a transaction savepoint
@@ -792,7 +802,16 @@ final class SQLite3Database {
             try self.open().execute(sql: sql, parameters: parameters)
         }
     }
-
+    
+    public func first(
+        sql: String,
+        parameters: [Value] = []
+    ) throws -> Row? {
+        try queue.sync {
+            try self.open().first(sql: sql, parameters: parameters)
+        }
+    }
+    
     /// Get user_version as integer
     public func getUserVersion() throws -> Int {
         try queue.sync {

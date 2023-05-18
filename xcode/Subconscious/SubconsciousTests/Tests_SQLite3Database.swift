@@ -34,6 +34,62 @@ final class Tests_SQLite3Database: XCTestCase {
         XCTAssert(!FileManager.default.fileExists(atPath: url.path()))
     }
     
+    func testExecute() throws {
+        let tmp = try createTmp(path: UUID().uuidString)
+        let url = tmp.appending(
+            path: "sqlite.db",
+            directoryHint: .notDirectory
+        )
+        let database = SQLite3Database(
+            path: url.absoluteString
+        )
+        try database.executescript(
+            sql: """
+            CREATE TABLE test (
+                id TEXT PRIMARY KEY,
+                text TEXT NOT NULL
+            );
+            INSERT INTO test (id, text)
+            VALUES ('foo', 'Foo')
+            """
+        )
+        let rows = try database.execute(
+            sql: """
+            SELECT text FROM test WHERE id = 'foo'
+            """
+        )
+        let value = rows.first?.col(0)?.toString()
+        XCTAssertEqual(value, "Foo")
+    }
+
+    func testFirst() throws {
+        let tmp = try createTmp(path: UUID().uuidString)
+        let url = tmp.appending(
+            path: "sqlite.db",
+            directoryHint: .notDirectory
+        )
+        let database = SQLite3Database(
+            path: url.absoluteString
+        )
+        try database.executescript(
+            sql: """
+            CREATE TABLE test (
+                id TEXT PRIMARY KEY,
+                text TEXT NOT NULL
+            );
+            INSERT INTO test (id, text)
+            VALUES ('foo', 'Foo')
+            """
+        )
+        let row = try database.first(
+            sql: """
+            SELECT text FROM test WHERE id = 'foo'
+            """
+        )
+        let value = row?.col(0)?.toString()
+        XCTAssertEqual(value, "Foo")
+    }
+
     func testTransactionRelease() throws {
         let tmp = try createTmp(path: UUID().uuidString)
         let url = tmp.appending(
