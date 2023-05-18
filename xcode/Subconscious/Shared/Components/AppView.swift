@@ -883,16 +883,15 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        logger.debug(
-            "Documents: \(environment.documentURL)"
-        )
-        let sphereIdentity = state.sphereIdentity ?? "Unknown"
-        logger.debug(
-            "Sphere ID: \(sphereIdentity)"
-        )
-        logger.debug(
-            "Noosphere enabled? \(AppDefaults.standard.isNoosphereEnabled)"
-        )
+        let sphereIdentity = state.sphereIdentity ?? "nil"
+        let isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
+        logger.debug([
+            "msg": "appear",
+            "documents": environment.documentURL.absoluteString,
+            "database": environment.database.database.path,
+            "sphereIdentity": sphereIdentity,
+            "isNoosphereEnabled": String(describing: isNoosphereEnabled)
+        ])
         return update(
             state: state,
             actions: [
