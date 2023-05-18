@@ -79,11 +79,13 @@ actor NoosphereService:
         sphereIdentity: String? = nil,
         logger: Logger = logger
     ) {
-        logger.debug("init NoosphereService")
-        logger.debug("Global storage URL: \(globalStorageURL.absoluteString)")
-        logger.debug("Sphere storage URL: \(sphereStorageURL.absoluteString)")
-        logger.debug("Gateway URL: \(gatewayURL?.absoluteString ?? "none")")
-        logger.debug("Sphere identity: \(sphereIdentity ?? "none")")
+        logger.debug([
+            "msg": "init NoosphereService",
+            "globalStorageURL": globalStorageURL.absoluteString,
+            "sphereStorageURL": sphereStorageURL.absoluteString,
+            "gatewayURL": gatewayURL?.absoluteString ?? "nil",
+            "sphereIdentity": sphereIdentity ?? "nil"
+        ])
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
