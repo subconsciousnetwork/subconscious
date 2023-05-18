@@ -12,24 +12,6 @@ import os
 
 public typealias Cid = String
 
-/// Describes a peer change in our address book
-public enum PeerChange: Hashable {
-    /// Petname was added or updated within address book
-    case update(PeerRecord)
-    /// Petname was removed from address book
-    case remove(petname: Petname)
-}
-
-/// Describes a sphere petname and identity at a specific version
-public struct PeerRecord: Hashable, Codable {
-    /// Petname assigned to sphere
-    public var petname: Petname
-    /// DID of sphere
-    public var identity: Did
-    /// Sphere version
-    public var version: Cid?
-}
-
 /// Describes a Sphere.
 /// See `Sphere` for a concrete implementation.
 public protocol SphereProtocol {
@@ -109,12 +91,12 @@ extension SphereProtocol {
 
     /// Given a petname, get the corresponding peer record, which includes
     /// did and version information.
-    public func getPeer(_ petname: Petname) async -> PeerRecord? {
+    public func getPeer(_ petname: Petname) async -> Noosphere.Peer? {
         guard let identity = try? await getPetname(petname: petname) else {
             return nil
         }
         let version = try? await resolvePetname(petname: petname)
-        return PeerRecord(
+        return Noosphere.Peer(
             petname: petname,
             identity: identity,
             version: version
@@ -126,10 +108,10 @@ extension SphereProtocol {
     /// If CID is nil, will list all petnames from current version as updates.
     public func getPeerChanges(
         since version: Cid?
-    ) async throws -> [PeerChange] {
+    ) async throws -> [Noosphere.PeerChange] {
         guard let version = version else {
             let petnames = try await listPetnames()
-            var changes: [PeerChange] = []
+            var changes: [Noosphere.PeerChange] = []
             for petname in petnames {
                 let peer = try await getPeer(petname).unwrap()
                 changes.append(.update(peer))
@@ -137,7 +119,7 @@ extension SphereProtocol {
             return changes
         }
         let petnames = try await getPetnameChanges(since: version)
-        var changes: [PeerChange] = []
+        var changes: [Noosphere.PeerChange] = []
         for petname in petnames {
             // If we can get petname did, then change was an upsert.
             // If we can't, then change was a remove.

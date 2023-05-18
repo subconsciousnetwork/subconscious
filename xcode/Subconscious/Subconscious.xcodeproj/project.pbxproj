@@ -377,6 +377,12 @@
 		B8E1A9492A13F49F00B757A5 /* Tests_LogFmt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9482A13F49F00B757A5 /* Tests_LogFmt.swift */; };
 		B8E1A94B2A14198400B757A5 /* OurSphereRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */; };
 		B8E1A94C2A14198400B757A5 /* OurSphereRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */; };
+		B8E1A9512A16E8D400B757A5 /* NoospherePeer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9502A16E8D400B757A5 /* NoospherePeer.swift */; };
+		B8E1A9522A16E8D400B757A5 /* NoospherePeer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9502A16E8D400B757A5 /* NoospherePeer.swift */; };
+		B8E1A9542A16E8EA00B757A5 /* NoospherePeerChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9532A16E8EA00B757A5 /* NoospherePeerChange.swift */; };
+		B8E1A9552A16E8EA00B757A5 /* NoospherePeerChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9532A16E8EA00B757A5 /* NoospherePeerChange.swift */; };
+		B8E1A9572A16E98D00B757A5 /* PeerRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */; };
+		B8E1A9582A16E98D00B757A5 /* PeerRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */; };
 		B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */ = {isa = PBXBuildFile; productRef = B8E1BB78296DECE700B86E0E /* SwiftNoosphere */; };
 		B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */; };
 		B8E2B02729AD053D004A78B3 /* Tests_Petname.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E2B02529AD0539004A78B3 /* Tests_Petname.swift */; };
@@ -679,6 +685,9 @@
 		B8E1A9452A12F69E00B757A5 /* LogFmt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFmt.swift; sourceTree = "<group>"; };
 		B8E1A9482A13F49F00B757A5 /* Tests_LogFmt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_LogFmt.swift; sourceTree = "<group>"; };
 		B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OurSphereRecord.swift; sourceTree = "<group>"; };
+		B8E1A9502A16E8D400B757A5 /* NoospherePeer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoospherePeer.swift; sourceTree = "<group>"; };
+		B8E1A9532A16E8EA00B757A5 /* NoospherePeerChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoospherePeerChange.swift; sourceTree = "<group>"; };
+		B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerRecord.swift; sourceTree = "<group>"; };
 		B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoosphereService.swift; sourceTree = "<group>"; };
 		B8E2B02529AD0539004A78B3 /* Tests_Petname.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Petname.swift; sourceTree = "<group>"; };
 		B8E2B02829AD0E23004A78B3 /* Petname.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Petname.swift; sourceTree = "<group>"; };
@@ -907,6 +916,8 @@
 			isa = PBXGroup;
 			children = (
 				B87288DB299AB01800EF7E07 /* Noosphere.swift */,
+				B8E1A9502A16E8D400B757A5 /* NoospherePeer.swift */,
+				B8E1A9532A16E8EA00B757A5 /* NoospherePeerChange.swift */,
 				B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */,
 				B87288DD299AB02400EF7E07 /* Sphere.swift */,
 				B8937A562A03EA440032A1AF /* Sphere+Link.swift */,
@@ -1056,6 +1067,7 @@
 				B58A46B429D3CE9700491E43 /* StoryUser.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 				B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */,
+				B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1574,6 +1586,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B8E1A9512A16E8D400B757A5 /* NoospherePeer.swift in Sources */,
 				B8B4251B28FE1DA60081B8D5 /* Entry.swift in Sources */,
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
 				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
@@ -1742,6 +1755,7 @@
 				B8B6BCB529CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
+				B8E1A9572A16E98D00B757A5 /* PeerRecord.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B54187B829EF5CA00056E4A9 /* FollowUserFormSheet.swift in Sources */,
 				B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */,
@@ -1750,6 +1764,7 @@
 				B8B4251228FDE7780081B8D5 /* Mapping.swift in Sources */,
 				B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
+				B8E1A9542A16E8EA00B757A5 /* NoospherePeerChange.swift in Sources */,
 				B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */,
@@ -1816,6 +1831,7 @@
 				B8D7F04327A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B8B4251028FDE6960081B8D5 /* FileStore.swift in Sources */,
 				B8616DF929C3877F001C666A /* TranscludeButtonStyle.swift in Sources */,
+				B8E1A9552A16E8EA00B757A5 /* NoospherePeerChange.swift in Sources */,
 				B8EB2A2026F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B81A535D27275138001A6268 /* Tape.swift in Sources */,
 				B5F68F612A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */,
@@ -1840,6 +1856,7 @@
 				B831BDBA2825A28A00C4CE92 /* Header.swift in Sources */,
 				B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
+				B8E1A9522A16E8D400B757A5 /* NoospherePeer.swift in Sources */,
 				B8EA3EE629159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B85EC46A296F11F000558761 /* BylineSmView.swift in Sources */,
@@ -1865,6 +1882,7 @@
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B8D328B829A671DA00850A37 /* Transclude2View.swift in Sources */,
 				B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */,
+				B8E1A9582A16E98D00B757A5 /* PeerRecord.swift in Sources */,
 				B8B6BCB629CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B58862C929F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,

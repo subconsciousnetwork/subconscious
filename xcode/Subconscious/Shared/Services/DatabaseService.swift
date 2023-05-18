@@ -127,7 +127,7 @@ final class DatabaseService {
         }
         guard let row = try database.execute(
             sql: """
-            SELECT did, version
+            SELECT did, since
             FROM our_sphere
             """
         ).first else {
@@ -135,12 +135,12 @@ final class DatabaseService {
         }
         guard let identity = row.col(0)?.toString()?.toDid() else {
             throw CodingError.decodingError(
-                message: "Failed to decode sphere identity"
+                message: "Failed to decode did from column: did"
             )
         }
         guard let version = row.col(1)?.toString() else {
             throw CodingError.decodingError(
-                message: "Failed to decode sphere version"
+                message: "Failed to decode cid from column: since"
             )
         }
         return OurSphereRecord(
@@ -158,7 +158,7 @@ final class DatabaseService {
             sql: """
             INSERT OR REPLACE INTO our_sphere (
                 did,
-                version
+                since
             )
             VALUES (?, ?)
             """,
@@ -175,22 +175,22 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT version, petname FROM peer WHERE did = ?",
+            sql: "SELECT petname, since FROM peer WHERE did = ?",
             parameters: [.text(identity.description)]
         )
         guard let row = rows.first else {
             return nil
         }
-        guard let petname = row.col(1)?.toString()?.toPetname() else {
+        guard let petname = row.col(0)?.toString()?.toPetname() else {
             throw CodingError.decodingError(
                 message: "Could not decode petname"
             )
         }
-        let version = row.col(0)?.toString()
+        let since = row.col(1)?.toString()
         return PeerRecord(
             petname: petname,
             identity: identity,
-            version: version
+            since: since
         )
     }
     
@@ -202,7 +202,7 @@ final class DatabaseService {
         }
         let rows = try database.execute(
             sql: """
-            SELECT did, version
+            SELECT did, since
             FROM peer
             WHERE petname = ?
             """,
@@ -213,25 +213,20 @@ final class DatabaseService {
         }
         guard let identity = row.col(0)?.toString()?.toDid() else {
             throw CodingError.decodingError(
-                message: "Failed to decode sphere identity"
+                message: "Failed to decode did from column: did"
             )
         }
-        let version = row.col(1)?.toString()
+        let since = row.col(1)?.toString()
         return PeerRecord(
             petname: petname,
             identity: identity,
-            version: version
+            since: since
         )
     }
 
     /// Write database metadata at string key
-    /// - Parameters:
-    ///   - sphereIdentity: the DID for this sphere
-    ///   -
     func writePeer(
-        petname: Petname,
-        identity: Did,
-        version: Cid?
+        _ record: PeerRecord
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
@@ -241,14 +236,14 @@ final class DatabaseService {
             INSERT OR REPLACE INTO peer (
                 petname,
                 did,
-                version
+                since
             )
             VALUES (?, ?, ?)
             """,
             parameters: [
-                .text(petname.description),
-                .text(identity.description),
-                .text(version)
+                .text(record.petname.description),
+                .text(record.identity.description),
+                .text(record.since)
             ]
         )
     }
@@ -273,11 +268,11 @@ final class DatabaseService {
                     message: "Failed to decode did from row"
                 )
             }
-            let version = row.col(2)?.toString()
+            let since = row.col(2)?.toString()
             return PeerRecord(
                 petname: petname,
                 identity: identity,
-                version: version
+                since: since
             )
         })
     }
@@ -985,25 +980,35 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-16T12:30:00")!,
+            version: Int.from(iso8601String: "2023-05-18T12:33:00")!,
             sql: """
+            /*
+            A table that tracks sphere->database indexing info for our sphere.
+            Currently there should be at most one row in this table.
+            However, in future we may allow users to manage multiple spheres.
+            
+            Columns:
+            - did: the identity of the peer sphere
+            - since: the last indexed CID for our sphere
+              (may be null if we have not yet indexed our sphere)
+            */
             CREATE TABLE our_sphere (
                 did TEXT PRIMARY KEY,
-                version TEXT NOT NULL
+                since TEXT NOT NULL
             );
             
             /*
             A table that tracks sphere->database indexing info for peers.
             Columns:
-            - Petname: The petname for the peer sphere
-            - Did: the identity of the peer sphere
-            - Version: the last resolved CID for the sphere (may be null if we
-              have not yet managed to find the sphere)
+            - petname: The petname for the peer sphere (primary key)
+            - did: the identity of the peer sphere
+            - since: the last indexed CID for the peer
+              (may be null if we have not yet indexed the peer sphere)
             */
             CREATE TABLE peer (
                 petname TEXT PRIMARY KEY,
                 did TEXT NOT NULL,
-                version TEXT
+                since TEXT
             );
             
             /* History of user search queries */

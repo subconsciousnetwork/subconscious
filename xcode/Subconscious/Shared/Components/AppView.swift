@@ -1600,7 +1600,7 @@ struct AppModel: ModelProtocol {
             "msg": "Indexed peer",
             "petname": peer.petname.description,
             "identity": peer.identity.description,
-            "version": peer.version ?? "nil"
+            "since": peer.since ?? "nil"
         ])
         return Update(state: state)
     }
@@ -1645,7 +1645,7 @@ struct AppModel: ModelProtocol {
             "msg": "Purged peer from database",
             "petname": peer.petname.description,
             "identity": peer.identity.description,
-            "version": peer.version ?? "nil"
+            "since": peer.since ?? "nil"
         ])
         return Update(state: state)
     }

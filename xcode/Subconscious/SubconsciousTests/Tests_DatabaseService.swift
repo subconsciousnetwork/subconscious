@@ -667,17 +667,13 @@ class Tests_DatabaseService: XCTestCase {
         _ = try service.migrate()
         
         let source = PeerRecord(
+            petname: Petname("alice")!,
             identity: Did("did:key:abc123")!,
-            version: "bafyfakefakefake",
-            petname: Petname("alice")!
+            since: "bafyfakefakefake"
         )
         
         // Write
-        try service.writeSphere(
-            identity: source.identity,
-            version: source.version,
-            petname: source.petname
-        )
+        try service.writePeer(source)
 
         let out = try service.readPeer(identity: source.identity)
         
@@ -690,19 +686,15 @@ class Tests_DatabaseService: XCTestCase {
         
         let petname = Petname("alice")!
         let source = PeerRecord(
+            petname: petname,
             identity: Did("did:key:abc123")!,
-            version: "bafyfakefakefake",
-            petname: petname
+            since: "bafyfakefakefake"
         )
         
         // Write
-        try service.writeSphere(
-            identity: source.identity,
-            version: source.version,
-            petname: petname
-        )
+        try service.writePeer(source)
 
-        let out = try service.readSphere(petname: petname)
+        let out = try service.readPeer(petname: petname)
         
         XCTAssertEqual(out, source)
     }
@@ -786,9 +778,11 @@ class Tests_DatabaseService: XCTestCase {
         
         // Write fake sphere sync info so we can purge it
         try service.writePeer(
-            identity: did,
-            version: "bafyxyz123",
-            petname: nil
+            PeerRecord(
+                petname: Petname("alice")!,
+                identity: did,
+                since: "bafyxyz123"
+            )
         )
         
         try service.purgePeer(identity: did)

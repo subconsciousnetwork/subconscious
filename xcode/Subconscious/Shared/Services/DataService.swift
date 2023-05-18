@@ -123,16 +123,16 @@ actor DataService {
         ])
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        let info = try? database.readPeer(identity: identity)
+        let peer = try? database.readPeer(identity: identity)
         logger.debug([
             "msg": "Indexing peer",
             "petname": petname.description,
             "identity": identity.description,
             "version": version,
-            "since": info?.version ?? "nil"
+            "since": peer?.since ?? "nil"
         ])
         // Get changes since the last time we indexed this peer
-        let changes = try await sphere.changes(since: info?.version)
+        let changes = try await sphere.changes(since: peer?.since)
         let savepoint = "index_peer"
         try database.savepoint(savepoint)
         do {
@@ -161,9 +161,11 @@ actor DataService {
                 }
             }
             try database.writePeer(
-                petname: petname,
-                identity: identity,
-                version: version
+                PeerRecord(
+                    petname: petname,
+                    identity: identity,
+                    since: version
+                )
             )
             try database.release(savepoint)
             logger.log([
@@ -171,7 +173,7 @@ actor DataService {
                 "petname": petname.description,
                 "identity": identity.description,
                 "version": version,
-                "since": info?.version ?? "nil"
+                "since": peer?.since ?? "nil"
             ])
         } catch {
             try database.rollback(savepoint)
@@ -180,14 +182,14 @@ actor DataService {
                 "petname": petname.description,
                 "identity": identity.description,
                 "version": version,
-                "since": info?.version ?? "nil"
+                "since": peer?.since ?? "nil"
             ])
             throw error
         }
         return PeerRecord(
             petname: petname,
             identity: identity,
-            version: version
+            since: version
         )
     }
 
@@ -219,17 +221,43 @@ actor DataService {
             for change in peerChanges {
                 switch change {
                 case let .update(peer):
-                    try database.writePeer(
-                        petname: peer.petname,
-                        identity: peer.identity,
-                        version: peer.version
-                    )
-                    logger.log([
-                        "msg": "Indexed peer",
-                        "petname": peer.petname.description,
-                        "identity": peer.identity.description,
-                        "version": peer.version ?? "nil"
-                    ])
+                    // If this peer has been indexed before, update the did
+                    // (and correspondingly, the version, if needed) and write
+                    // to database.
+                    //
+                    // If this peer is not been indexed before, write it to DB
+                    // with nil version, since we have never yet indexed it.
+                    if var existing = try database.readPeer(
+                        petname: peer.petname
+                    ) {
+                        try database.writePeer(
+                            existing.update(
+                                identity: peer.identity
+                            )
+                        )
+                        logger.log([
+                            "msg": "Updated record for peer",
+                            "petname": peer.petname.description,
+                            "identity": peer.identity.description,
+                            "version": peer.version ?? "nil"
+                        ])
+                    } else {
+                        logger.log([
+                            "msg": "Created record for peer",
+                            "petname": peer.petname.description,
+                            "identity": peer.identity.description,
+                            "version": peer.version ?? "nil"
+                        ])
+                        // Intentionally set version to nil, since we have
+                        // never yet indexed this peer.
+                        try database.writePeer(
+                            PeerRecord(
+                                petname: peer.petname,
+                                identity: peer.identity,
+                                since: nil
+                            )
+                        )
+                    }
                 case let .remove(petname):
                     // If we have a peer under this petname,
                     // purge its contents from the db.
@@ -239,7 +267,7 @@ actor DataService {
                             "msg": "Purged peer",
                             "petname": peer.petname.description,
                             "identity": peer.identity.description,
-                            "version": peer.version ?? "nil"
+                            "since": peer.since ?? "nil"
                         ])
                     }
                 }
@@ -308,7 +336,7 @@ actor DataService {
             "msg": "Purged peer from database",
             "petname": petname.description,
             "identity": peer.identity.description,
-            "version": peer.version ?? "nil"
+            "since": peer.since ?? "nil"
         ])
         return peer
     }

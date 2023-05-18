@@ -55,8 +55,14 @@ public actor Noosphere {
     init(
         globalStoragePath: String,
         sphereStoragePath: String,
-        gatewayURL: String? = nil
+        gatewayURL: String? = nil,
+        logging: UInt32? = nil
     ) throws {
+        // If an explicit log level has been requested, set it.
+        // Otherwise, leave default.
+        if let logging = logging {
+            ns_tracing_initialize(logging)
+        }
         guard let noosphere = try Self.callWithError(
             ns_initialize,
             globalStoragePath,
