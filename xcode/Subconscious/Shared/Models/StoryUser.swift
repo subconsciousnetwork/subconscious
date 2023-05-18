@@ -13,8 +13,8 @@ struct StoryUser:
     Hashable,
     Identifiable,
     CustomStringConvertible,
-    Codable
-{
+    Codable {
+    
     var id = UUID()
     var user: UserProfile
     var isFollowingUser: Bool

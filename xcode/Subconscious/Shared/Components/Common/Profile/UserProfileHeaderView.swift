@@ -29,8 +29,8 @@ struct UserProfileHeaderView: View {
                 ProfilePic(pfp: user.pfp, size: .large)
             
                 PetnameView(
-                    nickname: user.nickname,
-                    petname: user.address.petname
+                    address: user.address,
+                    petname: user.nickname?.toPetname() ?? user.address.petname ?? Petname.unknown
                 )
                 .fontWeight(.medium)
                 .foregroundColor(.accentColor)
@@ -96,7 +96,7 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    nickname: Petname("ben")!,
+                    nickname: PetnamePart("ben")!,
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
@@ -108,7 +108,7 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    nickname: Petname("ben")!,
+                    nickname: PetnamePart("ben")!,
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
@@ -121,7 +121,7 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    nickname: Petname("ben")!,
+                    nickname: PetnamePart("ben")!,
                     address: Slashlink.ourProfile,
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),

@@ -14,9 +14,9 @@ enum FollowUserSheetAction: Equatable {
     case populate(UserProfile)
     case followUserForm(FollowUserFormAction)
     
-    case fetchPetnameCollisionStatus(Petname)
-    case populatePetnameCollisionStatus(Petname, Bool)
-    case attemptToFindUniquePetname(Petname)
+    case fetchPetnameCollisionStatus(PetnamePart)
+    case populatePetnameCollisionStatus(PetnamePart, Bool)
+    case attemptToFindUniquePetname(PetnamePart)
     case failToFindUniquePetname(String)
 }
 
@@ -49,12 +49,14 @@ struct FollowUserSheetModel: ModelProtocol {
         case .populate(let user):
             var model = state
             model.user = user
+            
+            let nickname = user.nickname ?? user.address.petname?.leaf ?? PetnamePart.unknown
             return update(
                 state: model,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: user.nickname.leaf.verbatim))),
-                    .fetchPetnameCollisionStatus(user.nickname.leaf)
+                    .followUserForm(.petnameField(.setValue(input: nickname.verbatim))),
+                    .fetchPetnameCollisionStatus(nickname)
                 ],
                 environment: environment
             )

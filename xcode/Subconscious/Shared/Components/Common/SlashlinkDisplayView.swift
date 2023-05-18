@@ -18,12 +18,12 @@ struct SlashlinkDisplayView: View {
         HStack(spacing: 0) {
             switch slashlink.peer {
             case let .petname(petname) where slashlink.isProfile:
-                PetnameView(nickname: petname)
+                PetnameView(petname: petname)
                     .foregroundColor(baseColor)
                     .fontWeight(.medium)
             case let .petname(petname):
                 HStack(spacing: 0) {
-                    PetnameView(nickname: petname)
+                    PetnameView(petname: petname)
                         .foregroundColor(baseColor)
                         .fontWeight(.medium)
                     Text(verbatim: slashlink.slug.markup)

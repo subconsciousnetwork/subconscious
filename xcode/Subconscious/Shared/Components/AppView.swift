@@ -112,7 +112,7 @@ enum AppAction: CustomLogStringConvertible {
     case failCreateInitialProfile(_ message: String)
     
     case fetchNicknameFromProfile
-    case succeedFetchNicknameFromProfile(_ nickname: Petname)
+    case succeedFetchNicknameFromProfile(_ nickname: PetnamePart)
     case failFetchNicknameFromProfile(_ message: String)
     
     case setInviteCode(_ inviteCode: String)
@@ -948,7 +948,11 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
             let response = try await environment.userProfile.requestOurProfile()
-            return AppAction.succeedFetchNicknameFromProfile(response.profile.nickname)
+            if let nickname = response.profile.nickname {
+                return AppAction.succeedFetchNicknameFromProfile(nickname)
+            }
+            
+            return AppAction.failFetchNicknameFromProfile("No nickname saved in profile")
         }
         .recover { error in
             AppAction.failFetchNicknameFromProfile(error.localizedDescription)

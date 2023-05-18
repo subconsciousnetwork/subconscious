@@ -156,7 +156,6 @@ actor UserProfileService {
     /// Load the underlying `_profile_` for a user and construct a `UserProfile` from it.
     private func loadProfileFromMemo(
         did: Did,
-        fallbackPetname: Petname,
         address: Slashlink,
         resolutionStatus: ResolutionStatus
     ) async throws -> UserProfile {
@@ -171,7 +170,7 @@ actor UserProfileService {
         
         let profile = UserProfile(
             did: did,
-            nickname: Petname(userProfileData?.nickname ?? "") ?? fallbackPetname,
+            nickname: PetnamePart(userProfileData?.nickname ?? ""),
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
@@ -244,9 +243,9 @@ actor UserProfileService {
             
             let slashlink = Func.run {
                 guard case let .petname(basePetname) = address.peer else {
-                    return Slashlink(petname: entry.petname)
+                    return Slashlink(petname: entry.nickname.toPetname())
                 }
-                return Slashlink(petname: entry.petname).rebaseIfNeeded(petname: basePetname)
+                return Slashlink(petname: entry.nickname.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
             let address = isOurs
@@ -254,12 +253,11 @@ actor UserProfileService {
                 : slashlink
             
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
-            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
+            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.nickname)
             let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
             
             let user = try await self.loadProfileFromMemo(
                 did: entry.did,
-                fallbackPetname: address.petname ?? entry.petname,
                 address: address,
                 resolutionStatus: status
             )
@@ -315,8 +313,7 @@ actor UserProfileService {
     }
     
     func loadProfileData(
-        address: Slashlink,
-        fallbackPetname: Petname
+        address: Slashlink
     ) async throws -> UserProfileContentResponse {
         let sphere = try await self.noosphere.sphere(address: address)
         let did = try await sphere.identity()
@@ -336,7 +333,6 @@ actor UserProfileService {
         
         let profile = try await self.loadProfileFromMemo(
             did: did,
-            fallbackPetname: fallbackPetname,
             address: address,
             resolutionStatus: .resolved(cid)
         )
@@ -357,7 +353,7 @@ actor UserProfileService {
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
     func requestOurProfile() async throws -> UserProfileContentResponse {
         let address = Slashlink.ourProfile
-        return try await loadProfileData(address: address, fallbackPetname: Petname.unknown)
+        return try await loadProfileData(address: address)
     }
     
     nonisolated func requestOurProfilePublisher(
@@ -373,7 +369,7 @@ actor UserProfileService {
         petname: Petname
     ) async throws -> UserProfileContentResponse {
         let address = Slashlink(petname: petname)
-        return try await loadProfileData(address: address, fallbackPetname: petname)
+        return try await loadProfileData(address: address)
     }
     
     nonisolated func requestUserProfilePublisher(

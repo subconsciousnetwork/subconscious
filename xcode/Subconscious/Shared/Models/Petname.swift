@@ -7,28 +7,34 @@
 
 import Foundation
 
-/// A type representing a valid petname (`@petname`)
-public struct Petname:
+public struct PetnamePart:
     Hashable,
     Equatable,
     Identifiable,
     Comparable,
     Codable,
-    LosslessStringConvertible
-{
-    private static let petnameRegex = /([\w\d\-]+)(\.[\w\d\-]+)*/
+    LosslessStringConvertible {
+    
+    static let petnamePartRegex = /([\w\d\-]+)/
     private static let numberedSuffixRegex = /^(?<petname>(.*?))(?<separator>-+)?(?<suffix>(\d+))?$/
+    public static let unknown = PetnamePart("unknown")!
     
-    public static let unknown = Petname("unknown")!
+    public var description: String
+    public var verbatim: String
+    public var id: String { description }
     
-    public static func < (lhs: Self, rhs: Self) -> Bool {
-        lhs.id < rhs.id
+    public var markup: String {
+        "@\(self.description)"
     }
     
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
+    public var verbatimMarkup: String {
+        "@\(self.verbatim)"
     }
-
+    
+    public static func < (lhs: PetnamePart, rhs: PetnamePart) -> Bool {
+        lhs.description < rhs.description
+    }
+    
     /// Attempt to sanitize a string into a "petname string" - a string that
     /// can can be losslessly converted to a petname.
     private static func format(_ string: String) -> String {
@@ -50,10 +56,85 @@ public struct Petname:
         )
         return formatted
     }
+    
+    public init?(_ description: String) {
+        guard description.wholeMatch(of: Self.petnamePartRegex) != nil else {
+            return nil
+        }
+        self.description = description.lowercased()
+        self.verbatim = description
+    }
+    
+    public init?(_ description: Substring) {
+        self.init(description.toString())
+    }
+    
+    /// Convert a string into a petname.
+    /// This will sanitize the string as best it can to create a valid petname.
+    public init?(formatting string: String) {
+        self.init(Self.format(string))
+    }
+    
+    public init?(formatting string: Substring) {
+        self.init(Self.format(string.toString()))
+    }
+    
+    public func toPetname() -> Petname {
+        Petname(petname: self)
+    }
+    
+    /// Return a new petname with a numerical suffix.
+    /// A plain petname e.g. `ziggy` becomes `ziggy-1`
+    /// But `ziggy-1` becomes `ziggy-2` etc.
+    public func increment() -> PetnamePart? {
+        guard let match = description.wholeMatch(of: Self.numberedSuffixRegex),
+              let separator = match.output.separator else {
+            return PetnamePart(formatting: verbatim + "-1")
+        }
+        
+        if let numberString = match.output.suffix,
+           let number = Int(numberString) {
+            return PetnamePart(formatting: "\(match.output.petname)\(separator)\(String(number + 1))")
+        } else {
+            return PetnamePart(formatting: "\(match.output.petname)\(separator)1")
+        }
+    }
+   
+}
 
-    public let description: String
-    public let verbatim: String
+/// A type representing a valid petname (`@petname`)
+public struct Petname:
+    Hashable,
+    Equatable,
+    Identifiable,
+    Comparable,
+    Codable,
+    LosslessStringConvertible {
+    
+    private static let petnameRegex = /([\w\d\-]+)(\.[\w\d\-]+)*/
+    public static let separator = "."
+    
+    public static let unknown = Petname("unknown")!
+    
+    public static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.id < rhs.id
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    public var description: String {
+        verbatim.lowercased()
+    }
+    public var verbatim: String {
+        self.parts.map { p in
+            p.verbatim
+        }.joined(separator: Self.separator)
+    }
+    
     public var id: String { description }
+    public let parts: [PetnamePart]
     
     public var markup: String {
         "@\(self.description)"
@@ -63,66 +144,77 @@ public struct Petname:
         "@\(self.verbatim)"
     }
     
-    public var leaf: Petname {
-        self.parts().first ?? self
+    public var isFirstOrder: Bool {
+        self.parts.count == 1
     }
     
-    public var root: Petname {
-        self.parts().last ?? self
+    public var leaf: PetnamePart {
+        self.parts.first ?? PetnamePart.unknown
+    }
+    
+    public var root: PetnamePart {
+        self.parts.last ?? PetnamePart.unknown
     }
     
     public init?(_ description: String) {
-        guard description.wholeMatch(of: Self.petnameRegex) != nil else {
-            return nil
+        let parts = description.split(separator: Self.separator)
+        var xs: [PetnamePart] = []
+        
+        for part in parts {
+            guard let p = PetnamePart(part) else {
+                return nil
+            }
+            
+            xs.append(p)
         }
-        self.description = description.lowercased()
-        self.verbatim = description
+        
+        self.parts = xs
     }
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
     /// Names are joined in order of their appearance in `petnames`
-    public init(petnames: [Petname]) {
-        let petnamePath = petnames
-            .map({ s in s.verbatim })
-            .joined(separator: ".")
-        self.description = petnamePath.lowercased()
-        self.verbatim = petnamePath
+    public init?(petnames: [PetnamePart]) {
+        guard !petnames.isEmpty else {
+            return nil
+        }
+        
+        self.parts = petnames
+    }
+        
+    public init(petname: PetnamePart) {
+        self.parts = [petname]
     }
     
     /// Convert a string into a petname.
     /// This will sanitize the string as best it can to create a valid petname.
     public init?(formatting string: String) {
-        self.init(Self.format(string))
-    }
-    
-    /// Explode a petname path into the individual steps along the way, in written order.
-    /// i.e. `@foo.bar.baz` -> `[foo, bar, baz]`
-    public func parts() -> [Petname] {
-        verbatim
-            .split(separator: ".")
-            .compactMap { part in Petname(part.toString()) }
-    }
-    
-    /// Return a new petname with a numerical suffix.
-    /// A plain petname e.g. `ziggy` becomes `ziggy-1`
-    /// But `ziggy-1` becomes `ziggy-2` etc.
-    public func increment() -> Petname? {
-        guard let match = description.wholeMatch(of: Self.numberedSuffixRegex),
-              let separator = match.output.separator else {
-            return Petname(formatting: verbatim + "-1")
+        let parts = string.split(separator: Self.separator)
+        var xs: [PetnamePart] = []
+        
+        for part in parts {
+            guard let p = PetnamePart(formatting: part) else {
+                return nil
+            }
+            
+            xs.append(p)
         }
         
-        if let numberString = match.output.suffix,
-           let number = Int(numberString) {
-            return Petname(formatting: "\(match.output.petname)\(separator)\(String(number + 1))")
-        } else {
-            return Petname(formatting: "\(match.output.petname)\(separator)1")
-        }
+        self.parts = xs
+    }
+     
+    /// Combines two petnames to build up a traversal path
+    /// i.e. `Petname("foo")!.append(petname: PetnamePart("bar")!)` -> `bar.foo`
+    public func append(petname: PetnamePart) -> Petname {
+        var parts = self.parts
+        parts.insert(petname, at: 0)
+        return Petname(petnames: parts) ?? Petname.unknown
     }
     
     /// Combines two petnames to build up a traversal path
     /// i.e. `Petname("foo")!.append(petname: Petname("bar")!)` -> `bar.foo`
     public func append(petname: Petname) -> Petname {
-        return Petname(petnames: [petname, self])
+        var parts = self.parts
+        parts.insert(contentsOf: petname.parts, at: 0)
+        return Petname(petnames: parts) ?? Petname.unknown
     }
 }

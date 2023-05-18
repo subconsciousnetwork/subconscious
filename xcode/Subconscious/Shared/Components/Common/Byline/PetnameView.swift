@@ -9,20 +9,24 @@ import SwiftUI
 
 /// Byline style for displaying a petname
 struct PetnameView: View {
-    var nickname: Petname
-    var petname: Petname?
+    var address: Slashlink?
+    var petname: Petname
+    
+    var identifier: String {
+        address?.petname?.markup ?? address?.markup ?? petname.markup
+    }
     
     var body: some View {
-        if let petname = petname {
+        if address != nil {
             VStack(alignment: .leading) {
-                Text(nickname.description)
-                Text(petname.markup)
+                Text(petname.description)
+                Text(identifier)
                     .foregroundColor(.secondary)
                     .fontWeight(.regular)
                     .font(.caption)
             }
         } else {
-            Text(nickname.markup)
+            Text(identifier)
                 .lineLimit(1)
         }
     }
@@ -32,14 +36,14 @@ struct PetnameView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             PetnameView(
-                nickname: Petname("melville")!,
-                petname: Petname("melville.bobby.tables")!
+                address: Slashlink(petname: Petname("melville.bobby.tables")!),
+                petname: Petname("melville")!
             )
             PetnameView(
-                nickname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
+                petname: Petname(petnames: [PetnamePart("melville")!, PetnamePart("bobby")!, PetnamePart("tables")!])!
             )
             PetnameView(
-                nickname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
+                petname: Petname(petnames: [PetnamePart("melville")!, PetnamePart("bobby")!, PetnamePart("tables")!])!
             )
             .frame(maxWidth: 128)
         }

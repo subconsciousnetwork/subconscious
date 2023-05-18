@@ -47,15 +47,15 @@ public protocol SphereProtocol {
     
     func changes(since: Cid?) async throws -> [Slug]
     
-    func getPetname(petname: Petname) async throws -> Did
+    func getPetname(petname: PetnamePart) async throws -> Did
     
-    func setPetname(did: Did?, petname: Petname) async throws
+    func setPetname(did: Did?, petname: PetnamePart) async throws
         
     func resolvePetname(petname: Petname) async throws -> Cid
     
-    func listPetnames() async throws -> [Petname]
+    func listPetnames() async throws -> [PetnamePart]
     
-    func getPetnameChanges(since: Cid) async throws -> [Petname]
+    func getPetnameChanges(since: Cid) async throws -> [PetnamePart]
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
@@ -75,12 +75,14 @@ extension SphereProtocol {
         case .petname(let petname):
             // Get did for petname
             let did = try await Func.run {
-                do {
-                    return try await self.getPetname(petname: petname)
-                } catch {
-                    let sphere = try await self.traverse(petname: petname)
-                    return try await sphere.identity()
+                if petname.isFirstOrder {
+                    do {
+                        return try await self.getPetname(petname: petname.root)
+                    }
                 }
+                
+                let sphere = try await self.traverse(petname: petname)
+                return try await sphere.identity()
             }
             
             // Return new slashlink with did root
@@ -139,20 +141,20 @@ public protocol SpherePublisherProtocol {
     
     func changesPublisher(since: Cid?) -> AnyPublisher<[Slug], Error>
     
-    func getPetnamePublisher(petname: Petname) -> AnyPublisher<Did, Error>
+    func getPetnamePublisher(petname: PetnamePart) -> AnyPublisher<Did, Error>
     
     func setPetnamePublisher(
         did: Did?,
-        petname: Petname
+        petname: PetnamePart
     ) -> AnyPublisher<Void, Error>
     
     func resolvePetnamePublisher(petname: Petname) -> AnyPublisher<Cid, Error>
     
-    func listPetnamesPublisher() -> AnyPublisher<[Petname], Error>
+    func listPetnamesPublisher() -> AnyPublisher<[PetnamePart], Error>
     
     func getPetnameChangesPublisher(
         since: Cid
-    ) -> AnyPublisher<[Petname], Error>
+    ) -> AnyPublisher<[PetnamePart], Error>
     
     /// Attempt to retrieve the sphere of a recorded petname, this can
     /// be chained to walk over multiple spheres:
@@ -485,7 +487,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// a sphere identity (or was previously assigned to a sphere identity
     /// but has since been unassigned).
     /// - Returns DID string
-    public func getPetname(petname: Petname) throws -> Did {
+    public func getPetname(petname: PetnamePart) throws -> Did {
         let name = try Noosphere.callWithError(
             ns_sphere_petname_get,
             noosphere.noosphere,
@@ -517,7 +519,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// but has since been unassigned).
     /// - Returns `AnyPublisher` for DID string
     nonisolated public func getPetnamePublisher(
-        petname: Petname
+        petname: PetnamePart
     ) -> AnyPublisher<Did, Error> {
         Future.detached {
             try await self.getPetname(petname: petname)
@@ -526,7 +528,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     }
     
     /// Set petname for DID
-    public func setPetname(did: Did?, petname: Petname) throws {
+    public func setPetname(did: Did?, petname: PetnamePart) throws {
         try Noosphere.callWithError(
             ns_sphere_petname_set,
             noosphere.noosphere,
@@ -540,7 +542,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// - Returns `AnyPublisher` for Void (success), or error
     nonisolated public func setPetnamePublisher(
         did: Did?,
-        petname: Petname
+        petname: PetnamePart
     ) -> AnyPublisher<Void, Error> {
         Future.detached {
             try await self.setPetname(did: did, petname: petname)
@@ -588,7 +590,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// List all petnames in user's follows (address book)
     /// - Returns an a array of `Petname`
-    public func listPetnames() throws -> [Petname] {
+    public func listPetnames() throws -> [PetnamePart] {
         let petnames = try Noosphere.callWithError(
             ns_sphere_petname_list,
             noosphere.noosphere,
@@ -600,7 +602,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         
         return try petnames.toStringArray().map({ string in
-            try Petname(string).unwrap(
+            try PetnamePart(string).unwrap(
                 SphereError.parseError(string)
             )
         })
@@ -608,7 +610,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// List all petnames in user's follows (address book)
     /// - Returns an a `AnyPublisher` for an array of `Petname`
-    nonisolated public func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
+    nonisolated public func listPetnamesPublisher() -> AnyPublisher<[PetnamePart], Error> {
         Future.detached {
             try await self.listPetnames()
         }
@@ -619,7 +621,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// in some way. It is up to you to read them to find out what happend
     /// (deletion, update, etc).
     /// - Returns an array of `Petname`
-    public func getPetnameChanges(since cid: Cid) throws -> [Petname] {
+    public func getPetnameChanges(since cid: Cid) throws -> [PetnamePart] {
         let changes = try Noosphere.callWithError(
             ns_sphere_petname_changes,
             noosphere.noosphere,
@@ -631,7 +633,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         
         return try changes.toStringArray().map({ string in
-            try Petname(string).unwrap(
+            try PetnamePart(string).unwrap(
                 SphereError.parseError(string)
             )
         })
@@ -643,7 +645,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// - Returns an `AnyPublisher` for array of `Petname`
     nonisolated public func getPetnameChangesPublisher(
         since cid: Cid
-    ) -> AnyPublisher<[Petname], Error> {
+    ) -> AnyPublisher<[PetnamePart], Error> {
         Future.detached {
             try await self.getPetnameChanges(since: cid)
         }
