@@ -219,35 +219,35 @@ private extension View {
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(UnfollowModifier(state: state, send: send))
+        self.modifier(UnfollowModifier(state: state, send: send))
     }
     
     func follow(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(FollowModifier(state: state, send: send))
+        self.modifier(FollowModifier(state: state, send: send))
     }
     
     func metaSheet(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(MetaSheetModifier(state: state, send: send))
+        self.modifier(MetaSheetModifier(state: state, send: send))
     }
     
     func editProfile(
         app: Store<AppModel>,
         store: Store<UserProfileDetailModel>
     ) -> some View {
-      self.modifier(EditProfileSheetModifier(app: app, store: store))
+        self.modifier(EditProfileSheetModifier(app: app, store: store))
     }
     
     func followNewUser(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(FollowNewUserSheetModifier(state: state, send: send))
+        self.modifier(FollowNewUserSheetModifier(state: state, send: send))
     }
 }
 
