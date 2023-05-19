@@ -253,12 +253,16 @@ actor UserProfileService {
             )
             
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
+            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
             
             following.append(
                 StoryUser(
                     user: user,
                     isFollowingUser: weAreFollowingListedUser,
-                    resolutionStatus: entry.status
+                    resolutionStatus:
+                        weAreFollowingListedUser && isPendingFollow
+                        ? .pending
+                        : entry.status
                 )
             )
         }

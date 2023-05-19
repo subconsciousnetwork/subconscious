@@ -267,6 +267,8 @@ actor AddressBookService {
     private var database: DatabaseService
     private var addressBook: AddressBook<NoosphereService>
     
+    private var pendingFollows: [Petname] = []
+    
     var localAddressBook: AddressBook<NoosphereService> {
         addressBook
     }
@@ -333,10 +335,17 @@ actor AddressBookService {
         await self.addressBook.invalidateCache()
     }
     
+    func isPendingResolution(petname: Petname) -> Bool {
+        self.pendingFollows.contains(petname)
+    }
+    
     func waitForPetnameResolution(
         petname: Petname
     ) async throws -> Cid? {
         let maxAttempts = 10 // 1+2+4+8+16+32+32+32+32+32 = 191 seconds
+        
+        self.pendingFollows.append(petname)
+        
         let cid = try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
             Self.logger.log("""
             Check for petname resolution, \
@@ -353,6 +362,8 @@ actor AddressBookService {
             
             return try await self.noosphere.resolvePetname(petname: petname)
         }
+        
+        self.pendingFollows.removeAll { f in f == petname }
         
         return cid
     }

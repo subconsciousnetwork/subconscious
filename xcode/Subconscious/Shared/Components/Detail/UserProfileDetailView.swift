@@ -113,8 +113,8 @@ enum UserProfileDetailAction {
     case succeedFollow(Petname)
     
     case requestWaitForFollowedUserResolution(_ petname: Petname)
-    case succeedResolveFollowedUser(_ petname: Petname)
-    case failResolveFollowedUser(_ petname: Petname, _ message: String)
+    case succeedResolveFollowedUser
+    case failResolveFollowedUser(_ message: String)
     
     case requestUnfollow(UserProfile)
     case attemptUnfollow
@@ -259,8 +259,6 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var unfollowCandidate: UserProfile? = nil
     
-    var pendingFollows: [Petname] = []
-    
     static func update(
         state: Self,
         action: Action,
@@ -327,18 +325,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.user = content.profile
             model.statistics = content.statistics
             model.recentEntries = content.recentEntries
-            model.following = content.following.map { follow in
-                if let petname = follow.user.address.petname,
-                   model.pendingFollows.contains(petname),
-                   follow.resolutionStatus != .resolved {
-                    
-                    var user = follow
-                    user.resolutionStatus = .pending
-                    return user
-                }
-                
-                return follow
-            }
+            model.following = content.following
             model.isFollowingUser = content.isFollowingUser
             model.loadingState = .loaded
             
@@ -465,35 +452,22 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: model)
             
         case let .requestWaitForFollowedUserResolution(petname):
-            var model = state
-            model.pendingFollows.append(petname)
-            
             let fx: Fx<UserProfileDetailAction> = environment.addressBook
                 .waitForPetnameResolutionPublisher(petname: petname)
                 .map { _ in
-                    .succeedResolveFollowedUser(petname)
+                    .succeedResolveFollowedUser
                 }
                 .recover { error in
-                    .failResolveFollowedUser(petname, error.localizedDescription)
+                    .failResolveFollowedUser(error.localizedDescription)
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: model, fx: fx)
-        case let .succeedResolveFollowedUser(petname):
-            var model = state
-            model.pendingFollows.removeAll { follow in
-                follow == petname
-            }
-            
-            return update(state: model, action: .refresh, environment: environment)
-        case let .failResolveFollowedUser(petname, message):
-            var model = state
-            model.pendingFollows.removeAll { follow in
-                follow == petname
-            }
-            
+            return Update(state: state, fx: fx)
+        case .succeedResolveFollowedUser:
+            return update(state: state, action: .refresh, environment: environment)
+        case .failResolveFollowedUser(let message):
             logger.log("Failed to resolve followed user: \(message)")
-            return Update(state: model)
+            return update(state: state, action: .refresh, environment: environment)
             
         // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):
