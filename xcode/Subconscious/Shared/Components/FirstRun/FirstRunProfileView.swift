@@ -69,6 +69,9 @@ struct FirstRunProfileView: View {
             AppTheme.onboarding
                 .appBackgroundGradient(colorScheme)
         )
+        .onAppear {
+            app.send(.createSphere)
+        }
     }
 }
 
