@@ -176,7 +176,7 @@ struct EditProfileSheet: View {
             pfp: pfp,
             bio: UserProfileBio(state.bioField.validated ?? ""),
             category: .you,
-            resolutionStatus: .resolved
+            resolutionStatus: .resolved(Cid("fake-for-preview"))
         )
     }
     

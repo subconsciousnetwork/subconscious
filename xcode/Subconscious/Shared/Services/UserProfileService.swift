@@ -312,12 +312,13 @@ actor UserProfileService {
             slugs: notes
         )
         let recentEntries = sortEntriesByModified(entries: entries)
+        let cid = try await sphere.version()
         
         let profile = try await self.loadProfileFromMemo(
             did: did,
             fallbackPetname: fallbackPetname,
             address: address,
-            resolutionStatus: .resolved // TODO: is this right?
+            resolutionStatus: .resolved(cid)
         )
         
         return UserProfileContentResponse(

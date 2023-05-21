@@ -101,7 +101,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human,
-                    resolutionStatus: .resolved
+                    resolutionStatus: .resolved("abc")
                 ),
                 isFollowingUser: false
             )
@@ -113,7 +113,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist,
-                    resolutionStatus: .resolved
+                    resolutionStatus: .resolved(Cid("ok"))
                 ),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
                 isFollowingUser: true
@@ -126,7 +126,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .you,
-                    resolutionStatus: .resolved
+                    resolutionStatus: .resolved(Cid("ok"))
                 ),
                 isFollowingUser: false
             )

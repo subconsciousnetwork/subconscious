@@ -98,8 +98,8 @@ actor AddressBook<Sphere: SphereProtocol> {
             let did = try await sphere.getPetname(petname: petname)
             let status = await Func.run {
                 do {
-                    _ = try await sphere.resolvePetname(petname: petname)
-                    return ResolutionStatus.resolved
+                    let cid =  try await sphere.resolvePetname(petname: petname)
+                    return ResolutionStatus.resolved(cid)
                 } catch {
                     return ResolutionStatus.unresolved
                 }

@@ -79,7 +79,7 @@ struct StoryUserView: View {
                     }
                     
                 }
-                .disabled(story.user.resolutionStatus != .resolved)
+                .disabled(!story.user.resolutionStatus.isReady)
                 
                 Menu(
                     content: {
@@ -181,7 +181,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .you,
-                        resolutionStatus: .resolved
+                        resolutionStatus: .resolved(Cid("ok"))
                     ),
                     isFollowingUser: false
                 ),

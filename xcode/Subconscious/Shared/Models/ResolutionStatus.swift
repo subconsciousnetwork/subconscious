@@ -12,9 +12,14 @@ import Foundation
 enum ResolutionStatus: Equatable, Hashable, Codable {
     case unresolved
     case pending
-    case resolved
+    case resolved(_ cid: Cid)
     
     var isReady: Bool {
-        self == .resolved
+        switch self {
+        case .resolved(_):
+            return true
+        case _:
+            return false
+        }
     }
 }
