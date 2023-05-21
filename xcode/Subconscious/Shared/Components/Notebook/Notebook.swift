@@ -164,7 +164,7 @@ enum NotebookAction {
     
     /// Push detail onto navigation stack
     case pushDetail(MemoDetailDescription)
-    case attemptPushInvalidDetail(_ message: String)
+    case failPushDetail(_ message: String)
     
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
@@ -278,7 +278,7 @@ extension NotebookAction {
             return .pushDetail(detail)
         case let .requestNavigateToProfile(user):
             guard user.resolutionStatus == .resolved else {
-                return .attemptPushInvalidDetail("Attempted to navigate to unresolved user")
+                return .failPushDetail("Attempted to navigate to unresolved user")
             }
             
             return .pushDetail(.profile(UserProfileDetailDescription(address: user.address)))
@@ -559,7 +559,7 @@ struct NotebookModel: ModelProtocol {
         case .failPushRandomDetail(let error):
             logger.log("Failed to get random note: \(error)")
             return Update(state: state)
-        case let .attemptPushInvalidDetail(error):
+        case let .failPushDetail(error):
             logger.log("Attempt to push invalid detail: \(error)")
             return Update(state: state)
         }
