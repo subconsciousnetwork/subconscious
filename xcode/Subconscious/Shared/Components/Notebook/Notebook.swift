@@ -277,7 +277,7 @@ extension NotebookAction {
         case let .requestDetail(detail):
             return .pushDetail(detail)
         case let .requestNavigateToProfile(user):
-            guard user.resolutionStatus == .resolved else {
+            guard user.resolutionStatus.isReady else {
                 return .failPushDetail("Attempted to navigate to unresolved user")
             }
             

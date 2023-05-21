@@ -153,7 +153,7 @@ actor UserProfileService {
         did: Did,
         fallbackPetname: Petname,
         address: Slashlink,
-        resolutionStatus: PetnameResolutionStatus
+        resolutionStatus: ResolutionStatus
     ) async throws -> UserProfile {
         let userProfileData = await self.readProfileMemo(address: address)
         let pfp: ProfilePicVariant = Func.run {

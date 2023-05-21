@@ -146,7 +146,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let pfp: ProfilePicVariant
     let bio: UserProfileBio
     let category: UserCategory
-    let resolutionStatus: PetnameResolutionStatus
+    let resolutionStatus: ResolutionStatus
 }
 
 struct EditProfileSheetCursor: CursorProtocol {

@@ -7,12 +7,6 @@
 
 import Foundation
 
-enum PetnameResolutionStatus: Equatable, Hashable, Codable {
-    case unresolved
-    case pending
-    case resolved
-}
-
 /// A type representing a valid petname (`@petname`)
 public struct Petname:
     Hashable,

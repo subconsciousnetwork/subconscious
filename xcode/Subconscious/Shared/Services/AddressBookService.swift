@@ -12,7 +12,7 @@ import Combine
 struct AddressBookEntry: Equatable, Hashable, Codable {
     var petname: Petname
     var did: Did
-    var status: PetnameResolutionStatus
+    var status: ResolutionStatus
 }
 
 enum AddressBookError: Error {
@@ -99,9 +99,9 @@ actor AddressBook<Sphere: SphereProtocol> {
             let status = await Func.run {
                 do {
                     _ = try await sphere.resolvePetname(petname: petname)
-                    return PetnameResolutionStatus.resolved
+                    return ResolutionStatus.resolved
                 } catch {
-                    return PetnameResolutionStatus.unresolved
+                    return ResolutionStatus.unresolved
                 }
             }
             
