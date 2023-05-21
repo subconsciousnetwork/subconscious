@@ -18,7 +18,6 @@ struct StoryUser:
     var id = UUID()
     var user: UserProfile
     var isFollowingUser: Bool
-    var resolutionStatus: PetnameResolutionStatus
     var statistics: UserProfileStatistics?
 
     var description: String {

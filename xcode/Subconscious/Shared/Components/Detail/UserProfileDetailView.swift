@@ -32,9 +32,7 @@ struct UserProfileDetailView: View {
     }
     
     func onNavigateToUser(user: UserProfile) {
-        notify(.requestDetail(.profile(
-            UserProfileDetailDescription(address: user.address)
-        )))
+        notify(.requestNavigateToProfile(user))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -74,6 +72,7 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
+    case requestNavigateToProfile(UserProfile)
     case requestDetail(MemoDetailDescription)
 }
 
@@ -147,6 +146,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let pfp: ProfilePicVariant
     let bio: UserProfileBio
     let category: UserCategory
+    let resolutionStatus: PetnameResolutionStatus
 }
 
 struct EditProfileSheetCursor: CursorProtocol {

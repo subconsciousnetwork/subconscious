@@ -58,7 +58,7 @@ struct StoryUserView: View {
                         
                     Spacer()
                     
-                    switch story.resolutionStatus {
+                    switch story.user.resolutionStatus {
                     case .unresolved:
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.secondary)
@@ -79,7 +79,7 @@ struct StoryUserView: View {
                     }
                     
                 }
-                .disabled(story.resolutionStatus != .resolved)
+                .disabled(story.user.resolutionStatus != .resolved)
                 
                 Menu(
                     content: {
@@ -129,10 +129,6 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            guard story.resolutionStatus == .resolved else {
-                return
-            }
-            
             action(
                 story.user.address,
                 story.user.bio.text
@@ -154,10 +150,10 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                        category: .human
+                        category: .human,
+                        resolutionStatus: .unresolved
                     ),
-                    isFollowingUser: false,
-                    resolutionStatus: .unresolved
+                    isFollowingUser: false
                 ),
                 action: { _, _ in }
             )
@@ -169,10 +165,10 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                        category: .human
+                        category: .human,
+                        resolutionStatus: .pending
                     ),
-                    isFollowingUser: true,
-                    resolutionStatus: .pending
+                    isFollowingUser: true
                 ),
                 action: { _, _ in }
             )
@@ -184,10 +180,10 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                        category: .you
+                        category: .you,
+                        resolutionStatus: .resolved
                     ),
-                    isFollowingUser: false,
-                    resolutionStatus: .resolved
+                    isFollowingUser: false
                 ),
                 action: { _, _ in }
             )
@@ -199,10 +195,10 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
-                        category: .you
+                        category: .you,
+                        resolutionStatus: .pending
                     ),
-                    isFollowingUser: false,
-                    resolutionStatus: .pending
+                    isFollowingUser: false
                 ),
                 action: { _, _ in }
             )

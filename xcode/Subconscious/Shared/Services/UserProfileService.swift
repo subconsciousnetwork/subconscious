@@ -152,7 +152,8 @@ actor UserProfileService {
     private func loadProfileFromMemo(
         did: Did,
         fallbackPetname: Petname,
-        address: Slashlink
+        address: Slashlink,
+        resolutionStatus: PetnameResolutionStatus
     ) async throws -> UserProfile {
         let userProfileData = await self.readProfileMemo(address: address)
         let pfp: ProfilePicVariant = Func.run {
@@ -169,7 +170,8 @@ actor UserProfileService {
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
-            category: address.isOurProfile ? .you : .human
+            category: address.isOurProfile ? .you : .human,
+            resolutionStatus: resolutionStatus
         )
         
         return profile
@@ -246,23 +248,22 @@ actor UserProfileService {
                 ? Slashlink.ourProfile
                 : slashlink
             
-            let user = try await self.loadProfileFromMemo(
-                did: entry.did,
-                fallbackPetname: address.petname ?? entry.petname,
-                address: address
-            )
             
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
             let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
+            let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
+            
+            let user = try await self.loadProfileFromMemo(
+                did: entry.did,
+                fallbackPetname: address.petname ?? entry.petname,
+                address: address,
+                resolutionStatus: status
+            )
             
             following.append(
                 StoryUser(
                     user: user,
-                    isFollowingUser: weAreFollowingListedUser,
-                    resolutionStatus:
-                        weAreFollowingListedUser && isPendingFollow
-                        ? .pending
-                        : entry.status
+                    isFollowingUser: weAreFollowingListedUser
                 )
             )
         }
@@ -315,7 +316,8 @@ actor UserProfileService {
         let profile = try await self.loadProfileFromMemo(
             did: did,
             fallbackPetname: fallbackPetname,
-            address: address
+            address: address,
+            resolutionStatus: .resolved // TODO: is this right?
         )
         
         return UserProfileContentResponse(

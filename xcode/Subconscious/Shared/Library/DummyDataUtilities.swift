@@ -82,10 +82,10 @@ extension StoryUser: DummyData {
                 address: Slashlink(petname: petname),
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
-                category: [UserCategory.human, UserCategory.geist].randomElement()!
+                category: [UserCategory.human, UserCategory.geist].randomElement()!,
+                resolutionStatus: .unresolved
             ),
-            isFollowingUser: Bool.dummyData(),
-            resolutionStatus: .unresolved
+            isFollowingUser: Bool.dummyData()
         )
     }
     
@@ -97,10 +97,10 @@ extension StoryUser: DummyData {
                 address: Slashlink(petname: petname),
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
-                category: [UserCategory.human, UserCategory.geist].randomElement()!
+                category: [UserCategory.human, UserCategory.geist].randomElement()!,
+                resolutionStatus: .unresolved
             ),
-            isFollowingUser: Bool.dummyData(),
-            resolutionStatus: .unresolved
+            isFollowingUser: Bool.dummyData()
         )
     }
 }
@@ -163,7 +163,8 @@ extension UserProfile: DummyData {
             address: Slashlink(petname: petname),
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
-            category: .human
+            category: .human,
+            resolutionStatus: .unresolved
         )
     }
 }

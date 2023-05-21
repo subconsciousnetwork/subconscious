@@ -175,7 +175,8 @@ struct EditProfileSheet: View {
             address: user.address,
             pfp: pfp,
             bio: UserProfileBio(state.bioField.validated ?? ""),
-            category: .you
+            category: .you,
+            resolutionStatus: .resolved
         )
     }
     
