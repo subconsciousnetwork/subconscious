@@ -235,6 +235,19 @@ enum AppAction: CustomLogStringConvertible {
     }
 }
 
+extension AppAction {
+    public static func from(action: UserProfileDetailAction) -> AppAction? {
+        switch action {
+        case .refresh:
+            return .syncAll
+        case .succeedEditProfile:
+            return .fetchNicknameFromProfile
+        case _:
+            return nil
+        }
+    }
+}
+
 // MARK: Cursors
 
 struct AppRecoveryPhraseCursor: CursorProtocol {
