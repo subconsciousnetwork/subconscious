@@ -65,6 +65,7 @@ actor NoosphereService:
     var globalStorageURL: URL
     var sphereStorageURL: URL
     var gatewayURL: URL?
+    private var _noosphereLogLevel: Noosphere.NoosphereLogLevel
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
     /// Identity of default sphere
@@ -77,6 +78,7 @@ actor NoosphereService:
         sphereStorageURL: URL,
         gatewayURL: URL? = nil,
         sphereIdentity: String? = nil,
+        noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic,
         logger: Logger = logger
     ) {
         logger.debug([
@@ -91,6 +93,7 @@ actor NoosphereService:
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
         self.logger = logger
+        self._noosphereLogLevel = noosphereLogLevel
     }
     
     /// Create a default sphere for user and persist sphere details
@@ -134,7 +137,8 @@ actor NoosphereService:
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
-            gatewayURL: gatewayURL?.absoluteString
+            gatewayURL: gatewayURL?.absoluteString,
+            noosphereLogLevel: _noosphereLogLevel
         )
         self._noosphere = noosphere
         return noosphere
