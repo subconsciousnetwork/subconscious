@@ -111,8 +111,6 @@ actor DataService {
     /// - If sphere has been indexed before, we retreive the last-indexed
     ///   version, and use it to get changes since.
     /// - If sphere has not been indexed, we get everything, and update
-    ///
-    /// This internal helper just exposes the basics
     func indexPeer(
         petname: Petname
     ) async throws -> PeerRecord {
@@ -123,16 +121,18 @@ actor DataService {
         ])
         let identity = try await sphere.identity()
         let version = try await sphere.version()
+        // Get peer info from last sync
         let peer = try? database.readPeer(identity: identity)
+        // Get changes since the last time we indexed this peer
+        let changes = try await sphere.changes(since: peer?.since)
         logger.debug([
             "msg": "Indexing peer",
             "petname": petname.description,
             "identity": identity.description,
             "version": version,
-            "since": peer?.since ?? "nil"
+            "since": peer?.since ?? "nil",
+            "changes": changes.count.description
         ])
-        // Get changes since the last time we indexed this peer
-        let changes = try await sphere.changes(since: peer?.since)
         let savepoint = "index_peer"
         try database.savepoint(savepoint)
         do {
