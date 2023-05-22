@@ -404,14 +404,10 @@ private struct EditProfileSheetModifier: ViewModifier {
                     )
                 }
             }
-            .onReceive(store.actions) { action in
-                switch(action) {
-                case .succeedEditProfile:
-                    app.send(.fetchNicknameFromProfile)
-                case _:
-                    break
-                }
-            }
+            .onReceive(
+                store.actions.compactMap(AppAction.from),
+                perform: app.send
+            )
     }
 }
 

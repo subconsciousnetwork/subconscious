@@ -47,26 +47,39 @@ struct StoryUserView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
-                ProfilePic(pfp: story.user.pfp, size: .medium)
-                PetnameView(
-                    nickname: story.user.nickname,
-                    petname: story.user.address.petname
-                )
-                .fontWeight(.medium)
-                .foregroundColor(.accentColor)
-                
-                Spacer()
-                
-                switch (story.isFollowingUser, story.user.category) {
-                case (true, _):
-                    Image.from(appIcon: .following)
-                        .foregroundColor(.secondary)
-                case (_, .you):
-                    Image.from(appIcon: .you(colorScheme))
-                        .foregroundColor(.secondary)
-                case (_, _):
-                    EmptyView()
+                Group {
+                    ProfilePic(pfp: story.user.pfp, size: .medium)
+                    PetnameView(
+                        nickname: story.user.nickname,
+                        petname: story.user.address.petname
+                    )
+                    .fontWeight(.medium)
+                    .foregroundColor(.accentColor)
+                        
+                    Spacer()
+                    
+                    switch story.user.resolutionStatus {
+                    case .unresolved:
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.secondary)
+                    case .pending:
+                        PendingSyncBadge()
+                            .foregroundColor(.secondary)
+                    case .resolved:
+                        switch (story.isFollowingUser, story.user.category) {
+                        case (true, _):
+                            Image.from(appIcon: .following)
+                                .foregroundColor(.secondary)
+                        case (_, .you):
+                            Image.from(appIcon: .you(colorScheme))
+                                .foregroundColor(.secondary)
+                        case (_, _):
+                            EmptyView()
+                        }
+                    }
+                    
                 }
+                .disabled(!story.user.resolutionStatus.isReady)
                 
                 Menu(
                     content: {
@@ -77,7 +90,7 @@ struct StoryUserView: View {
                                 },
                                 label: {
                                     Label(
-                                        title: { Text("Unfollow \(story.user.nickname.markup)") },
+                                        title: { Text("Unfollow") },
                                         icon: { Image(systemName: "person.fill.xmark") }
                                     )
                                 }
@@ -89,7 +102,7 @@ struct StoryUserView: View {
                                 },
                                 label: {
                                     Label(
-                                        title: { Text("Follow \(story.user.nickname.markup)") },
+                                        title: { Text("Follow") },
                                         icon: { Image(systemName: "person.badge.plus") }
                                     )
                                 }
@@ -137,7 +150,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                        category: .human
+                        category: .human,
+                        resolutionStatus: .unresolved
                     ),
                     isFollowingUser: false
                 ),
@@ -151,7 +165,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                        category: .human
+                        category: .human,
+                        resolutionStatus: .pending
                     ),
                     isFollowingUser: true
                 ),
@@ -165,7 +180,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                        category: .you
+                        category: .you,
+                        resolutionStatus: .resolved(Cid("ok"))
                     ),
                     isFollowingUser: false
                 ),
@@ -179,7 +195,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
-                        category: .you
+                        category: .you,
+                        resolutionStatus: .pending
                     ),
                     isFollowingUser: false
                 ),

@@ -152,7 +152,8 @@ actor UserProfileService {
     private func loadProfileFromMemo(
         did: Did,
         fallbackPetname: Petname,
-        address: Slashlink
+        address: Slashlink,
+        resolutionStatus: ResolutionStatus
     ) async throws -> UserProfile {
         let userProfileData = await self.readProfileMemo(address: address)
         let pfp: ProfilePicVariant = Func.run {
@@ -169,7 +170,8 @@ actor UserProfileService {
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
-            category: address.isOurProfile ? .you : .human
+            category: address.isOurProfile ? .you : .human,
+            resolutionStatus: resolutionStatus
         )
         
         return profile
@@ -246,13 +248,17 @@ actor UserProfileService {
                 ? Slashlink.ourProfile
                 : slashlink
             
+            
+            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
+            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
+            let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
+            
             let user = try await self.loadProfileFromMemo(
                 did: entry.did,
                 fallbackPetname: address.petname ?? entry.petname,
-                address: address
+                address: address,
+                resolutionStatus: status
             )
-            
-            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
             
             following.append(
                 StoryUser(
@@ -306,11 +312,13 @@ actor UserProfileService {
             slugs: notes
         )
         let recentEntries = sortEntriesByModified(entries: entries)
+        let cid = try await sphere.version()
         
         let profile = try await self.loadProfileFromMemo(
             did: did,
             fallbackPetname: fallbackPetname,
-            address: address
+            address: address,
+            resolutionStatus: .resolved(cid)
         )
         
         return UserProfileContentResponse(

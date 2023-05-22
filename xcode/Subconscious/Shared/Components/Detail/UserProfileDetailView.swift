@@ -32,9 +32,7 @@ struct UserProfileDetailView: View {
     }
     
     func onNavigateToUser(user: UserProfile) {
-        notify(.requestDetail(.profile(
-            UserProfileDetailDescription(address: user.address)
-        )))
+        notify(.requestNavigateToProfile(user))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -74,6 +72,7 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
+    case requestNavigateToProfile(UserProfile)
     case requestDetail(MemoDetailDescription)
 }
 
@@ -110,7 +109,11 @@ enum UserProfileDetailAction {
     case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow
+    case succeedFollow(Petname)
+    
+    case requestWaitForFollowedUserResolution(_ petname: Petname)
+    case succeedResolveFollowedUser
+    case failResolveFollowedUser(_ message: String)
     
     case requestUnfollow(UserProfile)
     case attemptUnfollow
@@ -143,6 +146,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let pfp: ProfilePicVariant
     let bio: UserProfileBio
     let category: UserCategory
+    let resolutionStatus: ResolutionStatus
 }
 
 struct EditProfileSheetCursor: CursorProtocol {
@@ -236,9 +240,7 @@ struct UserProfileDetailModel: ModelProtocol {
     private var selectedTabIndex: Int? = nil
     
     var currentTabIndex: Int {
-        get {
-            selectedTabIndex ?? initialTabIndex
-        }
+        selectedTabIndex ?? initialTabIndex
     }
     
     var isMetaSheetPresented = false
@@ -357,6 +359,15 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentFollowNewUserFormSheet(let presented):
             var model = state
             model.isFollowNewUserFormSheetPresented = presented
+            
+            if presented {
+                return update(
+                    state: model,
+                    action: .followNewUserFormSheet(.form(.reset)),
+                    environment: environment
+                )
+            }
+            
             return Update(state: model)
             
         case .presentFollowSheet(let presented):
@@ -401,7 +412,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
-                    UserProfileDetailAction.succeedFollow
+                    UserProfileDetailAction.succeedFollow(petname)
                 })
                 .catch { error in
                     Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
@@ -410,11 +421,12 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedFollow:
+        case let .succeedFollow(petname):
             var actions: [UserProfileDetailAction] = [
                 .presentFollowSheet(false),
                 .presentFollowNewUserFormSheet(false),
-                .refresh
+                .refresh,
+                .requestWaitForFollowedUserResolution(petname)
             ]
             
             // Refresh our profile & show the following list if we followed someone new
@@ -424,22 +436,38 @@ struct UserProfileDetailModel: ModelProtocol {
                     actions.append(.tabIndexSelected(Self.followingTabIndex))
                 }
             }
-            
+
             return update(
                 state: state,
                 actions: actions,
                 environment: environment
             )
-            
         case .failFollow(error: let error):
             var model = state
             model.failFollowErrorMessage = error
             return Update(state: model)
-            
         case .dismissFailFollowError:
             var model = state
             model.failFollowErrorMessage = nil
             return Update(state: model)
+            
+        case let .requestWaitForFollowedUserResolution(petname):
+            let fx: Fx<UserProfileDetailAction> = environment.addressBook
+                .waitForPetnameResolutionPublisher(petname: petname)
+                .map { _ in
+                    .succeedResolveFollowedUser
+                }
+                .recover { error in
+                    .failResolveFollowedUser(error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedResolveFollowedUser:
+            return update(state: state, action: .refresh, environment: environment)
+        case .failResolveFollowedUser(let message):
+            logger.log("Failed to resolve followed user: \(message)")
+            return update(state: state, action: .refresh, environment: environment)
             
         // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):

@@ -9,9 +9,10 @@ import os
 import Foundation
 import Combine
 
-struct AddressBookEntry: Equatable {
+struct AddressBookEntry: Equatable, Hashable, Codable {
     var petname: Petname
     var did: Did
+    var status: ResolutionStatus
 }
 
 enum AddressBookError: Error {
@@ -27,17 +28,35 @@ extension AddressBookError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cannotFollowYourself:
-            return String(localized: "You cannot follow yourself.", comment: "Address Book error description")
+            return String(
+                localized: "You cannot follow yourself.",
+                comment: "Address Book error description"
+            )
         case .alreadyFollowing:
-            return String(localized: "You are already following {}.", comment: "Address Book error description")
+            return String(
+                localized: "You are already following {}.",
+                comment: "Address Book error description"
+            )
         case .failedToIncrementPetname:
-            return String(localized: "Failed to increment a petname's suffix.", comment: "Address Book error description")
+            return String(
+                localized: "Failed to increment a petname's suffix.",
+                comment: "Address Book error description"
+            )
         case .exhaustedUniquePetnameRange:
-            return String(localized: "Failed to find an available petname.", comment: "Address Book error description")
+            return String(
+                localized: "Failed to find an available petname.",
+                comment: "Address Book error description"
+            )
         case .invalidAttemptToOverwitePetname:
-            return String(localized: "This petname is already in use.", comment: "Address Book error description")
+            return String(
+                localized: "This petname is already in use.",
+                comment: "Address Book error description"
+            )
         case .other(let msg):
-            return String(localized: "An unknown error occurred: \(msg)", comment: "Unknown Address Book error description")
+            return String(
+                localized: "An unknown error occurred: \(msg)",
+                comment: "Unknown Address Book error description"
+            )
         }
     }
 }
@@ -77,11 +96,20 @@ actor AddressBook<Sphere: SphereProtocol> {
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
             let did = try await sphere.getPetname(petname: petname)
+            let status = await Func.run {
+                do {
+                    let cid =  try await sphere.resolvePetname(petname: petname)
+                    return ResolutionStatus.resolved(cid)
+                } catch {
+                    return ResolutionStatus.unresolved
+                }
+            }
             
             addressBook.append(
                 AddressBookEntry(
                     petname: petname,
-                    did: did
+                    did: did,
+                    status: status
                 )
             )
         }
@@ -111,10 +139,15 @@ actor AddressBook<Sphere: SphereProtocol> {
     /// This method is designed not to throw for a quick check.
     func hasEntryForPetname(petname: Petname) async -> Bool {
         do {
-            let _  = try await self.sphere.getPetname(petname: petname)
+            _  = try await self.sphere.getPetname(petname: petname)
             return true
         } catch {
-            logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
+            logger.error(
+                """
+                An error occurred checking for \(petname.markup), returning false. \
+                Reason: \(error.localizedDescription)
+                """
+            )
             return false
         }
     }
@@ -234,10 +267,10 @@ actor AddressBookService {
     private var database: DatabaseService
     private var addressBook: AddressBook<NoosphereService>
     
+    private var pendingFollows: [Petname] = []
+    
     var localAddressBook: AddressBook<NoosphereService> {
-        get {
-            addressBook
-        }
+        addressBook
     }
     
     /// must be defined here not on `AddressBook` because
@@ -300,12 +333,50 @@ actor AddressBookService {
             version: version
         )
         await self.addressBook.invalidateCache()
+    }
+    
+    func isPendingResolution(petname: Petname) -> Bool {
+        self.pendingFollows.contains(petname)
+    }
+    
+    func waitForPetnameResolution(
+        petname: Petname
+    ) async throws -> Cid? {
+        let maxAttempts = 10 // 1+2+4+8+16+32+32+32+32+32 = 191 seconds
         
-        do {
-            let _ = try await self.noosphere.sync()
-        } catch {
-            Self.logger.error("Failed to sync after following user: \(error.localizedDescription)")
+        self.pendingFollows.append(petname)
+        
+        let cid = try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
+            Self.logger.log("""
+            Check for petname resolution, \
+            attempt \(attempts) of \(maxAttempts)
+            """)
+            
+            _ = try await self.noosphere.sync()
+            do {
+                _ = try await self.noosphere.getPetname(petname: petname)
+            } catch {
+                // Stop waiting, the petname is not in our addressbook anymore (unfollowed)
+                throw RetryError.cancelled
+            }
+            
+            return try await self.noosphere.resolvePetname(petname: petname)
         }
+        
+        self.pendingFollows.removeAll { f in f == petname }
+        
+        return cid
+    }
+    
+    nonisolated func waitForPetnameResolutionPublisher(
+        petname: Petname
+    ) -> AnyPublisher<Cid?, Error> {
+        Future.detached {
+            try await self.waitForPetnameResolution(
+                petname: petname
+            )
+        }
+        .eraseToAnyPublisher()
     }
     
     /// Associates the passed DID with the passed petname within the sphere,
@@ -340,10 +411,8 @@ actor AddressBookService {
     func unfollowUser(did: Did) async throws {
         let entries = try await listEntries()
         
-        for entry in entries {
-            if entry.did == did {
-                try await unfollowUser(petname: entry.petname)
-            }
+        for entry in entries where entry.did == did {
+            try await unfollowUser(petname: entry.petname)
         }
     }
     
@@ -398,7 +467,9 @@ actor AddressBookService {
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
     /// This can fail if `maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
-    nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
+    nonisolated func findAvailablePetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Petname, Error> {
         Future.detached {
             try await self.addressBook.findAvailablePetname(petname: petname)
         }

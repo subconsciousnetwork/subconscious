@@ -100,7 +100,8 @@ struct BylineLgView_Previews: PreviewProvider {
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
-                    category: .human
+                    category: .human,
+                    resolutionStatus: .resolved("abc")
                 ),
                 isFollowingUser: false
             )
@@ -111,7 +112,8 @@ struct BylineLgView_Previews: PreviewProvider {
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
-                    category: .geist
+                    category: .geist,
+                    resolutionStatus: .resolved(Cid("ok"))
                 ),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
                 isFollowingUser: true
@@ -123,7 +125,8 @@ struct BylineLgView_Previews: PreviewProvider {
                     address: Slashlink.ourProfile,
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
-                    category: .you
+                    category: .you,
+                    resolutionStatus: .resolved(Cid("ok"))
                 ),
                 isFollowingUser: false
             )

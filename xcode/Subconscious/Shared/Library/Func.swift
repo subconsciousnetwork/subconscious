@@ -7,6 +7,10 @@
 
 import Foundation
 
+enum RetryError: Error {
+    case cancelled
+}
+
 struct Func {
     static func pipe<T, U>(
         _ value: T,
@@ -58,6 +62,8 @@ struct Func {
     ) async throws -> T? {
         do {
             return try await perform(attempts)
+        } catch RetryError.cancelled {
+            return nil
         } catch {
             let attempts = attempts + 1
             guard attempts < maxAttempts else {
