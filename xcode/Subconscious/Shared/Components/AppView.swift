@@ -1307,18 +1307,20 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         do {
-            let sphereIdentity = try state.sphereIdentity.unwrap()
-            let did = try Did(sphereIdentity).unwrap()
             let info: OurSphereRecord = try environment.database
                 .readOurSphere()
                 .unwrap()
             logger.log([
-                "msg": "Last-known index for our sphere",
+                "msg": "Last index for our sphere",
                 "identity": info.identity.description,
                 "version": info.since
             ])
         } catch {
-            logger.log(["msg": "Last-known for our sphere: unknown"])
+            logger.log([
+                "msg": "Last index for our sphere",
+                "identity": "nil",
+                "version": "nil"
+            ])
         }
         // For now, we just sync everything on ready.
         return update(
@@ -1869,7 +1871,8 @@ struct AppEnvironment {
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: defaultGateway,
-            sphereIdentity: defaultSphereIdentity
+            sphereIdentity: defaultSphereIdentity,
+            noosphereLogLevel: .deafening
         )
         self.noosphere = noosphere
 
