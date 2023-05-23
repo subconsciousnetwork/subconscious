@@ -70,26 +70,6 @@ final class SQLite3Database {
                 return nil
             }
         }
-
-        public func get(_ i: Int) -> String? {
-            self.col(i)?.toString()
-        }
-
-        public func get(_ i: Int) -> Date? {
-            self.col(i)?.toDate()
-        }
-
-        public func get(_ i: Int) -> Int? {
-            self.col(i)?.toInt()
-        }
-
-        public func get(_ i: Int) -> Double? {
-            self.col(i)?.toDouble()
-        }
-
-        public func get(_ i: Int) -> Data? {
-            self.col(i)?.toData()
-        }
     }
 
     /// Column data types for SQLite
