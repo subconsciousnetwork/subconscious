@@ -125,12 +125,12 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        guard let row = try database.execute(
+        guard let row = try database.first(
             sql: """
             SELECT did, since
             FROM our_sphere
             """
-        ).first else {
+        ) else {
             return nil
         }
         guard let identity = row.col(0)?.toString()?.toDid() else {
