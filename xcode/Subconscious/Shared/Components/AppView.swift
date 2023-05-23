@@ -1537,7 +1537,6 @@ struct AppModel: ModelProtocol {
             } catch {
                 return Action.failIndexPeer(error.localizedDescription)
             }
-            
         }.eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
