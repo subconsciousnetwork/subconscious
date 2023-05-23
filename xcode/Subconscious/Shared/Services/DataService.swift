@@ -133,6 +133,7 @@ actor DataService {
             "since": peer?.since ?? "nil",
             "changes": changes.count.description
         ])
+        
         let savepoint = "index_peer"
         try database.savepoint(savepoint)
         do {
@@ -340,16 +341,6 @@ actor DataService {
             "since": peer.since ?? "nil"
         ])
         return peer
-    }
-    
-    /// Purge sphere from database with the given petname.
-    nonisolated func purgePeerPublisher(
-        petname: Petname
-    ) -> AnyPublisher<PeerRecord, Error> {
-        Future.detached(priority: .utility) {
-            try await self.purgePeer(petname: petname)
-        }
-        .eraseToAnyPublisher()
     }
     
     /// Sync file system with database.

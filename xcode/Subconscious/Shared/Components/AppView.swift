@@ -1623,13 +1623,16 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         petname: Petname
     ) -> Update<Self> {
-        let fx: Fx<Action> = environment.data.purgePeerPublisher(
-            petname: petname
-        ).map({ peer in
-            Action.succeedPurgePeer(peer)
-        }).recover({ error in
-            Action.failPurgePeer(error.localizedDescription)
-        }).eraseToAnyPublisher()
+        let fx: Fx<Action> = Future.detached(priority: .utility) {
+            do {
+                let peer = try await environment.data.purgePeer(
+                    petname: petname
+                )
+                return Action.succeedPurgePeer(peer)
+            } catch {
+                return Action.failPurgePeer(error.localizedDescription)
+            }
+        }.eraseToAnyPublisher()
         logger.log([
             "msg": "Purging peer",
             "petname": petname.description
