@@ -20,8 +20,8 @@ struct RandomNumberGeneratorWithSeed: RandomNumberGenerator {
     }
 
     mutating func next() -> UInt64 {
-        let highBits = UInt64(bitPattern: Int64(randomSource.nextInt()))
-        let lowBits = UInt64(bitPattern: Int64(randomSource.nextInt()))
+        let highBits = UInt64(randomSource.nextInt(upperBound: Int(UInt32.max)))
+        let lowBits = UInt64(randomSource.nextInt(upperBound: Int(UInt32.max)))
         return highBits << 32 | lowBits
     }
 }
