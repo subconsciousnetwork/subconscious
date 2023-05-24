@@ -24,6 +24,31 @@ struct RandomNumberGeneratorWithSeed: RandomNumberGenerator {
         let lowBits = UInt64(randomSource.nextInt(upperBound: Int(UInt32.max)))
         return highBits << 32 | lowBits
     }
+
+}
+
+struct KaleidoscopeModifier: ViewModifier {
+    let count: Int
+    let angle: Angle
+
+    func body(content: Content) -> some View {
+        if count == 1 {
+            content
+        } else {
+            ForEach(Array(0..<count), id: \.self) { index in
+                content
+                    .scaleEffect(x: 0.5, y: 0.5)
+                    .offset(y: CGFloat(2 + count)) // Adjust this value as per your requirement
+                    .rotationEffect(self.angle * Double(index))
+            }
+        }
+    }
+}
+
+extension View {
+    func kaleidoscope(n: Int) -> some View {
+        self.modifier(KaleidoscopeModifier(count: n, angle: .degrees(360 / Double(n))))
+    }
 }
 
 struct GenerativeProfilePicParams {
