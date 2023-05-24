@@ -183,42 +183,34 @@ struct GenerativeProfilePic_Previews: PreviewProvider {
                 GenerativeProfilePic(did: Did.dummyData(), size: 24)
                 GenerativeProfilePic(did: Did.dummyData(), size: 24)
                 GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+            }
+            ForEach(0..<5) {_ in
+                VStack {
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                    GenerativeProfilePic(did: Did.dummyData())
+                }
             }
             VStack {
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-            }
-            VStack {
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-            }
-            VStack {
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-            }
-            VStack {
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
-                GenerativeProfilePic(did: Did.dummyData())
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
+                GenerativeProfilePic(did: Did.dummyData(), size: 24)
             }
         }
     }
