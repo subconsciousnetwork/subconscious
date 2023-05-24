@@ -32,7 +32,7 @@ struct FirstRunProfileView: View {
                     caption: "Lowercase letters, numbers and dashes only.",
                     hasError: !app.state.isNicknameFormFieldValid,
                     autoFocus: true,
-                    submitLabel: .continue,
+                    submitLabel: .go,
                     onSubmit: {
                         if app.state.nicknameFormField.isValid {
                             app.send(.pushFirstRunStep(.sphere))

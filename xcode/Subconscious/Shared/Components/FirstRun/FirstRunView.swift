@@ -59,7 +59,7 @@ struct FirstRunView: View {
                     },
                     caption: "Look for this in your welcome email.",
                     hasError: app.state.inviteCodeFormField.hasError,
-                    submitLabel: .continue,
+                    submitLabel: .go,
                     onSubmit: {
                         if app.state.inviteCodeFormField.isValid {
                             app.send(.pushFirstRunStep(.nickname))
