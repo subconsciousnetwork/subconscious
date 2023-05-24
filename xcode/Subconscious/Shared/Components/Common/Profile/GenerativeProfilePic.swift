@@ -56,16 +56,15 @@ struct GenerativeProfilePicParams {
     var blendMode: BlendMode
     var color: Color
     var gradient: [Gradient.Stop]
+    var count: Int
     
     private static let gradientOptions = [
-        (Color.brandMarkPink, Color.brandMarkViolet, Color.brandMarkCyan),
-        (Color.brandMarkRed, Color.brandMarkPurple, Color.brandMarkViolet),
-        (Color.brandBgBlush, Color.brandMarkPurple, Color.brandMarkCyan),
+        (Color.brandMarkPink, Color.brandMarkPurple, Color.blue),
         (Color.brandMarkRed, Color.brandMarkViolet, Color.brandMarkCyan),
         (Color.brandMarkRed, Color.brandMarkPurple, Color.brandMarkPink),
         (Color.yellow, Color.orange, Color.brandMarkRed),
         (Color.brandMarkPink, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.brandMarkRed),
-        (Color.white, Color.brandBgBlush, Color.brandMarkPink),
+        (Color.orange, Color.brandMarkRed, Color.brandMarkPurple),
         (Color.brandMarkPink, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.brandMarkCyan),
         (Color.brandMarkCyan, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.orange)
     ]
@@ -78,20 +77,22 @@ struct GenerativeProfilePicParams {
         "✦",
         "✷",
         "☾",
-        "♦︎"
+        "♦︎",
+        "♢"
     ]
     
     private static let colorOptions = [
-        Color.blue,
-        Color.gray,
-        Color.cyan,
+        Color.brandMarkRed,
+//        Color.gray,
+//        Color.cyan,
         Color.brandMarkViolet,
-        Color.brandMarkPurple
+        Color.brandMarkPurple,
+//        Color.brandMarkCyan
     ]
     
     private static let blendModeOptions = [
-        BlendMode.colorDodge,
-        BlendMode.colorBurn
+        BlendMode.plusLighter,
+        BlendMode.plusDarker,
     ]
 }
 
@@ -112,6 +113,8 @@ extension GenerativeProfilePicParams {
                 ?? (Color.clear, Color.clear, Color.clear)
         
         self.gradient = Color.brandGradient(a: a, b: b, c: c)
+        
+        self.count = [1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 4].randomElement(using: &rng) ?? 1
         
         self.blendMode =
             Self.blendModeOptions.randomElement(using: &rng)
@@ -157,10 +160,20 @@ struct GenerativeProfilePic: View {
             Text(params.sigil)
                 .font(.system(size: size * 0.8, weight: .heavy))
                 .frame(width: size, height: size)
-                .foregroundColor(Color.brandBgSlate)
+                .foregroundColor(Color.white)
                 .blendMode(.darken)
                 .opacity(0.3)
                 .blur(radius: 3.0)
+                .kaleidoscope(n: params.count)
+            
+            Text(params.sigil)
+                .font(.system(size: size * 0.8, weight: .heavy))
+                .frame(width: size, height: size)
+                .foregroundColor(Color.black)
+                .blendMode(.darken)
+                .opacity(0.3)
+                .blur(radius: 1.0)
+                .kaleidoscope(n: params.count)
             
             Text(params.sigil)
                 .font(.system(size: size * 0.8, weight: .heavy))
@@ -168,6 +181,7 @@ struct GenerativeProfilePic: View {
                 .foregroundColor(params.color)
                 .blendMode(params.blendMode)
                 .opacity(0.9)
+                .kaleidoscope(n: params.count)
         }
     }
 }
