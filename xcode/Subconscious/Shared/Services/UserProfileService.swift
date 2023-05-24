@@ -15,6 +15,7 @@ enum UserProfileServiceError: Error {
     case unexpectedProfileSchemaVersion(String)
     case failedToDeserializeProfile(Error, String?)
     case other(String)
+    case profileAlreadyExists
 }
 
 extension UserProfileServiceError: LocalizedError {
@@ -48,6 +49,11 @@ extension UserProfileServiceError: LocalizedError {
                     comment: "UserProfileService error description"
                 )
             }
+        case .profileAlreadyExists:
+            return String(
+                localized: "Request to create initial profile but user already has a profile memo",
+                comment: "UserProfileService error description"
+            )
         case .other(let msg):
             return String(
                 localized: "An unknown error occurred: \(msg)",
@@ -110,7 +116,6 @@ actor UserProfileService {
         self.jsonEncoder.outputFormatting = .sortedKeys
     }
     
-    
     /// Attempt to read & deserialize a user `_profile_.json` at the given address.
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
@@ -137,7 +142,7 @@ actor UserProfileService {
                 guard let string = String(data: data.body, encoding: .utf8) else {
                     throw UserProfileServiceError.failedToDeserializeProfile(error, nil)
                 }
-               
+
                 throw UserProfileServiceError.failedToDeserializeProfile(error, string)
             }
         } catch {
@@ -248,7 +253,6 @@ actor UserProfileService {
                 ? Slashlink.ourProfile
                 : slashlink
             
-            
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
             let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
             let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
@@ -269,6 +273,22 @@ actor UserProfileService {
         }
         
         return following
+    }
+    
+    /// Sets our nickname if (and only if) there is no existing profile data.
+    /// This is intended to be idempotent for use in the onboarding flow.
+    func requestSetOurInitialNickname(nickname: String) async throws {
+        guard await readProfileMemo(address: Slashlink.ourProfile) != nil else {
+            let profile = UserProfileEntry(
+                nickname: nickname,
+                bio: nil,
+                profilePictureUrl: nil
+            )
+            
+            return try await writeOurProfile(profile: profile)
+        }
+
+        throw UserProfileServiceError.profileAlreadyExists
     }
     
     /// Update our `_profile_` memo with the contents of the passed profile.
