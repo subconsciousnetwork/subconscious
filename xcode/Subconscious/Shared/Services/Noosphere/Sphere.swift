@@ -253,9 +253,9 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Get current version of sphere
     public func version() throws -> Cid {
         guard let sphereVersionPointer = try Noosphere.callWithError(
-            ns_sphere_version_get,
+            ns_sphere_version,
             noosphere.noosphere,
-            _identity
+            sphere
         ) else {
             throw NoosphereError.nullPointer
         }
