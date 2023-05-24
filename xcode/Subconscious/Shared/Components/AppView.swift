@@ -80,7 +80,7 @@ struct AppView: View {
 }
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
-typealias NicknameFormField = FormField<String, Petname>
+typealias NicknameFormField = FormField<String, PetnamePart>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -407,7 +407,7 @@ struct AppModel: ModelProtocol {
     /// stored in `AppDefaults`.
     var nicknameFormField = NicknameFormField(
         value: "",
-        validate: { value in Petname(value) }
+        validate: { value in PetnamePart(value) }
     )
     /// Expose read-only value for view
     var nicknameFormFieldValue: String {

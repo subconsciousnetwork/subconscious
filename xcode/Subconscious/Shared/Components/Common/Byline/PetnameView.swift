@@ -40,10 +40,10 @@ struct PetnameView_Previews: PreviewProvider {
                 petname: Petname("melville")!
             )
             PetnameView(
-                petname: Petname(petnames: [PetnamePart("melville")!, PetnamePart("bobby")!, PetnamePart("tables")!])!
+                petname: Petname("bobby.tables")!
             )
             PetnameView(
-                petname: Petname(petnames: [PetnamePart("melville")!, PetnamePart("bobby")!, PetnamePart("tables")!])!
+                petname: Petname("tables")!
             )
             .frame(maxWidth: 128)
         }

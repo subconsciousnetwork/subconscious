@@ -23,7 +23,7 @@ struct FirstRunSphereView: View {
                     HStack(spacing: 0) {
                         Text("Hi, ")
                             .foregroundColor(.secondary)
-                        PetnameView(petname: name)
+                        PetnameView(petname: name.toPetname())
                         Text(".")
                             .foregroundColor(.secondary)
                     }
