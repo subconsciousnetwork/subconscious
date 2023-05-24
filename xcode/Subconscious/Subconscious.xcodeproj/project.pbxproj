@@ -2459,8 +2459,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
-				kind = revision;
-				revision = d8488b68bdd68a1ffc0f2d7f00fa29d6f6cb8e56;
+				kind = branch;
+				branch = "swift-noosphere-v0.10.11";
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
