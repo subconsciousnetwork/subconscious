@@ -14,12 +14,15 @@ struct PetnameView: View {
     
     var body: some View {
         if let petname = petname {
-            VStack(alignment: .leading) {
-                Text(nickname.description)
-                Text(petname.markup)
-                    .foregroundColor(.secondary)
-                    .fontWeight(.regular)
-                    .font(.caption)
+            VStack(alignment: .leading, spacing: AppTheme.unit) {
+                HStack(alignment: .center, spacing: AppTheme.unit) {
+                    Text(petname.leaf.markup)
+                    AkaBadge()
+                    Text(nickname.description)
+                        .foregroundColor(.secondary)
+                        .fontWeight(.regular)
+                        .font(.caption)
+                }
             }
         } else {
             Text(nickname.markup)
