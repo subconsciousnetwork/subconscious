@@ -931,14 +931,7 @@ struct AppModel: ModelProtocol {
         nickname: String
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
-            let profile =
-                UserProfileEntry(
-                    nickname: nickname,
-                    bio: nil,
-                    profilePictureUrl: nil
-                )
-            
-            try await environment.userProfile.writeOurProfile(profile: profile)
+            try await environment.userProfile.setOurInitialNickname(nickname: nickname)
             return AppAction.succeedCreateInitialProfile
         }
         .recover { error in
