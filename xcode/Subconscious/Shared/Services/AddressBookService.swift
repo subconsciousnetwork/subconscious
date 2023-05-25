@@ -10,9 +10,9 @@ import Foundation
 import Combine
 
 struct AddressBookEntry: Equatable, Hashable, Codable {
-    var nickname: PetnamePart
-    var did: Did
-    var status: ResolutionStatus
+    let nickname: PetnamePart
+    let did: Did
+    let status: ResolutionStatus
 }
 
 enum AddressBookError: Error {
@@ -405,13 +405,22 @@ actor AddressBookService {
         await self.addressBook.invalidateCache()
     }
     
+    private static func shouldBeUnfollowed(
+        _ entry: AddressBookEntry,
+        _ did: Did,
+        _ petname: PetnamePart?
+    ) -> Bool {
+        entry.did == did && (petname == nil || entry.nickname == petname)
+    }
+    
     /// Disassociates the passed DID from any petname(s) in the address book,
     /// clears the cache, saves the changes and updates the database.
     /// Requires listing the contents of the address book.
-    func unfollowUser(did: Did) async throws {
+    func unfollowUser(did: Did, petname: PetnamePart?) async throws {
         let entries = try await listEntries()
-        
-        for entry in entries where entry.did == did {
+
+        for entry in entries
+        where Self.shouldBeUnfollowed(entry, did, petname) {
             try await unfollowUser(petname: entry.nickname)
         }
     }
@@ -430,10 +439,11 @@ actor AddressBookService {
     /// Unassociates the passed DID with from any petname within the sphere,
     /// saves the changes and updates the database.
     nonisolated func unfollowUserPublisher(
-        did: Did
+        did: Did,
+        petname: PetnamePart?
     ) -> AnyPublisher<Void, Error> {
         Future.detached {
-            try await self.unfollowUser(did: did)
+            try await self.unfollowUser(did: did, petname: petname)
         }
         .eraseToAnyPublisher()
     }
