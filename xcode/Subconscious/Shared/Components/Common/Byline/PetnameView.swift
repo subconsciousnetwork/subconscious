@@ -12,21 +12,17 @@ struct PetnameView: View {
     var address: Slashlink?
     var petname: Petname
     
-    var identifier: String {
-        address?.petname?.markup ?? address?.markup ?? petname.markup
-    }
-    
     var body: some View {
-        if address != nil {
+        if let address = address {
             VStack(alignment: .leading) {
                 Text(petname.description)
-                Text(identifier)
+                Text(address.petname?.markup ?? address.markup)
                     .foregroundColor(.secondary)
                     .fontWeight(.regular)
                     .font(.caption)
             }
         } else {
-            Text(identifier)
+            Text(petname.markup)
                 .lineLimit(1)
         }
     }
