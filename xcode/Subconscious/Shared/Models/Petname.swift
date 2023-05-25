@@ -30,10 +30,11 @@ public struct Petname:
     public var description: String {
         verbatim.lowercased()
     }
+    
     public var verbatim: String {
-        self.parts.map { p in
-            p.verbatim
-        }.joined(separator: Self.separator)
+        self.parts
+            .map { p in p.verbatim }
+            .joined(separator: Self.separator)
     }
     
     public var id: String { description }
@@ -85,17 +86,11 @@ public struct Petname:
     /// This will sanitize the string as best it can to create a valid petname.
     public init?(formatting string: String) {
         let parts = string.split(separator: Self.separator)
-        var xs: [Petname.Part] = []
+        self.parts = parts.compactMap { part in Petname.Part(formatting: part) }
         
-        for part in parts {
-            guard let p = Petname.Part(formatting: part) else {
-                return nil
-            }
-            
-            xs.append(p)
+        guard !self.parts.isEmpty else {
+            return nil
         }
-        
-        self.parts = xs
     }
      
     /// Combines two petnames to build up a traversal path
