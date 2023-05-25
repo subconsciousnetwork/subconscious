@@ -50,7 +50,7 @@ struct FollowUserSheetModel: ModelProtocol {
             var model = state
             model.user = user
             
-            let nickname = user.nickname ?? user.address.petname?.leaf ?? PetnamePart.unknown
+            let nickname = user.identifier
             return update(
                 state: model,
                 actions: [

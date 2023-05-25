@@ -147,6 +147,10 @@ struct UserProfile: Equatable, Codable, Hashable {
     let bio: UserProfileBio
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
+    
+    var identifier: PetnamePart {
+        nickname ?? address.petname?.leaf ?? PetnamePart.unknown
+    }
 }
 
 struct EditProfileSheetCursor: CursorProtocol {
@@ -492,7 +496,10 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let fx: Fx<UserProfileDetailAction> =
             environment.addressBook
-                .unfollowUserPublisher(did: did)
+                .unfollowUserPublisher(
+                    did: did,
+                    petname: state.unfollowCandidate?.identifier
+                )
                 .map({ _ in
                     .succeedUnfollow
                 })

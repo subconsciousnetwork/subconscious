@@ -51,7 +51,7 @@ struct StoryUserView: View {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
                     PetnameView(
                         address: story.user.address,
-                        petname: story.user.nickname?.toPetname() ?? Petname.unknown
+                        petname: story.user.identifier.toPetname()
                     )
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
