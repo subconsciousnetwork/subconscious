@@ -542,7 +542,7 @@ final class Tests_Sphere: XCTestCase {
         )
         
         let bobKey = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
-        let bobName = Petname("bob")!
+        let bobName = Petname.Part("bob")!
         
         try await sphere.setPetname(did: bobKey, petname: bobName)
         try await sphere.save()
@@ -575,7 +575,7 @@ final class Tests_Sphere: XCTestCase {
         )
         
         let bobKey = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
-        let bobName = Petname("bob")!
+        let bobName = Petname.Part("bob")!
 
         try await sphere.setPetname(did: bobKey, petname: bobName)
         try await sphere.save()
@@ -583,7 +583,7 @@ final class Tests_Sphere: XCTestCase {
         let slug = Slug("foo")!
 
         let relBob = Slashlink(
-            peer: .petname(bobName),
+            peer: .petname(bobName.toPetname()),
             slug: slug
         )
         

@@ -113,7 +113,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testFormatCollapsesContiguousWhitespace() throws {
-        let petname = Petname(formatting: "  @the QuIck      brown FOX")
+        let petname = Petname.Part(formatting: "  @the QuIck      brown FOX")
         XCTAssertEqual(
             petname?.description,
             "the-quick-brown-fox",
@@ -122,7 +122,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testIncrementBasePetname() throws {
-        let petname = Petname("ziggy")!
+        let petname = Petname.Part("ziggy")!
         let next = petname.increment()
         
         XCTAssertEqual(
@@ -132,7 +132,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testIncrementTrailingDash() throws {
-        let petname = Petname("rodrigo-")!
+        let petname = Petname.Part("rodrigo-")!
         let next = petname.increment()
         
         XCTAssertEqual(
@@ -142,7 +142,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testIncrementTrailingDashes() throws {
-        let petname = Petname("james-baxter------")!
+        let petname = Petname.Part("james-baxter------")!
         let next = petname.increment()
         
         XCTAssertEqual(
@@ -152,7 +152,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testIncrementTrailingNumbers() throws {
-        let petname = Petname("django999")!
+        let petname = Petname.Part("django999")!
         let next = petname.increment()
         
         XCTAssertEqual(
@@ -162,7 +162,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testIncrementExistingSuffix() throws {
-        let petname = Petname("princess-arabella-3")!
+        let petname = Petname.Part("princess-arabella-3")!
         let next = petname.increment()
         
         XCTAssertEqual(
@@ -172,7 +172,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testIncrementDoubleDigitSuffix() throws {
-        let petname = Petname("xxx-31")!
+        let petname = Petname.Part("xxx-31")!
         let next = petname.increment()
         
         XCTAssertEqual(
@@ -182,7 +182,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testIncrementExtremelyLargeSuffix() throws {
-        let petname = Petname("ben-9999")!
+        let petname = Petname.Part("ben-9999")!
         let next = petname.increment()
         
         XCTAssertEqual(
@@ -201,23 +201,23 @@ class Tests_Petname: XCTestCase {
     
     func testLeaf() throws {
         let a = Petname("alice.bob.charlie")!
-        XCTAssertEqual(a.leaf, Petname("alice")!)
+        XCTAssertEqual(a.leaf, Petname.Part("alice")!)
         
         let b = Petname("bob.charlie")!
-        XCTAssertEqual(b.leaf, Petname("bob")!)
+        XCTAssertEqual(b.leaf, Petname.Part("bob")!)
         
         let c = Petname("charlie")!
-        XCTAssertEqual(c.leaf, Petname("charlie")!)
+        XCTAssertEqual(c.leaf, Petname.Part("charlie")!)
     }
     
     func testRoot() throws {
         let a = Petname("alice.bob.charlie")!
-        XCTAssertEqual(a.root, Petname("charlie")!)
+        XCTAssertEqual(a.root, Petname.Part("charlie")!)
         
         let b = Petname("charlie.bob")!
-        XCTAssertEqual(b.root, Petname("bob")!)
+        XCTAssertEqual(b.root, Petname.Part("bob")!)
         
         let c = Petname("charlie")!
-        XCTAssertEqual(c.root, Petname("charlie")!)
+        XCTAssertEqual(c.root, Petname.Part("charlie")!)
     }
 }
