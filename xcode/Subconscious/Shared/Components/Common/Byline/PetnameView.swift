@@ -32,15 +32,30 @@ struct PetnameView: View {
     }
 }
 
+extension PetnameView {
+    init(identifier: Petname.Part) {
+        self.petname = identifier.toPetname()
+    }
+    
+    init(address: Slashlink, identifier: Petname.Part) {
+        self.address = address
+        self.petname = identifier.toPetname()
+    }
+}
+
 struct PetnameView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             PetnameView(
                 address: Slashlink(petname: Petname("melville.bobby.tables")!),
-                petname: Petname("melville")!
+                identifier: Petname.Part("melville")!
             )
             PetnameView(
-                petname: Petname("bobby.tables")!
+                identifier: Petname.Part("bobby.tables")!
+            )
+            PetnameView(
+                address: Slashlink(petname: Petname("tables.bobby")!),
+                petname: Petname("tables")!
             )
             PetnameView(
                 petname: Petname("tables")!

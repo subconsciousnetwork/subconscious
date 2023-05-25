@@ -29,7 +29,7 @@ struct UserProfileHeaderView: View {
                 ProfilePic(pfp: user.pfp, size: .large)
             
                 PetnameView(
-                    petname: user.identifier.toPetname()
+                    identifier: user.identifier
                 )
                 .fontWeight(.medium)
                 .foregroundColor(.accentColor)

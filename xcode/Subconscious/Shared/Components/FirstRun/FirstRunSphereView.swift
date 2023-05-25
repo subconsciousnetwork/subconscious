@@ -19,11 +19,11 @@ struct FirstRunSphereView: View {
         VStack {
             Spacer()
             VStack(spacing: AppTheme.padding) {
-                if let name = app.state.nicknameFormField.validated  {
+                if let nickname = app.state.nicknameFormField.validated  {
                     HStack(spacing: 0) {
                         Text("Hi, ")
                             .foregroundColor(.secondary)
-                        PetnameView(petname: name.toPetname())
+                        PetnameView(identifier: nickname)
                         Text(".")
                             .foregroundColor(.secondary)
                     }
