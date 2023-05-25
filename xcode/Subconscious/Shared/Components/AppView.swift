@@ -107,7 +107,7 @@ enum AppAction: CustomLogStringConvertible {
     case persistNickname(_ nickname: String)
     
     /// Write to `Slashlink.ourProfile` during onboarding
-    case requestCreateInitialProfile(_ nickname: String)
+    case requestCreateInitialProfile(_ nickname: PetnamePart)
     case succeedCreateInitialProfile
     case failCreateInitialProfile(_ message: String)
     
@@ -399,12 +399,12 @@ struct AppModel: ModelProtocol {
     /// Validated nickname
     ///
     /// This property is updated at `.start` with the corresponding value
-    /// stored in `AppDefaults`.
+    /// stored in the user's `_profile_` memo.
     var nickname = ""
     /// Nickname form
     ///
     /// This property is updated at `.start` with the corresponding value
-    /// stored in `AppDefaults`.
+    /// stored in the user's `_profile_` memo.
     var nicknameFormField = NicknameFormField(
         value: "",
         validate: { value in PetnamePart(value) }
@@ -909,14 +909,14 @@ struct AppModel: ModelProtocol {
         text: String
     ) -> Update<AppModel> {
         // Persist any valid value
-        if let validated = state.nicknameFormField.validated {
+        if let validated = PetnamePart(text) {
             var model = state
             model.nickname = validated.description
             logger.log("Nickname saved: \(validated)")
             
             return update(
                 state: model,
-                action: .requestCreateInitialProfile(text),
+                action: .requestCreateInitialProfile(validated),
                 environment: environment
             )
         }
@@ -928,7 +928,7 @@ struct AppModel: ModelProtocol {
     static func requestCreateInitialProfile(
         state: AppModel,
         environment: AppEnvironment,
-        nickname: String
+        nickname: PetnamePart
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
             try await environment.userProfile.requestSetOurInitialNickname(nickname: nickname)
