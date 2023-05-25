@@ -14,9 +14,9 @@ enum FollowUserSheetAction: Equatable {
     case populate(UserProfile)
     case followUserForm(FollowUserFormAction)
     
-    case fetchPetnameCollisionStatus(PetnamePart)
-    case populatePetnameCollisionStatus(PetnamePart, Bool)
-    case attemptToFindUniquePetname(PetnamePart)
+    case fetchPetnameCollisionStatus(Petname.Part)
+    case populatePetnameCollisionStatus(Petname.Part, Bool)
+    case attemptToFindUniquePetname(Petname.Part)
     case failToFindUniquePetname(String)
 }
 

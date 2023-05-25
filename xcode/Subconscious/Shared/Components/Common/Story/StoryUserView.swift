@@ -145,7 +145,7 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        nickname: PetnamePart("ben")!,
+                        nickname: Petname.Part("ben")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
@@ -160,7 +160,7 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        nickname: PetnamePart("ben")!,
+                        nickname: Petname.Part("ben")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
@@ -175,7 +175,7 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        nickname: PetnamePart("ben")!,
+                        nickname: Petname.Part("ben")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
@@ -190,7 +190,7 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        nickname: PetnamePart("ben")!,
+                        nickname: Petname.Part("ben")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,

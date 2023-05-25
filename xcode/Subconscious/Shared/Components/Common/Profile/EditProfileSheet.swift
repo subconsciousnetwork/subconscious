@@ -19,7 +19,7 @@ enum EditProfileSheetAction: Equatable {
 
 private struct NicknameFieldCursor: CursorProtocol {
     typealias Model = EditProfileSheetModel
-    typealias ViewModel = FormField<String, PetnamePart>
+    typealias ViewModel = FormField<String, Petname.Part>
 
     static func get(state: Model) -> ViewModel {
         state.nicknameField
@@ -80,10 +80,10 @@ struct EditProfileSheetModel: ModelProtocol {
     typealias Action = EditProfileSheetAction
     typealias Environment = EditProfileSheetEnvironment
     
-    var nicknameField: FormField<String, PetnamePart> = FormField(
+    var nicknameField: FormField<String, Petname.Part> = FormField(
         value: "",
         validate: { value in
-            PetnamePart(value)
+            Petname.Part(value)
         }
     )
     var bioField: FormField<String, String> = FormField(
@@ -159,7 +159,7 @@ struct EditProfileSheet: View {
     var onCancel: () -> Void
     var onDismissError: () -> Void
     
-    func makePreview(nickname: PetnamePart) -> UserProfile {
+    func makePreview(nickname: Petname.Part) -> UserProfile {
         let pfp: ProfilePicVariant = Func.run {
             let did = user.did
             if let url = state.pfpUrlField.validated {

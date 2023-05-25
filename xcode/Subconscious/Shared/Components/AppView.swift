@@ -80,7 +80,7 @@ struct AppView: View {
 }
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
-typealias NicknameFormField = FormField<String, PetnamePart>
+typealias NicknameFormField = FormField<String, Petname.Part>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -107,12 +107,12 @@ enum AppAction: CustomLogStringConvertible {
     case persistNickname(_ nickname: String)
     
     /// Write to `Slashlink.ourProfile` during onboarding
-    case requestCreateInitialProfile(_ nickname: PetnamePart)
+    case requestCreateInitialProfile(_ nickname: Petname.Part)
     case succeedCreateInitialProfile
     case failCreateInitialProfile(_ message: String)
     
     case fetchNicknameFromProfile
-    case succeedFetchNicknameFromProfile(_ nickname: PetnamePart)
+    case succeedFetchNicknameFromProfile(_ nickname: Petname.Part)
     case failFetchNicknameFromProfile(_ message: String)
     
     case setInviteCode(_ inviteCode: String)
@@ -407,7 +407,7 @@ struct AppModel: ModelProtocol {
     /// stored in the user's `_profile_` memo.
     var nicknameFormField = NicknameFormField(
         value: "",
-        validate: { value in PetnamePart(value) }
+        validate: { value in Petname.Part(value) }
     )
     /// Expose read-only value for view
     var nicknameFormFieldValue: String {
@@ -909,7 +909,7 @@ struct AppModel: ModelProtocol {
         text: String
     ) -> Update<AppModel> {
         // Persist any valid value
-        if let validated = PetnamePart(text) {
+        if let validated = Petname.Part(text) {
             var model = state
             model.nickname = validated.description
             logger.log("Nickname saved: \(validated)")
@@ -928,7 +928,7 @@ struct AppModel: ModelProtocol {
     static func requestCreateInitialProfile(
         state: AppModel,
         environment: AppEnvironment,
-        nickname: PetnamePart
+        nickname: Petname.Part
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
             try await environment.userProfile.requestSetOurInitialNickname(nickname: nickname)

@@ -106,12 +106,12 @@ enum UserProfileDetailAction {
     case populateFollowingStatus(Bool)
     
     case requestFollow(UserProfile)
-    case attemptFollow(Did, PetnamePart)
+    case attemptFollow(Did, Petname.Part)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow(PetnamePart)
+    case succeedFollow(Petname.Part)
     
-    case requestWaitForFollowedUserResolution(_ petname: PetnamePart)
+    case requestWaitForFollowedUserResolution(_ petname: Petname.Part)
     case succeedResolveFollowedUser
     case failResolveFollowedUser(_ message: String)
     
@@ -141,15 +141,15 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
-    let nickname: PetnamePart?
+    let nickname: Petname.Part?
     let address: Slashlink
     let pfp: ProfilePicVariant
     let bio: UserProfileBio
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
     
-    var identifier: PetnamePart {
-        nickname ?? address.petname?.leaf ?? PetnamePart.unknown
+    var identifier: Petname.Part {
+        nickname ?? address.petname?.leaf ?? Petname.Part.unknown
     }
 }
 

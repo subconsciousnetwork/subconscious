@@ -170,7 +170,7 @@ actor UserProfileService {
         
         let profile = UserProfile(
             did: did,
-            nickname: PetnamePart(userProfileData?.nickname ?? ""),
+            nickname: Petname.Part(userProfileData?.nickname ?? ""),
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
@@ -243,9 +243,9 @@ actor UserProfileService {
             
             let slashlink = Func.run {
                 guard case let .petname(basePetname) = address.peer else {
-                    return Slashlink(petname: entry.nickname.toPetname())
+                    return Slashlink(petname: entry.identifier.toPetname())
                 }
-                return Slashlink(petname: entry.nickname.toPetname()).rebaseIfNeeded(petname: basePetname)
+                return Slashlink(petname: entry.identifier.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
             let address = isOurs
@@ -253,7 +253,7 @@ actor UserProfileService {
                 : slashlink
             
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
-            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.nickname)
+            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.identifier)
             let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
             
             let user = try await self.loadProfileFromMemo(
@@ -275,7 +275,7 @@ actor UserProfileService {
     
     /// Sets our nickname if (and only if) there is no existing profile data.
     /// This is intended to be idempotent for use in the onboarding flow.
-    func requestSetOurInitialNickname(nickname: PetnamePart) async throws {
+    func requestSetOurInitialNickname(nickname: Petname.Part) async throws {
         guard await readProfileMemo(address: Slashlink.ourProfile) != nil else {
             let profile = UserProfileEntry(
                 nickname: nickname.verbatim,
