@@ -26,7 +26,7 @@ struct StoryEntryView: View {
                         BylineSmView(
                             pfp: story.author.pfp,
                             slashlink: Slashlink(
-                                peer: .petname(story.author.displayName.toPetname()),
+                                peer: .petname(story.author.preferredName.toPetname()),
                                 slug: story.entry.address.slug
                             )
                         )

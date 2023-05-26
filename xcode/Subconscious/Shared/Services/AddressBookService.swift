@@ -10,7 +10,7 @@ import Foundation
 import Combine
 
 struct AddressBookEntry: Equatable, Hashable, Codable {
-    let identifier: Petname.Part
+    let petname: Petname.Part
     let did: Did
     let status: ResolutionStatus
 }
@@ -107,7 +107,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             
             addressBook.append(
                 AddressBookEntry(
-                    identifier: petname,
+                    petname: petname,
                     did: did,
                     status: status
                 )
@@ -116,7 +116,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         
         // Maintain consistent order
         addressBook.sort { a, b in
-            a.identifier < b.identifier
+            a.petname < b.petname
         }
         
         self.addressBook = addressBook
@@ -410,7 +410,7 @@ actor AddressBookService {
         _ did: Did,
         _ petname: Petname.Part?
     ) -> Bool {
-        entry.did == did && (petname == nil || entry.identifier == petname)
+        entry.did == did && (petname == nil || entry.petname == petname)
     }
     
     /// Disassociates the passed DID from any petname(s) in the address book,
@@ -421,7 +421,7 @@ actor AddressBookService {
 
         for entry in entries
         where Self.shouldBeUnfollowed(entry, did, petname) {
-            try await unfollowUser(petname: entry.identifier)
+            try await unfollowUser(petname: entry.petname)
         }
     }
     

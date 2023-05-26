@@ -243,9 +243,9 @@ actor UserProfileService {
             
             let slashlink = Func.run {
                 guard case let .petname(basePetname) = address.peer else {
-                    return Slashlink(petname: entry.identifier.toPetname())
+                    return Slashlink(petname: entry.petname.toPetname())
                 }
-                return Slashlink(petname: entry.identifier.toPetname()).rebaseIfNeeded(petname: basePetname)
+                return Slashlink(petname: entry.petname.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
             let address = isOurs
@@ -253,7 +253,7 @@ actor UserProfileService {
                 : slashlink
             
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
-            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.identifier)
+            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
             let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
             
             let user = try await self.loadProfileFromMemo(

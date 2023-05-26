@@ -150,7 +150,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     
     private static let unknownName = Petname.Part("unknown")!
     
-    var displayName: Petname.Part {
+    var preferredName: Petname.Part {
         nickname ?? address.petname?.leaf ?? Self.unknownName
     }
 }
@@ -500,7 +500,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .unfollowUserPublisher(
                     did: did,
-                    petname: state.unfollowCandidate?.displayName
+                    petname: state.unfollowCandidate?.preferredName
                 )
                 .map({ _ in
                     .succeedUnfollow
