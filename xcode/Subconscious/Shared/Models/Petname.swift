@@ -14,10 +14,7 @@ public struct Petname:
     Codable,
     LosslessStringConvertible {
     
-    private static let petnameRegex = /([\w\d\-]+)(\.[\w\d\-]+)*/
     public static let separator = "."
-    
-    public static let unknown = Petname(part: Part.unknown)
     
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
@@ -53,19 +50,27 @@ public struct Petname:
     }
     
     public var leaf: Petname.Part {
-        self.parts.first ?? Petname.Part.unknown
+        // Invariant: parts.count > 0
+        self.parts.first!
     }
     
     public var root: Petname.Part {
-        self.parts.last ?? Petname.Part.unknown
+        // Invariant: parts.count > 0
+        self.parts.last!
     }
     
     public init?(_ description: String) {
-        guard description.wholeMatch(of: Self.petnameRegex) != nil else {
+        let parts = description.split(separator: Self.separator)
+        guard !parts.isEmpty else {
             return nil
         }
-        let parts = description.split(separator: Self.separator)
-        self.parts = parts.compactMap { part in Petname.Part(part) }
+        
+        let mappedParts = parts.compactMap { part in Petname.Part(part) }
+        guard parts.count == mappedParts.count else {
+            return nil
+        }
+        
+        self.parts = mappedParts
     }
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
@@ -86,27 +91,32 @@ public struct Petname:
     /// This will sanitize the string as best it can to create a valid petname.
     public init?(formatting string: String) {
         let parts = string.split(separator: Self.separator)
-        self.parts = parts.compactMap { part in Petname.Part(formatting: part) }
-        
-        guard !self.parts.isEmpty else {
+        guard !parts.isEmpty else {
             return nil
         }
+        
+        let mappedParts = parts.compactMap { part in Petname.Part(formatting: part) }
+        guard parts.count == mappedParts.count else {
+            return nil
+        }
+        
+        self.parts = mappedParts
     }
      
     /// Combines two petnames to build up a traversal path
     /// i.e. `Petname("foo")!.append(petname: Petname.Part("bar")!)` -> `bar.foo`
-    public func append(petname: Petname.Part) -> Petname {
+    public func append(petname: Petname.Part) -> Petname? {
         var parts = self.parts
         parts.insert(petname, at: 0)
-        return Petname(parts: parts) ?? Petname.unknown
+        return Petname(parts: parts)
     }
     
     /// Combines two petnames to build up a traversal path
     /// i.e. `Petname("foo")!.append(petname: Petname("bar")!)` -> `bar.foo`
-    public func append(petname: Petname) -> Petname {
+    public func append(petname: Petname) -> Petname? {
         var parts = self.parts
         parts.insert(contentsOf: petname.parts, at: 0)
-        return Petname(parts: parts) ?? Petname.unknown
+        return Petname(parts: parts)
     }
 }
 
