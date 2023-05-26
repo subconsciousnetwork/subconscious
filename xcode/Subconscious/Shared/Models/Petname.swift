@@ -59,8 +59,8 @@ public struct Petname:
         self.parts.last!
     }
     
-    public init(part: Petname.Name) {
-        self.parts = [part]
+    public init(name: Petname.Name) {
+        self.parts = [name]
     }
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
@@ -105,6 +105,14 @@ public struct Petname:
     public func append(name: Petname.Name) -> Petname? {
         var parts = self.parts
         parts.insert(name, at: 0)
+        return Petname(parts: parts)
+    }
+    
+    /// Combines two petnames to build up a traversal path
+    /// i.e. `Petname("foo")!.append(petname: Petname("bar")!)` -> `bar.foo`
+    public func append(petname: Petname) -> Petname? {
+        var parts = self.parts
+        parts.insert(contentsOf: petname.parts, at: 0)
         return Petname(parts: parts)
     }
 }
@@ -184,7 +192,7 @@ extension Petname {
         }
         
         public func toPetname() -> Petname {
-            Petname(part: self)
+            Petname(name: self)
         }
         
         /// Return a new petname with a numerical suffix.

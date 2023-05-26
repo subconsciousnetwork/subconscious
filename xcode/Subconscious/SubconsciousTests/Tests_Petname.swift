@@ -336,7 +336,7 @@ class Tests_Petname: XCTestCase {
     
     func testPart() {
         let a = Petname.Name("alice")!
-        let name = Petname(part: a)
+        let name = Petname(name: a)
         
         XCTAssertEqual(name.description, "alice")
     }
