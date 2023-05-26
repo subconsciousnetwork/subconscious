@@ -20,7 +20,7 @@ struct StoryEntry:
 
     var description: String {
         """
-        \(author.identifier.markup)
+        \(author.displayName.markup)
         \(String(describing: entry))
         """
     }
