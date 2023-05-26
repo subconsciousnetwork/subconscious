@@ -107,14 +107,6 @@ public struct Petname:
         parts.insert(name, at: 0)
         return Petname(parts: parts)
     }
-    
-    /// Combines two petnames to build up a traversal path
-    /// i.e. `Petname("foo")!.append(petname: Petname("bar")!)` -> `bar.foo`
-    public func append(petname: Petname) -> Petname? {
-        var parts = self.parts
-        parts.insert(contentsOf: petname.parts, at: 0)
-        return Petname(parts: parts)
-    }
 }
 
 // MARK: Petname.Name
