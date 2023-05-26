@@ -59,18 +59,8 @@ public struct Petname:
         self.parts.last!
     }
     
-    public init?(_ description: String) {
-        let parts = description.split(separator: Self.separator)
-        guard !parts.isEmpty else {
-            return nil
-        }
-        
-        let mappedParts = parts.compactMap { part in Petname.Part(part) }
-        guard parts.count == mappedParts.count else {
-            return nil
-        }
-        
-        self.parts = mappedParts
+    public init(part: Petname.Part) {
+        self.parts = [part]
     }
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
@@ -82,25 +72,28 @@ public struct Petname:
         
         self.parts = parts
     }
+    
+    public init?(_ description: String) {
+        let parts = description.split(separator: Self.separator)
+        let mappedParts = parts.compactMap { part in Petname.Part(part) }
+        guard parts.count == mappedParts.count else {
+            return nil
+        }
         
-    public init(part: Petname.Part) {
-        self.parts = [part]
+        self.init(parts: mappedParts)
     }
+    
     
     /// Convert a string into a petname.
     /// This will sanitize the string as best it can to create a valid petname.
     public init?(formatting string: String) {
         let parts = string.split(separator: Self.separator)
-        guard !parts.isEmpty else {
-            return nil
-        }
-        
         let mappedParts = parts.compactMap { part in Petname.Part(formatting: part) }
         guard parts.count == mappedParts.count else {
             return nil
         }
         
-        self.parts = mappedParts
+        self.init(parts: mappedParts)
     }
      
     /// Combines two petnames to build up a traversal path
