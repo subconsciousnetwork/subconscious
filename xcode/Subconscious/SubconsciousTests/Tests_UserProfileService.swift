@@ -45,11 +45,11 @@ final class Tests_UserProfileService: XCTestCase {
             )
         )
         
-        let _ = try await data.addressBook.followUser(did: Did("did:key:123")!, petname: Petname.Part("ronald")!)
+        let _ = try await data.addressBook.followUser(did: Did("did:key:123")!, petname: Petname.Name("ronald")!)
         
         let profile = try await data.userProfile.requestOurProfile()
         
-        XCTAssertEqual(profile.profile.nickname, Petname.Part("alice")!)
+        XCTAssertEqual(profile.profile.nickname, Petname.Name("alice")!)
         XCTAssertEqual(profile.recentEntries.count, 1)
         // No hidden entries on profile
         XCTAssertFalse(profile.recentEntries.contains(where: { entry in entry.address.slug.isHidden }))
@@ -66,7 +66,7 @@ final class Tests_UserProfileService: XCTestCase {
         
         let _ = try await data.addressBook.followUser(
             did: Did("did:key:123")!,
-            petname: Petname.Part("ronald")!
+            petname: Petname.Name("ronald")!
         )
         
         let following = try await data.userProfile.getFollowingList(

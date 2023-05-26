@@ -31,8 +31,8 @@ extension UserProfileBio: DummyData {
     }
 }
 
-extension Petname.Part: DummyData {
-    static func dummyData() -> Petname.Part {
+extension Petname.Name: DummyData {
+    static func dummyData() -> Petname.Name {
         let options = [
             "mystic_mind",
             "dreamweaverz",
@@ -68,19 +68,19 @@ extension Petname.Part: DummyData {
             "wisdomkeybearer"
         ]
         let randomString = options.randomElement()!
-        return Petname.Part(randomString)! // OK to do this for test data
+        return Petname.Name(randomString)! // OK to do this for test data
     }
 }
 
 extension Petname: DummyData {
     static func dummyData() -> Petname {
-        Petname.Part.dummyData().toPetname()
+        Petname.Name.dummyData().toPetname()
     }
 }
 
 extension StoryUser: DummyData {
     static func dummyData() -> StoryUser {
-        let nickname = Petname.Part.dummyData()
+        let nickname = Petname.Name.dummyData()
         return StoryUser(
             user: UserProfile(
                 did: Did.dummyData(),
@@ -162,7 +162,7 @@ extension EntryStub: DummyData {
 
 extension UserProfile: DummyData {
     static func dummyData() -> UserProfile {
-        let nickname = Petname.Part.dummyData()
+        let nickname = Petname.Name.dummyData()
         return UserProfile(
             did: Did.dummyData(),
             nickname: nickname,

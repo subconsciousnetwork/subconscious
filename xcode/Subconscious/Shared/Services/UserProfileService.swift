@@ -170,7 +170,7 @@ actor UserProfileService {
         
         let profile = UserProfile(
             did: did,
-            nickname: Petname.Part(userProfileData?.nickname ?? ""),
+            nickname: Petname.Name(userProfileData?.nickname ?? ""),
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
@@ -275,7 +275,7 @@ actor UserProfileService {
     
     /// Sets our nickname if (and only if) there is no existing profile data.
     /// This is intended to be idempotent for use in the onboarding flow.
-    func requestSetOurInitialNickname(nickname: Petname.Part) async throws {
+    func requestSetOurInitialNickname(nickname: Petname.Name) async throws {
         guard await readProfileMemo(address: Slashlink.ourProfile) != nil else {
             let profile = UserProfileEntry(
                 nickname: nickname.verbatim,

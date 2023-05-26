@@ -18,7 +18,7 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname.Part("ziggy")!
+        let petname = Petname.Name("ziggy")!
         try await addressBook.followUser(did: did, petname: petname)
         
         let newEntries = try await addressBook.listEntries()
@@ -37,11 +37,11 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname.Part("ziggy")!
+        let petname = Petname.Name("ziggy")!
         try await addressBook.followUser(did: did, petname: petname)
         
         let did2 = Did("did:key:456")!
-        let petname2 = Petname.Part("flubbo")!
+        let petname2 = Petname.Name("flubbo")!
         try await addressBook.followUser(did: did2, petname: petname2)
         
         let newEntries = try await addressBook.listEntries()
@@ -67,11 +67,11 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname.Part("ziggy")!
+        let petname = Petname.Name("ziggy")!
         try await addressBook.followUser(did: did, petname: petname)
         
         let did2 = Did("did:key:456")!
-        let petname2 = Petname.Part("flubbo")!
+        let petname2 = Petname.Name("flubbo")!
         try await addressBook.followUser(did: did2, petname: petname2)
         
         let newEntries = try await addressBook.listEntries()
@@ -97,11 +97,11 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname.Part("ziggy")!
+        let petname = Petname.Name("ziggy")!
         try await addressBook.followUser(did: did, petname: petname)
         
         let newPetname = try await addressBook.findAvailablePetname(petname: petname)
-        XCTAssertEqual(newPetname, Petname.Part("ziggy-1")!)
+        XCTAssertEqual(newPetname, Petname.Name("ziggy-1")!)
     }
     
     func testFindAvailablePetnameWithExistingSuffix() async throws {
@@ -114,12 +114,12 @@ final class Tests_AddressBookService: XCTestCase {
         
         for i in 0..<64 {
             let did = Did("did:key:123\(i)")!
-            let petname = Petname.Part("ziggy-\(i)")!
+            let petname = Petname.Name("ziggy-\(i)")!
             try await addressBook.followUser(did: did, petname: petname)
         }
         
-        let newPetname = try await addressBook.findAvailablePetname(petname: Petname.Part("ziggy-1")!)
-        XCTAssertEqual(newPetname, Petname.Part("ziggy-64")!)
+        let newPetname = try await addressBook.findAvailablePetname(petname: Petname.Name("ziggy-1")!)
+        XCTAssertEqual(newPetname, Petname.Name("ziggy-64")!)
     }
     
     func testIsFollowingUserAndHasEntryFor() async throws {
@@ -128,7 +128,7 @@ final class Tests_AddressBookService: XCTestCase {
         let addressBook = data.addressBook
         
         let did = Did("did:key:123")!
-        let petname = Petname.Part("ziggy-2")!
+        let petname = Petname.Name("ziggy-2")!
         
         let a = await addressBook.isFollowingUser(did: did)
         let b = await addressBook.hasEntryForPetname(petname: petname)

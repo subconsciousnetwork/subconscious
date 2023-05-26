@@ -236,7 +236,7 @@ extension Slashlink {
     }
 }
 
-extension Petname.Part {
+extension Petname.Name {
     /// An optimized constructor that is only called internally by
     /// Slashlink.
     fileprivate init(uncheckedRawString string: String) {
@@ -249,7 +249,7 @@ extension Petname {
     /// An optimized constructor that is only called internally by
     /// Slashlink.
     fileprivate init(uncheckedRawString string: String) {
-        self.init(part: Petname.Part(uncheckedRawString: string))
+        self.init(part: Petname.Name(uncheckedRawString: string))
     }
 }
 

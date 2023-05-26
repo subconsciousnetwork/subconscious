@@ -342,12 +342,12 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
     
-    func getPetname(petname: Petname.Part) async throws -> Did {
+    func getPetname(petname: Petname.Name) async throws -> Did {
         try await self.sphere().getPetname(petname: petname)
     }
     
     nonisolated func getPetnamePublisher(
-        petname: Petname.Part
+        petname: Petname.Name
     ) -> AnyPublisher<Did, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.getPetnamePublisher(petname: petname)
@@ -355,13 +355,13 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
     
-    func setPetname(did: Did?, petname: Petname.Part) async throws {
+    func setPetname(did: Did?, petname: Petname.Name) async throws {
         try await self.sphere().setPetname(did: did, petname: petname)
     }
     
     nonisolated func setPetnamePublisher(
         did: Did?,
-        petname: Petname.Part
+        petname: Petname.Name
     ) -> AnyPublisher<Void, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.setPetnamePublisher(did: did, petname: petname)
@@ -382,24 +382,24 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
     
-    func listPetnames() async throws -> [Petname.Part] {
+    func listPetnames() async throws -> [Petname.Name] {
         try await self.sphere().listPetnames()
     }
     
-    nonisolated func listPetnamesPublisher() -> AnyPublisher<[Petname.Part], Error> {
+    nonisolated func listPetnamesPublisher() -> AnyPublisher<[Petname.Name], Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.listPetnamesPublisher()
         })
         .eraseToAnyPublisher()
     }
     
-    func getPetnameChanges(since cid: Cid) async throws -> [Petname.Part] {
+    func getPetnameChanges(since cid: Cid) async throws -> [Petname.Name] {
         try await self.sphere().getPetnameChanges(since: cid)
     }
     
     nonisolated func getPetnameChangesPublisher(
         since cid: String
-    ) -> AnyPublisher<[Petname.Part], Error> {
+    ) -> AnyPublisher<[Petname.Name], Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.getPetnameChangesPublisher(since: cid)
         })

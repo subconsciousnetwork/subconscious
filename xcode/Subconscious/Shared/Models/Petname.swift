@@ -35,7 +35,7 @@ public struct Petname:
     }
     
     public var id: String { description }
-    public let parts: [Petname.Part]
+    public let parts: [Petname.Name]
     
     public var markup: String {
         "@\(self.description)"
@@ -49,24 +49,28 @@ public struct Petname:
         self.parts.count == 1
     }
     
-    public var leaf: Petname.Part {
+    public var leaf: Petname.Name {
         // Invariant: parts.count > 0
         self.parts.first!
     }
     
-    public var root: Petname.Part {
+    public var root: Petname.Name {
         // Invariant: parts.count > 0
         self.parts.last!
     }
     
-    public init(part: Petname.Part) {
+    public init(part: Petname.Name) {
         self.parts = [part]
     }
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
     /// Names are joined in order of their appearance in `petnames`
-    public init?(parts: [Petname.Part]) {
+    public init?(parts: [Petname.Name]) {
         guard !parts.isEmpty else {
+            return nil
+        }
+        
+        guard !parts.contains(where: { part in part.verbatim.isEmpty }) else {
             return nil
         }
         
@@ -74,8 +78,8 @@ public struct Petname:
     }
     
     public init?(_ description: String) {
-        let parts = description.split(separator: Self.separator)
-        let mappedParts = parts.compactMap { part in Petname.Part(part) }
+        let parts = description.components(separatedBy: Self.separator)
+        let mappedParts = parts.compactMap { part in Petname.Name(part) }
         guard parts.count == mappedParts.count else {
             return nil
         }
@@ -88,7 +92,7 @@ public struct Petname:
     /// This will sanitize the string as best it can to create a valid petname.
     public init?(formatting string: String) {
         let parts = string.split(separator: Self.separator)
-        let mappedParts = parts.compactMap { part in Petname.Part(formatting: part) }
+        let mappedParts = parts.compactMap { part in Petname.Name(formatting: part) }
         guard parts.count == mappedParts.count else {
             return nil
         }
@@ -98,9 +102,9 @@ public struct Petname:
      
     /// Combines two petnames to build up a traversal path
     /// i.e. `Petname("foo")!.append(petname: Petname.Part("bar")!)` -> `bar.foo`
-    public func append(petname: Petname.Part) -> Petname? {
+    public func append(name: Petname.Name) -> Petname? {
         var parts = self.parts
-        parts.insert(petname, at: 0)
+        parts.insert(name, at: 0)
         return Petname(parts: parts)
     }
     
@@ -113,9 +117,9 @@ public struct Petname:
     }
 }
 
-// MARK: Petname.Part
+// MARK: Petname.Name
 extension Petname {
-    public struct Part:
+    public struct Name:
         Hashable,
         Equatable,
         Identifiable,
@@ -125,7 +129,7 @@ extension Petname {
         
         static let partRegex = /([\w\d\-]+)/
         private static let numberedSuffixRegex = /^(?<petname>(.*?))(?<separator>-+)?(?<suffix>(\d+))?$/
-        public static let unknown = Petname.Part("unknown")!
+        public static let unknown = Petname.Name("unknown")!
         
         public var description: String
         public var verbatim: String
@@ -139,7 +143,7 @@ extension Petname {
             "@\(self.verbatim)"
         }
         
-        public static func < (lhs: Petname.Part, rhs: Petname.Part) -> Bool {
+        public static func < (lhs: Petname.Name, rhs: Petname.Name) -> Bool {
             lhs.description < rhs.description
         }
         
@@ -194,17 +198,17 @@ extension Petname {
         /// Return a new petname with a numerical suffix.
         /// A plain petname e.g. `ziggy` becomes `ziggy-1`
         /// But `ziggy-1` becomes `ziggy-2` etc.
-        public func increment() -> Petname.Part? {
+        public func increment() -> Petname.Name? {
             guard let match = description.wholeMatch(of: Self.numberedSuffixRegex),
                   let separator = match.output.separator else {
-                return Petname.Part(formatting: verbatim + "-1")
+                return Petname.Name(formatting: verbatim + "-1")
             }
             
             if let numberString = match.output.suffix,
                let number = Int(numberString) {
-                return Petname.Part(formatting: "\(match.output.petname)\(separator)\(String(number + 1))")
+                return Petname.Name(formatting: "\(match.output.petname)\(separator)\(String(number + 1))")
             } else {
-                return Petname.Part(formatting: "\(match.output.petname)\(separator)1")
+                return Petname.Name(formatting: "\(match.output.petname)\(separator)1")
             }
         }
        

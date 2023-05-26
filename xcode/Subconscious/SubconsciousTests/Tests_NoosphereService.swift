@@ -41,9 +41,9 @@ final class Tests_NoosphereService: XCTestCase {
         let bobReceipt = try await noosphere.createSphere(ownerKeyName: "bob")
         let aliceReceipt = try await noosphere.createSphere(ownerKeyName: "alice")
         
-        let bob = Petname.Part("bob")!
+        let bob = Petname.Name("bob")!
         let bobDid = Did(bobReceipt.identity)!
-        let alice = Petname.Part("alice")!
+        let alice = Petname.Name("alice")!
         let aliceDid = Did(aliceReceipt.identity)!
 
         // Put bob in alice's address book
