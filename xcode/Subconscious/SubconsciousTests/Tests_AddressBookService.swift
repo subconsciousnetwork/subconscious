@@ -25,7 +25,7 @@ final class Tests_AddressBookService: XCTestCase {
         let user = newEntries[0]
         
         XCTAssertEqual(user.did, did)
-        XCTAssertEqual(user.petname, petname)
+        XCTAssertEqual(user.name, petname)
     }
     
     func testUnfollowByPetname() async throws {
@@ -55,7 +55,7 @@ final class Tests_AddressBookService: XCTestCase {
         
         XCTAssertEqual(finalEntries.count, 1)
         XCTAssertEqual(user.did, did2)
-        XCTAssertEqual(user.petname, petname2)
+        XCTAssertEqual(user.name, petname2)
     }
     
     func testUnfollowByDid() async throws {
@@ -85,7 +85,7 @@ final class Tests_AddressBookService: XCTestCase {
         
         XCTAssertEqual(finalEntries.count, 1)
         XCTAssertEqual(user.did, did2)
-        XCTAssertEqual(user.petname, petname2)
+        XCTAssertEqual(user.name, petname2)
     }
     
     func testFindAvailablePetname() async throws {
