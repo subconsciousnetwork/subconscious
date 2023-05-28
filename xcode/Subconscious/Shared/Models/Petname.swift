@@ -101,16 +101,16 @@ public struct Petname:
     }
      
     /// Combines two petnames to build up a traversal path
-    /// i.e. `Petname("foo")!.append(petname: Petname.Part("bar")!)` -> `bar.foo`
-    public func append(name: Petname.Name) -> Petname? {
+    /// i.e. `Petname("foo.bar")!.join(name: Petname.Name("baz")!)` -> `baz.bar.foo`
+    public func join(name: Petname.Name) -> Petname? {
         var parts = self.parts
         parts.insert(name, at: 0)
         return Petname(parts: parts)
     }
     
     /// Combines two petnames to build up a traversal path
-    /// i.e. `Petname("foo")!.append(petname: Petname("bar")!)` -> `bar.foo`
-    public func append(petname: Petname) -> Petname? {
+    /// i.e. `Petname("foo.bar")!.join(petname: Petname("baz.qux")!)` -> `baz.qux.foo.bar`
+    public func join(petname: Petname) -> Petname? {
         var parts = self.parts
         parts.insert(contentsOf: petname.parts, at: 0)
         return Petname(parts: parts)

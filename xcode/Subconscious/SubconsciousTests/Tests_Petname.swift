@@ -266,7 +266,7 @@ class Tests_Petname: XCTestCase {
     func testAppendPart() throws {
         let alice = Petname("alice")!
         let bob = Petname.Name("BOB")!
-        guard let path = alice.append(name: bob) else {
+        guard let path = alice.join(name: bob) else {
             XCTFail("append failed")
             return
         }
@@ -277,7 +277,7 @@ class Tests_Petname: XCTestCase {
     func testAppend() throws {
         let alice = Petname("alice")!
         let bob = Petname("BOB")!
-        guard let path = alice.append(petname: bob) else {
+        guard let path = alice.join(petname: bob) else {
             XCTFail("append failed")
             return
         }
@@ -288,7 +288,7 @@ class Tests_Petname: XCTestCase {
     func testComplexAppend() throws {
         let a = Petname("alice.charlie")!
         let b = Petname("BOB.ron")!
-        guard let path = a.append(petname: b) else {
+        guard let path = a.join(petname: b) else {
             XCTFail("append failed")
             return
         }

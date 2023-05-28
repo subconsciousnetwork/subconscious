@@ -199,7 +199,7 @@ extension Slashlink {
         case .did:
             return self
         case .petname(let localPetname):
-            let path = petname.append(petname: localPetname)
+            let path = petname.join(petname: localPetname)
             return Slashlink(petname: path, slug: self.slug)
         case .none:
             return Slashlink(petname: petname, slug: self.slug)
