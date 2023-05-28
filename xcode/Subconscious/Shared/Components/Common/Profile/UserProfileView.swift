@@ -183,7 +183,7 @@ struct UserProfileView: View {
                 Text("Not found")
             }
         }
-        .navigationTitle(state.user?.preferredName.markup ?? "")
+        .navigationTitle(state.user?.displayName ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
@@ -352,7 +352,7 @@ private struct UnfollowModifier: ViewModifier {
               )
       ) {
           Button(
-              "Unfollow \(state.unfollowCandidate?.preferredName.markup ?? "user")?",
+              "Unfollow \(state.unfollowCandidate?.displayName ?? "user")?",
               role: .destructive
           ) {
               send(.attemptUnfollow)

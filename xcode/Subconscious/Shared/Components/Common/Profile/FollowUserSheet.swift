@@ -50,13 +50,16 @@ struct FollowUserSheetModel: ModelProtocol {
             var model = state
             model.user = user
             
-            let nickname = user.preferredName
+            guard let name = user.preferredName else {
+                return Update(state: model)
+            }
+            
             return update(
                 state: model,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: nickname.verbatim))),
-                    .fetchPetnameCollisionStatus(nickname)
+                    .followUserForm(.petnameField(.setValue(input: name.verbatim))),
+                    .fetchPetnameCollisionStatus(name)
                 ],
                 environment: environment
             )

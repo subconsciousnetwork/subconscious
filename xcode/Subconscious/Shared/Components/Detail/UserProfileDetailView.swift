@@ -148,10 +148,17 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
     
-    private static let unknownName = Petname.Name("unknown")!
+    // The name this user would prefer to be called,
+    // this is the suggested name when following a user.
+    var preferredName: Petname.Name? {
+        nickname ?? address.petname?.leaf
+    }
     
-    var preferredName: Petname.Name {
-        nickname ?? address.petname?.leaf ?? Self.unknownName
+    // A string that identifies this user.
+    // Returns preferredName as an @-handle
+    // OR returns the last 4 characters of the user's DID.
+    var displayName: String {
+        preferredName?.markup ?? "#\(did.description.suffix(4))"
     }
 }
 

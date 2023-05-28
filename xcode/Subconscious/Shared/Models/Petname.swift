@@ -129,7 +129,6 @@ extension Petname {
         
         static let partRegex = /([\w\d\-]+)/
         private static let numberedSuffixRegex = /^(?<petname>(.*?))(?<separator>-+)?(?<suffix>(\d+))?$/
-        public static let unknown = Petname.Name("unknown")!
         
         public var description: String
         public var verbatim: String
