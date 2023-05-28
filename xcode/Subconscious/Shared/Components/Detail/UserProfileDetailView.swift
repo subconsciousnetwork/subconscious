@@ -158,7 +158,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     // Returns preferredName as an @-handle
     // OR returns the last 4 characters of the user's DID.
     var displayName: String {
-        preferredName?.markup ?? "#\(did.description.suffix(4))"
+        preferredName?.toPetname().markup ?? "#\(did.description.suffix(4))"
     }
 }
 

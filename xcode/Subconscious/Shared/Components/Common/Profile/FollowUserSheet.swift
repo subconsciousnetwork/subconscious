@@ -86,7 +86,7 @@ struct FollowUserSheetModel: ModelProtocol {
             model.isPetnamePresentInAddressBook = collision
             
             if collision {
-                model.petnameFieldCaption = "You already follow a \(petname.markup)"
+                model.petnameFieldCaption = "You already follow a \(petname.toPetname().markup)"
                 return update(
                     state: model,
                     actions: [.attemptToFindUniquePetname(petname)],
@@ -207,7 +207,7 @@ struct FollowUserSheet: View {
                 action: onAttemptFollow,
                 label: {
                     if let petname = state.followUserForm.petname.validated {
-                        Text("Follow \(petname.markup)")
+                        Text("Follow \(petname.toPetname().markup)")
                     } else {
                         Text("Invalid petname")
                     }

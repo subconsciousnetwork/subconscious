@@ -127,14 +127,6 @@ extension Petname {
         public var verbatim: String
         public var id: String { description }
         
-        public var markup: String {
-            "@\(self.description)"
-        }
-        
-        public var verbatimMarkup: String {
-            "@\(self.verbatim)"
-        }
-        
         public static func < (lhs: Petname.Name, rhs: Petname.Name) -> Bool {
             lhs.description < rhs.description
         }

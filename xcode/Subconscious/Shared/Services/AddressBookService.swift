@@ -144,7 +144,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         } catch {
             logger.error(
                 """
-                An error occurred checking for \(petname.markup), returning false. \
+                An error occurred checking for \(petname.toPetname().markup), returning false. \
                 Reason: \(error.localizedDescription)
                 """
             )
