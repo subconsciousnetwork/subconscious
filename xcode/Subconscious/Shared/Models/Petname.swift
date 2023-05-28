@@ -14,7 +14,7 @@ public struct Petname:
     Codable,
     LosslessStringConvertible {
     
-    public static let separator = "."
+    private static let separator = "."
     
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
@@ -45,22 +45,13 @@ public struct Petname:
         "@\(self.verbatim)"
     }
     
-    public var isFirstOrder: Bool {
-        self.parts.count == 1
-    }
-    
-    public var leaf: Petname.Name {
-        // Invariant: parts.count > 0
-        self.parts.first!
-    }
-    
-    public var root: Petname.Name {
-        // Invariant: parts.count > 0
-        self.parts.last!
-    }
+    public var leaf: Petname.Name
+    public var root: Petname.Name
     
     public init(name: Petname.Name) {
         self.parts = [name]
+        self.leaf = name
+        self.root = name
     }
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
@@ -75,6 +66,8 @@ public struct Petname:
         }
         
         self.parts = parts
+        self.leaf = parts.first!
+        self.root = parts.last!
     }
     
     public init?(_ description: String) {
@@ -127,7 +120,7 @@ extension Petname {
         Codable,
         LosslessStringConvertible {
         
-        static let partRegex = /([\w\d\-]+)/
+        private static let nameRegex = /([\w\d\-]+)/
         private static let numberedSuffixRegex = /^(?<petname>(.*?))(?<separator>-+)?(?<suffix>(\d+))?$/
         
         public var description: String
@@ -169,7 +162,7 @@ extension Petname {
         }
         
         public init?(_ description: String) {
-            guard description.wholeMatch(of: Self.partRegex) != nil else {
+            guard description.wholeMatch(of: Self.nameRegex) != nil else {
                 return nil
             }
             self.description = description.lowercased()

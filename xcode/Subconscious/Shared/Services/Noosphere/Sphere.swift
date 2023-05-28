@@ -76,7 +76,7 @@ extension SphereProtocol {
             // Get did for petname
             let did = try await Func.run {
                 // Look locally if we have the option
-                if petname.isFirstOrder {
+                if petname.parts.count == 1 {
                     do {
                         return try await self.getPetname(petname: petname.root)
                     }
