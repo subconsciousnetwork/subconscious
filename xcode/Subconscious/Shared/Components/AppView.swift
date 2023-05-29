@@ -198,10 +198,11 @@ enum AppAction: CustomLogStringConvertible {
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
     
-    case requestProvisionGateway
-    case beginProvisionGateway(String)
-    case completeProvisionGateway(URL)
-    case failProvisionGateway(String)
+    case requestProvisionGateway(_ inviteCode: InviteCode)
+    case receiveGatewayId(_ gatewayId: String)
+    case requestGatewayProvisioningStatus
+    case completeProvisionGateway(_ gatewayURL: URL)
+    case failProvisionGateway(_ error: String)
     
     case setFirstRunPath([FirstRunStep])
     case pushFirstRunStep(FirstRunStep)
@@ -449,6 +450,7 @@ struct AppModel: ModelProtocol {
     /// This property is updated at `.start` with the corresponding value
     /// stored in `AppDefaults`.
     var gatewayURL = ""
+    var gatewayId: String? = nil
     var gatewayURLTextField = ""
     var isGatewayURLTextFieldValid = true
     var lastGatewaySyncStatus = ResourceStatus.initial
@@ -765,19 +767,29 @@ struct AppModel: ModelProtocol {
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
             
-        case .requestProvisionGateway:
+        case .requestProvisionGateway(let inviteCode):
             return requestProvisionGateway(
+                state: state,
+                environment: environment,
+                inviteCode: inviteCode
+            )
+        case .receiveGatewayId(let gatewayId):
+            var model = state
+            model.gatewayId = gatewayId
+            AppDefaults.standard.gatewayId = gatewayId
+            
+            return update(
+                state: model,
+                action: .requestGatewayProvisioningStatus,
+                environment: environment
+            )
+        case .requestGatewayProvisioningStatus:
+            return requestGatewayProvisioningStatus(
                 state: state,
                 environment: environment
             )
-        case .beginProvisionGateway(let gatewayId):
-            return beginProvisionGateway(
-                state: state,
-                environment: environment,
-                gatewayId: gatewayId
-            )
         case .completeProvisionGateway(let url):
-            return completeProvisionGateway(
+            return succeedProvisionGateway(
                 state: state,
                 environment: environment,
                 url: url
@@ -814,6 +826,7 @@ struct AppModel: ModelProtocol {
         
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayURLTextField = AppDefaults.standard.gatewayURL
+        model.gatewayId = AppDefaults.standard.gatewayId
         
         // Update model from app defaults
         return update(
@@ -827,6 +840,9 @@ struct AppModel: ModelProtocol {
                 ),
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
+                ),
+                .inviteCodeFormField(
+                    .setValue(input: AppDefaults.standard.inviteCode ?? "")
                 )
             ],
             environment: environment
@@ -963,6 +979,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
+        
         return update(
             state: state,
             actions: [
@@ -1060,14 +1077,19 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: SphereReceipt
     ) -> Update<AppModel> {
+        var actions: [AppAction] = [
+            .setSphereIdentity(receipt.identity),
+            .setRecoveryPhrase(receipt.mnemonic),
+            .followDefaultGeist,
+        ]
+        
+        if let inviteCode = state.inviteCodeFormField.validated {
+            actions.append(.requestProvisionGateway(inviteCode))
+        }
+        
         return update(
             state: state,
-            actions: [
-                .setSphereIdentity(receipt.identity),
-                .setRecoveryPhrase(receipt.mnemonic),
-                .followDefaultGeist,
-                .requestProvisionGateway
-            ],
+            actions: actions,
             environment: environment
         )
     }
@@ -1552,11 +1574,11 @@ struct AppModel: ModelProtocol {
     
     static func requestProvisionGateway(
         state: AppModel,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        inviteCode: InviteCode
     ) -> Update<AppModel> {
         guard let did = state.sphereIdentity,
-              let did = Did(did),
-              let inviteCode = state.inviteCodeFormField.validated else {
+              let did = Did(did) else {
             return Update(state: state)
         }
         
@@ -1567,7 +1589,7 @@ struct AppModel: ModelProtocol {
                 sphere: did
             )
             .map { res in
-                .beginProvisionGateway(res.gateway_id)
+                .receiveGatewayId(res.gateway_id)
             }
             .recover { error in
                 .failProvisionGateway(error.localizedDescription)
@@ -1576,15 +1598,19 @@ struct AppModel: ModelProtocol {
         
         var model = state
         model.gatewayProvisioningStatus = .pending
+        AppDefaults.standard.inviteCode = inviteCode.description
         
         return Update(state: model, fx: fx)
     }
     
-    static func beginProvisionGateway(
+    static func requestGatewayProvisioningStatus(
         state: AppModel,
-        environment: AppEnvironment,
-        gatewayId: String
+        environment: AppEnvironment
     ) -> Update<AppModel> {
+        guard let gatewayId = AppDefaults.standard.gatewayId else {
+            return Update(state: state)
+        }
+        
         var model = state
         model.gatewayProvisioningStatus = .pending
         
@@ -1607,7 +1633,7 @@ struct AppModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
-    static func completeProvisionGateway(
+    static func succeedProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
         url: URL
@@ -1619,8 +1645,7 @@ struct AppModel: ModelProtocol {
             state: model,
             actions: [
                 .submitGatewayURL(url.absoluteString),
-                .syncSphereWithGateway,
-                .inviteCodeFormField(.reset)
+                .syncSphereWithGateway
             ],
             environment: environment
         )
@@ -1635,11 +1660,7 @@ struct AppModel: ModelProtocol {
         var model = state
         model.gatewayProvisioningStatus = .failed(error)
         
-        return update(
-            state: model,
-            action: .inviteCodeFormField(.reset),
-            environment: environment
-        )
+        return Update(state: model)
     }
 }
 
