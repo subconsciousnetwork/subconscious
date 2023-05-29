@@ -201,7 +201,7 @@ enum AppAction: CustomLogStringConvertible {
     case requestProvisionGateway(_ inviteCode: InviteCode)
     case receiveGatewayId(_ gatewayId: String)
     case requestGatewayProvisioningStatus
-    case completeProvisionGateway(_ gatewayURL: URL)
+    case succeedProvisionGateway(_ gatewayURL: URL)
     case failProvisionGateway(_ error: String)
     
     case setFirstRunPath([FirstRunStep])
@@ -788,7 +788,7 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .completeProvisionGateway(let url):
+        case .succeedProvisionGateway(let url):
             return succeedProvisionGateway(
                 state: state,
                 environment: environment,
