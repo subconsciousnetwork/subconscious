@@ -18,14 +18,14 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname.Name("ziggy")!
+        let petname = Petname("ziggy")!
         try await addressBook.followUser(did: did, petname: petname)
         
         let newEntries = try await addressBook.listEntries()
         let user = newEntries[0]
         
         XCTAssertEqual(user.did, did)
-        XCTAssertEqual(user.name, petname)
+        XCTAssertEqual(user.petname, petname)
     }
     
     func testUnfollowByPetname() async throws {
@@ -37,11 +37,11 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname.Name("ziggy")!
+        let petname = Petname("ziggy")!
         try await addressBook.followUser(did: did, petname: petname)
         
         let did2 = Did("did:key:456")!
-        let petname2 = Petname.Name("flubbo")!
+        let petname2 = Petname("flubbo")!
         try await addressBook.followUser(did: did2, petname: petname2)
         
         let newEntries = try await addressBook.listEntries()
@@ -55,7 +55,7 @@ final class Tests_AddressBookService: XCTestCase {
         
         XCTAssertEqual(finalEntries.count, 1)
         XCTAssertEqual(user.did, did2)
-        XCTAssertEqual(user.name, petname2)
+        XCTAssertEqual(user.petname, petname2)
     }
     
     func testUnfollowByDid() async throws {
@@ -67,25 +67,25 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname.Name("ziggy")!
+        let petname = Petname("ziggy")!
         try await addressBook.followUser(did: did, petname: petname)
         
         let did2 = Did("did:key:456")!
-        let petname2 = Petname.Name("flubbo")!
+        let petname2 = Petname("flubbo")!
         try await addressBook.followUser(did: did2, petname: petname2)
         
         let newEntries = try await addressBook.listEntries()
         
         XCTAssertEqual(newEntries.count, 2)
         
-        try await addressBook.unfollowUser(did: did, petname: nil)
+        try await addressBook.unfollowUser(did: did, name: nil)
         
         let finalEntries = try await addressBook.listEntries()
         let user = finalEntries[0]
         
         XCTAssertEqual(finalEntries.count, 1)
         XCTAssertEqual(user.did, did2)
-        XCTAssertEqual(user.name, petname2)
+        XCTAssertEqual(user.petname, petname2)
     }
     
     func testFindAvailablePetname() async throws {
@@ -98,9 +98,9 @@ final class Tests_AddressBookService: XCTestCase {
         
         let did = Did("did:key:123")!
         let petname = Petname.Name("ziggy")!
-        try await addressBook.followUser(did: did, petname: petname)
+        try await addressBook.followUser(did: did, petname: petname.toPetname())
         
-        let newPetname = try await addressBook.findAvailablePetname(petname: petname)
+        let newPetname = try await addressBook.findAvailablePetname(name: petname)
         XCTAssertEqual(newPetname, Petname.Name("ziggy-1")!)
     }
     
@@ -114,11 +114,11 @@ final class Tests_AddressBookService: XCTestCase {
         
         for i in 0..<64 {
             let did = Did("did:key:123\(i)")!
-            let petname = Petname.Name("ziggy-\(i)")!
+            let petname = Petname("ziggy-\(i)")!
             try await addressBook.followUser(did: did, petname: petname)
         }
         
-        let newPetname = try await addressBook.findAvailablePetname(petname: Petname.Name("ziggy-1")!)
+        let newPetname = try await addressBook.findAvailablePetname(name: Petname.Name("ziggy-1")!)
         XCTAssertEqual(newPetname, Petname.Name("ziggy-64")!)
     }
     
@@ -128,7 +128,7 @@ final class Tests_AddressBookService: XCTestCase {
         let addressBook = data.addressBook
         
         let did = Did("did:key:123")!
-        let petname = Petname.Name("ziggy-2")!
+        let petname = Petname("ziggy-2")!
         
         let a = await addressBook.isFollowingUser(did: did)
         let b = await addressBook.hasEntryForPetname(petname: petname)
@@ -142,7 +142,7 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertTrue(c)
         XCTAssertTrue(d)
         
-        try await addressBook.unfollowUser(did: did, petname: nil)
+        try await addressBook.unfollowUser(did: did, name: nil)
         
         let e = await addressBook.isFollowingUser(did: did)
         let f = await addressBook.hasEntryForPetname(petname: petname)

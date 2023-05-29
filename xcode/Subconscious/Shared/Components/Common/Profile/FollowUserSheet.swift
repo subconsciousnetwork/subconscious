@@ -50,7 +50,7 @@ struct FollowUserSheetModel: ModelProtocol {
             var model = state
             model.user = user
             
-            guard let name = user.preferredName else {
+            guard let bestFollowName = user.nickname ?? user.address.petname?.leaf else {
                 return Update(state: model)
             }
             
@@ -58,8 +58,8 @@ struct FollowUserSheetModel: ModelProtocol {
                 state: model,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: name.verbatim))),
-                    .fetchPetnameCollisionStatus(name)
+                    .followUserForm(.petnameField(.setValue(input: bestFollowName.verbatim))),
+                    .fetchPetnameCollisionStatus(bestFollowName)
                 ],
                 environment: environment
             )
@@ -73,7 +73,7 @@ struct FollowUserSheetModel: ModelProtocol {
             
         case .fetchPetnameCollisionStatus(let petname):
             let fx: Fx<FollowUserSheetAction> =
-                environment.addressBook.hasEntryForPetnamePublisher(petname: petname)
+                environment.addressBook.hasEntryForPetnamePublisher(petname: petname.toPetname())
                 .map { collision in
                     FollowUserSheetAction.populatePetnameCollisionStatus(petname, collision)
                 }
@@ -98,7 +98,7 @@ struct FollowUserSheetModel: ModelProtocol {
             
         case .attemptToFindUniquePetname(let petname):
             let fx: Fx<FollowUserSheetAction> =
-                environment.addressBook.findAvailablePetnamePublisher(petname: petname)
+                environment.addressBook.findAvailablePetnamePublisher(name: petname)
                 .map { petname in
                     FollowUserSheetAction.followUserForm(
                         .petnameField(.setValue(input: petname.verbatim))

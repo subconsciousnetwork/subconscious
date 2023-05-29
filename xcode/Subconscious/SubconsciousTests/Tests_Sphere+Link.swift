@@ -46,7 +46,7 @@ final class Tests_Sphere_Link: XCTestCase {
         )
         
         let bobKey = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
-        let bobName = Petname.Name("bob")!
+        let bobName = Petname("bob")!
         
         try await sphere.setPetname(did: bobKey, petname: bobName)
         try await sphere.save()
@@ -54,7 +54,7 @@ final class Tests_Sphere_Link: XCTestCase {
         let slug = Slug("foo")!
         
         let relBob = Slashlink(
-            peer: .petname(bobName.toPetname()),
+            peer: .petname(bobName),
             slug: slug
         )
         

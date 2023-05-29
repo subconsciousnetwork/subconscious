@@ -41,9 +41,9 @@ final class Tests_NoosphereService: XCTestCase {
         let bobReceipt = try await noosphere.createSphere(ownerKeyName: "bob")
         let aliceReceipt = try await noosphere.createSphere(ownerKeyName: "alice")
         
-        let bob = Petname.Name("bob")!
+        let bob = Petname("bob")!
         let bobDid = Did(bobReceipt.identity)!
-        let alice = Petname.Name("alice")!
+        let alice = Petname("alice")!
         let aliceDid = Did(aliceReceipt.identity)!
 
         // Put bob in alice's address book
@@ -65,8 +65,8 @@ final class Tests_NoosphereService: XCTestCase {
         _ = try await noosphere.sync()
         // This should loop back around to bob
         let destinationSphere = try await noosphere
-            .traverse(petname: alice.toPetname())
-            .traverse(petname: bob.toPetname())
+            .traverse(petname: alice)
+            .traverse(petname: bob)
 
         // Clear out Noosphere and Sphere instance
         await noosphere.reset()

@@ -311,11 +311,11 @@ private struct FollowModifier: ViewModifier {
                         guard let did = form.did.validated else {
                             return
                         }
-                        guard let petname = form.petname.validated else {
+                        guard let name = form.petname.validated else {
                             return
                         }
                         
-                        send(.attemptFollow(did, petname))
+                        send(.attemptFollow(did, name.toPetname()))
                     },
                     failFollowError: state.failFollowErrorMessage,
                     onDismissError: {
@@ -436,11 +436,11 @@ private struct FollowNewUserSheetModifier: ViewModifier {
                         guard let did = form.did.validated else {
                             return
                         }
-                        guard let petname = form.petname.validated else {
+                        guard let name = form.petname.validated else {
                             return
                         }
                         
-                        send(.attemptFollow(did, petname))
+                        send(.attemptFollow(did, name.toPetname()))
                     },
                     onCancel: { send(.presentFollowNewUserFormSheet(false)) },
                     onDismissFailFollowError: { send(.dismissFailFollowError) }

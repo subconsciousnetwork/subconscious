@@ -45,7 +45,10 @@ final class Tests_UserProfileService: XCTestCase {
             )
         )
         
-        let _ = try await data.addressBook.followUser(did: Did("did:key:123")!, petname: Petname.Name("ronald")!)
+        let _ = try await data.addressBook.followUser(
+            did: Did("did:key:123")!,
+            petname: Petname("ronald")!
+        )
         
         let profile = try await data.userProfile.requestOurProfile()
         
@@ -66,7 +69,7 @@ final class Tests_UserProfileService: XCTestCase {
         
         let _ = try await data.addressBook.followUser(
             did: Did("did:key:123")!,
-            petname: Petname.Name("ronald")!
+            petname: Petname("ronald")!
         )
         
         let following = try await data.userProfile.getFollowingList(

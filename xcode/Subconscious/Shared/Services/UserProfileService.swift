@@ -253,7 +253,7 @@ actor UserProfileService {
                 : slashlink
             
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
-            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.name)
+            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
             let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
             
             let user = try await self.loadProfileFromMemo(

@@ -106,12 +106,12 @@ enum UserProfileDetailAction {
     case populateFollowingStatus(Bool)
     
     case requestFollow(UserProfile)
-    case attemptFollow(Did, Petname.Name)
+    case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow(Petname.Name)
+    case succeedFollow(Petname)
     
-    case requestWaitForFollowedUserResolution(_ petname: Petname.Name)
+    case requestWaitForFollowedUserResolution(_ petname: Petname)
     case succeedResolveFollowedUser
     case failResolveFollowedUser(_ message: String)
     
@@ -148,17 +148,14 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
     
-    // The name this user would prefer to be called,
-    // this is the suggested name when following a user.
-    var preferredName: Petname.Name? {
-        nickname ?? address.petname?.leaf
-    }
-    
     // A string that identifies this user.
-    // Returns preferredName as an @-handle
-    // OR returns the last 4 characters of the user's DID.
     var displayName: String {
-        preferredName?.toPetname().markup ?? "#\(did.description.suffix(4))"
+        let didSuffix = "#\(did.description.suffix(4))"
+        if let name = nickname?.toPetname() {
+            return "\(name)\(didSuffix)"
+        }
+        
+        return didSuffix
     }
 }
 
@@ -507,7 +504,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .unfollowUserPublisher(
                     did: did,
-                    petname: state.unfollowCandidate?.preferredName
+                    petname: state.unfollowCandidate?.nickname
                 )
                 .map({ _ in
                     .succeedUnfollow

@@ -182,14 +182,14 @@ actor DataService {
     ///
     /// Gets did for petname, then purges everything belonging to did
     /// from Database.
-    func purgeSphere(petname: Petname.Name) async throws {
+    func purgeSphere(petname: Petname) async throws {
         let did = try await noosphere.getPetname(petname: petname)
         try database.purgeSphere(did: did)
     }
     
     /// Purge sphere from database with the given petname.
     nonisolated func purgeSpherePublisher(
-        petname: Petname.Name
+        petname: Petname
     ) -> AnyPublisher<Void, Error> {
         Future.detached(priority: .utility) {
             try await self.purgeSphere(petname: petname)
