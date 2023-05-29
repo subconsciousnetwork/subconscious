@@ -114,10 +114,6 @@ class Tests_Petname: XCTestCase {
     }
     
     func testMarkup() throws {
-        let name = Petname.Name("VALID-petname")
-        XCTAssertEqual(name?.markup, "@valid-petname")
-        XCTAssertEqual(name?.verbatimMarkup, "@VALID-petname")
-        
         let petname = Petname("VALID-petname.MORE-parts")
         XCTAssertEqual(petname?.markup, "@valid-petname.more-parts")
         XCTAssertEqual(petname?.verbatimMarkup, "@VALID-petname.MORE-parts")
