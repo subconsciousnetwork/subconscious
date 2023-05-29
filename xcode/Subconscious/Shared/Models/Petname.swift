@@ -45,13 +45,16 @@ public struct Petname:
         "@\(self.verbatim)"
     }
     
-    public var leaf: Petname.Name
-    public var root: Petname.Name
+    public var leaf: Petname.Name {
+        self.parts.first!
+    }
+    
+    public var root: Petname.Name {
+        self.parts.last!
+    }
     
     public init(name: Petname.Name) {
         self.parts = [name]
-        self.leaf = name
-        self.root = name
     }
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
@@ -61,13 +64,7 @@ public struct Petname:
             return nil
         }
         
-        guard !parts.contains(where: { part in part.verbatim.isEmpty }) else {
-            return nil
-        }
-        
         self.parts = parts
-        self.leaf = parts.first!
-        self.root = parts.last!
     }
     
     public init?(_ description: String) {
