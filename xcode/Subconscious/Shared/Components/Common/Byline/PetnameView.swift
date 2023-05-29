@@ -9,33 +9,31 @@ import SwiftUI
 
 /// Byline style for displaying a petname
 struct PetnameView: View {
-    var address: Slashlink?
-    var name: Petname
+    var address: Slashlink
+    var name: Petname?
     
     var body: some View {
-        if let address = address {
+        if let name = name {
             VStack(alignment: .leading) {
                 Text(name.description)
-                Text(address.petname?.markup ?? address.markup)
-                    .foregroundColor(.secondary)
-                    .fontWeight(.regular)
-                    .font(.caption)
+                if let peer = address.peer?.markup {
+                    Text(peer)
+                        .foregroundColor(.secondary)
+                        .fontWeight(.regular)
+                        .font(.caption)
+                }
             }
         } else {
-            Text(name.markup)
+            Text(address.peer?.markup ?? address.markup)
                 .lineLimit(1)
         }
     }
 }
 
 extension PetnameView {
-    init(name: Petname.Name) {
-        self.name = name.toPetname()
-    }
-    
-    init(address: Slashlink, name: Petname.Name) {
+    init(address: Slashlink, name: Petname.Name?) {
         self.address = address
-        self.name = name.toPetname()
+        self.name = name?.toPetname()
     }
 }
 
@@ -47,14 +45,14 @@ struct PetnameView_Previews: PreviewProvider {
                 name: Petname.Name("melville")!
             )
             PetnameView(
-                name: Petname.Name("bobby.tables")!
+                address: Slashlink(petname: Petname("bobby.tables")!)
             )
             PetnameView(
                 address: Slashlink(petname: Petname("tables.bobby")!),
                 name: Petname("tables")!
             )
             PetnameView(
-                name: Petname("tables")!
+                address: Slashlink(petname: Petname("tables")!)
             )
             .frame(maxWidth: 128)
         }

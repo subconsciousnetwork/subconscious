@@ -49,14 +49,12 @@ struct StoryUserView: View {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
-                    if let name = story.user.nickname {
-                        PetnameView(
-                            address: story.user.address,
-                            name: name
-                        )
-                        .fontWeight(.medium)
-                        .foregroundColor(.accentColor)
-                    }
+                    PetnameView(
+                        address: story.user.address,
+                        name: story.user.nickname
+                    )
+                    .fontWeight(.medium)
+                    .foregroundColor(.accentColor)
                         
                     Spacer()
                     

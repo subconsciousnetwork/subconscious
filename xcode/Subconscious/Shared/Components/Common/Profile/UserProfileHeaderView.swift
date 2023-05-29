@@ -28,15 +28,9 @@ struct UserProfileHeaderView: View {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp, size: .large)
             
-                if let name = user.nickname {
-                    PetnameView(name: name)
-                        .fontWeight(.medium)
-                        .foregroundColor(.accentColor)
-                } else {
-                    // TODO: check in app
-                    Text(user.displayName)
-                        .foregroundColor(.secondary)
-                }
+                PetnameView(address: user.address, name: user.nickname)
+                    .fontWeight(.medium)
+                    .foregroundColor(.accentColor)
                 
                 Spacer()
                 

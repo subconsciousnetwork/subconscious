@@ -151,7 +151,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     // A string that identifies this user.
     var displayName: String {
         let didSuffix = "#\(did.description.suffix(4))"
-        if let name = nickname?.toPetname() {
+        if let name = nickname?.toPetname() ?? address.petname {
             return "\(name)\(didSuffix)"
         }
         
