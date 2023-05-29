@@ -131,16 +131,9 @@ struct GatewayURLSettingsView: View {
                     }
                     .disabled(app.state.gatewayProvisioningStatus == .pending)
                     
-                   Button(
+                    Button(
                         action: {
-                            // TODO: lift logic into model
-                            if let inviteCode = app.state.inviteCodeFormField.validated,
-                               app.state.gatewayId == nil {
-                                app.send(.requestProvisionGateway(inviteCode))
-                            } else {
-                                app.send(.requestGatewayProvisioningStatus)
-                            }
-                            
+                            app.send(.submitProvisionGatewayForm)
                         },
                         label: {
                             GatewayProvisionLabel(

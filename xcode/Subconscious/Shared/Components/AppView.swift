@@ -198,6 +198,7 @@ enum AppAction: CustomLogStringConvertible {
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
     
+    case submitProvisionGatewayForm
     case requestProvisionGateway(_ inviteCode: InviteCode)
     case receiveGatewayId(_ gatewayId: String)
     case requestGatewayProvisioningStatus
@@ -767,6 +768,21 @@ struct AppModel: ModelProtocol {
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
             
+        case .submitProvisionGatewayForm:
+            switch (state.inviteCodeFormField.validated, state.gatewayId) {
+            case (.some(let inviteCode), .none):
+                return update(
+                    state: state,
+                    action: .requestProvisionGateway(inviteCode),
+                    environment: environment
+                )
+            case _:
+                return update(
+                    state: state,
+                    action: .requestGatewayProvisioningStatus,
+                    environment: environment
+                )
+            }
         case .requestProvisionGateway(let inviteCode):
             return requestProvisionGateway(
                 state: state,
