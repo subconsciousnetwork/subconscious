@@ -1639,7 +1639,7 @@ struct AppModel: ModelProtocol {
                     return AppAction.failProvisionGateway("Timed out waiting for URL")
                 }
                 
-                return AppAction.completeProvisionGateway(url)
+                return AppAction.succeedProvisionGateway(url)
             }
             .recover { err in
                 AppAction.failProvisionGateway(err.localizedDescription)
