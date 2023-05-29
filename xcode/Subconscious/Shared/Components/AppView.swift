@@ -1607,7 +1607,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard let gatewayId = AppDefaults.standard.gatewayId else {
+        guard let gatewayId = state.gatewayId else {
             return Update(state: state)
         }
         
