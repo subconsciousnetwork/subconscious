@@ -77,9 +77,7 @@ extension SphereProtocol {
             let did = try await Func.run {
                 // Look locally if we have the option
                 if petname.parts.count == 1 {
-                    do {
-                        return try await self.getPetname(petname: petname.root)
-                    }
+                    return try await self.getPetname(petname: petname.root)
                 }
                 
                 let sphere = try await self.traverse(petname: petname)
