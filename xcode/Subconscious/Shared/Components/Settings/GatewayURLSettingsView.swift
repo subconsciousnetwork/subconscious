@@ -47,17 +47,25 @@ struct ResourceSyncBadge: View {
 
 struct GatewayProvisionLabel: View {
     var status: ResourceStatus
+    var inviteCode: InviteCode?
+    var gatewayId: String?
     
     var label: String {
-        switch status {
-        case .initial:
-            return "Provision Gateway"
-        case .pending:
-            return "Provisioning..."
-        case .failed:
+        switch (status, inviteCode, gatewayId) {
+        case (.initial, .some(_), .some):
+            return "Check Gateway Status"
+        case (.pending, .some, .none):
+            return "Redeeming Invite Code..."
+        case (.pending, .some, .some):
+            return "Waiting..."
+        case (.failed, _, .none):
+            return "Failed to Redeem Invite Code"
+        case (.failed, _, .some):
             return "Provisioning Failed"
-        case .succeeded:
-            return "Gateway Created"
+        case (.succeeded, _, _):
+            return "Gateway Ready"
+        case _:
+            return "Provision Gateway"
         }
     }
     
@@ -125,11 +133,13 @@ struct GatewayURLSettingsView: View {
                     
                     Button(
                         action: {
-                            app.send(.requestProvisionGateway)
+                            app.send(.submitProvisionGatewayForm)
                         },
                         label: {
                             GatewayProvisionLabel(
-                                status: app.state.gatewayProvisioningStatus
+                                status: app.state.gatewayProvisioningStatus,
+                                inviteCode: app.state.inviteCodeFormField.validated,
+                                gatewayId: app.state.gatewayId
                             )
                         }
                     )
@@ -142,11 +152,24 @@ struct GatewayURLSettingsView: View {
                     Text("Provision Gateway")
                 },
                 footer: {
-                    switch app.state.gatewayProvisioningStatus {
-                    case let .failed(message):
-                        Text(message)
-                    default:
-                        EmptyView()
+                    VStack {
+                        if let gatewayId = app.state.gatewayId {
+                            HStack {
+                                Text("Gateway ID")
+                                    .foregroundColor(.secondary)
+                                    .bold()
+                                Text(gatewayId)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        switch app.state.gatewayProvisioningStatus {
+                        case let .failed(message):
+                            Text(message)
+                        default:
+                            EmptyView()
+                        }
+                            
                     }
                 }
             )

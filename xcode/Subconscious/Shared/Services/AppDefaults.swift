@@ -23,4 +23,10 @@ struct AppDefaults {
     
     @UserDefaultsProperty(forKey: "gatewayURL")
     var gatewayURL = "http://127.0.0.1:4433"
+    
+    @UserDefaultsProperty(forKey: "gatewayId")
+    var gatewayId: String? = nil
+    
+    @UserDefaultsProperty(forKey: "inviteCode")
+    var inviteCode: String? = nil
 }
