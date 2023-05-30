@@ -10,9 +10,13 @@ import Foundation
 import Combine
 
 struct AddressBookEntry: Equatable, Hashable, Codable {
-    var petname: Petname
-    var did: Did
-    var status: ResolutionStatus
+    let petname: Petname
+    let did: Did
+    let status: ResolutionStatus
+    
+    var name: Petname.Name {
+        petname.root
+    }
 }
 
 enum AddressBookError: Error {
@@ -116,7 +120,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         
         // Maintain consistent order
         addressBook.sort { a, b in
-            a.petname < b.petname
+            a.name < b.name
         }
         
         self.addressBook = addressBook
@@ -164,11 +168,11 @@ actor AddressBook<Sphere: SphereProtocol> {
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
     /// This can fail if `AddressBookService.maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
-    func findAvailablePetname(petname: Petname) async throws -> Petname {
-        var name = petname
+    func findAvailablePetname(name: Petname.Name) async throws -> Petname.Name {
+        var name = name
         var count = 0
         
-        while await hasEntryForPetname(petname: name) {
+        while await hasEntryForPetname(petname: name.toPetname()) {
             guard let next = name.increment() else {
                 throw AddressBookError.exhaustedUniquePetnameRange
             }
@@ -405,14 +409,23 @@ actor AddressBookService {
         await self.addressBook.invalidateCache()
     }
     
+    private static func shouldBeUnfollowed(
+        _ entry: AddressBookEntry,
+        _ did: Did,
+        _ petname: Petname.Name?
+    ) -> Bool {
+        entry.did == did && (petname == nil || entry.name == petname)
+    }
+    
     /// Disassociates the passed DID from any petname(s) in the address book,
     /// clears the cache, saves the changes and updates the database.
     /// Requires listing the contents of the address book.
-    func unfollowUser(did: Did) async throws {
+    func unfollowUser(did: Did, name: Petname.Name?) async throws {
         let entries = try await listEntries()
-        
-        for entry in entries where entry.did == did {
-            try await unfollowUser(petname: entry.petname)
+
+        for entry in entries
+        where Self.shouldBeUnfollowed(entry, did, name) {
+            try await unfollowUser(petname: entry.name.toPetname())
         }
     }
     
@@ -430,10 +443,11 @@ actor AddressBookService {
     /// Unassociates the passed DID with from any petname within the sphere,
     /// saves the changes and updates the database.
     nonisolated func unfollowUserPublisher(
-        did: Did
+        did: Did,
+        petname: Petname.Name?
     ) -> AnyPublisher<Void, Error> {
         Future.detached {
-            try await self.unfollowUser(did: did)
+            try await self.unfollowUser(did: did, name: petname)
         }
         .eraseToAnyPublisher()
     }
@@ -460,18 +474,18 @@ actor AddressBookService {
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
     /// This can fail if `maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
-    func findAvailablePetname(petname: Petname) async throws -> Petname {
-        try await self.addressBook.findAvailablePetname(petname: petname)
+    func findAvailablePetname(name: Petname.Name) async throws -> Petname.Name {
+        try await self.addressBook.findAvailablePetname(name: name)
     }
     
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
     /// This can fail if `maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
     nonisolated func findAvailablePetnamePublisher(
-        petname: Petname
-    ) -> AnyPublisher<Petname, Error> {
+        name: Petname.Name
+    ) -> AnyPublisher<Petname.Name, Error> {
         Future.detached {
-            try await self.addressBook.findAvailablePetname(petname: petname)
+            try await self.addressBook.findAvailablePetname(name: name)
         }
         .eraseToAnyPublisher()
     }

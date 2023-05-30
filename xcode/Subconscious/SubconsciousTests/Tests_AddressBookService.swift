@@ -78,7 +78,7 @@ final class Tests_AddressBookService: XCTestCase {
         
         XCTAssertEqual(newEntries.count, 2)
         
-        try await addressBook.unfollowUser(did: did)
+        try await addressBook.unfollowUser(did: did, name: nil)
         
         let finalEntries = try await addressBook.listEntries()
         let user = finalEntries[0]
@@ -97,11 +97,11 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(entries, [])
         
         let did = Did("did:key:123")!
-        let petname = Petname("ziggy")!
-        try await addressBook.followUser(did: did, petname: petname)
+        let petname = Petname.Name("ziggy")!
+        try await addressBook.followUser(did: did, petname: petname.toPetname())
         
-        let newPetname = try await addressBook.findAvailablePetname(petname: Petname("ziggy")!)
-        XCTAssertEqual(newPetname, Petname("ziggy-1")!)
+        let newPetname = try await addressBook.findAvailablePetname(name: petname)
+        XCTAssertEqual(newPetname, Petname.Name("ziggy-1")!)
     }
     
     func testFindAvailablePetnameWithExistingSuffix() async throws {
@@ -118,8 +118,8 @@ final class Tests_AddressBookService: XCTestCase {
             try await addressBook.followUser(did: did, petname: petname)
         }
         
-        let newPetname = try await addressBook.findAvailablePetname(petname: Petname("ziggy-1")!)
-        XCTAssertEqual(newPetname, Petname("ziggy-64")!)
+        let newPetname = try await addressBook.findAvailablePetname(name: Petname.Name("ziggy-1")!)
+        XCTAssertEqual(newPetname, Petname.Name("ziggy-64")!)
     }
     
     func testIsFollowingUserAndHasEntryFor() async throws {
@@ -142,7 +142,7 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertTrue(c)
         XCTAssertTrue(d)
         
-        try await addressBook.unfollowUser(did: did)
+        try await addressBook.unfollowUser(did: did, name: nil)
         
         let e = await addressBook.isFollowingUser(did: did)
         let f = await addressBook.hasEntryForPetname(petname: petname)

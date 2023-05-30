@@ -301,7 +301,7 @@ struct FollowUserFormModel: ModelProtocol {
         validate: Self.validateDid
     )
     
-    var petname: FormField<String, Petname> = FormField(
+    var petname: FormField<String, Petname.Name> = FormField(
         value: "",
         validate: Self.validatePetname
     )
@@ -310,8 +310,8 @@ struct FollowUserFormModel: ModelProtocol {
         Did(key)
     }
 
-    static func validatePetname(petname: String) -> Petname? {
-        Petname(petname)
+    static func validatePetname(petname: String) -> Petname.Name? {
+        Petname.Name(petname)
     }
     
     static func update(
@@ -349,7 +349,7 @@ struct FollowUserFormModel: ModelProtocol {
 
 struct PetnameFieldCursor: CursorProtocol {
     typealias Model = FollowUserFormModel
-    typealias ViewModel = FormField<String, Petname>
+    typealias ViewModel = FormField<String, Petname.Name>
 
     static func get(state: Model) -> ViewModel {
         state.petname

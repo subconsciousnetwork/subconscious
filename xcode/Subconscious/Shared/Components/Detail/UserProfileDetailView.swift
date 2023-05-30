@@ -141,12 +141,22 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
-    let nickname: Petname
+    let nickname: Petname.Name?
     let address: Slashlink
     let pfp: ProfilePicVariant
     let bio: UserProfileBio
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
+    
+    // A string that identifies this user.
+    var displayName: String {
+        let didSuffix = "#\(did.description.suffix(4))"
+        if let name = nickname?.toPetname() ?? address.petname {
+            return "\(name)\(didSuffix)"
+        }
+        
+        return didSuffix
+    }
 }
 
 struct EditProfileSheetCursor: CursorProtocol {
@@ -492,7 +502,10 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let fx: Fx<UserProfileDetailAction> =
             environment.addressBook
-                .unfollowUserPublisher(did: did)
+                .unfollowUserPublisher(
+                    did: did,
+                    petname: state.unfollowCandidate?.nickname
+                )
                 .map({ _ in
                     .succeedUnfollow
                 })
@@ -538,7 +551,7 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let profile = UserProfileEntry(
-                nickname: state.user?.nickname.verbatim,
+                nickname: state.user?.nickname?.verbatim,
                 bio: state.user?.bio.text,
                 profilePictureUrl: pfp?.absoluteString
             )

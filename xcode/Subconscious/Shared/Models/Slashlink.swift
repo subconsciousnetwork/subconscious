@@ -199,7 +199,7 @@ extension Slashlink {
         case .did:
             return self
         case .petname(let localPetname):
-            let path = petname.append(petname: localPetname)
+            let path = petname.join(petname: localPetname)
             return Slashlink(petname: path, slug: self.slug)
         case .none:
             return Slashlink(petname: petname, slug: self.slug)
@@ -236,12 +236,20 @@ extension Slashlink {
     }
 }
 
-extension Petname {
+extension Petname.Name {
     /// An optimized constructor that is only called internally by
     /// Slashlink.
     fileprivate init(uncheckedRawString string: String) {
         self.description = string.lowercased()
         self.verbatim = string
+    }
+}
+
+extension Petname {
+    /// An optimized constructor that is only called internally by
+    /// Slashlink.
+    fileprivate init(uncheckedRawString string: String) {
+        self.init(name: Petname.Name(uncheckedRawString: string))
     }
 }
 

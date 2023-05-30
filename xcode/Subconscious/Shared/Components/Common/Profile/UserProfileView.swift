@@ -183,7 +183,7 @@ struct UserProfileView: View {
                 Text("Not found")
             }
         }
-        .navigationTitle(state.user?.nickname.verbatim ?? "")
+        .navigationTitle(state.user?.displayName ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
@@ -311,11 +311,11 @@ private struct FollowModifier: ViewModifier {
                         guard let did = form.did.validated else {
                             return
                         }
-                        guard let petname = form.petname.validated else {
+                        guard let name = form.petname.validated else {
                             return
                         }
                         
-                        send(.attemptFollow(did, petname))
+                        send(.attemptFollow(did, name.toPetname()))
                     },
                     failFollowError: state.failFollowErrorMessage,
                     onDismissError: {
@@ -352,7 +352,7 @@ private struct UnfollowModifier: ViewModifier {
               )
       ) {
           Button(
-              "Unfollow \(state.unfollowCandidate?.nickname.markup ?? "user")?",
+              "Unfollow \(state.unfollowCandidate?.displayName ?? "user")?",
               role: .destructive
           ) {
               send(.attemptUnfollow)
@@ -436,11 +436,11 @@ private struct FollowNewUserSheetModifier: ViewModifier {
                         guard let did = form.did.validated else {
                             return
                         }
-                        guard let petname = form.petname.validated else {
+                        guard let name = form.petname.validated else {
                             return
                         }
                         
-                        send(.attemptFollow(did, petname))
+                        send(.attemptFollow(did, name.toPetname()))
                     },
                     onCancel: { send(.presentFollowNewUserFormSheet(false)) },
                     onDismissFailFollowError: { send(.dismissFailFollowError) }

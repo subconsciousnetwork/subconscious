@@ -80,7 +80,7 @@ struct AppView: View {
 }
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
-typealias NicknameFormField = FormField<String, Petname>
+typealias NicknameFormField = FormField<String, Petname.Name>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -107,12 +107,12 @@ enum AppAction: CustomLogStringConvertible {
     case persistNickname(_ nickname: String)
     
     /// Write to `Slashlink.ourProfile` during onboarding
-    case requestCreateInitialProfile(_ nickname: String)
+    case requestCreateInitialProfile(_ nickname: Petname.Name)
     case succeedCreateInitialProfile
     case failCreateInitialProfile(_ message: String)
     
     case fetchNicknameFromProfile
-    case succeedFetchNicknameFromProfile(_ nickname: Petname)
+    case succeedFetchNicknameFromProfile(_ nickname: Petname.Name)
     case failFetchNicknameFromProfile(_ message: String)
     
     case setInviteCode(_ inviteCode: String)
@@ -399,15 +399,15 @@ struct AppModel: ModelProtocol {
     /// Validated nickname
     ///
     /// This property is updated at `.start` with the corresponding value
-    /// stored in `AppDefaults`.
+    /// stored in the user's `_profile_` memo.
     var nickname = ""
     /// Nickname form
     ///
     /// This property is updated at `.start` with the corresponding value
-    /// stored in `AppDefaults`.
+    /// stored in the user's `_profile_` memo.
     var nicknameFormField = NicknameFormField(
         value: "",
-        validate: { value in Petname(value) }
+        validate: { value in Petname.Name(value) }
     )
     /// Expose read-only value for view
     var nicknameFormFieldValue: String {
@@ -909,14 +909,14 @@ struct AppModel: ModelProtocol {
         text: String
     ) -> Update<AppModel> {
         // Persist any valid value
-        if let validated = state.nicknameFormField.validated {
+        if let validated = Petname.Name(text) {
             var model = state
             model.nickname = validated.description
             logger.log("Nickname saved: \(validated)")
             
             return update(
                 state: model,
-                action: .requestCreateInitialProfile(text),
+                action: .requestCreateInitialProfile(validated),
                 environment: environment
             )
         }
@@ -928,7 +928,7 @@ struct AppModel: ModelProtocol {
     static func requestCreateInitialProfile(
         state: AppModel,
         environment: AppEnvironment,
-        nickname: String
+        nickname: Petname.Name
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
             try await environment.userProfile.requestSetOurInitialNickname(nickname: nickname)
@@ -948,7 +948,11 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
             let response = try await environment.userProfile.requestOurProfile()
-            return AppAction.succeedFetchNicknameFromProfile(response.profile.nickname)
+            if let nickname = response.profile.nickname {
+                return AppAction.succeedFetchNicknameFromProfile(nickname)
+            }
+            
+            return AppAction.failFetchNicknameFromProfile("No nickname saved in profile")
         }
         .recover { error in
             AppAction.failFetchNicknameFromProfile(error.localizedDescription)

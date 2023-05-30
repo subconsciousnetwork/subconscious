@@ -414,7 +414,7 @@ actor NoosphereService:
     func sphere(address: Slashlink) async throws -> Sphere {
         let identity = try await self.identity()
         
-        switch (address.peer) {
+        switch address.peer {
         case .none:
             return try self.sphere()
         case .did(let did) where did == identity:

@@ -9,22 +9,31 @@ import SwiftUI
 
 /// Byline style for displaying a petname
 struct PetnameView: View {
-    var nickname: Petname
-    var petname: Petname?
+    var address: Slashlink
+    var name: Petname?
     
     var body: some View {
-        if let petname = petname {
+        if let name = name {
             VStack(alignment: .leading) {
-                Text(nickname.description)
-                Text(petname.markup)
-                    .foregroundColor(.secondary)
-                    .fontWeight(.regular)
-                    .font(.caption)
+                Text(name.description)
+                if let peer = address.peer?.markup {
+                    Text(peer)
+                        .foregroundColor(.secondary)
+                        .fontWeight(.regular)
+                        .font(.caption)
+                }
             }
         } else {
-            Text(nickname.markup)
+            Text(address.peer?.markup ?? address.markup)
                 .lineLimit(1)
         }
+    }
+}
+
+extension PetnameView {
+    init(address: Slashlink, name: Petname.Name?) {
+        self.address = address
+        self.name = name?.toPetname()
     }
 }
 
@@ -32,14 +41,18 @@ struct PetnameView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             PetnameView(
-                nickname: Petname("melville")!,
-                petname: Petname("melville.bobby.tables")!
+                address: Slashlink(petname: Petname("melville.bobby.tables")!),
+                name: Petname.Name("melville")!
             )
             PetnameView(
-                nickname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
+                address: Slashlink(petname: Petname("bobby.tables")!)
             )
             PetnameView(
-                nickname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
+                address: Slashlink(petname: Petname("tables.bobby")!),
+                name: Petname("tables")!
+            )
+            PetnameView(
+                address: Slashlink(petname: Petname("tables")!)
             )
             .frame(maxWidth: 128)
         }

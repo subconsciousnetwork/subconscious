@@ -31,8 +31,8 @@ extension UserProfileBio: DummyData {
     }
 }
 
-extension Petname: DummyData {
-    static func dummyData() -> Petname {
+extension Petname.Name: DummyData {
+    static func dummyData() -> Petname.Name {
         let options = [
             "mystic_mind",
             "dreamweaverz",
@@ -68,18 +68,24 @@ extension Petname: DummyData {
             "wisdomkeybearer"
         ]
         let randomString = options.randomElement()!
-        return Petname(randomString)! // OK to do this for test data
+        return Petname.Name(randomString)! // OK to do this for test data
+    }
+}
+
+extension Petname: DummyData {
+    static func dummyData() -> Petname {
+        Petname.Name.dummyData().toPetname()
     }
 }
 
 extension StoryUser: DummyData {
     static func dummyData() -> StoryUser {
-        let petname = Petname.dummyData()
+        let nickname = Petname.Name.dummyData()
         return StoryUser(
             user: UserProfile(
                 did: Did.dummyData(),
-                nickname: petname,
-                address: Slashlink(petname: petname),
+                nickname: nickname,
+                address: Slashlink(petname: nickname.toPetname()),
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
@@ -93,7 +99,7 @@ extension StoryUser: DummyData {
         StoryUser(
             user: UserProfile(
                 did: Did.dummyData(),
-                nickname: petname,
+                nickname: petname.leaf,
                 address: Slashlink(petname: petname),
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
@@ -156,11 +162,11 @@ extension EntryStub: DummyData {
 
 extension UserProfile: DummyData {
     static func dummyData() -> UserProfile {
-        let petname = Petname.dummyData()
+        let nickname = Petname.Name.dummyData()
         return UserProfile(
             did: Did.dummyData(),
-            nickname: petname,
-            address: Slashlink(petname: petname),
+            nickname: nickname,
+            address: Slashlink(petname: nickname.toPetname()),
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
             category: .human,
