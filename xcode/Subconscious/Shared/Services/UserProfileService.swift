@@ -174,7 +174,7 @@ actor UserProfileService {
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
-            category: address.isOurProfile ? .you : .human,
+            category: address.isOurProfile ? UserCategory.you : UserCategory.human,
             resolutionStatus: resolutionStatus
         )
         
@@ -273,10 +273,10 @@ actor UserProfileService {
         return following
     }
     
-    /// Sets our nickname if (and only if) there is no existing profile data.
+    /// Sets our nickname, preserving existing profile data.
     /// This is intended to be idempotent for use in the onboarding flow.
-    func requestSetOurInitialNickname(nickname: Petname.Name) async throws {
-        guard await readProfileMemo(address: Slashlink.ourProfile) != nil else {
+    func updateOurNickname(nickname: Petname.Name) async throws {
+        guard let profile = await readProfileMemo(address: Slashlink.ourProfile) else {
             let profile = UserProfileEntry(
                 nickname: nickname.verbatim,
                 bio: nil,
@@ -285,8 +285,13 @@ actor UserProfileService {
             
             return try await writeOurProfile(profile: profile)
         }
-
-        throw UserProfileServiceError.profileAlreadyExists
+        
+        let updated = UserProfileEntry(
+            nickname: nickname.verbatim,
+            bio: profile.bio,
+            profilePictureUrl: profile.profilePictureUrl
+        )
+        return try await writeOurProfile(profile: updated)
     }
     
     /// Update our `_profile_` memo with the contents of the passed profile.
