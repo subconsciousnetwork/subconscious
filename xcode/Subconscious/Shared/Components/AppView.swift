@@ -107,9 +107,9 @@ enum AppAction: CustomLogStringConvertible {
     case persistNickname(_ nickname: String)
     
     /// Write to `Slashlink.ourProfile` during onboarding
-    case requestCreateInitialProfile(_ nickname: Petname.Name)
-    case succeedCreateInitialProfile
-    case failCreateInitialProfile(_ message: String)
+    case updateOurProfileWithNickname(_ nickname: Petname.Name)
+    case succeedCreateUpdateNickname
+    case failUpdateNickname(_ message: String)
     
     case fetchNicknameFromProfile
     case succeedFetchNicknameFromProfile(_ nickname: Petname.Name)
@@ -590,16 +590,16 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 text: nickname
             )
-        case let .requestCreateInitialProfile(nickname):
-            return requestCreateInitialProfile(
+        case let .updateOurProfileWithNickname(nickname):
+            return updateOurProfileWithNickname(
                 state: state,
                 environment: environment,
                 nickname: nickname
             )
-        case .succeedCreateInitialProfile:
+        case .succeedCreateUpdateNickname:
             logger.log("Wrote initial profile memo")
             return Update(state: state)
-        case let .failCreateInitialProfile(message):
+        case let .failUpdateNickname(message):
             logger.log("Failed to write initial profile memo: \(message)")
             return Update(state: state)
         case .fetchNicknameFromProfile:
@@ -948,7 +948,7 @@ struct AppModel: ModelProtocol {
             
             return update(
                 state: model,
-                action: .requestCreateInitialProfile(validated),
+                action: .updateOurProfileWithNickname(validated),
                 environment: environment
             )
         }
@@ -957,17 +957,17 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
     
-    static func requestCreateInitialProfile(
+    static func updateOurProfileWithNickname(
         state: AppModel,
         environment: AppEnvironment,
         nickname: Petname.Name
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
-            try await environment.userProfile.requestSetOurInitialNickname(nickname: nickname)
-            return AppAction.succeedCreateInitialProfile
+            try await environment.userProfile.updateOurNickname(nickname: nickname)
+            return AppAction.succeedCreateUpdateNickname
         }
         .recover { error in
-            return AppAction.failCreateInitialProfile(error.localizedDescription)
+            return AppAction.failUpdateNickname(error.localizedDescription)
         }
         .eraseToAnyPublisher()
         
