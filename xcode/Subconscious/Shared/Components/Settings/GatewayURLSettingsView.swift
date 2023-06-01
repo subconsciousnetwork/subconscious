@@ -154,7 +154,7 @@ struct GatewayURLSettingsView: View {
                 footer: {
                     VStack {
                         if let gatewayId = app.state.gatewayId {
-                            HStack {
+                            VStack(alignment: .leading) {
                                 Text("Gateway ID")
                                     .foregroundColor(.secondary)
                                     .bold()
