@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/twostraws/CodeScanner",
       "state" : {
-        "revision" : "d8f10d992ef32a4187b78a6df320facf75d631d8",
-        "version" : "2.3.1"
+        "revision" : "4b2f9c57d03bfe94e6b45572e0c908c1433c32b2",
+        "version" : "2.3.2"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/subconsciousnetwork/noosphere",
       "state" : {
-        "branch" : "swift-noosphere-v0.11.0-pre.2",
-        "revision" : "454147bfa95f74d2f3140576bee21c77b6ca388c"
+        "branch" : "noosphere-v0.11.0-pre.4",
+        "revision" : "6f1261a1edb38cc80a91a8ec165cbbd31a96301e"
       }
     },
     {
