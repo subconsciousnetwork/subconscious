@@ -13,6 +13,7 @@ import Combine
 /// Display a user profile detail view.
 /// Used to browse users entries and list of petnames.
 struct UserProfileDetailView: View {
+    @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: UserProfileDetailModel(),
         environment: AppEnvironment.default
@@ -31,9 +32,7 @@ struct UserProfileDetailView: View {
     }
     
     func onNavigateToUser(user: UserProfile) {
-        notify(.requestDetail(.profile(
-            UserProfileDetailDescription(address: user.address)
-        )))
+        notify(.requestNavigateToProfile(user))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -49,11 +48,12 @@ struct UserProfileDetailView: View {
 
     var body: some View {
         UserProfileView(
-            state: store.state,
-            send: store.send,
+            app: app,
+            store: store,
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser,
-            onProfileAction: self.onProfileAction
+            onProfileAction: self.onProfileAction,
+            onRefresh: store.refresh
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -72,6 +72,7 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
+    case requestNavigateToProfile(UserProfile)
     case requestDetail(MemoDetailDescription)
     case succeedFollow(identity: Did, petname: Petname)
     case succeedUnfollow(identity: Did, petname: Petname)
@@ -110,7 +111,11 @@ enum UserProfileDetailAction {
     case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow(identity: Did, petname: Petname)
+    case succeedFollow(Petname)
+    
+    case requestWaitForFollowedUserResolution(_ petname: Petname)
+    case succeedResolveFollowedUser
+    case failResolveFollowedUser(_ message: String)
     
     case requestUnfollow(UserProfile)
     case attemptUnfollow
@@ -138,11 +143,22 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
-    let nickname: Petname
+    let nickname: Petname.Name?
     let address: Slashlink
     let pfp: ProfilePicVariant
-    let bio: String
+    let bio: UserProfileBio
     let category: UserCategory
+    let resolutionStatus: ResolutionStatus
+    
+    // A string that identifies this user.
+    var displayName: String {
+        let didSuffix = "#\(did.description.suffix(4))"
+        if let name = nickname?.toPetname() ?? address.petname {
+            return "\(name)\(didSuffix)"
+        }
+        
+        return didSuffix
+    }
 }
 
 struct EditProfileSheetCursor: CursorProtocol {
@@ -161,6 +177,47 @@ struct EditProfileSheetCursor: CursorProtocol {
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         .editProfileSheet(action)
+    }
+}
+
+extension Store<UserProfileDetailModel> {
+    func refresh() async {
+        guard let address = state.user?.address else {
+            return
+        }
+        
+        // Ensure updates are sent on the main thread
+        let send = { (action) -> Void in
+            Task {
+                @MainActor in self.send(action)
+            }
+        }
+        
+        do {
+            let res = try await Self.Model.refresh(
+                address: address,
+                environment: self.environment
+            )
+            
+            send(.populate(res))
+        } catch {
+            send(.failedToPopulate(error.localizedDescription))
+        }
+    }
+}
+
+extension UserProfileDetailModel {
+     static func refresh(
+        address: Slashlink,
+        environment: UserProfileDetailModel.Environment
+    ) async throws -> UserProfileContentResponse {
+        return try await Func.run {
+            if let petname = address.toPetname() {
+                return try await environment.userProfile.requestUserProfile(petname: petname)
+            } else {
+                return try await environment.userProfile.requestOurProfile()
+            }
+        }
     }
 }
 
@@ -195,9 +252,7 @@ struct UserProfileDetailModel: ModelProtocol {
     private var selectedTabIndex: Int? = nil
     
     var currentTabIndex: Int {
-        get {
-            selectedTabIndex ?? initialTabIndex
-        }
+        selectedTabIndex ?? initialTabIndex
     }
     
     var isMetaSheetPresented = false
@@ -264,17 +319,9 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.initialTabIndex = initialTabIndex
             
-            let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
-            Func.run {
-                if let petname = address.toPetname() {
-                    return environment.userProfile.requestUserProfilePublisher(petname: petname)
-                } else {
-                    return environment.userProfile.requestOwnProfilePublisher()
+            let fx: Fx<UserProfileDetailAction> = Future.detached {
+                    try await Self.refresh(address: address, environment: environment)
                 }
-            }
-            
-            let fx: Fx<UserProfileDetailAction> =
-            fxRoot
                 .map { content in
                     UserProfileDetailAction.populate(content)
                 }
@@ -312,7 +359,7 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.selectedTabIndex = index
             
-            return Update(state: model)
+            return Update(state: model).animation(.default)
             
         // MARK: Presentation
         case .presentMetaSheet(let presented):
@@ -324,6 +371,15 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentFollowNewUserFormSheet(let presented):
             var model = state
             model.isFollowNewUserFormSheetPresented = presented
+            
+            if presented {
+                return update(
+                    state: model,
+                    action: .followNewUserFormSheet(.form(.reset)),
+                    environment: environment
+                )
+            }
+            
             return Update(state: model)
             
         case .presentFollowSheet(let presented):
@@ -368,10 +424,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
-                    UserProfileDetailAction.succeedFollow(
-                        identity: did,
-                        petname: petname
-                    )
+                    UserProfileDetailAction.succeedFollow(petname)
                 })
                 .catch { error in
                     Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
@@ -380,11 +433,12 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedFollow:
+        case let .succeedFollow(petname):
             var actions: [UserProfileDetailAction] = [
                 .presentFollowSheet(false),
                 .presentFollowNewUserFormSheet(false),
-                .refresh
+                .refresh,
+                .requestWaitForFollowedUserResolution(petname)
             ]
             
             // Refresh our profile & show the following list if we followed someone new
@@ -394,22 +448,38 @@ struct UserProfileDetailModel: ModelProtocol {
                     actions.append(.tabIndexSelected(Self.followingTabIndex))
                 }
             }
-            
+
             return update(
                 state: state,
                 actions: actions,
                 environment: environment
             )
-            
         case .failFollow(error: let error):
             var model = state
             model.failFollowErrorMessage = error
             return Update(state: model)
-            
         case .dismissFailFollowError:
             var model = state
             model.failFollowErrorMessage = nil
             return Update(state: model)
+            
+        case let .requestWaitForFollowedUserResolution(petname):
+            let fx: Fx<UserProfileDetailAction> = environment.addressBook
+                .waitForPetnameResolutionPublisher(petname: petname)
+                .map { _ in
+                    .succeedResolveFollowedUser
+                }
+                .recover { error in
+                    .failResolveFollowedUser(error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedResolveFollowedUser:
+            return update(state: state, action: .refresh, environment: environment)
+        case .failResolveFollowedUser(let message):
+            logger.log("Failed to resolve followed user: \(message)")
+            return update(state: state, action: .refresh, environment: environment)
             
         // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):
@@ -434,7 +504,10 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let fx: Fx<UserProfileDetailAction> =
             environment.addressBook
-                .unfollowUserPublisher(did: did)
+                .unfollowUserPublisher(
+                    did: did,
+                    petname: state.unfollowCandidate?.nickname
+                )
                 .map({ _ in
                     Action.succeedUnfollow
                 })
@@ -480,8 +553,8 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let profile = UserProfileEntry(
-                nickname: state.user?.nickname.verbatim,
-                bio: state.user?.bio,
+                nickname: state.user?.nickname?.verbatim,
+                bio: state.user?.bio.text,
                 profilePictureUrl: pfp?.absoluteString
             )
             return update(

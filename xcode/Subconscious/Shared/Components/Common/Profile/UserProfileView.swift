@@ -21,61 +21,133 @@ struct ProfileStatisticView: View {
     }
 }
 
-struct UserProfileView: View {
+struct RecentTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
-    
-    let onNavigateToNote: (Slashlink) -> Void
-    let onNavigateToUser: (UserProfile) -> Void
-    
-    let onProfileAction: (UserProfile, UserProfileAction) -> Void
+    var onNavigateToNote: (Slashlink) -> Void
+    var onRefresh: () async -> Void
     
     var body: some View {
-        let columnRecent = TabbedColumnItem(
-            label: "Recent",
-            view: Group {
-                if let user = state.user {
-                    ForEach(state.recentEntries) { entry in
-                        StoryEntryView(
-                            story: StoryEntry(
-                                author: user,
-                                entry: entry
-                            ),
-                            action: { address, _ in onNavigateToNote(address) }
-                        )
-                    }
-                }
-            }
-        )
-        
-        let columnTop = TabbedColumnItem(
-            label: "Top",
-            view: VStack(spacing: AppTheme.unit * 2) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 48))
-                    Text("Coming Soon...")
-                }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .foregroundColor(Color.secondary)
-                .background(Color.background)
-        )
-         
-        let columnFollowing = TabbedColumnItem(
-            label: "Following",
-            view: Group {
-                ForEach(state.following) { follow in
-                    StoryUserView(
-                        story: follow,
-                        action: { _, _ in onNavigateToUser(follow.user) },
-                        profileAction: onProfileAction
+        ScrollView {
+            if let user = state.user {
+                ForEach(state.recentEntries) { entry in
+                    StoryEntryView(
+                        story: StoryEntry(
+                            author: user,
+                            entry: entry
+                        ),
+                        action: { address, _ in onNavigateToNote(address) }
                     )
                 }
             }
+            
+            if state.recentEntries.count == 0 {
+                EmptyStateView()
+            }
+        }
+        .refreshable {
+            await onRefresh()
+        }
+    }
+}
+
+struct TopTabView: View {
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
+    var onRefresh: () async -> Void
+    
+    var body: some View {
+        ScrollView {
+            EmptyStateView()
+        }
+        .refreshable {
+            await onRefresh()
+        }
+    }
+}
+
+struct FollowTabView: View {
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
+    var onNavigateToUser: (UserProfile) -> Void
+    var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    var onRefresh: () async -> Void
+    
+    var body: some View {
+        ScrollView {
+            ForEach(state.following) { follow in
+                StoryUserView(
+                    story: follow,
+                    action: { _, _ in onNavigateToUser(follow.user) },
+                    profileAction: onProfileAction
+                )
+            }
+            
+            if state.following.count == 0 {
+                EmptyStateView()
+            }
+        }
+        .refreshable {
+            await onRefresh()
+        }
+    }
+}
+
+struct UserProfileView: View {
+    @ObservedObject var app: Store<AppModel>
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    
+    private var state: UserProfileDetailModel {
+        store.state
+    }
+    private var send: (UserProfileDetailAction) -> Void {
+        store.send
+    }
+    
+    var onNavigateToNote: (Slashlink) -> Void
+    var onNavigateToUser: (UserProfile) -> Void
+    
+    var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    var onRefresh: () async -> Void
+    
+    var columnRecent: TabbedColumnItem<RecentTabView> {
+        TabbedColumnItem(
+            label: "Recent",
+            view: RecentTabView(
+                state: state,
+                send: send,
+                onNavigateToNote: onNavigateToNote,
+                onRefresh: onRefresh
+            )
         )
+    }
+    var columnTop: TabbedColumnItem<TopTabView> {
+        TabbedColumnItem(
+            label: "Top",
+            view: TopTabView(
+                state: state,
+                send: send,
+                onRefresh: onRefresh
+            )
+        )
+    }
         
+    var columnFollowing: TabbedColumnItem<FollowTabView> {
+        TabbedColumnItem(
+            label: "Following",
+            view: FollowTabView(
+                state: state,
+                send: send,
+                onNavigateToUser: onNavigateToUser,
+                onProfileAction: onProfileAction,
+                onRefresh: onRefresh
+            )
+        )
+    }
+    
+    var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            switch (state.loadingState) {
+            switch state.loadingState {
             case .loading:
                 ProgressView()
             case .loaded:
@@ -86,6 +158,13 @@ struct UserProfileView: View {
                         isFollowingUser: state.isFollowingUser,
                         action: { action in
                             onProfileAction(user, action)
+                        },
+                        onTapStatistics: {
+                            send(
+                                .tabIndexSelected(
+                                    UserProfileDetailModel.followingTabIndex
+                                )
+                            )
                         }
                     )
                     .padding(AppTheme.padding)
@@ -104,7 +183,7 @@ struct UserProfileView: View {
                 Text("Not found")
             }
         }
-        .navigationTitle(state.user?.nickname.verbatim ?? "")
+        .navigationTitle(state.user?.displayName ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
@@ -139,7 +218,7 @@ struct UserProfileView: View {
         .metaSheet(state: state, send: send)
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
-        .editProfile(state: state, send: send)
+        .editProfile(app: app, store: store)
         .followNewUser(state: state, send: send)
     }
 }
@@ -150,35 +229,35 @@ private extension View {
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(UnfollowModifier(state: state, send: send))
+        self.modifier(UnfollowModifier(state: state, send: send))
     }
     
     func follow(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(FollowModifier(state: state, send: send))
+        self.modifier(FollowModifier(state: state, send: send))
     }
     
     func metaSheet(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(MetaSheetModifier(state: state, send: send))
+        self.modifier(MetaSheetModifier(state: state, send: send))
     }
     
     func editProfile(
-        state: UserProfileDetailModel,
-        send: @escaping (UserProfileDetailAction) -> Void
+        app: Store<AppModel>,
+        store: Store<UserProfileDetailModel>
     ) -> some View {
-      self.modifier(EditProfileSheetModifier(state: state, send: send))
+        self.modifier(EditProfileSheetModifier(app: app, store: store))
     }
     
     func followNewUser(
         state: UserProfileDetailModel,
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
-      self.modifier(FollowNewUserSheetModifier(state: state, send: send))
+        self.modifier(FollowNewUserSheetModifier(state: state, send: send))
     }
 }
 
@@ -232,11 +311,11 @@ private struct FollowModifier: ViewModifier {
                         guard let did = form.did.validated else {
                             return
                         }
-                        guard let petname = form.petname.validated else {
+                        guard let name = form.petname.validated else {
                             return
                         }
                         
-                        send(.attemptFollow(did, petname))
+                        send(.attemptFollow(did, name.toPetname()))
                     },
                     failFollowError: state.failFollowErrorMessage,
                     onDismissError: {
@@ -246,7 +325,6 @@ private struct FollowModifier: ViewModifier {
             }
     }
 }
-
 
 private struct UnfollowModifier: ViewModifier {
   let state: UserProfileDetailModel
@@ -274,7 +352,7 @@ private struct UnfollowModifier: ViewModifier {
               )
       ) {
           Button(
-              "Unfollow \(state.unfollowCandidate?.nickname.markup ?? "user")?",
+              "Unfollow \(state.unfollowCandidate?.displayName ?? "user")?",
               role: .destructive
           ) {
               send(.attemptUnfollow)
@@ -285,10 +363,15 @@ private struct UnfollowModifier: ViewModifier {
   }
 }
 
-
 private struct EditProfileSheetModifier: ViewModifier {
-    let state: UserProfileDetailModel
-    let send: (UserProfileDetailAction) -> Void
+    @ObservedObject var app: Store<AppModel>
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    private var state: UserProfileDetailModel {
+        store.state
+    }
+    private var send: (UserProfileDetailAction) -> Void {
+        store.send
+    }
     
     func body(content: Content) -> some View {
         content
@@ -321,6 +404,10 @@ private struct EditProfileSheetModifier: ViewModifier {
                     )
                 }
             }
+            .onReceive(
+                store.actions.compactMap(AppAction.from),
+                perform: app.send
+            )
     }
 }
 
@@ -349,11 +436,11 @@ private struct FollowNewUserSheetModifier: ViewModifier {
                         guard let did = form.did.validated else {
                             return
                         }
-                        guard let petname = form.petname.validated else {
+                        guard let name = form.petname.validated else {
                             return
                         }
                         
-                        send(.attemptFollow(did, petname))
+                        send(.attemptFollow(did, name.toPetname()))
                     },
                     onCancel: { send(.presentFollowNewUserFormSheet(false)) },
                     onDismissFailFollowError: { send(.dismissFailFollowError) }
@@ -365,11 +452,15 @@ private struct FollowNewUserSheetModifier: ViewModifier {
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
         UserProfileView(
-            state: UserProfileDetailModel(),
-            send: { _ in },
+            app: Store(state: AppModel(), environment: AppEnvironment()),
+            store: Store(
+                state: UserProfileDetailModel(),
+                environment: UserProfileDetailModel.Environment()
+            ),
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") },
-            onProfileAction: { user, action in print("profile action") }
+            onProfileAction: { user, action in print("profile action") },
+            onRefresh: { }
         )
     }
 }

@@ -10,75 +10,102 @@ import SwiftUI
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
-
+    
     var body: some View {
-        NavigationStack {
-            VStack(spacing: AppTheme.padding * 2) {
+        NavigationStack(
+            path: Binding(
+                get: { app.state.firstRunPath },
+                send: app.send,
+                tag: AppAction.setFirstRunPath
+            )
+        ) {
+            VStack(spacing: AppTheme.padding) {
                 Spacer()
-                StackedGlowingImage(
-                    image: Image("sub_logo"),
-                    width: AppTheme.onboarding.heroIconSize,
-                    height: AppTheme.onboarding.heroIconSize
-                )
-                Spacer()
-                VStack(alignment: .leading, spacing: AppTheme.unit3) {
-                    Text("Welcome to the Subconscious Beta.")
-                    
-                    Text("Subconscious is a place to garden thoughts and share with others.")
-                    
-                    Text("It's powered by a decentralized note graph, so your data belongs to you.")
+                StackedGlowingImage() {
+                    Image("sub_logo").resizable()
                 }
-                .foregroundColor(.secondary)
-                .font(.callout)
+                .aspectRatio(contentMode: .fit)
+                .frame(
+                    minWidth: 32,
+                    maxWidth: AppTheme.onboarding.heroIconSize,
+                    minHeight: 32,
+                    maxHeight: AppTheme.onboarding.heroIconSize
+                )
+                
+                Spacer()
+                
+                Text("Subconscious is a place to garden thoughts and share them with others.")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
+                    
+                Text("It’s powered by Noosphere, a decentralized protocol, so your data belongs to you.")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
+                
+                Spacer()
                 
                 ValidatedTextField(
+                    alignment: .center,
                     placeholder: "Enter your invite code",
                     text: Binding(
                         get: { app.state.inviteCodeFormField.value },
                         send: app.send,
                         tag: AppAction.setInviteCode
                     ),
+                    onFocusChanged: { focused in
+                        app.send(.inviteCodeFormField(.focusChange(focused: focused)))
+                    },
                     caption: "Look for this in your welcome email.",
-                    hasError: app.state.inviteCodeFormField.hasError
+                    hasError: app.state.inviteCodeFormField.hasError,
+                    submitLabel: .go,
+                    onSubmit: {
+                        if app.state.inviteCodeFormField.isValid {
+                            app.send(.pushFirstRunStep(.nickname))
+                        }
+                    }
                 )
                 .textFieldStyle(.roundedBorder)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 
-                Spacer()
                 
-                NavigationLink(
-                    destination: {
-                        FirstRunProfileView(
-                            app: app
-                        )
-                    },
-                    label: {
-                        Text("Get Started")
-                    }
-                )
-                .buttonStyle(PillButtonStyle())
-                .disabled(!app.state.inviteCodeFormField.isValid)
+                if !app.state.inviteCodeFormField.hasFocus {
+                    Spacer()
                     
+                    NavigationLink(
+                        value: FirstRunStep.nickname,
+                        label: {
+                            Text("Get Started")
+                        }
+                    )
+                    .buttonStyle(PillButtonStyle())
+                    .disabled(!app.state.inviteCodeFormField.isValid)
+                }
+                
                 // MARK: Use Offline
-                VStack(spacing: AppTheme.unit) {
+                HStack(spacing: AppTheme.unit) {
                     Text("No invite code?")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
                     NavigationLink(
-                        destination: {
-                            FirstRunProfileView(
-                                app: app
-                            )
-                        },
+                        value: FirstRunStep.nickname,
                         label: {
-                            
                             Text("Use offline")
                                 .font(.caption)
                         }
                     )
                 }
+                .padding(
+                    .init(
+                        top: 0,
+                        leading: 0,
+                        bottom: AppTheme.tightPadding,
+                        trailing: 0
+                    )
+                )
             }
             .navigationTitle("Welcome to Subconscious")
             .navigationBarTitleDisplayMode(.inline)
@@ -87,6 +114,20 @@ struct FirstRunView: View {
                 AppTheme.onboarding
                     .appBackgroundGradient(colorScheme)
             )
+            .navigationDestination(
+                for: FirstRunStep.self
+            ) { step in
+                switch step {
+                case .nickname:
+                    FirstRunProfileView(app: app)
+                case .sphere:
+                    FirstRunSphereView(app: app)
+                case .recovery:
+                    FirstRunRecoveryView(app: app)
+                case .connect:
+                    FirstRunDoneView(app: app)
+                }
+            }
         }
     }
 }

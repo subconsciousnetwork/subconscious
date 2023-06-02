@@ -13,8 +13,6 @@ final class Tests_UserProfileService: XCTestCase {
         let tmp = try TestUtilities.createTmpDir()
         let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
-        AppDefaults.standard.nickname = "test"
-        
         let memoA = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -47,11 +45,14 @@ final class Tests_UserProfileService: XCTestCase {
             )
         )
         
-        let _ = try await data.addressBook.followUser(did: Did("did:key:123")!, petname: Petname("ronald")!)
+        let _ = try await data.addressBook.followUser(
+            did: Did("did:key:123")!,
+            petname: Petname("ronald")!
+        )
         
         let profile = try await data.userProfile.requestOurProfile()
         
-        XCTAssertEqual(profile.profile.nickname, Petname("alice")!)
+        XCTAssertEqual(profile.profile.nickname, Petname.Name("alice")!)
         XCTAssertEqual(profile.recentEntries.count, 1)
         // No hidden entries on profile
         XCTAssertFalse(profile.recentEntries.contains(where: { entry in entry.address.slug.isHidden }))
@@ -65,8 +66,6 @@ final class Tests_UserProfileService: XCTestCase {
     func testFollowingListAddresses() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
-        
-        AppDefaults.standard.nickname = "test"
         
         let _ = try await data.addressBook.followUser(
             did: Did("did:key:123")!,

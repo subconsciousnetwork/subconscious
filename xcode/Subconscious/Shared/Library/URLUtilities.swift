@@ -8,6 +8,24 @@
 import Foundation
 
 extension URL {
+    /// Attempt to construct a URL from the passed string and validate its components
+    /// This will only allow http & https URLs with a full hostname
+    init?(validating string: String) {
+        guard let url = URL(string: string) else {
+            return nil
+        }
+        
+        guard url.isHTTP() else {
+            return nil
+        }
+        
+        guard (url.host ?? "").count > 0 else {
+            return nil
+        }
+        
+        self = url
+    }
+    
     /// Check if URL is HTTP or HTTPs
     func isHTTP() -> Bool {
         return self.scheme == "http" || self.scheme == "https"

@@ -13,39 +13,56 @@ enum ProfilePicVariant: Equatable, Codable, Hashable {
     case image(String)
 }
 
-struct ProfilePicImage: View {
-    var image: Image
-    
-    var body: some View {
-        image
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: 48, height: 48)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color.separator, lineWidth: 0.5))
-    }
+enum ProfilePicSize {
+    case small
+    case medium
+    case large
 }
 
 struct ProfilePic: View {
     var pfp: ProfilePicVariant
+    var size: ProfilePicSize
+
+    private var imageSize: CGFloat {
+        switch (size) {
+        case .small:
+            return AppTheme.smPfpSize
+        case .medium:
+            return AppTheme.mdPfpSize
+        case .large:
+            return AppTheme.lgPfpSize
+        }
+    }
+    
+    private var lineWidth: CGFloat {
+        switch (size) {
+        case .small:
+            return 1
+        case .medium:
+            return 0.75
+        case .large:
+            return 0.5
+        }
+    }
+
     var body: some View {
         switch pfp {
         case .none(let did):
-            GenerativeProfilePic(did: did)
-                .frame(width: 48, height: 48)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.separator, lineWidth: 0.5))
+            GenerativeProfilePic(did: did, size: imageSize)
+                .profilePicFrame(size: imageSize, lineWidth: lineWidth)
         case .url(let url):
             AsyncImage(url: url) { image in
-                ProfilePicImage(image: image)
+                image
+                    .resizable()
+                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
             } placeholder: {
                 ProgressView()
-                    .frame(width: 48, height: 48)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.separator, lineWidth: 0.5))
+                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
             }
         case .image(let img):
-            ProfilePicImage(image: Image(img))
+            Image(img)
+                .resizable()
+                .profilePicFrame(size: imageSize, lineWidth: lineWidth)
         }
     }
 }
@@ -54,13 +71,16 @@ struct ProfilePic_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             ProfilePic(
-                pfp: .none(Did.dummyData())
+                pfp: .none(Did.dummyData()),
+                size: .small
             )
             ProfilePic(
-                pfp: .url(URL(string: "https://images.unsplash.com/photo-1577766729821-6003ae138e18")!)
+                pfp: .url(URL(string: "https://images.unsplash.com/photo-1577766729821-6003ae138e18")!),
+                size: .medium
             )
             ProfilePic(
-                pfp: .image("pfp-dog")
+                pfp: .image("pfp-dog"),
+                size: .large
             )
         }
     }

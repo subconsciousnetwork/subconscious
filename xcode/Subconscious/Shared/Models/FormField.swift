@@ -29,6 +29,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
             lhs.value == rhs.value &&
             lhs.touched == rhs.touched &&
             lhs.isValid == rhs.isValid &&
+            lhs.hasFocus == rhs.hasFocus &&
             lhs.hasBeenFocusedAtLeastOnce == rhs.hasBeenFocusedAtLeastOnce
         )
     }
@@ -38,6 +39,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
     /// Should be a pure, static function
     var validate: FormFieldValidator<Input, Output>
     var touched: Bool
+    var hasFocus: Bool
     var hasBeenFocusedAtLeastOnce: Bool
     
     init(value: Input, defaultValue: Input, validate: @escaping FormFieldValidator<Input, Output>) {
@@ -45,6 +47,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
         self.defaultValue = defaultValue
         self.validate = validate
         self.touched = false
+        self.hasFocus = false
         self.hasBeenFocusedAtLeastOnce = false
     }
     
@@ -53,26 +56,21 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
         self.defaultValue = value
         self.validate = validate
         self.touched = false
+        self.hasFocus = false
         self.hasBeenFocusedAtLeastOnce = false
     }
     
     /// Attempt to validate the input and produce the backing type
     var validated: Output? {
-        get {
-            validate(value)
-        }
+        validate(value)
     }
     /// Is the current value valid?
     var isValid: Bool {
-        get {
-            validated != nil
-        }
+        validated != nil
     }
     /// Should this field visually display an error?
     var hasError: Bool {
-        get {
-            !isValid && touched
-        }
+        !isValid && touched
     }
     
     static func update(
@@ -90,6 +88,8 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
             
         case .focusChange(let focused):
             var model = state
+            model.hasFocus = focused
+            
             // Only mark as touched when the field loses focus after an initial input.
             // This avoids telling the user that a field is invalid before they've even typed in it.
             if state.hasBeenFocusedAtLeastOnce && !focused {

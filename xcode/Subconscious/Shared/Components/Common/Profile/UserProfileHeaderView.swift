@@ -21,12 +21,14 @@ struct UserProfileHeaderView: View {
     var action: (UserProfileAction) -> Void = { _ in }
     var hideActionButton: Bool = false
     
+    var onTapStatistics: () -> Void = { }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
-                ProfilePic(pfp: user.pfp)
+                ProfilePic(pfp: user.pfp, size: .large)
             
-                PetnameView(petname: user.nickname)
+                PetnameView(address: user.address, name: user.nickname)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
                 
@@ -61,18 +63,25 @@ struct UserProfileHeaderView: View {
             }
             
             if let statistics = statistics {
-                HStack(spacing: AppTheme.unit2) {
-                    ProfileStatisticView(label: "Notes", count: statistics.noteCount)
-                    // TODO: put this back when we have backlink count
-                    // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
-                    ProfileStatisticView(label: "Following", count: statistics.followingCount)
-                }
-                .font(.caption)
-                .foregroundColor(.primary)
+                Button(
+                    action: {
+                        onTapStatistics()
+                    },
+                    label: {
+                        HStack(spacing: AppTheme.unit2) {
+                            ProfileStatisticView(label: "Notes", count: statistics.noteCount)
+                            // TODO: put this back when we have backlink count
+                            // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
+                            ProfileStatisticView(label: "Following", count: statistics.followingCount)
+                        }
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                    }
+                )
             }
             
-            if user.bio.count > 0 {
-                Text(verbatim: user.bio)
+            if user.bio.hasVisibleContent {
+                Text(verbatim: user.bio.text)
             }
         }
     }
@@ -84,22 +93,24 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    nickname: Petname("ben")!,
+                    nickname: Petname.Name("ben")!,
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
-                    category: .human
+                    bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
+                    category: .human,
+                    resolutionStatus: .resolved("abc")
                 ),
                 isFollowingUser: false
             )
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    nickname: Petname("ben")!,
+                    nickname: Petname.Name("ben")!,
                     address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
-                    category: .geist
+                    bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
+                    category: .geist,
+                    resolutionStatus: .resolved(Cid("ok"))
                 ),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
                 isFollowingUser: true
@@ -107,11 +118,12 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    nickname: Petname("ben")!,
+                    nickname: Petname.Name("ben")!,
                     address: Slashlink.ourProfile,
                     pfp: .image("pfp-dog"),
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
-                    category: .you
+                    bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
+                    category: .you,
+                    resolutionStatus: .resolved(Cid("ok"))
                 ),
                 isFollowingUser: false
             )

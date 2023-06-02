@@ -169,6 +169,7 @@ enum NotebookAction {
     
     /// Push detail onto navigation stack
     case pushDetail(MemoDetailDescription)
+    case failPushDetail(_ message: String)
     
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
@@ -284,6 +285,12 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
+        case let .requestNavigateToProfile(user):
+            guard user.resolutionStatus.isReady else {
+                return .failPushDetail("Attempted to navigate to unresolved user")
+            }
+            
+            return .pushDetail(.profile(UserProfileDetailDescription(address: user.address)))
         case let .succeedFollow(identity, petname):
             return .notifySucceedFollow(identity: identity, petname: petname)
         case let .succeedUnfollow(identity, petname):
@@ -573,6 +580,9 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details.append(detail)
             return Update(state: model)
+        case let .failPushDetail(error):
+            logger.log("Attempt to push invalid detail: \(error)")
+            return Update(state: state)
         case .pushRandomDetail(let autofocus):
             return pushRandomDetail(
                 state: state,
@@ -587,7 +597,6 @@ struct NotebookModel: ModelProtocol {
             return Update(state: state)
         case let .notifySucceedUnfollow(identity, petname):
             logger.log("Notify unfollowed \(petname) with identity \(identity)")
-            return Update(state: state)
         }
     }
     
@@ -946,6 +955,23 @@ struct NotebookModel: ModelProtocol {
         slashlink: Slashlink,
         fallback: String
     ) -> Update<NotebookModel> {
+        // Intercept profile visits and use the correct view if noosphere is enabled
+        if AppDefaults.standard.isNoosphereEnabled {
+            guard !slashlink.slug.isProfile else {
+                return update(
+                    state: state,
+                    action: .pushDetail(
+                        .profile(
+                            UserProfileDetailDescription(
+                                address: slashlink
+                            )
+                        )
+                    ),
+                    environment: environment
+                )
+            }
+        }
+        
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
         guard slashlink.peer != nil else {
@@ -960,21 +986,6 @@ struct NotebookModel: ModelProtocol {
         }
         
         if AppDefaults.standard.isNoosphereEnabled {
-            // Intercept profile visits and use the correct view
-            guard !slashlink.slug.isProfile else {
-                return update(
-                    state: state,
-                    action: .pushDetail(
-                        .profile(
-                            UserProfileDetailDescription(
-                                address: slashlink
-                            )
-                        )
-                    ),
-                    environment: environment
-                )
-            }
-            
             // If Noosphere is enabled, and slashlink pointing to other sphere,
             // dispatch action for viewer.
             return update(

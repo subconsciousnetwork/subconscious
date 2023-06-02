@@ -14,10 +14,10 @@ enum FollowUserSheetAction: Equatable {
     case populate(UserProfile)
     case followUserForm(FollowUserFormAction)
     
-    case fetchPetnameCollisionStatus(Petname)
-    case populatePetnameCollisionStatus(Petname, Bool)
-    case attemptToFindUniquePetname(Petname)
-    case failToFindUniquePetname
+    case fetchPetnameCollisionStatus(Petname.Name)
+    case populatePetnameCollisionStatus(Petname.Name, Bool)
+    case attemptToFindUniquePetname(Petname.Name)
+    case failToFindUniquePetname(String)
 }
 
 struct FollowUserSheetEnvironment {
@@ -49,12 +49,17 @@ struct FollowUserSheetModel: ModelProtocol {
         case .populate(let user):
             var model = state
             model.user = user
+            
+            guard let bestFollowName = user.nickname ?? user.address.petname?.leaf else {
+                return Update(state: model)
+            }
+            
             return update(
                 state: model,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: user.nickname.verbatim))),
-                    .fetchPetnameCollisionStatus(user.nickname)
+                    .followUserForm(.petnameField(.setValue(input: bestFollowName.verbatim))),
+                    .fetchPetnameCollisionStatus(bestFollowName)
                 ],
                 environment: environment
             )
@@ -68,7 +73,7 @@ struct FollowUserSheetModel: ModelProtocol {
             
         case .fetchPetnameCollisionStatus(let petname):
             let fx: Fx<FollowUserSheetAction> =
-                environment.addressBook.hasEntryForPetnamePublisher(petname: petname)
+                environment.addressBook.hasEntryForPetnamePublisher(petname: petname.toPetname())
                 .map { collision in
                     FollowUserSheetAction.populatePetnameCollisionStatus(petname, collision)
                 }
@@ -81,7 +86,7 @@ struct FollowUserSheetModel: ModelProtocol {
             model.isPetnamePresentInAddressBook = collision
             
             if collision {
-                model.petnameFieldCaption = "You already follow a \(petname.markup)"
+                model.petnameFieldCaption = "You already follow a \(petname.toPetname().markup)"
                 return update(
                     state: model,
                     actions: [.attemptToFindUniquePetname(petname)],
@@ -93,24 +98,24 @@ struct FollowUserSheetModel: ModelProtocol {
             
         case .attemptToFindUniquePetname(let petname):
             let fx: Fx<FollowUserSheetAction> =
-                environment.addressBook.findAvailablePetnamePublisher(petname: petname)
+                environment.addressBook.findAvailablePetnamePublisher(name: petname)
                 .map { petname in
                     FollowUserSheetAction.followUserForm(
                         .petnameField(.setValue(input: petname.verbatim))
                     )
                 }
-                .catch { error in
-                    Just(FollowUserSheetAction.failToFindUniquePetname)
+                .recover { error in
+                    FollowUserSheetAction.failToFindUniquePetname(error.localizedDescription)
                 }
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
             
-        case .failToFindUniquePetname:
+        case .failToFindUniquePetname(let error):
             // This is a no-op at the moment, if we failed to find a unique name the user
             // will be unable to submit the form anyway so adding an extra error message
             // seems redundant.
-            logger.warning("Failed to find a unique petname")
+            logger.warning("Failed to find a unique petname: \(error)")
             return Update(state: state)
         }
     }
@@ -166,7 +171,7 @@ struct FollowUserSheet: View {
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
             if let user = state.user {
-                ProfilePic(pfp: user.pfp)
+                ProfilePic(pfp: user.pfp, size: .large)
                 
                 Text(user.did.did)
                     .font(.caption.monospaced())
@@ -202,7 +207,7 @@ struct FollowUserSheet: View {
                 action: onAttemptFollow,
                 label: {
                     if let petname = state.followUserForm.petname.validated {
-                        Text("Follow \(petname.markup)")
+                        Text("Follow \(petname.toPetname().markup)")
                     } else {
                         Text("Invalid petname")
                     }

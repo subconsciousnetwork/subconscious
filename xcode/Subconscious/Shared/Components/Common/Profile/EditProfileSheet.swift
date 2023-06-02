@@ -19,7 +19,7 @@ enum EditProfileSheetAction: Equatable {
 
 private struct NicknameFieldCursor: CursorProtocol {
     typealias Model = EditProfileSheetModel
-    typealias ViewModel = FormField<String, Petname>
+    typealias ViewModel = FormField<String, Petname.Name>
 
     static func get(state: Model) -> ViewModel {
         state.nicknameField
@@ -80,22 +80,22 @@ struct EditProfileSheetModel: ModelProtocol {
     typealias Action = EditProfileSheetAction
     typealias Environment = EditProfileSheetEnvironment
     
-    var nicknameField: FormField<String, Petname> = FormField(
+    var nicknameField: FormField<String, Petname.Name> = FormField(
         value: "",
         validate: { value in
-            Petname(value)
+            Petname.Name(value)
         }
     )
     var bioField: FormField<String, String> = FormField(
         value: "",
         validate: { value in
-            value.count >= 280 ? nil : value
+            value.fitsInUserBio ? value : nil
         }
     )
     var pfpUrlField: FormField<String, URL> = FormField(
         value: "",
         validate: { value in
-            URL(string: value)
+            URL(validating: value)
         }
     )
     
@@ -120,7 +120,7 @@ struct EditProfileSheetModel: ModelProtocol {
                     .pfpUrlField(.reset),
                     .nicknameField(.setValue(input: user?.nickname ?? "")),
                     .bioField(.setValue(input: user?.bio ?? "")),
-                    .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? "")),
+                    .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? ""))
                 ],
                 environment: environment
             )
@@ -159,7 +159,7 @@ struct EditProfileSheet: View {
     var onCancel: () -> Void
     var onDismissError: () -> Void
     
-    func makePreview(nickname: Petname) -> UserProfile {
+    func makePreview(nickname: Petname.Name) -> UserProfile {
         let pfp: ProfilePicVariant = Func.run {
             let did = user.did
             if let url = state.pfpUrlField.validated {
@@ -174,8 +174,9 @@ struct EditProfileSheet: View {
             nickname: nickname,
             address: user.address,
             pfp: pfp,
-            bio: state.bioField.validated ?? "",
-            category: .you
+            bio: UserProfileBio(state.bioField.validated ?? ""),
+            category: .you,
+            resolutionStatus: .resolved(Cid("fake-for-preview"))
         )
     }
     
@@ -250,7 +251,6 @@ struct EditProfileSheet: View {
                             axis: .vertical
                         )
                         .formField()
-                        .lineLimit(3)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                     }

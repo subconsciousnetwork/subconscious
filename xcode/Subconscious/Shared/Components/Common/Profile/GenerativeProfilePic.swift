@@ -20,8 +20,10 @@ struct RandomNumberGeneratorWithSeed: RandomNumberGenerator {
     }
 
     mutating func next() -> UInt64 {
-        let highBits = UInt64(bitPattern: Int64(randomSource.nextInt()))
-        let lowBits = UInt64(bitPattern: Int64(randomSource.nextInt()))
+        // nextInt() generates a random number between 0 and Int32.max inclusive.
+        // Carefully combine these into 64 bits of randomness.
+        let highBits = UInt64(randomSource.nextInt(upperBound: Int(UInt32.max)))
+        let lowBits = UInt64(randomSource.nextInt(upperBound: Int(UInt32.max)))
         return highBits << 32 | lowBits
     }
 }
@@ -96,7 +98,7 @@ extension GenerativeProfilePicParams {
 
 struct GenerativeProfilePic: View {
     var did: Did
-    var size: CGFloat = 48
+    var size: CGFloat = AppTheme.lgPfpSize
     
     @Environment(\.colorScheme) var colorScheme
     

@@ -80,7 +80,7 @@ struct AppView: View {
 }
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
-typealias NicknameFormField = FormField<String, Petname>
+typealias NicknameFormField = FormField<String, Petname.Name>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -105,6 +105,15 @@ enum AppAction: CustomLogStringConvertible {
     /// Sets form field, and persists if needed.
     case setNickname(_ nickname: String)
     case persistNickname(_ nickname: String)
+    
+    /// Write to `Slashlink.ourProfile` during onboarding
+    case updateOurProfileWithNickname(_ nickname: Petname.Name)
+    case succeedCreateUpdateNickname
+    case failUpdateNickname(_ message: String)
+    
+    case fetchNicknameFromProfile
+    case succeedFetchNicknameFromProfile(_ nickname: Petname.Name)
+    case failFetchNicknameFromProfile(_ message: String)
     
     case setInviteCode(_ inviteCode: String)
 
@@ -207,10 +216,15 @@ enum AppAction: CustomLogStringConvertible {
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
     
-    case requestProvisionGateway
-    case beginProvisionGateway(String)
-    case completeProvisionGateway(URL)
-    case failProvisionGateway(String)
+    case submitProvisionGatewayForm
+    case requestProvisionGateway(_ inviteCode: InviteCode)
+    case receiveGatewayId(_ gatewayId: String)
+    case requestGatewayProvisioningStatus
+    case succeedProvisionGateway(_ gatewayURL: URL)
+    case failProvisionGateway(_ error: String)
+    
+    case setFirstRunPath([FirstRunStep])
+    case pushFirstRunStep(FirstRunStep)
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
@@ -242,6 +256,19 @@ enum AppAction: CustomLogStringConvertible {
             return "succeedSyncLocalFilesWithDatabase(...) \(fingerprints.count) items"
         default:
             return String(describing: self)
+        }
+    }
+}
+
+extension AppAction {
+    public static func from(action: UserProfileDetailAction) -> AppAction? {
+        switch action {
+        case .refresh:
+            return .syncAll
+        case .succeedEditProfile:
+            return .fetchNicknameFromProfile
+        case _:
+            return nil
         }
     }
 }
@@ -343,6 +370,13 @@ enum AppDatabaseState {
     case ready
 }
 
+enum FirstRunStep {
+    case nickname
+    case sphere
+    case recovery
+    case connect
+}
+
 // MARK: Model
 struct AppModel: ModelProtocol {
     /// Is Noosphere enabled?
@@ -365,7 +399,8 @@ struct AppModel: ModelProtocol {
     /// update both the model property (triggering a view re-render)
     /// and persist the new value to UserDefaults.
     var isFirstRunComplete = false
-    
+    var firstRunPath: [FirstRunStep] = []
+
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
         guard isNoosphereEnabled else {
@@ -389,15 +424,15 @@ struct AppModel: ModelProtocol {
     /// Validated nickname
     ///
     /// This property is updated at `.start` with the corresponding value
-    /// stored in `AppDefaults`.
+    /// stored in the user's `_profile_` memo.
     var nickname = ""
     /// Nickname form
     ///
     /// This property is updated at `.start` with the corresponding value
-    /// stored in `AppDefaults`.
+    /// stored in the user's `_profile_` memo.
     var nicknameFormField = NicknameFormField(
         value: "",
-        validate: { value in Petname(value) }
+        validate: { value in Petname.Name(value) }
     )
     /// Expose read-only value for view
     var nicknameFormFieldValue: String {
@@ -439,6 +474,7 @@ struct AppModel: ModelProtocol {
     /// This property is updated at `.start` with the corresponding value
     /// stored in `AppDefaults`.
     var gatewayURL = ""
+    var gatewayId: String? = nil
     var gatewayURLTextField = ""
     var isGatewayURLTextFieldValid = true
     var lastGatewaySyncStatus = ResourceStatus.initial
@@ -507,47 +543,26 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case let .setFirstRunPath(path):
+            var model = state
+            model.firstRunPath = path
+            return Update(state: model)
+        case let .pushFirstRunStep(step):
+            var model = state
+            model.firstRunPath.append(step)
+            
+            return Update(state: model)
         case let .setAppUpgraded(isUpgraded):
             return setAppUpgraded(
                 state: state,
                 environment: environment,
                 isUpgraded: isUpgraded
             )
-        case let .setNickname(nickname):
-            return setNickname(
-                state: state,
-                environment: environment,
-                text: nickname
-            )
-        case let .persistNickname(nickname):
-            return persistNickname(
-                state: state,
-                environment: environment,
-                text: nickname
-            )
         case let .setInviteCode(inviteCode):
             return setInviteCode(
                 state: state,
                 environment: environment,
                 text: inviteCode
-            )
-        case let .setGatewayURLTextField(text):
-            return setGatewayURLTextField(
-                state: state,
-                environment: environment,
-                text: text
-            )
-        case let .submitGatewayURL(gateway):
-            return submitGatewayURL(
-                state: state,
-                environment: environment,
-                gatewayURL: gateway
-            )
-        case let .succeedResetGatewayURL(url):
-            return succeedResetGatewayURL(
-                state: state,
-                environment: environment,
-                url: url
             )
         case .createSphere:
             return createSphere(
@@ -585,6 +600,59 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case let .setNickname(nickname):
+            return setNickname(
+                state: state,
+                environment: environment,
+                text: nickname
+            )
+        case let .persistNickname(nickname):
+            return persistNickname(
+                state: state,
+                environment: environment,
+                text: nickname
+            )
+        case let .updateOurProfileWithNickname(nickname):
+            return updateOurProfileWithNickname(
+                state: state,
+                environment: environment,
+                nickname: nickname
+            )
+        case .succeedCreateUpdateNickname:
+            logger.log("Wrote initial profile memo")
+            return Update(state: state)
+        case let .failUpdateNickname(message):
+            logger.log("Failed to write initial profile memo: \(message)")
+            return Update(state: state)
+        case .fetchNicknameFromProfile:
+            return fetchNicknameFromProfileMemo(state: state, environment: environment)
+        case let .succeedFetchNicknameFromProfile(nickname):
+            return update(
+                state: state,
+                action: .setNickname(nickname.verbatim),
+                environment: environment
+            )
+        case let .failFetchNicknameFromProfile(message):
+            logger.log("Failed to read nickname from profile: \(message)")
+            return Update(state: state)
+        case let .setGatewayURLTextField(text):
+            return setGatewayURLTextField(
+                state: state,
+                environment: environment,
+                text: text
+            )
+        case let .submitGatewayURL(gateway):
+            return submitGatewayURL(
+                state: state,
+                environment: environment,
+                gatewayURL: gateway
+            )
+        case let .succeedResetGatewayURL(url):
+            return succeedResetGatewayURL(
+                state: state,
+                environment: environment,
+                url: url
             )
         case let .persistNoosphereEnabled(isEnabled):
             return persistNoosphereEnabled(
@@ -776,19 +844,44 @@ struct AppModel: ModelProtocol {
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
             
-        case .requestProvisionGateway:
+        case .submitProvisionGatewayForm:
+            switch (state.inviteCodeFormField.validated, state.gatewayId) {
+            case (.some(let inviteCode), .none):
+                return update(
+                    state: state,
+                    action: .requestProvisionGateway(inviteCode),
+                    environment: environment
+                )
+            case _:
+                return update(
+                    state: state,
+                    action: .requestGatewayProvisioningStatus,
+                    environment: environment
+                )
+            }
+        case .requestProvisionGateway(let inviteCode):
             return requestProvisionGateway(
+                state: state,
+                environment: environment,
+                inviteCode: inviteCode
+            )
+        case .receiveGatewayId(let gatewayId):
+            var model = state
+            model.gatewayId = gatewayId
+            AppDefaults.standard.gatewayId = gatewayId
+            
+            return update(
+                state: model,
+                action: .requestGatewayProvisioningStatus,
+                environment: environment
+            )
+        case .requestGatewayProvisioningStatus:
+            return requestGatewayProvisioningStatus(
                 state: state,
                 environment: environment
             )
-        case .beginProvisionGateway(let gatewayId):
-            return beginProvisionGateway(
-                state: state,
-                environment: environment,
-                gatewayId: gatewayId
-            )
-        case .completeProvisionGateway(let url):
-            return completeProvisionGateway(
+        case .succeedProvisionGateway(let url):
+            return succeedProvisionGateway(
                 state: state,
                 environment: environment,
                 url: url
@@ -839,6 +932,7 @@ struct AppModel: ModelProtocol {
         
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayURLTextField = AppDefaults.standard.gatewayURL
+        model.gatewayId = AppDefaults.standard.gatewayId
         
         // Update model from app defaults
         return update(
@@ -853,8 +947,8 @@ struct AppModel: ModelProtocol {
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
                 ),
-                .setNickname(
-                    AppDefaults.standard.nickname ?? state.nickname
+                .inviteCodeFormField(
+                    .setValue(input: AppDefaults.standard.inviteCode ?? "")
                 )
             ],
             environment: environment
@@ -896,7 +990,8 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .migrateDatabase,
-                .refreshSphereVersion
+                .refreshSphereVersion,
+                .fetchNicknameFromProfile
             ],
             environment: environment
         )
@@ -935,16 +1030,57 @@ struct AppModel: ModelProtocol {
         text: String
     ) -> Update<AppModel> {
         // Persist any valid value
-        if let validated = state.nicknameFormField.validated {
-            AppDefaults.standard.nickname = validated.description
-            logger.log("Nickname saved: \(validated)")
-            
+        if let validated = Petname.Name(text) {
             var model = state
             model.nickname = validated.description
-            return Update(state: model)
+            logger.log("Nickname saved: \(validated)")
+            
+            return update(
+                state: model,
+                action: .updateOurProfileWithNickname(validated),
+                environment: environment
+            )
         }
+        
         // Otherwise, just return state
         return Update(state: state)
+    }
+    
+    static func updateOurProfileWithNickname(
+        state: AppModel,
+        environment: AppEnvironment,
+        nickname: Petname.Name
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = Future.detached {
+            try await environment.userProfile.updateOurNickname(nickname: nickname)
+            return AppAction.succeedCreateUpdateNickname
+        }
+        .recover { error in
+            return AppAction.failUpdateNickname(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func fetchNicknameFromProfileMemo(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = Future.detached {
+            let response = try await environment.userProfile.requestOurProfile()
+            if let nickname = response.profile.nickname {
+                return AppAction.succeedFetchNicknameFromProfile(nickname)
+            }
+            
+            return AppAction.failFetchNicknameFromProfile("No nickname saved in profile")
+        }
+        .recover { error in
+            AppAction.failFetchNicknameFromProfile(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func setInviteCode(
@@ -952,6 +1088,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
+        
         return update(
             state: state,
             actions: [
@@ -1046,14 +1183,19 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: SphereReceipt
     ) -> Update<AppModel> {
+        var actions: [AppAction] = [
+            .setSphereIdentity(receipt.identity),
+            .setRecoveryPhrase(receipt.mnemonic),
+            .followDefaultGeist,
+        ]
+        
+        if let inviteCode = state.inviteCodeFormField.validated {
+            actions.append(.requestProvisionGateway(inviteCode))
+        }
+        
         return update(
             state: state,
-            actions: [
-                .setSphereIdentity(receipt.identity),
-                .setRecoveryPhrase(receipt.mnemonic),
-                .followDefaultGeist,
-                .requestProvisionGateway
-            ],
+            actions: actions,
             environment: environment
         )
     }
@@ -1157,6 +1299,11 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.firstRunComplete = isComplete
         var model = state
         model.isFirstRunComplete = isComplete
+        
+        // Reset navigation
+        if !isComplete {
+            model.firstRunPath = []
+        }
         
         return Update(state: model).animation(.default)
     }
@@ -1698,11 +1845,11 @@ struct AppModel: ModelProtocol {
     
     static func requestProvisionGateway(
         state: AppModel,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        inviteCode: InviteCode
     ) -> Update<AppModel> {
         guard let did = state.sphereIdentity,
-              let did = Did(did),
-              let inviteCode = state.inviteCodeFormField.validated else {
+              let did = Did(did) else {
             return Update(state: state)
         }
         
@@ -1712,7 +1859,7 @@ struct AppModel: ModelProtocol {
                 sphere: did
             )
             .map { res in
-                .beginProvisionGateway(res.gateway_id)
+                .receiveGatewayId(res.gateway_id)
             }
             .recover { error in
                 .failProvisionGateway(error.localizedDescription)
@@ -1721,15 +1868,19 @@ struct AppModel: ModelProtocol {
         
         var model = state
         model.gatewayProvisioningStatus = .pending
+        AppDefaults.standard.inviteCode = inviteCode.description
         
         return Update(state: model, fx: fx)
     }
     
-    static func beginProvisionGateway(
+    static func requestGatewayProvisioningStatus(
         state: AppModel,
-        environment: AppEnvironment,
-        gatewayId: String
+        environment: AppEnvironment
     ) -> Update<AppModel> {
+        guard let gatewayId = state.gatewayId else {
+            return Update(state: state)
+        }
+        
         var model = state
         model.gatewayProvisioningStatus = .pending
         
@@ -1742,7 +1893,7 @@ struct AppModel: ModelProtocol {
                     return AppAction.failProvisionGateway("Timed out waiting for URL")
                 }
                 
-                return AppAction.completeProvisionGateway(url)
+                return AppAction.succeedProvisionGateway(url)
             }
             .recover { err in
                 AppAction.failProvisionGateway(err.localizedDescription)
@@ -1752,7 +1903,7 @@ struct AppModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
-    static func completeProvisionGateway(
+    static func succeedProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
         url: URL
@@ -1778,6 +1929,7 @@ struct AppModel: ModelProtocol {
         logger.error("Failed to provision gateway: \(error)")
         var model = state
         model.gatewayProvisioningStatus = .failed(error)
+        
         return Update(state: model)
     }
     
@@ -1824,7 +1976,7 @@ struct AppEnvironment {
     var data: DataService
     var feed: FeedService
     
-    var recoveryPhrase = RecoveryPhraseEnvironment()
+    var recoveryPhrase: RecoveryPhraseEnvironment = RecoveryPhraseEnvironment()
     
     var addressBook: AddressBookService
     var userProfile: UserProfileService

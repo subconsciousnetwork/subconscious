@@ -10,13 +10,18 @@ import Combine
 
 /// A text field that comes with help text and a validation flag
 struct ValidatedTextField: View {
+    var alignment: HorizontalAlignment = .leading
     var placeholder: String
     @Binding var text: String
     var onFocusChanged: (Bool) -> Void = { _ in}
     var caption: String
     var hasError: Bool = false
     var axis: Axis = .horizontal
+    var autoFocus: Bool = false
     @FocusState var focused: Bool
+    
+    var submitLabel: SubmitLabel = .return
+    var onSubmit: () -> Void = { }
     
     var backgroundColor = Color.background
     
@@ -28,7 +33,7 @@ struct ValidatedTextField: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+        VStack(alignment: alignment, spacing: AppTheme.unit2) {
             HStack {
                 TextField(
                     placeholder,
@@ -50,6 +55,15 @@ struct ValidatedTextField: View {
                 }
                 .onChange(of: focused) { focused in
                     onFocusChanged(focused)
+                }
+                .submitLabel(submitLabel)
+                .onSubmit {
+                    onSubmit()
+                }
+                .task {
+                    if autoFocus {
+                        self.focused = true
+                    }
                 }
             }
             Text(caption)
@@ -97,7 +111,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 ValidatedTextField(
                     placeholder: "nickname",
                     text: .constant(""),
-                    caption: "Lowercase letters and numbers only."
+                    caption: "Lowercase letters and numbers only.",
+                    autoFocus: true
                 )
                 .formField()
                 ValidatedTextField(

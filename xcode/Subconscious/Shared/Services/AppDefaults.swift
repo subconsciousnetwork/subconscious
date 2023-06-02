@@ -14,10 +14,6 @@ struct AppDefaults {
     /// Are Noosphere features enabled for end-users?
     @UserDefaultsProperty(forKey: "isNoosphereEnabled")
     var isNoosphereEnabled = false
-
-    /// The user/sphere nickname.
-    @UserDefaultsProperty(forKey: "nickname")
-    var nickname: String? = nil
     
     @UserDefaultsProperty(forKey: "sphereIdentity")
     var sphereIdentity: String? = nil
@@ -27,4 +23,10 @@ struct AppDefaults {
     
     @UserDefaultsProperty(forKey: "gatewayURL")
     var gatewayURL = "http://127.0.0.1:4433"
+    
+    @UserDefaultsProperty(forKey: "gatewayId")
+    var gatewayId: String? = nil
+    
+    @UserDefaultsProperty(forKey: "inviteCode")
+    var inviteCode: String? = nil
 }

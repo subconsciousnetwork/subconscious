@@ -8,18 +8,9 @@
 import Foundation
 import SwiftUI
 
-struct StackedGlowingImage: View {
+struct StackedGlowingImage<Content: View>: View {
     @Environment(\.colorScheme) var colorScheme
-    
-    var image: Image
-    var width: CGFloat
-    var height: CGFloat
-    
-    private var resizedImage: some View {
-        image
-            .resizable()
-            .frame(width: width, height: height)
-    }
+    @ViewBuilder var content: () -> Content
     
     private var blendMode: BlendMode {
         colorScheme == .dark
@@ -27,18 +18,22 @@ struct StackedGlowingImage: View {
             : BlendMode.darken
     }
     
+    private var img: some View {
+        content()
+    }
+    
     var body: some View {
         ZStack {
-            resizedImage
+            img
                 .blur(radius: 48)
                 .blendMode(blendMode)
             
-            resizedImage
+            img
                 .blur(radius: 4)
                 .opacity(0.5)
                 .blendMode(blendMode)
             
-            resizedImage
+            img
         }
     }
 }
