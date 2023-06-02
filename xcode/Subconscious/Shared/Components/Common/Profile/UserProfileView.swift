@@ -11,15 +11,39 @@ import Combine
 
 struct ProfileStatisticView: View {
     var label: String
-    var count: Int
+    var count: Int?
     
     var body: some View {
         HStack(spacing: AppTheme.unit) {
-            Text("\(count)").bold()
+            Text("\(count.map { c in String(c) } ?? "-")").bold()
             Text(label).foregroundColor(.secondary)
         }
     }
 }
+
+struct LoadingTabView: View {
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
+    var onRefresh: () async -> Void
+    
+    var body: some View {
+        ScrollView {
+            VStack() {
+                Spacer()
+                ProgressView()
+                Spacer()
+            }
+            .padding(AppTheme.padding)
+            .transition(.opacity)
+            .frame(maxWidth: .infinity, minHeight: 256)
+            
+        }
+        .refreshable {
+            await onRefresh()
+        }
+    }
+}
+
 
 struct RecentTabView: View {
     var state: UserProfileDetailModel
@@ -110,6 +134,17 @@ struct UserProfileView: View {
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void
     
+    func columnLoading(label: String) -> TabbedColumnItem<LoadingTabView> {
+        TabbedColumnItem(
+            label: label,
+            view: LoadingTabView(
+                state: state,
+                send: send,
+                onRefresh: onRefresh
+            )
+        )
+    }
+    
     var columnRecent: TabbedColumnItem<RecentTabView> {
         TabbedColumnItem(
             label: "Recent",
@@ -147,29 +182,38 @@ struct UserProfileView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if let user = state.user {
+                UserProfileHeaderView(
+                    user: user,
+                    statistics: state.statistics,
+                    isFollowingUser: state.isFollowingUser,
+                    action: { action in
+                        onProfileAction(user, action)
+                    },
+                    hideActionButton: state.loadingState != .loaded,
+                    onTapStatistics: {
+                        send(
+                            .tabIndexSelected(
+                                UserProfileDetailModel.followingTabIndex
+                            )
+                        )
+                    }
+                )
+                .padding(AppTheme.padding)
+            }
+            
             switch state.loadingState {
             case .loading:
-                ProgressView()
+                TabbedThreeColumnView(
+                    columnA: columnLoading(label: "Recent"),
+                    columnB: columnLoading(label: "Top"),
+                    columnC: columnLoading(label: "Following"),
+                    selectedColumnIndex: state.currentTabIndex,
+                    changeColumn: { index in
+                        send(.tabIndexSelected(index))
+                    }
+                )
             case .loaded:
-                if let user = state.user {
-                    UserProfileHeaderView(
-                        user: user,
-                        statistics: state.statistics,
-                        isFollowingUser: state.isFollowingUser,
-                        action: { action in
-                            onProfileAction(user, action)
-                        },
-                        onTapStatistics: {
-                            send(
-                                .tabIndexSelected(
-                                    UserProfileDetailModel.followingTabIndex
-                                )
-                            )
-                        }
-                    )
-                    .padding(AppTheme.padding)
-                }
-                
                 TabbedThreeColumnView(
                     columnA: columnRecent,
                     columnB: columnTop,

@@ -18,7 +18,7 @@ struct EmptyStateView: View {
             Spacer()
         }
         .padding(AppTheme.padding)
-        .font(.caption)
+        .font(.body)
         .foregroundColor(Color.secondary)
         .background(Color.clear)
         .transition(.opacity)

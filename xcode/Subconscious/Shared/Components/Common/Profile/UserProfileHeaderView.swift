@@ -59,29 +59,30 @@ struct UserProfileHeaderView: View {
                     )
                     .buttonStyle(GhostPillButtonStyle(size: .small))
                     .frame(maxWidth: 160)
+                    .transition(.opacity)
                 }
             }
             
-            if let statistics = statistics {
-                Button(
-                    action: {
-                        onTapStatistics()
-                    },
-                    label: {
-                        HStack(spacing: AppTheme.unit2) {
-                            ProfileStatisticView(label: "Notes", count: statistics.noteCount)
-                            // TODO: put this back when we have backlink count
-                            // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
-                            ProfileStatisticView(label: "Following", count: statistics.followingCount)
-                        }
-                        .font(.caption)
-                        .foregroundColor(.primary)
+            Button(
+                action: {
+                    onTapStatistics()
+                },
+                label: {
+                    HStack(spacing: AppTheme.unit2) {
+                        ProfileStatisticView(label: "Notes", count: statistics?.noteCount)
+                        // TODO: put this back when we have backlink count
+                        // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
+                        ProfileStatisticView(label: "Following", count: statistics?.followingCount)
                     }
-                )
-            }
+                    .font(.caption)
+                    .foregroundColor(.primary)
+                }
+            )
+            .transition(.opacity)
             
             if user.bio.hasVisibleContent {
                 Text(verbatim: user.bio.text)
+                    .transition(.opacity)
             }
         }
     }
