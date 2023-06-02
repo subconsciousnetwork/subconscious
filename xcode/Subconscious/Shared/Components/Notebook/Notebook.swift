@@ -597,6 +597,7 @@ struct NotebookModel: ModelProtocol {
             return Update(state: state)
         case let .notifySucceedUnfollow(identity, petname):
             logger.log("Notify unfollowed \(petname) with identity \(identity)")
+            return Update(state: state)
         }
     }
     
