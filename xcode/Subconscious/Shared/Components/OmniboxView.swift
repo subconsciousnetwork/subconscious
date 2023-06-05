@@ -57,9 +57,18 @@ struct OmniboxView: View {
                 switch (status) {
                 case .loading:
                     RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                        .stroke(style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [8, 4], dashPhase: phase))
+                        .stroke(
+                            style: StrokeStyle(
+                                lineWidth: 1.5,
+                                lineCap: .round,
+                                dash: [8, 4],
+                                dashPhase: phase
+                            )
+                        )
                         .onAppear {
-                            withAnimation(.linear.repeatForever(autoreverses: false)) {
+                            withAnimation(
+                                .linear.repeatForever(autoreverses: false)
+                            ) {
                                 phase -= 20
                             }
                         }
@@ -126,14 +135,19 @@ struct OmniboxView_Previews: PreviewProvider {
         
         @State private var address: Slashlink? = nil
         var defaultAudience = Audience.local
+        let status = [LoadingState.loaded, LoadingState.loading].randomElement()!
 
         var body: some View {
-            OmniboxView(address: address, defaultAudience: defaultAudience, status: [.loaded, .loading].randomElement()!)
-                .onTapGesture {
-                    withAnimation {
-                        self.address = addresses.randomElement()
-                    }
+            OmniboxView(
+                address: address,
+                defaultAudience: defaultAudience,
+                status: status
+            )
+            .onTapGesture {
+                withAnimation {
+                    self.address = addresses.randomElement()
                 }
+            }
         }
     }
 
