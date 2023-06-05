@@ -59,7 +59,6 @@ struct UserProfileHeaderView: View {
                     )
                     .buttonStyle(GhostPillButtonStyle(size: .small))
                     .frame(maxWidth: 160)
-                    .transition(.opacity)
                 }
             }
             
@@ -78,11 +77,9 @@ struct UserProfileHeaderView: View {
                     .foregroundColor(.primary)
                 }
             )
-            .transition(.opacity)
             
             if user.bio.hasVisibleContent {
                 Text(verbatim: user.bio.text)
-                    .transition(.opacity)
             }
         }
     }

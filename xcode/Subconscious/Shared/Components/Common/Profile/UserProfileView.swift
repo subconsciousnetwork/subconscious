@@ -13,9 +13,13 @@ struct ProfileStatisticView: View {
     var label: String
     var count: Int?
     
+    var countLabel: String {
+        count.map { c in String(c) } ?? "-"
+    }
+    
     var body: some View {
         HStack(spacing: AppTheme.unit) {
-            Text("\(count.map { c in String(c) } ?? "-")").bold()
+            Text(countLabel).bold()
             Text(label).foregroundColor(.secondary)
         }
     }
