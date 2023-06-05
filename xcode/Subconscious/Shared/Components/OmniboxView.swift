@@ -9,9 +9,11 @@ import SwiftUI
 
 struct OmniboxView: View {
     @Environment(\.colorScheme) var colorScheme
+    @State private var phase = 0.0
     
     var address: Slashlink?
     var defaultAudience: Audience
+    var status: LoadingState = .loaded
 
     private func icon() -> Image {
         guard let address = address else {
@@ -44,15 +46,30 @@ struct OmniboxView: View {
             }
             Spacer(minLength: AppTheme.unit)
         }
-        .transition(.opacity)
+        .transition(.opacity.combined(with: .scale))
         .foregroundColor(.accentColor)
         .font(.callout)
         .padding(.leading, 8)
         .padding(.trailing, 12)
         .frame(height: 34)
         .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                .stroke(Color.separator, lineWidth: 0.5)
+            VStack {
+                switch (status) {
+                case .loading:
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                        .stroke(style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [8, 4], dashPhase: phase))
+                        .onAppear {
+                            withAnimation(.linear.repeatForever(autoreverses: false)) {
+                                phase -= 20
+                            }
+                        }
+                        .foregroundColor(.accentColor)
+                        .opacity(0.5)
+                case _:
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                        .stroke(Color.separator, lineWidth: 0.5)
+                }
+            }
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
     }
@@ -111,7 +128,7 @@ struct OmniboxView_Previews: PreviewProvider {
         var defaultAudience = Audience.local
 
         var body: some View {
-            OmniboxView(address: address, defaultAudience: defaultAudience)
+            OmniboxView(address: address, defaultAudience: defaultAudience, status: [.loaded, .loading].randomElement()!)
                 .onTapGesture {
                     withAnimation {
                         self.address = addresses.randomElement()

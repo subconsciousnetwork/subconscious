@@ -350,7 +350,7 @@ struct UserProfileDetailModel: ModelProtocol {
                     .fetchFollowingStatus(content.profile.did)
                 ],
                 environment: environment
-            )
+            ).animation(.easeOut)
             
         case .failedToPopulate(let error):
             var model = state

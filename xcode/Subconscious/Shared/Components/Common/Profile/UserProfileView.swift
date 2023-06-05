@@ -211,7 +211,8 @@ struct UserProfileView: View {
                     selectedColumnIndex: state.currentTabIndex,
                     changeColumn: { index in
                         send(.tabIndexSelected(index))
-                    }
+                    },
+                    showBar: false
                 )
             case .loaded:
                 TabbedThreeColumnView(
@@ -236,7 +237,8 @@ struct UserProfileView: View {
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
-                    }
+                    },
+                    status: state.loadingState
                 )
                 if user.category == .you {
                     ToolbarItem(placement: .confirmationAction) {
