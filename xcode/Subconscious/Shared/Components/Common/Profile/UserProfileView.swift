@@ -211,8 +211,7 @@ struct UserProfileView: View {
                     selectedColumnIndex: state.currentTabIndex,
                     changeColumn: { index in
                         send(.tabIndexSelected(index))
-                    },
-                    showBar: false
+                    }
                 )
             case .loaded:
                 TabbedThreeColumnView(

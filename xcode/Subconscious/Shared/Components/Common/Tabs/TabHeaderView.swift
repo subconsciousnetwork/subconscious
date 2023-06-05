@@ -18,7 +18,6 @@ struct TabHeaderView: View {
     var focusedTabIndex: Int = 0
     /// Slightly narrow the "selected" bar that appears under the current tab
     var inset = 16.0
-    var showBar = true
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -40,20 +39,18 @@ struct TabHeaderView: View {
                     .frame(height: 1),
                 alignment: .bottom
             )
-            
-            // Position the "selected" bar on top of the buttons
+            Spacer()
             GeometryReader { geometry in
                 let increment = geometry.size.width * (1.0 / CGFloat(items.count))
-                if showBar {
-                    Rectangle()
-                        .fill(Color.accentColor)
-                        .frame(width: increment - inset, height: geometry.size.height)
-                        .cornerRadius(2, corners: [.topLeft, .topRight])
-                        .offset(x: inset / 2 + increment * CGFloat(focusedTabIndex), y: 0)
-                        .animation(.easeInOut(duration: Duration.fast), value: focusedTabIndex)
-                }
+                Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: increment - inset, height: 3)
+                    .cornerRadius(2, corners: [.topLeft, .topRight])
+                    .offset(x: inset / 2 + increment * CGFloat(focusedTabIndex), y: 0)
+                    .opacity(0.5)
+                    .animation(.easeInOut(duration: Duration.fast), value: focusedTabIndex)
             }
-            .frame(height: 3) // Vertical height of the bar
+            .frame(height: 3)
         }
         .frame(maxWidth: .infinity)
     }

@@ -19,7 +19,6 @@ struct TabbedThreeColumnView<A: View, B: View, C: View>: View {
     
     var selectedColumnIndex: Int = 0
     var changeColumn: (Int) -> Void
-    var showBar: Bool = true
     
     var body: some View {
         TabHeaderView(
@@ -38,8 +37,7 @@ struct TabbedThreeColumnView<A: View, B: View, C: View>: View {
                 )
             ],
             tabChanged: { index, tab in changeColumn(index) },
-            focusedTabIndex: selectedColumnIndex,
-            showBar: showBar
+            focusedTabIndex: selectedColumnIndex
         )
         
         ThreeColumnView(
