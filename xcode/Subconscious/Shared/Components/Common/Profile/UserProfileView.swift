@@ -32,15 +32,9 @@ struct LoadingTabView: View {
     
     var body: some View {
         ScrollView {
-            VStack() {
-                Spacer()
-                ProgressView()
-                Spacer()
-            }
-            .padding(AppTheme.padding)
-            .transition(.opacity)
-            .frame(maxWidth: .infinity, minHeight: 256)
-            
+            StoryPlaceholderView(bioWidthFactor: 1.2)
+            StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
+            StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
         }
         .refreshable {
             await onRefresh()
