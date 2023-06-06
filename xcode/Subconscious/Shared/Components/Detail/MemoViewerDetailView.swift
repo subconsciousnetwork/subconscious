@@ -20,6 +20,9 @@ struct MemoViewerDetailView: View {
 
     var description: MemoViewerDetailDescription
     var notify: (MemoViewerDetailNotification) -> Void
+    var navigationTitle: String {
+        store.state.address?.markup ?? store.state.title
+    }
 
     var body: some View {
         VStack {
@@ -44,7 +47,7 @@ struct MemoViewerDetailView: View {
                 )
             }
         }
-        .navigationTitle(store.state.title)
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible)
         .toolbarBackground(Color.background, for: .navigationBar)

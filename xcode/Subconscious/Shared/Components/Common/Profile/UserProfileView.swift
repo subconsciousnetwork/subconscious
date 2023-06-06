@@ -183,7 +183,7 @@ struct UserProfileView: View {
                 Text("Not found")
             }
         }
-        .navigationTitle(state.user?.displayName ?? "")
+        .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
