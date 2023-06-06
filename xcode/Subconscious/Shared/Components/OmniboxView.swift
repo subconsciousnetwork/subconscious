@@ -66,9 +66,22 @@ struct OmniboxView: View {
                 .stroke(Color.separator, lineWidth: 0.5)
         )
         .overlay(
+            // Loading pulse
             RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                .stroke(.conicGradient(gradient, center: .center, angle: Angle.radians(phase)), lineWidth: 2)
-                .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: phase)
+                .stroke(
+                    .conicGradient(
+                        gradient,
+                        center: .center,
+                        angle: Angle.radians(phase)),
+                    lineWidth: 2
+                )
+                .animation(
+                    .linear(duration: Duration.loading * 2)
+                        .repeatForever(autoreverses: false),
+                    value: phase
+                )
+                // Keep the view mounted but invisible
+                // This prevents a race condition where SwiftUI animates the position
                 .opacity(status == .loading ? 0.5 : 0)
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)

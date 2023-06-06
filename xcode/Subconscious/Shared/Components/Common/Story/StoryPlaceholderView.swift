@@ -7,12 +7,14 @@
 
 import SwiftUI
 
-/// Show an excerpt of an entry in a feed
+/// Show a placeholder story designed for a loading state
 struct StoryPlaceholderView: View {
     @State var opacity = 1.0
     var delay = 0.0
     var nameWidthFactor = 1.0
     var bioWidthFactor = 1.0
+    
+    private static let color = Color.separator.opacity(0.5)
     
     var body: some View {
         Button(
@@ -21,12 +23,10 @@ struct StoryPlaceholderView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .center, spacing: AppTheme.unit) {
                         Circle()
-                            .foregroundColor(.separator)
-                            .opacity(0.5)
+                            .foregroundColor(Self.color)
                             .frame(maxHeight: 24)
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                            .foregroundColor(.separator)
-                            .opacity(0.5)
+                            .foregroundColor(Self.color)
                             .frame(maxWidth: 128 * nameWidthFactor, maxHeight: 14)
                         
                         Spacer()
@@ -39,12 +39,10 @@ struct StoryPlaceholderView: View {
                     
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                            .foregroundColor(.separator)
-                            .opacity(0.5)
+                            .foregroundColor(Self.color)
                             .frame(maxHeight: 14)
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                            .foregroundColor(.separator)
-                            .opacity(0.5)
+                            .foregroundColor(Self.color)
                             .frame(maxWidth: 200 * bioWidthFactor, maxHeight: 14)
                     }
                     .padding(AppTheme.tightPadding)
@@ -55,7 +53,12 @@ struct StoryPlaceholderView: View {
         )
         .buttonStyle(.plain)
         .opacity(opacity)
-        .animation(.easeInOut(duration: 1.5 / 2).repeatForever(autoreverses: true).delay(delay), value: opacity)
+        .animation(
+            .easeInOut(duration: Duration.loading)
+                .repeatForever(autoreverses: true)
+                .delay(delay),
+            value: opacity
+        )
         .onAppear {
             opacity = 0.33
         }

@@ -27,6 +27,8 @@ extension Duration {
     //  2023-03-07 Gordon Brander
     /// Approximate sheet animation duration.
     static let sheet: Double = 0.25
+    
+    static let loading: Double = 0.75
 }
 
 extension Animation {
