@@ -62,22 +62,19 @@ struct OmniboxView: View {
         .padding(.trailing, 12)
         .frame(height: 34)
         .overlay(
-            ZStack {
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                    .stroke(Color.separator, lineWidth: 0.5)
-                
-                if status == .loading {
-                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                        .stroke(.conicGradient(gradient, center: .center, angle: Angle.radians(phase)), lineWidth: 2)
-                        .onAppear {
-                            phase += Double.pi * 2
-                        }
-                        .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: phase)
-                        .opacity(0.5)
-                }
-            }
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(Color.separator, lineWidth: 0.5)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(.conicGradient(gradient, center: .center, angle: Angle.radians(phase)), lineWidth: 2)
+                .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: phase)
+                .opacity(status == .loading ? 0.5 : 0)
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
+        .onAppear {
+            phase += Double.pi * 2
+        }
     }
 }
 
@@ -138,7 +135,7 @@ struct OmniboxView_Previews: PreviewProvider {
             OmniboxView(
                 address: address,
                 defaultAudience: defaultAudience,
-                status: status
+                status: .loading
             )
             .onTapGesture {
                 withAnimation {
