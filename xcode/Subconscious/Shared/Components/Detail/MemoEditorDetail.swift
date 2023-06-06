@@ -987,7 +987,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         info: MemoEditorDetailDescription
     ) -> Update<MemoEditorDetailModel> {
         // No address? This is a draft.
-        guard let address = info.address else {
+        guard let address = state.address ?? info.address else {
             return update(
                 state: state,
                 action: .setDraftDetail(
