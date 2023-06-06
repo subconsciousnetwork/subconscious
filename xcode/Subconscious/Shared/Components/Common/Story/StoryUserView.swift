@@ -49,12 +49,20 @@ struct StoryUserView: View {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
-                    PetnameView(
-                        address: story.user.address,
-                        name: story.user.nickname
-                    )
-                    .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
+                    
+                    switch (story.isFollowingUser, story.user.address.petname) {
+                    case (true, .some(let name)):
+                        PetnameView(name: .known(name))
+                    case (_, _):
+                        PetnameView(
+                            address: story.user.address,
+                            name: story.user.nickname
+                        )
+                        .fontWeight(.medium)
+                        .foregroundColor(.accentColor)
+                    }
+                    
+                    
                         
                     Spacer()
                     

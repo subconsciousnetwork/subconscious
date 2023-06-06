@@ -27,10 +27,18 @@ struct UserProfileHeaderView: View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp, size: .large)
-            
-                PetnameView(address: user.address, name: user.nickname)
+                
+                switch (isFollowingUser, user.address.petname) {
+                case (true, .some(let name)):
+                    PetnameView(name: .known(name))
+                case (_, _):
+                    PetnameView(
+                        address: user.address,
+                        name: user.nickname
+                    )
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
+                }
                 
                 Spacer()
                 

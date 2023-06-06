@@ -7,33 +7,60 @@
 
 import SwiftUI
 
+public enum Name {
+    case known(Petname)
+    case named(Slashlink, Petname.Name)
+    case unknown(Slashlink)
+}
+
 /// Byline style for displaying a petname
 struct PetnameView: View {
-    var address: Slashlink
-    var name: Petname?
+    var name: Name
     
     var body: some View {
-        if let name = name {
-            VStack(alignment: .leading) {
-                Text(name.description)
-                if let peer = address.peer?.markup {
-                    Text(peer)
-                        .foregroundColor(.secondary)
-                        .fontWeight(.regular)
-                        .font(.caption)
+        switch name {
+        case .known(let name):
+            Text(name.markup)
+                .fontWeight(.medium)
+                .foregroundColor(.accentColor)
+        case .named(let address, let name):
+                VStack(alignment: .leading, spacing: AppTheme.unit) {
+                    Text(name.description)
+                        .italic()
+                        .fontWeight(.medium)
+                    if let peer = address.peer?.markup {
+                        HStack(spacing: AppTheme.unit) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: AppTheme.cornerRadius/2)
+                                    .foregroundColor(.secondaryBackground)
+                                Text("AKA")
+                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 10))
+                            }
+                            .frame(width: 28, height: 15)
+                            
+                            Text(peer)
+                                .foregroundColor(.secondary)
+                                .fontWeight(.regular)
+                                .font(.caption)
+                        }
+                    }
                 }
-            }
-        } else {
-            Text(address.peer?.markup ?? address.markup)
-                .lineLimit(1)
+        case .unknown(let address):
+                Text(address.peer?.markup ?? address.markup)
+                    .lineLimit(1)
+                    .fontWeight(.medium)
         }
     }
 }
 
 extension PetnameView {
     init(address: Slashlink, name: Petname.Name?) {
-        self.address = address
-        self.name = name?.toPetname()
+        if let name = name {
+            self.name = Name.named(address, name)
+        } else {
+            self.name = Name.unknown(address)
+        }
     }
 }
 
@@ -41,20 +68,21 @@ struct PetnameView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             PetnameView(
-                address: Slashlink(petname: Petname("melville.bobby.tables")!),
-                name: Petname.Name("melville")!
+                name: .named(
+                    Slashlink(petname: Petname("melville.bobby.tables")!),
+                    Petname.Name("melville")!
+                )
             )
             PetnameView(
-                address: Slashlink(petname: Petname("bobby.tables")!)
+                name: .unknown(
+                    Slashlink(petname: Petname("melville.bobby.tables")!)
+                )
             )
             PetnameView(
-                address: Slashlink(petname: Petname("tables.bobby")!),
-                name: Petname("tables")!
+                name: .known(
+                    Petname("robert")!
+                )
             )
-            PetnameView(
-                address: Slashlink(petname: Petname("tables")!)
-            )
-            .frame(maxWidth: 128)
         }
     }
 }
