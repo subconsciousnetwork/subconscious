@@ -55,7 +55,7 @@ struct OmniboxView: View {
             }
             Spacer(minLength: AppTheme.unit)
         }
-        .transition(.opacity.combined(with: .scale))
+        .transition(.opacity)
         .foregroundColor(.accentColor)
         .font(.callout)
         .padding(.leading, 8)
