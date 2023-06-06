@@ -12,13 +12,15 @@ struct DetailToolbarContent: ToolbarContent {
     var address: Slashlink?
     var defaultAudience: Audience
     var onTapOmnibox: () -> Void
+    var status: LoadingState = .loaded
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Button(action: onTapOmnibox) {
                 OmniboxView(
                     address: address,
-                    defaultAudience: defaultAudience
+                    defaultAudience: defaultAudience,
+                    status: status
                 )
             }
         }

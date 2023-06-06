@@ -317,7 +317,26 @@ actor UserProfileService {
         }
     }
     
-    func loadProfileData(
+    func loadOurProfileFromMemo() async throws -> UserProfile {
+        let did = try await noosphere.identity()
+        let cid = try await noosphere.version()
+        
+        return try await self.loadProfileFromMemo(
+            did: did,
+            address: Slashlink.ourProfile,
+            resolutionStatus: .resolved(cid)
+        )
+    }
+    
+    nonisolated func loadOurProfileFromMemoPublisher(
+    ) -> AnyPublisher<UserProfile, Error> {
+        Future.detached {
+            try await self.loadOurProfileFromMemo()
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    func loadFullProfileData(
         address: Slashlink
     ) async throws -> UserProfileContentResponse {
         let sphere = try await self.noosphere.sphere(address: address)
@@ -358,7 +377,7 @@ actor UserProfileService {
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
     func requestOurProfile() async throws -> UserProfileContentResponse {
         let address = Slashlink.ourProfile
-        return try await loadProfileData(address: address)
+        return try await loadFullProfileData(address: address)
     }
     
     nonisolated func requestOurProfilePublisher(
@@ -374,7 +393,7 @@ actor UserProfileService {
         petname: Petname
     ) async throws -> UserProfileContentResponse {
         let address = Slashlink(petname: petname)
-        return try await loadProfileData(address: address)
+        return try await loadFullProfileData(address: address)
     }
     
     nonisolated func requestUserProfilePublisher(

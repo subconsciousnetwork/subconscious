@@ -26,9 +26,7 @@ struct TabHeaderView: View {
                     let item = items[index]
                     TabButtonView(
                         action: {
-                            withAnimation {
-                                tabChanged(index, item)
-                            }
+                            tabChanged(index, item)
                         },
                         label: item.label,
                         selected: index == focusedTabIndex
@@ -41,18 +39,18 @@ struct TabHeaderView: View {
                     .frame(height: 1),
                 alignment: .bottom
             )
-            
-            // Position the "selected" bar on top of the buttons
+            Spacer()
             GeometryReader { geometry in
                 let increment = geometry.size.width * (1.0 / CGFloat(items.count))
                 Rectangle()
                     .fill(Color.accentColor)
-                    .frame(width: increment - inset, height: geometry.size.height)
+                    .frame(width: increment - inset, height: 3)
                     .cornerRadius(2, corners: [.topLeft, .topRight])
                     .offset(x: inset / 2 + increment * CGFloat(focusedTabIndex), y: 0)
+                    .opacity(0.5)
                     .animation(.easeInOut(duration: Duration.fast), value: focusedTabIndex)
             }
-            .frame(height: 3) // Vertical height of the bar
+            .frame(height: 3)
         }
         .frame(maxWidth: .infinity)
     }

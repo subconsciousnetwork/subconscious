@@ -57,7 +57,8 @@ struct MemoViewerDetailView: View {
                 defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
-                }
+                },
+                status: store.state.loadingState
             )
         })
         .onAppear {
@@ -347,7 +348,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             action: .setDom(dom),
             environment: environment
-        )
+        ).animation(.easeOut)
     }
     
     static func setDom(

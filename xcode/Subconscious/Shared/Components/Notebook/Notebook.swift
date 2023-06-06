@@ -164,6 +164,8 @@ enum NotebookAction {
     
     /// Push detail onto navigation stack
     case pushDetail(MemoDetailDescription)
+    case requestOurProfileDetail
+    case pushOurProfileDetail(UserProfile)
     case failPushDetail(_ message: String)
     
     case pushRandomDetail(autofocus: Bool)
@@ -281,7 +283,12 @@ extension NotebookAction {
                 return .failPushDetail("Attempted to navigate to unresolved user")
             }
             
-            return .pushDetail(.profile(UserProfileDetailDescription(address: user.address)))
+            return .pushDetail(.profile(
+                UserProfileDetailDescription(
+                    address: user.address,
+                    user: user
+                )
+            ))
         }
     }
 }
@@ -556,6 +563,28 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 autofocus: autofocus
             )
+        case .requestOurProfileDetail:
+            let fx: Fx<NotebookAction> = environment.userProfile
+                .loadOurProfileFromMemoPublisher()
+                .map { user in
+                    NotebookAction.pushOurProfileDetail(user)
+                }
+                .recover { error in
+                    NotebookAction.failPushDetail(error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .pushOurProfileDetail(let user):
+            let detail = UserProfileDetailDescription(
+                address: Slashlink.ourProfile,
+                user: user,
+                // Focus following list by default
+                // We can already see our recent notes in our notebook so no
+                // point showing it again
+                initialTabIndex: UserProfileDetailModel.followingTabIndex
+            )
+            return update(state: state, action: .pushDetail(.profile(detail)), environment: environment)
         case .failPushRandomDetail(let error):
             logger.log("Failed to get random note: \(error)")
             return Update(state: state)
