@@ -9,7 +9,7 @@ import SwiftUI
 
 struct OmniboxView: View {
     @Environment(\.colorScheme) var colorScheme
-    @State private var phase = 0.0
+    @State private var phase = Double.pi / 8
     
     var address: Slashlink?
     var defaultAudience: Audience
@@ -31,11 +31,20 @@ struct OmniboxView: View {
         return Image(audience: .public)
     }
     
+    var gradient = Gradient(stops: [
+        Gradient.Stop(color: .brandMarkPurple.opacity(0), location: 0),
+        Gradient.Stop(color: .brandMarkPurple.opacity(0), location: 0.75),
+        Gradient.Stop(color: .brandMarkPurple.opacity(1), location: 1),
+    ])
+    
     var body: some View {
         HStack(spacing: 8) {
-            icon()
-                .resizable()
-                .frame(width: 17, height: 17)
+            if status != .loading {
+                icon()
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 17, height: 17)
+            }
             
             Spacer(minLength: AppTheme.unit)
             if let slashlink = address {
@@ -53,30 +62,18 @@ struct OmniboxView: View {
         .padding(.trailing, 12)
         .frame(height: 34)
         .overlay(
-            VStack {
-                switch (status) {
-                case .loading:
+            ZStack {
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                    .stroke(Color.separator, lineWidth: 0.5)
+                
+                if status == .loading {
                     RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                        .stroke(
-                            style: StrokeStyle(
-                                lineWidth: 1.5,
-                                lineCap: .round,
-                                dash: [8, 4],
-                                dashPhase: phase
-                            )
-                        )
+                        .stroke(.conicGradient(gradient, center: .center, angle: Angle.radians(phase)), lineWidth: 2)
                         .onAppear {
-                            withAnimation(
-                                .linear.repeatForever(autoreverses: false)
-                            ) {
-                                phase -= 20
-                            }
+                            phase += Double.pi * 2
                         }
-                        .foregroundColor(.accentColor)
+                        .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: phase)
                         .opacity(0.5)
-                case _:
-                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                        .stroke(Color.separator, lineWidth: 0.5)
                 }
             }
         )
