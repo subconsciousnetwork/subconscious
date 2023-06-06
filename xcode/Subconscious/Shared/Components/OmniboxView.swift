@@ -9,6 +9,8 @@ import SwiftUI
 
 struct OmniboxView: View {
     @Environment(\.colorScheme) var colorScheme
+    // Used to animate the border during loading
+    // Value is updated in .onAppear {}
     @State private var phase = Double.pi / 8
     
     var address: Slashlink?
