@@ -9,6 +9,22 @@ import os
 import Foundation
 import Combine
 
+enum UserProfileFollowStatus: Codable, Hashable, Equatable {
+    case notFollowing
+    case following(Petname.Name)
+}
+
+extension UserProfileFollowStatus {
+    var isFollowing: Bool {
+        switch self {
+        case .following(_):
+            return true
+        case _:
+            return false
+        }
+    }
+}
+
 enum UserProfileServiceError: Error {
     case missingPreferredPetname
     case unexpectedProfileContentType(String)
@@ -68,7 +84,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var statistics: UserProfileStatistics
     var recentEntries: [EntryStub]
     var following: [StoryUser]
-    var isFollowingUser: Bool
+    var followingStatus: UserProfileFollowStatus
 }
 
 struct UserProfileEntry: Codable, Equatable {
@@ -252,20 +268,22 @@ actor UserProfileService {
                 ? Slashlink.ourProfile
                 : slashlink
             
-            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
+            let followingStatus = await self.addressBook.followingStatus(did: entry.did)
             let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
-            let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
+            let resolutionStatus =
+                followingStatus.isFollowing &&
+                isPendingFollow ? .pending : entry.status
             
             let user = try await self.loadProfileFromMemo(
                 did: entry.did,
                 address: address,
-                resolutionStatus: status
+                resolutionStatus: resolutionStatus
             )
             
             following.append(
                 StoryUser(
                     user: user,
-                    isFollowingUser: weAreFollowingListedUser
+                    ourFollowStatus: followingStatus
                 )
             )
         }
@@ -346,7 +364,7 @@ actor UserProfileService {
             address: address
         )
         let notes = try await sphere.list()
-        let isFollowing = await self.addressBook.isFollowingUser(did: did)
+        let followingStatus = await self.addressBook.followingStatus(did: did)
         
         let entries = try await self.loadEntries(
             address: address,
@@ -370,7 +388,7 @@ actor UserProfileService {
             ),
             recentEntries: recentEntries,
             following: following,
-            isFollowingUser: isFollowing
+            followingStatus: followingStatus
         )
     }
     

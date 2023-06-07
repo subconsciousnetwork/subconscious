@@ -17,7 +17,7 @@ struct UserProfileHeaderView: View {
     var user: UserProfile
     var statistics: UserProfileStatistics?
     
-    var isFollowingUser: Bool
+    var ourFollowStatus: UserProfileFollowStatus
     var action: (UserProfileAction) -> Void = { _ in }
     var hideActionButton: Bool = false
     
@@ -28,16 +28,17 @@ struct UserProfileHeaderView: View {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp, size: .large)
                 
-                switch (isFollowingUser, user.address.petname) {
-                case (true, .some(let name)):
-                    PetnameView(name: .known(name))
-                case (_, _):
+                switch (ourFollowStatus) {
+                case .following(let name):
+                    PetnameView(name: .known(name, user.address))
+                    
+                case _:
                     PetnameView(
                         address: user.address,
                         name: user.nickname
                     )
+                    .prefix(msg: "Maybe: ")
                     .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
                 }
                 
                 Spacer()
@@ -45,22 +46,22 @@ struct UserProfileHeaderView: View {
                 if !hideActionButton {
                     Button(
                         action: {
-                            switch (user.category, isFollowingUser) {
+                            switch (user.category, ourFollowStatus) {
                             case (.you, _):
                                 action(.editOwnProfile)
-                            case (_, true):
+                            case (_, .following(_)):
                                 action(.requestUnfollow)
-                            case (_, false):
+                            case (_, .notFollowing):
                                 action(.requestFollow)
                             }
                         },
                         label: {
-                            switch (user.category, isFollowingUser) {
+                            switch (user.category, ourFollowStatus) {
                             case (.you, _):
                                 Label("Edit Profile", systemImage: AppIcon.edit.systemName)
-                            case (_, true):
+                            case (_, .following(_)):
                                 Label("Following", systemImage: AppIcon.following.systemName)
-                            case (_, false):
+                            case (_, .notFollowing):
                                 Text("Follow")
                             }
                         }
@@ -106,7 +107,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     category: .human,
                     resolutionStatus: .resolved("abc")
                 ),
-                isFollowingUser: false
+                ourFollowStatus: .notFollowing
             )
             UserProfileHeaderView(
                 user: UserProfile(
@@ -119,7 +120,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     resolutionStatus: .resolved(Cid("ok"))
                 ),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
-                isFollowingUser: true
+                ourFollowStatus: .following(Petname.Name("ben")!)
             )
             UserProfileHeaderView(
                 user: UserProfile(
@@ -131,7 +132,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     category: .you,
                     resolutionStatus: .resolved(Cid("ok"))
                 ),
-                isFollowingUser: false
+                ourFollowStatus: .notFollowing
             )
         }
     }

@@ -263,7 +263,7 @@ struct EditProfileSheet: View {
                         UserProfileHeaderView(
                             user: preview,
                             statistics: statistics,
-                            isFollowingUser: false,
+                            ourFollowStatus: .notFollowing,
                             hideActionButton: true
                         )
                     }

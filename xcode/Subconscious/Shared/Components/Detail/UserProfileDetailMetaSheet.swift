@@ -28,7 +28,7 @@ struct UserProfileDetailMetaSheet: View {
     @Environment(\.dismiss) private var dismiss
     var state: UserProfileDetailMetaSheetModel
     var profile: UserProfileDetailModel
-    var isFollowingUser: Bool
+    var ourFollowStatus: UserProfileFollowStatus
     var send: (UserProfileDetailMetaSheetAction) -> Void
     
     var body: some View {

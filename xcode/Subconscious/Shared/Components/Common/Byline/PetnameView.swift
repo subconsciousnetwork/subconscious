@@ -8,42 +8,64 @@
 import SwiftUI
 
 public enum Name {
-    case known(Petname)
+    case known(Petname.Name, Slashlink?)
     case named(Slashlink, Petname.Name)
     case unknown(Slashlink)
+}
+
+struct AddressView: View {
+    var peer: Peer
+
+    var body: some View {
+        HStack(spacing: AppTheme.unit) {
+            ZStack {
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius/2)
+                    .foregroundColor(.secondaryBackground)
+                Text("AKA")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 10))
+            }
+            .frame(width: 28, height: 15)
+
+            Text(peer.markup)
+                .foregroundColor(.secondary)
+                .fontWeight(.regular)
+                .font(.caption)
+        }
+    }
 }
 
 /// Byline style for displaying a petname
 struct PetnameView: View {
     var name: Name
+    var annotation: String? = nil
+    
+    public func prefix(msg: String) -> Self {
+        var this = self
+        this.annotation = msg
+        return this
+    }
     
     var body: some View {
         switch name {
-        case .known(let name):
-            Text(name.markup)
-                .fontWeight(.medium)
-                .foregroundColor(.accentColor)
+        case .known(let name, let address):
+            VStack(alignment: .leading, spacing: AppTheme.unit) {
+                Text(name.toPetname().markup)
+                    .fontWeight(.medium)
+                    .foregroundColor(.accentColor)
+                if let peer = address?.peer,
+                   let petname = address?.petname,
+                   petname.leaf != name {
+                    AddressView(peer: peer)
+                }
+            }
         case .named(let address, let name):
                 VStack(alignment: .leading, spacing: AppTheme.unit) {
-                    Text(name.description)
+                    Text("\(annotation ?? "")\(name.description)")
                         .italic()
                         .fontWeight(.medium)
-                    if let peer = address.peer?.markup {
-                        HStack(spacing: AppTheme.unit) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: AppTheme.cornerRadius/2)
-                                    .foregroundColor(.secondaryBackground)
-                                Text("AKA")
-                                    .foregroundColor(.secondary)
-                                    .font(.system(size: 10))
-                            }
-                            .frame(width: 28, height: 15)
-                            
-                            Text(peer)
-                                .foregroundColor(.secondary)
-                                .fontWeight(.regular)
-                                .font(.caption)
-                        }
+                    if let peer = address.peer {
+                        AddressView(peer: peer)
                     }
                 }
         case .unknown(let address):
@@ -80,7 +102,8 @@ struct PetnameView_Previews: PreviewProvider {
             )
             PetnameView(
                 name: .known(
-                    Petname("robert")!
+                    Petname.Name("robert")!,
+                    nil
                 )
             )
         }

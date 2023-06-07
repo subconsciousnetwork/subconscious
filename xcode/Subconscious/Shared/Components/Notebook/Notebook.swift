@@ -278,14 +278,14 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestNavigateToProfile(user):
+        case let .requestNavigateToProfile(user, address):
             guard user.resolutionStatus.isReady else {
                 return .failPushDetail("Attempted to navigate to unresolved user")
             }
             
             return .pushDetail(.profile(
                 UserProfileDetailDescription(
-                    address: user.address,
+                    address: address ?? user.address,
                     user: user
                 )
             ))

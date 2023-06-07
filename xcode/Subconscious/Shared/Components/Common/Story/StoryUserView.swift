@@ -40,7 +40,7 @@ struct StoryUserView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var story: StoryUser
-    var action: (Slashlink, String) -> Void
+    var action: (Slashlink) -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
     
@@ -50,20 +50,22 @@ struct StoryUserView: View {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
                     
-                    switch (story.isFollowingUser, story.user.address.petname) {
-                    case (true, .some(let name)):
-                        PetnameView(name: .known(name))
+                    switch (story.ourFollowStatus, story.user.address.petname) {
+                    case (.following(let name), .some(let petname)):
+                        if name == petname.leaf {
+                            PetnameView(name: .known(name, story.user.address))
+                        } else {
+                            PetnameView(name: .known(name, story.user.address))
+                        }
+                        
                     case (_, _):
                         PetnameView(
                             address: story.user.address,
                             name: story.user.nickname
                         )
                         .fontWeight(.medium)
-                        .foregroundColor(.accentColor)
                     }
                     
-                    
-                        
                     Spacer()
                     
                     switch story.user.resolutionStatus {
@@ -74,8 +76,8 @@ struct StoryUserView: View {
                         PendingSyncBadge()
                             .foregroundColor(.secondary)
                     case .resolved:
-                        switch (story.isFollowingUser, story.user.category) {
-                        case (true, _):
+                        switch (story.ourFollowStatus, story.user.category) {
+                        case (.following(_), _):
                             Image.from(appIcon: .following)
                                 .foregroundColor(.secondary)
                         case (_, .you):
@@ -90,7 +92,7 @@ struct StoryUserView: View {
                 
                 Menu(
                     content: {
-                        if story.isFollowingUser {
+                        if story.ourFollowStatus.isFollowing {
                             Button(
                                 action: {
                                     profileAction(story.user, .requestUnfollow)
@@ -135,10 +137,12 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            action(
-                story.user.address,
-                story.user.bio.text
-            )
+            switch story.ourFollowStatus {
+            case .following(let name):
+                action(Slashlink(petname: name.toPetname(), slug: Slug.profile))
+            case _:
+                action(story.user.address)
+            }
         }
         .background(.background)
     }
@@ -159,9 +163,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .human,
                         resolutionStatus: .unresolved
                     ),
-                    isFollowingUser: false
+                    ourFollowStatus: .notFollowing
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -174,9 +178,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .human,
                         resolutionStatus: .pending
                     ),
-                    isFollowingUser: true
+                    ourFollowStatus: .following(Petname.Name("lol")!)
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -189,9 +193,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .you,
                         resolutionStatus: .resolved(Cid("ok"))
                     ),
-                    isFollowingUser: false
+                    ourFollowStatus: .notFollowing
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -204,9 +208,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         category: .you,
                         resolutionStatus: .pending
                     ),
-                    isFollowingUser: false
+                    ourFollowStatus: .notFollowing
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             Spacer()
         }

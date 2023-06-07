@@ -91,7 +91,7 @@ extension StoryUser: DummyData {
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
                 resolutionStatus: .unresolved
             ),
-            isFollowingUser: Bool.dummyData()
+            ourFollowStatus: [.following(Petname.Name.dummyData()), .notFollowing].randomElement()!
         )
     }
     
@@ -106,7 +106,7 @@ extension StoryUser: DummyData {
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
                 resolutionStatus: .unresolved
             ),
-            isFollowingUser: Bool.dummyData()
+            ourFollowStatus: [.following(Petname.Name.dummyData()), .notFollowing].randomElement()!
         )
     }
 }

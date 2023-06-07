@@ -251,15 +251,22 @@ actor AddressBook<Sphere: SphereProtocol> {
         .eraseToAnyPublisher()
     }
     
-    func isFollowing(did: Did) async -> Bool {
+    func followingStatus(did: Did) async -> UserProfileFollowStatus {
         do {
-            return try await listEntries(refetch: false)
-                .contains(where: { f in
+            let found = try await listEntries(refetch: false)
+                .filter{ f in
                     f.did == did
-                })
+                }
+                .first
+            
+            guard let found = found else {
+                return .notFollowing
+            }
+            
+            return .following(found.name)
         } catch {
             logger.warning("Failed to check following status.")
-            return false
+            return .notFollowing
         }
     }
 }
@@ -491,14 +498,14 @@ actor AddressBookService {
     }
     
     /// Is this user in the AddressBook?
-    func isFollowingUser(did: Did) async -> Bool {
-        await self.addressBook.isFollowing(did: did)
+    func followingStatus(did: Did) async -> UserProfileFollowStatus {
+        await self.addressBook.followingStatus(did: did)
     }
     
     /// Is this user in the AddressBook?
-    nonisolated func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
+    nonisolated func followingStatusPublisher(did: Did) -> AnyPublisher<UserProfileFollowStatus, Error> {
         Future.detached {
-            try await self.addressBook.isFollowingUser(did: did)
+            await self.addressBook.followingStatus(did: did)
         }
         .eraseToAnyPublisher()
     }

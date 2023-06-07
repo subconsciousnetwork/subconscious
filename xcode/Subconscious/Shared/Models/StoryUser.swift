@@ -17,13 +17,13 @@ struct StoryUser:
     
     var id = UUID()
     var user: UserProfile
-    var isFollowingUser: Bool
+    var ourFollowStatus: UserProfileFollowStatus
     var statistics: UserProfileStatistics?
 
     var description: String {
         """
         \(String(describing: user.nickname))
-        Following? \(isFollowingUser)
+        Following? \(ourFollowStatus.isFollowing)
         
         \(user.bio)
         """
