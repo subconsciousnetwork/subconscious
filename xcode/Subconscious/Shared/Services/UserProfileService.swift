@@ -184,6 +184,8 @@ actor UserProfileService {
             return .none(did)
         }
         
+        let followingStatus = await self.addressBook.followingStatus(did: did)
+        
         let profile = UserProfile(
             did: did,
             nickname: Petname.Name(userProfileData?.nickname ?? ""),
@@ -191,7 +193,8 @@ actor UserProfileService {
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: address.isOurProfile ? UserCategory.you : UserCategory.human,
-            resolutionStatus: resolutionStatus
+            resolutionStatus: resolutionStatus,
+            ourFollowStatus: followingStatus
         )
         
         return profile
@@ -281,10 +284,7 @@ actor UserProfileService {
             )
             
             following.append(
-                StoryUser(
-                    user: user,
-                    ourFollowStatus: followingStatus
-                )
+                StoryUser(user: user)
             )
         }
         

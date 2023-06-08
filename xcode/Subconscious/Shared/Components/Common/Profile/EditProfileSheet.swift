@@ -176,7 +176,8 @@ struct EditProfileSheet: View {
             pfp: pfp,
             bio: UserProfileBio(state.bioField.validated ?? ""),
             category: .you,
-            resolutionStatus: .resolved(Cid("fake-for-preview"))
+            resolutionStatus: .resolved(Cid("fake-for-preview")),
+            ourFollowStatus: .notFollowing
         )
     }
     
@@ -263,7 +264,6 @@ struct EditProfileSheet: View {
                         UserProfileHeaderView(
                             user: preview,
                             statistics: statistics,
-                            ourFollowStatus: .notFollowing,
                             hideActionButton: true
                         )
                     }

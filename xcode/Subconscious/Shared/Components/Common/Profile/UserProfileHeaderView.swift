@@ -17,7 +17,6 @@ struct UserProfileHeaderView: View {
     var user: UserProfile
     var statistics: UserProfileStatistics?
     
-    var ourFollowStatus: UserProfileFollowStatus
     var action: (UserProfileAction) -> Void = { _ in }
     var hideActionButton: Bool = false
     
@@ -28,8 +27,13 @@ struct UserProfileHeaderView: View {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp, size: .large)
                 
-                switch (ourFollowStatus) {
-                case .following(let name):
+                switch (user.ourFollowStatus, user.category) {
+                case (_, .you):
+                    if let nickname = user.nickname {
+                        PetnameView(name: .known(nickname, nil))
+                    }
+                    
+                case (.following(let name), _):
                     PetnameView(name: .known(name, user.address))
                     
                 case _:
@@ -46,7 +50,7 @@ struct UserProfileHeaderView: View {
                 if !hideActionButton {
                     Button(
                         action: {
-                            switch (user.category, ourFollowStatus) {
+                            switch (user.category, user.ourFollowStatus) {
                             case (.you, _):
                                 action(.editOwnProfile)
                             case (_, .following(_)):
@@ -56,7 +60,7 @@ struct UserProfileHeaderView: View {
                             }
                         },
                         label: {
-                            switch (user.category, ourFollowStatus) {
+                            switch (user.category, user.ourFollowStatus) {
                             case (.you, _):
                                 Label("Edit Profile", systemImage: AppIcon.edit.systemName)
                             case (_, .following(_)):
@@ -105,9 +109,9 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human,
-                    resolutionStatus: .resolved("abc")
-                ),
-                ourFollowStatus: .notFollowing
+                    resolutionStatus: .resolved("abc"),
+                    ourFollowStatus: .notFollowing
+                )
             )
             UserProfileHeaderView(
                 user: UserProfile(
@@ -117,10 +121,10 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist,
-                    resolutionStatus: .resolved(Cid("ok"))
+                    resolutionStatus: .resolved(Cid("ok")),
+                    ourFollowStatus: .following(Petname.Name("ben")!)
                 ),
-                statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
-                ourFollowStatus: .following(Petname.Name("ben")!)
+                statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19)
             )
             UserProfileHeaderView(
                 user: UserProfile(
@@ -130,9 +134,9 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .you,
-                    resolutionStatus: .resolved(Cid("ok"))
-                ),
-                ourFollowStatus: .notFollowing
+                    resolutionStatus: .resolved(Cid("ok")),
+                    ourFollowStatus: .notFollowing
+                )
             )
         }
     }

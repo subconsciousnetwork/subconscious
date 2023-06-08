@@ -47,31 +47,30 @@ struct PetnameView: View {
     }
     
     var body: some View {
-        switch name {
-        case .known(let name, let address):
-            VStack(alignment: .leading, spacing: AppTheme.unit) {
+        VStack(alignment: .leading, spacing: AppTheme.unit) {
+            switch name {
+            case .known(let name, let address):
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
+                // Ensure we do not show the exact same name twice
                 if let peer = address?.peer,
                    let petname = address?.petname,
                    petname.leaf != name {
                     AddressView(peer: peer)
                 }
-            }
-        case .named(let address, let name):
-                VStack(alignment: .leading, spacing: AppTheme.unit) {
-                    Text("\(annotation ?? "")\(name.description)")
-                        .italic()
-                        .fontWeight(.medium)
-                    if let peer = address.peer {
-                        AddressView(peer: peer)
-                    }
+            case .named(let address, let name):
+                Text("\(annotation ?? "")\(name.description)")
+                    .italic()
+                    .fontWeight(.medium)
+                if let peer = address.peer {
+                    AddressView(peer: peer)
                 }
-        case .unknown(let address):
+            case .unknown(let address):
                 Text(address.peer?.markup ?? address.markup)
                     .lineLimit(1)
                     .fontWeight(.medium)
+            }
         }
     }
 }

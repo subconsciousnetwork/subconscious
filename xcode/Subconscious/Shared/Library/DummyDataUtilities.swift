@@ -89,9 +89,12 @@ extension StoryUser: DummyData {
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
-                resolutionStatus: .unresolved
-            ),
-            ourFollowStatus: [.following(Petname.Name.dummyData()), .notFollowing].randomElement()!
+                resolutionStatus: .unresolved,
+                ourFollowStatus: [
+                    .following(Petname.Name.dummyData()),
+                    .notFollowing
+                ].randomElement()!
+            )
         )
     }
     
@@ -104,9 +107,12 @@ extension StoryUser: DummyData {
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
-                resolutionStatus: .unresolved
-            ),
-            ourFollowStatus: [.following(Petname.Name.dummyData()), .notFollowing].randomElement()!
+                resolutionStatus: .unresolved,
+                ourFollowStatus: [
+                    .following(Petname.Name.dummyData()),
+                    .notFollowing
+                ].randomElement()!
+            )
         )
     }
 }
@@ -170,7 +176,8 @@ extension UserProfile: DummyData {
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
             category: .human,
-            resolutionStatus: .unresolved
+            resolutionStatus: .unresolved,
+            ourFollowStatus: .notFollowing
         )
     }
 }

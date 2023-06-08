@@ -31,13 +31,8 @@ struct UserProfileDetailView: View {
         notify(.requestDetail(.from(address: address, fallback: "")))
     }
     
-    func onNavigateToUser(user: UserProfile, ourFollowStatus: UserProfileFollowStatus) {
-        switch ourFollowStatus {
-        case .following(let name):
-            notify(.requestNavigateToProfile(user, Slashlink(petname: name.toPetname(), slug: Slug.profile)))
-        case _:
-            notify(.requestNavigateToProfile(user, user.address))
-        }
+    func onNavigateToUser(user: UserProfile) {
+        notify(.requestNavigateToProfile(user))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -78,7 +73,7 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
-    case requestNavigateToProfile(_ user: UserProfile, _ address: Slashlink?)
+    case requestNavigateToProfile(_ user: UserProfile)
     case requestDetail(MemoDetailDescription)
 }
 
@@ -108,9 +103,6 @@ enum UserProfileDetailAction {
     case followUserSheet(FollowUserSheetAction)
     case editProfileSheet(EditProfileSheetAction)
     case followNewUserFormSheet(FollowNewUserFormSheetAction)
-    
-    case fetchFollowingStatus(Did)
-    case populateFollowingStatus(UserProfileFollowStatus)
     
     case requestFollow(UserProfile)
     case attemptFollow(Did, Petname)
@@ -154,6 +146,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let bio: UserProfileBio
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
+    let ourFollowStatus: UserProfileFollowStatus
     
     // A string that identifies this user.
     var displayName: String {
@@ -272,7 +265,6 @@ struct UserProfileDetailModel: ModelProtocol {
     var recentEntries: [EntryStub] = []
     var following: [StoryUser] = []
     
-    var ourFollowStatus: UserProfileFollowStatus = .notFollowing
     var statistics: UserProfileStatistics? = nil
     var unfollowCandidate: UserProfile? = nil
     
@@ -347,14 +339,11 @@ struct UserProfileDetailModel: ModelProtocol {
             model.statistics = content.statistics
             model.recentEntries = content.recentEntries
             model.following = content.following
-            model.ourFollowStatus = content.followingStatus
             model.loadingState = .loaded
             
             return update(
                 state: model,
-                actions: [
-                    .fetchFollowingStatus(content.profile.did)
-                ],
+                actions: [],
                 environment: environment
             ).animation(.easeOut)
             
@@ -394,27 +383,6 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentFollowSheet(let presented):
             var model = state
             model.isFollowSheetPresented = presented
-            return Update(state: model)
-            
-        // MARK: Following status
-        case .fetchFollowingStatus(let did):
-            let fx: Fx<UserProfileDetailAction> =
-            environment.addressBook
-                .followingStatusPublisher(did: did)
-                .map { following in
-                    UserProfileDetailAction.populateFollowingStatus(following)
-                }
-                .catch { error in
-                    logger.error("Failed to fetch following status for \(did): \(error)")
-                    return Just(UserProfileDetailAction.populateFollowingStatus(.notFollowing))
-                }
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
-            
-        case .populateFollowingStatus(let following):
-            var model = state
-            model.ourFollowStatus = following
             return Update(state: model)
             
         // MARK: Following

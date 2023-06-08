@@ -278,14 +278,27 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestNavigateToProfile(user, address):
+        case let .requestNavigateToProfile(user):
+            let user = Func.run {
+            switch user.ourFollowStatus {
+                case .following(let name):
+                    var ourUser = user
+                    // Rewrite address using our name
+                    ourUser.address = Slashlink(petname: name.toPetname(), slug: Slug.profile)
+                    return ourUser
+                case _:
+                    return user
+                }
+            }
+            
+            
             guard user.resolutionStatus.isReady else {
                 return .failPushDetail("Attempted to navigate to unresolved user")
             }
             
             return .pushDetail(.profile(
                 UserProfileDetailDescription(
-                    address: address ?? user.address,
+                    address: user.address,
                     user: user
                 )
             ))

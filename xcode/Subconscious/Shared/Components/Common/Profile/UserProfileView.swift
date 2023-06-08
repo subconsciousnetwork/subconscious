@@ -91,7 +91,7 @@ struct TopTabView: View {
 struct FollowTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
-    var onNavigateToUser: (UserProfile, UserProfileFollowStatus) -> Void
+    var onNavigateToUser: (UserProfile) -> Void
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void
     
@@ -100,7 +100,7 @@ struct FollowTabView: View {
             ForEach(state.following) { follow in
                 StoryUserView(
                     story: follow,
-                    action: { _ in onNavigateToUser(follow.user, follow.ourFollowStatus) },
+                    action: { _ in onNavigateToUser(follow.user) },
                     profileAction: onProfileAction
                 )
             }
@@ -127,7 +127,7 @@ struct UserProfileView: View {
     }
     
     var onNavigateToNote: (Slashlink) -> Void
-    var onNavigateToUser: (UserProfile, UserProfileFollowStatus) -> Void
+    var onNavigateToUser: (UserProfile) -> Void
     
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void
@@ -185,7 +185,6 @@ struct UserProfileView: View {
                 UserProfileHeaderView(
                     user: user,
                     statistics: state.statistics,
-                    ourFollowStatus: state.ourFollowStatus,
                     action: { action in
                         onProfileAction(user, action)
                     },
@@ -324,7 +323,6 @@ private struct MetaSheetModifier: ViewModifier {
                 UserProfileDetailMetaSheet(
                     state: state.metaSheet,
                     profile: state,
-                    ourFollowStatus: state.ourFollowStatus,
                     send: Address.forward(
                         send: send,
                         tag: UserProfileDetailMetaSheetCursor.tag
@@ -505,7 +503,7 @@ struct UserProfileView_Previews: PreviewProvider {
                 environment: UserProfileDetailModel.Environment()
             ),
             onNavigateToNote: { _ in print("navigate to note") },
-            onNavigateToUser: { _, _ in print("navigate to user") },
+            onNavigateToUser: { _ in print("navigate to user") },
             onProfileAction: { user, action in print("profile action") },
             onRefresh: { }
         )

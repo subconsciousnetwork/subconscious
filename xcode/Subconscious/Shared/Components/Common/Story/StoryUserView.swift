@@ -50,7 +50,7 @@ struct StoryUserView: View {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
                     
-                    switch (story.ourFollowStatus, story.user.address.petname) {
+                    switch (story.user.ourFollowStatus, story.user.address.petname) {
                     case (.following(let name), .some(let petname)):
                         if name == petname.leaf {
                             PetnameView(name: .known(name, story.user.address))
@@ -76,7 +76,7 @@ struct StoryUserView: View {
                         PendingSyncBadge()
                             .foregroundColor(.secondary)
                     case .resolved:
-                        switch (story.ourFollowStatus, story.user.category) {
+                        switch (story.user.ourFollowStatus, story.user.category) {
                         case (.following(_), _):
                             Image.from(appIcon: .following)
                                 .foregroundColor(.secondary)
@@ -92,7 +92,7 @@ struct StoryUserView: View {
                 
                 Menu(
                     content: {
-                        if story.ourFollowStatus.isFollowing {
+                        if story.user.ourFollowStatus.isFollowing {
                             Button(
                                 action: {
                                     profileAction(story.user, .requestUnfollow)
@@ -137,7 +137,7 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            switch story.ourFollowStatus {
+            switch story.user.ourFollowStatus {
             case .following(let name):
                 action(Slashlink(petname: name.toPetname(), slug: Slug.profile))
             case _:
@@ -161,9 +161,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .unresolved
-                    ),
-                    ourFollowStatus: .notFollowing
+                        resolutionStatus: .unresolved,
+                        ourFollowStatus: .notFollowing
+                    )
                 ),
                 action: { _ in }
             )
@@ -176,9 +176,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .pending
-                    ),
-                    ourFollowStatus: .following(Petname.Name("lol")!)
+                        resolutionStatus: .pending,
+                        ourFollowStatus: .following(Petname.Name("lol")!)
+                    )
                 ),
                 action: { _ in }
             )
@@ -191,9 +191,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .you,
-                        resolutionStatus: .resolved(Cid("ok"))
-                    ),
-                    ourFollowStatus: .notFollowing
+                        resolutionStatus: .resolved(Cid("ok")),
+                        ourFollowStatus: .notFollowing
+                    )
                 ),
                 action: { _ in }
             )
@@ -206,9 +206,9 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
                         category: .you,
-                        resolutionStatus: .pending
-                    ),
-                    ourFollowStatus: .notFollowing
+                        resolutionStatus: .pending,
+                        ourFollowStatus: .notFollowing
+                    )
                 ),
                 action: { _ in }
             )
