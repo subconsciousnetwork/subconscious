@@ -80,7 +80,7 @@ class Tests_NotebookUpdate: XCTestCase {
         let link = SubSlashlinkLink(slashlink: slashlink)
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            address: Slashlink(petname: Petname("origin")!),
+            address: Slashlink(profile: Petname("origin")!),
             link: link
         )
         
