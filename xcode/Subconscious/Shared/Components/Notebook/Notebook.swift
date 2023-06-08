@@ -280,8 +280,13 @@ extension NotebookAction {
             return .pushDetail(detail)
         case let .requestNavigateToProfile(user):
             let user = Func.run {
-            switch user.ourFollowStatus {
-                case .following(let name):
+                switch (user.category, user.ourFollowStatus) {
+                case (.you, _):
+                    var ourUser = user
+                    // Loop back to our profile
+                    ourUser.address = Slashlink.ourProfile
+                    return ourUser
+                case (_, .following(let name)):
                     var ourUser = user
                     // Rewrite address using our name
                     ourUser.address = Slashlink(profile: name.toPetname())

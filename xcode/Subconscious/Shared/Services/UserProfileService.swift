@@ -175,7 +175,12 @@ actor UserProfileService {
         address: Slashlink,
         resolutionStatus: ResolutionStatus
     ) async throws -> UserProfile {
-        let userProfileData = await self.readProfileMemo(address: address)
+        let noosphereIdentity = try await noosphere.identity()
+        let isOurs = noosphereIdentity == did
+        
+        let userProfileData = await self.readProfileMemo(
+            address: isOurs ? Slashlink.ourProfile : address
+        )
         let pfp: ProfilePicVariant = Func.run {
             if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
                 return .url(url)
@@ -192,7 +197,7 @@ actor UserProfileService {
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
-            category: address.isOurProfile ? UserCategory.you : UserCategory.human,
+            category: isOurs ? UserCategory.you : UserCategory.human,
             resolutionStatus: resolutionStatus,
             ourFollowStatus: followingStatus
         )
@@ -257,8 +262,6 @@ actor UserProfileService {
         let entries = try await localAddressBook.listEntries(refetch: true)
         
         for entry in entries {
-            let noosphereIdentity = try await noosphere.identity()
-            let isOurs = noosphereIdentity == entry.did
             
             let slashlink = Func.run {
                 guard case let .petname(basePetname) = address.peer else {
@@ -267,9 +270,7 @@ actor UserProfileService {
                 return Slashlink(profile: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
-            let address = isOurs
-                ? Slashlink.ourProfile
-                : slashlink
+            let address = slashlink
             
             let followingStatus = await self.addressBook.followingStatus(did: entry.did)
             let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)

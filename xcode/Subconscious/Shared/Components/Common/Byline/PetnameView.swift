@@ -53,10 +53,8 @@ struct PetnameView: View {
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
-                // Ensure we do not show the exact same name twice
-                if let peer = address.peer,
-                   let petname = address.petname,
-                   petname.leaf != name {
+                
+                if let peer = address.peer {
                     PeerView(peer: peer)
                 }
             case .named(let address, let name):

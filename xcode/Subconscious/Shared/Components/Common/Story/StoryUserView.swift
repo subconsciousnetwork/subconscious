@@ -50,14 +50,21 @@ struct StoryUserView: View {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
                     
-                    switch (story.user.ourFollowStatus) {
-                    case .following(let name):
-                        PetnameView(name: .known(story.user.address, name))
+                    let user = story.user
+                    
+                    switch (user.ourFollowStatus, user.category) {
+                    case (_, .you):
+                        if let nickname = user.nickname {
+                            PetnameView(name: .known(user.address, nickname))
+                        }
+                        
+                    case (.following(let name), _):
+                        PetnameView(name: .known(user.address, name))
                         
                     case _:
                         PetnameView(
-                            address: story.user.address,
-                            name: story.user.nickname
+                            address: user.address,
+                            name: user.nickname
                         )
                         .fontWeight(.medium)
                     }
@@ -121,7 +128,7 @@ struct StoryUserView: View {
                             .background(.background)
                             .foregroundColor(.secondary)
                     }
-                )
+                ).disabled(story.user.category == .you)
             }
             .padding(AppTheme.tightPadding)
             .frame(height: AppTheme.unit * 13)
