@@ -135,7 +135,7 @@ struct StoryUserView: View {
         .onTapGesture {
             switch story.user.ourFollowStatus {
             case .following(let name):
-                action(Slashlink(petname: name.toPetname(), slug: Slug.profile))
+                action(Slashlink(profile: name.toPetname()))
             case _:
                 action(story.user.address)
             }
