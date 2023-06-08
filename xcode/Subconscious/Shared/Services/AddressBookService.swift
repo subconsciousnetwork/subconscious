@@ -416,30 +416,6 @@ actor AddressBookService {
         await self.addressBook.invalidateCache()
     }
     
-    /// Disassociates the passed DID from any petname(s) in the address book,
-    /// clears the cache, saves the changes and updates the database.
-    /// Requires listing the contents of the address book.
-    func unfollowUser(did: Did) async throws {
-        let entries = try await listEntries()
-
-        for entry in entries
-        where entry.did == did {
-            try await unfollowUser(petname: entry.name.toPetname())
-        }
-    }
-    
-    /// Disassociates the passed DID from any petname(s) in the address book,
-    /// clears the cache, saves the changes and updates the database.
-    /// Requires listing the contents of the address book.
-    func unfollowUser(did: Did, name: Petname.Name) async throws {
-        let entries = try await listEntries()
-
-        for entry in entries
-        where entry.name == name && entry.did == did {
-            try await unfollowUser(petname: entry.name.toPetname())
-        }
-    }
-    
     /// Unassociates the passed petname with any DID in the sphere,
     /// saves the changes and updates the database.
     nonisolated func unfollowUserPublisher(
@@ -447,29 +423,6 @@ actor AddressBookService {
     ) -> AnyPublisher<Void, Error> {
         Future.detached {
             try await self.unfollowUser(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-    
-    /// Unassociates the passed DID with from any petname within the sphere,
-    /// saves the changes and updates the database.
-    nonisolated func unfollowUserPublisher(
-        did: Did
-    ) -> AnyPublisher<Void, Error> {
-        Future.detached {
-            try await self.unfollowUser(did: did)
-        }
-        .eraseToAnyPublisher()
-    }
-    
-    /// Unassociates the passed DID with from any petname within the sphere,
-    /// saves the changes and updates the database.
-    nonisolated func unfollowUserPublisher(
-        did: Did,
-        petname: Petname.Name
-    ) -> AnyPublisher<Void, Error> {
-        Future.detached {
-            try await self.unfollowUser(did: did, name: petname)
         }
         .eraseToAnyPublisher()
     }

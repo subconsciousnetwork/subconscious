@@ -489,20 +489,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 return Update(state: state)
             case .following(let name):
                 let fx: Fx<UserProfileDetailAction> =
-                    Func.run {
-                       if name == candidate.address.petname?.leaf {
-                           return environment.addressBook
-                               .unfollowUserPublisher(
-                                   did: candidate.did,
-                                   petname: name
-                               )
-                       } else {
-                           return environment.addressBook
-                               .unfollowUserPublisher(
-                                    did: candidate.did
-                               )
-                       }
-                    }
+                     environment.addressBook
+                     .unfollowUserPublisher(
+                        petname: name.toPetname()
+                     )
                     .map({ _ in
                         .succeedUnfollow
                     })
