@@ -53,8 +53,17 @@ struct PetnameView: View {
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
-                
-                if let peer = address.peer {
+              
+                /// Prevent showing _exactly_ the same name above and below e.g.
+                /// @bob
+                /// AKA @bob
+                ///
+                /// We still permit:
+                /// @bob
+                /// AKA @bob.alice
+                if let peer = address.peer,
+                   let petname = address.petname,
+                   petname != name.toPetname() {
                     PeerView(peer: peer)
                 }
             case .named(let address, let name):
