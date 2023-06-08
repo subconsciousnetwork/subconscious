@@ -30,11 +30,11 @@ struct UserProfileHeaderView: View {
                 switch (user.ourFollowStatus, user.category) {
                 case (_, .you):
                     if let nickname = user.nickname {
-                        PetnameView(name: .known(nickname, nil))
+                        PetnameView(name: .known(Slashlink.ourProfile, nickname))
                     }
                     
                 case (.following(let name), _):
-                    PetnameView(name: .known(name, user.address))
+                    PetnameView(name: .known(user.address, name))
                     
                 case _:
                     PetnameView(
@@ -105,7 +105,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     nickname: Petname.Name("ben")!,
-                    address: Slashlink(petname: Petname("ben")!),
+                    address: Slashlink(profile: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human,
@@ -117,7 +117,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     nickname: Petname.Name("ben")!,
-                    address: Slashlink(petname: Petname("ben")!),
+                    address: Slashlink(profile: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist,

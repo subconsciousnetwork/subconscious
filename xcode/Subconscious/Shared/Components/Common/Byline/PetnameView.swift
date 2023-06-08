@@ -8,7 +8,7 @@
 import SwiftUI
 
 public enum Name {
-    case known(Petname.Name, Slashlink?)
+    case known(Slashlink, Petname.Name)
     case named(Slashlink, Petname.Name)
     case unknown(Slashlink)
 }
@@ -49,13 +49,13 @@ struct PetnameView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             switch name {
-            case .known(let name, let address):
+            case .known(let address, let name):
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
                 // Ensure we do not show the exact same name twice
-                if let peer = address?.peer,
-                   let petname = address?.petname,
+                if let peer = address.peer,
+                   let petname = address.petname,
                    petname.leaf != name {
                     AddressView(peer: peer)
                 }
@@ -90,19 +90,19 @@ struct PetnameView_Previews: PreviewProvider {
         VStack {
             PetnameView(
                 name: .named(
-                    Slashlink(petname: Petname("melville.bobby.tables")!),
+                    Slashlink(profile: Petname("melville.bobby.tables")!),
                     Petname.Name("melville")!
                 )
             )
             PetnameView(
                 name: .unknown(
-                    Slashlink(petname: Petname("melville.bobby.tables")!)
+                    Slashlink(profile: Petname("melville.bobby.tables")!)
                 )
             )
             PetnameView(
                 name: .known(
-                    Petname.Name("robert")!,
-                    nil
+                    Slashlink(profile: Petname("robert")!),
+                    Petname.Name("robert")!
                 )
             )
         }

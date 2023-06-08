@@ -150,12 +150,17 @@ struct UserProfile: Equatable, Codable, Hashable {
     
     // A string that identifies this user.
     var displayName: String {
-        let didSuffix = "#\(did.description.suffix(4))"
-        if let name = nickname?.toPetname() ?? address.petname {
-            return "\(name)\(didSuffix)"
+        switch (ourFollowStatus) {
+        case .following(let name):
+            return name.description
+        case _:
+            guard let name = nickname?.toPetname() ?? address.petname else {
+                return "(unknown)"
+            }
+            
+            return "\(name)"
         }
         
-        return didSuffix
     }
 }
 
@@ -475,16 +480,26 @@ struct UserProfileDetailModel: ModelProtocol {
             )
             
         case .attemptUnfollow:
-            guard let did = state.unfollowCandidate?.did else {
+            guard let candidate = state.unfollowCandidate else {
                 return Update(state: state)
             }
             
+            let x = Func.run {
+                switch (candidate.ourFollowStatus) {
+                case .following(let name):
+                    return environment.addressBook
+                        .unfollowUserPublisher(
+                            did: candidate.did,
+                            petname: name
+                        )
+                case _:
+                    return environment.addressBook
+                        .unfollowUserPublisher(did: candidate.did)
+                }
+            }
+            
             let fx: Fx<UserProfileDetailAction> =
-            environment.addressBook
-                .unfollowUserPublisher(
-                    did: did,
-                    petname: state.unfollowCandidate?.nickname
-                )
+                x
                 .map({ _ in
                     .succeedUnfollow
                 })

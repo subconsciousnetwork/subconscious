@@ -50,15 +50,11 @@ struct StoryUserView: View {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
                     
-                    switch (story.user.ourFollowStatus, story.user.address.petname) {
-                    case (.following(let name), .some(let petname)):
-                        if name == petname.leaf {
-                            PetnameView(name: .known(name, story.user.address))
-                        } else {
-                            PetnameView(name: .known(name, story.user.address))
-                        }
+                    switch (story.user.ourFollowStatus) {
+                    case .following(let name):
+                        PetnameView(name: .known(story.user.address, name))
                         
-                    case (_, _):
+                    case _:
                         PetnameView(
                             address: story.user.address,
                             name: story.user.nickname
@@ -157,7 +153,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
@@ -172,7 +168,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
@@ -187,7 +183,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .you,
@@ -202,7 +198,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
                         category: .you,
