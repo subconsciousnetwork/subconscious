@@ -41,7 +41,7 @@ struct UserProfileHeaderView: View {
                         address: user.address,
                         name: user.nickname
                     )
-                    .prefix(msg: "Maybe: ")
+                    .annotated(with: "Maybe: ")
                     .fontWeight(.medium)
                 }
                 

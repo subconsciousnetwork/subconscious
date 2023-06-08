@@ -350,11 +350,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.following = content.following
             model.loadingState = .loaded
             
-            return update(
-                state: model,
-                actions: [],
-                environment: environment
-            ).animation(.easeOut)
+            return Update(state: model).animation(.easeOut)
             
         case .failedToPopulate(let error):
             var model = state
@@ -488,31 +484,35 @@ struct UserProfileDetailModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            let x = Func.run {
-                switch (candidate.ourFollowStatus) {
-                case .following(let name):
-                    return environment.addressBook
-                        .unfollowUserPublisher(
-                            did: candidate.did,
-                            petname: name
-                        )
-                case _:
-                    return environment.addressBook
-                        .unfollowUserPublisher(did: candidate.did)
-                }
+            switch (candidate.ourFollowStatus) {
+            case .notFollowing:
+                return Update(state: state)
+            case .following(let name):
+                let fx: Fx<UserProfileDetailAction> =
+                    Func.run {
+                       if name == candidate.address.petname?.leaf {
+                           return environment.addressBook
+                               .unfollowUserPublisher(
+                                   did: candidate.did,
+                                   petname: name
+                               )
+                       } else {
+                           return environment.addressBook
+                               .unfollowUserPublisher(
+                                    did: candidate.did
+                               )
+                       }
+                    }
+                    .map({ _ in
+                        .succeedUnfollow
+                    })
+                    .recover({ error in
+                        .failUnfollow(error: error.localizedDescription)
+                    })
+                    .eraseToAnyPublisher()
+                
+                return Update(state: state, fx: fx)
             }
-            
-            let fx: Fx<UserProfileDetailAction> =
-                x
-                .map({ _ in
-                    .succeedUnfollow
-                })
-                .recover({ error in
-                    .failUnfollow(error: error.localizedDescription)
-                })
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
             
         case .succeedUnfollow:
             return update(

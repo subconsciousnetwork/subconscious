@@ -284,7 +284,7 @@ extension NotebookAction {
                 case .following(let name):
                     var ourUser = user
                     // Rewrite address using our name
-                    ourUser.address = Slashlink(petname: name.toPetname(), slug: Slug.profile)
+                    ourUser.address = Slashlink(profile: name.toPetname())
                     return ourUser
                 case _:
                     return user

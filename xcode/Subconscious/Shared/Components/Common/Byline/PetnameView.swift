@@ -7,13 +7,13 @@
 
 import SwiftUI
 
-public enum Name {
+public enum NameVariant {
     case known(Slashlink, Petname.Name)
     case named(Slashlink, Petname.Name)
     case unknown(Slashlink)
 }
 
-struct AddressView: View {
+struct PeerView: View {
     var peer: Peer
 
     var body: some View {
@@ -37,12 +37,12 @@ struct AddressView: View {
 
 /// Byline style for displaying a petname
 struct PetnameView: View {
-    var name: Name
+    var name: NameVariant
     var annotation: String? = nil
     
-    public func prefix(msg: String) -> Self {
+    public func annotated(with annotation: String) -> Self {
         var this = self
-        this.annotation = msg
+        this.annotation = annotation
         return this
     }
     
@@ -57,14 +57,14 @@ struct PetnameView: View {
                 if let peer = address.peer,
                    let petname = address.petname,
                    petname.leaf != name {
-                    AddressView(peer: peer)
+                    PeerView(peer: peer)
                 }
             case .named(let address, let name):
                 Text("\(annotation ?? "")\(name.description)")
                     .italic()
                     .fontWeight(.medium)
                 if let peer = address.peer {
-                    AddressView(peer: peer)
+                    PeerView(peer: peer)
                 }
             case .unknown(let address):
                 Text(address.peer?.markup ?? address.markup)
@@ -78,9 +78,9 @@ struct PetnameView: View {
 extension PetnameView {
     init(address: Slashlink, name: Petname.Name?) {
         if let name = name {
-            self.name = Name.named(address, name)
+            self.name = NameVariant.named(address, name)
         } else {
-            self.name = Name.unknown(address)
+            self.name = NameVariant.unknown(address)
         }
     }
 }
