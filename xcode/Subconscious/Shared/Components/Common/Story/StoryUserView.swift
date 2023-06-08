@@ -88,7 +88,7 @@ struct StoryUserView: View {
                 
                 Menu(
                     content: {
-                        if story.user.ourFollowStatus.isFollowing {
+                        if story.user.isFollowedByUs {
                             Button(
                                 action: {
                                     profileAction(story.user, .requestUnfollow)

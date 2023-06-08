@@ -148,6 +148,10 @@ struct UserProfile: Equatable, Codable, Hashable {
     let resolutionStatus: ResolutionStatus
     let ourFollowStatus: UserProfileFollowStatus
     
+    var isFollowedByUs: Bool {
+        ourFollowStatus.isFollowing
+    }
+    
     // A string that identifies this user.
     var displayName: String {
         switch (ourFollowStatus) {
