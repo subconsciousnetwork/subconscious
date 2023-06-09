@@ -43,6 +43,79 @@ struct GatewaySyncLabel: View {
     }
 }
 
+// MARK: Provisioning
+
+struct GatewayProvisioningSection: View {
+    @ObservedObject var app: Store<AppModel>
+    
+    var body: some View {
+        Section(
+            content: {
+                ValidatedTextField(
+                    placeholder: "Enter your invite code",
+                    text: Binding(
+                        get: { app.state.inviteCodeFormField.value },
+                        send: app.send,
+                        tag: AppAction.setInviteCode
+                    ),
+                    caption: "Look for this in your welcome email.",
+                    hasError: app.state.inviteCodeFormField.hasError
+                )
+                .formField()
+                .autocapitalization(.none)
+                .autocorrectionDisabled(true)
+                .onDisappear {
+                    app.send(.setInviteCode(app.state.inviteCodeFormField.value))
+                }
+                .disabled(app.state.gatewayProvisioningStatus == .pending)
+                
+                Button(
+                    action: {
+                        app.send(.submitProvisionGatewayForm)
+                    },
+                    label: {
+                        GatewayProvisionLabel(
+                            status: app.state.gatewayProvisioningStatus,
+                            inviteCode: app.state.inviteCodeFormField.validated,
+                            gatewayId: app.state.gatewayId
+                        )
+                    }
+                )
+                .disabled(
+                    !app.state.inviteCodeFormField.isValid ||
+                    app.state.gatewayProvisioningStatus == .pending
+                )
+            },
+            header: {
+                Text("Provision Gateway")
+            },
+            footer: {
+                VStack {
+                    if let gatewayId = app.state.gatewayId {
+                        VStack(alignment: .leading) {
+                            Text("Gateway ID")
+                                .foregroundColor(.secondary)
+                                .bold()
+                            Text(gatewayId)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    switch app.state.gatewayProvisioningStatus {
+                    case let .failed(message):
+                        Text(message)
+                    default:
+                        EmptyView()
+                    }
+                        
+                }
+            }
+        )
+    }
+}
+
+// MARK: Sync
+
 struct GatewaySyncSection: View {
     @ObservedObject var app: Store<AppModel>
     
@@ -88,6 +161,8 @@ struct GatewaySyncSection: View {
         )
     }
 }
+
+// MARK: Settings
 
 struct SettingsView: View {
     @ObservedObject var app: Store<AppModel>
