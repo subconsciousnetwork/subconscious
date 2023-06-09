@@ -201,10 +201,10 @@ struct SettingsView: View {
                         .lineLimit(1)
                         .textSelection(.enabled)
                     }
-                    if app.state.gatewayProvisioningStatus != .succeeded {
-                        GatewayProvisioningSection(app: app)
-                    } else {
+                    if app.state.gatewayProvisioningStatus == .succeeded {
                         GatewaySyncSection(app: app)
+                    } else {
+                        GatewayProvisioningSection(app: app)
                     }
                 }
                 Section {
