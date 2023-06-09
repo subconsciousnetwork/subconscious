@@ -180,7 +180,8 @@ struct UserProfileView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let user = state.user {
+            if let user = state.user,
+               state.loadingState != .notFound {
                 UserProfileHeaderView(
                     user: user,
                     statistics: state.statistics,
@@ -222,22 +223,53 @@ struct UserProfileView: View {
                     }
                 )
             case .notFound:
-                Text("Not found")
+                VStack(spacing: AppTheme.unit * 6) {
+                    Spacer()
+                    Text("Not Found")
+                    Image(systemName: "moon.stars.fill")
+                        .font(.system(size: 64))
+                    VStack(spacing: AppTheme.unit) {
+                        Text("""
+                             When emptiness is possible,
+                             Everything is possible;
+                             Were emptiness impossible,
+                             Nothing would be possible.
+                             """)
+                        .italic()
+                        Text(
+                            "Nāgārjuna"
+                        )
+                    }
+                    .frame(maxWidth: 240)
+                    // Some extra padding to visually center the group.
+                    // The icon is large and rather heavy. This offset
+                    // helps prevent the illusion of being off-center.
+                    .padding(.bottom, AppTheme.unit * 24)
+                    .font(.caption)
+                    Spacer()
+                }
+                .multilineTextAlignment(.center)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .foregroundColor(Color.secondary)
+                .background(Color.background)
+                .transition(.opacity)
             }
         }
         .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
-            if let user = state.user {
+            if let address = state.address {
                 DetailToolbarContent(
-                    address: user.address,
+                    address: address,
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
                     },
                     status: state.loadingState
                 )
-                if user.category == .you {
+                if let user = state.user,
+                   user.category == .you {
                     ToolbarItem(placement: .confirmationAction) {
                         Button(
                             action: {
