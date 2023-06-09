@@ -62,7 +62,8 @@ struct UserProfileDetailView: View {
             store.send(
                 UserProfileDetailAction.appear(
                     description.address,
-                    description.initialTabIndex
+                    description.initialTabIndex,
+                    description.user
                 )
             )
         }
@@ -82,11 +83,12 @@ enum UserProfileDetailNotification: Hashable {
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
     var address: Slashlink
+    var user: UserProfile?
     var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
 enum UserProfileDetailAction {
-    case appear(Slashlink, Int)
+    case appear(Slashlink, Int, UserProfile?)
     case refresh
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
@@ -311,13 +313,16 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return update(
                 state: state,
-                action: .appear(user.address, state.initialTabIndex),
+                action: .appear(user.address, state.initialTabIndex, state.user),
                 environment: environment
             )
             
-        case .appear(let address, let initialTabIndex):
+        case .appear(let address, let initialTabIndex, let user):
             var model = state
             model.initialTabIndex = initialTabIndex
+            // We might be passed some basic profile data
+            // we can use this in the loading state for a preview
+            model.user = user
             
             let fx: Fx<UserProfileDetailAction> = Future.detached {
                     try await Self.refresh(address: address, environment: environment)
@@ -347,7 +352,7 @@ struct UserProfileDetailModel: ModelProtocol {
                     .fetchFollowingStatus(content.profile.did)
                 ],
                 environment: environment
-            )
+            ).animation(.easeOut)
             
         case .failedToPopulate(let error):
             var model = state

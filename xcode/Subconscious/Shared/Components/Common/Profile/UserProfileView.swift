@@ -11,15 +11,37 @@ import Combine
 
 struct ProfileStatisticView: View {
     var label: String
-    var count: Int
+    var count: Int?
+    
+    var countLabel: String {
+        count.map { c in String(c) } ?? "-"
+    }
     
     var body: some View {
         HStack(spacing: AppTheme.unit) {
-            Text("\(count)").bold()
+            Text(countLabel).bold()
             Text(label).foregroundColor(.secondary)
         }
     }
 }
+
+struct LoadingTabView: View {
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
+    var onRefresh: () async -> Void
+    
+    var body: some View {
+        ScrollView {
+            StoryPlaceholderView(bioWidthFactor: 1.2)
+            StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
+            StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
+        }
+        .refreshable {
+            await onRefresh()
+        }
+    }
+}
+
 
 struct RecentTabView: View {
     var state: UserProfileDetailModel
@@ -110,6 +132,17 @@ struct UserProfileView: View {
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void
     
+    func columnLoading(label: String) -> TabbedColumnItem<LoadingTabView> {
+        TabbedColumnItem(
+            label: label,
+            view: LoadingTabView(
+                state: state,
+                send: send,
+                onRefresh: onRefresh
+            )
+        )
+    }
+    
     var columnRecent: TabbedColumnItem<RecentTabView> {
         TabbedColumnItem(
             label: "Recent",
@@ -147,29 +180,38 @@ struct UserProfileView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if let user = state.user {
+                UserProfileHeaderView(
+                    user: user,
+                    statistics: state.statistics,
+                    isFollowingUser: state.isFollowingUser,
+                    action: { action in
+                        onProfileAction(user, action)
+                    },
+                    hideActionButton: state.loadingState != .loaded,
+                    onTapStatistics: {
+                        send(
+                            .tabIndexSelected(
+                                UserProfileDetailModel.followingTabIndex
+                            )
+                        )
+                    }
+                )
+                .padding(AppTheme.padding)
+            }
+            
             switch state.loadingState {
             case .loading:
-                ProgressView()
+                TabbedThreeColumnView(
+                    columnA: columnLoading(label: "Recent"),
+                    columnB: columnLoading(label: "Top"),
+                    columnC: columnLoading(label: "Following"),
+                    selectedColumnIndex: state.currentTabIndex,
+                    changeColumn: { index in
+                        send(.tabIndexSelected(index))
+                    }
+                )
             case .loaded:
-                if let user = state.user {
-                    UserProfileHeaderView(
-                        user: user,
-                        statistics: state.statistics,
-                        isFollowingUser: state.isFollowingUser,
-                        action: { action in
-                            onProfileAction(user, action)
-                        },
-                        onTapStatistics: {
-                            send(
-                                .tabIndexSelected(
-                                    UserProfileDetailModel.followingTabIndex
-                                )
-                            )
-                        }
-                    )
-                    .padding(AppTheme.padding)
-                }
-                
                 TabbedThreeColumnView(
                     columnA: columnRecent,
                     columnB: columnTop,
@@ -183,7 +225,7 @@ struct UserProfileView: View {
                 Text("Not found")
             }
         }
-        .navigationTitle(state.user?.displayName ?? "")
+        .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
@@ -192,7 +234,8 @@ struct UserProfileView: View {
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
-                    }
+                    },
+                    status: state.loadingState
                 )
                 if user.category == .you {
                     ToolbarItem(placement: .confirmationAction) {

@@ -9,9 +9,13 @@ import SwiftUI
 
 struct OmniboxView: View {
     @Environment(\.colorScheme) var colorScheme
+    // Used to animate the border during loading
+    // Value is updated in .onAppear {}
+    @State private var phase = Double.pi / 8
     
     var address: Slashlink?
     var defaultAudience: Audience
+    var status: LoadingState = .loaded
 
     private func icon() -> Image {
         guard let address = address else {
@@ -29,11 +33,20 @@ struct OmniboxView: View {
         return Image(audience: .public)
     }
     
+    var gradient = Gradient(stops: [
+        Gradient.Stop(color: .brandMarkPurple.opacity(0), location: 0),
+        Gradient.Stop(color: .brandMarkPurple.opacity(0), location: 0.75),
+        Gradient.Stop(color: .brandMarkPurple.opacity(1), location: 1),
+    ])
+    
     var body: some View {
         HStack(spacing: 8) {
-            icon()
-                .resizable()
-                .frame(width: 17, height: 17)
+            if status != .loading {
+                icon()
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 17, height: 17)
+            }
             
             Spacer(minLength: AppTheme.unit)
             if let slashlink = address {
@@ -54,7 +67,29 @@ struct OmniboxView: View {
             RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
                 .stroke(Color.separator, lineWidth: 0.5)
         )
+        .overlay(
+            // Loading pulse
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(
+                    .conicGradient(
+                        gradient,
+                        center: .center,
+                        angle: Angle.radians(phase)),
+                    lineWidth: 2
+                )
+                .animation(
+                    .linear(duration: Duration.loading * 2)
+                        .repeatForever(autoreverses: false),
+                    value: phase
+                )
+                // Keep the view mounted but invisible
+                // This prevents a race condition where SwiftUI animates the position
+                .opacity(status == .loading ? 0.5 : 0)
+        )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
+        .onAppear {
+            phase += Double.pi * 2
+        }
     }
 }
 
@@ -109,14 +144,19 @@ struct OmniboxView_Previews: PreviewProvider {
         
         @State private var address: Slashlink? = nil
         var defaultAudience = Audience.local
+        let status = [LoadingState.loaded, LoadingState.loading].randomElement()!
 
         var body: some View {
-            OmniboxView(address: address, defaultAudience: defaultAudience)
-                .onTapGesture {
-                    withAnimation {
-                        self.address = addresses.randomElement()
-                    }
+            OmniboxView(
+                address: address,
+                defaultAudience: defaultAudience,
+                status: .loading
+            )
+            .onTapGesture {
+                withAnimation {
+                    self.address = addresses.randomElement()
                 }
+            }
         }
     }
 

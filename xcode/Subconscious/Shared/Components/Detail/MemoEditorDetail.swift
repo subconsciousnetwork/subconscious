@@ -30,6 +30,14 @@ struct MemoEditorDetailView: View {
     var description: MemoEditorDetailDescription
     /// An address to forward notifications (informational actions)
     var notify: (MemoEditorDetailNotification) -> Void
+    var navigationTitle: String {
+        switch store.state.audience {
+        case .local:
+            return store.state.address?.slug.markup ?? store.state.title
+        case .public:
+            return store.state.address?.markup ?? store.state.title
+        }
+    }
 
     private func onLink(
         url: URL
@@ -129,7 +137,7 @@ struct MemoEditorDetailView: View {
                 }
             }
         }
-        .navigationTitle(store.state.title)
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible)
         .toolbarBackground(Color.background, for: .navigationBar)
@@ -979,7 +987,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         info: MemoEditorDetailDescription
     ) -> Update<MemoEditorDetailModel> {
         // No address? This is a draft.
-        guard let address = info.address else {
+        guard let address = state.address ?? info.address else {
             return update(
                 state: state,
                 action: .setDraftDetail(

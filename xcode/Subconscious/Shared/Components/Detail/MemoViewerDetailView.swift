@@ -20,6 +20,9 @@ struct MemoViewerDetailView: View {
 
     var description: MemoViewerDetailDescription
     var notify: (MemoViewerDetailNotification) -> Void
+    var navigationTitle: String {
+        store.state.address?.markup ?? store.state.title
+    }
 
     var body: some View {
         VStack {
@@ -44,7 +47,7 @@ struct MemoViewerDetailView: View {
                 )
             }
         }
-        .navigationTitle(store.state.title)
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible)
         .toolbarBackground(Color.background, for: .navigationBar)
@@ -54,7 +57,8 @@ struct MemoViewerDetailView: View {
                 defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
-                }
+                },
+                status: store.state.loadingState
             )
         })
         .onAppear {
@@ -344,7 +348,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             action: .setDom(dom),
             environment: environment
-        )
+        ).animation(.easeOut)
     }
     
     static func setDom(
