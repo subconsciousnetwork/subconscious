@@ -41,10 +41,7 @@ struct MemoViewerDetailView: View {
                     notify: notify
                 )
             case .notFound:
-                MemoViewerDetailNotFoundView(
-                    backlinks: store.state.backlinks,
-                    notify: notify
-                )
+                NotFoundView()
             }
         }
         .navigationTitle(navigationTitle)
