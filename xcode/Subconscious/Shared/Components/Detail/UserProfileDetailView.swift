@@ -158,6 +158,7 @@ struct UserProfile: Equatable, Codable, Hashable {
         case .following(let name):
             return name.description
         case _:
+            // Rare edgecase, only occurs if the address is a DID
             guard let name = nickname?.toPetname() ?? address.petname else {
                 return "(unknown)"
             }
