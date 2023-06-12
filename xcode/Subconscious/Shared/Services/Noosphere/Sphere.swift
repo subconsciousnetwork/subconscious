@@ -854,8 +854,17 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// List all changed slugs between two versions of a sphere.
     /// This method lists which slugs changed between version, but not
     /// what changed.
+    ///
+    /// If `since` is nil, this method acts as a synonym of `list`, since
+    /// changes-since-beginning, is identical to listing the contents of the
+    /// sphere.
+    ///
     /// - Returns array of `Slug`
     public func changes(since cid: Cid? = nil) throws -> [Slug] {
+        guard let cid = cid else {
+            return try list()
+        }
+        
         let changes = try Noosphere.callWithError(
             ns_sphere_content_changes,
             noosphere.noosphere,
