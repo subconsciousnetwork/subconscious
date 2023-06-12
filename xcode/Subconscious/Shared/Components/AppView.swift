@@ -1682,7 +1682,9 @@ struct AppModel: ModelProtocol {
                 let peers = try environment.database.listPeers()
                 return Action.succeedCollectPeersToIndex(peers)
             } catch {
-                return Action.failIndexPeer(error.localizedDescription)
+                return Action.failCollectPeersToIndex(
+                    error.localizedDescription
+                )
             }
         }.eraseToAnyPublisher()
         return Update(state: state, fx: fx)

@@ -152,11 +152,13 @@ actor DataService {
                         memo: memo
                     )
                     logger.debug([
-                        "msg": "Indexed memo \(slashlink)"
+                        "msg": "Indexed memo \(slashlink)",
+                        "slashlink": slashlink.description
                     ])
                 } else {
                     logger.debug([
-                        "msg": "Removed indexed memo \(slashlink)"
+                        "msg": "Removed indexed memo \(slashlink)",
+                        "slashlink": slashlink.description
                     ])
                     try database.removeMemo(link)
                 }
