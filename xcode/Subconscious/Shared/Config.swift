@@ -39,7 +39,7 @@ struct Config: Equatable, Codable {
     var subconsciousGeistPetname: Petname = Petname("subconscious")!
     
     /// URL for sending feedback to developers
-    var feedbackURL: URL = URL(string: "https://example.com")!
+    var feedbackURL: URL = URL(string: "https://docs.google.com/forms/d/e/1FAIpQLSeQHRBacSLtE2scIeezlgW6ou_xq_CLBUawJeMmOZv4O9NuEw/viewform?usp=sf_link")!
     
     /// URL for built-in web service
     var cloudCtlUrl: URL = URL(string: "https://cloudctl.sphere.test.subconscious.cloud")!
