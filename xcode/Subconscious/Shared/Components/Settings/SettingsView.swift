@@ -114,54 +114,6 @@ struct GatewayProvisioningSection: View {
     }
 }
 
-// MARK: Sync
-
-struct GatewaySyncSection: View {
-    @ObservedObject var app: Store<AppModel>
-    
-    var body: some View {
-        Section(
-            content: {
-                NavigationLink(
-                    destination: {
-                        GatewayURLSettingsView(app: app)
-                    },
-                    label: {
-                        LabeledContent(
-                            "Gateway",
-                            value: app.state.gatewayURL
-                        )
-                        .lineLimit(1)
-                    }
-                )
-                
-                if app.state.gatewayProvisioningStatus != .pending {
-                    Button(
-                        action: {
-                            app.send(.syncSphereWithGateway)
-                        },
-                        label: {
-                            GatewaySyncLabel(
-                                status: app.state.lastGatewaySyncStatus
-                            )
-                        }
-                    )
-                    .disabled(app.state.gatewayURL.count == 0)
-                }
-            }, header: {
-                Text("Gateway")
-            }, footer: {
-                switch app.state.lastGatewaySyncStatus {
-                case let .failed(message):
-                    Text(message)
-                default:
-                    EmptyView()
-                }
-            }
-        )
-    }
-}
-
 // MARK: Settings
 
 struct SettingsView: View {
@@ -200,12 +152,23 @@ struct SettingsView: View {
                         )
                         .lineLimit(1)
                         .textSelection(.enabled)
+                        
+                        NavigationLink(
+                            destination: {
+                                GatewayURLSettingsView(app: app)
+                            },
+                            label: {
+                                LabeledContent(
+                                    "Gateway",
+                                    value: app.state.gatewayURL
+                                )
+                                .lineLimit(1)
+                            }
+                        )
+                        .disabled(app.state.gatewayProvisioningStatus == .pending)
                     }
-                    if app.state.gatewayProvisioningStatus == .succeeded {
-                        GatewaySyncSection(app: app)
-                    } else {
-                        GatewayProvisioningSection(app: app)
-                    }
+                    
+                    GatewayProvisioningSection(app: app)
                 }
                 Section {
                     NavigationLink("Developer Settings") {

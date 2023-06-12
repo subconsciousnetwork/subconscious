@@ -93,23 +93,50 @@ struct GatewayURLSettingsView: View {
 
     var body: some View {
         Form {
-            ValidatedTextField(
-                placeholder: "http://example.com",
-                text: Binding(
-                    get: { app.state.gatewayURLTextField },
-                    send: app.send,
-                    tag: AppAction.setGatewayURLTextField
-                ),
-                caption: "The URL of your preferred Noosphere gateway",
-                hasError: !app.state.isGatewayURLTextFieldValid
+            Section(
+                content: {
+                    ValidatedTextField(
+                        placeholder: "http://example.com",
+                        text: Binding(
+                            get: { app.state.gatewayURLTextField },
+                            send: app.send,
+                            tag: AppAction.setGatewayURLTextField
+                        ),
+                        caption: "The URL of your preferred Noosphere gateway",
+                        hasError: !app.state.isGatewayURLTextFieldValid
+                    )
+                    .formField()
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled(true)
+                    .keyboardType(.URL)
+                    .onDisappear {
+                        app.send(.submitGatewayURL(app.state.gatewayURLTextField))
+                    }
+                    
+                    if app.state.gatewayProvisioningStatus != .pending {
+                        Button(
+                            action: {
+                                app.send(.syncSphereWithGateway)
+                            },
+                            label: {
+                                GatewaySyncLabel(
+                                    status: app.state.lastGatewaySyncStatus
+                                )
+                            }
+                        )
+                        .disabled(app.state.gatewayURL.count == 0)
+                    }
+                }, header: {
+                    Text("Gateway")
+                }, footer: {
+                    switch app.state.lastGatewaySyncStatus {
+                    case let .failed(message):
+                        Text(message)
+                    default:
+                        EmptyView()
+                    }
+                }
             )
-            .formField()
-            .autocapitalization(.none)
-            .autocorrectionDisabled(true)
-            .keyboardType(.URL)
-            .onDisappear {
-                app.send(.submitGatewayURL(app.state.gatewayURLTextField))
-            }
         }
         .navigationTitle("Gateway URL")
     }
