@@ -224,6 +224,8 @@ struct UserProfileView: View {
                 )
             case .notFound:
                 NotFoundView()
+                    // extra padding to visually center the group
+                    .padding(.bottom, AppTheme.unit * 24)
             }
         }
         .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
