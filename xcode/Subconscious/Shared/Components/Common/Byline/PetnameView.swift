@@ -86,7 +86,7 @@ struct PetnameView: View {
                  .proposedName(let address, let name):
                 Text(showMaybePrefix
                      ? "Maybe: \(name.description)"
-                     : "\(name.description)"
+                     : name.description
                 )
                 .italic()
                 .fontWeight(.medium)
