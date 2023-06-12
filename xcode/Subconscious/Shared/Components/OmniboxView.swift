@@ -136,7 +136,7 @@ struct OmniboxView_Previews: PreviewProvider {
             Slashlink("@ksr/red-mars")!,
             Slashlink("@ksr/green-mars")!,
             Slashlink("@ksr/blue-mars")!,
-            Slashlink(profile: Petname("ksr")!),
+            Slashlink(petname: Petname("ksr")!),
             Slashlink.local(Slug("mars")!),
             Slashlink.local(Slug("a-very-long-note-title-that-goes-on-and-on")!),
             Slashlink("@ksr/a-very-long-note-title-that-goes-on-and-on")!
@@ -177,11 +177,11 @@ struct OmniboxView_Previews: PreviewProvider {
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: Slashlink(profile: Petname("ksr")!),
+                    address: Slashlink(petname: Petname("ksr")!),
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: Slashlink(profile: Petname("ksr.biz.gov")!),
+                    address: Slashlink(petname: Petname("ksr.biz.gov")!),
                     defaultAudience: .local
                 )
                 OmniboxView(

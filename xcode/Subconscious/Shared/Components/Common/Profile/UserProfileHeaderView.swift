@@ -94,7 +94,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     nickname: Petname.Name("ben")!,
-                    address: Slashlink(profile: Petname("ben")!),
+                    address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human,
@@ -106,7 +106,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     nickname: Petname.Name("ben")!,
-                    address: Slashlink(profile: Petname("ben")!),
+                    address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist,

@@ -127,7 +127,7 @@ struct StoryUserView: View {
         .onTapGesture {
             switch story.user.ourFollowStatus {
             case .following(let name):
-                action(Slashlink(profile: name.toPetname()))
+                action(Slashlink(petname: name.toPetname()))
             case _:
                 action(story.user.address)
             }
@@ -145,7 +145,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
@@ -160,7 +160,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
@@ -175,7 +175,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .you,
@@ -190,7 +190,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
-                        address: Slashlink(profile: Petname("ben.gordon.chris.bob")!),
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
                         category: .you,

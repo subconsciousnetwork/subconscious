@@ -265,9 +265,9 @@ actor UserProfileService {
             
             let slashlink = Func.run {
                 guard case let .petname(basePetname) = address.peer else {
-                    return Slashlink(profile: entry.name.toPetname())
+                    return Slashlink(petname: entry.name.toPetname())
                 }
-                return Slashlink(profile: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
+                return Slashlink(petname: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
             let address = slashlink
@@ -411,7 +411,7 @@ actor UserProfileService {
     func requestUserProfile(
         petname: Petname
     ) async throws -> UserProfileContentResponse {
-        let address = Slashlink(profile: petname)
+        let address = Slashlink(petname: petname)
         return try await loadFullProfileData(address: address)
     }
     

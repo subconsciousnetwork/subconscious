@@ -85,7 +85,7 @@ extension StoryUser: DummyData {
             user: UserProfile(
                 did: Did.dummyData(),
                 nickname: nickname,
-                address: Slashlink(profile: nickname.toPetname()),
+                address: Slashlink(petname: nickname.toPetname()),
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
@@ -103,7 +103,7 @@ extension StoryUser: DummyData {
             user: UserProfile(
                 did: Did.dummyData(),
                 nickname: petname.leaf,
-                address: Slashlink(profile: petname),
+                address: Slashlink(petname: petname),
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
@@ -172,7 +172,7 @@ extension UserProfile: DummyData {
         return UserProfile(
             did: Did.dummyData(),
             nickname: nickname,
-            address: Slashlink(profile: nickname.toPetname()),
+            address: Slashlink(petname: nickname.toPetname()),
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
             category: .human,

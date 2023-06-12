@@ -118,7 +118,7 @@ public struct Slashlink:
     }
 
     /// Convenience initializer that creates a link to `@user/_profile_`
-    init(profile petname: Petname) {
+    init(petname: Petname) {
         self.init(
             peer: Peer.petname(petname),
             slug: Slug.profile

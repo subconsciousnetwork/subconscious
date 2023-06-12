@@ -100,20 +100,20 @@ struct PetnameView: View {
             VStack {
                 PetnameView(
                     name: .selfNickname(
-                        Slashlink(profile: Petname("melville.bobby.tables")!),
+                        Slashlink(petname: Petname("melville.bobby.tables")!),
                         Petname.Name("melville")!
                     )
                 )
                 PetnameView(
                     name: .proposedName(
-                        Slashlink(profile: Petname("melville.bobby.tables")!),
+                        Slashlink(petname: Petname("melville.bobby.tables")!),
                         Petname.Name("melville")!
                     ),
                     showMaybePrefix: true
                 )
                 PetnameView(
                     name: .petname(
-                        Slashlink(profile: Petname("robert")!),
+                        Slashlink(petname: Petname("robert")!),
                         Petname.Name("robert")!
                     )
                 )
