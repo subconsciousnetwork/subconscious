@@ -8,9 +8,9 @@
 import SwiftUI
 
 public enum NameVariant {
-    case known(Slashlink, Petname.Name)
-    case named(Slashlink, Petname.Name)
-    case unknown(Slashlink)
+    case petname(Slashlink, Petname.Name)
+    case proposedName(Slashlink, Petname.Name)
+    case selfNickname(Slashlink, Petname.Name)
 }
 
 struct PeerView: View {
@@ -35,6 +35,23 @@ struct PeerView: View {
     }
 }
 
+extension UserProfile {
+    func toNameVariant() -> NameVariant? {
+        switch (self.category, self.ourFollowStatus, self.nickname, self.address.petname?.leaf) {
+        case (.you, _, .some(let selfNickname), _):
+            return NameVariant.petname(Slashlink.ourProfile, selfNickname)
+        case (_, .following(let petname), _, _):
+            return NameVariant.petname(self.address, petname)
+        case (_, .notFollowing, .some(let selfNickname), _):
+            return NameVariant.selfNickname(self.address, selfNickname)
+        case (_, .notFollowing, _, .some(let proposedName)):
+            return NameVariant.proposedName(self.address, proposedName)
+        case _:
+            return nil
+        }
+    }
+}
+
 /// Byline style for displaying a petname
 struct PetnameView: View {
     var name: NameVariant
@@ -49,11 +66,11 @@ struct PetnameView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             switch name {
-            case .known(let address, let name):
+            case .petname(let address, let name):
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
-              
+                
                 /// Prevent showing _exactly_ the same name above and below e.g.
                 /// @bob
                 /// AKA @bob
@@ -66,52 +83,48 @@ struct PetnameView: View {
                    petname != name.toPetname() {
                     PeerView(peer: peer)
                 }
-            case .named(let address, let name):
+            case .selfNickname(let address, let name):
                 Text("\(annotation ?? "")\(name.description)")
                     .italic()
                     .fontWeight(.medium)
                 if let peer = address.peer {
                     PeerView(peer: peer)
                 }
-            case .unknown(let address):
-                Text(address.peer?.markup ?? address.markup)
-                    .lineLimit(1)
+            case .proposedName(let address, let name):
+                Text("\(annotation ?? "")\(name.description)")
+                    .italic()
                     .fontWeight(.medium)
+                if let peer = address.peer {
+                    PeerView(peer: peer)
+                }
             }
         }
     }
-}
-
-extension PetnameView {
-    init(address: Slashlink, name: Petname.Name?) {
-        if let name = name {
-            self.name = NameVariant.named(address, name)
-        } else {
-            self.name = NameVariant.unknown(address)
-        }
-    }
-}
-
-struct PetnameView_Previews: PreviewProvider {
-    static var previews: some View {
-        VStack {
-            PetnameView(
-                name: .named(
-                    Slashlink(profile: Petname("melville.bobby.tables")!),
-                    Petname.Name("melville")!
+    
+    
+    
+    struct PetnameView_Previews: PreviewProvider {
+        static var previews: some View {
+            VStack {
+                PetnameView(
+                    name: .selfNickname(
+                        Slashlink(profile: Petname("melville.bobby.tables")!),
+                        Petname.Name("melville")!
+                    )
                 )
-            )
-            PetnameView(
-                name: .unknown(
-                    Slashlink(profile: Petname("melville.bobby.tables")!)
+                PetnameView(
+                    name: .proposedName(
+                        Slashlink(profile: Petname("melville.bobby.tables")!),
+                        Petname.Name("melville")!
+                    )
                 )
-            )
-            PetnameView(
-                name: .known(
-                    Slashlink(profile: Petname("robert")!),
-                    Petname.Name("robert")!
+                PetnameView(
+                    name: .petname(
+                        Slashlink(profile: Petname("robert")!),
+                        Petname.Name("robert")!
+                    )
                 )
-            )
+            }
         }
     }
 }

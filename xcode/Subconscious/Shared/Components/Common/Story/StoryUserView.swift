@@ -50,23 +50,8 @@ struct StoryUserView: View {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
                     
-                    let user = story.user
-                    
-                    switch (user.ourFollowStatus, user.category) {
-                    case (_, .you):
-                        if let nickname = user.nickname {
-                            PetnameView(name: .known(user.address, nickname))
-                        }
-                        
-                    case (.following(let name), _):
-                        PetnameView(name: .known(user.address, name))
-                        
-                    case _:
-                        PetnameView(
-                            address: user.address,
-                            name: user.nickname
-                        )
-                        .fontWeight(.medium)
+                    if let name = story.user.toNameVariant() {
+                        PetnameView(name: name)
                     }
                     
                     Spacer()

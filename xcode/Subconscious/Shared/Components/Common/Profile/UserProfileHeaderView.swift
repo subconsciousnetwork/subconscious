@@ -27,22 +27,8 @@ struct UserProfileHeaderView: View {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp, size: .large)
                 
-                switch (user.ourFollowStatus, user.category) {
-                case (_, .you):
-                    if let nickname = user.nickname {
-                        PetnameView(name: .known(Slashlink.ourProfile, nickname))
-                    }
-                    
-                case (.following(let name), _):
-                    PetnameView(name: .known(user.address, name))
-                    
-                case _:
-                    PetnameView(
-                        address: user.address,
-                        name: user.nickname
-                    )
-                    .annotated(with: "Maybe: ")
-                    .fontWeight(.medium)
+                if let name = user.toNameVariant() {
+                    PetnameView(name: name)
                 }
                 
                 Spacer()
