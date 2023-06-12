@@ -13,6 +13,28 @@ public enum NameVariant {
     case selfNickname(Slashlink, Petname.Name)
 }
 
+extension UserProfile {
+    func toNameVariant() -> NameVariant? {
+        switch (
+            self.category,
+            self.ourFollowStatus,
+            self.nickname,
+            self.address.petname?.leaf
+        ) {
+        case (.you, _, .some(let selfNickname), _):
+            return NameVariant.petname(Slashlink.ourProfile, selfNickname)
+        case (_, .following(let petname), _, _):
+            return NameVariant.petname(self.address, petname)
+        case (_, .notFollowing, .some(let selfNickname), _):
+            return NameVariant.selfNickname(self.address, selfNickname)
+        case (_, .notFollowing, _, .some(let proposedName)):
+            return NameVariant.proposedName(self.address, proposedName)
+        case _:
+            return nil
+        }
+    }
+}
+
 struct PeerView: View {
     var peer: Peer
 
@@ -31,23 +53,6 @@ struct PeerView: View {
                 .foregroundColor(.secondary)
                 .fontWeight(.regular)
                 .font(.caption)
-        }
-    }
-}
-
-extension UserProfile {
-    func toNameVariant() -> NameVariant? {
-        switch (self.category, self.ourFollowStatus, self.nickname, self.address.petname?.leaf) {
-        case (.you, _, .some(let selfNickname), _):
-            return NameVariant.petname(Slashlink.ourProfile, selfNickname)
-        case (_, .following(let petname), _, _):
-            return NameVariant.petname(self.address, petname)
-        case (_, .notFollowing, .some(let selfNickname), _):
-            return NameVariant.selfNickname(self.address, selfNickname)
-        case (_, .notFollowing, _, .some(let proposedName)):
-            return NameVariant.proposedName(self.address, proposedName)
-        case _:
-            return nil
         }
     }
 }
