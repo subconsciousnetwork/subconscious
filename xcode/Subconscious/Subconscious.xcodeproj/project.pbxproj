@@ -70,6 +70,8 @@
 		B5F6ADCC29C1323900690DE4 /* Tests_FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */; };
 		B5FB9D9429D5176100D64988 /* GhostPillButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FB9D9329D5176100D64988 /* GhostPillButtonStyle.swift */; };
 		B5FB9D9529D51D9600D64988 /* UserProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */; };
+		B5FFB5342A37075400672B67 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FFB5332A37075400672B67 /* NotificationView.swift */; };
+		B5FFB5352A37075400672B67 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FFB5332A37075400672B67 /* NotificationView.swift */; };
 		B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057EA27DC355E002C0129 /* SubconsciousTests.swift */; };
 		B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057F327DC35BE002C0129 /* Tests_Slug.swift */; };
 		B800ABE8297DE7D20024D1FD /* DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800ABE7297DE7D20024D1FD /* DataService.swift */; };
@@ -479,6 +481,7 @@
 		B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookService.swift; sourceTree = "<group>"; };
 		B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FormField.swift; sourceTree = "<group>"; };
 		B5FB9D9329D5176100D64988 /* GhostPillButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostPillButtonStyle.swift; sourceTree = "<group>"; };
+		B5FFB5332A37075400672B67 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		B80057E827DC355E002C0129 /* SubconsciousTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SubconsciousTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B80057EA27DC355E002C0129 /* SubconsciousTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousTests.swift; sourceTree = "<group>"; };
 		B80057F327DC35BE002C0129 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
@@ -1262,6 +1265,7 @@
 				B822F18C27C9C0AB00943C6B /* CountChip.swift */,
 				B57D63BA29B1CA8B008BBB62 /* DidView.swift */,
 				B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */,
+				B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */,
 				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
 				B8A1621729B39337008322EB /* ExpandAlignedLeadingViewModifier.swift */,
@@ -1272,6 +1276,7 @@
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
 				B856521F2975BA9000B7FCA0 /* MetaTableView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
+				B5FFB5332A37075400672B67 /* NotificationView.swift */,
 				B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */,
 				B58A46B829D4001500491E43 /* Profile */,
 				B8AC648B278F757B0099E96B /* ProgressScrimView.swift */,
@@ -1293,7 +1298,6 @@
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
-				B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1712,6 +1716,7 @@
 				B85A805E296F08720007F957 /* AudienceMenuButtonView.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
+				B5FFB5342A37075400672B67 /* NotificationView.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */,
@@ -1840,6 +1845,7 @@
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8E00A2B29928DD2003B40C1 /* AppDefaults.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
+				B5FFB5352A37075400672B67 /* NotificationView.swift in Sources */,
 				B8B4251C28FE1DA60081B8D5 /* Entry.swift in Sources */,
 				B82BB7FC2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
@@ -2463,8 +2469,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
-				kind = branch;
 				branch = "swift-noosphere-v0.10.11";
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
