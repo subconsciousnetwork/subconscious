@@ -205,7 +205,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Index the contents of a sphere in the database
     case indexPeer(_ petname: Petname)
     case succeedIndexPeer(_ peer: PeerRecord)
-    case failIndexPeer(_ error: String)
+    case failIndexPeer(petname: Petname, error: Error)
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ petname: Petname)
@@ -803,10 +803,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 peer: peer
             )
-        case .failIndexPeer(let error):
+        case let .failIndexPeer(petname, error):
             return failIndexPeer(
                 state: state,
                 environment: environment,
+                petname: petname,
                 error: error
             )
         case .purgePeer(let petname):
@@ -1734,7 +1735,10 @@ struct AppModel: ModelProtocol {
                 )
                 return Action.succeedIndexPeer(peer)
             } catch {
-                return Action.failIndexPeer(error.localizedDescription)
+                return Action.failIndexPeer(
+                    petname: petname,
+                    error: error
+                )
             }
             
         }.eraseToAnyPublisher()
@@ -1758,11 +1762,13 @@ struct AppModel: ModelProtocol {
     static func failIndexPeer(
         state: Self,
         environment: Environment,
-        error: String
+        petname: Petname,
+        error: Error
     ) -> Update<Self> {
         logger.log([
             "msg": "Failed to index peer",
-            "error": error
+            "petname": petname.description,
+            "error": error.localizedDescription
         ])
         return Update(state: state)
     }
