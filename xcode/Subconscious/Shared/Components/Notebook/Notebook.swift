@@ -205,10 +205,13 @@ extension NotebookAction {
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
         case let .memo(address, fallback):
+            // Determine whether content is ours or theirs, push
+            // corresponding memo detail type.
             return .pushDetail(
-                MemoEditorDetailDescription(
+                MemoDetailDescription.from(
                     address: address,
-                    fallback: fallback
+                    fallback: fallback,
+                    defaultAudience: .local
                 )
             )
         case let .createLocalMemo(slug, fallback):
