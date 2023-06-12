@@ -19,7 +19,7 @@ struct PeerView: View {
     var body: some View {
         HStack(spacing: AppTheme.unit) {
             ZStack {
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadius/2)
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSm)
                     .foregroundColor(.secondaryBackground)
                 Text("AKA")
                     .foregroundColor(.secondary)
@@ -55,13 +55,7 @@ extension UserProfile {
 /// Byline style for displaying a petname
 struct PetnameView: View {
     var name: NameVariant
-    var annotation: String? = nil
-    
-    public func annotated(with annotation: String) -> Self {
-        var this = self
-        this.annotation = annotation
-        return this
-    }
+    var showMaybePrefix = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
@@ -83,17 +77,15 @@ struct PetnameView: View {
                    petname != name.toPetname() {
                     PeerView(peer: peer)
                 }
-            case .selfNickname(let address, let name):
-                Text("\(annotation ?? "")\(name.description)")
-                    .italic()
-                    .fontWeight(.medium)
-                if let peer = address.peer {
-                    PeerView(peer: peer)
-                }
-            case .proposedName(let address, let name):
-                Text("\(annotation ?? "")\(name.description)")
-                    .italic()
-                    .fontWeight(.medium)
+            case .selfNickname(let address, let name),
+                 .proposedName(let address, let name):
+                Text(showMaybePrefix
+                     ? "Maybe: \(name.description)"
+                     : "\(name.description)"
+                )
+                .italic()
+                .fontWeight(.medium)
+                
                 if let peer = address.peer {
                     PeerView(peer: peer)
                 }
@@ -116,7 +108,8 @@ struct PetnameView: View {
                     name: .proposedName(
                         Slashlink(profile: Petname("melville.bobby.tables")!),
                         Petname.Name("melville")!
-                    )
+                    ),
+                    showMaybePrefix: true
                 )
                 PetnameView(
                     name: .petname(

@@ -28,8 +28,11 @@ struct UserProfileHeaderView: View {
                 ProfilePic(pfp: user.pfp, size: .large)
                 
                 if let name = user.toNameVariant() {
-                    PetnameView(name: name)
-                }
+                    PetnameView(
+                        name: name,
+                        showMaybePrefix: true
+                    )
+               }
                 
                 Spacer()
                 
