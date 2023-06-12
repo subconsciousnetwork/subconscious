@@ -115,24 +115,28 @@ actor DataService {
         petname: Petname
     ) async throws -> PeerRecord {
         let sphere = try await noosphere.traverse(petname: petname)
-        logger.debug([
-            "msg": "Traversed to peer",
-            "petname": petname.description
-        ])
+        logger.debug(
+            "Traversed to peer",
+            metadata: [
+                "petname": petname.description
+            ]
+        )
         let identity = try await sphere.identity()
         let version = try await sphere.version()
         // Get peer info from last sync
         let peer = try? database.readPeer(identity: identity)
         // Get changes since the last time we indexed this peer
         let changes = try await sphere.changes(since: peer?.since)
-        logger.debug([
-            "msg": "Indexing peer",
-            "petname": petname.description,
-            "identity": identity.description,
-            "version": version,
-            "since": peer?.since ?? "nil",
-            "changes": changes.count.description
-        ])
+        logger.debug(
+            "Indexing peer",
+            metadata: [
+                "petname": petname.description,
+                "identity": identity.description,
+                "version": version,
+                "since": peer?.since ?? "nil",
+                "changes": changes.count.description
+            ]
+        )
         
         let savepoint = "index_peer"
         try database.savepoint(savepoint)
@@ -151,15 +155,19 @@ actor DataService {
                         link: link,
                         memo: memo
                     )
-                    logger.debug([
-                        "msg": "Indexed memo \(slashlink)",
-                        "slashlink": slashlink.description
-                    ])
+                    logger.debug(
+                        "Indexed memo \(slashlink)",
+                        metadata: [
+                            "slashlink": slashlink.description
+                        ]
+                    )
                 } else {
-                    logger.debug([
-                        "msg": "Removed indexed memo \(slashlink)",
-                        "slashlink": slashlink.description
-                    ])
+                    logger.debug(
+                        "Removed indexed memo \(slashlink)",
+                        metadata: [
+                            "slashlink": slashlink.description
+                        ]
+                    )
                     try database.removeMemo(link)
                 }
             }
@@ -171,22 +179,26 @@ actor DataService {
                 )
             )
             try database.release(savepoint)
-            logger.log([
-                "msg": "Indexed peer",
-                "petname": petname.description,
-                "identity": identity.description,
-                "version": version,
-                "since": peer?.since ?? "nil"
-            ])
+            logger.log(
+                "Indexed peer",
+                metadata: [
+                    "petname": petname.description,
+                    "identity": identity.description,
+                    "version": version,
+                    "since": peer?.since ?? "nil"
+                ]
+            )
         } catch {
             try database.rollback(savepoint)
-            logger.log([
-                "msg": "Failed to index peer. Rolling back.",
-                "petname": petname.description,
-                "identity": identity.description,
-                "version": version,
-                "since": peer?.since ?? "nil"
-            ])
+            logger.log(
+                "Failed to index peer. Rolling back.",
+                metadata: [
+                    "petname": petname.description,
+                    "identity": identity.description,
+                    "version": version,
+                    "since": peer?.since ?? "nil"
+                ]
+            )
             throw error
         }
         return PeerRecord(
@@ -237,12 +249,14 @@ actor DataService {
                             identity: peer.identity
                         )
                         try database.writePeer(updatedPeer)
-                        logger.log([
-                            "msg": "Updated record for peer",
-                            "petname": updatedPeer.petname.description,
-                            "identity": updatedPeer.identity.description,
-                            "since": updatedPeer.since ?? "nil"
-                        ])
+                        logger.log(
+                            "Updated record for peer",
+                            metadata: [
+                                "petname": updatedPeer.petname.description,
+                                "identity": updatedPeer.identity.description,
+                                "since": updatedPeer.since ?? "nil"
+                            ]
+                        )
                     } else {
                         let createdPeer = PeerRecord(
                             petname: peer.petname,
@@ -252,12 +266,14 @@ actor DataService {
                         // Intentionally set version to nil, since we have
                         // never yet indexed this peer.
                         try database.writePeer(createdPeer)
-                        logger.log([
-                            "msg": "Created record for peer",
-                            "petname": createdPeer.petname.description,
-                            "identity": createdPeer.identity.description,
-                            "since": createdPeer.since ?? "nil"
-                        ])
+                        logger.log(
+                            "Created record for peer",
+                            metadata: [
+                                "petname": createdPeer.petname.description,
+                                "identity": createdPeer.identity.description,
+                                "since": createdPeer.since ?? "nil"
+                            ]
+                        )
                     }
                 case let .remove(petname):
                     // If we have a peer under this petname,
@@ -266,12 +282,14 @@ actor DataService {
                         petname: petname
                     ) {
                         try database.purgePeer(identity: removedPeer.identity)
-                        logger.log([
-                            "msg": "Purged peer",
-                            "petname": removedPeer.petname.description,
-                            "identity": removedPeer.identity.description,
-                            "since": removedPeer.since ?? "nil"
-                        ])
+                        logger.log(
+                            "Purged peer",
+                            metadata: [
+                                "petname": removedPeer.petname.description,
+                                "identity": removedPeer.identity.description,
+                                "since": removedPeer.since ?? "nil"
+                            ]
+                        )
                     }
                 }
             }
@@ -304,23 +322,27 @@ actor DataService {
                 )
             )
             try database.release(savepoint)
-            logger.log([
-                "msg": "Indexed our sphere",
-                "identity": identity.description,
-                "version": version
-            ])
-
+            logger.log(
+                "Indexed our sphere",
+                metadata: [
+                    "identity": identity.description,
+                    "version": version
+                ]
+            )
+            
             return OurSphereRecord(
                 identity: identity,
                 since: version
             )
         } catch {
             try database.rollback(savepoint)
-            logger.log([
-                "msg": "Failed to index our sphere. Rolling back.",
-                "identity": identity.description,
-                "version": version
-            ])
+            logger.log(
+                "Failed to index our sphere. Rolling back.",
+                metadata: [
+                    "identity": identity.description,
+                    "version": version
+                ]
+            )
             throw error
         }
     }
@@ -336,12 +358,14 @@ actor DataService {
             DataServiceError.unknownPetname(petname)
         )
         try database.purgePeer(identity: peer.identity)
-        logger.log([
-            "msg": "Purged peer from database",
-            "petname": petname.description,
-            "identity": peer.identity.description,
-            "since": peer.since ?? "nil"
-        ])
+        logger.log(
+            "Purged peer from database",
+            metadata: [
+                "petname": petname.description,
+                "identity": peer.identity.description,
+                "since": peer.since ?? "nil"
+            ]
+        )
         return peer
     }
     

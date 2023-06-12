@@ -980,13 +980,15 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         let sphereIdentity = state.sphereIdentity ?? "nil"
         let isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
-        logger.debug([
-            "msg": "appear",
-            "documents": environment.documentURL.absoluteString,
-            "database": environment.database.database.path,
-            "sphereIdentity": sphereIdentity,
-            "isNoosphereEnabled": String(describing: isNoosphereEnabled)
-        ])
+        logger.debug(
+            "appear",
+            metadata: [
+                "documents": environment.documentURL.absoluteString,
+                "database": environment.database.database.path,
+                "sphereIdentity": sphereIdentity,
+                "isNoosphereEnabled": String(describing: isNoosphereEnabled)
+            ]
+        )
         return update(
             state: state,
             actions: [
@@ -1458,17 +1460,21 @@ struct AppModel: ModelProtocol {
             let info: OurSphereRecord = try environment.database
                 .readOurSphere()
                 .unwrap()
-            logger.log([
-                "msg": "Last index for our sphere",
-                "identity": info.identity.description,
-                "version": info.since
-            ])
+            logger.log(
+                "Last index for our sphere",
+                metadata: [
+                    "identity": info.identity.description,
+                    "version": info.since
+                ]
+            )
         } catch {
-            logger.log([
-                "msg": "Last index for our sphere",
-                "identity": "nil",
-                "version": "nil"
-            ])
+            logger.log(
+                "Last index for our sphere",
+                metadata: [
+                    "identity": "nil",
+                    "version": "nil"
+                ]
+            )
         }
         // For now, we just sync everything on ready.
         return update(
@@ -1499,10 +1505,12 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.lastGatewaySyncStatus = .pending
-        logger.log([
-            "msg": "Syncing with gateway",
-            "url": model.gatewayURL
-        ])
+        logger.log(
+            "Syncing with gateway",
+            metadata: [
+                "url": model.gatewayURL
+            ]
+        )
         let fx: Fx<AppAction> = environment.noosphere.syncPublisher(
         ).map({ version in
             AppAction.succeedSyncSphereWithGateway(version: version)
@@ -1517,10 +1525,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         version: String
     ) -> Update<AppModel> {
-        logger.log([
-            "msg": "Synced our sphere with gateway",
-            "version": version
-        ])
+        logger.log(
+            "Synced our sphere with gateway",
+            metadata: [
+                "version": version
+            ]
+        )
         
         var model = state
         model.lastGatewaySyncStatus = .succeeded
@@ -1537,10 +1547,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.log([
-            "msg": "Sphere failed to sync with gateway",
-            "error": error
-        ])
+        logger.log(
+            "Sphere failed to sync with gateway",
+            metadata: [
+                "error": error
+            ]
+        )
         
         var model = state
         model.lastGatewaySyncStatus = .failed(error)
@@ -1575,11 +1587,13 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: OurSphereRecord
     ) -> Update<AppModel> {
-        logger.log([
-            "msg": "Indexed our sphere",
-            "identity": receipt.identity.description,
-            "version": receipt.since
-        ])
+        logger.log(
+            "Indexed our sphere",
+            metadata: [
+                "identity": receipt.identity.description,
+                "version": receipt.since
+            ]
+        )
         
         var model = state
         model.sphereSyncStatus = .succeeded
@@ -1599,10 +1613,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.log([
-            "msg": "Failed to index our sphere to database",
-            "error": error
-        ])
+        logger.log(
+            "Failed to index our sphere to database",
+            metadata: [
+                "error": error
+            ]
+        )
         
         var model = state
         model.sphereSyncStatus = .failed(error)
@@ -1675,9 +1691,10 @@ struct AppModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
-        logger.log([
-            "msg": "Collecting peers to index"
-        ])
+        logger.log(
+            "Collecting peers to index",
+            metadata: [:]
+        )
         let fx: Fx<Action> = Future.detached {
             do {
                 let peers = try environment.database.listPeers()
@@ -1711,10 +1728,12 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         error: String
     ) -> Update<Self> {
-        logger.log([
-            "msg": "Failed to collect peers to index",
-            "error": error
-        ])
+        logger.log(
+            "Failed to collect peers to index",
+            metadata: [
+                "error": error
+            ]
+        )
         return Update(state: state)
     }
     
@@ -1724,10 +1743,12 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         petname: Petname
     ) -> Update<Self> {
-        logger.log([
-            "msg": "Indexing peer",
-            "petname": petname.description
-        ])
+        logger.log(
+            "Indexing peer",
+            metadata: [
+                "petname": petname.description
+            ]
+        )
         let fx: Fx<Action> = Future.detached(priority: .background) {
             do {
                 let peer = try await environment.data.indexPeer(
@@ -1750,12 +1771,14 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         peer: PeerRecord
     ) -> Update<Self> {
-        logger.log([
-            "msg": "Indexed peer",
-            "petname": peer.petname.description,
-            "identity": peer.identity.description,
-            "since": peer.since ?? "nil"
-        ])
+        logger.log(
+            "Indexed peer",
+            metadata: [
+                "petname": peer.petname.description,
+                "identity": peer.identity.description,
+                "since": peer.since ?? "nil"
+            ]
+        )
         return Update(state: state)
     }
     
@@ -1765,11 +1788,13 @@ struct AppModel: ModelProtocol {
         petname: Petname,
         error: Error
     ) -> Update<Self> {
-        logger.log([
-            "msg": "Failed to index peer",
-            "petname": petname.description,
-            "error": error.localizedDescription
-        ])
+        logger.log(
+            "Failed to index peer",
+            metadata: [
+                "petname": petname.description,
+                "error": error.localizedDescription
+            ]
+        )
         return Update(state: state)
     }
     
@@ -1788,10 +1813,12 @@ struct AppModel: ModelProtocol {
                 return Action.failPurgePeer(error.localizedDescription)
             }
         }.eraseToAnyPublisher()
-        logger.log([
-            "msg": "Purging peer",
-            "petname": petname.description
-        ])
+        logger.log(
+            "Purging peer",
+            metadata: [
+                "petname": petname.description
+            ]
+        )
         return Update(state: state, fx: fx)
     }
     
@@ -1800,12 +1827,14 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         peer: PeerRecord
     ) -> Update<Self> {
-        logger.log([
-            "msg": "Purged peer from database",
-            "petname": peer.petname.description,
-            "identity": peer.identity.description,
-            "since": peer.since ?? "nil"
-        ])
+        logger.log(
+            "Purged peer from database",
+            metadata: [
+                "petname": peer.petname.description,
+                "identity": peer.identity.description,
+                "since": peer.since ?? "nil"
+            ]
+        )
         return Update(state: state)
     }
     
@@ -1814,10 +1843,12 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         error: String
     ) -> Update<Self> {
-        logger.log([
-            "msg": "Failed to purge peer from database",
-            "error": error
-        ])
+        logger.log(
+            "Failed to purge peer from database",
+            metadata: [
+                "error": error
+            ]
+        )
         return Update(state: state)
     }
     

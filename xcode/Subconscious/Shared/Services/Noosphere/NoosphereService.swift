@@ -81,13 +81,15 @@ actor NoosphereService:
         noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic,
         logger: Logger = logger
     ) {
-        logger.debug([
-            "msg": "init NoosphereService",
-            "globalStorageURL": globalStorageURL.absoluteString,
-            "sphereStorageURL": sphereStorageURL.absoluteString,
-            "gatewayURL": gatewayURL?.absoluteString ?? "nil",
-            "sphereIdentity": sphereIdentity ?? "nil"
-        ])
+        logger.debug(
+            "init NoosphereService",
+            metadata: [
+                "globalStorageURL": globalStorageURL.absoluteString,
+                "sphereStorageURL": sphereStorageURL.absoluteString,
+                "gatewayURL": gatewayURL?.absoluteString ?? "nil",
+                "sphereIdentity": sphereIdentity ?? "nil"
+            ]
+        )
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
