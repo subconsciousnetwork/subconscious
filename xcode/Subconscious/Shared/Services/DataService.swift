@@ -228,47 +228,47 @@ actor DataService {
                     //
                     // If this peer is not been indexed before, write it to DB
                     // with nil version, since we have never yet indexed it.
-                    if var existing = try database.readPeer(
+                    if var existingPeer = try database.readPeer(
                         petname: peer.petname
                     ) {
-                        try database.writePeer(
-                            existing.update(
-                                identity: peer.identity
-                            )
+                        let updatedPeer = existingPeer.update(
+                            identity: peer.identity
                         )
+                        try database.writePeer(updatedPeer)
                         logger.log([
                             "msg": "Updated record for peer",
-                            "petname": peer.petname.description,
-                            "identity": peer.identity.description,
-                            "version": peer.version ?? "nil"
+                            "petname": updatedPeer.petname.description,
+                            "identity": updatedPeer.identity.description,
+                            "since": updatedPeer.since ?? "nil"
                         ])
                     } else {
-                        logger.log([
-                            "msg": "Created record for peer",
-                            "petname": peer.petname.description,
-                            "identity": peer.identity.description,
-                            "version": peer.version ?? "nil"
-                        ])
+                        let createdPeer = PeerRecord(
+                            petname: peer.petname,
+                            identity: peer.identity,
+                            since: nil
+                        )
                         // Intentionally set version to nil, since we have
                         // never yet indexed this peer.
-                        try database.writePeer(
-                            PeerRecord(
-                                petname: peer.petname,
-                                identity: peer.identity,
-                                since: nil
-                            )
-                        )
+                        try database.writePeer(createdPeer)
+                        logger.log([
+                            "msg": "Created record for peer",
+                            "petname": createdPeer.petname.description,
+                            "identity": createdPeer.identity.description,
+                            "since": createdPeer.since ?? "nil"
+                        ])
                     }
                 case let .remove(petname):
                     // If we have a peer under this petname,
                     // purge its contents from the db.
-                    if let peer = try? database.readPeer(petname: petname) {
-                        try database.purgePeer(identity: peer.identity)
+                    if let removedPeer = try? database.readPeer(
+                        petname: petname
+                    ) {
+                        try database.purgePeer(identity: removedPeer.identity)
                         logger.log([
                             "msg": "Purged peer",
-                            "petname": peer.petname.description,
-                            "identity": peer.identity.description,
-                            "since": peer.since ?? "nil"
+                            "petname": removedPeer.petname.description,
+                            "identity": removedPeer.identity.description,
+                            "since": removedPeer.since ?? "nil"
                         ])
                     }
                 }
