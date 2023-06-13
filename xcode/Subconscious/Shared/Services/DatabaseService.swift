@@ -835,39 +835,55 @@ final class DatabaseService {
         }
         // Get backlinks.
         // Use content indexed in database, even though it might be stale.
-        guard let results = try? database.execute(
+        return try database.execute(
             sql: """
-            SELECT id, modified, excerpt
+            SELECT
+                memo_search.did,
+                peer.petname,
+                memo_search.slug,
+                memo_search.modified,
+                memo_search.excerpt
             FROM memo_search
-            WHERE id != ? AND memo_search.description MATCH ?
+            LEFT JOIN peer ON memo_search.did = peer.did
+            WHERE memo_search.description MATCH ?
+                AND id != ?
+                AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY rank
             LIMIT 200
             """,
             parameters: [
-                .text(link.id),
-                .queryFTS5(link.slug.description)
+                .queryFTS5(link.slug.description),
+                .text(link.id)
             ]
-        ) else {
-            return []
-        }
-        
-        return results.compactMap({ row in
-            guard
-                let address = row.col(0)?
-                    .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
-            else {
+        ).compactMap({ row in
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let modified = row.col(3)?.toDate()
+            let excerpt = row.col(4)?.toString() ?? ""
+            switch (did, petname, slug, modified) {
+            case let (_, .some(petname), .some(slug), .some(modified)):
+                return EntryStub(
+                    address: Slashlink(
+                        peer: Peer.petname(petname),
+                        slug: slug
+                    ),
+                    excerpt: excerpt,
+                    modified: modified
+                )
+            case let (.some(did), .none, .some(slug), .some(modified)):
+                let address = Slashlink(
+                    peer: Peer.did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return EntryStub(
+                    address: address,
+                    excerpt: excerpt,
+                    modified: modified
+                )
+            default:
                 return nil
             }
-            return EntryStub(
-                address: address.relativizeIfNeeded(did: owner),
-                excerpt: excerpt,
-                modified: modified
-            )
         })
     }
     
