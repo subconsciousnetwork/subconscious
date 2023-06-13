@@ -141,7 +141,7 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
     let nickname: Petname.Name?
-    var address: Slashlink
+    let address: Slashlink
     let pfp: ProfilePicVariant
     let bio: UserProfileBio
     let category: UserCategory
@@ -166,6 +166,19 @@ struct UserProfile: Equatable, Codable, Hashable {
             return "\(name)"
         }
         
+    }
+    
+    func overrideAddress(_ address: Slashlink) -> UserProfile {
+        UserProfile(
+            did: did,
+            nickname: nickname,
+            address: address,
+            pfp: pfp,
+            bio: bio,
+            category: category,
+            resolutionStatus: resolutionStatus,
+            ourFollowStatus: ourFollowStatus
+        )
     }
 }
 

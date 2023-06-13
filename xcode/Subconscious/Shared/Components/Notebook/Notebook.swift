@@ -282,15 +282,11 @@ extension NotebookAction {
             let user = Func.run {
                 switch (user.category, user.ourFollowStatus) {
                 case (.you, _):
-                    var ourUser = user
                     // Loop back to our profile
-                    ourUser.address = Slashlink.ourProfile
-                    return ourUser
+                    return user.overrideAddress(Slashlink.ourProfile)
                 case (_, .following(let name)):
-                    var ourUser = user
                     // Rewrite address using our name
-                    ourUser.address = Slashlink(petname: name.toPetname())
-                    return ourUser
+                    return user.overrideAddress(Slashlink(petname: name.toPetname()))
                 case _:
                     return user
                 }
