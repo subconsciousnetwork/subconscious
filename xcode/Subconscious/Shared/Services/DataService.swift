@@ -685,7 +685,9 @@ actor DataService {
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         Future.detached(priority: .userInitiated) {
-            await self.database.searchLinkSuggestions(
+            let identity = try await self.noosphere.identity()
+            return await self.database.searchLinkSuggestions(
+                owner: identity,
                 query: query,
                 omitting: invalidSuggestions,
                 fallback: fallback

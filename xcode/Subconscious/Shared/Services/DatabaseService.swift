@@ -709,7 +709,8 @@ final class DatabaseService {
                 sql: """
                 SELECT id
                 FROM memo_search
-                WHERE memo_search MATCH ? AND did IN (SELECT value FROM json_each(?))
+                WHERE memo_search MATCH ?
+                    AND did IN (SELECT value FROM json_each(?))
                 ORDER BY rank
                 LIMIT 25
                 """,
@@ -732,6 +733,7 @@ final class DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
+        owner: Did?,
         query: String,
         omitting invalidSuggestions: Set<Slashlink> = Set(),
         fallback: [LinkSuggestion] = []
@@ -757,9 +759,15 @@ final class DatabaseService {
         
         guard let results = try? database.execute(
             sql: """
-            SELECT id, title
+            SELECT
+                memo_search.did,
+                peer.petname,
+                memo_search.slug,
+                memo_search.title
             FROM memo_search
+            LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search MATCH ?
+                AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY rank
             LIMIT 25
             """,
@@ -770,16 +778,31 @@ final class DatabaseService {
             return Array(suggestions.values)
         }
         let entries: [EntryLink] = results.compactMap({ row in
-            guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
-                let title = row.col(1)?.toString()
-            else {
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let title = row.col(3)?.toString()
+            switch (did, petname, slug, title) {
+            case let (_, .some(petname), .some(slug), .some(title)):
+                return EntryLink(
+                    address: Slashlink(
+                        peer: Peer.petname(petname),
+                        slug: slug
+                    ),
+                    title: title
+                )
+            case let (.some(did), .none, .some(slug), .some(title)):
+                let address = Slashlink(
+                    peer: Peer.did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return EntryLink(
+                    address: address,
+                    title: title
+                )
+            default:
                 return nil
             }
-            return EntryLink(
-                address: address,
-                title: title
-            )
         })
         
         // Insert entries into suggestions.
