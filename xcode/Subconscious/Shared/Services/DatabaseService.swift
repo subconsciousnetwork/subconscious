@@ -490,7 +490,7 @@ final class DatabaseService {
             SELECT memo.did, peer.petname, memo.slug, memo.title
             FROM memo
             LEFT JOIN peer ON memo.did = peer.did
-            WHERE memo.slug NOT LIKE '\_%' ESCAPE '\'
+            WHERE substr(memo.slug, 1, 1) != '_'
             ORDER BY memo.modified DESC
             LIMIT 5
             """#
@@ -501,7 +501,7 @@ final class DatabaseService {
             let slug = row.col(2)?.toString()?.toSlug()
             let title = row.col(3)?.toString()
             switch (did, petname, slug) {
-            case let (.none, .some(petname), .some(slug)):
+            case let (_, .some(petname), .some(slug)):
                 return EntryLink(
                     address: Slashlink(
                         peer: Peer.petname(petname),
@@ -509,7 +509,7 @@ final class DatabaseService {
                     ),
                     title: title
                 )
-            case let (.some(did), .none, .some(slug)):
+            case let (.some(did), _, .some(slug)):
                 let address = Slashlink(
                     peer: Peer.did(did),
                     slug: slug
@@ -575,7 +575,7 @@ final class DatabaseService {
             FROM memo_search
             LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search MATCH ?
-                AND (memo_search.slug NOT LIKE '\_%' ESCAPE '\')
+                AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY rank
             LIMIT 25
             """#,
@@ -589,7 +589,7 @@ final class DatabaseService {
             let slug = row.col(2)?.toString()?.toSlug()
             let excerpt = row.col(3)?.toString() ?? ""
             switch (did, petname, slug) {
-            case let (.none, .some(petname), .some(slug)):
+            case let (_, .some(petname), .some(slug)):
                 return Suggestion.memo(
                     address: Slashlink(
                         peer: .petname(petname),
@@ -597,7 +597,7 @@ final class DatabaseService {
                     ),
                     fallback: excerpt
                 )
-            case let (.some(did), .none, .some(slug)):
+            case let (.some(did), _, .some(slug)):
                 let address = Slashlink(
                     peer: .did(did),
                     slug: slug
