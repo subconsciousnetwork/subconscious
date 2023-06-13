@@ -746,7 +746,7 @@ final class DatabaseService {
             return fallback
         }
         
-        var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
+        var suggestions: OrderedDictionary<Slashlink, LinkSuggestion> = [:]
         
         // Append literal
         if
@@ -754,7 +754,7 @@ final class DatabaseService {
                 .toLocalSlashlink()
                 .toEntryLink(title: query)
         {
-            suggestions[literal.address.slug] = .new(literal)
+            suggestions[literal.address] = .new(literal)
         }
         
         guard let results = try? database.execute(
@@ -782,8 +782,8 @@ final class DatabaseService {
             let petname = row.col(1)?.toString()?.toPetname()
             let slug = row.col(2)?.toString()?.toSlug()
             let title = row.col(3)?.toString()
-            switch (did, petname, slug, title) {
-            case let (_, .some(petname), .some(slug), .some(title)):
+            switch (did, petname, slug) {
+            case let (_, .some(petname), .some(slug)):
                 return EntryLink(
                     address: Slashlink(
                         peer: Peer.petname(petname),
@@ -791,7 +791,7 @@ final class DatabaseService {
                     ),
                     title: title
                 )
-            case let (.some(did), .none, .some(slug), .some(title)):
+            case let (.some(did), .none, .some(slug)):
                 let address = Slashlink(
                     peer: Peer.did(did),
                     slug: slug
@@ -814,7 +814,7 @@ final class DatabaseService {
             if !invalidSuggestions.contains(entry.address) {
                 suggestions.updateValue(
                     .entry(entry),
-                    forKey: entry.address.slug
+                    forKey: entry.address
                 )
             }
         }
