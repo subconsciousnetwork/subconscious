@@ -711,6 +711,7 @@ final class DatabaseService {
                 FROM memo_search
                 WHERE memo_search MATCH ?
                     AND did IN (SELECT value FROM json_each(?))
+                    AND substr(memo_search.slug, 1, 1) != '_'
                 ORDER BY rank
                 LIMIT 25
                 """,
