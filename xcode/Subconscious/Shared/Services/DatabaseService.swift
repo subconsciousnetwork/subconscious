@@ -307,15 +307,28 @@ final class DatabaseService {
         }
     }
 
-    /// Write entry syncronously
+    /// Write entry synchronously
+    ///
+    /// - Parameters:
+    ///     - did: the DID of the sphere this content belongs to
+    ///     - petname: the petname, if any, for this sphere.
+    ///       We use this to index the petname for autocompletion.
+    ///     - slug: the slug of the content
+    ///     - memo: the memo to write
+    ///     - size: the total file size on disk in bytes. This is only used for
+    ///       local files, not sphere files. We use modified time and size as a
+    ///       signal for indexing.
     func writeMemo(
-        link: Link,
+        did: Did,
+        petname: Petname?,
+        slug: Slug,
         memo: Memo,
         size: Int? = nil
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
+        let link = Link(did: did, slug: slug)
         if link.isLocal && size == nil {
             throw DatabaseServiceError.sizeMissingForLocal
         }
@@ -356,6 +369,7 @@ final class DatabaseService {
             parameters: [
                 .text(link.id),
                 .text(link.did.description),
+                .text(petname?.description),
                 .text(link.slug.description),
                 .text(memo.contentType),
                 .date(memo.created),
@@ -373,10 +387,11 @@ final class DatabaseService {
     }
     
     /// Delete entry from database
-    func removeMemo(_ link: Link) throws {
+    func removeMemo(did: Did, slug: Slug) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
+        let link = Link(did: did, slug: slug)
         try database.execute(
             sql: """
             DELETE FROM memo WHERE id = ?
@@ -388,7 +403,7 @@ final class DatabaseService {
     }
     
     /// Count all entries
-    func countMemos() -> Int? {
+    func countMemos(owner: Did?) -> Int? {
         guard self.state == .ready else {
             return nil
         }
@@ -397,8 +412,13 @@ final class DatabaseService {
         guard let results = try? database.execute(
             sql: """
             SELECT count(slug)
+            WHERE did = ?
+                AND substr(memo.slug, 1, 1) != '_'
             FROM memo
-            """
+            """,
+            parameters: [
+                .text(owner?.description)
+            ]
         ) else {
             return nil
         }
@@ -1027,6 +1047,7 @@ final class DatabaseService {
             sql: """
             SELECT id, title
             FROM memo
+            WHERE substr(memo.slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1
             """
@@ -1052,7 +1073,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-18T16:39:00")!,
+            version: Int.from(iso8601String: "2023-06-13T14:49:00")!,
             sql: """
             /*
             A table that tracks sphere->database indexing info for our sphere.
@@ -1094,6 +1115,7 @@ extension Config {
             CREATE TABLE memo (
                 id TEXT PRIMARY KEY,
                 did TEXT NOT NULL,
+                petname TEXT,
                 slug TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
@@ -1117,6 +1139,7 @@ extension Config {
             CREATE VIRTUAL TABLE memo_search USING fts5(
                 id,
                 did UNINDEXED,
+                petname,
                 slug,
                 content_type UNINDEXED,
                 created UNINDEXED,
@@ -1153,6 +1176,7 @@ extension Config {
                     rowid,
                     id,
                     did,
+                    petname,
                     slug,
                     content_type,
                     created,
@@ -1170,6 +1194,7 @@ extension Config {
                     new.rowid,
                     new.id,
                     new.did,
+                    new.petname,
                     new.slug,
                     new.content_type,
                     new.created,
@@ -1189,6 +1214,7 @@ extension Config {
                     rowid,
                     id,
                     did,
+                    petname,
                     slug,
                     content_type,
                     created,
@@ -1206,6 +1232,7 @@ extension Config {
                     new.rowid,
                     new.id,
                     new.did,
+                    new.petname,
                     new.slug,
                     new.content_type,
                     new.created,
