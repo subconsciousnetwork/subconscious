@@ -486,28 +486,41 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         let suggestions: [Suggestion] = try database.execute(
-            sql: """
-            SELECT id, title
+            sql: #"""
+            SELECT memo.did, peer.petname, memo.slug, memo.title
             FROM memo
-            ORDER BY modified DESC
+            LEFT JOIN peer ON memo.did = peer.did
+            WHERE memo.slug NOT LIKE '\_%' ESCAPE '\'
+            ORDER BY memo.modified DESC
             LIMIT 5
-            """
+            """#
         )
         .compactMap({ row in
-            guard
-                let address = row.col(0)?
-                    .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let title = row.col(1)?.toString()
-            else {
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let title = row.col(3)?.toString()
+            switch (did, petname, slug) {
+            case let (.none, .some(petname), .some(slug)):
+                return EntryLink(
+                    address: Slashlink(
+                        peer: Peer.petname(petname),
+                        slug: slug
+                    ),
+                    title: title
+                )
+            case let (.some(did), .none, .some(slug)):
+                let address = Slashlink(
+                    peer: Peer.did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return EntryLink(
+                    address: address,
+                    title: title
+                )
+            default:
                 return nil
             }
-            return EntryLink(
-                address: address,
-                title: title
-            )
         })
         .map({ (link: EntryLink) in
             Suggestion.memo(
@@ -553,29 +566,49 @@ final class DatabaseService {
         suggestions.append(.createLocalMemo(fallback: query))
 
         let memos: [Suggestion] = try database.execute(
-            sql: """
-            SELECT id, excerpt
+            sql: #"""
+            SELECT
+                memo_search.did,
+                peer.petname,
+                memo_search.slug,
+                memo_search.excerpt
             FROM memo_search
+            LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search MATCH ?
+                AND (memo_search.slug NOT LIKE '\_%' ESCAPE '\')
             ORDER BY rank
             LIMIT 25
-            """,
+            """#,
             parameters: [
                 .prefixQueryFTS5(query)
             ]
         )
         .compactMap({ row in
-            guard
-                let address = row.col(0)?
-                    .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let excerpt = row.col(1)?.toString()
-            else {
-                return  nil
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let excerpt = row.col(3)?.toString() ?? ""
+            switch (did, petname, slug) {
+            case let (.none, .some(petname), .some(slug)):
+                return Suggestion.memo(
+                    address: Slashlink(
+                        peer: .petname(petname),
+                        slug: slug
+                    ),
+                    fallback: excerpt
+                )
+            case let (.some(did), .none, .some(slug)):
+                let address = Slashlink(
+                    peer: .did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return Suggestion.memo(
+                    address: address,
+                    fallback: excerpt
+                )
+            default:
+                return nil
             }
-            return Suggestion.memo(address: address, fallback: excerpt)
         })
         suggestions.append(contentsOf: memos)
         return suggestions
