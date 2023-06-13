@@ -105,11 +105,7 @@ struct MemoViewerDetailNotFoundView: View {
     
     var body: some View {
         ScrollView {
-            VStack {
-                Text("Nothing here yet")
-            }
-            .frame(minHeight: contentFrameHeight)
-            .foregroundColor(.secondary)
+            NotFoundView()
             ThickDividerView()
                 .padding(.bottom, AppTheme.unit4)
             BacklinksView(

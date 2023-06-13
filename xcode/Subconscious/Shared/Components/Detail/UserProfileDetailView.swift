@@ -261,6 +261,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var isUnfollowConfirmationPresented = false
     var isEditProfileSheetPresented = false
     
+    var address: Slashlink? = nil
     var user: UserProfile? = nil
     var isFollowingUser: Bool = false
     
@@ -320,6 +321,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.initialTabIndex = initialTabIndex
             // We might be passed some basic profile data
             // we can use this in the loading state for a preview
+            model.address = address
             model.user = user
             
             let fx: Fx<UserProfileDetailAction> = Future.detached {

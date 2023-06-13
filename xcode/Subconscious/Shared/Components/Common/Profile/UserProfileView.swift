@@ -180,7 +180,8 @@ struct UserProfileView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let user = state.user {
+            if let user = state.user,
+               state.loadingState != .notFound {
                 UserProfileHeaderView(
                     user: user,
                     statistics: state.statistics,
@@ -222,22 +223,25 @@ struct UserProfileView: View {
                     }
                 )
             case .notFound:
-                Text("Not found")
+                NotFoundView()
+                    // extra padding to visually center the group
+                    .padding(.bottom, AppTheme.unit * 24)
             }
         }
         .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
-            if let user = state.user {
+            if let address = state.address {
                 DetailToolbarContent(
-                    address: user.address,
+                    address: address,
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
                     },
                     status: state.loadingState
                 )
-                if user.category == .you {
+                if let user = state.user,
+                   user.category == .you {
                     ToolbarItem(placement: .confirmationAction) {
                         Button(
                             action: {
