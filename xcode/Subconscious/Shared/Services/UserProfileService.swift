@@ -9,6 +9,22 @@ import os
 import Foundation
 import Combine
 
+enum UserProfileFollowStatus: Codable, Hashable, Equatable {
+    case notFollowing
+    case following(Petname.Name)
+}
+
+extension UserProfileFollowStatus {
+    var isFollowing: Bool {
+        switch self {
+        case .following(_):
+            return true
+        case _:
+            return false
+        }
+    }
+}
+
 enum UserProfileServiceError: Error {
     case missingPreferredPetname
     case unexpectedProfileContentType(String)
@@ -68,7 +84,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var statistics: UserProfileStatistics
     var recentEntries: [EntryStub]
     var following: [StoryUser]
-    var isFollowingUser: Bool
+    var followingStatus: UserProfileFollowStatus
 }
 
 struct UserProfileEntry: Codable, Equatable {
@@ -159,7 +175,12 @@ actor UserProfileService {
         address: Slashlink,
         resolutionStatus: ResolutionStatus
     ) async throws -> UserProfile {
-        let userProfileData = await self.readProfileMemo(address: address)
+        let noosphereIdentity = try await noosphere.identity()
+        let isOurs = noosphereIdentity == did
+        
+        let userProfileData = await self.readProfileMemo(
+            address: isOurs ? Slashlink.ourProfile : address
+        )
         let pfp: ProfilePicVariant = Func.run {
             if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
                 return .url(url)
@@ -168,14 +189,17 @@ actor UserProfileService {
             return .none(did)
         }
         
+        let followingStatus = await self.addressBook.followingStatus(did: did)
+        
         let profile = UserProfile(
             did: did,
             nickname: Petname.Name(userProfileData?.nickname ?? ""),
             address: address,
             pfp: pfp,
             bio: UserProfileBio(userProfileData?.bio ?? ""),
-            category: address.isOurProfile ? UserCategory.you : UserCategory.human,
-            resolutionStatus: resolutionStatus
+            category: isOurs ? UserCategory.you : UserCategory.human,
+            resolutionStatus: resolutionStatus,
+            ourFollowStatus: followingStatus
         )
         
         return profile
@@ -238,8 +262,6 @@ actor UserProfileService {
         let entries = try await localAddressBook.listEntries(refetch: true)
         
         for entry in entries {
-            let noosphereIdentity = try await noosphere.identity()
-            let isOurs = noosphereIdentity == entry.did
             
             let slashlink = Func.run {
                 guard case let .petname(basePetname) = address.peer else {
@@ -248,25 +270,22 @@ actor UserProfileService {
                 return Slashlink(petname: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
-            let address = isOurs
-                ? Slashlink.ourProfile
-                : slashlink
+            let address = slashlink
             
-            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
+            let followingStatus = await self.addressBook.followingStatus(did: entry.did)
             let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
-            let status = weAreFollowingListedUser && isPendingFollow ? .pending : entry.status
+            let resolutionStatus =
+                followingStatus.isFollowing &&
+                isPendingFollow ? .pending : entry.status
             
             let user = try await self.loadProfileFromMemo(
                 did: entry.did,
                 address: address,
-                resolutionStatus: status
+                resolutionStatus: resolutionStatus
             )
             
             following.append(
-                StoryUser(
-                    user: user,
-                    isFollowingUser: weAreFollowingListedUser
-                )
+                StoryUser(user: user)
             )
         }
         
@@ -346,7 +365,7 @@ actor UserProfileService {
             address: address
         )
         let notes = try await sphere.list()
-        let isFollowing = await self.addressBook.isFollowingUser(did: did)
+        let followingStatus = await self.addressBook.followingStatus(did: did)
         
         let entries = try await self.loadEntries(
             address: address,
@@ -370,7 +389,7 @@ actor UserProfileService {
             ),
             recentEntries: recentEntries,
             following: following,
-            isFollowingUser: isFollowing
+            followingStatus: followingStatus
         )
     }
     

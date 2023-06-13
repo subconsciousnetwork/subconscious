@@ -40,7 +40,7 @@ struct StoryUserView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var story: StoryUser
-    var action: (Slashlink, String) -> Void
+    var action: (Slashlink) -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
     
@@ -49,13 +49,11 @@ struct StoryUserView: View {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 Group {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
-                    PetnameView(
-                        address: story.user.address,
-                        name: story.user.nickname
-                    )
-                    .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
-                        
+                    
+                    if let name = story.user.toNameVariant() {
+                        PetnameView(name: name)
+                    }
+                    
                     Spacer()
                     
                     switch story.user.resolutionStatus {
@@ -66,8 +64,8 @@ struct StoryUserView: View {
                         PendingSyncBadge()
                             .foregroundColor(.secondary)
                     case .resolved:
-                        switch (story.isFollowingUser, story.user.category) {
-                        case (true, _):
+                        switch (story.user.ourFollowStatus, story.user.category) {
+                        case (.following(_), _):
                             Image.from(appIcon: .following)
                                 .foregroundColor(.secondary)
                         case (_, .you):
@@ -82,7 +80,7 @@ struct StoryUserView: View {
                 
                 Menu(
                     content: {
-                        if story.isFollowingUser {
+                        if story.user.isFollowedByUs {
                             Button(
                                 action: {
                                     profileAction(story.user, .requestUnfollow)
@@ -115,7 +113,7 @@ struct StoryUserView: View {
                             .background(.background)
                             .foregroundColor(.secondary)
                     }
-                )
+                ).disabled(story.user.category == .you)
             }
             .padding(AppTheme.tightPadding)
             .frame(height: AppTheme.unit * 13)
@@ -127,10 +125,12 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            action(
-                story.user.address,
-                story.user.bio.text
-            )
+            switch story.user.ourFollowStatus {
+            case .following(let name):
+                action(Slashlink(petname: name.toPetname()))
+            case _:
+                action(story.user.address)
+            }
         }
         .background(.background)
     }
@@ -149,11 +149,11 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .unresolved
-                    ),
-                    isFollowingUser: false
+                        resolutionStatus: .unresolved,
+                        ourFollowStatus: .notFollowing
+                    )
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -164,11 +164,11 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .pending
-                    ),
-                    isFollowingUser: true
+                        resolutionStatus: .pending,
+                        ourFollowStatus: .following(Petname.Name("lol")!)
+                    )
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -179,11 +179,11 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .you,
-                        resolutionStatus: .resolved(Cid("ok"))
-                    ),
-                    isFollowingUser: false
+                        resolutionStatus: .resolved(Cid("ok")),
+                        ourFollowStatus: .notFollowing
+                    )
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             StoryUserView(
                 story: StoryUser(
@@ -194,11 +194,11 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
                         category: .you,
-                        resolutionStatus: .pending
-                    ),
-                    isFollowingUser: false
+                        resolutionStatus: .pending,
+                        ourFollowStatus: .notFollowing
+                    )
                 ),
-                action: { _, _ in }
+                action: { _ in }
             )
             Spacer()
         }

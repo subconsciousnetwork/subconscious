@@ -73,7 +73,7 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
-    case requestNavigateToProfile(UserProfile)
+    case requestNavigateToProfile(_ user: UserProfile)
     case requestDetail(MemoDetailDescription)
 }
 
@@ -103,9 +103,6 @@ enum UserProfileDetailAction {
     case followUserSheet(FollowUserSheetAction)
     case editProfileSheet(EditProfileSheetAction)
     case followNewUserFormSheet(FollowNewUserFormSheetAction)
-    
-    case fetchFollowingStatus(Did)
-    case populateFollowingStatus(Bool)
     
     case requestFollow(UserProfile)
     case attemptFollow(Did, Petname)
@@ -149,15 +146,39 @@ struct UserProfile: Equatable, Codable, Hashable {
     let bio: UserProfileBio
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
+    let ourFollowStatus: UserProfileFollowStatus
+    
+    var isFollowedByUs: Bool {
+        ourFollowStatus.isFollowing
+    }
     
     // A string that identifies this user.
     var displayName: String {
-        let didSuffix = "#\(did.description.suffix(4))"
-        if let name = nickname?.toPetname() ?? address.petname {
-            return "\(name)\(didSuffix)"
+        switch (ourFollowStatus) {
+        case .following(let name):
+            return name.description
+        case _:
+            // Rare edgecase, only occurs if the address is a DID
+            guard let name = nickname?.toPetname() ?? address.petname else {
+                return "(unknown)"
+            }
+            
+            return "\(name)"
         }
         
-        return didSuffix
+    }
+    
+    func overrideAddress(_ address: Slashlink) -> UserProfile {
+        UserProfile(
+            did: did,
+            nickname: nickname,
+            address: address,
+            pfp: pfp,
+            bio: bio,
+            category: category,
+            resolutionStatus: resolutionStatus,
+            ourFollowStatus: ourFollowStatus
+        )
     }
 }
 
@@ -263,13 +284,11 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var address: Slashlink? = nil
     var user: UserProfile? = nil
-    var isFollowingUser: Bool = false
     
     var recentEntries: [EntryStub] = []
     var following: [StoryUser] = []
     
     var statistics: UserProfileStatistics? = nil
-    
     var unfollowCandidate: UserProfile? = nil
     
     static func update(
@@ -343,16 +362,9 @@ struct UserProfileDetailModel: ModelProtocol {
             model.statistics = content.statistics
             model.recentEntries = content.recentEntries
             model.following = content.following
-            model.isFollowingUser = content.isFollowingUser
             model.loadingState = .loaded
             
-            return update(
-                state: model,
-                actions: [
-                    .fetchFollowingStatus(content.profile.did)
-                ],
-                environment: environment
-            ).animation(.easeOut)
+            return Update(state: model).animation(.easeOut)
             
         case .failedToPopulate(let error):
             var model = state
@@ -390,27 +402,6 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentFollowSheet(let presented):
             var model = state
             model.isFollowSheetPresented = presented
-            return Update(state: model)
-            
-        // MARK: Following status
-        case .fetchFollowingStatus(let did):
-            let fx: Fx<UserProfileDetailAction> =
-            environment.addressBook
-                .isFollowingUserPublisher(did: did)
-                .map { following in
-                    UserProfileDetailAction.populateFollowingStatus(following)
-                }
-                .catch { error in
-                    logger.error("Failed to fetch following status for \(did): \(error)")
-                    return Just(UserProfileDetailAction.populateFollowingStatus(false))
-                }
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
-            
-        case .populateFollowingStatus(let following):
-            var model = state
-            model.isFollowingUser = following
             return Update(state: model)
             
         // MARK: Following
@@ -503,25 +494,29 @@ struct UserProfileDetailModel: ModelProtocol {
             )
             
         case .attemptUnfollow:
-            guard let did = state.unfollowCandidate?.did else {
+            guard let candidate = state.unfollowCandidate else {
                 return Update(state: state)
             }
             
-            let fx: Fx<UserProfileDetailAction> =
-            environment.addressBook
-                .unfollowUserPublisher(
-                    did: did,
-                    petname: state.unfollowCandidate?.nickname
-                )
-                .map({ _ in
-                    .succeedUnfollow
-                })
-                .recover({ error in
-                    .failUnfollow(error: error.localizedDescription)
-                })
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
+            switch (candidate.ourFollowStatus) {
+            case .notFollowing:
+                return Update(state: state)
+            case .following(let name):
+                let fx: Fx<UserProfileDetailAction> =
+                     environment.addressBook
+                     .unfollowUserPublisher(
+                        petname: name.toPetname()
+                     )
+                    .map({ _ in
+                        .succeedUnfollow
+                    })
+                    .recover({ error in
+                        .failUnfollow(error: error.localizedDescription)
+                    })
+                    .eraseToAnyPublisher()
+                
+                return Update(state: state, fx: fx)
+            }
             
         case .succeedUnfollow:
             return update(

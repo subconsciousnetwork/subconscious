@@ -58,36 +58,6 @@ final class Tests_AddressBookService: XCTestCase {
         XCTAssertEqual(user.petname, petname2)
     }
     
-    func testUnfollowByDid() async throws {
-        let tmp = try TestUtilities.createTmpDir()
-        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
-        let addressBook = data.addressBook
-        
-        let entries = try await addressBook.listEntries()
-        XCTAssertEqual(entries, [])
-        
-        let did = Did("did:key:123")!
-        let petname = Petname("ziggy")!
-        try await addressBook.followUser(did: did, petname: petname)
-        
-        let did2 = Did("did:key:456")!
-        let petname2 = Petname("flubbo")!
-        try await addressBook.followUser(did: did2, petname: petname2)
-        
-        let newEntries = try await addressBook.listEntries()
-        
-        XCTAssertEqual(newEntries.count, 2)
-        
-        try await addressBook.unfollowUser(did: did, name: nil)
-        
-        let finalEntries = try await addressBook.listEntries()
-        let user = finalEntries[0]
-        
-        XCTAssertEqual(finalEntries.count, 1)
-        XCTAssertEqual(user.did, did2)
-        XCTAssertEqual(user.petname, petname2)
-    }
-    
     func testFindAvailablePetname() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
@@ -130,23 +100,23 @@ final class Tests_AddressBookService: XCTestCase {
         let did = Did("did:key:123")!
         let petname = Petname("ziggy-2")!
         
-        let a = await addressBook.isFollowingUser(did: did)
+        let a = await addressBook.followingStatus(did: did)
         let b = await addressBook.hasEntryForPetname(petname: petname)
-        XCTAssertFalse(a)
+        XCTAssertFalse(a.isFollowing)
         XCTAssertFalse(b)
     
         try await addressBook.followUser(did: did, petname: petname)
         
-        let c = await addressBook.isFollowingUser(did: did)
+        let c = await addressBook.followingStatus(did: did)
         let d = await addressBook.hasEntryForPetname(petname: petname)
-        XCTAssertTrue(c)
+        XCTAssertTrue(c.isFollowing)
         XCTAssertTrue(d)
         
-        try await addressBook.unfollowUser(did: did, name: nil)
+        try await addressBook.unfollowUser(petname: petname)
         
-        let e = await addressBook.isFollowingUser(did: did)
+        let e = await addressBook.followingStatus(did: did)
         let f = await addressBook.hasEntryForPetname(petname: petname)
-        XCTAssertFalse(e)
+        XCTAssertFalse(e.isFollowing)
         XCTAssertFalse(f)
     }
 }

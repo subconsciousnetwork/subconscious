@@ -100,7 +100,7 @@ struct FollowTabView: View {
             ForEach(state.following) { follow in
                 StoryUserView(
                     story: follow,
-                    action: { _, _ in onNavigateToUser(follow.user) },
+                    action: { _ in onNavigateToUser(follow.user) },
                     profileAction: onProfileAction
                 )
             }
@@ -185,7 +185,6 @@ struct UserProfileView: View {
                 UserProfileHeaderView(
                     user: user,
                     statistics: state.statistics,
-                    isFollowingUser: state.isFollowingUser,
                     action: { action in
                         onProfileAction(user, action)
                     },
@@ -324,7 +323,6 @@ private struct MetaSheetModifier: ViewModifier {
                 UserProfileDetailMetaSheet(
                     state: state.metaSheet,
                     profile: state,
-                    isFollowingUser: state.isFollowingUser,
                     send: Address.forward(
                         send: send,
                         tag: UserProfileDetailMetaSheetCursor.tag
