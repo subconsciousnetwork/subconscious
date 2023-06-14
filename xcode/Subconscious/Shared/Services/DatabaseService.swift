@@ -328,16 +328,17 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        let link = Link(did: did, slug: slug)
-        if link.isLocal && size == nil {
+        let slashlink = Slashlink(petname: petname, slug: slug)
+        if slashlink.isLocal && size == nil {
             throw DatabaseServiceError.sizeMissingForLocal
         }
+        let link = Link(did: did, slug: slug)
         try database.execute(
             sql: """
             INSERT INTO memo (
                 id,
                 did,
-                petname,
+                slashlink,
                 slug,
                 content_type,
                 created,
@@ -354,7 +355,7 @@ final class DatabaseService {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 did=excluded.did,
-                petname=excluded.petname,
+                slashlink=excluded.slashlink,
                 slug=excluded.slug,
                 content_type=excluded.content_type,
                 created=excluded.created,
@@ -371,7 +372,7 @@ final class DatabaseService {
             parameters: [
                 .text(link.id),
                 .text(link.did.description),
-                .text(petname?.description),
+                .text(slashlink.markup),
                 .text(link.slug.description),
                 .text(memo.contentType),
                 .date(memo.created),
@@ -1084,7 +1085,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-06-13T14:49:00")!,
+            version: Int.from(iso8601String: "2023-06-14T16:29:00")!,
             sql: """
             /*
             A table that tracks sphere->database indexing info for our sphere.
@@ -1126,7 +1127,9 @@ extension Config {
             CREATE TABLE memo (
                 id TEXT PRIMARY KEY,
                 did TEXT NOT NULL,
-                petname TEXT,
+                /* Indexed with the memo for type-ahead link completion */
+                slashlink TEXT NOT NULL,
+                /* Indexed with the memo for type-ahead link completion */
                 slug TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
@@ -1150,7 +1153,7 @@ extension Config {
             CREATE VIRTUAL TABLE memo_search USING fts5(
                 id,
                 did UNINDEXED,
-                petname,
+                slashlink,
                 slug,
                 content_type UNINDEXED,
                 created UNINDEXED,
@@ -1187,7 +1190,7 @@ extension Config {
                     rowid,
                     id,
                     did,
-                    petname,
+                    slashlink,
                     slug,
                     content_type,
                     created,
@@ -1205,7 +1208,7 @@ extension Config {
                     new.rowid,
                     new.id,
                     new.did,
-                    new.petname,
+                    new.slashlink,
                     new.slug,
                     new.content_type,
                     new.created,
@@ -1225,7 +1228,7 @@ extension Config {
                     rowid,
                     id,
                     did,
-                    petname,
+                    slashlink,
                     slug,
                     content_type,
                     created,
@@ -1243,7 +1246,7 @@ extension Config {
                     new.rowid,
                     new.id,
                     new.did,
-                    new.petname,
+                    new.slashlink,
                     new.slug,
                     new.content_type,
                     new.created,
