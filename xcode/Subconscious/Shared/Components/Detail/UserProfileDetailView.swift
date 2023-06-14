@@ -543,19 +543,9 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.isEditProfileSheetPresented = presented
             
-            let pfp: URL? = Func.run {
-                switch (state.user?.pfp) {
-                case .some(.url(let url)):
-                    return url
-                case _:
-                    return nil
-                }
-            }
-            
             let profile = UserProfileEntry(
                 nickname: state.user?.nickname?.verbatim,
-                bio: state.user?.bio.text,
-                profilePictureUrl: pfp?.absoluteString
+                bio: state.user?.bio.text
             )
             return update(
                 state: model,
@@ -566,8 +556,7 @@ struct UserProfileDetailModel: ModelProtocol {
         case .requestEditProfile:
             let profile = UserProfileEntry(
                 nickname: state.editProfileSheet.nicknameField.validated?.verbatim,
-                bio: state.editProfileSheet.bioField.validated,
-                profilePictureUrl: state.editProfileSheet.pfpUrlField.validated?.absoluteString
+                bio: state.editProfileSheet.bioField.validated
             )
             
             let fx: Fx<UserProfileDetailAction> = Future.detached {
