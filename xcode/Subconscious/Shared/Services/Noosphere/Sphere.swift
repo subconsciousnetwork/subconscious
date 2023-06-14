@@ -66,35 +66,19 @@ public protocol SphereProtocol {
 }
 
 extension SphereProtocol {
-    /// Resolve a relative slashlink, making it an absolute slashlink.
-    /// - Returns Slashlink with did peer
-    func resolve(slashlink: Slashlink) async throws -> Slashlink {
-        switch slashlink.peer {
-        case .did:
-            return slashlink
-        case .petname(let petname):
-            // Get did for petname
-            let did = try await Func.run {
-                // Look locally if we have the option
-                if petname.parts.count == 1 {
-                    return try await self.getPetname(petname: petname.root.toPetname())
-                }
-                
-                let sphere = try await self.traverse(petname: petname)
-                return try await sphere.identity()
-            }
-            
-            // Return new slashlink with did root
-            return Slashlink(
-                peer: .did(did),
-                slug: slashlink.slug
-            )
+    /// Resolve a peer, returning the Did for the sphere it points to.
+    /// - Returns Did
+    func resolve(peer: Peer?) async throws -> Did {
+        switch peer {
+        case let .did(did):
+            return did
+        case let .petname(petname) where petname.parts.count == 1:
+            return try await self.getPetname(petname: petname.root.toPetname())
+        case let .petname(petname):
+            let sphere = try await self.traverse(petname: petname)
+            return try await sphere.identity()
         case .none:
-            let identity = try await self.identity()
-            return Slashlink(
-                peer: Peer.did(identity),
-                slug: slashlink.slug
-            )
+            return try await self.identity()
         }
     }
 

@@ -2064,8 +2064,7 @@ struct AppEnvironment {
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: defaultGateway,
-            sphereIdentity: defaultSphereIdentity,
-            noosphereLogLevel: .deafening
+            sphereIdentity: defaultSphereIdentity
         )
         self.noosphere = noosphere
 

@@ -104,10 +104,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("foo")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("foo")!,
             memo: foo,
             size: foo.toHeaderSubtext().size()!
         )
@@ -121,10 +120,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("bar")!,
             memo: bar,
             size: bar.toHeaderSubtext().size()!
         )
@@ -138,10 +136,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("baz")!,
             memo: baz
         )
         
@@ -171,10 +168,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("foo")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("foo")!,
             memo: foo,
             size: foo.toHeaderSubtext().size()!
         )
@@ -188,10 +184,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("bar")!,
             memo: bar,
             size: bar.toHeaderSubtext().size()!
         )
@@ -205,10 +200,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("baz")!,
             memo: baz
         )
         
@@ -263,10 +257,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("foo")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("foo")!,
             memo: foo,
             size: foo.toHeaderSubtext().size()!
         )
@@ -280,10 +273,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("bar")!,
             memo: bar,
             size: bar.toHeaderSubtext().size()!
         )
@@ -297,10 +289,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("baz")!,
             memo: baz
         )
         
@@ -348,10 +339,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("foo")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("foo")!,
             memo: foo,
             size: foo.toHeaderSubtext().size()!
         )
@@ -365,10 +355,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("bar")!,
             memo: bar,
             size: bar.toHeaderSubtext().size()!
         )
@@ -382,10 +371,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: nil,
+            slug: Slug("baz")!,
             memo: baz
         )
         
@@ -426,10 +414,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("foo")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("foo")!,
             memo: foo,
             size: foo.toHeaderSubtext().size()!
         )
@@ -443,10 +430,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("bar")!,
             memo: bar,
             size: bar.toHeaderSubtext().size()!
         )
@@ -460,10 +446,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("baz")!,
             memo: baz
         )
         
@@ -507,10 +492,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("foo")!,
             memo: foo
         )
         
@@ -524,10 +508,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("bar")!,
             memo: bar,
             size: bar.toHeaderSubtext().size()!
         )
@@ -542,10 +525,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("baz")!,
             memo: baz
         )
         
@@ -559,19 +541,16 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bing"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("bing")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("bing")!,
             memo: bing
         )
         
         let stubs = try service.readEntryBacklinks(
             owner: Did("did:key:abc123")!,
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            )
+            did: Did("did:key:abc123")!,
+            slug: Slug("foo")!
         )
         
         let slashlinks = Set(
@@ -614,10 +593,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("foo")!,
             memo: foo
         )
         
@@ -631,19 +609,16 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("bar")!
-            ),
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("bar")!,
             memo: bar
         )
         
         let stubs = try service.readEntryBacklinks(
             owner: nil,
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            )
+            did: Did("did:key:abc123")!,
+            slug: Slug("foo")!
         )
         
         let slashlinks = Set(
@@ -717,10 +692,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
-                did: did,
-                slug: Slug("foo")!
-            ),
+            did: did,
+            petname: Petname("abc")!,
+            slug: Slug("foo")!,
             memo: foo
         )
         
@@ -734,10 +708,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
+            did: Did.local,
+            petname: nil,
+            slug: Slug("bar")!,
             memo: bar,
             size: bar.toHeaderSubtext().size()!
         )
@@ -752,10 +725,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
-                did: did,
-                slug: Slug("baz")!
-            ),
+            did: did,
+            petname: Petname("abc")!,
+            slug: Slug("baz")!,
             memo: baz
         )
         
@@ -769,10 +741,9 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bing"
         )
         try service.writeMemo(
-            link: Link(
-                did: did,
-                slug: Slug("bing")!
-            ),
+            did: did,
+            petname: Petname("abc")!,
+            slug: Slug("bing")!,
             memo: bing
         )
         

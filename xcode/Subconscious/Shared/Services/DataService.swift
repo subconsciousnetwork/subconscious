@@ -10,24 +10,20 @@ import os
 
 enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
-    case defaultSphereNotFound
     case sphereExists(_ sphereIdentity: String)
-    case cannotEditSphere(Did)
-    case cannotWriteToSphere(Did)
+    case cannotWriteToSphere(did: Did? = nil, petname: Petname? = nil)
     case unknownPetname(Petname)
     
     var errorDescription: String? {
         switch self {
         case .fileExists(let message):
             return "File exists: \(message)"
-        case .defaultSphereNotFound:
-            return "Default sphere not found"
         case let .sphereExists(sphereIdentity):
             return "Sphere exists: \(sphereIdentity)"
-        case let .cannotEditSphere(did):
-            return "Cannot edit sphere \(did)"
-        case .cannotWriteToSphere(let did):
-            return "Cannot write to sphere \(did)"
+        case let .cannotWriteToSphere(did, petname):
+            let did = did?.description ?? "unknown"
+            let petname = petname?.description ?? "unknown"
+            return "Cannot write to sphere with did \(did) and petname \(petname)"
         case .unknownPetname(let petname):
             return "No sphere in index with petname \(petname)"
         }
@@ -142,17 +138,16 @@ actor DataService {
         try database.savepoint(savepoint)
         do {
             for change in changes {
-                let link = Link(did: identity, slug: change)
-                // FIXME
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
                 // If memo does not exist, that means change was a remove.
-                // FIXME should I be reading form my own sphere?
                 if let memo = try? await sphere.read(
                     slashlink: slashlink
                 ).toMemo() {
                     try database.writeMemo(
-                        link: link,
+                        did: identity,
+                        petname: petname,
+                        slug: change,
                         memo: memo
                     )
                     logger.debug(
@@ -168,7 +163,10 @@ actor DataService {
                             "slashlink": slashlink.description
                         ]
                     )
-                    try database.removeMemo(link)
+                    try database.removeMemo(
+                        did: identity,
+                        slug: change
+                    )
                 }
             }
             try database.writePeer(
@@ -308,11 +306,16 @@ actor DataService {
                     slashlink: slashlink
                 ).toMemo() {
                     try database.writeMemo(
-                        link: link,
+                        did: identity,
+                        petname: nil,
+                        slug: change,
                         memo: memo
                     )
                 } else {
-                    try database.removeMemo(link)
+                    try database.removeMemo(
+                        did: identity,
+                        slug: change
+                    )
                 }
             }
             try database.writeOurSphere(
@@ -403,7 +406,9 @@ actor DataService {
             // .leftNewer = update.
             // .rightNewer = Follower shouldn't be ahead.
             //               Leader wins.
-            // .conflict. Leader wins.
+            // .conflict = leader wins.
+            // .rightOnly = delete. Remove from search index
+            // .same = no change. Do nothing.
             switch change {
             case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
                 var memo = try local.read(left.slug).unwrap()
@@ -411,16 +416,17 @@ actor DataService {
                 let info = try local.info(left.slug).unwrap()
                 memo.modified = info.modified
                 try database.writeMemo(
-                    link: left.slug.toLocalLink().unwrap(),
+                    did: Did.local,
+                    petname: nil,
+                    slug: left.slug,
                     memo: memo,
                     size: info.size
                 )
-                // .rightOnly = delete. Remove from search index
             case .rightOnly(let right):
                 try database.removeMemo(
-                    right.slug.toLocalLink().unwrap()
+                    did: Did.local,
+                    slug: right.slug
                 )
-                // .same = no change. Do nothing.
             case .same:
                 break
             }
@@ -451,36 +457,35 @@ actor DataService {
     }
     
     private func writeLocalMemo(
-        link: Link,
+        slug: Slug,
         memo: Memo
     ) async throws {
         var memo = memo
-        try local.write(link.slug, value: memo)
+        try local.write(slug, value: memo)
         // Read modified/size from file system directly after writing.
         // Why: we use file system as source of truth and don't want any
         // discrepencies to sneak in (e.g. different time between write and
         // persistence on file system).
-        let info = try local.info(link.slug).unwrap()
+        let info = try local.info(slug).unwrap()
         memo.modified = info.modified
         try database.writeMemo(
-            link: link,
+            did: Did.local,
+            petname: nil,
+            slug: slug,
             memo: memo,
             size: info.size
         )
     }
 
     private func writeSphereMemo(
-        link: Link,
+        slug: Slug,
         memo: Memo
     ) async throws {
         let identity = try await noosphere.identity()
-        guard link.did == identity else {
-            throw DataServiceError.cannotEditSphere(link.did)
-        }
         // Get absolute slashlink
         let body = try memo.body.toData().unwrap()
         try await noosphere.write(
-            slug: link.slug,
+            slug: slug,
             contentType: memo.contentType,
             additionalHeaders: memo.headers,
             body: body
@@ -488,7 +493,9 @@ actor DataService {
         let version = try await noosphere.save()
         // Write to database
         try database.writeMemo(
-            link: link,
+            did: identity,
+            petname: nil,
+            slug: slug,
             memo: memo
         )
         // Write new sphere version to database
@@ -506,15 +513,18 @@ actor DataService {
         address: Slashlink,
         memo: Memo
     ) async throws {
-        let link = try await noosphere.resolveLink(slashlink: address)
         var memo = memo
         memo.modified = Date.now
         
-        switch link.did {
-        case Did.local:
-            return try await writeLocalMemo(link: link, memo: memo)
-        default:
-            return try await writeSphereMemo(link: link, memo: memo)
+        switch address.peer {
+        case .none:
+            return try await writeSphereMemo(slug: address.slug, memo: memo)
+        case let .did(did) where did == Did.local:
+            return try await writeLocalMemo(slug: address.slug, memo: memo)
+        case let .did(did):
+            throw DataServiceError.cannotWriteToSphere(did: did)
+        case let .petname(petname):
+            throw DataServiceError.cannotWriteToSphere(petname: petname)
         }
     }
     
@@ -534,17 +544,17 @@ actor DataService {
     /// Delete entry from file system and database
     func deleteMemo(_ address: Slashlink) async throws {
         let identity = try await noosphere.identity()
-        // Get absolute address
-        let link = try await noosphere.resolveLink(slashlink: address)
-        switch link.did {
+        let did = try await noosphere.resolve(peer: address.peer)
+        let slug = address.slug
+        switch did {
         case Did.local:
             try local.remove(address.slug)
-            try database.removeMemo(link)
+            try database.removeMemo(did: did, slug: slug)
             return
         case identity:
             try await noosphere.remove(slug: address.slug)
             let version = try await noosphere.save()
-            try database.removeMemo(link)
+            try database.removeMemo(did: did, slug: slug)
             // Write new sphere version to database
             try database.writeOurSphere(
                 OurSphereRecord(
@@ -554,7 +564,10 @@ actor DataService {
             )
             return
         default:
-            throw DataServiceError.cannotWriteToSphere(link.did)
+            throw DataServiceError.cannotWriteToSphere(
+                did: did,
+                petname: address.petname
+            )
         }
     }
     
@@ -639,10 +652,7 @@ actor DataService {
     
     func listRecentMemos() async throws -> [EntryStub] {
         let identity = try? await noosphere.identity()
-        let recent = try self.database.listRecentMemos(owner: identity)
-        return recent.filter { entry in
-            !entry.address.slug.isHidden
-        }
+        return try self.database.listRecentMemos(owner: identity)
     }
     
     nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
@@ -652,8 +662,9 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
-    func countMemos() throws -> Int {
-        return try database.countMemos().unwrap()
+    func countMemos() async throws -> Int {
+        let identity = try? await noosphere.identity()
+        return try database.countMemos(owner: identity).unwrap()
     }
     
     /// Count all entries
@@ -820,11 +831,14 @@ actor DataService {
         fallback: String
     ) async throws -> MemoEditorDetailResponse {
         let identity = try? await noosphere.identity()
-        let link = try await noosphere.resolveLink(slashlink: address)
+        let did = try await noosphere.resolve(peer: address.peer)
         
         // We do not allow editing 3p memos.
-        guard link.did.isLocal || link.did == identity else {
-            throw DataServiceError.cannotEditSphere(link.did)
+        guard did.isLocal || did == identity else {
+            throw DataServiceError.cannotWriteToSphere(
+                did: did,
+                petname: address.petname
+            )
         }
         
         // Read memo from local or sphere.
@@ -832,7 +846,8 @@ actor DataService {
         
         let backlinks = try database.readEntryBacklinks(
             owner: identity,
-            link: link
+            did: did,
+            slug: address.slug
         )
         
         guard let memo = memo else {
@@ -885,8 +900,8 @@ actor DataService {
             return nil
         }
         
-        guard let link = try? await noosphere.resolveLink(
-            slashlink: address
+        guard let did = try? await noosphere.resolve(
+            peer: address.peer
         ) else {
             return nil
         }
@@ -900,7 +915,8 @@ actor DataService {
         
         guard let backlinks = try? database.readEntryBacklinks(
             owner: identity,
-            link: link
+            did: did,
+            slug: address.slug
         ) else {
             return nil
         }

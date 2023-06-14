@@ -428,20 +428,20 @@ final class Tests_DataService: XCTestCase {
         XCTAssertEqual(list.count, 2)
         XCTAssertTrue(
             list.contains(where: { entry in
-                let comparitor = Slashlink(
+                let comparator = Slashlink(
                     peer: .did(Did.local),
                     slug: Slug("a")!
                 )
-                return entry.address == comparitor
+                return entry.address == comparator
             })
         )
         XCTAssertTrue(
             list.contains(where: { entry in
-                let comparitor = Slashlink(
+                let comparator = Slashlink(
                     peer: .did(Did.local),
                     slug: Slug("b")!
                 )
-                return entry.address == comparitor
+                return entry.address == comparator
             })
         )
     }

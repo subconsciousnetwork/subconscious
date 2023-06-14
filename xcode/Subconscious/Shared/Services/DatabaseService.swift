@@ -337,6 +337,7 @@ final class DatabaseService {
             INSERT INTO memo (
                 id,
                 did,
+                petname,
                 slug,
                 content_type,
                 created,
@@ -350,9 +351,10 @@ final class DatabaseService {
                 links,
                 size
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 did=excluded.did,
+                petname=excluded.petname,
                 slug=excluded.slug,
                 content_type=excluded.content_type,
                 created=excluded.created,
@@ -407,29 +409,34 @@ final class DatabaseService {
         guard self.state == .ready else {
             return nil
         }
+
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+        
         // Use stale body content from db. It's faster, and these
         // are read-only teaser views.
-        guard let results = try? database.execute(
+        guard let results = try? database.first(
             sql: """
             SELECT count(slug)
-            WHERE did = ?
-                AND substr(memo.slug, 1, 1) != '_'
             FROM memo
+            WHERE did IN (SELECT value FROM json_each(?))
+                AND substr(slug, 1, 1) != '_'
             """,
             parameters: [
-                .text(owner?.description)
+                .json(dids, or: "[]")
             ]
         ) else {
             return nil
         }
-        return results.first?.col(0)?.toInt()
+        return results.col(0)?.toInt()
     }
     
     /// List recent entries
     func listRecentMemos(owner: Did?) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
-
         }
         
         var dids = [Did.local.description]
@@ -440,7 +447,9 @@ final class DatabaseService {
         let results = try database.execute(
             sql: """
             SELECT id, modified, excerpt
-            FROM memo WHERE did IN (SELECT value FROM json_each(?))
+            FROM memo
+            WHERE did IN (SELECT value FROM json_each(?))
+                AND substr(slug, 1, 1) != '_'
             ORDER BY modified DESC
             LIMIT 1000
             """,
@@ -872,11 +881,13 @@ final class DatabaseService {
     
     func readEntryBacklinks(
         owner: Did?,
-        link: Link
+        did: Did,
+        slug: Slug
     ) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
+        let link = Link(did: did, slug: slug)
         // Get backlinks.
         // Use content indexed in database, even though it might be stale.
         return try database.execute(
