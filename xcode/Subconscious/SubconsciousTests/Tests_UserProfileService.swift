@@ -40,8 +40,7 @@ final class Tests_UserProfileService: XCTestCase {
         try await data.userProfile.writeOurProfile(
             profile: UserProfileEntry(
                 nickname: "alice",
-                bio: nil,
-                profilePictureUrl: nil
+                bio: nil
             )
         )
         
