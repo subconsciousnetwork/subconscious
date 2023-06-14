@@ -102,8 +102,8 @@ struct GatewayURLSettingsView: View {
                             send: app.send,
                             tag: AppAction.setGatewayURLTextField
                         ),
-                        caption: "The URL of your preferred Noosphere gateway",
-                        hasError: !app.state.isGatewayURLTextFieldValid
+                        caption: "The URL of your preferred Noosphere gateway"
+//                        hasError: !app.state.isGatewayURLTextFieldValid
                     )
                     .formField()
                     .autocapitalization(.none)

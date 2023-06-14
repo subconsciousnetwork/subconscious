@@ -193,8 +193,8 @@ struct FollowUserSheet: View {
                 onFocusChanged: { focused in
                     send(.followUserForm(.petnameField(.focusChange(focused: focused))))
                 },
-                caption: state.petnameFieldCaption ?? "",
-                hasError: !state.followUserForm.petname.isValid
+                caption: state.petnameFieldCaption ?? ""
+//                hasError: !state.followUserForm.petname.isValid
             )
             .textFieldStyle(.roundedBorder)
             .lineLimit(1)

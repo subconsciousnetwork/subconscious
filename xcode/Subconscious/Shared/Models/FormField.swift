@@ -27,8 +27,8 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
     static func == (lhs: FormField<Input, Output>, rhs: FormField<Input, Output>) -> Bool {
         return (
             lhs.value == rhs.value &&
+            lhs.defaultValue == rhs.defaultValue &&
             lhs.touched == rhs.touched &&
-            lhs.isValid == rhs.isValid &&
             lhs.hasFocus == rhs.hasFocus &&
             lhs.hasBeenFocusedAtLeastOnce == rhs.hasBeenFocusedAtLeastOnce
         )

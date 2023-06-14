@@ -248,8 +248,8 @@ struct FollowUserFormView: View {
                     onFocusChanged: { focused in
                         send(.didField(.focusChange(focused: focused)))
                     },
-                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                    hasError: state.did.hasError
+                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+//                    hasError: state.did.hasError
                 )
                 .formField()
                 .lineLimit(1)
@@ -270,8 +270,8 @@ struct FollowUserFormView: View {
                     onFocusChanged: { focused in
                         send(.petnameField(.focusChange(focused: focused)))
                     },
-                    caption: "Lowercase letters, numbers and dashes only.",
-                    hasError: state.petname.hasError
+                    caption: "Lowercase letters, numbers and dashes only."
+//                    hasError: state.petname.hasError
                 )
                 .formField()
                 .lineLimit(1)

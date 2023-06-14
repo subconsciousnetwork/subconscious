@@ -58,7 +58,7 @@ struct FirstRunView: View {
                         app.send(.inviteCodeFormField(.focusChange(focused: focused)))
                     },
                     caption: "Look for this in your welcome email.",
-                    hasError: app.state.inviteCodeFormField.hasError,
+//                    hasError: app.state.inviteCodeFormField.hasError,
                     submitLabel: .go,
                     onSubmit: {
                         if app.state.inviteCodeFormField.isValid {

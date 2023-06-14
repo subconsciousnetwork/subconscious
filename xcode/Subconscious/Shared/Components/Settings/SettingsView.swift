@@ -58,8 +58,8 @@ struct GatewayProvisioningSection: View {
                         send: app.send,
                         tag: AppAction.setInviteCode
                     ),
-                    caption: "Look for this in your welcome email.",
-                    hasError: app.state.inviteCodeFormField.hasError
+                    caption: "Look for this in your welcome email."
+//                    hasError: app.state.inviteCodeFormField.hasError
                 )
                 .formField()
                 .autocapitalization(.none)
@@ -125,20 +125,19 @@ struct SettingsView: View {
             Form {
                 if app.state.isNoosphereEnabled {
                     Section(header: Text("Noosphere")) {
-                        NavigationLink(
-                            destination: {
-                                ProfileSettingsView(app: app)
-                            },
-                            label: {
-                                LabeledContent(
-                                    "Nickname",
-                                    value: app.state.nickname
-                                )
-                                .lineLimit(1)
-                                .textSelection(.enabled)
-                            }
-                        )
-
+//                        NavigationLink(
+//                            destination: {
+//                                ProfileSettingsView(app: app)
+//                            },
+//                            label: {
+//                                LabeledContent(
+//                                    "Nickname",
+//                                    value: app.state.nickname
+//                                )
+//                                .lineLimit(1)
+//                                .textSelection(.enabled)
+//                            }
+//                        )
                         LabeledContent(
                             "Sphere",
                             value: app.state.sphereIdentity ?? unknown

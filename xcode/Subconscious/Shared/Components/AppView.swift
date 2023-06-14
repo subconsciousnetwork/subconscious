@@ -104,7 +104,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Set sphere/user nickname
     /// Sets form field, and persists if needed.
     case setNickname(_ nickname: String)
-    case persistNickname(_ nickname: String)
+    case persistNickname
     
     /// Write to `Slashlink.ourProfile` during onboarding
     case updateOurProfileWithNickname(_ nickname: Petname.Name)
@@ -607,11 +607,10 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 text: nickname
             )
-        case let .persistNickname(nickname):
+        case .persistNickname:
             return persistNickname(
                 state: state,
-                environment: environment,
-                text: nickname
+                environment: environment
             )
         case let .updateOurProfileWithNickname(nickname):
             return updateOurProfileWithNickname(
@@ -1015,13 +1014,13 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
+//        let text = text.lowercased().trimmingCharacters(in: .whitespaces)
         /// First pass down setValue to form field,
         /// then persist the nickname by reading the updated model.
         return update(
             state: state,
             actions: [
                 .nicknameFormField(.setValue(input: text)),
-                .persistNickname(text)
             ],
             environment: environment
         )
@@ -1029,11 +1028,10 @@ struct AppModel: ModelProtocol {
     
     static func persistNickname(
         state: AppModel,
-        environment: AppEnvironment,
-        text: String
+        environment: AppEnvironment
     ) -> Update<AppModel> {
         // Persist any valid value
-        if let validated = Petname.Name(text) {
+        if let validated = Petname.Name(state.nickname) {
             var model = state
             model.nickname = validated.description
             logger.log("Nickname saved: \(validated)")
@@ -1308,7 +1306,11 @@ struct AppModel: ModelProtocol {
             model.firstRunPath = []
         }
         
-        return Update(state: model).animation(.default)
+        return update(
+            state: model,
+            action: .persistNickname,
+            environment: environment
+        ).animation(.default)
     }
     
     /// Reset NoosphereService managed instances of `Noosphere` and `Sphere`.

@@ -22,7 +22,7 @@ public struct UserProfileBio:
         text.hasVisibleContent
     }
 
-    public init(_ description: String) {
+    public init?(_ description: String) {
         self.text = description
             // Turn all whitespace into spaces
             .replacingOccurrences(
@@ -34,5 +34,9 @@ public struct UserProfileBio:
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .prefix(Self.maxLength)
             .toString()
+        
+        guard self.text.count <= Self.maxLength else {
+            return nil
+        }
     }
 }

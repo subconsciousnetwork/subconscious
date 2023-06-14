@@ -37,7 +37,7 @@ private struct NicknameFieldCursor: CursorProtocol {
 
 private struct BioFieldCursor: CursorProtocol {
     typealias Model = EditProfileSheetModel
-    typealias ViewModel = FormField<String, String>
+    typealias ViewModel = FormField<String, UserProfileBio>
 
     static func get(state: Model) -> ViewModel {
         state.bioField
@@ -66,10 +66,10 @@ struct EditProfileSheetModel: ModelProtocol {
             Petname.Name(value)
         }
     )
-    var bioField: FormField<String, String> = FormField(
+    var bioField: FormField<String, UserProfileBio> = FormField(
         value: "",
         validate: { value in
-            value.fitsInUserBio ? value : nil
+            UserProfileBio(value)
         }
     )
     
@@ -114,6 +114,35 @@ struct EditProfileSheetModel: ModelProtocol {
     }
 }
 
+struct ValidatedFormField<T: Equatable, Model: ModelProtocol>: View {
+    var placeholder: String
+    var field: FormField<String, T>
+    var send: (Model.Action) -> Void
+    var tag: (FormFieldAction<String>) -> Model.Action
+    var caption: String
+    var axis: Axis = .horizontal
+    
+    var body: some View {
+        ValidatedTextField(
+            placeholder: placeholder,
+            text: Binding(
+                get: { field.value },
+                send: send,
+                tag: { v in tag(.setValue(input: v))}
+            ),
+            onFocusChanged: { focused in
+                send(tag(.focusChange(focused: focused)))
+            },
+            validator: { v in
+                field.validate(v) != nil
+            },
+            caption: caption,
+            axis: axis
+        )
+        .formField()
+    }
+}
+
 struct EditProfileSheet: View {
     var state: EditProfileSheetModel
     var send: (EditProfileSheetAction) -> Void
@@ -132,7 +161,7 @@ struct EditProfileSheet: View {
             nickname: nickname,
             address: user.address,
             pfp: pfp,
-            bio: UserProfileBio(state.bioField.validated ?? ""),
+            bio: UserProfileBio(state.bioField.validated?.text ?? ""),
             category: .you,
             resolutionStatus: .resolved(Cid("fake-for-preview")),
             ourFollowStatus: .notFollowing
@@ -146,20 +175,13 @@ struct EditProfileSheet: View {
                     HStack(alignment: .firstTextBaseline) {
                         Image(systemName: "at")
                             .foregroundColor(.accentColor)
-                        ValidatedTextField(
+                        ValidatedFormField<Petname.Name, EditProfileSheetModel>(
                             placeholder: "nickname",
-                            text: Binding(
-                                get: { state.nicknameField.value },
-                                send: send,
-                                tag: { v in .nicknameField(.setValue(input: v))}
-                            ),
-                            onFocusChanged: { focused in
-                                send(.nicknameField(.focusChange(focused: focused)))
-                            },
-                            caption: "How you would like to be known",
-                            hasError: state.nicknameField.hasError
+                            field: state.nicknameField,
+                            send: send,
+                            tag: { a in EditProfileSheetAction.nicknameField(a) },
+                            caption: "Lowercase letters, numbers and dashes only."
                         )
-                        .formField()
                         .lineLimit(1)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
@@ -168,24 +190,15 @@ struct EditProfileSheet: View {
                     HStack(alignment: .top) {
                         Image(systemName: "text.quote")
                             .foregroundColor(.accentColor)
-                        ValidatedTextField(
+                        
+                        ValidatedFormField<UserProfileBio, EditProfileSheetModel>(
                             placeholder: "bio",
-                            text: Binding(
-                                get: { state.bioField.value },
-                                send: send,
-                                tag: { v in .bioField(.setValue(input: v))}
-                            ),
-                            onFocusChanged: { focused in
-                                send(.bioField(.focusChange(focused: focused)))
-                            },
-                            caption:
-                                "A short description of yourself (\(state.bioField.value.count)/280)",
-                            hasError:
-                                !state.bioField.isValid &&
-                                state.bioField.value.count > 0,
+                            field: state.bioField,
+                            send: send,
+                            tag: { a in EditProfileSheetAction.bioField(a) },
+                            caption: "A short description of yourself (\(state.bioField.value.count)/280)",
                             axis: .vertical
                         )
-                        .formField()
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                     }

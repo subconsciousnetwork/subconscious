@@ -10,6 +10,8 @@ import ObservableStore
 
 struct ProfileSettingsView: View {
     @ObservedObject var app: Store<AppModel>
+    
+    @State var txt: String = ""
 
     var body: some View {
         Form {
@@ -21,10 +23,11 @@ struct ProfileSettingsView: View {
                         send: app.send,
                         tag: AppAction.setNickname
                     ),
-                    caption: "Lowercase letters, numbers, and dashes only",
-                    hasError: !app.state.isNicknameFormFieldValid
+                    caption: "Lowercase letters, numbers, and dashes only"
+//                    hasError: !app.state.isNicknameFormFieldValid
                 )
                 .formField()
+                .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .autocapitalization(.none)
             }

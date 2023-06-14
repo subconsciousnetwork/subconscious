@@ -80,8 +80,9 @@ struct UserProfileHeaderView: View {
                 }
             )
             
-            if user.bio.hasVisibleContent {
-                Text(verbatim: user.bio.text)
+            if let bio = user.bio,
+               bio.hasVisibleContent {
+                Text(verbatim: bio.text)
             }
         }
     }

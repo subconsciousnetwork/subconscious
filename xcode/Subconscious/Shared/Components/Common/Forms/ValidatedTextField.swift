@@ -10,12 +10,15 @@ import Combine
 
 /// A text field that comes with help text and a validation flag
 struct ValidatedTextField: View {
+    @State var innerText: String = ""
+    
     var alignment: HorizontalAlignment = .leading
     var placeholder: String
     @Binding var text: String
     var onFocusChanged: (Bool) -> Void = { _ in}
+    var onTextChanged: () -> Void = {}
+    var validator: (String) -> Bool = { _ in true }
     var caption: String
-    var hasError: Bool = false
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
     @FocusState var focused: Bool
@@ -32,12 +35,16 @@ struct ValidatedTextField: View {
         return this
     }
     
+    var hasError: Bool {
+        !validator(text)
+    }
+    
     var body: some View {
         VStack(alignment: alignment, spacing: AppTheme.unit2) {
             HStack {
                 TextField(
                     placeholder,
-                    text: $text,
+                    text: $innerText,
                     axis: axis
                 )
                 .focused($focused)
@@ -56,6 +63,9 @@ struct ValidatedTextField: View {
                 .onChange(of: focused) { focused in
                     onFocusChanged(focused)
                 }
+                .onChange(of: innerText, perform: { innerText in
+                    text = innerText
+                })
                 .submitLabel(submitLabel)
                 .onSubmit {
                     onSubmit()
@@ -73,6 +83,9 @@ struct ValidatedTextField: View {
                 .animation(.default, value: hasError)
                 .font(.caption)
         }
+        .onAppear {
+            innerText = text
+        }
     }
 }
 
@@ -87,8 +100,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
             ValidatedTextField(
                 placeholder: "nickname",
                 text: .constant(""),
-                caption: "Lowercase letters and numbers only.",
-                hasError: true
+                validator: { _ in false },
+                caption: "Lowercase letters and numbers only."
             )
             ValidatedTextField(
                 placeholder: "nickname",
@@ -99,8 +112,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
             ValidatedTextField(
                 placeholder: "nickname",
                 text: .constant("A very long run of text to test how this interacts with the icon"),
-                caption: "Lowercase letters and numbers only.",
-                hasError: true
+                validator: { _ in false },
+                caption: "Lowercase letters and numbers only."
             )
             .textFieldStyle(.roundedBorder)
             
@@ -118,8 +131,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 ValidatedTextField(
                     placeholder: "nickname",
                     text: .constant(""),
-                    caption: "Lowercase letters and numbers only.",
-                    hasError: true
+                    validator: { _ in false },
+                    caption: "Lowercase letters and numbers only."
                 )
                 .formField()
             }
