@@ -138,14 +138,14 @@ struct SettingsView: View {
                                 .textSelection(.enabled)
                             }
                         )
-                        
+
                         LabeledContent(
                             "Sphere",
                             value: app.state.sphereIdentity ?? unknown
                         )
                         .lineLimit(1)
                         .textSelection(.enabled)
-                        
+
                         LabeledContent(
                             "Version",
                             value: app.state.sphereVersion ?? unknown
@@ -170,6 +170,12 @@ struct SettingsView: View {
                     
                     GatewayProvisioningSection(app: app)
                 }
+                SwiftUI.Link(
+                    destination: Config.default.feedbackURL,
+                    label: {
+                        Text("Share feedback")
+                    }
+                )
                 Section {
                     NavigationLink("Developer Settings") {
                         DeveloperSettingsView(app: app)
