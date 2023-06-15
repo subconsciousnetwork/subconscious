@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct OurSphereRecord: Hashable {
+struct OurSphereRecord: Hashable, Codable {
     /// Sphere identity
     var identity: Did
     /// Last indexed sphere version
