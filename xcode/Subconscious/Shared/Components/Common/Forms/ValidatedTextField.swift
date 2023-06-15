@@ -37,7 +37,7 @@ struct ValidatedFormField<T: Equatable, Model: ModelProtocol>: View {
             caption: caption,
             axis: axis,
             autoFocus: autoFocus,
-            isValid: !field.hasError,
+            isValid: !field.shouldPresentAsInvalid,
             submitLabel: submitLabel,
             onSubmit: onSubmit
         )

@@ -69,7 +69,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
         validated != nil
     }
     /// Should this field visually display an error?
-    var hasError: Bool {
+    var shouldPresentAsInvalid: Bool {
         !isValid && hasBeenFocusedAtLeastOnce
     }
     

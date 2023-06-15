@@ -457,14 +457,6 @@ struct AppModel: ModelProtocol {
         value: "",
         validate: { value in Petname.Name(value) }
     )
-    /// Expose read-only value for view
-    var nicknameFormFieldValue: String {
-        nicknameFormField.value
-    }
-    /// Expose read-only valid value for view
-    var isNicknameFormFieldValid: Bool {
-        nicknameFormField.isValid
-    }
     
     var inviteCodeFormField = InviteCodeFormField(
         value: "",
@@ -498,8 +490,6 @@ struct AppModel: ModelProtocol {
     /// stored in `AppDefaults`.
     var gatewayURL = ""
     var gatewayId: String? = nil
-//    var gatewayURLTextField = ""
-//    var isGatewayURLTextFieldValid = true
     var gatewayURLField = GatewayUrlFormField(
         value: "",
         validate: { value in

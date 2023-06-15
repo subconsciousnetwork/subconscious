@@ -53,7 +53,7 @@ struct FirstRunProfileView: View {
                     }
                 )
                 .buttonStyle(PillButtonStyle())
-                .disabled(!app.state.isNicknameFormFieldValid)
+                .disabled(!app.state.nicknameFormField.isValid)
             }
         }
         .padding()
