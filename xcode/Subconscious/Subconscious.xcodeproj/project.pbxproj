@@ -77,6 +77,8 @@
 		B80890A72A056A130087E091 /* SlashlinkDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80890A62A056A130087E091 /* SlashlinkDisplayView.swift */; };
 		B80890A82A056A130087E091 /* SlashlinkDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80890A62A056A130087E091 /* SlashlinkDisplayView.swift */; };
 		B80890AA2A0693C40087E091 /* Tests_HeaderSubtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80890A92A0693C40087E091 /* Tests_HeaderSubtext.swift */; };
+		B8099F002A3B5A820014FC2E /* MemoRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8099EFF2A3B5A820014FC2E /* MemoRecord.swift */; };
+		B8099F022A3B6FA50014FC2E /* Tests_MemoRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8099F012A3B6FA50014FC2E /* Tests_MemoRecord.swift */; };
 		B809AFF428D8E7BC00D0589A /* Tests_MarkupText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */; };
 		B80C9E432A2A7CE400E152FB /* Tests_HeaderSubtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80C9E422A2A7CE400E152FB /* Tests_HeaderSubtext.swift */; };
 		B80C9E452A2A7CF100E152FB /* Tests_Audience.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80C9E442A2A7CF100E152FB /* Tests_Audience.swift */; };
@@ -497,6 +499,8 @@
 		B800ABE7297DE7D20024D1FD /* DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataService.swift; sourceTree = "<group>"; };
 		B80890A62A056A130087E091 /* SlashlinkDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlashlinkDisplayView.swift; sourceTree = "<group>"; };
 		B80890A92A0693C40087E091 /* Tests_HeaderSubtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_HeaderSubtext.swift; sourceTree = "<group>"; };
+		B8099EFF2A3B5A820014FC2E /* MemoRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoRecord.swift; sourceTree = "<group>"; };
+		B8099F012A3B6FA50014FC2E /* Tests_MemoRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MemoRecord.swift; sourceTree = "<group>"; };
 		B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MarkupText.swift; sourceTree = "<group>"; };
 		B80C9E422A2A7CE400E152FB /* Tests_HeaderSubtext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tests_HeaderSubtext.swift; sourceTree = "<group>"; };
 		B80C9E442A2A7CF100E152FB /* Tests_Audience.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tests_Audience.swift; sourceTree = "<group>"; };
@@ -886,6 +890,7 @@
 				B5908BEA29DAB05B00225B1A /* TestUtilities.swift */,
 				B80890A92A0693C40087E091 /* Tests_HeaderSubtext.swift */,
 				B840CCC62A0C1F840000C025 /* Tests_Audience.swift */,
+				B8099F012A3B6FA50014FC2E /* Tests_MemoRecord.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -1077,6 +1082,7 @@
 				B8B4251728FDE8AA0081B8D5 /* MemoData.swift */,
 				B8925B2C29C0FD91001F9503 /* MemoDetailResponse.swift */,
 				B824FDD026FA98F300B81BBD /* MemoEditorDetailResponse.swift */,
+				B8099EFF2A3B5A820014FC2E /* MemoRecord.swift */,
 				B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */,
 				B8C80F0029FC201000BAC84D /* Peer.swift */,
 				B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */,
@@ -1574,6 +1580,7 @@
 				B8F27EE42970CD8F00A33E78 /* Tests_Sphere.swift in Sources */,
 				B80C9E452A2A7CF100E152FB /* Tests_Audience.swift in Sources */,
 				B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */,
+				B8099F022A3B6FA50014FC2E /* Tests_MemoRecord.swift in Sources */,
 				B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */,
 				B5432B8329F8BAED003BBB23 /* Tests_UserProfileService.swift in Sources */,
 				B87288E0299B05B500EF7E07 /* Tests_DataService.swift in Sources */,
@@ -1740,6 +1747,7 @@
 				B8DA32B529CB999500EA166E /* AppUpgradeView.swift in Sources */,
 				B8CAA6CB2A02FA7000F4A0F6 /* Link.swift in Sources */,
 				B8B3EE77297AEE8B00779B7F /* FirstRunDoneView.swift in Sources */,
+				B8099F002A3B5A820014FC2E /* MemoRecord.swift in Sources */,
 				B85A805E296F08720007F957 /* AudienceMenuButtonView.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,

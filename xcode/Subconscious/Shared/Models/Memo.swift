@@ -160,3 +160,30 @@ extension MemoData {
         )
     }
 }
+
+extension MemoRecord {
+    init(
+        did: Did,
+        petname: Petname?,
+        slug: Slug,
+        memo: Memo,
+        size: Int? = nil
+    ) throws {
+        try self.init(
+            did: did,
+            petname: petname,
+            slug: slug,
+            contentType: memo.contentType,
+            created: memo.created,
+            modified: memo.modified,
+            title: memo.title(),
+            fileExtension: memo.fileExtension,
+            headers: memo.headers,
+            body: memo.body,
+            description: memo.plain(),
+            excerpt: memo.excerpt(),
+            links: memo.slugs(),
+            size: size
+        )
+    }
+}

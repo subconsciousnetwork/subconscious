@@ -145,10 +145,12 @@ actor DataService {
                     slashlink: slashlink
                 ).toMemo() {
                     try database.writeMemo(
-                        did: identity,
-                        petname: petname,
-                        slug: change,
-                        memo: memo
+                        MemoRecord(
+                            did: identity,
+                            petname: petname,
+                            slug: change,
+                            memo: memo
+                        )
                     )
                     logger.debug(
                         "Indexed memo \(slashlink)",
@@ -306,10 +308,12 @@ actor DataService {
                     slashlink: slashlink
                 ).toMemo() {
                     try database.writeMemo(
-                        did: identity,
-                        petname: nil,
-                        slug: change,
-                        memo: memo
+                        MemoRecord(
+                            did: identity,
+                            petname: nil,
+                            slug: change,
+                            memo: memo
+                        )
                     )
                 } else {
                     try database.removeMemo(
@@ -416,11 +420,13 @@ actor DataService {
                 let info = try local.info(left.slug).unwrap()
                 memo.modified = info.modified
                 try database.writeMemo(
-                    did: Did.local,
-                    petname: nil,
-                    slug: left.slug,
-                    memo: memo,
-                    size: info.size
+                    MemoRecord(
+                        did: Did.local,
+                        petname: nil,
+                        slug: left.slug,
+                        memo: memo,
+                        size: info.size
+                    )
                 )
             case .rightOnly(let right):
                 try database.removeMemo(
@@ -469,11 +475,13 @@ actor DataService {
         let info = try local.info(slug).unwrap()
         memo.modified = info.modified
         try database.writeMemo(
-            did: Did.local,
-            petname: nil,
-            slug: slug,
-            memo: memo,
-            size: info.size
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: slug,
+                memo: memo,
+                size: info.size
+            )
         )
     }
 
@@ -493,10 +501,12 @@ actor DataService {
         let version = try await noosphere.save()
         // Write to database
         try database.writeMemo(
-            did: identity,
-            petname: nil,
-            slug: slug,
-            memo: memo
+            MemoRecord(
+                did: identity,
+                petname: nil,
+                slug: slug,
+                memo: memo
+            )
         )
         // Write new sphere version to database
         try database.writeOurSphere(

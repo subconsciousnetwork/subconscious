@@ -319,20 +319,11 @@ final class DatabaseService {
     ///       local files, not sphere files. We use modified time and size as a
     ///       signal for indexing.
     func writeMemo(
-        did: Did,
-        petname: Petname?,
-        slug: Slug,
-        memo: Memo,
-        size: Int? = nil
+        _ record: MemoRecord
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        let slashlink = Slashlink(petname: petname, slug: slug)
-        if slashlink.isLocal && size == nil {
-            throw DatabaseServiceError.sizeMissingForLocal
-        }
-        let link = Link(did: did, slug: slug)
         try database.execute(
             sql: """
             INSERT INTO memo (
@@ -370,21 +361,21 @@ final class DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(link.id),
-                .text(link.did.description),
-                .text(slashlink.markup),
-                .text(link.slug.description),
-                .text(memo.contentType),
-                .date(memo.created),
-                .date(memo.modified),
-                .text(memo.title()),
-                .text(memo.fileExtension),
-                .json(memo.headers, or: "[]"),
-                .text(memo.body),
-                .text(memo.plain()),
-                .text(memo.excerpt()),
-                .json(memo.slugs(), or: "[]"),
-                .integer(size ?? 0)
+                .text(record.id),
+                .text(record.did.description),
+                .text(record.slashlink.markup),
+                .text(record.slug.description),
+                .text(record.contentType),
+                .date(record.created),
+                .date(record.modified),
+                .text(record.title),
+                .text(record.fileExtension),
+                .json(record.headers, or: "[]"),
+                .text(record.body),
+                .text(record.description),
+                .text(record.excerpt),
+                .json(record.links, or: "[]"),
+                .integer(record.size)
             ]
         )
     }
