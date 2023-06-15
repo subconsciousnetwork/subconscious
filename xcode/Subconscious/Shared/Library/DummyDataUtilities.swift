@@ -27,7 +27,7 @@ extension Did: DummyData {
 
 extension UserProfileBio: DummyData {
     static func dummyData() -> UserProfileBio {
-        UserProfileBio(String.dummyDataMedium())!
+        UserProfileBio(String.dummyDataMedium())
     }
 }
 
