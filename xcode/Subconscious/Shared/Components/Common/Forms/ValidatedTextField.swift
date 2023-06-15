@@ -37,7 +37,7 @@ struct ValidatedFormField<T: Equatable, Model: ModelProtocol>: View {
             caption: caption,
             axis: axis,
             autoFocus: autoFocus,
-            hasError: field.hasError,
+            isValid: !field.hasError,
             submitLabel: submitLabel,
             onSubmit: onSubmit
         )
@@ -57,7 +57,7 @@ struct ValidatedTextField: View {
     var caption: String
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
-    var hasError: Bool = false
+    var isValid: Bool = true
     @FocusState var focused: Bool
     
     var submitLabel: SubmitLabel = .return
@@ -90,8 +90,8 @@ struct ValidatedTextField: View {
                             .background(backgroundColor)
                     }
                     .padding(.trailing, 1)
-                    .opacity(hasError ? 1 : 0)
-                    .animation(.default, value: hasError)
+                    .opacity(isValid ? 0 : 1)
+                    .animation(.default, value: isValid)
                 }
                 .onChange(of: focused) { _ in
                     onFocusChanged(focused)
@@ -111,9 +111,9 @@ struct ValidatedTextField: View {
             }
             Text(caption)
                 .foregroundColor(
-                    hasError ? Color.red : Color.secondary
+                    isValid ? Color.secondary : Color.red
                 )
-                .animation(.default, value: hasError)
+                .animation(.default, value: isValid)
                 .font(.caption)
         }
         .onAppear {
@@ -134,7 +134,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 text: .constant(""),
                 caption: "Lowercase letters and numbers only.",
-                hasError: true
+                isValid: false
             )
             ValidatedTextField(
                 placeholder: "nickname",
@@ -146,7 +146,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 text: .constant("A very long run of text to test how this interacts with the icon"),
                 caption: "Lowercase letters and numbers only.",
-                hasError: true
+                isValid: false
             )
             .textFieldStyle(.roundedBorder)
             
@@ -165,7 +165,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     placeholder: "nickname",
                     text: .constant(""),
                     caption: "Lowercase letters and numbers only.",
-                    hasError: true
+                    isValid: false
                 )
                 .formField()
             }
