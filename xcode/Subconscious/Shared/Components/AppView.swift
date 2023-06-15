@@ -106,7 +106,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Set sphere/user nickname
     /// Sets form field, and persists if needed.
     case setNickname(_ nickname: String)
-    case persistNickname
+    case persistNickname(_ nickname: Petname.Name)
     
     /// Write to `Slashlink.ourProfile` during onboarding
     case updateOurProfileWithNickname(_ nickname: Petname.Name)
@@ -637,10 +637,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 text: nickname
             )
-        case .persistNickname:
+        case .persistNickname(let nickname):
             return persistNickname(
                 state: state,
-                environment: environment
+                environment: environment,
+                nickname: nickname
             )
         case let .updateOurProfileWithNickname(nickname):
             return updateOurProfileWithNickname(
@@ -1053,25 +1054,22 @@ struct AppModel: ModelProtocol {
     
     static func persistNickname(
         state: AppModel,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        nickname: Petname.Name
     ) -> Update<AppModel> {
         // Persist any valid value
-        if let validated = Petname.Name(state.nicknameFormField.value) {
-            var model = state
-            model.nickname = validated.description
-            logger.log("Nickname saved: \(validated)")
-            
-            return update(
-                state: model,
-                actions: [
-                    .updateOurProfileWithNickname(validated),
-                    .nicknameFormField(.setValue(input: validated.description))
-                ],
-                environment: environment
-            )
-        }
+        var model = state
+        model.nickname = nickname.description
+        logger.log("Nickname saved: \(nickname)")
         
-        return Update(state: state)
+        return update(
+            state: model,
+            actions: [
+                .updateOurProfileWithNickname(nickname),
+                .nicknameFormField(.setValue(input: nickname.description))
+            ],
+            environment: environment
+        )
     }
     
     static func updateOurProfileWithNickname(
@@ -1303,9 +1301,13 @@ struct AppModel: ModelProtocol {
             model.firstRunPath = []
         }
         
+        guard let nickname = state.nicknameFormField.validated else {
+            return Update(state: state)
+        }
+        
         return update(
             state: model,
-            action: .persistNickname,
+            action: .persistNickname(nickname),
             environment: environment
         ).animation(.default)
     }

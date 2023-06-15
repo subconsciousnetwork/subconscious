@@ -25,7 +25,11 @@ struct ProfileSettingsView: View {
                 .disableAutocorrection(true)
                 .autocapitalization(.none)
                 .onDisappear {
-                    app.send(.persistNickname)
+                    guard let nickname = app.state.nicknameFormField.validated else {
+                        return
+                    }
+                    
+                    app.send(.persistNickname(nickname))
                 }
             }
         }
