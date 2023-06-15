@@ -407,8 +407,9 @@ actor AddressBookService {
     
     /// Disassociates the passed Petname from any DID within the sphere,
     /// clears the cache, saves the changes and updates the database.
-    func unfollowUser(petname: Petname) async throws {
+    func unfollowUser(petname: Petname) async throws -> Did {
         let ourIdentity = try await noosphere.identity()
+        let did = try await self.noosphere.getPetname(petname: petname)
         try await self.addressBook.unsetPetname(petname: petname)
         let version = try await self.noosphere.save()
         try database.writeOurSphere(
@@ -418,13 +419,14 @@ actor AddressBookService {
             )
         )
         await self.addressBook.invalidateCache()
+        return did
     }
     
     /// Unassociates the passed petname with any DID in the sphere,
     /// saves the changes and updates the database.
     nonisolated func unfollowUserPublisher(
         petname: Petname
-    ) -> AnyPublisher<Void, Error> {
+    ) -> AnyPublisher<Did, Error> {
         Future.detached {
             try await self.unfollowUser(petname: petname)
         }

@@ -208,8 +208,8 @@ enum AppAction: CustomLogStringConvertible {
     case failIndexPeer(petname: Petname, error: Error)
 
     /// Purge the contents of a sphere from the database
-    case purgePeer(_ petname: Petname)
-    case succeedPurgePeer(_ peer: PeerRecord)
+    case purgePeer(_ did: Did)
+    case succeedPurgePeer(_ did: Did)
     case failPurgePeer(_ error: String)
 
     case followDefaultGeist
@@ -230,7 +230,7 @@ enum AppAction: CustomLogStringConvertible {
     case presentSettingsSheet(_ isPresented: Bool)
     
     /// Notification that a follow happened somewhere else
-    case notifySucceedFollow(identity: Did, petname: Petname)
+    case notifySucceedFollow(Petname)
     /// Notification that an unfollow happened somewhere else
     case notifySucceedUnfollow(identity: Did, petname: Petname)
 
@@ -810,17 +810,17 @@ struct AppModel: ModelProtocol {
                 petname: petname,
                 error: error
             )
-        case .purgePeer(let petname):
+        case .purgePeer(let identity):
             return purgePeer(
                 state: state,
                 environment: environment,
-                petname: petname
+                identity: identity
             )
-        case .succeedPurgePeer(let snapshot):
+        case .succeedPurgePeer(let identity):
             return succeedPurgePeer(
                 state: state,
                 environment: environment,
-                peer: snapshot
+                identity: identity
             )
         case .failPurgePeer(let error):
             return failPurgePeer(
@@ -893,18 +893,17 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case let .notifySucceedFollow(identity, petname):
+        case let .notifySucceedFollow(petname):
             return notifySucceedFollow(
                 state: state,
                 environment: environment,
-                identity: identity,
                 petname: petname
             )
-        case let .notifySucceedUnfollow(identity, petname):
+        case let .notifySucceedUnfollow(did, petname):
             return notifySucceedUnfollow(
                 state: state,
                 environment: environment,
-                identity: identity,
+                identity: did,
                 petname: petname
             )
         }
@@ -1801,14 +1800,14 @@ struct AppModel: ModelProtocol {
     static func purgePeer(
         state: Self,
         environment: Environment,
-        petname: Petname
+        identity: Did
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached(priority: .utility) {
             do {
-                let peer = try await environment.data.purgePeer(
-                    petname: petname
+                try environment.database.purgePeer(
+                    identity: identity
                 )
-                return Action.succeedPurgePeer(peer)
+                return Action.succeedPurgePeer(identity)
             } catch {
                 return Action.failPurgePeer(error.localizedDescription)
             }
@@ -1816,7 +1815,7 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Purging peer",
             metadata: [
-                "petname": petname.description
+                "identity": identity.description
             ]
         )
         return Update(state: state, fx: fx)
@@ -1825,14 +1824,12 @@ struct AppModel: ModelProtocol {
     static func succeedPurgePeer(
         state: Self,
         environment: Environment,
-        peer: PeerRecord
+        identity: Did
     ) -> Update<Self> {
         logger.log(
             "Purged peer from database",
             metadata: [
-                "petname": peer.petname.description,
-                "identity": peer.identity.description,
-                "since": peer.since ?? "nil"
+                "identity": identity.description
             ]
         )
         return Update(state: state)
@@ -1975,10 +1972,9 @@ struct AppModel: ModelProtocol {
     static func notifySucceedFollow(
         state: Self,
         environment: Environment,
-        identity: Did,
         petname: Petname
     ) -> Update<Self> {
-        logger.log("Notify followed \(petname) with identity \(identity)")
+        logger.log("Notify followed \(petname)")
         return update(
             state: state,
             action: .indexPeer(petname),
@@ -1992,10 +1988,16 @@ struct AppModel: ModelProtocol {
         identity: Did,
         petname: Petname
     ) -> Update<Self> {
-        logger.log("Notify unfollowed \(petname) with identity \(identity)")
+        logger.log(
+            "Notify unfollowed sphere",
+            metadata: [
+                "did": identity.description,
+                "petname": petname.description
+            ]
+        )
         return update(
             state: state,
-            action: .purgePeer(petname),
+            action: .purgePeer(identity),
             environment: environment
         )
     }

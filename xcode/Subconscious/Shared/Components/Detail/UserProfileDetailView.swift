@@ -67,6 +67,14 @@ struct UserProfileDetailView: View {
                 )
             )
         }
+        .onReceive(
+            store.actions.compactMap(UserProfileDetailAction.toAppAction),
+            perform: app.send
+        )
+        .onReceive(store.actions) { action in
+            let message = String.loggable(action)
+            Self.logger.debug("[action] \(message)")
+        }
     }
 }
 
@@ -75,8 +83,19 @@ struct UserProfileDetailView: View {
 enum UserProfileDetailNotification: Hashable {
     case requestNavigateToProfile(_ user: UserProfile)
     case requestDetail(MemoDetailDescription)
-    case succeedFollow(identity: Did, petname: Petname)
-    case succeedUnfollow(identity: Did, petname: Petname)
+}
+
+extension UserProfileDetailAction {
+    static func toAppAction(_ action: Self) -> AppAction? {
+        switch action {
+        case let .succeedFollow(petname):
+            return .notifySucceedFollow(petname)
+        case let .succeedUnfollow(identity, petname):
+            return .notifySucceedUnfollow(identity: identity, petname: petname)
+        default:
+            return nil
+        }
+    }
 }
 
 /// A description of a user profile that can be used to set up the user
@@ -87,7 +106,7 @@ struct UserProfileDetailDescription: Hashable {
     var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
-enum UserProfileDetailAction {
+enum UserProfileDetailAction: CustomLogStringConvertible {
     case appear(Slashlink, Int, UserProfile?)
     case refresh
     case populate(UserProfileContentResponse)
@@ -110,7 +129,7 @@ enum UserProfileDetailAction {
     case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow(Petname)
+    case succeedFollow(_ petname: Petname)
     
     case requestWaitForFollowedUserResolution(_ petname: Petname)
     case succeedResolveFollowedUser
@@ -120,12 +139,21 @@ enum UserProfileDetailAction {
     case attemptUnfollow
     case failUnfollow(error: String)
     case dismissFailUnfollowError
-    case succeedUnfollow
+    case succeedUnfollow(identity: Did, petname: Petname)
     
     case requestEditProfile
     case failEditProfile(error: String)
     case dismissEditProfileError
     case succeedEditProfile
+    
+    var logDescription: String {
+        switch self {
+        case .populate(_):
+            return "populate(...)"
+        default:
+            return String(describing: self)
+        }
+    }
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -420,12 +448,20 @@ struct UserProfileDetailModel: ModelProtocol {
         case .attemptFollow(let did, let petname):
             let fx: Fx<UserProfileDetailAction> =
             environment.addressBook
-                .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
+                .followUserPublisher(
+                    did: did,
+                    petname: petname,
+                    preventOverwrite: true
+                )
                 .map({ _ in
                     UserProfileDetailAction.succeedFollow(petname)
                 })
                 .catch { error in
-                    Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
+                    Just(
+                        UserProfileDetailAction.failFollow(
+                            error: error.localizedDescription
+                        )
+                    )
                 }
                 .eraseToAnyPublisher()
             
@@ -504,13 +540,11 @@ struct UserProfileDetailModel: ModelProtocol {
             case .notFollowing:
                 return Update(state: state)
             case .following(let name):
-                let fx: Fx<UserProfileDetailAction> =
-                     environment.addressBook
-                     .unfollowUserPublisher(
-                        petname: name.toPetname()
-                     )
-                    .map({ _ in
-                        .succeedUnfollow
+                let petname = name.toPetname()
+                let fx: Fx<UserProfileDetailAction> = environment.addressBook
+                    .unfollowUserPublisher(petname: petname)
+                    .map({ identity in
+                        .succeedUnfollow(identity: identity, petname: petname)
                     })
                     .recover({ error in
                         .failUnfollow(error: error.localizedDescription)
@@ -520,7 +554,14 @@ struct UserProfileDetailModel: ModelProtocol {
                 return Update(state: state, fx: fx)
             }
             
-        case .succeedUnfollow:
+        case let .succeedUnfollow(identity, petname):
+            logger.log(
+                "Unfollowed sphere",
+                metadata: [
+                    "petname": petname.description,
+                    "did:": identity.description
+                ]
+            )
             return update(
                 state: state,
                 actions: [

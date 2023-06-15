@@ -69,11 +69,6 @@ struct NotebookView: View {
             app.actions.compactMap(NotebookAction.from),
             perform: store.send
         )
-        /// Replay some note actions on app store
-        .onReceive(
-            store.actions.compactMap(AppAction.from),
-            perform: app.send
-        )
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             NotebookModel.logger.debug("[action] \(message)")
@@ -176,10 +171,6 @@ enum NotebookAction {
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
     
-    /// Notification from UserProfileDetailView
-    case notifySucceedFollow(identity: Did, petname: Petname)
-    case notifySucceedUnfollow(identity: Did, petname: Petname)
-
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
@@ -314,25 +305,6 @@ extension NotebookAction {
                     user: user
                 )
             ))
-        case let .succeedFollow(identity, petname):
-            return .notifySucceedFollow(identity: identity, petname: petname)
-        case let .succeedUnfollow(identity, petname):
-            return .notifySucceedUnfollow(identity: identity, petname: petname)
-        }
-    }
-}
-
-extension AppAction {
-    /// Map select notebook actions to `AppAction`
-    /// Used to replay select notebook actions on app store.
-    static func from(_ action: NotebookAction) -> Self? {
-        switch action {
-        case let .notifySucceedFollow(identity, petname):
-            return .notifySucceedFollow(identity: identity, petname: petname)
-        case let .notifySucceedUnfollow(identity, petname):
-            return .notifySucceedUnfollow(identity: identity, petname: petname)
-        default:
-            return nil
         }
     }
 }
@@ -636,12 +608,6 @@ struct NotebookModel: ModelProtocol {
             return update(state: state, action: .pushDetail(.profile(detail)), environment: environment)
         case .failPushRandomDetail(let error):
             logger.log("Failed to get random note: \(error)")
-            return Update(state: state)
-        case let .notifySucceedFollow(identity, petname):
-            logger.log("Notify followed \(petname) with identity \(identity)")
-            return Update(state: state)
-        case let .notifySucceedUnfollow(identity, petname):
-            logger.log("Notify unfollowed \(petname) with identity \(identity)")
             return Update(state: state)
         }
     }

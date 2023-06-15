@@ -353,28 +353,6 @@ actor DataService {
             throw error
         }
     }
-
-    /// Purge sphere from database with the given petname.
-    ///
-    /// Gets did for petname, then purges everything belonging to did
-    /// from Database.
-    func purgePeer(petname: Petname) async throws -> PeerRecord {
-        let peer = try database.readPeer(
-            petname: petname
-        ).unwrap(
-            DataServiceError.unknownPetname(petname)
-        )
-        try database.purgePeer(identity: peer.identity)
-        logger.log(
-            "Purged peer from database",
-            metadata: [
-                "petname": petname.description,
-                "identity": peer.identity.description,
-                "since": peer.since ?? "nil"
-            ]
-        )
-        return peer
-    }
     
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).

@@ -9,6 +9,7 @@
 import Foundation
 import OrderedCollections
 import Combine
+import os
 
 /// Enum representing the current readiness state of the database service
 enum DatabaseServiceState: String {
@@ -60,7 +61,11 @@ final class DatabaseService {
     @Published private(set) var state: DatabaseServiceState
     let migrations: Migrations
     let database: SQLite3Database
-
+    private let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "DatabaseService"
+    )
+    
     init(
         database: SQLite3Database,
         migrations: Migrations
@@ -285,6 +290,7 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         let savepoint = "purge"
+
         try database.savepoint(savepoint)
         do {
             try database.execute(
@@ -301,8 +307,21 @@ final class DatabaseService {
                 parameters: [.text(identity.description)]
             )
             try database.release(savepoint)
+            logger.log(
+                "Purged peer from database",
+                metadata: [
+                    "identity": identity.description
+                ]
+            )
         } catch {
             try database.rollback(savepoint)
+            logger.log(
+                "Failed to purge peer from database",
+                metadata: [
+                    "identity": identity.description,
+                    "error": error.localizedDescription
+                ]
+            )
             throw error
         }
     }
