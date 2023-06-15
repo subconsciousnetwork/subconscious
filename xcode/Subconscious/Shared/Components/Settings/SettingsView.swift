@@ -43,6 +43,79 @@ struct GatewaySyncLabel: View {
     }
 }
 
+// MARK: Provisioning
+
+struct GatewayProvisioningSection: View {
+    @ObservedObject var app: Store<AppModel>
+    
+    var body: some View {
+        Section(
+            content: {
+                ValidatedTextField(
+                    placeholder: "Enter your invite code",
+                    text: Binding(
+                        get: { app.state.inviteCodeFormField.value },
+                        send: app.send,
+                        tag: AppAction.setInviteCode
+                    ),
+                    caption: "Look for this in your welcome email.",
+                    hasError: app.state.inviteCodeFormField.hasError
+                )
+                .formField()
+                .autocapitalization(.none)
+                .autocorrectionDisabled(true)
+                .onDisappear {
+                    app.send(.setInviteCode(app.state.inviteCodeFormField.value))
+                }
+                .disabled(app.state.gatewayProvisioningStatus == .pending)
+                
+                Button(
+                    action: {
+                        app.send(.submitProvisionGatewayForm)
+                    },
+                    label: {
+                        GatewayProvisionLabel(
+                            status: app.state.gatewayProvisioningStatus,
+                            inviteCode: app.state.inviteCodeFormField.validated,
+                            gatewayId: app.state.gatewayId
+                        )
+                    }
+                )
+                .disabled(
+                    !app.state.inviteCodeFormField.isValid ||
+                    app.state.gatewayProvisioningStatus == .pending
+                )
+            },
+            header: {
+                Text("Provision Gateway")
+            },
+            footer: {
+                VStack {
+                    if let gatewayId = app.state.gatewayId {
+                        VStack(alignment: .leading) {
+                            Text("Gateway ID")
+                                .foregroundColor(.secondary)
+                                .bold()
+                            Text(gatewayId)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    switch app.state.gatewayProvisioningStatus {
+                    case let .failed(message):
+                        Text(message)
+                    default:
+                        EmptyView()
+                    }
+                        
+                }
+            }
+        )
+    }
+}
+
+// MARK: Settings
+
 struct SettingsView: View {
     @ObservedObject var app: Store<AppModel>
     var unknown = "Unknown"
@@ -65,61 +138,44 @@ struct SettingsView: View {
                                 .textSelection(.enabled)
                             }
                         )
-                        
+
                         LabeledContent(
                             "Sphere",
                             value: app.state.sphereIdentity ?? unknown
                         )
                         .lineLimit(1)
                         .textSelection(.enabled)
-                        
+
                         LabeledContent(
                             "Version",
                             value: app.state.sphereVersion ?? unknown
                         )
                         .lineLimit(1)
                         .textSelection(.enabled)
-                    }
-                    Section(
-                        content: {
-                            NavigationLink(
-                                destination: {
-                                    GatewayURLSettingsView(app: app)
-                                },
-                                label: {
-                                    LabeledContent(
-                                        "Gateway",
-                                        value: app.state.gatewayURL
-                                    )
-                                    .lineLimit(1)
-                                }
-                            )
-                            
-                            if app.state.gatewayProvisioningStatus != .pending {
-                                Button(
-                                    action: {
-                                        app.send(.syncSphereWithGateway)
-                                    },
-                                    label: {
-                                        GatewaySyncLabel(
-                                            status: app.state.lastGatewaySyncStatus
-                                        )
-                                    }
+                        
+                        NavigationLink(
+                            destination: {
+                                GatewayURLSettingsView(app: app)
+                            },
+                            label: {
+                                LabeledContent(
+                                    "Gateway",
+                                    value: app.state.gatewayURL
                                 )
-                                .disabled(app.state.gatewayURL.count == 0)
+                                .lineLimit(1)
                             }
-                        }, header: {
-                            Text("Gateway")
-                        }, footer: {
-                            switch app.state.lastGatewaySyncStatus {
-                            case let .failed(message):
-                                Text(message)
-                            default:
-                                EmptyView()
-                            }
-                        }
-                    )
+                        )
+                        .disabled(app.state.gatewayProvisioningStatus == .pending)
+                    }
+                    
+                    GatewayProvisioningSection(app: app)
                 }
+                SwiftUI.Link(
+                    destination: Config.default.feedbackURL,
+                    label: {
+                        Text("Share feedback")
+                    }
+                )
                 Section {
                     NavigationLink("Developer Settings") {
                         DeveloperSettingsView(app: app)

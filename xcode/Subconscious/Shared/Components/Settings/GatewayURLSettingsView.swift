@@ -93,83 +93,47 @@ struct GatewayURLSettingsView: View {
 
     var body: some View {
         Form {
-            ValidatedTextField(
-                placeholder: "http://example.com",
-                text: Binding(
-                    get: { app.state.gatewayURLTextField },
-                    send: app.send,
-                    tag: AppAction.setGatewayURLTextField
-                ),
-                caption: "The URL of your preferred Noosphere gateway",
-                hasError: !app.state.isGatewayURLTextFieldValid
-            )
-            .formField()
-            .autocapitalization(.none)
-            .autocorrectionDisabled(true)
-            .keyboardType(.URL)
-            .onDisappear {
-                app.send(.submitGatewayURL(app.state.gatewayURLTextField))
-            }
-            
             Section(
                 content: {
                     ValidatedTextField(
-                        placeholder: "Enter your invite code",
+                        placeholder: "http://example.com",
                         text: Binding(
-                            get: { app.state.inviteCodeFormField.value },
+                            get: { app.state.gatewayURLTextField },
                             send: app.send,
-                            tag: AppAction.setInviteCode
+                            tag: AppAction.setGatewayURLTextField
                         ),
-                        caption: "Look for this in your welcome email.",
-                        hasError: app.state.inviteCodeFormField.hasError
+                        caption: "The URL of your preferred Noosphere gateway",
+                        hasError: !app.state.isGatewayURLTextFieldValid
                     )
                     .formField()
                     .autocapitalization(.none)
                     .autocorrectionDisabled(true)
+                    .keyboardType(.URL)
                     .onDisappear {
-                        app.send(.setInviteCode(app.state.inviteCodeFormField.value))
+                        app.send(.submitGatewayURL(app.state.gatewayURLTextField))
                     }
-                    .disabled(app.state.gatewayProvisioningStatus == .pending)
                     
-                    Button(
-                        action: {
-                            app.send(.submitProvisionGatewayForm)
-                        },
-                        label: {
-                            GatewayProvisionLabel(
-                                status: app.state.gatewayProvisioningStatus,
-                                inviteCode: app.state.inviteCodeFormField.validated,
-                                gatewayId: app.state.gatewayId
-                            )
-                        }
-                    )
-                    .disabled(
-                        !app.state.inviteCodeFormField.isValid ||
-                        app.state.gatewayProvisioningStatus == .pending
-                    )
-                },
-                header: {
-                    Text("Provision Gateway")
-                },
-                footer: {
-                    VStack {
-                        if let gatewayId = app.state.gatewayId {
-                            VStack(alignment: .leading) {
-                                Text("Gateway ID")
-                                    .foregroundColor(.secondary)
-                                    .bold()
-                                Text(gatewayId)
-                                    .foregroundColor(.secondary)
+                    if app.state.gatewayProvisioningStatus != .pending {
+                        Button(
+                            action: {
+                                app.send(.syncSphereWithGateway)
+                            },
+                            label: {
+                                GatewaySyncLabel(
+                                    status: app.state.lastGatewaySyncStatus
+                                )
                             }
-                        }
-                        
-                        switch app.state.gatewayProvisioningStatus {
-                        case let .failed(message):
-                            Text(message)
-                        default:
-                            EmptyView()
-                        }
-                            
+                        )
+                        .disabled(app.state.gatewayURL.count == 0)
+                    }
+                }, header: {
+                    Text("Gateway")
+                }, footer: {
+                    switch app.state.lastGatewaySyncStatus {
+                    case let .failed(message):
+                        Text(message)
+                    default:
+                        EmptyView()
                     }
                 }
             )

@@ -59,6 +59,8 @@
 		B5CA448A29D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */; };
 		B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
 		B5CFC7FF29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
+		B5D71D192A32B2AF000E058A /* NotFoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D71D182A32B2AF000E058A /* NotFoundView.swift */; };
+		B5D71D1A2A32B2AF000E058A /* NotFoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D71D182A32B2AF000E058A /* NotFoundView.swift */; };
 		B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
 		B5D769CC29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
 		B5E60C8B2A145F04007065A1 /* UserProfileBio.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60C8A2A145F04007065A1 /* UserProfileBio.swift */; };
@@ -484,6 +486,7 @@
 		B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayProvisioningService.swift; sourceTree = "<group>"; };
 		B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyDataUtilities.swift; sourceTree = "<group>"; };
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
+		B5D71D182A32B2AF000E058A /* NotFoundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotFoundView.swift; sourceTree = "<group>"; };
 		B5D769CA29F770440015385A /* GenerativeProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerativeProfilePic.swift; sourceTree = "<group>"; };
 		B5D8D30029AF1F9B0011D820 /* Did.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Did.swift; sourceTree = "<group>"; };
 		B5E60C8A2A145F04007065A1 /* UserProfileBio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileBio.swift; sourceTree = "<group>"; };
@@ -1326,6 +1329,7 @@
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
 				B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */,
+				B5D71D182A32B2AF000E058A /* NotFoundView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1793,6 +1797,7 @@
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
+				B5D71D192A32B2AF000E058A /* NotFoundView.swift in Sources */,
 				B8CA8F2628909E66005F8802 /* Feed.swift in Sources */,
 				B85652202975BA9000B7FCA0 /* MetaTableView.swift in Sources */,
 				B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */,
@@ -1927,6 +1932,7 @@
 				B8D328B829A671DA00850A37 /* Transclude2View.swift in Sources */,
 				B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */,
 				B8E1A9582A16E98D00B757A5 /* PeerRecord.swift in Sources */,
+				B5D71D1A2A32B2AF000E058A /* NotFoundView.swift in Sources */,
 				B8B6BCB629CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B58862C929F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,

@@ -17,7 +17,6 @@ struct UserProfileHeaderView: View {
     var user: UserProfile
     var statistics: UserProfileStatistics?
     
-    var isFollowingUser: Bool
     var action: (UserProfileAction) -> Void = { _ in }
     var hideActionButton: Bool = false
     
@@ -27,32 +26,35 @@ struct UserProfileHeaderView: View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp, size: .large)
-            
-                PetnameView(address: user.address, name: user.nickname)
-                    .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
+                
+                if let name = user.toNameVariant() {
+                    PetnameView(
+                        name: name,
+                        showMaybePrefix: true
+                    )
+               }
                 
                 Spacer()
                 
                 if !hideActionButton {
                     Button(
                         action: {
-                            switch (user.category, isFollowingUser) {
+                            switch (user.category, user.ourFollowStatus) {
                             case (.you, _):
                                 action(.editOwnProfile)
-                            case (_, true):
+                            case (_, .following(_)):
                                 action(.requestUnfollow)
-                            case (_, false):
+                            case (_, .notFollowing):
                                 action(.requestFollow)
                             }
                         },
                         label: {
-                            switch (user.category, isFollowingUser) {
+                            switch (user.category, user.ourFollowStatus) {
                             case (.you, _):
                                 Label("Edit Profile", systemImage: AppIcon.edit.systemName)
-                            case (_, true):
+                            case (_, .following(_)):
                                 Label("Following", systemImage: AppIcon.following.systemName)
-                            case (_, false):
+                            case (_, .notFollowing):
                                 Text("Follow")
                             }
                         }
@@ -96,9 +98,9 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human,
-                    resolutionStatus: .resolved("abc")
-                ),
-                isFollowingUser: false
+                    resolutionStatus: .resolved("abc"),
+                    ourFollowStatus: .notFollowing
+                )
             )
             UserProfileHeaderView(
                 user: UserProfile(
@@ -108,10 +110,10 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist,
-                    resolutionStatus: .resolved(Cid("ok"))
+                    resolutionStatus: .resolved(Cid("ok")),
+                    ourFollowStatus: .following(Petname.Name("ben")!)
                 ),
-                statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
-                isFollowingUser: true
+                statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19)
             )
             UserProfileHeaderView(
                 user: UserProfile(
@@ -121,9 +123,9 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .you,
-                    resolutionStatus: .resolved(Cid("ok"))
-                ),
-                isFollowingUser: false
+                    resolutionStatus: .resolved(Cid("ok")),
+                    ourFollowStatus: .notFollowing
+                )
             )
         }
     }
