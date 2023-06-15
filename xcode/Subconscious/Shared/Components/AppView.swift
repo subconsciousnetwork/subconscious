@@ -81,6 +81,7 @@ struct AppView: View {
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
+typealias GatewayUrlFormField = FormField<String, URL>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -91,6 +92,7 @@ enum AppAction: CustomLogStringConvertible {
     case appUpgrade(AppUpgradeAction)
     case nicknameFormField(NicknameFormField.Action)
     case inviteCodeFormField(InviteCodeFormField.Action)
+    case gatewayURLField(GatewayUrlFormField.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -118,8 +120,7 @@ enum AppAction: CustomLogStringConvertible {
     case setInviteCode(_ inviteCode: String)
 
     /// Set gateway URL
-    case setGatewayURLTextField(_ gateway: String)
-    case submitGatewayURL(_ gateway: String)
+    case submitGatewayURL(_ url: URL)
     case succeedResetGatewayURL(_ url: URL)
 
     /// Create a new sphere given an owner key name
@@ -315,6 +316,28 @@ struct AppUpgradeCursor: CursorProtocol {
     }
 }
 
+struct GatewayUrlFormFieldCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = GatewayUrlFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.gatewayURLField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.gatewayURLField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .gatewayURLField(action)
+        }
+    }
+}
+
 struct NicknameFormFieldCursor: CursorProtocol {
     typealias Model = AppModel
     typealias ViewModel = NicknameFormField
@@ -475,8 +498,19 @@ struct AppModel: ModelProtocol {
     /// stored in `AppDefaults`.
     var gatewayURL = ""
     var gatewayId: String? = nil
-    var gatewayURLTextField = ""
-    var isGatewayURLTextFieldValid = true
+//    var gatewayURLTextField = ""
+//    var isGatewayURLTextFieldValid = true
+    var gatewayURLField = GatewayUrlFormField(
+        value: "",
+        validate: { value in
+            guard let url = URL(string: value),
+               url.isHTTP() else {
+                return nil
+            }
+            
+            return url
+        }
+    )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
     /// Show settings sheet?
@@ -528,6 +562,12 @@ struct AppModel: ModelProtocol {
             )
         case .inviteCodeFormField(let action):
             return InviteCodeFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
+        case .gatewayURLField(let action):
+            return GatewayUrlFormFieldCursor.update(
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
@@ -635,17 +675,11 @@ struct AppModel: ModelProtocol {
         case let .failFetchNicknameFromProfile(message):
             logger.log("Failed to read nickname from profile: \(message)")
             return Update(state: state)
-        case let .setGatewayURLTextField(text):
-            return setGatewayURLTextField(
-                state: state,
-                environment: environment,
-                text: text
-            )
-        case let .submitGatewayURL(gateway):
+        case .submitGatewayURL(let url):
             return submitGatewayURL(
                 state: state,
                 environment: environment,
-                gatewayURL: gateway
+                url: url
             )
         case let .succeedResetGatewayURL(url):
             return succeedResetGatewayURL(
@@ -931,7 +965,6 @@ struct AppModel: ModelProtocol {
         var model = state
         
         model.gatewayURL = AppDefaults.standard.gatewayURL
-        model.gatewayURLTextField = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         
         // Update model from app defaults
@@ -949,6 +982,9 @@ struct AppModel: ModelProtocol {
                 ),
                 .inviteCodeFormField(
                     .setValue(input: AppDefaults.standard.inviteCode ?? "")
+                ),
+                .gatewayURLField(
+                    .setValue(input: AppDefaults.standard.gatewayURL)
                 )
             ],
             environment: environment
@@ -1014,7 +1050,6 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
-//        let text = text.lowercased().trimmingCharacters(in: .whitespaces)
         /// First pass down setValue to form field,
         /// then persist the nickname by reading the updated model.
         return update(
@@ -1031,19 +1066,21 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         // Persist any valid value
-        if let validated = Petname.Name(state.nickname) {
+        if let validated = Petname.Name(state.nicknameFormField.value) {
             var model = state
             model.nickname = validated.description
             logger.log("Nickname saved: \(validated)")
             
             return update(
                 state: model,
-                action: .updateOurProfileWithNickname(validated),
+                actions: [
+                    .updateOurProfileWithNickname(validated),
+                    .nicknameFormField(.setValue(input: validated.description))
+                ],
                 environment: environment
             )
         }
         
-        // Otherwise, just return state
         return Update(state: state)
     }
     
@@ -1099,47 +1136,17 @@ struct AppModel: ModelProtocol {
         )
     }
     
-    static func setGatewayURLTextField(
-        state: AppModel,
-        environment: AppEnvironment,
-        text: String
-    ) -> Update<AppModel> {
-        let url = URL(string: text)
-        let isGatewayURLTextFieldValid = url?.isHTTP() ?? false
-        
-        var model = state
-        model.gatewayURLTextField = text
-        model.isGatewayURLTextFieldValid = isGatewayURLTextFieldValid
-        return Update(state: model)
-    }
-    
     static func submitGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
-        gatewayURL: String
+        url: URL
     ) -> Update<AppModel> {
-        var fallback = state
-        fallback.gatewayURLTextField = state.gatewayURL
-        fallback.isGatewayURLTextFieldValid = true
-        
-        // If URL given is not valid, fall back to original value.
-        guard let url = URL(string: gatewayURL) else {
-            return Update(state: fallback)
-        }
-        
-        // If URL given is not HTTP, fall back to original value.
-        guard url.isHTTP() else {
-            return Update(state: fallback)
-        }
-        
         var model = state
-        model.gatewayURL = gatewayURL
-        model.gatewayURLTextField = gatewayURL
-        model.isGatewayURLTextFieldValid = true
-        
+        model.gatewayURL = url.absoluteString
+
         // Persist to UserDefaults
-        AppDefaults.standard.gatewayURL = gatewayURL
-        
+        AppDefaults.standard.gatewayURL = url.absoluteString
+
         // Reset gateway on environment
         let fx: Fx<AppAction> = Future.detached {
             await environment.noosphere.resetGateway(url: url)
@@ -1953,7 +1960,7 @@ struct AppModel: ModelProtocol {
         return update(
             state: model,
             actions: [
-                .submitGatewayURL(url.absoluteString),
+                .submitGatewayURL(url),
                 .syncSphereWithGateway
             ],
             environment: environment

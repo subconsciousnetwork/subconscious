@@ -7,6 +7,43 @@
 
 import SwiftUI
 import Combine
+import ObservableStore
+
+struct ValidatedFormField<T: Equatable, Model: ModelProtocol>: View {
+    var alignment: HorizontalAlignment = .leading
+    var placeholder: String
+    var field: FormField<String, T>
+    var send: (Model.Action) -> Void
+    var tag: (FormFieldAction<String>) -> Model.Action
+    var caption: String
+    var axis: Axis = .horizontal
+    var autoFocus: Bool = false
+    var submitLabel: SubmitLabel = .done
+    var onSubmit: () -> Void = {}
+    
+    
+    var body: some View {
+        ValidatedTextField(
+            alignment: alignment,
+            placeholder: placeholder,
+            text: Binding(
+                get: { field.value },
+                send: send,
+                tag: { v in tag(.setValue(input: v))}
+            ),
+            onFocusChanged: { focused in
+                send(tag(.focusChange(focused: focused)))
+            },
+            caption: caption,
+            axis: axis,
+            autoFocus: autoFocus,
+            hasError: field.hasError,
+            submitLabel: submitLabel,
+            onSubmit: onSubmit
+        )
+        .formField()
+    }
+}
 
 /// A text field that comes with help text and a validation flag
 struct ValidatedTextField: View {
@@ -17,10 +54,10 @@ struct ValidatedTextField: View {
     @Binding var text: String
     var onFocusChanged: (Bool) -> Void = { _ in}
     var onTextChanged: () -> Void = {}
-    var validator: (String) -> Bool = { _ in true }
     var caption: String
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
+    var hasError: Bool = false
     @FocusState var focused: Bool
     
     var submitLabel: SubmitLabel = .return
@@ -33,10 +70,6 @@ struct ValidatedTextField: View {
         var this = self
         this.backgroundColor = Color.formFieldBackground
         return this
-    }
-    
-    var hasError: Bool {
-        !validator(text)
     }
     
     var body: some View {
@@ -60,7 +93,7 @@ struct ValidatedTextField: View {
                     .opacity(hasError ? 1 : 0)
                     .animation(.default, value: hasError)
                 }
-                .onChange(of: focused) { focused in
+                .onChange(of: focused) { _ in
                     onFocusChanged(focused)
                 }
                 .onChange(of: innerText, perform: { innerText in
@@ -100,8 +133,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
             ValidatedTextField(
                 placeholder: "nickname",
                 text: .constant(""),
-                validator: { _ in false },
-                caption: "Lowercase letters and numbers only."
+                caption: "Lowercase letters and numbers only.",
+                hasError: true
             )
             ValidatedTextField(
                 placeholder: "nickname",
@@ -112,8 +145,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
             ValidatedTextField(
                 placeholder: "nickname",
                 text: .constant("A very long run of text to test how this interacts with the icon"),
-                validator: { _ in false },
-                caption: "Lowercase letters and numbers only."
+                caption: "Lowercase letters and numbers only.",
+                hasError: true
             )
             .textFieldStyle(.roundedBorder)
             
@@ -131,8 +164,8 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 ValidatedTextField(
                     placeholder: "nickname",
                     text: .constant(""),
-                    validator: { _ in false },
-                    caption: "Lowercase letters and numbers only."
+                    caption: "Lowercase letters and numbers only.",
+                    hasError: true
                 )
                 .formField()
             }

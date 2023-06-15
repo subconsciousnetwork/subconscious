@@ -18,19 +18,13 @@ struct FirstRunProfileView: View {
             Text("What should we call you?")
                 .foregroundColor(.secondary)
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                ValidatedTextField(
+                ValidatedFormField<Petname.Name, AppModel>(
                     alignment: .center,
                     placeholder: "nickname",
-                    text: Binding(
-                        get: { app.state.nicknameFormFieldValue },
-                        send: app.send,
-                        tag: AppAction.setNickname
-                    ),
-                    onFocusChanged: { focused in
-                        app.send(.nicknameFormField(.focusChange(focused: focused)))
-                    },
+                    field: app.state.nicknameFormField,
+                    send: app.send,
+                    tag: AppAction.nicknameFormField,
                     caption: "Lowercase letters, numbers and dashes only.",
-//                    hasError: !app.state.isNicknameFormFieldValid,
                     autoFocus: true,
                     submitLabel: .go,
                     onSubmit: {

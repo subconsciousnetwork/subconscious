@@ -114,34 +114,6 @@ struct EditProfileSheetModel: ModelProtocol {
     }
 }
 
-struct ValidatedFormField<T: Equatable, Model: ModelProtocol>: View {
-    var placeholder: String
-    var field: FormField<String, T>
-    var send: (Model.Action) -> Void
-    var tag: (FormFieldAction<String>) -> Model.Action
-    var caption: String
-    var axis: Axis = .horizontal
-    
-    var body: some View {
-        ValidatedTextField(
-            placeholder: placeholder,
-            text: Binding(
-                get: { field.value },
-                send: send,
-                tag: { v in tag(.setValue(input: v))}
-            ),
-            onFocusChanged: { focused in
-                send(tag(.focusChange(focused: focused)))
-            },
-            validator: { v in
-                field.validate(v) != nil
-            },
-            caption: caption,
-            axis: axis
-        )
-        .formField()
-    }
-}
 
 struct EditProfileSheet: View {
     var state: EditProfileSheetModel

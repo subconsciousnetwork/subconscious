@@ -238,20 +238,14 @@ struct FollowUserFormView: View {
             HStack(alignment: .top) {
                 Image(systemName: "key")
                     .foregroundColor(.accentColor)
-                ValidatedTextField(
-                    placeholder: "DID",
-                    text: Binding(
-                        get: { state.did.value },
-                        send: send,
-                        tag: { v in .didField(.setValue(input: v))}
-                    ),
-                    onFocusChanged: { focused in
-                        send(.didField(.focusChange(focused: focused)))
-                    },
+                
+                ValidatedFormField<Did, FollowUserFormModel>(
+                    placeholder: "petname",
+                    field: state.did,
+                    send: send,
+                    tag: FollowUserFormAction.didField,
                     caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
-//                    hasError: state.did.hasError
                 )
-                .formField()
                 .lineLimit(1)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
@@ -260,20 +254,14 @@ struct FollowUserFormView: View {
             HStack(alignment: .top) {
                 Image(systemName: "at")
                     .foregroundColor(.accentColor)
-                ValidatedTextField(
-                    placeholder: "Petname",
-                    text: Binding(
-                        get: { state.petname.value },
-                        send: send,
-                        tag: { v in .petnameField(.setValue(input: v))}
-                    ),
-                    onFocusChanged: { focused in
-                        send(.petnameField(.focusChange(focused: focused)))
-                    },
+                
+                ValidatedFormField<Petname.Name, FollowUserFormModel>(
+                    placeholder: "petname",
+                    field: state.petname,
+                    send: send,
+                    tag: FollowUserFormAction.petnameField,
                     caption: "Lowercase letters, numbers and dashes only."
-//                    hasError: state.petname.hasError
                 )
-                .formField()
                 .lineLimit(1)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)

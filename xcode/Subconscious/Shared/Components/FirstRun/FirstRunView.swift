@@ -46,19 +46,13 @@ struct FirstRunView: View {
                 
                 Spacer()
                 
-                ValidatedTextField(
+                ValidatedFormField<InviteCode, AppModel>(
                     alignment: .center,
                     placeholder: "Enter your invite code",
-                    text: Binding(
-                        get: { app.state.inviteCodeFormField.value },
-                        send: app.send,
-                        tag: AppAction.setInviteCode
-                    ),
-                    onFocusChanged: { focused in
-                        app.send(.inviteCodeFormField(.focusChange(focused: focused)))
-                    },
+                    field: app.state.inviteCodeFormField,
+                    send: app.send,
+                    tag: AppAction.inviteCodeFormField,
                     caption: "Look for this in your welcome email.",
-//                    hasError: app.state.inviteCodeFormField.hasError,
                     submitLabel: .go,
                     onSubmit: {
                         if app.state.inviteCodeFormField.isValid {

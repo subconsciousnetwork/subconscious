@@ -70,7 +70,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
     }
     /// Should this field visually display an error?
     var hasError: Bool {
-        !isValid && touched
+        !isValid && hasBeenFocusedAtLeastOnce
     }
     
     static func update(

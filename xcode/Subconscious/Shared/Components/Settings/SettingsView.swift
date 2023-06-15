@@ -51,17 +51,13 @@ struct GatewayProvisioningSection: View {
     var body: some View {
         Section(
             content: {
-                ValidatedTextField(
+                ValidatedFormField<InviteCode, AppModel>(
                     placeholder: "Enter your invite code",
-                    text: Binding(
-                        get: { app.state.inviteCodeFormField.value },
-                        send: app.send,
-                        tag: AppAction.setInviteCode
-                    ),
+                    field: app.state.inviteCodeFormField,
+                    send: app.send,
+                    tag: AppAction.inviteCodeFormField,
                     caption: "Look for this in your welcome email."
-//                    hasError: app.state.inviteCodeFormField.hasError
                 )
-                .formField()
                 .autocapitalization(.none)
                 .autocorrectionDisabled(true)
                 .onDisappear {
@@ -125,19 +121,20 @@ struct SettingsView: View {
             Form {
                 if app.state.isNoosphereEnabled {
                     Section(header: Text("Noosphere")) {
-//                        NavigationLink(
-//                            destination: {
-//                                ProfileSettingsView(app: app)
-//                            },
-//                            label: {
-//                                LabeledContent(
-//                                    "Nickname",
-//                                    value: app.state.nickname
-//                                )
-//                                .lineLimit(1)
-//                                .textSelection(.enabled)
-//                            }
-//                        )
+                        NavigationLink(
+                            destination: {
+                                ProfileSettingsView(app: app)
+                            },
+                            label: {
+                                LabeledContent(
+                                    "Nickname",
+                                    value: app.state.nickname
+                                )
+                                .lineLimit(1)
+                                .textSelection(.enabled)
+                            }
+                        )
+                        
                         LabeledContent(
                             "Sphere",
                             value: app.state.sphereIdentity ?? unknown

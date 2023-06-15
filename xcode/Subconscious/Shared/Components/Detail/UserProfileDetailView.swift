@@ -587,7 +587,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isEditProfileSheetPresented = presented
             
             let profile = UserProfileEntry(
-                nickname: state.user?.nickname?.verbatim,
+                nickname: state.user?.nickname?.description,
                 bio: state.user?.bio?.text
             )
             return update(
@@ -598,7 +598,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
         case .requestEditProfile:
             let profile = UserProfileEntry(
-                nickname: state.editProfileSheet.nicknameField.validated?.verbatim,
+                nickname: state.editProfileSheet.nicknameField.validated?.description,
                 bio: state.editProfileSheet.bioField.validated?.text
             )
             
