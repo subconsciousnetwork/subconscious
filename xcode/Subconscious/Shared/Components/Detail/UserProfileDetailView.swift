@@ -88,8 +88,8 @@ enum UserProfileDetailNotification: Hashable {
 extension UserProfileDetailAction {
     static func toAppAction(_ action: Self) -> AppAction? {
         switch action {
-        case let .succeedFollow(petname):
-            return .notifySucceedFollow(petname)
+        case let .succeedResolveFollowedUser(petname, cid):
+            return .notifySucceedResolveFollowedUser(petname: petname, cid: cid)
         case let .succeedUnfollow(identity, petname):
             return .notifySucceedUnfollow(identity: identity, petname: petname)
         default:
@@ -132,7 +132,7 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     case succeedFollow(_ petname: Petname)
     
     case requestWaitForFollowedUserResolution(_ petname: Petname)
-    case succeedResolveFollowedUser
+    case succeedResolveFollowedUser(petname: Petname, cid: Cid?)
     case failResolveFollowedUser(_ message: String)
     
     case requestUnfollow(UserProfile)
@@ -500,8 +500,8 @@ struct UserProfileDetailModel: ModelProtocol {
         case let .requestWaitForFollowedUserResolution(petname):
             let fx: Fx<UserProfileDetailAction> = environment.addressBook
                 .waitForPetnameResolutionPublisher(petname: petname)
-                .map { _ in
-                    .succeedResolveFollowedUser
+                .map { cid in
+                    .succeedResolveFollowedUser(petname: petname, cid: cid)
                 }
                 .recover { error in
                     .failResolveFollowedUser(error.localizedDescription)

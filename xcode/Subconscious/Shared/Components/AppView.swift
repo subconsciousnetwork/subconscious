@@ -229,8 +229,8 @@ enum AppAction: CustomLogStringConvertible {
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
     
-    /// Notification that a follow happened somewhere else
-    case notifySucceedFollow(Petname)
+    /// Notification that a follow happened, and the sphere was resolved
+    case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
     /// Notification that an unfollow happened somewhere else
     case notifySucceedUnfollow(identity: Did, petname: Petname)
 
@@ -893,11 +893,12 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case let .notifySucceedFollow(petname):
-            return notifySucceedFollow(
+        case let .notifySucceedResolveFollowedUser(petname, cid):
+            return notifySucceedResolveFollowedUser(
                 state: state,
                 environment: environment,
-                petname: petname
+                petname: petname,
+                cid: cid
             )
         case let .notifySucceedUnfollow(did, petname):
             return notifySucceedUnfollow(
@@ -1969,12 +1970,19 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func notifySucceedFollow(
+    static func notifySucceedResolveFollowedUser(
         state: Self,
         environment: Environment,
-        petname: Petname
+        petname: Petname,
+        cid: Cid?
     ) -> Update<Self> {
-        logger.log("Notify followed \(petname)")
+        logger.log(
+            "Notify followed and resolved sphere",
+            metadata: [
+                "petname": petname.description,
+                "version": cid?.description ?? "nil"
+            ]
+        )
         return update(
             state: state,
             action: .indexPeer(petname),
