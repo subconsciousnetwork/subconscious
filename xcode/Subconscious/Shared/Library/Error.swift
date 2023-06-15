@@ -20,3 +20,22 @@ enum CodingError: Error, LocalizedError {
         }
     }
 }
+
+/// Thrown when a value provided is not valid
+struct ValueError:
+    Error,
+    LocalizedError,
+    Hashable,
+    Codable,
+    CustomStringConvertible
+{
+    var description: String
+    
+    init(_ description: String) {
+        self.description = description
+    }
+    
+    var errorDescription: String? {
+        "Value error: \(description)"
+    }
+}
