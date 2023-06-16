@@ -506,6 +506,69 @@ class Tests_DatabaseService: XCTestCase {
         )
     }
     
+    func testSearchSuggestionsFilterHiddenFiles() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let did = Did("did:key:abc123")!
+
+        let profile = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo profile"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: nil,
+                slug: Slug("_profile_")!,
+                memo: profile
+            )
+        )
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo
+            )
+        )
+
+        let results = try service.searchSuggestions(
+            owner: did,
+            query: "foo"
+        )
+        let slugs = results.compactMap({ result in
+            switch result {
+            case let .memo(address, _):
+                return address.slug
+            default:
+                return nil
+            }
+        })
+        
+        XCTAssertFalse(
+            slugs.contains(Slug("_profile_")!),
+            "Hidden file is not part of results"
+        )
+        XCTAssertEqual(slugs.count, 1, "Hidden file is not returned")
+    }
+
     func testReadBacklinks() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
@@ -585,6 +648,24 @@ class Tests_DatabaseService: XCTestCase {
             )
         )
         
+        // Hidden, should not show up in results
+        let hidden = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bing"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did("did:key:abc123")!,
+                petname: Petname("abc")!,
+                slug: Slug("_hidden")!,
+                memo: hidden
+            )
+        )
+
         let stubs = try service.readEntryBacklinks(
             owner: Did("did:key:abc123")!,
             did: Did("did:key:abc123")!,
