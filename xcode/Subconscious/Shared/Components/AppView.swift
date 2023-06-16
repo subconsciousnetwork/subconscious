@@ -494,7 +494,7 @@ struct AppModel: ModelProtocol {
         value: "",
         validate: { value in
             guard let url = URL(string: value),
-               url.isHTTP() else {
+                  url.isHTTP() else {
                 return nil
             }
             

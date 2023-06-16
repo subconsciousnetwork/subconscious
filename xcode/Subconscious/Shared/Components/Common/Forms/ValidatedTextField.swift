@@ -53,7 +53,6 @@ struct ValidatedTextField: View {
     var placeholder: String
     @Binding var text: String
     var onFocusChanged: (Bool) -> Void = { _ in}
-    var onTextChanged: () -> Void = {}
     var caption: String
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
