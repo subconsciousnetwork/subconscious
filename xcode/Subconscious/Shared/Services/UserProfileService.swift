@@ -90,17 +90,15 @@ struct UserProfileContentResponse: Equatable, Hashable {
 struct UserProfileEntry: Codable, Equatable {
     static let currentVersion = "0.0"
     
-    init(nickname: String?, bio: String?, profilePictureUrl: String?) {
+    init(nickname: String?, bio: String?) {
         self.version = Self.currentVersion
         self.nickname = nickname
         self.bio = UserProfileBio(bio ?? "").text
-        self.profilePictureUrl = profilePictureUrl
     }
     
     let version: String
     let nickname: String?
     let bio: String?
-    let profilePictureUrl: String?
 }
 
 actor UserProfileService {
@@ -181,13 +179,6 @@ actor UserProfileService {
         let userProfileData = await self.readProfileMemo(
             address: isOurs ? Slashlink.ourProfile : address
         )
-        let pfp: ProfilePicVariant = Func.run {
-            if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
-                return .url(url)
-            }
-            
-            return .none(did)
-        }
         
         let followingStatus = await self.addressBook.followingStatus(did: did)
         
@@ -195,7 +186,7 @@ actor UserProfileService {
             did: did,
             nickname: Petname.Name(userProfileData?.nickname ?? ""),
             address: address,
-            pfp: pfp,
+            pfp: .none(did),
             bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: isOurs ? UserCategory.you : UserCategory.human,
             resolutionStatus: resolutionStatus,
@@ -298,8 +289,7 @@ actor UserProfileService {
         guard let profile = await readProfileMemo(address: Slashlink.ourProfile) else {
             let profile = UserProfileEntry(
                 nickname: nickname.verbatim,
-                bio: nil,
-                profilePictureUrl: nil
+                bio: nil
             )
             
             return try await writeOurProfile(profile: profile)
@@ -307,8 +297,7 @@ actor UserProfileService {
         
         let updated = UserProfileEntry(
             nickname: nickname.verbatim,
-            bio: profile.bio,
-            profilePictureUrl: profile.profilePictureUrl
+            bio: profile.bio
         )
         return try await writeOurProfile(profile: updated)
     }

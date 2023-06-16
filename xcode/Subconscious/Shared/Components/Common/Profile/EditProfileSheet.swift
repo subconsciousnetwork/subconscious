@@ -14,7 +14,6 @@ enum EditProfileSheetAction: Equatable {
     case populate(UserProfileEntry?)
     case nicknameField(FormFieldAction<String>)
     case bioField(FormFieldAction<String>)
-    case pfpUrlField(FormFieldAction<String>)
 }
 
 private struct NicknameFieldCursor: CursorProtocol {
@@ -55,25 +54,6 @@ private struct BioFieldCursor: CursorProtocol {
     }
 }
 
-private struct PfpUrlFieldCursor: CursorProtocol {
-    typealias Model = EditProfileSheetModel
-    typealias ViewModel = FormField<String, URL>
-
-    static func get(state: Model) -> ViewModel {
-        state.pfpUrlField
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.pfpUrlField = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .pfpUrlField(action)
-    }
-}
-
 typealias EditProfileSheetEnvironment = Void
 
 struct EditProfileSheetModel: ModelProtocol {
@@ -90,12 +70,6 @@ struct EditProfileSheetModel: ModelProtocol {
         value: "",
         validate: { value in
             value.fitsInUserBio ? value : nil
-        }
-    )
-    var pfpUrlField: FormField<String, URL> = FormField(
-        value: "",
-        validate: { value in
-            URL(validating: value)
         }
     )
     
@@ -117,10 +91,8 @@ struct EditProfileSheetModel: ModelProtocol {
                 actions: [
                     .nicknameField(.reset),
                     .bioField(.reset),
-                    .pfpUrlField(.reset),
                     .nicknameField(.setValue(input: user?.nickname ?? "")),
                     .bioField(.setValue(input: user?.bio ?? "")),
-                    .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? ""))
                 ],
                 environment: environment
             )
@@ -134,13 +106,6 @@ struct EditProfileSheetModel: ModelProtocol {
             
         case .bioField(let action):
             return BioFieldCursor.update(
-                state: state,
-                action: action,
-                environment: FormFieldEnvironment()
-            )
-            
-        case .pfpUrlField(let action):
-            return PfpUrlFieldCursor.update(
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
@@ -160,14 +125,7 @@ struct EditProfileSheet: View {
     var onDismissError: () -> Void
     
     func makePreview(nickname: Petname.Name) -> UserProfile {
-        let pfp: ProfilePicVariant = Func.run {
-            let did = user.did
-            if let url = state.pfpUrlField.validated {
-                return ProfilePicVariant.url(url)
-            }
-            
-            return ProfilePicVariant.none(did)
-        }
+        let pfp: ProfilePicVariant = ProfilePicVariant.none(user.did)
         
         return UserProfile(
             did: user.did,
@@ -200,30 +158,6 @@ struct EditProfileSheet: View {
                             },
                             caption: "How you would like to be known",
                             hasError: state.nicknameField.hasError
-                        )
-                        .formField()
-                        .lineLimit(1)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                    }
-                    
-                    HStack(alignment: .firstTextBaseline) {
-                        Image(systemName: "photo")
-                            .foregroundColor(.accentColor)
-                        ValidatedTextField(
-                            placeholder: "http://example.org/pfp.jpg",
-                            text: Binding(
-                                get: { state.pfpUrlField.value },
-                                send: send,
-                                tag: { v in .pfpUrlField(.setValue(input: v))}
-                            ),
-                            onFocusChanged: { focused in
-                                send(.pfpUrlField(.focusChange(focused: focused)))
-                            },
-                            caption: "The image shown on your profile",
-                            hasError:
-                                !state.pfpUrlField.isValid &&
-                                state.pfpUrlField.value.count > 0
                         )
                         .formField()
                         .lineLimit(1)

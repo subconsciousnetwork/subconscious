@@ -9,7 +9,6 @@ import SwiftUI
 
 enum ProfilePicVariant: Equatable, Codable, Hashable {
     case none(Did)
-    case url(URL)
     case image(String)
 }
 
@@ -50,15 +49,6 @@ struct ProfilePic: View {
         case .none(let did):
             GenerativeProfilePic(did: did, size: imageSize)
                 .profilePicFrame(size: imageSize, lineWidth: lineWidth)
-        case .url(let url):
-            AsyncImage(url: url) { image in
-                image
-                    .resizable()
-                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
-            } placeholder: {
-                ProgressView()
-                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
-            }
         case .image(let img):
             Image(img)
                 .resizable()
@@ -73,10 +63,6 @@ struct ProfilePic_Previews: PreviewProvider {
             ProfilePic(
                 pfp: .none(Did.dummyData()),
                 size: .small
-            )
-            ProfilePic(
-                pfp: .url(URL(string: "https://images.unsplash.com/photo-1577766729821-6003ae138e18")!),
-                size: .medium
             )
             ProfilePic(
                 pfp: .image("pfp-dog"),
