@@ -327,16 +327,6 @@ final class DatabaseService {
     }
 
     /// Write entry synchronously
-    ///
-    /// - Parameters:
-    ///     - did: the DID of the sphere this content belongs to
-    ///     - petname: the petname, if any, for this sphere.
-    ///       We use this to index the petname for autocompletion.
-    ///     - slug: the slug of the content
-    ///     - memo: the memo to write
-    ///     - size: the total file size on disk in bytes. This is only used for
-    ///       local files, not sphere files. We use modified time and size as a
-    ///       signal for indexing.
     func writeMemo(
         _ record: MemoRecord
     ) throws {
