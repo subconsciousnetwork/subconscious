@@ -18,7 +18,7 @@ struct FirstRunProfileView: View {
             Text("What should we call you?")
                 .foregroundColor(.secondary)
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                ValidatedFormField<Petname.Name, AppModel>(
+                ValidatedFormField(
                     alignment: .center,
                     placeholder: "nickname",
                     field: app.state.nicknameFormField,

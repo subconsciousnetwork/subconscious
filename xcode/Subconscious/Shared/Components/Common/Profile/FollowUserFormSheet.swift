@@ -239,7 +239,7 @@ struct FollowUserFormView: View {
                 Image(systemName: "key")
                     .foregroundColor(.accentColor)
                 
-                ValidatedFormField<Did, FollowUserFormModel>(
+                ValidatedFormField(
                     placeholder: "petname",
                     field: state.did,
                     send: send,
@@ -255,7 +255,7 @@ struct FollowUserFormView: View {
                 Image(systemName: "at")
                     .foregroundColor(.accentColor)
                 
-                ValidatedFormField<Petname.Name, FollowUserFormModel>(
+                ValidatedFormField(
                     placeholder: "petname",
                     field: state.petname,
                     send: send,

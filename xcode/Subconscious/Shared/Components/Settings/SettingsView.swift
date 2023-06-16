@@ -51,7 +51,7 @@ struct GatewayProvisioningSection: View {
     var body: some View {
         Section(
             content: {
-                ValidatedFormField<InviteCode, AppModel>(
+                ValidatedFormField(
                     placeholder: "Enter your invite code",
                     field: app.state.inviteCodeFormField,
                     send: app.send,

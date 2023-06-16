@@ -147,7 +147,7 @@ struct EditProfileSheet: View {
                     HStack(alignment: .firstTextBaseline) {
                         Image(systemName: "at")
                             .foregroundColor(.accentColor)
-                        ValidatedFormField<Petname.Name, EditProfileSheetModel>(
+                        ValidatedFormField(
                             placeholder: "nickname",
                             field: state.nicknameField,
                             send: send,
@@ -163,7 +163,7 @@ struct EditProfileSheet: View {
                         Image(systemName: "text.quote")
                             .foregroundColor(.accentColor)
                         
-                        ValidatedFormField<UserProfileBio, EditProfileSheetModel>(
+                        ValidatedFormField(
                             placeholder: "bio",
                             field: state.bioField,
                             send: send,

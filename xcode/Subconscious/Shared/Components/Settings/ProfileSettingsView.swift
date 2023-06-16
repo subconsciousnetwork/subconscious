@@ -14,7 +14,7 @@ struct ProfileSettingsView: View {
     var body: some View {
         Form {
             Section {
-                ValidatedFormField<Petname.Name, AppModel>(
+                ValidatedFormField(
                     placeholder: "nickname",
                     field: app.state.nicknameFormField,
                     send: app.send,

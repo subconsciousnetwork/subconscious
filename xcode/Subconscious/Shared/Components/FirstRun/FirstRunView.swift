@@ -46,7 +46,7 @@ struct FirstRunView: View {
                 
                 Spacer()
                 
-                ValidatedFormField<InviteCode, AppModel>(
+                ValidatedFormField(
                     alignment: .center,
                     placeholder: "Enter your invite code",
                     field: app.state.inviteCodeFormField,

@@ -95,7 +95,7 @@ struct GatewayURLSettingsView: View {
         Form {
             Section(
                 content: {
-                    ValidatedFormField<URL, AppModel>(
+                    ValidatedFormField(
                         placeholder: "http://example.com",
                         field: app.state.gatewayURLField,
                         send: app.send,

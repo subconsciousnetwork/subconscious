@@ -181,7 +181,7 @@ struct FollowUserSheet: View {
                 Spacer()
             }
             
-            ValidatedFormField<Petname.Name, FollowUserSheetModel>(
+            ValidatedFormField(
                 alignment: .center,
                 placeholder: "nickname",
                 field: state.followUserForm.petname,

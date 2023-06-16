@@ -9,12 +9,12 @@ import SwiftUI
 import Combine
 import ObservableStore
 
-struct ValidatedFormField<T: Equatable, Model: ModelProtocol>: View {
+struct ValidatedFormField<T: Equatable, Action>: View {
     var alignment: HorizontalAlignment = .leading
     var placeholder: String
     var field: FormField<String, T>
-    var send: (Model.Action) -> Void
-    var tag: (FormFieldAction<String>) -> Model.Action
+    var send: (Action) -> Void
+    var tag: (FormFieldAction<String>) -> Action
     var caption: String
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
