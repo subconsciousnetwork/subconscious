@@ -64,7 +64,7 @@ struct NotebookView: View {
         .onAppear {
             store.send(.appear)
         }
-        /// Wire up local store to respond to some events at app level
+        /// Replay some app actions on notebook store
         .onReceive(
             app.actions.compactMap(NotebookAction.from),
             perform: store.send
@@ -196,10 +196,13 @@ extension NotebookAction {
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
         case let .memo(address, fallback):
+            // Determine whether content is ours or theirs, push
+            // corresponding memo detail type.
             return .pushDetail(
-                MemoEditorDetailDescription(
+                MemoDetailDescription.from(
                     address: address,
-                    fallback: fallback
+                    fallback: fallback,
+                    defaultAudience: .local
                 )
             )
         case let .createLocalMemo(slug, fallback):
@@ -296,7 +299,6 @@ extension NotebookAction {
             guard user.resolutionStatus.isReady else {
                 return .failPushDetail("Attempted to navigate to unresolved user")
             }
-            
             return .pushDetail(.profile(
                 UserProfileDetailDescription(
                     address: user.address,
@@ -308,6 +310,8 @@ extension NotebookAction {
 }
 
 extension NotebookAction {
+    /// Map select app actions to `NotebookAction`
+    /// Used to replay select app actions on note store.
     static func from(_ action: AppAction) -> Self? {
         switch action {
         case .succeedMigrateDatabase:
@@ -571,6 +575,9 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details.append(detail)
             return Update(state: model)
+        case let .failPushDetail(error):
+            logger.log("Attempt to push invalid detail: \(error)")
+            return Update(state: state)
         case .pushRandomDetail(let autofocus):
             return pushRandomDetail(
                 state: state,
@@ -601,9 +608,6 @@ struct NotebookModel: ModelProtocol {
             return update(state: state, action: .pushDetail(.profile(detail)), environment: environment)
         case .failPushRandomDetail(let error):
             logger.log("Failed to get random note: \(error)")
-            return Update(state: state)
-        case let .failPushDetail(error):
-            logger.log("Attempt to push invalid detail: \(error)")
             return Update(state: state)
         }
     }

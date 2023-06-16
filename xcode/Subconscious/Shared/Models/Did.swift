@@ -32,3 +32,9 @@ extension Did: LosslessStringConvertible {
         self.init(did: description)
     }
 }
+
+extension String {
+    func toDid() -> Did? {
+        Did(self)
+    }
+}

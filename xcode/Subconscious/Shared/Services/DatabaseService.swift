@@ -9,6 +9,7 @@
 import Foundation
 import OrderedCollections
 import Combine
+import os
 
 /// Enum representing the current readiness state of the database service
 enum DatabaseServiceState: String {
@@ -60,7 +61,11 @@ final class DatabaseService {
     @Published private(set) var state: DatabaseServiceState
     let migrations: Migrations
     let database: SQLite3Database
-
+    private let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "DatabaseService"
+    )
+    
     init(
         database: SQLite3Database,
         migrations: Migrations
@@ -120,85 +125,220 @@ final class DatabaseService {
         try self.database.rollback(savepoint)
     }
 
-    /// Geven a sphere did, read the last known version that the database has
-    /// synced to (if any).
-    func readSphereSyncInfo(sphereIdentity: Did) throws -> String? {
+    /// Read sphere information for our sphere
+    func readOurSphere() throws -> OurSphereRecord? {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        guard let row = try database.first(
+            sql: """
+            SELECT did, since
+            FROM our_sphere
+            """
+        ) else {
+            return nil
+        }
+        guard let identity = row.col(0)?.toString()?.toDid() else {
+            throw CodingError.decodingError(
+                message: "Failed to decode did from column: did"
+            )
+        }
+        guard let since = row.col(1)?.toString() else {
+            throw CodingError.decodingError(
+                message: "Failed to decode cid from column: since"
+            )
+        }
+        return OurSphereRecord(
+            identity: identity,
+            since: since
+        )
+    }
+
+    /// Write sphere information for one of our spheres into the database
+    func writeOurSphere(
+        _ record: OurSphereRecord
+    ) throws {
+        try database.execute(
+            sql: """
+            INSERT OR REPLACE INTO our_sphere (
+                did,
+                since
+            )
+            VALUES (?, ?)
+            """,
+            parameters: [
+                .text(record.identity.description),
+                .text(record.since)
+            ]
+        )
+    }
+    
+    /// Given a sphere did, read the sync info from the database (if any).
+    func readPeer(identity: Did) throws -> PeerRecord? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT version FROM sphere_sync_info WHERE did = ?",
-            parameters: [.text(sphereIdentity.description)]
+            sql: "SELECT petname, since FROM peer WHERE did = ?",
+            parameters: [.text(identity.description)]
         )
-        let version = rows.first?.col(0)?.toString()
-        return version
+        guard let row = rows.first else {
+            return nil
+        }
+        guard let petname = row.col(0)?.toString()?.toPetname() else {
+            throw CodingError.decodingError(
+                message: "Could not decode petname"
+            )
+        }
+        let since = row.col(1)?.toString()
+        return PeerRecord(
+            petname: petname,
+            identity: identity,
+            since: since
+        )
+    }
+    
+    /// Given a sphere petname, read the indexed info from the
+    /// database (if any).
+    func readPeer(petname: Petname) throws -> PeerRecord? {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        let rows = try database.execute(
+            sql: """
+            SELECT did, since
+            FROM peer
+            WHERE petname = ?
+            """,
+            parameters: [.text(petname.description)]
+        )
+        guard let row = rows.first else {
+            return nil
+        }
+        guard let identity = row.col(0)?.toString()?.toDid() else {
+            throw CodingError.decodingError(
+                message: "Failed to decode did from column: did"
+            )
+        }
+        let since = row.col(1)?.toString()
+        return PeerRecord(
+            petname: petname,
+            identity: identity,
+            since: since
+        )
     }
 
     /// Write database metadata at string key
-    func writeSphereSyncInfo(sphereIdentity: Did, version: String) throws {
+    func writePeer(
+        _ record: PeerRecord
+    ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO sphere_sync_info (
+            INSERT OR REPLACE INTO peer (
+                petname,
                 did,
-                version
+                since
             )
-            VALUES (?, ?)
+            VALUES (?, ?, ?)
             """,
-            parameters: [.text(sphereIdentity.description), .text(version)]
+            parameters: [
+                .text(record.petname.description),
+                .text(record.identity.description),
+                .text(record.since)
+            ]
         )
     }
     
+    /// List all peers in database
+    func listPeers() throws -> [PeerRecord] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        return try database.execute(
+            sql: """
+            SELECT petname, did, since FROM peer;
+            """
+        ).map({ row in
+            guard let petname = row.col(0)?.toString()?.toPetname() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode petname from row"
+                )
+            }
+            guard let identity = row.col(1)?.toString()?.toDid() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode did from row"
+                )
+            }
+            let since = row.col(2)?.toString()
+            return PeerRecord(
+                petname: petname,
+                identity: identity,
+                since: since
+            )
+        })
+    }
+
     /// Purge all content of sphere with given DID from the database.
     ///
     /// This does not delete the content from file system or sphere,
     /// only removes knowledge of it from the database.
-    func purgeSphere(did: Did) throws {
+    func purgePeer(identity: Did) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let savepoint = "purge"
+
         try database.savepoint(savepoint)
         do {
             try database.execute(
                 sql: """
                 DELETE FROM memo WHERE did = ?
                 """,
-                parameters: [.text(did.description)]
+                parameters: [.text(identity.description)]
             )
             // Remove sync info
             try database.execute(
                 sql: """
-                DELETE FROM sphere_sync_info WHERE did = ?
+                DELETE FROM peer WHERE did = ?
                 """,
-                parameters: [.text(did.description)]
+                parameters: [.text(identity.description)]
             )
             try database.release(savepoint)
+            logger.log(
+                "Purged peer from database",
+                metadata: [
+                    "identity": identity.description
+                ]
+            )
         } catch {
             try database.rollback(savepoint)
+            logger.log(
+                "Failed to purge peer from database",
+                metadata: [
+                    "identity": identity.description,
+                    "error": error.localizedDescription
+                ]
+            )
             throw error
         }
     }
 
-    /// Write entry syncronously
+    /// Write entry synchronously
     func writeMemo(
-        link: Link,
-        memo: Memo,
-        size: Int? = nil
+        _ record: MemoRecord
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
-        }
-        if link.isLocal && size == nil {
-            throw DatabaseServiceError.sizeMissingForLocal
         }
         try database.execute(
             sql: """
             INSERT INTO memo (
                 id,
                 did,
+                slashlink,
                 slug,
                 content_type,
                 created,
@@ -212,9 +352,10 @@ final class DatabaseService {
                 links,
                 size
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 did=excluded.did,
+                slashlink=excluded.slashlink,
                 slug=excluded.slug,
                 content_type=excluded.content_type,
                 created=excluded.created,
@@ -229,29 +370,31 @@ final class DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(link.id),
-                .text(link.did.description),
-                .text(link.slug.description),
-                .text(memo.contentType),
-                .date(memo.created),
-                .date(memo.modified),
-                .text(memo.title()),
-                .text(memo.fileExtension),
-                .json(memo.headers, or: "[]"),
-                .text(memo.body),
-                .text(memo.plain()),
-                .text(memo.excerpt()),
-                .json(memo.slugs(), or: "[]"),
-                .integer(size ?? 0)
+                .text(record.id),
+                .text(record.did.description),
+                .text(record.slashlink.markup),
+                .text(record.slug.description),
+                .text(record.contentType),
+                .date(record.created),
+                .date(record.modified),
+                .text(record.title),
+                .text(record.fileExtension),
+                .json(record.headers, or: "[]"),
+                .text(record.body),
+                .text(record.description),
+                .text(record.excerpt),
+                .json(record.links, or: "[]"),
+                .integer(record.size)
             ]
         )
     }
     
     /// Delete entry from database
-    func removeMemo(_ link: Link) throws {
+    func removeMemo(did: Did, slug: Slug) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
+        let link = Link(did: did, slug: slug)
         try database.execute(
             sql: """
             DELETE FROM memo WHERE id = ?
@@ -263,28 +406,38 @@ final class DatabaseService {
     }
     
     /// Count all entries
-    func countMemos() -> Int? {
+    func countMemos(owner: Did?) -> Int? {
         guard self.state == .ready else {
             return nil
         }
+
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+        
         // Use stale body content from db. It's faster, and these
         // are read-only teaser views.
-        guard let results = try? database.execute(
+        guard let results = try? database.first(
             sql: """
             SELECT count(slug)
             FROM memo
-            """
+            WHERE did IN (SELECT value FROM json_each(?))
+                AND substr(slug, 1, 1) != '_'
+            """,
+            parameters: [
+                .json(dids, or: "[]")
+            ]
         ) else {
             return nil
         }
-        return results.first?.col(0)?.toInt()
+        return results.col(0)?.toInt()
     }
     
     /// List recent entries
     func listRecentMemos(owner: Did?) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
-
         }
         
         var dids = [Did.local.description]
@@ -295,7 +448,9 @@ final class DatabaseService {
         let results = try database.execute(
             sql: """
             SELECT id, modified, excerpt
-            FROM memo WHERE did IN (SELECT value FROM json_each(?))
+            FROM memo
+            WHERE did IN (SELECT value FROM json_each(?))
+                AND substr(slug, 1, 1) != '_'
             ORDER BY modified DESC
             LIMIT 1000
             """,
@@ -361,28 +516,41 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         let suggestions: [Suggestion] = try database.execute(
-            sql: """
-            SELECT id, title
+            sql: #"""
+            SELECT memo.did, peer.petname, memo.slug, memo.title
             FROM memo
-            ORDER BY modified DESC
+            LEFT JOIN peer ON memo.did = peer.did
+            WHERE substr(memo.slug, 1, 1) != '_'
+            ORDER BY memo.modified DESC
             LIMIT 5
-            """
+            """#
         )
         .compactMap({ row in
-            guard
-                let address = row.col(0)?
-                    .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let title = row.col(1)?.toString()
-            else {
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let title = row.col(3)?.toString()
+            switch (did, petname, slug) {
+            case let (_, .some(petname), .some(slug)):
+                return EntryLink(
+                    address: Slashlink(
+                        peer: Peer.petname(petname),
+                        slug: slug
+                    ),
+                    title: title
+                )
+            case let (.some(did), _, .some(slug)):
+                let address = Slashlink(
+                    peer: Peer.did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return EntryLink(
+                    address: address,
+                    title: title
+                )
+            default:
                 return nil
             }
-            return EntryLink(
-                address: address,
-                title: title
-            )
         })
         .map({ (link: EntryLink) in
             Suggestion.memo(
@@ -428,29 +596,49 @@ final class DatabaseService {
         suggestions.append(.createLocalMemo(fallback: query))
 
         let memos: [Suggestion] = try database.execute(
-            sql: """
-            SELECT id, excerpt
+            sql: #"""
+            SELECT
+                memo_search.did,
+                peer.petname,
+                memo_search.slug,
+                memo_search.excerpt
             FROM memo_search
+            LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search MATCH ?
+                AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY rank
             LIMIT 25
-            """,
+            """#,
             parameters: [
                 .prefixQueryFTS5(query)
             ]
         )
         .compactMap({ row in
-            guard
-                let address = row.col(0)?
-                    .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let excerpt = row.col(1)?.toString()
-            else {
-                return  nil
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let excerpt = row.col(3)?.toString() ?? ""
+            switch (did, petname, slug) {
+            case let (_, .some(petname), .some(slug)):
+                return Suggestion.memo(
+                    address: Slashlink(
+                        peer: .petname(petname),
+                        slug: slug
+                    ),
+                    fallback: excerpt
+                )
+            case let (.some(did), _, .some(slug)):
+                let address = Slashlink(
+                    peer: .did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return Suggestion.memo(
+                    address: address,
+                    fallback: excerpt
+                )
+            default:
+                return nil
             }
-            return Suggestion.memo(address: address, fallback: excerpt)
         })
         suggestions.append(contentsOf: memos)
         return suggestions
@@ -551,7 +739,9 @@ final class DatabaseService {
                 sql: """
                 SELECT id
                 FROM memo_search
-                WHERE memo_search MATCH ? AND did IN (SELECT value FROM json_each(?))
+                WHERE memo_search MATCH ?
+                    AND did IN (SELECT value FROM json_each(?))
+                    AND substr(memo_search.slug, 1, 1) != '_'
                 ORDER BY rank
                 LIMIT 25
                 """,
@@ -574,6 +764,7 @@ final class DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
+        owner: Did?,
         query: String,
         omitting invalidSuggestions: Set<Slashlink> = Set(),
         fallback: [LinkSuggestion] = []
@@ -586,7 +777,7 @@ final class DatabaseService {
             return fallback
         }
         
-        var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
+        var suggestions: OrderedDictionary<Slashlink, LinkSuggestion> = [:]
         
         // Append literal
         if
@@ -594,14 +785,20 @@ final class DatabaseService {
                 .toLocalSlashlink()
                 .toEntryLink(title: query)
         {
-            suggestions[literal.address.slug] = .new(literal)
+            suggestions[literal.address] = .new(literal)
         }
         
         guard let results = try? database.execute(
             sql: """
-            SELECT id, title
+            SELECT
+                memo_search.did,
+                peer.petname,
+                memo_search.slug,
+                memo_search.title
             FROM memo_search
+            LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search MATCH ?
+                AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY rank
             LIMIT 25
             """,
@@ -612,16 +809,31 @@ final class DatabaseService {
             return Array(suggestions.values)
         }
         let entries: [EntryLink] = results.compactMap({ row in
-            guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
-                let title = row.col(1)?.toString()
-            else {
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let title = row.col(3)?.toString()
+            switch (did, petname, slug) {
+            case let (_, .some(petname), .some(slug)):
+                return EntryLink(
+                    address: Slashlink(
+                        peer: Peer.petname(petname),
+                        slug: slug
+                    ),
+                    title: title
+                )
+            case let (.some(did), .none, .some(slug)):
+                let address = Slashlink(
+                    peer: Peer.did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return EntryLink(
+                    address: address,
+                    title: title
+                )
+            default:
                 return nil
             }
-            return EntryLink(
-                address: address,
-                title: title
-            )
         })
         
         // Insert entries into suggestions.
@@ -633,7 +845,7 @@ final class DatabaseService {
             if !invalidSuggestions.contains(entry.address) {
                 suggestions.updateValue(
                     .entry(entry),
-                    forKey: entry.address.slug
+                    forKey: entry.address
                 )
             }
         }
@@ -670,46 +882,64 @@ final class DatabaseService {
     
     func readEntryBacklinks(
         owner: Did?,
-        link: Link
+        did: Did,
+        slug: Slug
     ) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
+        let link = Link(did: did, slug: slug)
         // Get backlinks.
         // Use content indexed in database, even though it might be stale.
-        guard let results = try? database.execute(
+        return try database.execute(
             sql: """
-            SELECT id, modified, excerpt
+            SELECT
+                memo_search.did,
+                peer.petname,
+                memo_search.slug,
+                memo_search.modified,
+                memo_search.excerpt
             FROM memo_search
-            WHERE id != ? AND memo_search.description MATCH ?
+            LEFT JOIN peer ON memo_search.did = peer.did
+            WHERE memo_search.description MATCH ?
+                AND id != ?
+                AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY rank
             LIMIT 200
             """,
             parameters: [
-                .text(link.id),
-                .queryFTS5(link.slug.description)
+                .queryFTS5(link.slug.description),
+                .text(link.id)
             ]
-        ) else {
-            return []
-        }
-        
-        return results.compactMap({ row in
-            guard
-                let address = row.col(0)?
-                    .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
-            else {
+        ).compactMap({ row in
+            let did = row.col(0)?.toString()?.toDid()
+            let petname = row.col(1)?.toString()?.toPetname()
+            let slug = row.col(2)?.toString()?.toSlug()
+            let modified = row.col(3)?.toDate()
+            let excerpt = row.col(4)?.toString() ?? ""
+            switch (did, petname, slug, modified) {
+            case let (_, .some(petname), .some(slug), .some(modified)):
+                return EntryStub(
+                    address: Slashlink(
+                        peer: Peer.petname(petname),
+                        slug: slug
+                    ),
+                    excerpt: excerpt,
+                    modified: modified
+                )
+            case let (.some(did), .none, .some(slug), .some(modified)):
+                let address = Slashlink(
+                    peer: Peer.did(did),
+                    slug: slug
+                ).relativizeIfNeeded(did: owner)
+                return EntryStub(
+                    address: address,
+                    excerpt: excerpt,
+                    modified: modified
+                )
+            default:
                 return nil
             }
-            return EntryStub(
-                address: address.relativizeIfNeeded(did: owner),
-                excerpt: excerpt,
-                modified: modified
-            )
         })
     }
     
@@ -829,6 +1059,7 @@ final class DatabaseService {
             sql: """
             SELECT id, title
             FROM memo
+            WHERE substr(memo.slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1
             """
@@ -854,14 +1085,35 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-04T09:13:00")!,
+            version: Int.from(iso8601String: "2023-06-14T16:29:00")!,
             sql: """
             /*
-            A table that tracks sphere->database sync info.
+            A table that tracks sphere->database indexing info for our sphere.
+            Currently there should be at most one row in this table.
+            However, in future we may allow users to manage multiple spheres.
+            
+            Columns:
+            - did: the identity of the peer sphere
+            - since: the last indexed CID for our sphere
+              (may be null if we have not yet indexed our sphere)
             */
-            CREATE TABLE sphere_sync_info (
+            CREATE TABLE our_sphere (
                 did TEXT PRIMARY KEY,
-                version TEXT NOT NULL
+                since TEXT NOT NULL
+            );
+            
+            /*
+            A table that tracks sphere->database indexing info for peers.
+            Columns:
+            - petname: The petname for the peer sphere (primary key)
+            - did: the identity of the peer sphere
+            - since: the last indexed CID for the peer
+              (may be null if we have not yet indexed the peer sphere)
+            */
+            CREATE TABLE peer (
+                petname TEXT PRIMARY KEY,
+                did TEXT NOT NULL,
+                since TEXT
             );
             
             /* History of user search queries */
@@ -875,6 +1127,9 @@ extension Config {
             CREATE TABLE memo (
                 id TEXT PRIMARY KEY,
                 did TEXT NOT NULL,
+                /* Indexed with the memo for type-ahead link completion */
+                slashlink TEXT NOT NULL,
+                /* Indexed with the memo for type-ahead link completion */
                 slug TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
@@ -898,6 +1153,7 @@ extension Config {
             CREATE VIRTUAL TABLE memo_search USING fts5(
                 id,
                 did UNINDEXED,
+                slashlink,
                 slug,
                 content_type UNINDEXED,
                 created UNINDEXED,
@@ -934,6 +1190,7 @@ extension Config {
                     rowid,
                     id,
                     did,
+                    slashlink,
                     slug,
                     content_type,
                     created,
@@ -951,6 +1208,7 @@ extension Config {
                     new.rowid,
                     new.id,
                     new.did,
+                    new.slashlink,
                     new.slug,
                     new.content_type,
                     new.created,
@@ -970,6 +1228,7 @@ extension Config {
                     rowid,
                     id,
                     did,
+                    slashlink,
                     slug,
                     content_type,
                     created,
@@ -987,6 +1246,7 @@ extension Config {
                     new.rowid,
                     new.id,
                     new.did,
+                    new.slashlink,
                     new.slug,
                     new.content_type,
                     new.created,

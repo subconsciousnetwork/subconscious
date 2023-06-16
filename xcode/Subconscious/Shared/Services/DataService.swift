@@ -10,28 +10,27 @@ import os
 
 enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
-    case defaultSphereNotFound
     case sphereExists(_ sphereIdentity: String)
-    case cannotEditSphere(Did)
-    case cannotWriteToSphere(Did)
+    case cannotWriteToSphere(did: Did? = nil, petname: Petname? = nil)
+    case unknownPetname(Petname)
     
     var errorDescription: String? {
         switch self {
         case .fileExists(let message):
             return "File exists: \(message)"
-        case .defaultSphereNotFound:
-            return "Default sphere not found"
         case let .sphereExists(sphereIdentity):
             return "Sphere exists: \(sphereIdentity)"
-        case let .cannotEditSphere(did):
-            return "Cannot edit sphere \(did)"
-        case .cannotWriteToSphere(let did):
-            return "Cannot write to sphere \(did)"
+        case let .cannotWriteToSphere(did, petname):
+            let did = did?.description ?? "unknown"
+            let petname = petname?.description ?? "unknown"
+            return "Cannot write to sphere with did \(did) and petname \(petname)"
+        case .unknownPetname(let petname):
+            return "No sphere in index with petname \(petname)"
         }
     }
 }
 
-/// Record of a successful move transaction
+/// Receipt for a successful move transaction
 struct MoveReceipt: Hashable {
     var from: Slashlink
     var to: Slashlink
@@ -83,6 +82,13 @@ actor DataService {
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
         // Set sphere identity on NoosphereService
         await noosphere.resetSphere(sphereReceipt.identity)
+        logger.log(
+            "User sphere created and persisted",
+            metadata: [
+                "ownerKeyName": ownerKeyName,
+                "identity": sphereReceipt.identity.description
+            ]
+        )
         return sphereReceipt
     }
     
@@ -101,100 +107,258 @@ actor DataService {
         }
         .eraseToAnyPublisher()
     }
-    
-    /// Index a sphere's content in our database.
+
+    /// Index a peer sphere's content in our database.
+    ///
+    /// - If sphere has been indexed before, we retreive the last-indexed
+    ///   version, and use it to get changes since.
+    /// - If sphere has not been indexed, we get everything, and update
+    func indexPeer(
+        petname: Petname
+    ) async throws -> PeerRecord {
+        let sphere = try await noosphere.traverse(petname: petname)
+        logger.debug(
+            "Traversed to peer",
+            metadata: [
+                "petname": petname.description
+            ]
+        )
+        let identity = try await sphere.identity()
+        let version = try await sphere.version()
+        // Get peer info from last sync
+        let peer = try? database.readPeer(identity: identity)
+        // Get changes since the last time we indexed this peer,
+        // or get all changes if this is the first time we've tried to index.
+        let changes = try await sphere.changes(since: peer?.since)
+        logger.debug(
+            "Indexing peer",
+            metadata: [
+                "petname": petname.description,
+                "identity": identity.description,
+                "version": version,
+                "since": peer?.since ?? "nil",
+                "changes": changes.count.description
+            ]
+        )
+        
+        let savepoint = "index_peer"
+        try database.savepoint(savepoint)
+        do {
+            for change in changes {
+                let slashlink = Slashlink(slug: change)
+                // If memo does exist, write it to database.
+                // If memo does not exist, that means change was a remove.
+                if let memo = try? await sphere.read(
+                    slashlink: slashlink
+                ).toMemo() {
+                    try database.writeMemo(
+                        MemoRecord(
+                            did: identity,
+                            petname: petname,
+                            slug: change,
+                            memo: memo
+                        )
+                    )
+                    logger.debug(
+                        "Indexed memo \(slashlink)",
+                        metadata: [
+                            "slashlink": slashlink.description
+                        ]
+                    )
+                } else {
+                    logger.debug(
+                        "Removed indexed memo \(slashlink)",
+                        metadata: [
+                            "slashlink": slashlink.description
+                        ]
+                    )
+                    try database.removeMemo(
+                        did: identity,
+                        slug: change
+                    )
+                }
+            }
+            try database.writePeer(
+                PeerRecord(
+                    petname: petname,
+                    identity: identity,
+                    since: version
+                )
+            )
+            try database.release(savepoint)
+            logger.log(
+                "Indexed peer",
+                metadata: [
+                    "petname": petname.description,
+                    "identity": identity.description,
+                    "version": version,
+                    "since": peer?.since ?? "nil"
+                ]
+            )
+        } catch {
+            try database.rollback(savepoint)
+            logger.log(
+                "Failed to index peer. Rolling back.",
+                metadata: [
+                    "petname": petname.description,
+                    "identity": identity.description,
+                    "version": version,
+                    "since": peer?.since ?? "nil"
+                ]
+            )
+            throw error
+        }
+        return PeerRecord(
+            petname: petname,
+            identity: identity,
+            since: version
+        )
+    }
+
+    /// Index our sphere's content in our database.
+    ///
+    /// The notion is that when our sphere's state advances (content and peers)
+    /// we also atomically advance the state of the database.
     ///
     /// - If sphere has been indexed before, we retreive the last-indexed
     ///   version, and use it to get changes since.
     /// - If sphere has not been indexed, we get everything, and update
     ///
-    /// This internal helper just exposes the basics
-    private func indexSphere<Spherelike: SphereProtocol>(
-        _ sphere: Spherelike
-    ) async throws -> String {
+    /// If there is a failure, we roll back the database, so that the next
+    /// time we try, it will pick back up from the previous `since`, and
+    /// correctly replay everything since the last successful index.
+    func indexOurSphere() async throws -> OurSphereRecord {
+        let sphere = noosphere
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        let since = try? database.readSphereSyncInfo(sphereIdentity: identity)
-        let changes = try await noosphere.changes(since: since)
-        let savepoint = "sync"
+
+        let since = try database.readOurSphere()?.since
+        let savepoint = "index_our_sphere"
+        // Save database state so we can roll back on error
         try database.savepoint(savepoint)
+
         do {
-            for change in changes {
-                let link = Link(did: identity, slug: change)
-                let slashlink = Slashlink(slug: change)
-                // If memo does exist, write it to database
-                // Sphere content is always public right now
-                if let memo = try? await noosphere
-                    .read(slashlink: slashlink)
-                    .toMemo()
-                {
-                    try database.writeMemo(
-                        link: link,
-                        memo: memo
-                    )
-                }
-                // If memo does not exist, that means change was a remove
-                else {
-                    try database.removeMemo(link)
+            // First index peers
+            let peerChanges = try await noosphere.getPeerChanges(since: since)
+            for change in peerChanges {
+                switch change {
+                case let .update(peer):
+                    // If this peer has been indexed before, update the did
+                    // (and correspondingly, the version, if needed) and write
+                    // to database.
+                    //
+                    // If this peer is not been indexed before, write it to DB
+                    // with nil version, since we have never yet indexed it.
+                    if var existingPeer = try database.readPeer(
+                        petname: peer.petname
+                    ) {
+                        let updatedPeer = existingPeer.update(
+                            identity: peer.identity
+                        )
+                        try database.writePeer(updatedPeer)
+                        logger.log(
+                            "Updated record for peer",
+                            metadata: [
+                                "petname": updatedPeer.petname.description,
+                                "identity": updatedPeer.identity.description,
+                                "since": updatedPeer.since ?? "nil"
+                            ]
+                        )
+                    } else {
+                        let createdPeer = PeerRecord(
+                            petname: peer.petname,
+                            identity: peer.identity,
+                            since: nil
+                        )
+                        // Intentionally set version to nil, since we have
+                        // never yet indexed this peer.
+                        try database.writePeer(createdPeer)
+                        logger.log(
+                            "Created record for peer",
+                            metadata: [
+                                "petname": createdPeer.petname.description,
+                                "identity": createdPeer.identity.description,
+                                "since": createdPeer.since ?? "nil"
+                            ]
+                        )
+                    }
+                case let .remove(petname):
+                    // If we have a peer under this petname,
+                    // purge its contents from the db.
+                    if let removedPeer = try? database.readPeer(
+                        petname: petname
+                    ) {
+                        try database.purgePeer(identity: removedPeer.identity)
+                        logger.log(
+                            "Purged peer",
+                            metadata: [
+                                "petname": removedPeer.petname.description,
+                                "identity": removedPeer.identity.description,
+                                "since": removedPeer.since ?? "nil"
+                            ]
+                        )
+                    }
                 }
             }
-            try database.writeSphereSyncInfo(
-                sphereIdentity: identity,
-                version: version
+            
+            // Give others a chance to do stuff for a bit.
+            await Task.yield()
+            
+            // Then index memo changes from our sphere.
+            let memoChanges = try await sphere.changes(since: since)
+            for change in memoChanges {
+                let link = Link(did: identity, slug: change)
+                let slashlink = Slashlink(slug: change)
+                // If memo does exist, write it to database.
+                // If memo does not exist, that means change was a remove.
+                if let memo = try? await sphere.read(
+                    slashlink: slashlink
+                ).toMemo() {
+                    try database.writeMemo(
+                        MemoRecord(
+                            did: identity,
+                            petname: nil,
+                            slug: change,
+                            memo: memo
+                        )
+                    )
+                } else {
+                    try database.removeMemo(
+                        did: identity,
+                        slug: change
+                    )
+                }
+            }
+            try database.writeOurSphere(
+                OurSphereRecord(
+                    identity: identity,
+                    since: version
+                )
             )
             try database.release(savepoint)
+            logger.log(
+                "Indexed our sphere",
+                metadata: [
+                    "identity": identity.description,
+                    "version": version
+                ]
+            )
+            
+            return OurSphereRecord(
+                identity: identity,
+                since: version
+            )
         } catch {
             try database.rollback(savepoint)
+            logger.log(
+                "Failed to index our sphere. Rolling back.",
+                metadata: [
+                    "identity": identity.description,
+                    "version": version
+                ]
+            )
             throw error
         }
-        return version
-    }
-    
-    /// Index our sphere
-    func indexOurSphere() async throws -> String {
-        try await indexSphere(noosphere)
-    }
-    
-    nonisolated func indexOurSpherePublisher() -> AnyPublisher<String, Error> {
-        Future.detached(priority: .utility) {
-            try await self.indexOurSphere()
-        }
-        .eraseToAnyPublisher()
-    }
-
-    /// Index the contents of a sphere, referenced by petname
-    func indexSphere(petname: Petname) async throws -> String {
-        let sphere = try await noosphere.traverse(petname: petname)
-        return try await indexSphere(sphere)
-    }
-
-    /// Index the contents of a sphere, referenced by petname
-    nonisolated func indexSpherePublisher(
-        petname: Petname
-    ) -> AnyPublisher<String, Error> {
-        Future.detached(priority: .utility) {
-            try await self.indexSphere(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-    
-    /// Purge sphere from database with the given petname.
-    ///
-    /// Gets did for petname, then purges everything belonging to did
-    /// from Database.
-    func purgeSphere(petname: Petname) async throws {
-        let did = try await noosphere.getPetname(petname: petname)
-        try database.purgeSphere(did: did)
-    }
-    
-    /// Purge sphere from database with the given petname.
-    nonisolated func purgeSpherePublisher(
-        petname: Petname
-    ) -> AnyPublisher<Void, Error> {
-        Future.detached(priority: .utility) {
-            try await self.purgeSphere(petname: petname)
-        }
-        .eraseToAnyPublisher()
     }
     
     /// Sync file system with database.
@@ -231,7 +395,9 @@ actor DataService {
             // .leftNewer = update.
             // .rightNewer = Follower shouldn't be ahead.
             //               Leader wins.
-            // .conflict. Leader wins.
+            // .conflict = leader wins.
+            // .rightOnly = delete. Remove from search index
+            // .same = no change. Do nothing.
             switch change {
             case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
                 var memo = try local.read(left.slug).unwrap()
@@ -239,16 +405,19 @@ actor DataService {
                 let info = try local.info(left.slug).unwrap()
                 memo.modified = info.modified
                 try database.writeMemo(
-                    link: left.slug.toLocalLink().unwrap(),
-                    memo: memo,
-                    size: info.size
+                    MemoRecord(
+                        did: Did.local,
+                        petname: nil,
+                        slug: left.slug,
+                        memo: memo,
+                        size: info.size
+                    )
                 )
-                // .rightOnly = delete. Remove from search index
             case .rightOnly(let right):
                 try database.removeMemo(
-                    right.slug.toLocalLink().unwrap()
+                    did: Did.local,
+                    slug: right.slug
                 )
-                // .same = no change. Do nothing.
             case .same:
                 break
             }
@@ -279,36 +448,37 @@ actor DataService {
     }
     
     private func writeLocalMemo(
-        link: Link,
+        slug: Slug,
         memo: Memo
     ) async throws {
         var memo = memo
-        try local.write(link.slug, value: memo)
+        try local.write(slug, value: memo)
         // Read modified/size from file system directly after writing.
         // Why: we use file system as source of truth and don't want any
         // discrepencies to sneak in (e.g. different time between write and
         // persistence on file system).
-        let info = try local.info(link.slug).unwrap()
+        let info = try local.info(slug).unwrap()
         memo.modified = info.modified
         try database.writeMemo(
-            link: link,
-            memo: memo,
-            size: info.size
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: slug,
+                memo: memo,
+                size: info.size
+            )
         )
     }
 
     private func writeSphereMemo(
-        link: Link,
+        slug: Slug,
         memo: Memo
     ) async throws {
         let identity = try await noosphere.identity()
-        guard link.did == identity else {
-            throw DataServiceError.cannotEditSphere(link.did)
-        }
         // Get absolute slashlink
         let body = try memo.body.toData().unwrap()
         try await noosphere.write(
-            slug: link.slug,
+            slug: slug,
             contentType: memo.contentType,
             additionalHeaders: memo.headers,
             body: body
@@ -316,13 +486,19 @@ actor DataService {
         let version = try await noosphere.save()
         // Write to database
         try database.writeMemo(
-            link: link,
-            memo: memo
+            MemoRecord(
+                did: identity,
+                petname: nil,
+                slug: slug,
+                memo: memo
+            )
         )
         // Write new sphere version to database
-        try database.writeSphereSyncInfo(
-            sphereIdentity: identity,
-            version: version
+        try database.writeOurSphere(
+            OurSphereRecord(
+                identity: identity,
+                since: version
+            )
         )
     }
 
@@ -332,15 +508,18 @@ actor DataService {
         address: Slashlink,
         memo: Memo
     ) async throws {
-        let link = try await noosphere.resolveLink(slashlink: address)
         var memo = memo
         memo.modified = Date.now
         
-        switch link.did {
-        case Did.local:
-            return try await writeLocalMemo(link: link, memo: memo)
-        default:
-            return try await writeSphereMemo(link: link, memo: memo)
+        switch address.peer {
+        case .none:
+            return try await writeSphereMemo(slug: address.slug, memo: memo)
+        case let .did(did) where did == Did.local:
+            return try await writeLocalMemo(slug: address.slug, memo: memo)
+        case let .did(did):
+            throw DataServiceError.cannotWriteToSphere(did: did)
+        case let .petname(petname):
+            throw DataServiceError.cannotWriteToSphere(petname: petname)
         }
     }
     
@@ -360,25 +539,30 @@ actor DataService {
     /// Delete entry from file system and database
     func deleteMemo(_ address: Slashlink) async throws {
         let identity = try await noosphere.identity()
-        // Get absolute address
-        let link = try await noosphere.resolveLink(slashlink: address)
-        switch link.did {
+        let did = try await noosphere.resolve(peer: address.peer)
+        let slug = address.slug
+        switch did {
         case Did.local:
             try local.remove(address.slug)
-            try database.removeMemo(link)
+            try database.removeMemo(did: did, slug: slug)
             return
         case identity:
             try await noosphere.remove(slug: address.slug)
             let version = try await noosphere.save()
-            try database.removeMemo(link)
+            try database.removeMemo(did: did, slug: slug)
             // Write new sphere version to database
-            try database.writeSphereSyncInfo(
-                sphereIdentity: identity,
-                version: version
+            try database.writeOurSphere(
+                OurSphereRecord(
+                    identity: identity,
+                    since: version
+                )
             )
             return
         default:
-            throw DataServiceError.cannotWriteToSphere(link.did)
+            throw DataServiceError.cannotWriteToSphere(
+                did: did,
+                petname: address.petname
+            )
         }
     }
     
@@ -463,10 +647,7 @@ actor DataService {
     
     func listRecentMemos() async throws -> [EntryStub] {
         let identity = try? await noosphere.identity()
-        let recent = try self.database.listRecentMemos(owner: identity)
-        return recent.filter { entry in
-            !entry.address.slug.isHidden
-        }
+        return try self.database.listRecentMemos(owner: identity)
     }
     
     nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
@@ -476,8 +657,9 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
-    func countMemos() throws -> Int {
-        return try database.countMemos().unwrap()
+    func countMemos() async throws -> Int {
+        let identity = try? await noosphere.identity()
+        return try database.countMemos(owner: identity).unwrap()
     }
     
     /// Count all entries
@@ -509,7 +691,9 @@ actor DataService {
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         Future.detached(priority: .userInitiated) {
-            await self.database.searchLinkSuggestions(
+            let identity = try await self.noosphere.identity()
+            return await self.database.searchLinkSuggestions(
+                owner: identity,
                 query: query,
                 omitting: invalidSuggestions,
                 fallback: fallback
@@ -642,11 +826,14 @@ actor DataService {
         fallback: String
     ) async throws -> MemoEditorDetailResponse {
         let identity = try? await noosphere.identity()
-        let link = try await noosphere.resolveLink(slashlink: address)
+        let did = try await noosphere.resolve(peer: address.peer)
         
         // We do not allow editing 3p memos.
-        guard link.did.isLocal || link.did == identity else {
-            throw DataServiceError.cannotEditSphere(link.did)
+        guard did.isLocal || did == identity else {
+            throw DataServiceError.cannotWriteToSphere(
+                did: did,
+                petname: address.petname
+            )
         }
         
         // Read memo from local or sphere.
@@ -654,7 +841,8 @@ actor DataService {
         
         let backlinks = try database.readEntryBacklinks(
             owner: identity,
-            link: link
+            did: did,
+            slug: address.slug
         )
         
         guard let memo = memo else {
@@ -707,8 +895,8 @@ actor DataService {
             return nil
         }
         
-        guard let link = try? await noosphere.resolveLink(
-            slashlink: address
+        guard let did = try? await noosphere.resolve(
+            peer: address.peer
         ) else {
             return nil
         }
@@ -722,7 +910,8 @@ actor DataService {
         
         guard let backlinks = try? database.readEntryBacklinks(
             owner: identity,
-            link: link
+            did: did,
+            slug: address.slug
         ) else {
             return nil
         }

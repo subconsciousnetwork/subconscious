@@ -182,10 +182,11 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncSphereWithGateway(version: String)
     case failSyncSphereWithGateway(String)
 
-    /// Sync current sphere state with database state
-    /// Sphere always wins.
+    /// Index current sphere state to database. Sphere always wins.
+    /// This indexes everything from the sphere update, including memo
+    /// and petname changes.
     case indexOurSphere
-    case succeedIndexOurSphere(version: String)
+    case succeedIndexOurSphere(OurSphereRecord)
     case failIndexOurSphere(String)
     
     /// Sync database with file system.
@@ -194,6 +195,23 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
     case failSyncLocalFilesWithDatabase(String)
     
+    /// Begin indexing peer content one-by-one.
+    /// Should be called _after_ indexing our own sphere (which updates the
+    /// peers information in our address book).
+    case collectPeersToIndex
+    case succeedCollectPeersToIndex([PeerRecord])
+    case failCollectPeersToIndex(_ error: String)
+
+    /// Index the contents of a sphere in the database
+    case indexPeer(_ petname: Petname)
+    case succeedIndexPeer(_ peer: PeerRecord)
+    case failIndexPeer(petname: Petname, error: Error)
+
+    /// Purge the contents of a sphere from the database
+    case purgePeer(_ did: Did)
+    case succeedPurgePeer(_ did: Did)
+    case failPurgePeer(_ error: String)
+
     case followDefaultGeist
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
@@ -211,6 +229,11 @@ enum AppAction: CustomLogStringConvertible {
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
     
+    /// Notification that a follow happened, and the sphere was resolved
+    case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
+    /// Notification that an unfollow happened somewhere else
+    case notifySucceedUnfollow(identity: Did, petname: Petname)
+
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
@@ -365,7 +388,7 @@ struct AppModel: ModelProtocol {
     /// update both the model property (triggering a view re-render)
     /// and persist the new value to UserDefaults.
     var isNoosphereEnabled = false
-
+    
     /// Has first run completed?
     ///
     /// This property is updated at `.start` with the corresponding value
@@ -385,18 +408,18 @@ struct AppModel: ModelProtocol {
         }
         return !isFirstRunComplete
     }
-
+    
     /// Is database connected and migrated?
     var databaseMigrationStatus = ResourceStatus.initial
     var localSyncStatus = ResourceStatus.initial
     var sphereSyncStatus = ResourceStatus.initial
-
+    
     var isSyncAllResolved: Bool {
         databaseMigrationStatus.isResolved &&
         localSyncStatus.isResolved &&
         sphereSyncStatus.isResolved
     }
-
+    
     //  User Nickname (preferred petname)
     /// Validated nickname
     ///
@@ -425,7 +448,7 @@ struct AppModel: ModelProtocol {
         validate: { value in InviteCode(value) }
     )
     var gatewayProvisioningStatus = ResourceStatus.initial
-
+    
     /// Default sphere identity
     ///
     /// This property is updated at `.start` with the corresponding value
@@ -445,7 +468,7 @@ struct AppModel: ModelProtocol {
     /// State for app upgrade view that takes over if we have to do any
     /// one-time long-running migration tasks at startup.
     var appUpgrade = AppUpgradeModel()
-
+    
     /// Preferred Gateway URL.
     ///
     /// This property is updated at `.start` with the corresponding value
@@ -722,11 +745,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .succeedIndexOurSphere(version):
+        case let .succeedIndexOurSphere(receipt):
             return succeedIndexOurSphere(
                 state: state,
                 environment: environment,
-                version: version
+                receipt: receipt
             )
         case let .failIndexOurSphere(error):
             return failIndexOurSphere(
@@ -750,6 +773,60 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 message: message
+            )
+        case .collectPeersToIndex:
+            return collectPeersToIndex(
+                state: state,
+                environment: environment
+            )
+        case .succeedCollectPeersToIndex(let peers):
+            return succeedCollectPeersToIndex(
+                state: state,
+                environment: environment,
+                peers: peers
+            )
+        case .failCollectPeersToIndex(let error):
+            return failCollectPeersToIndex(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .indexPeer(let petname):
+            return indexPeer(
+                state: state,
+                environment: environment,
+                petname: petname
+            )
+        case .succeedIndexPeer(let peer):
+            return succeedIndexPeer(
+                state: state,
+                environment: environment,
+                peer: peer
+            )
+        case let .failIndexPeer(petname, error):
+            return failIndexPeer(
+                state: state,
+                environment: environment,
+                petname: petname,
+                error: error
+            )
+        case .purgePeer(let identity):
+            return purgePeer(
+                state: state,
+                environment: environment,
+                identity: identity
+            )
+        case .succeedPurgePeer(let identity):
+            return succeedPurgePeer(
+                state: state,
+                environment: environment,
+                identity: identity
+            )
+        case .failPurgePeer(let error):
+            return failPurgePeer(
+                state: state,
+                environment: environment,
+                error: error
             )
         case let .presentSettingsSheet(isPresented):
             return presentSettingsSheet(
@@ -816,9 +893,23 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
+        case let .notifySucceedResolveFollowedUser(petname, cid):
+            return notifySucceedResolveFollowedUser(
+                state: state,
+                environment: environment,
+                petname: petname,
+                cid: cid
+            )
+        case let .notifySucceedUnfollow(did, petname):
+            return notifySucceedUnfollow(
+                state: state,
+                environment: environment,
+                identity: did,
+                petname: petname
+            )
         }
     }
-
+    
     /// Log message and no-op
     static func log(
         state: AppModel,
@@ -864,7 +955,7 @@ struct AppModel: ModelProtocol {
             environment: environment
         ).mergeFx(fx)
     }
-
+    
     /// Handle scene phase change
     static func scenePhaseChange(
         state: AppModel,
@@ -882,20 +973,21 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         }
     }
-
+    
     static func appear(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        let sphereIdentity = state.sphereIdentity ?? "nil"
+        let isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
         logger.debug(
-            "Documents: \(environment.documentURL)"
-        )
-        let sphereIdentity = state.sphereIdentity ?? "Unknown"
-        logger.debug(
-            "Sphere ID: \(sphereIdentity)"
-        )
-        logger.debug(
-            "Noosphere enabled? \(AppDefaults.standard.isNoosphereEnabled)"
+            "appear",
+            metadata: [
+                "documents": environment.documentURL.absoluteString,
+                "database": environment.database.database.path,
+                "sphereIdentity": sphereIdentity,
+                "isNoosphereEnabled": String(describing: isNoosphereEnabled)
+            ]
         )
         return update(
             state: state,
@@ -934,7 +1026,7 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func persistNickname(
         state: AppModel,
         environment: AppEnvironment,
@@ -1016,7 +1108,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         let url = URL(string: text)
         let isGatewayURLTextFieldValid = url?.isHTTP() ?? false
-
+        
         var model = state
         model.gatewayURLTextField = text
         model.isGatewayURLTextFieldValid = isGatewayURLTextFieldValid
@@ -1031,36 +1123,35 @@ struct AppModel: ModelProtocol {
         var fallback = state
         fallback.gatewayURLTextField = state.gatewayURL
         fallback.isGatewayURLTextFieldValid = true
-
+        
         // If URL given is not valid, fall back to original value.
         guard let url = URL(string: gatewayURL) else {
             return Update(state: fallback)
         }
-
+        
         // If URL given is not HTTP, fall back to original value.
         guard url.isHTTP() else {
             return Update(state: fallback)
         }
-
+        
         var model = state
         model.gatewayURL = gatewayURL
         model.gatewayURLTextField = gatewayURL
         model.isGatewayURLTextFieldValid = true
-
+        
         // Persist to UserDefaults
         AppDefaults.standard.gatewayURL = gatewayURL
-
+        
         // Reset gateway on environment
         let fx: Fx<AppAction> = Future.detached {
             await environment.noosphere.resetGateway(url: url)
             return .succeedResetGatewayURL(url)
-        }
-        .eraseToAnyPublisher()
-
+        }.eraseToAnyPublisher()
+        
         /// Only set valid nicknames
         return Update(state: model, fx: fx)
     }
-
+    
     static func succeedResetGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
@@ -1069,7 +1160,7 @@ struct AppModel: ModelProtocol {
         logger.log("Reset gateway URL: \(url)")
         return Update(state: state)
     }
-
+    
     static func createSphere(
         state: AppModel,
         environment: AppEnvironment
@@ -1077,21 +1168,19 @@ struct AppModel: ModelProtocol {
         // We always use the default owner key name for the user's default
         // sphere.
         let ownerKeyName = Config.default.noosphere.ownerKeyName
-
+        
         let fx: Fx<AppAction> = Future.detached {
             let receipt = try await environment.data.createSphere(
                 ownerKeyName: ownerKeyName
             )
             return AppAction.succeedCreateSphere(receipt)
-        }
-        .recover({ error in
+        }.recover({ error in
             AppAction.failCreateSphere(error.localizedDescription)
-        })
-        .eraseToAnyPublisher()
-
+        }).eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
-
+    
     static func succeedCreateSphere(
         state: AppModel,
         environment: AppEnvironment,
@@ -1113,7 +1202,7 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func setSphereIdentity(
         state: AppModel,
         environment: AppEnvironment,
@@ -1140,7 +1229,7 @@ struct AppModel: ModelProtocol {
             }).eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
+    
     static func succeedRefreshSphereVersion(
         state: AppModel,
         environment: AppEnvironment,
@@ -1151,7 +1240,7 @@ struct AppModel: ModelProtocol {
         logger.debug("Refreshed sphere version: \(version)")
         return Update(state: model)
     }
-
+    
     static func failRefreshSphereVersion(
         state: AppModel,
         environment: AppEnvironment,
@@ -1160,7 +1249,7 @@ struct AppModel: ModelProtocol {
         logger.log("Failed to refresh sphere version: \(error)")
         return Update(state: state)
     }
-
+    
     /// Persist Noosphere enabled state.
     /// Note that this updates the model state (triggering a re-render),
     /// and ALSO perists the state to UserDefaults.
@@ -1175,7 +1264,7 @@ struct AppModel: ModelProtocol {
         model.isNoosphereEnabled = isEnabled
         return Update(state: model)
     }
-
+    
     /// Update model to match persisted enabled state.
     /// A notification is generated for every
     /// This will take care of cases where the enabled state has been set
@@ -1221,7 +1310,7 @@ struct AppModel: ModelProtocol {
         
         return Update(state: model).animation(.default)
     }
-
+    
     /// Reset NoosphereService managed instances of `Noosphere` and `Sphere`.
     static func resetNoosphereService(
         state: AppModel,
@@ -1230,11 +1319,10 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = Future.detached {
             await environment.noosphere.reset()
             return .succeedResetNoosphereService
-        }
-        .eraseToAnyPublisher()
+        }.eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
+    
     static func succeedResetNoosphereService(
         state: AppModel,
         environment: AppEnvironment
@@ -1242,7 +1330,7 @@ struct AppModel: ModelProtocol {
         logger.log("Reset noosphere service")
         return Update(state: state)
     }
-
+    
     /// Make database ready.
     /// This will kick off a migration IF a successful migration
     /// has not already occurred.
@@ -1311,7 +1399,7 @@ struct AppModel: ModelProtocol {
         // Upgrade screen will be shown to user.
         model.isAppUpgraded = false
         model.databaseMigrationStatus = .pending
-
+        
         let fx: Fx<AppAction> = environment.data.rebuildPublisher().map({
             receipt in
             AppAction.succeedRebuildDatabase(receipt)
@@ -1369,14 +1457,24 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         do {
-            let sphereIdentity = try state.sphereIdentity.unwrap()
-            let did = try Did(sphereIdentity).unwrap()
-            let sphereVersion = try environment.database.readSphereSyncInfo(
-                sphereIdentity: did
-            ).unwrap()
-            logger.log("Database last-known sphere state: \(sphereIdentity) @ \(sphereVersion)")
+            let info: OurSphereRecord = try environment.database
+                .readOurSphere()
+                .unwrap()
+            logger.log(
+                "Last index for our sphere",
+                metadata: [
+                    "identity": info.identity.description,
+                    "version": info.since
+                ]
+            )
         } catch {
-            logger.log("Database last-known sphere state: unknown")
+            logger.log(
+                "Last index for our sphere",
+                metadata: [
+                    "identity": "nil",
+                    "version": "nil"
+                ]
+            )
         }
         // For now, we just sync everything on ready.
         return update(
@@ -1385,7 +1483,7 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func syncAll(
         state: AppModel,
         environment: AppEnvironment
@@ -1407,15 +1505,18 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.lastGatewaySyncStatus = .pending
-        logger.log("Syncing with gateway: \(model.gatewayURL)")
-        let fx: Fx<AppAction> = environment.noosphere.syncPublisher()
-            .map({ version in
-                AppAction.succeedSyncSphereWithGateway(version: version)
-            })
-            .catch({ error in
-                Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
+        logger.log(
+            "Syncing with gateway",
+            metadata: [
+                "url": model.gatewayURL
+            ]
+        )
+        let fx: Fx<AppAction> = environment.noosphere.syncPublisher(
+        ).map({ version in
+            AppAction.succeedSyncSphereWithGateway(version: version)
+        }).catch({ error in
+            Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
+        }).eraseToAnyPublisher()
         return Update(state: model, fx: fx)
     }
     
@@ -1424,7 +1525,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         version: String
     ) -> Update<AppModel> {
-        logger.log("Sphere synced with gateway @ \(version)")
+        logger.log(
+            "Synced our sphere with gateway",
+            metadata: [
+                "version": version
+            ]
+        )
         
         var model = state
         model.lastGatewaySyncStatus = .succeeded
@@ -1441,7 +1547,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.log("Sphere failed to sync with gateway: \(error)")
+        logger.log(
+            "Sphere failed to sync with gateway",
+            metadata: [
+                "error": error
+            ]
+        )
         
         var model = state
         model.lastGatewaySyncStatus = .failed(error)
@@ -1452,19 +1563,19 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-    
+
     static func indexOurSphere(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data.indexOurSpherePublisher().map({
-            version in
-            AppAction.succeedIndexOurSphere(version: version)
-        }).catch({ error in
-            Just(
-                AppAction.failIndexOurSphere(error.localizedDescription)
-            )
-        }).eraseToAnyPublisher()
+        let fx: Fx<AppAction> = Future.detached(priority: .utility) {
+            do {
+                let record = try await environment.data.indexOurSphere()
+                return Action.succeedIndexOurSphere(record)
+            } catch {
+                return Action.failIndexOurSphere(error.localizedDescription)
+            }
+        }.eraseToAnyPublisher()
         
         var model = state
         model.sphereSyncStatus = .pending
@@ -1474,17 +1585,25 @@ struct AppModel: ModelProtocol {
     static func succeedIndexOurSphere(
         state: AppModel,
         environment: AppEnvironment,
-        version: String
+        receipt: OurSphereRecord
     ) -> Update<AppModel> {
-        let identity = state.sphereIdentity ?? "unknown"
-        logger.log("Database indexed sphere \(identity) @ \(version)")
+        logger.log(
+            "Indexed our sphere",
+            metadata: [
+                "identity": receipt.identity.description,
+                "version": receipt.since
+            ]
+        )
         
         var model = state
         model.sphereSyncStatus = .succeeded
         
         return update(
             state: model,
-            action: .setAppUpgradeComplete(model.isSyncAllResolved),
+            actions: [
+                .setAppUpgradeComplete(model.isSyncAllResolved),
+                .collectPeersToIndex
+            ],
             environment: environment
         )
     }
@@ -1494,8 +1613,13 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.log("Database failed to sync with sphere: \(error)")
-
+        logger.log(
+            "Failed to index our sphere to database",
+            metadata: [
+                "error": error
+            ]
+        )
+        
         var model = state
         model.sphereSyncStatus = .failed(error)
         
@@ -1512,7 +1636,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         logger.log("File sync started")
-
+        
         let fx: Fx<AppAction> = environment.data.syncLocalWithDatabasePublisher().map({
             changes in
             AppAction.succeedSyncLocalFilesWithDatabase(changes)
@@ -1561,7 +1685,171 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
+    /// Index a sphere to the database
+    static func collectPeersToIndex(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        logger.log(
+            "Collecting peers to index",
+            metadata: [:]
+        )
+        let fx: Fx<Action> = Future.detached {
+            do {
+                let peers = try environment.database.listPeers()
+                return Action.succeedCollectPeersToIndex(peers)
+            } catch {
+                return Action.failCollectPeersToIndex(
+                    error.localizedDescription
+                )
+            }
+        }.eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    /// Index a sphere to the database
+    static func succeedCollectPeersToIndex(
+        state: Self,
+        environment: Environment,
+        peers: [PeerRecord]
+    ) -> Update<Self> {
+        // Transform list of peers into fx publisher of actions.
+        let fx: Fx<Action> = peers
+            .map({ peer in Action.indexPeer(peer.petname) })
+            .publisher
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    /// Index a sphere to the database
+    static func failCollectPeersToIndex(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to collect peers to index",
+            metadata: [
+                "error": error
+            ]
+        )
+        return Update(state: state)
+    }
+    
+    /// Index a sphere to the database
+    static func indexPeer(
+        state: Self,
+        environment: Environment,
+        petname: Petname
+    ) -> Update<Self> {
+        logger.log(
+            "Indexing peer",
+            metadata: [
+                "petname": petname.description
+            ]
+        )
+        let fx: Fx<Action> = Future.detached(priority: .background) {
+            do {
+                let peer = try await environment.data.indexPeer(
+                    petname: petname
+                )
+                return Action.succeedIndexPeer(peer)
+            } catch {
+                return Action.failIndexPeer(
+                    petname: petname,
+                    error: error
+                )
+            }
+            
+        }.eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedIndexPeer(
+        state: Self,
+        environment: Environment,
+        peer: PeerRecord
+    ) -> Update<Self> {
+        logger.log(
+            "Indexed peer",
+            metadata: [
+                "petname": peer.petname.description,
+                "identity": peer.identity.description,
+                "since": peer.since ?? "nil"
+            ]
+        )
+        return Update(state: state)
+    }
+    
+    static func failIndexPeer(
+        state: Self,
+        environment: Environment,
+        petname: Petname,
+        error: Error
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to index peer",
+            metadata: [
+                "petname": petname.description,
+                "error": error.localizedDescription
+            ]
+        )
+        return Update(state: state)
+    }
+    
+    static func purgePeer(
+        state: Self,
+        environment: Environment,
+        identity: Did
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached(priority: .utility) {
+            do {
+                try environment.database.purgePeer(
+                    identity: identity
+                )
+                return Action.succeedPurgePeer(identity)
+            } catch {
+                return Action.failPurgePeer(error.localizedDescription)
+            }
+        }.eraseToAnyPublisher()
+        logger.log(
+            "Purging peer",
+            metadata: [
+                "identity": identity.description
+            ]
+        )
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedPurgePeer(
+        state: Self,
+        environment: Environment,
+        identity: Did
+    ) -> Update<Self> {
+        logger.log(
+            "Purged peer from database",
+            metadata: [
+                "identity": identity.description
+            ]
+        )
+        return Update(state: state)
+    }
+    
+    static func failPurgePeer(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to purge peer from database",
+            metadata: [
+                "error": error
+            ]
+        )
+        return Update(state: state)
+    }
+    
     static func presentSettingsSheet(
         state: AppModel,
         environment: AppEnvironment,
@@ -1602,8 +1890,7 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         }
         
-        let fx: Fx<AppAction> =
-            environment.gatewayProvisioningService
+        let fx: Fx<AppAction> = environment.gatewayProvisioningService
             .provisionGatewayPublisher(
                 inviteCode: inviteCode,
                 sphere: did
@@ -1681,6 +1968,46 @@ struct AppModel: ModelProtocol {
         model.gatewayProvisioningStatus = .failed(error)
         
         return Update(state: model)
+    }
+    
+    static func notifySucceedResolveFollowedUser(
+        state: Self,
+        environment: Environment,
+        petname: Petname,
+        cid: Cid?
+    ) -> Update<Self> {
+        logger.log(
+            "Notify followed and resolved sphere",
+            metadata: [
+                "petname": petname.description,
+                "version": cid?.description ?? "nil"
+            ]
+        )
+        return update(
+            state: state,
+            action: .indexPeer(petname),
+            environment: environment
+        )
+    }
+    
+    static func notifySucceedUnfollow(
+        state: Self,
+        environment: Environment,
+        identity: Did,
+        petname: Petname
+    ) -> Update<Self> {
+        logger.log(
+            "Notify unfollowed sphere",
+            metadata: [
+                "did": identity.description,
+                "petname": petname.description
+            ]
+        )
+        return update(
+            state: state,
+            action: .purgePeer(identity),
+            environment: environment
+        )
     }
 }
 

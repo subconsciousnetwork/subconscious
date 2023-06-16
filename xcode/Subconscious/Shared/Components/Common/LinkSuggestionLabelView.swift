@@ -17,8 +17,11 @@ struct LinkSuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text(link.title),
-                        subtitle: Text(
-                            #"Link to "\#(String(describing: link.address.slug))""#
+                        subtitle: SlashlinkDisplayView(
+                            slashlink: link.address,
+                            baseColor: Color.secondary,
+                            slugColor: Color.secondary,
+                            labelColor: Color.secondary
                         )
                     )
                 },

@@ -43,6 +43,43 @@ public struct SphereReceipt {
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
 public actor Noosphere {
+    /// Wraps `NS_NOOSPHERE_LOG_*` constants
+    enum NoosphereLogLevel: UInt32 {
+        /// Equivalent to minimal format / INFO filter
+        case basic
+        /// Equivalent to minimal format / DEBUG filter
+        case chatty
+        /// Equivalent to minimal format / OFF filter
+        case silent
+        /// Equivalent to pretty format / DEBUG filter
+        case academic
+        /// Equivalent to verbose format / DEBUG filter
+        case informed
+        /// Equivalent to verbose format / TRACE filter
+        case tiresome
+        /// Equivalent to pretty format / TRACE filter
+        case deafening
+        
+        var rawValue: UInt32 {
+            switch self {
+            case .basic:
+                return NS_NOOSPHERE_LOG_BASIC.rawValue
+            case .chatty:
+                return NS_NOOSPHERE_LOG_CHATTY.rawValue
+            case .silent:
+                return NS_NOOSPHERE_LOG_SILENT.rawValue
+            case .academic:
+                return NS_NOOSPHERE_LOG_ACADEMIC.rawValue
+            case .informed:
+                return NS_NOOSPHERE_LOG_INFORMED.rawValue
+            case .tiresome:
+                return NS_NOOSPHERE_LOG_TIRESOME.rawValue
+            case .deafening:
+                return NS_NOOSPHERE_LOG_DEAFENING.rawValue
+            }
+        }
+    }
+
     private let logger: Logger = Logger(
         subsystem: Config.default.rdns,
         category: "Noosphere"
@@ -55,8 +92,10 @@ public actor Noosphere {
     init(
         globalStoragePath: String,
         sphereStoragePath: String,
-        gatewayURL: String? = nil
+        gatewayURL: String? = nil,
+        noosphereLogLevel: NoosphereLogLevel = .basic
     ) throws {
+        ns_tracing_initialize(noosphereLogLevel.rawValue)
         guard let noosphere = try Self.callWithError(
             ns_initialize,
             globalStoragePath,

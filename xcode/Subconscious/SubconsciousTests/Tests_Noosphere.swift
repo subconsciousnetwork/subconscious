@@ -26,4 +26,35 @@ final class Tests_Noosphere: XCTestCase {
             )
         )
     }
+    
+    func testNoosphereLogLevel() throws {
+        XCTAssertEqual(
+            Noosphere.NoosphereLogLevel.academic.rawValue,
+            NS_NOOSPHERE_LOG_ACADEMIC.rawValue
+        )
+        XCTAssertEqual(
+            Noosphere.NoosphereLogLevel.basic.rawValue,
+            NS_NOOSPHERE_LOG_BASIC.rawValue
+        )
+        XCTAssertEqual(
+            Noosphere.NoosphereLogLevel.chatty.rawValue,
+            NS_NOOSPHERE_LOG_CHATTY.rawValue
+        )
+        XCTAssertEqual(
+            Noosphere.NoosphereLogLevel.deafening.rawValue,
+            NS_NOOSPHERE_LOG_DEAFENING.rawValue
+        )
+        XCTAssertEqual(
+            Noosphere.NoosphereLogLevel.informed.rawValue,
+            NS_NOOSPHERE_LOG_INFORMED.rawValue
+        )
+        XCTAssertEqual(
+            Noosphere.NoosphereLogLevel.silent.rawValue,
+            NS_NOOSPHERE_LOG_SILENT.rawValue
+        )
+        XCTAssertEqual(
+            Noosphere.NoosphereLogLevel.tiresome.rawValue,
+            NS_NOOSPHERE_LOG_TIRESOME.rawValue
+        )
+    }
 }

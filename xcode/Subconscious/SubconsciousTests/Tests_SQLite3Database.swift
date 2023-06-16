@@ -34,6 +34,62 @@ final class Tests_SQLite3Database: XCTestCase {
         XCTAssert(!FileManager.default.fileExists(atPath: url.path()))
     }
     
+    func testExecute() throws {
+        let tmp = try createTmp(path: UUID().uuidString)
+        let url = tmp.appending(
+            path: "sqlite.db",
+            directoryHint: .notDirectory
+        )
+        let database = SQLite3Database(
+            path: url.absoluteString
+        )
+        try database.executescript(
+            sql: """
+            CREATE TABLE test (
+                id TEXT PRIMARY KEY,
+                text TEXT NOT NULL
+            );
+            INSERT INTO test (id, text)
+            VALUES ('foo', 'Foo')
+            """
+        )
+        let rows = try database.execute(
+            sql: """
+            SELECT text FROM test WHERE id = 'foo'
+            """
+        )
+        let value = rows.first?.col(0)?.toString()
+        XCTAssertEqual(value, "Foo")
+    }
+
+    func testFirst() throws {
+        let tmp = try createTmp(path: UUID().uuidString)
+        let url = tmp.appending(
+            path: "sqlite.db",
+            directoryHint: .notDirectory
+        )
+        let database = SQLite3Database(
+            path: url.absoluteString
+        )
+        try database.executescript(
+            sql: """
+            CREATE TABLE test (
+                id TEXT PRIMARY KEY,
+                text TEXT NOT NULL
+            );
+            INSERT INTO test (id, text)
+            VALUES ('foo', 'Foo')
+            """
+        )
+        let row = try database.first(
+            sql: """
+            SELECT text FROM test WHERE id = 'foo'
+            """
+        )
+        let value = row?.col(0)?.toString()
+        XCTAssertEqual(value, "Foo")
+    }
+
     func testTransactionRelease() throws {
         let tmp = try createTmp(path: UUID().uuidString)
         let url = tmp.appending(
@@ -64,5 +120,25 @@ final class Tests_SQLite3Database: XCTestCase {
         try database.rollback("test")
         let version = try database.getUserVersion()
         XCTAssertEqual(version, 0)
+    }
+    
+    func testTextOptional() throws {
+        let value = SQLite3Database.Value.text(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
+    }
+    
+    func testIntegerOptional() throws {
+        let value = SQLite3Database.Value.integer(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
+    }
+    
+    func testRealOptional() throws {
+        let value = SQLite3Database.Value.real(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
+    }
+    
+    func testBlobOptional() throws {
+        let value = SQLite3Database.Value.blob(nil)
+        XCTAssertEqual(value, SQLite3Database.Value.null)
     }
 }

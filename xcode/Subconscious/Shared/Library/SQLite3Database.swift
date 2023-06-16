@@ -70,30 +70,10 @@ final class SQLite3Database {
                 return nil
             }
         }
-
-        public func get(_ i: Int) -> String? {
-            self.col(i)?.toString()
-        }
-
-        public func get(_ i: Int) -> Date? {
-            self.col(i)?.toDate()
-        }
-
-        public func get(_ i: Int) -> Int? {
-            self.col(i)?.toInt()
-        }
-
-        public func get(_ i: Int) -> Double? {
-            self.col(i)?.toDouble()
-        }
-
-        public func get(_ i: Int) -> Data? {
-            self.col(i)?.toData()
-        }
     }
 
     /// Column data types for SQLite
-    public enum Value {
+    public enum Value: Hashable {
         case null
         case text(String)
         case integer(Int)
@@ -127,7 +107,36 @@ final class SQLite3Database {
         public static func bool(_ bool: Bool) -> Self {
             .integer(bool ? 1 : 0)
         }
-
+        
+        /// Create optional text value
+        public static func text(_ string: String?) -> Value {
+            guard let string = string else {
+                return .null
+            }
+            return .text(string)
+        }
+        
+        public static func integer(_ int: Int?) -> Value {
+            guard let int = int else {
+                return .null
+            }
+            return .integer(int)
+        }
+        
+        public static func real(_ double: Double?) -> Value {
+            guard let double = double else {
+                return .null
+            }
+            return .real(double)
+        }
+        
+        public static func blob(_ data: Data?) -> Value {
+            guard let data = data else {
+                return .null
+            }
+            return .blob(data)
+        }
+        
         /// Encode a structure to JSON and wrap as a `.text` value.
         /// - Returns a `Value.text` if successful, `or` fallback otherwise.
         public static func json<T: Encodable>(
@@ -418,16 +427,26 @@ final class SQLite3Database {
             return rows
         }
 
+        /// Execute query, returning first row.
+        /// Note that your query should limit the number of results to one.
+        public func first(
+            sql: String,
+            parameters: [Value] = []
+        ) throws -> Row? {
+            try execute(sql: sql, parameters: parameters).first
+        }
+
         /// Get user_version as integer
         public func getUserVersion() throws -> Int {
-            let rows = try execute(sql: "PRAGMA user_version")
-            if let version: Int = rows.first?.get(0) {
-                return version
-            } else {
+            guard let version = try first(sql: "PRAGMA user_version")?
+                .col(0)?
+                .toInt()
+            else {
                 throw SQLite3DatabaseError.value(
                     "Could not read user_version"
                 )
             }
+            return version
         }
 
         /// Create a transaction savepoint
@@ -763,7 +782,16 @@ final class SQLite3Database {
             try self.open().execute(sql: sql, parameters: parameters)
         }
     }
-
+    
+    public func first(
+        sql: String,
+        parameters: [Value] = []
+    ) throws -> Row? {
+        try queue.sync {
+            try self.open().first(sql: sql, parameters: parameters)
+        }
+    }
+    
     /// Get user_version as integer
     public func getUserVersion() throws -> Int {
         try queue.sync {

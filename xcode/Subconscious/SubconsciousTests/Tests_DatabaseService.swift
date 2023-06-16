@@ -104,12 +104,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("foo")!
-            ),
-            memo: foo,
-            size: foo.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
         )
         
         let bar = Memo(
@@ -121,12 +122,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
         )
         
         let baz = Memo(
@@ -138,11 +140,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
         )
         
         let fingerprints = try service.listLocalMemoFingerprints()
@@ -171,12 +174,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("foo")!
-            ),
-            memo: foo,
-            size: foo.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
         )
         
         let bar = Memo(
@@ -188,12 +192,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
         )
         
         let baz = Memo(
@@ -205,11 +210,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
         )
         
         let recent = try service.listRecentMemos(owner: Did("did:key:abc123")!)
@@ -263,12 +269,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("foo")!
-            ),
-            memo: foo,
-            size: foo.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
         )
         
         let bar = Memo(
@@ -280,12 +287,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
         )
         
         let baz = Memo(
@@ -297,11 +305,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
         )
         
         let recent = try service.listRecentMemos(owner: nil)
@@ -348,12 +357,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("foo")!
-            ),
-            memo: foo,
-            size: foo.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
         )
         
         let bar = Memo(
@@ -365,12 +375,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
         )
         
         let baz = Memo(
@@ -382,11 +393,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
+                petname: nil,
+                slug: Slug("baz")!,
+                memo: baz
+            )
         )
         
         let results = try service.searchSuggestions(
@@ -426,12 +438,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("foo")!
-            ),
-            memo: foo,
-            size: foo.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
         )
         
         let bar = Memo(
@@ -443,12 +456,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
         )
         
         let baz = Memo(
@@ -460,11 +474,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
         )
         
         let results = try service.searchSuggestions(
@@ -491,6 +506,69 @@ class Tests_DatabaseService: XCTestCase {
         )
     }
     
+    func testSearchSuggestionsFilterHiddenFiles() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let did = Did("did:key:abc123")!
+
+        let profile = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo profile"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: nil,
+                slug: Slug("_profile_")!,
+                memo: profile
+            )
+        )
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo
+            )
+        )
+
+        let results = try service.searchSuggestions(
+            owner: did,
+            query: "foo"
+        )
+        let slugs = results.compactMap({ result in
+            switch result {
+            case let .memo(address, _):
+                return address.slug
+            default:
+                return nil
+            }
+        })
+        
+        XCTAssertFalse(
+            slugs.contains(Slug("_profile_")!),
+            "Hidden file is not part of results"
+        )
+        XCTAssertEqual(slugs.count, 1, "Hidden file is not returned")
+    }
+
     func testReadBacklinks() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
@@ -507,11 +585,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            ),
-            memo: foo
+                petname: Petname("abc")!,
+                slug: Slug("foo")!,
+                memo: foo
+            )
         )
         
         // Contains link, should show up in results
@@ -524,12 +603,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
         )
         
         // Contains link, should show up in results
@@ -542,11 +622,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
         )
         
         // Does not contain link, should not show up in results
@@ -559,19 +640,36 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bing"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("bing")!
-            ),
-            memo: bing
+                petname: Petname("abc")!,
+                slug: Slug("bing")!,
+                memo: bing
+            )
         )
         
+        // Hidden, should not show up in results
+        let hidden = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bing"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did("did:key:abc123")!,
+                petname: Petname("abc")!,
+                slug: Slug("_hidden")!,
+                memo: hidden
+            )
+        )
+
         let stubs = try service.readEntryBacklinks(
             owner: Did("did:key:abc123")!,
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            )
+            did: Did("did:key:abc123")!,
+            slug: Slug("foo")!
         )
         
         let slashlinks = Set(
@@ -614,11 +712,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            ),
-            memo: foo
+                petname: Petname("abc")!,
+                slug: Slug("foo")!,
+                memo: foo
+            )
         )
         
         // Contains link, should show up in results
@@ -631,19 +730,18 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did("did:key:abc123")!,
-                slug: Slug("bar")!
-            ),
-            memo: bar
+                petname: Petname("abc")!,
+                slug: Slug("bar")!,
+                memo: bar
+            )
         )
         
         let stubs = try service.readEntryBacklinks(
             owner: nil,
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("foo")!
-            )
+            did: Did("did:key:abc123")!,
+            slug: Slug("foo")!
         )
         
         let slashlinks = Set(
@@ -662,6 +760,43 @@ class Tests_DatabaseService: XCTestCase {
         )
     }
     
+    func testReadWriteSyncInfoDid() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        let source = PeerRecord(
+            petname: Petname("alice")!,
+            identity: Did("did:key:abc123")!,
+            since: "bafyfakefakefake"
+        )
+        
+        // Write
+        try service.writePeer(source)
+
+        let out = try service.readPeer(identity: source.identity)
+        
+        XCTAssertEqual(out, source)
+    }
+    
+    func testReadWriteSyncInfoPetname() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        let petname = Petname("alice")!
+        let source = PeerRecord(
+            petname: petname,
+            identity: Did("did:key:abc123")!,
+            since: "bafyfakefakefake"
+        )
+        
+        // Write
+        try service.writePeer(source)
+
+        let out = try service.readPeer(petname: petname)
+        
+        XCTAssertEqual(out, source)
+    }
+
     func testPurgeSphere() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
@@ -680,11 +815,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Foo"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: did,
-                slug: Slug("foo")!
-            ),
-            memo: foo
+                petname: Petname("abc")!,
+                slug: Slug("foo")!,
+                memo: foo
+            )
         )
         
         // Contains link, should show up in results
@@ -697,12 +833,13 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bar /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
         )
         
         // Contains link, should show up in results
@@ -715,11 +852,12 @@ class Tests_DatabaseService: XCTestCase {
             body: "Baz /foo should appear in results"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: did,
-                slug: Slug("baz")!
-            ),
-            memo: baz
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
         )
         
         // Does not contain link, should not show up in results
@@ -732,22 +870,26 @@ class Tests_DatabaseService: XCTestCase {
             body: "Bing"
         )
         try service.writeMemo(
-            link: Link(
+            MemoRecord(
                 did: did,
-                slug: Slug("bing")!
-            ),
-            memo: bing
+                petname: Petname("abc")!,
+                slug: Slug("bing")!,
+                memo: bing
+            )
         )
         
         // Write fake sphere sync info so we can purge it
-        try service.writeSphereSyncInfo(
-            sphereIdentity: did,
-            version: "bafyxyz123"
+        try service.writePeer(
+            PeerRecord(
+                petname: Petname("alice")!,
+                identity: did,
+                since: "bafyxyz123"
+            )
         )
         
-        try service.purgeSphere(did: did)
+        try service.purgePeer(identity: did)
         
-        let syncInfo = try service.readSphereSyncInfo(sphereIdentity: did)
+        let syncInfo = try service.readPeer(identity: did)
         XCTAssertNil(syncInfo)
         
         let recent = try service.listRecentMemos(owner: did)

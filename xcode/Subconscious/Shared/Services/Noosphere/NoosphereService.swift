@@ -65,6 +65,7 @@ actor NoosphereService:
     var globalStorageURL: URL
     var sphereStorageURL: URL
     var gatewayURL: URL?
+    private var _noosphereLogLevel: Noosphere.NoosphereLogLevel
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
     /// Identity of default sphere
@@ -77,18 +78,24 @@ actor NoosphereService:
         sphereStorageURL: URL,
         gatewayURL: URL? = nil,
         sphereIdentity: String? = nil,
+        noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic,
         logger: Logger = logger
     ) {
-        logger.debug("init NoosphereService")
-        logger.debug("Global storage URL: \(globalStorageURL.absoluteString)")
-        logger.debug("Sphere storage URL: \(sphereStorageURL.absoluteString)")
-        logger.debug("Gateway URL: \(gatewayURL?.absoluteString ?? "none")")
-        logger.debug("Sphere identity: \(sphereIdentity ?? "none")")
+        logger.debug(
+            "init NoosphereService",
+            metadata: [
+                "globalStorageURL": globalStorageURL.absoluteString,
+                "sphereStorageURL": sphereStorageURL.absoluteString,
+                "gatewayURL": gatewayURL?.absoluteString ?? "nil",
+                "sphereIdentity": sphereIdentity ?? "nil"
+            ]
+        )
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
         self.logger = logger
+        self._noosphereLogLevel = noosphereLogLevel
     }
     
     /// Create a default sphere for user and persist sphere details
@@ -132,7 +139,8 @@ actor NoosphereService:
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
-            gatewayURL: gatewayURL?.absoluteString
+            gatewayURL: gatewayURL?.absoluteString,
+            noosphereLogLevel: _noosphereLogLevel
         )
         self._noosphere = noosphere
         return noosphere

@@ -551,7 +551,7 @@ final class Tests_Sphere: XCTestCase {
         XCTAssertEqual(bobKey2, bobKey, "Got back petname")
     }
     
-    func testResolve() async throws {
+    func testResolvePeer() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -580,16 +580,8 @@ final class Tests_Sphere: XCTestCase {
         try await sphere.setPetname(did: bobKey, petname: bobName)
         try await sphere.save()
 
-        let slug = Slug("foo")!
+        let did = try await sphere.resolve(peer: .petname(bobName))
 
-        let relBob = Slashlink(
-            peer: .petname(bobName),
-            slug: slug
-        )
-        
-        let absBob = try await sphere.resolve(slashlink: relBob)
-
-        XCTAssertEqual(absBob.peer, Peer.did(bobKey), "Peer part is a did")
-        XCTAssertEqual(absBob.slug, slug, "Slug remains unchanged")
+        XCTAssertEqual(did, bobKey, "Resolves did")
     }
 }

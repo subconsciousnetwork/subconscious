@@ -195,3 +195,9 @@ extension Petname {
        
     }
 }
+
+extension String {
+    func toPetname() -> Petname? {
+        Petname(self)
+    }
+}

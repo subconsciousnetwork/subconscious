@@ -66,36 +66,63 @@ public protocol SphereProtocol {
 }
 
 extension SphereProtocol {
-    /// Resolve a relative slashlink, making it an absolute slashlink.
-    /// - Returns Slashlink with did peer
-    func resolve(slashlink: Slashlink) async throws -> Slashlink {
-        switch slashlink.peer {
-        case .did:
-            return slashlink
-        case .petname(let petname):
-            // Get did for petname
-            let did = try await Func.run {
-                // Look locally if we have the option
-                if petname.parts.count == 1 {
-                    return try await self.getPetname(petname: petname.root.toPetname())
-                }
-                
-                let sphere = try await self.traverse(petname: petname)
-                return try await sphere.identity()
-            }
-            
-            // Return new slashlink with did root
-            return Slashlink(
-                peer: .did(did),
-                slug: slashlink.slug
-            )
+    /// Resolve a peer, returning the Did for the sphere it points to.
+    /// - Returns Did
+    func resolve(peer: Peer?) async throws -> Did {
+        switch peer {
+        case let .did(did):
+            return did
+        case let .petname(petname) where petname.parts.count == 1:
+            return try await self.getPetname(petname: petname.root.toPetname())
+        case let .petname(petname):
+            let sphere = try await self.traverse(petname: petname)
+            return try await sphere.identity()
         case .none:
-            let identity = try await self.identity()
-            return Slashlink(
-                peer: Peer.did(identity),
-                slug: slashlink.slug
-            )
+            return try await self.identity()
         }
+    }
+
+    /// Given a petname, get the corresponding peer record, which includes
+    /// did and version information.
+    public func getPeer(_ petname: Petname) async -> Noosphere.Peer? {
+        guard let identity = try? await getPetname(petname: petname) else {
+            return nil
+        }
+        let version = try? await resolvePetname(petname: petname)
+        return Noosphere.Peer(
+            petname: petname,
+            identity: identity,
+            version: version
+        )
+    }
+    
+    /// Get array of peer changes since last version.
+    /// If CID is given, will calculate changes since CID.
+    /// If CID is nil, will list all petnames from current version as updates.
+    public func getPeerChanges(
+        since version: Cid?
+    ) async throws -> [Noosphere.PeerChange] {
+        guard let version = version else {
+            let petnames = try await listPetnames()
+            var changes: [Noosphere.PeerChange] = []
+            for petname in petnames {
+                let peer = try await getPeer(petname).unwrap()
+                changes.append(.update(peer))
+            }
+            return changes
+        }
+        let petnames = try await getPetnameChanges(since: version)
+        var changes: [Noosphere.PeerChange] = []
+        for petname in petnames {
+            // If we can get petname did, then change was an upsert.
+            // If we can't, then change was a remove.
+            if let peer = await getPeer(petname) {
+                changes.append(.update(peer))
+            } else {
+                changes.append(.remove(petname: petname))
+            }
+        }
+        return changes
     }
 }
 
@@ -536,7 +563,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             did?.description
         )
     }
-        
+    
     /// Set petname for DID
     /// - Returns `AnyPublisher` for Void (success), or error
     nonisolated public func setPetnamePublisher(
@@ -620,12 +647,12 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// in some way. It is up to you to read them to find out what happend
     /// (deletion, update, etc).
     /// - Returns an array of `Petname`
-    public func getPetnameChanges(since cid: Cid) throws -> [Petname] {
+    public func getPetnameChanges(since version: Cid) throws -> [Petname] {
         let changes = try Noosphere.callWithError(
             ns_sphere_petname_changes,
             noosphere.noosphere,
             sphere,
-            cid
+            version
         )
         defer {
             ns_string_array_free(changes)
@@ -811,8 +838,17 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// List all changed slugs between two versions of a sphere.
     /// This method lists which slugs changed between version, but not
     /// what changed.
+    ///
+    /// If `since` is nil, this method acts as a synonym of `list`, since
+    /// changes-since-beginning, is identical to listing the contents of the
+    /// sphere.
+    ///
     /// - Returns array of `Slug`
     public func changes(since cid: Cid? = nil) throws -> [Slug] {
+        guard let cid = cid else {
+            return try list()
+        }
+        
         let changes = try Noosphere.callWithError(
             ns_sphere_content_changes,
             noosphere.noosphere,
