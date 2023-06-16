@@ -240,7 +240,7 @@ struct FollowUserFormView: View {
                     .foregroundColor(.accentColor)
                 
                 ValidatedFormField(
-                    placeholder: "petname",
+                    placeholder: "DID",
                     field: state.did,
                     send: send,
                     tag: FollowUserFormAction.didField,

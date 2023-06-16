@@ -183,7 +183,7 @@ struct FollowUserSheet: View {
             
             ValidatedFormField(
                 alignment: .center,
-                placeholder: "nickname",
+                placeholder: "petname",
                 field: state.followUserForm.petname,
                 send: send,
                 tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) },

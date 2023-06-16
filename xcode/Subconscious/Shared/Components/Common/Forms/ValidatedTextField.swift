@@ -92,7 +92,7 @@ struct ValidatedTextField: View {
                     .opacity(isValid ? 0 : 1)
                     .animation(.default, value: isValid)
                 }
-                .onChange(of: focused) { _ in
+                .onChange(of: focused) { focused in
                     onFocusChanged(focused)
                 }
                 .onChange(of: innerText, perform: { innerText in
