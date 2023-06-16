@@ -1537,7 +1537,7 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            actions: [.indexOurSphere],
+            action: .indexOurSphere,
             environment: environment
         )
     }
@@ -1559,7 +1559,7 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            actions: [.indexOurSphere],
+            action: .indexOurSphere,
             environment: environment
         )
     }
