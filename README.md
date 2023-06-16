@@ -6,7 +6,7 @@ Install [Xcode](https://apps.apple.com/us/app/xcode/id497799835?mt=12), clone th
 
 ## Config
 
-Common application config is set in `Config.swift`, set `debug` to `true` for local development.
+Common application config is set in `xcode/Subconscious/Shared/Config.swift`, set `debug` to `true` for local development.
 
 ## Running on Device
 
