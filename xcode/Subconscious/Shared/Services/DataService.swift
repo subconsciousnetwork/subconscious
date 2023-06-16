@@ -127,7 +127,8 @@ actor DataService {
         let version = try await sphere.version()
         // Get peer info from last sync
         let peer = try? database.readPeer(identity: identity)
-        // Get changes since the last time we indexed this peer
+        // Get changes since the last time we indexed this peer,
+        // or get all changes if this is the first time we've tried to index.
         let changes = try await sphere.changes(since: peer?.since)
         logger.debug(
             "Indexing peer",
