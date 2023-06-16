@@ -53,6 +53,8 @@ struct PeerView: View {
                 .foregroundColor(.secondary)
                 .fontWeight(.regular)
                 .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
         }
     }
 }

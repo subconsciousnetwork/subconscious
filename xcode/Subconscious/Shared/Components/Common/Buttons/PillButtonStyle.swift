@@ -18,7 +18,7 @@ struct PillButtonView: View {
     
     var body: some View {
         HStack {
-            Spacer()
+            Spacer(minLength: 0)
             label
                 .font(
                     Func.run {
@@ -26,11 +26,11 @@ struct PillButtonView: View {
                         case .regular:
                             return .body
                         case .small:
-                            return .callout
+                            return .caption
                         }
                     }
                 )
-            Spacer()
+            Spacer(minLength: 0)
         }
         .bold()
         .frame(
@@ -39,7 +39,7 @@ struct PillButtonView: View {
                 case .regular:
                     return AppTheme.unit * 12
                 case .small:
-                    return AppTheme.unit * 9
+                    return AppTheme.unit * 6
                 }
             }
         )
