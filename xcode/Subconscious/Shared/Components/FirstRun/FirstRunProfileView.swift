@@ -66,6 +66,13 @@ struct FirstRunProfileView: View {
         .onAppear {
             app.send(.createSphere)
         }
+        .onDisappear {
+            guard let nickname = app.state.nicknameFormField.validated else {
+                return
+            }
+            
+            app.send(.submitNickname(nickname))
+        }
     }
 }
 

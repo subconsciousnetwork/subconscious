@@ -40,8 +40,13 @@ class Tests_UserProfileBio: XCTestCase {
                       layer of creamy, organic butter.
                       """
         
-        XCTAssertNotNil(state.bioField.validate(valid))
-        XCTAssertNil(state.bioField.validate(tooLong))
+        let a = state.bioField.validate(valid)
+        XCTAssertNotNil(a)
+        XCTAssertEqual(a!.text, valid)
+        
+        let b = state.bioField.validate(tooLong)
+        XCTAssertNotNil(b)
+        XCTAssertEqual(b!.text.count, 280)
     }
     
     func testTruncation() throws {

@@ -106,7 +106,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Set sphere/user nickname
     /// Sets form field, and persists if needed.
     case setNickname(_ nickname: String)
-    case persistNickname(_ nickname: Petname.Name)
+    case submitNickname(_ nickname: Petname.Name)
     
     /// Write to `Slashlink.ourProfile` during onboarding
     case updateOurProfileWithNickname(_ nickname: Petname.Name)
@@ -637,8 +637,8 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 text: nickname
             )
-        case .persistNickname(let nickname):
-            return persistNickname(
+        case .submitNickname(let nickname):
+            return submitNickname(
                 state: state,
                 environment: environment,
                 nickname: nickname
@@ -1051,8 +1051,8 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-    
-    static func persistNickname(
+
+    static func submitNickname(
         state: AppModel,
         environment: AppEnvironment,
         nickname: Petname.Name
@@ -1301,15 +1301,7 @@ struct AppModel: ModelProtocol {
             model.firstRunPath = []
         }
         
-        guard let nickname = state.nicknameFormField.validated else {
-            return Update(state: state)
-        }
-        
-        return update(
-            state: model,
-            action: .persistNickname(nickname),
-            environment: environment
-        ).animation(.default)
+        return Update(state: model).animation(.default)
     }
     
     /// Reset NoosphereService managed instances of `Noosphere` and `Sphere`.

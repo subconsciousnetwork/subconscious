@@ -29,7 +29,7 @@ struct ProfileSettingsView: View {
                         return
                     }
                     
-                    app.send(.persistNickname(nickname))
+                    app.send(.submitNickname(nickname))
                 }
             }
         }

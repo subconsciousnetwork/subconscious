@@ -105,24 +105,24 @@ class Tests_FormField: XCTestCase {
         
         XCTAssertEqual(state.validated, nil, "Validated output is nil")
         XCTAssertEqual(state.isValid, false, "Validator fails")
-        XCTAssertEqual(state.hasError, false, "No error is displayed")
+        XCTAssertEqual(state.shouldPresentAsInvalid, false, "No error is displayed")
         
         var update = FormField.update(state: state, action: .markAsTouched, environment: environment)
         
         XCTAssertEqual(update.state.validated, nil, "Validated output is nil")
         XCTAssertEqual(update.state.isValid, false, "Validator fails")
-        XCTAssertEqual(update.state.hasError, true, "Error message is displayed")
+        XCTAssertEqual(update.state.shouldPresentAsInvalid, true, "Error message is displayed")
         
         update = FormField.update(state: update.state, action: .setValue(input: "hello"), environment: environment)
         
         XCTAssertEqual(update.state.validated, "hello", "Validated output returned")
         XCTAssertEqual(update.state.isValid, true, "Validator passes")
-        XCTAssertEqual(update.state.hasError, false, "No error message is displayed")
+        XCTAssertEqual(update.state.shouldPresentAsInvalid, false, "No error message is displayed")
         
         update = FormField.update(state: update.state, action: .reset, environment: environment)
         
         XCTAssertEqual(state.validated, nil, "Validated output is nil")
         XCTAssertEqual(state.isValid, false, "Validator fails")
-        XCTAssertEqual(state.hasError, false, "No error is displayed")
+        XCTAssertEqual(state.shouldPresentAsInvalid, false, "No error is displayed")
     }
 }
