@@ -43,6 +43,7 @@ struct StoryUserView: View {
     var action: (Slashlink) -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
+    var onRefreshUser: () -> Void = {}
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -105,7 +106,23 @@ struct StoryUserView: View {
                                 }
                             )
                         }
-                       
+                        
+                        switch story.user.resolutionStatus {
+                        case .unresolved:
+                            Button(
+                                action: {
+                                    onRefreshUser()
+                                },
+                                label: {
+                                    Label(
+                                        title: { Text("Refresh") },
+                                        icon: { Image(systemName: "arrow.clockwise") }
+                                    )
+                                }
+                            )
+                        case _:
+                            EmptyView()
+                        }
                     },
                     label: {
                         Image(systemName: "ellipsis")

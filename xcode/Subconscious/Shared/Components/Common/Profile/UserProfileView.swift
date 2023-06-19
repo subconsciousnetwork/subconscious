@@ -101,7 +101,14 @@ struct FollowTabView: View {
                 StoryUserView(
                     story: follow,
                     action: { _ in onNavigateToUser(follow.user) },
-                    profileAction: onProfileAction
+                    profileAction: onProfileAction,
+                    onRefreshUser: {
+                        guard let petname = follow.user.address.toPetname() else {
+                            return
+                        }
+                        
+                        send(.requestWaitForFollowedUserResolution(petname))
+                    }
                 )
             }
             

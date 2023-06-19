@@ -508,7 +508,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return update(
+                state: state,
+                action: .refresh,
+                environment: environment
+            ).mergeFx(fx)
         case .succeedResolveFollowedUser:
             return update(state: state, action: .refresh, environment: environment)
         case .failResolveFollowedUser(let message):
