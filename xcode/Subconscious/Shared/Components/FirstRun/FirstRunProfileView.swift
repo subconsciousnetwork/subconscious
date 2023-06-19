@@ -22,8 +22,10 @@ struct FirstRunProfileView: View {
                     alignment: .center,
                     placeholder: "nickname",
                     field: app.state.nicknameFormField,
-                    send: app.send,
-                    tag: AppAction.nicknameFormField,
+                    send: Address.forward(
+                        send: app.send,
+                        tag: AppAction.nicknameFormField
+                    ),
                     caption: "Lowercase letters, numbers and dashes only.",
                     autoFocus: true,
                     submitLabel: .go,

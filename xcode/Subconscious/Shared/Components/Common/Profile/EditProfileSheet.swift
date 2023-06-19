@@ -150,8 +150,10 @@ struct EditProfileSheet: View {
                         ValidatedFormField(
                             placeholder: "nickname",
                             field: state.nicknameField,
-                            send: send,
-                            tag: { a in EditProfileSheetAction.nicknameField(a) },
+                            send: Address.forward(
+                                send: send,
+                                tag: EditProfileSheetAction.nicknameField
+                            ),
                             caption: "Lowercase letters, numbers and dashes only."
                         )
                         .lineLimit(1)
@@ -166,8 +168,10 @@ struct EditProfileSheet: View {
                         ValidatedFormField(
                             placeholder: "bio",
                             field: state.bioField,
-                            send: send,
-                            tag: { a in EditProfileSheetAction.bioField(a) },
+                            send: Address.forward(
+                                send: send,
+                                tag: EditProfileSheetAction.bioField
+                            ),
                             caption: "A short description of yourself (\(state.bioField.value.count)/280)",
                             axis: .vertical
                         )

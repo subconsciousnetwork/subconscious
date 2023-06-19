@@ -9,12 +9,11 @@ import SwiftUI
 import Combine
 import ObservableStore
 
-struct ValidatedFormField<T: Equatable, Action>: View {
+struct ValidatedFormField<T: Equatable>: View {
     var alignment: HorizontalAlignment = .leading
     var placeholder: String
     var field: FormField<String, T>
-    var send: (Action) -> Void
-    var tag: (FormFieldAction<String>) -> Action
+    var send: (FormFieldAction<String>) -> Void
     var caption: String
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
@@ -29,10 +28,10 @@ struct ValidatedFormField<T: Equatable, Action>: View {
             text: Binding(
                 get: { field.value },
                 send: send,
-                tag: { v in tag(.setValue(input: v))}
+                tag: { v in .setValue(input: v)}
             ),
             onFocusChanged: { focused in
-                send(tag(.focusChange(focused: focused)))
+                send(.focusChange(focused: focused))
             },
             caption: caption,
             axis: axis,

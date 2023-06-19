@@ -185,8 +185,10 @@ struct FollowUserSheet: View {
                 alignment: .center,
                 placeholder: "petname",
                 field: state.followUserForm.petname,
-                send: send,
-                tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) },
+                send: Address.forward(
+                    send: send,
+                    tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
+                ),
                 caption: state.petnameFieldCaption ?? ""
             )
             .textFieldStyle(.roundedBorder)

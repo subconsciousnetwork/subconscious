@@ -242,8 +242,10 @@ struct FollowUserFormView: View {
                 ValidatedFormField(
                     placeholder: "DID",
                     field: state.did,
-                    send: send,
-                    tag: FollowUserFormAction.didField,
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowUserFormAction.didField
+                    ),
                     caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
                 )
                 .lineLimit(1)
@@ -258,8 +260,10 @@ struct FollowUserFormView: View {
                 ValidatedFormField(
                     placeholder: "petname",
                     field: state.petname,
-                    send: send,
-                    tag: FollowUserFormAction.petnameField,
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowUserFormAction.petnameField
+                    ),
                     caption: "Lowercase letters, numbers and dashes only."
                 )
                 .lineLimit(1)

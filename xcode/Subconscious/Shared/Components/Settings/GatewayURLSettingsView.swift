@@ -98,8 +98,10 @@ struct GatewayURLSettingsView: View {
                     ValidatedFormField(
                         placeholder: "http://example.com",
                         field: app.state.gatewayURLField,
-                        send: app.send,
-                        tag: AppAction.gatewayURLField,
+                        send: Address.forward(
+                            send: app.send,
+                            tag: AppAction.gatewayURLField
+                        ),
                         caption: "The URL of your preferred Noosphere gateway"
                     )
                     .textInputAutocapitalization(.never)

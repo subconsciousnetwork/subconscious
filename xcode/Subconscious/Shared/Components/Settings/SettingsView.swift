@@ -54,8 +54,10 @@ struct GatewayProvisioningSection: View {
                 ValidatedFormField(
                     placeholder: "Enter your invite code",
                     field: app.state.inviteCodeFormField,
-                    send: app.send,
-                    tag: AppAction.inviteCodeFormField,
+                    send: Address.forward(
+                        send: app.send,
+                        tag: AppAction.inviteCodeFormField
+                    ),
                     caption: "Look for this in your welcome email."
                 )
                 .autocapitalization(.none)
