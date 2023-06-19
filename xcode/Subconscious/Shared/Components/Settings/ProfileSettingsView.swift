@@ -10,23 +10,29 @@ import ObservableStore
 
 struct ProfileSettingsView: View {
     @ObservedObject var app: Store<AppModel>
-
+    
     var body: some View {
         Form {
             Section {
-                ValidatedTextField(
+                ValidatedFormField(
                     placeholder: "nickname",
-                    text: Binding(
-                        get: { app.state.nicknameFormFieldValue },
+                    field: app.state.nicknameFormField,
+                    send: Address.forward(
                         send: app.send,
-                        tag: AppAction.setNickname
+                        tag: AppAction.nicknameFormField
                     ),
-                    caption: "Lowercase letters, numbers, and dashes only",
-                    hasError: !app.state.isNicknameFormFieldValid
+                    caption: "Lowercase letters, numbers and dashes only."
                 )
-                .formField()
+                .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .autocapitalization(.none)
+                .onDisappear {
+                    guard let nickname = app.state.nicknameFormField.validated else {
+                        return
+                    }
+                    
+                    app.send(.submitNickname(nickname))
+                }
             }
         }
         .formStyle(.automatic)

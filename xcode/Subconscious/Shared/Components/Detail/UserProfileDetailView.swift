@@ -173,7 +173,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let nickname: Petname.Name?
     let address: Slashlink
     let pfp: ProfilePicVariant
-    let bio: UserProfileBio
+    let bio: UserProfileBio?
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
     let ourFollowStatus: UserProfileFollowStatus
@@ -587,8 +587,8 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isEditProfileSheetPresented = presented
             
             let profile = UserProfileEntry(
-                nickname: state.user?.nickname?.verbatim,
-                bio: state.user?.bio.text
+                nickname: state.user?.nickname?.description,
+                bio: state.user?.bio?.text
             )
             return update(
                 state: model,
@@ -598,8 +598,8 @@ struct UserProfileDetailModel: ModelProtocol {
             
         case .requestEditProfile:
             let profile = UserProfileEntry(
-                nickname: state.editProfileSheet.nicknameField.validated?.verbatim,
-                bio: state.editProfileSheet.bioField.validated
+                nickname: state.editProfileSheet.nicknameField.validated?.description,
+                bio: state.editProfileSheet.bioField.validated?.text
             )
             
             let fx: Fx<UserProfileDetailAction> = Future.detached {

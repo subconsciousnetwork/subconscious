@@ -118,8 +118,9 @@ struct StoryUserView: View {
             .padding(AppTheme.tightPadding)
             .frame(height: AppTheme.unit * 13)
             
-            if story.user.bio.hasVisibleContent {
-                Text(verbatim: story.user.bio.text)
+            if let bio = story.user.bio,
+               bio.hasVisibleContent {
+                Text(verbatim: bio.text)
                     .padding(AppTheme.tightPadding)
             }
         }

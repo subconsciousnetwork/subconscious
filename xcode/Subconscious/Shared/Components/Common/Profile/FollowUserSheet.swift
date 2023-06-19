@@ -181,20 +181,15 @@ struct FollowUserSheet: View {
                 Spacer()
             }
             
-            ValidatedTextField(
+            ValidatedFormField(
+                alignment: .center,
                 placeholder: "petname",
-                text: Binding(
-                    get: { state.followUserForm.petname.value },
+                field: state.followUserForm.petname,
+                send: Address.forward(
                     send: send,
-                    tag: { input in
-                        .followUserForm(.petnameField(.setValue(input: input)))
-                    }
+                    tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
                 ),
-                onFocusChanged: { focused in
-                    send(.followUserForm(.petnameField(.focusChange(focused: focused))))
-                },
-                caption: state.petnameFieldCaption ?? "",
-                hasError: !state.followUserForm.petname.isValid
+                caption: state.petnameFieldCaption ?? ""
             )
             .textFieldStyle(.roundedBorder)
             .lineLimit(1)

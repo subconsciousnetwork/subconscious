@@ -51,17 +51,15 @@ struct GatewayProvisioningSection: View {
     var body: some View {
         Section(
             content: {
-                ValidatedTextField(
+                ValidatedFormField(
                     placeholder: "Enter your invite code",
-                    text: Binding(
-                        get: { app.state.inviteCodeFormField.value },
+                    field: app.state.inviteCodeFormField,
+                    send: Address.forward(
                         send: app.send,
-                        tag: AppAction.setInviteCode
+                        tag: AppAction.inviteCodeFormField
                     ),
-                    caption: "Look for this in your welcome email.",
-                    hasError: app.state.inviteCodeFormField.hasError
+                    caption: "Look for this in your welcome email."
                 )
-                .formField()
                 .autocapitalization(.none)
                 .autocorrectionDisabled(true)
                 .onDisappear {
@@ -138,7 +136,7 @@ struct SettingsView: View {
                                 .textSelection(.enabled)
                             }
                         )
-
+                        
                         LabeledContent(
                             "Sphere",
                             value: app.state.sphereIdentity ?? unknown

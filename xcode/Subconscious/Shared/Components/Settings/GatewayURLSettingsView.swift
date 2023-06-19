@@ -95,22 +95,25 @@ struct GatewayURLSettingsView: View {
         Form {
             Section(
                 content: {
-                    ValidatedTextField(
+                    ValidatedFormField(
                         placeholder: "http://example.com",
-                        text: Binding(
-                            get: { app.state.gatewayURLTextField },
+                        field: app.state.gatewayURLField,
+                        send: Address.forward(
                             send: app.send,
-                            tag: AppAction.setGatewayURLTextField
+                            tag: AppAction.gatewayURLField
                         ),
-                        caption: "The URL of your preferred Noosphere gateway",
-                        hasError: !app.state.isGatewayURLTextFieldValid
+                        caption: "The URL of your preferred Noosphere gateway"
                     )
-                    .formField()
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
                     .autocapitalization(.none)
-                    .autocorrectionDisabled(true)
                     .keyboardType(.URL)
                     .onDisappear {
-                        app.send(.submitGatewayURL(app.state.gatewayURLTextField))
+                        guard let url = app.state.gatewayURLField.validated else {
+                            return
+                        }
+                        
+                        app.send(.submitGatewayURL(url))
                     }
                     
                     if app.state.gatewayProvisioningStatus != .pending {

@@ -18,19 +18,15 @@ struct FirstRunProfileView: View {
             Text("What should we call you?")
                 .foregroundColor(.secondary)
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                ValidatedTextField(
+                ValidatedFormField(
                     alignment: .center,
                     placeholder: "nickname",
-                    text: Binding(
-                        get: { app.state.nicknameFormFieldValue },
+                    field: app.state.nicknameFormField,
+                    send: Address.forward(
                         send: app.send,
-                        tag: AppAction.setNickname
+                        tag: AppAction.nicknameFormField
                     ),
-                    onFocusChanged: { focused in
-                        app.send(.nicknameFormField(.focusChange(focused: focused)))
-                    },
                     caption: "Lowercase letters, numbers and dashes only.",
-                    hasError: !app.state.isNicknameFormFieldValid,
                     autoFocus: true,
                     submitLabel: .go,
                     onSubmit: {
@@ -59,7 +55,7 @@ struct FirstRunProfileView: View {
                     }
                 )
                 .buttonStyle(PillButtonStyle())
-                .disabled(!app.state.isNicknameFormFieldValid)
+                .disabled(!app.state.nicknameFormField.isValid)
             }
         }
         .padding()
@@ -71,6 +67,13 @@ struct FirstRunProfileView: View {
         )
         .onAppear {
             app.send(.createSphere)
+        }
+        .onDisappear {
+            guard let nickname = app.state.nicknameFormField.validated else {
+                return
+            }
+            
+            app.send(.submitNickname(nickname))
         }
     }
 }

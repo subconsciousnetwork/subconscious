@@ -7,21 +7,21 @@
 
 import SwiftUI
 import Combine
+import ObservableStore
 
-/// A text field that comes with help text and a validation flag
-struct ValidatedTextField: View {
+struct ValidatedFormField<T: Equatable>: View {
+    @State private var innerText: String = ""
+    @FocusState private var focused: Bool
+    
     var alignment: HorizontalAlignment = .leading
     var placeholder: String
-    @Binding var text: String
-    var onFocusChanged: (Bool) -> Void = { _ in}
+    var field: FormField<String, T>
+    var send: (FormFieldAction<String>) -> Void
     var caption: String
-    var hasError: Bool = false
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
-    @FocusState var focused: Bool
-    
-    var submitLabel: SubmitLabel = .return
-    var onSubmit: () -> Void = { }
+    var submitLabel: SubmitLabel = .done
+    var onSubmit: () -> Void = {}
     
     var backgroundColor = Color.background
     
@@ -32,12 +32,16 @@ struct ValidatedTextField: View {
         return this
     }
     
+    var isValid: Bool {
+        !field.shouldPresentAsInvalid
+    }
+    
     var body: some View {
         VStack(alignment: alignment, spacing: AppTheme.unit2) {
             HStack {
                 TextField(
                     placeholder,
-                    text: $text,
+                    text: $innerText,
                     axis: axis
                 )
                 .focused($focused)
@@ -50,12 +54,15 @@ struct ValidatedTextField: View {
                             .background(backgroundColor)
                     }
                     .padding(.trailing, 1)
-                    .opacity(hasError ? 1 : 0)
-                    .animation(.default, value: hasError)
+                    .opacity(isValid ? 0 : 1)
+                    .animation(.default, value: isValid)
                 }
                 .onChange(of: focused) { focused in
-                    onFocusChanged(focused)
+                    send(.focusChange(focused: focused))
                 }
+                .onChange(of: innerText, perform: { innerText in
+                    send(.setValue(input: innerText))
+                })
                 .submitLabel(submitLabel)
                 .onSubmit {
                     onSubmit()
@@ -68,10 +75,13 @@ struct ValidatedTextField: View {
             }
             Text(caption)
                 .foregroundColor(
-                    hasError ? Color.red : Color.secondary
+                    isValid ? Color.secondary : Color.red
                 )
-                .animation(.default, value: hasError)
+                .animation(.default, value: isValid)
                 .font(.caption)
+        }
+        .onAppear {
+            innerText = field.value
         }
     }
 }
@@ -79,28 +89,30 @@ struct ValidatedTextField: View {
 struct ValidatedTextField_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            ValidatedTextField(
+            ValidatedFormField(
                 placeholder: "nickname",
-                text: .constant(""),
+                field: FormField(value: "", validate: { _ in "" }),
+                send: { _ in },
                 caption: "Lowercase letters and numbers only."
             )
-            ValidatedTextField(
+            ValidatedFormField(
                 placeholder: "nickname",
-                text: .constant(""),
-                caption: "Lowercase letters and numbers only.",
-                hasError: true
+                field: FormField(value: "", validate: { _ in nil as String? }),
+                send: { _ in },
+                caption: "Lowercase letters and numbers only."
             )
-            ValidatedTextField(
+            ValidatedFormField(
                 placeholder: "nickname",
-                text: .constant(""),
+                field: FormField(value: "", validate: { _ in "" }),
+                send: { _ in },
                 caption: "Lowercase letters and numbers only."
             )
             .textFieldStyle(.roundedBorder)
-            ValidatedTextField(
+            ValidatedFormField(
                 placeholder: "nickname",
-                text: .constant("A very long run of text to test how this interacts with the icon"),
-                caption: "Lowercase letters and numbers only.",
-                hasError: true
+                field: FormField(value: "A very long run of text to test how this interacts with the icon", validate: { _ in nil as String? }),
+                send: { _ in },
+                caption: "Lowercase letters and numbers only."
             )
             .textFieldStyle(.roundedBorder)
             
@@ -108,18 +120,19 @@ struct ValidatedTextField_Previews: PreviewProvider {
             Spacer()
             
             Form {
-                ValidatedTextField(
+                ValidatedFormField(
                     placeholder: "nickname",
-                    text: .constant(""),
+                    field: FormField(value: "", validate: { _ in "" }),
+                    send: { _ in },
                     caption: "Lowercase letters and numbers only.",
                     autoFocus: true
                 )
                 .formField()
-                ValidatedTextField(
+                ValidatedFormField(
                     placeholder: "nickname",
-                    text: .constant(""),
-                    caption: "Lowercase letters and numbers only.",
-                    hasError: true
+                    field: FormField(value: "", validate: { _ in nil as String? }),
+                    send: { _ in },
+                    caption: "Lowercase letters and numbers only."
                 )
                 .formField()
             }
