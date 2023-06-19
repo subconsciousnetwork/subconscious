@@ -53,7 +53,10 @@ struct UserProfileDetailView: View {
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser,
             onProfileAction: self.onProfileAction,
-            onRefresh: store.refresh
+            onRefresh: {
+                app.send(.syncAll)
+                await store.refresh()
+            }
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -245,7 +248,7 @@ extension Store<UserProfileDetailModel> {
         }
         
         do {
-            let res = try await Self.Model.forceRefresh(
+            let res = try await Self.Model.refresh(
                 address: address,
                 environment: self.environment
             )
@@ -270,21 +273,6 @@ extension UserProfileDetailModel {
             }
         }
     }
-    
-    static func forceRefresh(
-       address: Slashlink,
-       environment: UserProfileDetailModel.Environment
-   ) async throws -> UserProfileContentResponse {
-       return try await Func.run {
-           _ = try await environment.noosphere.sync()
-           
-           if let petname = address.toPetname() {
-               return try await environment.userProfile.requestUserProfile(petname: petname)
-           } else {
-               return try await environment.userProfile.requestOurProfile()
-           }
-       }
-   }
 }
 
 // MARK: Model
