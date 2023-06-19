@@ -39,10 +39,11 @@ struct PillButtonView: View {
                 case .regular:
                     return AppTheme.unit * 12
                 case .small:
-                    return AppTheme.unit * 6
+                    return AppTheme.unit * 8
                 }
             }
         )
+        
     }
 }
 
@@ -72,20 +73,23 @@ struct PillButtonStyle: ButtonStyle {
         )
         .clipShape(Capsule())
         .animation(.default, value: configuration.isPressed)
+        .frame(minHeight: AppTheme.minTouchSize)
     }
 }
 
 struct PillButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            Button(
-                action: {},
-                label: {
-                    Text("Floop")
-                }
-            ).buttonStyle(
-                PillButtonStyle(size: .small)
-            )
+            HStack {
+                Button(
+                    action: {},
+                    label: {
+                        Text("Floop")
+                    }
+                ).buttonStyle(
+                    PillButtonStyle(size: .small)
+                )
+            }
             Button(
                 action: {},
                 label: {
