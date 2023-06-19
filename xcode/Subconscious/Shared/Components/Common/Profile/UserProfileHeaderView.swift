@@ -60,7 +60,7 @@ struct UserProfileHeaderView: View {
                         }
                     )
                     .buttonStyle(GhostPillButtonStyle(size: .small))
-                    .frame(maxWidth: 160)
+                    .frame(maxWidth: user.category == .you ? 120 : 100)
                 }
             }
             
