@@ -245,7 +245,7 @@ extension Store<UserProfileDetailModel> {
         }
         
         do {
-            let res = try await Self.Model.refresh(
+            let res = try await Self.Model.forceRefresh(
                 address: address,
                 environment: self.environment
             )
@@ -270,6 +270,21 @@ extension UserProfileDetailModel {
             }
         }
     }
+    
+    static func forceRefresh(
+       address: Slashlink,
+       environment: UserProfileDetailModel.Environment
+   ) async throws -> UserProfileContentResponse {
+       return try await Func.run {
+           _ = try await environment.noosphere.sync()
+           
+           if let petname = address.toPetname() {
+               return try await environment.userProfile.requestUserProfile(petname: petname)
+           } else {
+               return try await environment.userProfile.requestOurProfile()
+           }
+       }
+   }
 }
 
 // MARK: Model
