@@ -59,7 +59,7 @@ struct StoryUserView: View {
                     
                     switch story.user.resolutionStatus {
                     case .unresolved:
-                        Image(systemName: "exclamationmark.triangle.fill")
+                        Image(systemName: "person.fill.questionmark")
                             .foregroundColor(.secondary)
                     case .pending:
                         PendingSyncBadge()
