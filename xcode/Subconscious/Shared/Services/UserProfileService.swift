@@ -93,7 +93,7 @@ struct UserProfileEntry: Codable, Equatable {
     init(nickname: String?, bio: String?) {
         self.version = Self.currentVersion
         self.nickname = nickname
-        self.bio = UserProfileBio(bio ?? "")?.text
+        self.bio = UserProfileBio(bio ?? "").text
     }
     
     let version: String

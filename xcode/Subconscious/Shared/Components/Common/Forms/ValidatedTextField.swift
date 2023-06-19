@@ -47,7 +47,8 @@ struct ValidatedFormField<T: Equatable, Action>: View {
 
 /// A text field that comes with help text and a validation flag
 struct ValidatedTextField: View {
-    @State var innerText: String = ""
+    @State private var innerText: String = ""
+    @FocusState private var focused: Bool
     
     var alignment: HorizontalAlignment = .leading
     var placeholder: String
@@ -57,7 +58,6 @@ struct ValidatedTextField: View {
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
     var isValid: Bool = true
-    @FocusState var focused: Bool
     
     var submitLabel: SubmitLabel = .return
     var onSubmit: () -> Void = { }
