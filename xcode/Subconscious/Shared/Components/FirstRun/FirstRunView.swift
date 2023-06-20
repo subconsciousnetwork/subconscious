@@ -75,11 +75,24 @@ struct FirstRunView: View {
                             send: app.send,
                             tag: AppAction.inviteCodeFormField
                         ),
-                        caption: "Look for this in your welcome email."
+                        caption: "Look for this in your welcome email.",
+                        onFocusChanged: { focused in
+                            if let inviteCode = app.state.inviteCodeFormField.validated,
+                               !focused {
+                                app.send(.requestProvisionGateway(inviteCode))
+                            }
+                        }
                     )
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                }
+                
+                switch app.state.gatewayProvisioningStatus {
+                case .failed(let msg):
+                    Text("FAILED! \(msg)")
+                case _:
+                    EmptyView()
                 }
                 
                 if !app.state.inviteCodeFormField.hasFocus {
@@ -141,6 +154,13 @@ struct FirstRunView: View {
                 case .connect:
                     FirstRunDoneView(app: app)
                 }
+            }
+            .onAppear {
+                guard app.state.sphereIdentity == nil else {
+                    return
+                }
+                
+                app.send(.createSphere)
             }
         }
     }

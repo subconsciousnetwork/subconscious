@@ -22,6 +22,7 @@ struct ValidatedFormField<T: Equatable>: View {
     var autoFocus: Bool = false
     var submitLabel: SubmitLabel = .done
     var onSubmit: () -> Void = {}
+    var onFocusChanged: (_ focused: Bool) -> Void = { _ in }
     
     var backgroundColor = Color.background
     
@@ -59,6 +60,7 @@ struct ValidatedFormField<T: Equatable>: View {
                 }
                 .onChange(of: focused) { focused in
                     send(.focusChange(focused: focused))
+                    onFocusChanged(focused)
                 }
                 .onChange(of: innerText, perform: { innerText in
                     send(.setValue(input: innerText))

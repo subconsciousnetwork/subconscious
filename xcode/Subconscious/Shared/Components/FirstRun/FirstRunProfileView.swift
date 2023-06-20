@@ -65,9 +65,6 @@ struct FirstRunProfileView: View {
             AppTheme.onboarding
                 .appBackgroundGradient(colorScheme)
         )
-        .onAppear {
-            app.send(.createSphere)
-        }
         .onDisappear {
             guard let nickname = app.state.nicknameFormField.validated else {
                 return
