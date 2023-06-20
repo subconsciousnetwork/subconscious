@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 struct LogFmt {
     private static func escapeValuePart(_ value: String) -> String {
