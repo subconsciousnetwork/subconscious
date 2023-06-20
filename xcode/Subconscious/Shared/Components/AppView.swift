@@ -1149,9 +1149,6 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
         .mergeFx(fx)
-        
-        /// Only set valid nicknames
-        return Update(state: model, fx: fx)
     }
     
     static func succeedResetGatewayURL(
