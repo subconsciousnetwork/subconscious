@@ -12,7 +12,11 @@ struct FirstRunDoneView: View {
     @Environment(\.colorScheme) var colorScheme
     
     private var status: ResourceStatus {
-        app.state.gatewayProvisioningStatus
+        if app.state.lastGatewaySyncStatus == .succeeded {
+            return app.state.lastGatewaySyncStatus
+        }
+        
+        return app.state.gatewayProvisioningStatus
     }
     
     private var dottedLine: some View {

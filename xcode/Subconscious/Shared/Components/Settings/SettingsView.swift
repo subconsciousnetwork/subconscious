@@ -51,19 +51,29 @@ struct GatewayProvisioningSection: View {
     var body: some View {
         Section(
             content: {
-                ValidatedFormField(
-                    placeholder: "Enter your invite code",
-                    field: app.state.inviteCodeFormField,
-                    send: Address.forward(
-                        send: app.send,
-                        tag: AppAction.inviteCodeFormField
-                    ),
-                    caption: "Look for this in your welcome email."
-                )
-                .autocapitalization(.none)
-                .autocorrectionDisabled(true)
-                .onDisappear {
-                    app.send(.setInviteCode(app.state.inviteCodeFormField.value))
+                if let gatewayId = app.state.gatewayId {
+                    LabeledContent(
+                        "Gateway ID",
+                        value: gatewayId
+                    )
+                    .lineLimit(1)
+                    .textSelection(.enabled)
+                } else {
+                    ValidatedFormField(
+                        placeholder: "Enter your invite code",
+                        field: app.state.inviteCodeFormField,
+                        send: Address.forward(
+                            send: app.send,
+                            tag: AppAction.inviteCodeFormField
+                        ),
+                        caption: "Look for this in your welcome email."
+                    )
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled(true)
+                    .onDisappear {
+                        app.send(.setInviteCode(app.state.inviteCodeFormField.value))
+                    }
+                    .disabled(app.state.gatewayProvisioningStatus == .pending)
                 }
                 .disabled(app.state.gatewayOperationInProgress)
                 
@@ -89,16 +99,6 @@ struct GatewayProvisioningSection: View {
             },
             footer: {
                 VStack {
-                    if let gatewayId = app.state.gatewayId {
-                        VStack(alignment: .leading) {
-                            Text("Gateway ID")
-                                .foregroundColor(.secondary)
-                                .bold()
-                            Text(gatewayId)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
                     switch app.state.gatewayProvisioningStatus {
                     case let .failed(message):
                         Text(message)

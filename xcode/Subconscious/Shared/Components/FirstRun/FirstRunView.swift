@@ -46,26 +46,41 @@ struct FirstRunView: View {
                 
                 Spacer()
                 
-                ValidatedFormField(
-                    alignment: .center,
-                    placeholder: "Enter your invite code",
-                    field: app.state.inviteCodeFormField,
-                    send: Address.forward(
-                        send: app.send,
-                        tag: AppAction.inviteCodeFormField
-                    ),
-                    caption: "Look for this in your welcome email.",
-                    submitLabel: .go,
-                    onSubmit: {
-                        if app.state.inviteCodeFormField.isValid {
-                            app.send(.pushFirstRunStep(.nickname))
+                if let gatewayId = app.state.gatewayId {
+                    VStack(spacing: AppTheme.unit2) {
+                        HStack(spacing: AppTheme.unit2) {
+                            Text("Invite code redeemed")
+                        Image(systemName: "checkmark.circle")
+                            .resizable()
+                            .frame(width: 16, height: 16)
+                            .opacity(0.5)
                         }
+                        .font(.body)
+                        .bold()
+                        
+                        HStack(spacing: AppTheme.unit) {
+                            Text("Gateway ID")
+                                .bold()
+                            Text(gatewayId)
+                        }
+                        .font(.caption)
                     }
-                )
-                .textFieldStyle(.roundedBorder)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                
+                    .foregroundColor(.secondary)
+                } else {
+                    ValidatedFormField(
+                        alignment: .center,
+                        placeholder: "Enter your invite code",
+                        field: app.state.inviteCodeFormField,
+                        send: Address.forward(
+                            send: app.send,
+                            tag: AppAction.inviteCodeFormField
+                        ),
+                        caption: "Look for this in your welcome email."
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                }
                 
                 if !app.state.inviteCodeFormField.hasFocus {
                     Spacer()
@@ -77,24 +92,27 @@ struct FirstRunView: View {
                         }
                     )
                     .buttonStyle(PillButtonStyle())
-                    .disabled(!app.state.inviteCodeFormField.isValid)
+                    .disabled(app.state.gatewayId == nil)
                 }
                 
                 // MARK: Use Offline
-                HStack(spacing: AppTheme.unit) {
-                    Text("No invite code?")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    NavigationLink(
-                        value: FirstRunStep.nickname,
-                        label: {
-                            Text("Use offline")
+                VStack {
+                    if app.state.gatewayId == .none {
+                        HStack(spacing: AppTheme.unit) {
+                            Text("No invite code?")
                                 .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            NavigationLink(
+                                value: FirstRunStep.nickname,
+                                label: {
+                                    Text("Use offline")
+                                        .font(.caption)
+                                }
+                            )
                         }
-                    )
-                }
-                .padding(
+                    }
+                }.padding(
                     .init(
                         top: 0,
                         leading: 0,
@@ -132,7 +150,7 @@ struct FirstRunView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunView(
             app: Store(
-                state: AppModel(),
+                state: AppModel(gatewayId: nil),
                 environment: AppEnvironment()
             )
         )
