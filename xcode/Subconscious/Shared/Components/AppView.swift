@@ -1141,6 +1141,15 @@ struct AppModel: ModelProtocol {
             return .succeedResetGatewayURL(url)
         }.eraseToAnyPublisher()
         
+        return update(
+            state: model,
+            action: .gatewayURLField(
+                .setValue(input: url.absoluteString)
+            ),
+            environment: environment
+        )
+        .mergeFx(fx)
+        
         /// Only set valid nicknames
         return Update(state: model, fx: fx)
     }
