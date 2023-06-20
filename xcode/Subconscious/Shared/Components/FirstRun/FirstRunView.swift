@@ -178,7 +178,7 @@ struct FirstRunView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunView(
             app: Store(
-                state: AppModel(gatewayId: nil),
+                state: AppModel(),
                 environment: AppEnvironment()
             )
         )

@@ -23,6 +23,8 @@ struct ValidatedFormField<T: Equatable>: View {
     var submitLabel: SubmitLabel = .done
     var onSubmit: () -> Void = {}
     var onFocusChanged: (_ focused: Bool) -> Void = { _ in }
+    
+    /// Indicate if this field should appear invalid due to a side effect failing etc.
     var isValid: Bool = true
     
     var backgroundColor = Color.background
