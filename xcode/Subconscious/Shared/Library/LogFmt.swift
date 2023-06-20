@@ -6,9 +6,6 @@
 //
 
 import Foundation
-import os
-import OSLog
-import Sentry
 
 struct LogFmt {
     private static func escapeValuePart(_ value: String) -> String {
@@ -43,39 +40,6 @@ struct LogFmt {
     }
 }
 
-extension OSLogType {
-    func toSentry() -> Sentry.SentryLevel {
-        switch (self) {
-        case .debug:
-            return .debug
-        case .info:
-            return .info
-        case .error:
-            return .error
-        case .fault:
-            return .fatal
-        default:
-            return .debug
-        }
-    }
-}
-
-extension OSLogEntryLog.Level {
-    func toSentry() -> Sentry.SentryLevel {
-        switch (self) {
-        case .debug:
-            return .debug
-        case .info:
-            return .info
-        case .error:
-            return .error
-        case .fault:
-            return .fatal
-        default:
-            return .debug
-        }
-    }
-}
 
 /// Extend logger to provide a LogFmt variant that allows you to log
 /// `KeyValuePairs` as a LogFmt string.
