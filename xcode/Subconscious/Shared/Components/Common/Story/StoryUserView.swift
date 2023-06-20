@@ -106,23 +106,6 @@ struct StoryUserView: View {
                                 }
                             )
                         }
-                        
-                        switch story.user.resolutionStatus {
-                        case .unresolved:
-                            Button(
-                                action: {
-                                    onRefreshUser()
-                                },
-                                label: {
-                                    Label(
-                                        title: { Text("Refresh") },
-                                        icon: { Image(systemName: "arrow.clockwise") }
-                                    )
-                                }
-                            )
-                        case _:
-                            EmptyView()
-                        }
                     },
                     label: {
                         Image(systemName: "ellipsis")
@@ -142,8 +125,10 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            switch story.user.ourFollowStatus {
-            case .following(let name):
+            switch (story.user.ourFollowStatus, story.user.resolutionStatus) {
+            case (.following(_), .unresolved):
+                onRefreshUser()
+            case (.following(let name), _):
                 action(Slashlink(petname: name.toPetname()))
             case _:
                 action(story.user.address)
