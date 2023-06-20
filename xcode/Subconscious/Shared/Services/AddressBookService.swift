@@ -355,7 +355,7 @@ actor AddressBookService {
     func waitForPetnameResolution(
         petname: Petname
     ) async throws -> Cid? {
-        let maxAttempts = 10 // 1+2+4+8+16+32+32+32+32+32 = 191 seconds
+        let maxAttempts = 13 // 1+2+4+8+16+32+32+32+32+32+32+32+32 = 287 seconds
         
         self.pendingFollows.append(petname)
         

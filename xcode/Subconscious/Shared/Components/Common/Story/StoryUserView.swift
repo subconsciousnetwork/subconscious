@@ -43,6 +43,7 @@ struct StoryUserView: View {
     var action: (Slashlink) -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
+    var onRefreshUser: () -> Void = {}
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -58,7 +59,7 @@ struct StoryUserView: View {
                     
                     switch story.user.resolutionStatus {
                     case .unresolved:
-                        Image(systemName: "exclamationmark.triangle.fill")
+                        Image(systemName: "person.fill.questionmark")
                             .foregroundColor(.secondary)
                     case .pending:
                         PendingSyncBadge()
@@ -105,7 +106,6 @@ struct StoryUserView: View {
                                 }
                             )
                         }
-                       
                     },
                     label: {
                         Image(systemName: "ellipsis")
@@ -126,8 +126,10 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            switch story.user.ourFollowStatus {
-            case .following(let name):
+            switch (story.user.ourFollowStatus, story.user.resolutionStatus) {
+            case (.following(_), .unresolved):
+                onRefreshUser()
+            case (.following(let name), _):
                 action(Slashlink(petname: name.toPetname()))
             case _:
                 action(story.user.address)

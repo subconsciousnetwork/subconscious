@@ -53,7 +53,10 @@ struct UserProfileDetailView: View {
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser,
             onProfileAction: self.onProfileAction,
-            onRefresh: store.refresh
+            onRefresh: {
+                app.send(.syncAll)
+                await store.refresh()
+            }
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -508,7 +511,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return update(
+                state: state,
+                action: .refresh,
+                environment: environment
+            ).mergeFx(fx)
         case .succeedResolveFollowedUser:
             return update(state: state, action: .refresh, environment: environment)
         case .failResolveFollowedUser(let message):
