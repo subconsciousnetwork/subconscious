@@ -23,6 +23,7 @@ struct ValidatedFormField<T: Equatable>: View {
     var submitLabel: SubmitLabel = .done
     var onSubmit: () -> Void = {}
     var onFocusChanged: (_ focused: Bool) -> Void = { _ in }
+    var isValid: Bool = true
     
     var backgroundColor = Color.background
     
@@ -33,8 +34,8 @@ struct ValidatedFormField<T: Equatable>: View {
         return this
     }
     
-    var isValid: Bool {
-        !field.shouldPresentAsInvalid
+    var shouldRenderAsValid: Bool {
+        isValid && !field.shouldPresentAsInvalid
     }
     
     var body: some View {
@@ -55,8 +56,8 @@ struct ValidatedFormField<T: Equatable>: View {
                             .background(backgroundColor)
                     }
                     .padding(.trailing, 1)
-                    .opacity(isValid ? 0 : 1)
-                    .animation(.default, value: isValid)
+                    .opacity(shouldRenderAsValid ? 0 : 1)
+                    .animation(.default, value: shouldRenderAsValid)
                 }
                 .onChange(of: focused) { focused in
                     send(.focusChange(focused: focused))
@@ -77,9 +78,9 @@ struct ValidatedFormField<T: Equatable>: View {
             }
             Text(caption)
                 .foregroundColor(
-                    isValid ? Color.secondary : Color.red
+                    shouldRenderAsValid ? Color.secondary : Color.red
                 )
-                .animation(.default, value: isValid)
+                .animation(.default, value: shouldRenderAsValid)
                 .font(.caption)
         }
         .onAppear {

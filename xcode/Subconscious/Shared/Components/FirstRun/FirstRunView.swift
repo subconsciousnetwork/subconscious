@@ -75,24 +75,32 @@ struct FirstRunView: View {
                             send: app.send,
                             tag: AppAction.inviteCodeFormField
                         ),
-                        caption: "Look for this in your welcome email.",
+                        caption: Func.run {
+                            switch app.state.gatewayProvisioningStatus {
+                            case .failed(_):
+                                return "Failed to redeem invite code"
+                            case _:
+                                return "Look for this in your welcome email"
+                            }
+                        },
                         onFocusChanged: { focused in
                             if let inviteCode = app.state.inviteCodeFormField.validated,
                                !focused {
                                 app.send(.requestProvisionGateway(inviteCode))
+                            }
+                        },
+                        isValid: Func.run {
+                            switch app.state.gatewayProvisioningStatus {
+                            case .failed(_):
+                                return false
+                            case _:
+                                return true
                             }
                         }
                     )
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
-                }
-                
-                switch app.state.gatewayProvisioningStatus {
-                case .failed(let msg):
-                    Text("FAILED! \(msg)")
-                case _:
-                    EmptyView()
                 }
                 
                 if !app.state.inviteCodeFormField.hasFocus {
