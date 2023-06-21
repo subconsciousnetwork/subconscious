@@ -8,6 +8,8 @@ Install [Xcode](https://apps.apple.com/us/app/xcode/id497799835?mt=12), clone th
 
 Common application config is set in `xcode/Subconscious/Shared/Config.swift`, set `debug` to `true` for local development.
 
+There are also a few configurations in a `.env` file. You can use `.env.example` as a guide for how to build yours.
+
 ## Running on Device
 
 - Enable Developer Mode on the target device
