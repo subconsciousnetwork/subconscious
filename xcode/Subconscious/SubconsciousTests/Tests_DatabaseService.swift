@@ -527,7 +527,7 @@ class Tests_DatabaseService: XCTestCase {
             MemoRecord(
                 did: did,
                 petname: nil,
-                slug: Slug("_profile_")!,
+                slug: Slug.profile,
                 memo: profile
             )
         )
@@ -563,7 +563,7 @@ class Tests_DatabaseService: XCTestCase {
         })
         
         XCTAssertFalse(
-            slugs.contains(Slug("_profile_")!),
+            slugs.contains(Slug.profile),
             "Hidden file is not part of results"
         )
         XCTAssertEqual(slugs.count, 1, "Hidden file is not returned")
@@ -661,7 +661,7 @@ class Tests_DatabaseService: XCTestCase {
             MemoRecord(
                 did: Did("did:key:abc123")!,
                 petname: Petname("abc")!,
-                slug: Slug("_hidden")!,
+                slug: Slug(hidden: "hidden")!,
                 memo: hidden
             )
         )

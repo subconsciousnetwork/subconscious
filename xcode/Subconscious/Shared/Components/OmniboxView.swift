@@ -191,7 +191,7 @@ struct OmniboxView_Previews: PreviewProvider {
             }
             Group {
                 OmniboxView(
-                    address: Slashlink(slug: Slug("_profile_")!),
+                    address: Slashlink(slug: Slug.profile),
                     defaultAudience: .local
                 )
                 OmniboxView(
