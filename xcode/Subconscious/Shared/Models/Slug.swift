@@ -92,11 +92,18 @@ public struct Slug:
     /// This requires that the string already be formatted like a
     /// valid slug.
     public init?(_ description: String) {
+        self.init(description, allowHidden: false)
+    }
+    
+    /// Losslessly create a slug from a string.
+    /// This requires that the string already be formatted like a
+    /// valid slug.
+    public init?(_ description: String, allowHidden: Bool) {
         guard description.wholeMatch(of: Self.slugRegex) != nil else {
             return nil
         }
         
-        guard !description.starts(with: Self.hiddenPrefix) else {
+        guard allowHidden || !description.starts(with: Self.hiddenPrefix) else {
             return nil
         }
         

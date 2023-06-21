@@ -786,7 +786,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         
         return try slugs.toStringArray().map({ string in
-            try Slug(string).unwrap(SphereError.parseError(string))
+            try Slug(string, allowHidden: true).unwrap(SphereError.parseError(string))
         })
     }
     
