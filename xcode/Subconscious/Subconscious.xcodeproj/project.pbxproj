@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8804D2552A4242E300D45E83 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 8804D2542A4242E300D45E83 /* Sentry */; };
 		B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956D29E7862A0048106B /* Tests_AddressBookService.swift */; };
 		B508957029E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B508957129E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
@@ -752,6 +753,7 @@
 				B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */,
 				B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */,
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
+				8804D2552A4242E300D45E83 /* Sentry in Frameworks */,
 				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
 				B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */,
@@ -1362,6 +1364,7 @@
 				B8EB29F726F27797006E97C3 /* Sources */,
 				B8EB29F826F27797006E97C3 /* Frameworks */,
 				B8EB29F926F27797006E97C3 /* Resources */,
+				8804D2562A424FD900D45E83 /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -1379,6 +1382,7 @@
 				B8CA8F19288F038C005F8802 /* Tracery */,
 				B8E1BB78296DECE700B86E0E /* SwiftNoosphere */,
 				B57D63BF29B574C3008BBB62 /* CodeScanner */,
+				8804D2542A4242E300D45E83 /* Sentry */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -1483,6 +1487,7 @@
 				B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */,
 				B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */,
 				B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */,
+				8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -1561,6 +1566,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8804D2562A424FD900D45E83 /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+			);
+			name = "Run Script";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which sentry-cli >/dev/null; then\n    export SENTRY_ORG=subconscious\n    export SENTRY_PROJECT=apple-ios\n    if [ \"$SENTRY_AUTH_TOKEN\" -eq \"\" ]; then\n      echo \"error: sentry auth token isn't set. Cannot upload debug symbols.\"\n      exit 1\n    else\n      ERROR=$(sentry-cli debug-files upload \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n      if [ ! $? -eq 0 ]; then\n        echo \"warning: sentry-cli - $ERROR\"\n      fi\n    fi\nelse\n  echo \"warning: sentry-cli not installed. download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B80057E427DC355E002C0129 /* Sources */ = {
@@ -2471,6 +2498,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 		B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/twostraws/CodeScanner";
@@ -2522,6 +2557,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		8804D2542A4242E300D45E83 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
 		B57D63BF29B574C3008BBB62 /* CodeScanner */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */;
