@@ -1585,7 +1585,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which sentry-cli >/dev/null; then\nexport SENTRY_ORG=subconscious\nexport SENTRY_PROJECT=apple-ios\nexport SENTRY_AUTH_TOKEN=cfb08a61febc418bb55ec80ae6f99e2ce34b93d5b179454e9a8b8c240a3bb4d6\nERROR=$(sentry-cli debug-files upload \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\nif [ ! $? -eq 0 ]; then\necho \"warning: sentry-cli - $ERROR\"\nfi\nelse\necho \"warning: sentry-cli not installed. download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
+			shellScript = "if which sentry-cli >/dev/null; then\n    export SENTRY_ORG=subconscious\n    export SENTRY_PROJECT=apple-ios\n    if [ \"$SENTRY_AUTH_TOKEN\" -eq \"\" ]; then\n      echo \"warning: sentry auth token isn't set. Cannot upload debug symbols.\"\n    else\n      ERROR=$(sentry-cli debug-files upload \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n      if [ ! $? -eq 0 ]; then\n        echo \"warning: sentry-cli - $ERROR\"\n      fi\n    fi\nelse\n  echo \"warning: sentry-cli not installed. download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
