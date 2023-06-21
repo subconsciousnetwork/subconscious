@@ -506,7 +506,7 @@ struct NotebookModel: ModelProtocol {
             // This reorders list by modified.
             return update(
                 state: state,
-                action: .listRecent,
+                action: .refreshLists,
                 environment: environment
             )
         case let .succeedMoveEntry(from, to):
