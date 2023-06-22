@@ -255,6 +255,11 @@ enum AppAction: CustomLogStringConvertible {
             return "succeedMigrateDatabase(\(version))"
         case let .succeedSyncLocalFilesWithDatabase(fingerprints):
             return "succeedSyncLocalFilesWithDatabase(...) \(fingerprints.count) items"
+        case let .succeedCreateSphere(receipt):
+            // !!!: Do not log mnemonic
+            // The user's sphere mnemonic is carried with this sphere receipt.
+            // It is a secret and should never be logged.
+            return "succeedCreateSphere(\(receipt.identity))"
         default:
             return String(describing: self)
         }

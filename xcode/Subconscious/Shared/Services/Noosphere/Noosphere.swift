@@ -33,9 +33,25 @@ public enum NoosphereError: Error, LocalizedError {
     }
 }
 
-public struct SphereReceipt {
-    var identity: String
-    var mnemonic: String
+public struct SphereReceipt:
+    CustomStringConvertible,
+    CustomDebugStringConvertible
+{
+    public var identity: String
+    // !!!: Mnemonic is a secret and should never be logged or persisted
+    public var mnemonic: String
+    
+    /// Define custom description to avoid accidentally revealing mnemonic
+    /// if describing receipt as string.
+    public var description: String {
+        "SphereReceipt(identity: \(identity), mnemonic: *****)"
+    }
+    
+    /// Define custom debug description to avoid accidentally revealing mnemonic
+    /// if logging or debuging receipt.
+    public var debugDescription: String {
+        "SphereReceipt(identity: \(identity), mnemonic: *****)"
+    }
 }
 
 /// Create a Noosphere instance.
