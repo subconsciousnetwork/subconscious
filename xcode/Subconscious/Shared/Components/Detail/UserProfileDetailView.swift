@@ -330,7 +330,7 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
-        // MARK: Submodels
+            // MARK: Submodels
         case .metaSheet(let action):
             return UserProfileDetailMetaSheetCursor.update(
                 state: state,
@@ -355,294 +355,588 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: EditProfileSheetEnvironment()
             )
-            
-        // MARK: Lifecycle
+            // MARK: Lifecycle
         case .refresh:
-            guard let user = state.user else {
-                return Update(state: state)
-            }
-            
-            return update(
+            return refresh(
                 state: state,
-                action: .appear(user.address, state.initialTabIndex, state.user),
                 environment: environment
             )
-            
         case .appear(let address, let initialTabIndex, let user):
-            var model = state
-            model.initialTabIndex = initialTabIndex
-            // We might be passed some basic profile data
-            // we can use this in the loading state for a preview
-            model.address = address
-            model.user = user
-            
-            let fx: Fx<UserProfileDetailAction> = Future.detached {
-                    try await Self.refresh(address: address, environment: environment)
-                }
-                .map { content in
-                    UserProfileDetailAction.populate(content)
-                }
-                .catch { error in
-                    Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
-                }
-                .eraseToAnyPublisher()
-            
-            return Update(state: model, fx: fx)
-            
-        case .populate(let content):
-            var model = state
-            model.user = content.profile
-            model.statistics = content.statistics
-            model.recentEntries = content.recentEntries
-            model.following = content.following
-            model.loadingState = .loaded
-            
-            return Update(state: model).animation(.easeOut)
-            
-        case .failedToPopulate(let error):
-            var model = state
-            model.loadingState = .notFound
-            logger.error("Failed to fetch profile: \(error)")
-            return Update(state: model)
-            
-        case .tabIndexSelected(let index):
-            var model = state
-            model.selectedTabIndex = index
-            
-            return Update(state: model).animation(.default)
-            
-        // MARK: Presentation
-        case .presentMetaSheet(let presented):
-            var model = state
-            model.isMetaSheetPresented = presented
-            
-            return Update(state: model)
-            
-        case .presentFollowNewUserFormSheet(let presented):
-            var model = state
-            model.isFollowNewUserFormSheetPresented = presented
-            
-            if presented {
-                return update(
-                    state: model,
-                    action: .followNewUserFormSheet(.form(.reset)),
-                    environment: environment
-                )
-            }
-            
-            return Update(state: model)
-            
-        case .presentFollowSheet(let presented):
-            var model = state
-            model.isFollowSheetPresented = presented
-            return Update(state: model)
-            
-        // MARK: Following
-        case .requestFollow(let user):
-            return update(
+            return appear(
                 state: state,
-                actions: [
-                    .presentFollowSheet(true),
-                    .followUserSheet(.populate(user))
-                ],
-                environment: environment
+                environment: environment,
+                address: address,
+                initialTabIndex: initialTabIndex,
+                user: user
             )
-            
-        case .attemptFollow(let did, let petname):
-            let fx: Fx<UserProfileDetailAction> =
-            environment.addressBook
-                .followUserPublisher(
-                    did: did,
-                    petname: petname,
-                    preventOverwrite: true
-                )
-                .map({ _ in
-                    UserProfileDetailAction.succeedFollow(petname)
-                })
-                .catch { error in
-                    Just(
-                        UserProfileDetailAction.failFollow(
-                            error: error.localizedDescription
-                        )
-                    )
-                }
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
-            
-        case let .succeedFollow(petname):
-            var actions: [UserProfileDetailAction] = [
-                .presentFollowSheet(false),
-                .presentFollowNewUserFormSheet(false),
-                .refresh,
-                .requestWaitForFollowedUserResolution(petname)
-            ]
-            
-            // Refresh our profile & show the following list if we followed someone new
-            // This matters if we used the manual "Follow User" form
-            if let user = state.user {
-                if user.category == .you {
-                    actions.append(.tabIndexSelected(Self.followingTabIndex))
-                }
-            }
-
-            return update(
+        case .populate(let content):
+            return populate(
                 state: state,
-                actions: actions,
-                environment: environment
+                environment: environment,
+                content: content
+            )
+        case .failedToPopulate(let error):
+            return failedToPopulate(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .tabIndexSelected(let index):
+            return tabIndexSelected(
+                state: state,
+                environment: environment,
+                index: index
+            )
+            // MARK: Presentation
+        case .presentMetaSheet(let isPresented):
+            return presentMetaSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .presentFollowNewUserFormSheet(let isPresented):
+            return presentFollowNewUserFormSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .presentFollowSheet(let isPresented):
+            return presentFollowSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+            // MARK: Following
+        case .requestFollow(let user):
+            return requestFollow(
+                state: state,
+                environment: environment,
+                user: user
+            )
+        case .attemptFollow(let did, let petname):
+            return attemptFollow(
+                state: state,
+                environment: environment,
+                did: did,
+                petname: petname
+            )
+        case let .succeedFollow(petname):
+            return succeedFollow(
+                state: state,
+                environment: environment,
+                petname: petname
             )
         case .failFollow(error: let error):
-            var model = state
-            model.failFollowErrorMessage = error
-            return Update(state: model)
+            return failFollow(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .dismissFailFollowError:
-            var model = state
-            model.failFollowErrorMessage = nil
-            return Update(state: model)
-            
+            return dismissFailFollowError(
+                state: state,
+                environment: environment
+            )
         case let .requestWaitForFollowedUserResolution(petname):
+            return requestWaitForFollowedUserResolution(
+                state: state,
+                environment: environment,
+                petname: petname
+            )
+        case .succeedResolveFollowedUser:
+            return succeedResolveFollowedUser(
+                state: state,
+                environment: environment
+            )
+        case .failResolveFollowedUser(let error):
+            return failResolveFollowedUser(
+                state: state,
+                environment: environment,
+                error: error
+            )
+            // MARK: Unfollowing
+        case .presentUnfollowConfirmation(let isPresented):
+            return presentUnfollowConfirmation(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .requestUnfollow(let user):
+            return requestUnfollow(
+                state: state,
+                environment: environment,
+                user: user
+            )
+        case .attemptUnfollow:
+            return attemptUnfollow(
+                state: state,
+                environment: environment
+            )
+        case let .succeedUnfollow(identity, petname):
+            return succeedUnfollow(
+                state: state,
+                environment: environment,
+                identity: identity,
+                petname: petname
+            )
+        case let .failUnfollow(error):
+            return failUnfollow(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .dismissFailUnfollowError:
+            return dismissFailUnfollowError(
+                state: state,
+                environment: environment
+            )
+            // MARK: Edit Profile
+        case .presentEditProfile(let isPresented):
+            return presentEditProfile(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .requestEditProfile:
+            return requestEditProfile(
+                state: state,
+                environment: environment
+            )
+        case .succeedEditProfile:
+            return succeedEditProfile(
+                state: state,
+                environment: environment
+            )
+        case .failEditProfile(let error):
+            return failEditProfile(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .dismissEditProfileError:
+            return dismissEditProfileError(
+                state: state,
+                environment: environment
+            )
+        }
+    }
+    
+    static func refresh(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let user = state.user else {
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            action: .appear(user.address, state.initialTabIndex, state.user),
+            environment: environment
+        )
+    }
+    
+    static func appear(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        initialTabIndex: Int,
+        user: UserProfile?
+    ) -> Update<Self> {
+        var model = state
+        model.initialTabIndex = initialTabIndex
+        // We might be passed some basic profile data
+        // we can use this in the loading state for a preview
+        model.address = address
+        model.user = user
+        
+        let fx: Fx<UserProfileDetailAction> = Future.detached {
+            try await Self.refresh(address: address, environment: environment)
+        }
+            .map { content in
+                UserProfileDetailAction.populate(content)
+            }
+            .catch { error in
+                Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: model, fx: fx)
+    }
+    
+    static func populate(
+        state: Self,
+        environment: Environment,
+        content: UserProfileContentResponse
+    ) -> Update<Self> {
+        var model = state
+        model.user = content.profile
+        model.statistics = content.statistics
+        model.recentEntries = content.recentEntries
+        model.following = content.following
+        model.loadingState = .loaded
+        
+        return Update(state: model).animation(.easeOut)
+    }
+    
+    static func failedToPopulate(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        var model = state
+        model.loadingState = .notFound
+        logger.error("Failed to fetch profile: \(error)")
+        return Update(state: model)
+    }
+    
+    static func tabIndexSelected(
+        state: Self,
+        environment: Environment,
+        index: Int
+    ) -> Update<Self> {
+        var model = state
+        model.selectedTabIndex = index
+        
+        return Update(state: model).animation(.default)
+    }
+    
+    static func presentMetaSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isMetaSheetPresented = isPresented
+        return Update(state: model)
+    }
+    
+    static func presentFollowNewUserFormSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isFollowNewUserFormSheetPresented = isPresented
+        
+        if isPresented {
+            return update(
+                state: model,
+                action: .followNewUserFormSheet(.form(.reset)),
+                environment: environment
+            )
+        }
+        
+        return Update(state: model)
+    }
+    
+    static func presentFollowSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isFollowSheetPresented = isPresented
+        return Update(state: model)
+    }
+    
+    static func requestFollow(
+        state: Self,
+        environment: Environment,
+        user: UserProfile
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .presentFollowSheet(true),
+                .followUserSheet(.populate(user))
+            ],
+            environment: environment
+        )
+    }
+    
+    static func attemptFollow(
+        state: Self,
+        environment: Environment,
+        did: Did,
+        petname: Petname
+    ) -> Update<Self> {
+        let fx: Fx<UserProfileDetailAction> =
+        environment.addressBook
+            .followUserPublisher(
+                did: did,
+                petname: petname,
+                preventOverwrite: true
+            )
+            .map({ _ in
+                UserProfileDetailAction.succeedFollow(petname)
+            })
+            .catch { error in
+                Just(
+                    UserProfileDetailAction.failFollow(
+                        error: error.localizedDescription
+                    )
+                )
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedFollow(
+        state: Self,
+        environment: Environment,
+        petname: Petname
+    ) -> Update<Self> {
+        var actions: [UserProfileDetailAction] = [
+            .presentFollowSheet(false),
+            .presentFollowNewUserFormSheet(false),
+            .refresh,
+            .requestWaitForFollowedUserResolution(petname)
+        ]
+        
+        // Refresh our profile & show the following list if we followed someone new
+        // This matters if we used the manual "Follow User" form
+        if let user = state.user {
+            if user.category == .you {
+                actions.append(.tabIndexSelected(Self.followingTabIndex))
+            }
+        }
+        
+        return update(
+            state: state,
+            actions: actions,
+            environment: environment
+        )
+    }
+    
+    static func failFollow(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        var model = state
+        model.failFollowErrorMessage = error
+        return Update(state: model)
+    }
+    
+    static func dismissFailFollowError(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        var model = state
+        model.failFollowErrorMessage = nil
+        return Update(state: model)
+    }
+    
+    static func requestWaitForFollowedUserResolution(
+        state: Self,
+        environment: Environment,
+        petname: Petname
+    ) -> Update<Self> {
+        let fx: Fx<UserProfileDetailAction> = environment.addressBook
+            .waitForPetnameResolutionPublisher(petname: petname)
+            .map { cid in
+                Action.succeedResolveFollowedUser(petname: petname, cid: cid)
+            }
+            .recover { error in
+                Action.failResolveFollowedUser(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return update(
+            state: state,
+            action: .refresh,
+            environment: environment
+        ).mergeFx(fx)
+    }
+    
+    static func succeedResolveFollowedUser(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        update(
+            state: state,
+            action: .refresh,
+            environment: environment
+        )
+    }
+    
+    static func failResolveFollowedUser(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log("Failed to resolve followed user: \(error)")
+        return update(state: state, action: .refresh, environment: environment)
+    }
+    
+    static func presentUnfollowConfirmation(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isUnfollowConfirmationPresented = isPresented
+        return Update(state: model)
+    }
+    
+    static func requestUnfollow(
+        state: Self,
+        environment: Environment,
+        user: UserProfile
+    ) -> Update<Self> {
+        var model = state
+        model.unfollowCandidate = user
+        
+        return update(
+            state: model,
+            action: .presentUnfollowConfirmation(true),
+            environment: environment
+        )
+    }
+    
+    static func attemptUnfollow(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let candidate = state.unfollowCandidate else {
+            return Update(state: state)
+        }
+        
+        switch (candidate.ourFollowStatus) {
+        case .notFollowing:
+            return Update(state: state)
+        case .following(let name):
+            let petname = name.toPetname()
             let fx: Fx<UserProfileDetailAction> = environment.addressBook
-                .waitForPetnameResolutionPublisher(petname: petname)
-                .map { cid in
-                    .succeedResolveFollowedUser(petname: petname, cid: cid)
-                }
-                .recover { error in
-                    .failResolveFollowedUser(error.localizedDescription)
-                }
+                .unfollowUserPublisher(petname: petname)
+                .map({ identity in
+                    Action.succeedUnfollow(identity: identity, petname: petname)
+                })
+                .recover({ error in
+                    Action.failUnfollow(error: error.localizedDescription)
+                })
                 .eraseToAnyPublisher()
             
-            return update(
-                state: state,
-                action: .refresh,
-                environment: environment
-            ).mergeFx(fx)
-        case .succeedResolveFollowedUser:
-            return update(state: state, action: .refresh, environment: environment)
-        case .failResolveFollowedUser(let message):
-            logger.log("Failed to resolve followed user: \(message)")
-            return update(state: state, action: .refresh, environment: environment)
-            
-        // MARK: Unfollowing
-        case .presentUnfollowConfirmation(let presented):
-            var model = state
-            model.isUnfollowConfirmationPresented = presented
-            return Update(state: model)
-            
-        case .requestUnfollow(let user):
-            var model = state
-            model.unfollowCandidate = user
-            
-            return update(
-                state: model,
-                action: .presentUnfollowConfirmation(true),
-                environment: environment
-            )
-            
-        case .attemptUnfollow:
-            guard let candidate = state.unfollowCandidate else {
-                return Update(state: state)
-            }
-            
-            switch (candidate.ourFollowStatus) {
-            case .notFollowing:
-                return Update(state: state)
-            case .following(let name):
-                let petname = name.toPetname()
-                let fx: Fx<UserProfileDetailAction> = environment.addressBook
-                    .unfollowUserPublisher(petname: petname)
-                    .map({ identity in
-                        .succeedUnfollow(identity: identity, petname: petname)
-                    })
-                    .recover({ error in
-                        .failUnfollow(error: error.localizedDescription)
-                    })
-                    .eraseToAnyPublisher()
-                
-                return Update(state: state, fx: fx)
-            }
-            
-        case let .succeedUnfollow(identity, petname):
-            logger.log(
-                "Unfollowed sphere",
-                metadata: [
-                    "petname": petname.description,
-                    "did:": identity.description
-                ]
-            )
-            return update(
-                state: state,
-                actions: [
-                    .presentUnfollowConfirmation(false),
-                    .refresh
-                ],
-                environment: environment
-            )
-            
-        case .failUnfollow(error: let error):
-            var model = state
-            model.failUnfollowErrorMessage = error
-            return Update(state: model)
-            
-        case .dismissFailUnfollowError:
-            var model = state
-            model.failUnfollowErrorMessage = nil
-            return Update(state: model)
-        
-        // MARK: Edit Profile
-        case .presentEditProfile(let presented):
-            var model = state
-            model.isEditProfileSheetPresented = presented
-            
-            let profile = UserProfileEntry(
-                nickname: state.user?.nickname?.description,
-                bio: state.user?.bio?.text
-            )
-            return update(
-                state: model,
-                action: .editProfileSheet(.populate(profile)),
-                environment: environment
-            )
-            
-        case .requestEditProfile:
-            let profile = UserProfileEntry(
-                nickname: state.editProfileSheet.nicknameField.validated?.description,
-                bio: state.editProfileSheet.bioField.validated?.text
-            )
-            
-            let fx: Fx<UserProfileDetailAction> = Future.detached {
-                try await environment.userProfile.writeOurProfile(
-                    profile: profile
-                )
-                return UserProfileDetailAction.succeedEditProfile
-            }
-            .recover({ error in
-                UserProfileDetailAction.failEditProfile(
-                    error: error.localizedDescription
-                )
-            })
-            .eraseToAnyPublisher()
-            
             return Update(state: state, fx: fx)
-            
-        case .succeedEditProfile:
-            var model = state
-            model.isEditProfileSheetPresented = false
-            
-            return update(
-                state: model,
-                action: .refresh,
-                environment: environment
-            )
-            
-        case .failEditProfile(let error):
-            var model = state
-            model.failEditProfileMessage = error
-            return Update(state: model)
-            
-        case .dismissEditProfileError:
-            var model = state
-            model.failEditProfileMessage = nil
-            return Update(state: model)
         }
+    }
+    
+    static func succeedUnfollow(
+        state: Self,
+        environment: Environment,
+        identity: Did,
+        petname: Petname
+    ) -> Update<Self> {
+        logger.log(
+            "Unfollowed sphere",
+            metadata: [
+                "petname": petname.description,
+                "did:": identity.description
+            ]
+        )
+        return update(
+            state: state,
+            actions: [
+                .presentUnfollowConfirmation(false),
+                .refresh
+            ],
+            environment: environment
+        )
+    }
+    
+    static func failUnfollow(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        var model = state
+        model.failUnfollowErrorMessage = error
+        return Update(state: model)
+    }
+    
+    static func dismissFailUnfollowError(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        var model = state
+        model.failUnfollowErrorMessage = nil
+        return Update(state: model)
+    }
+    
+    static func presentEditProfile(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isEditProfileSheetPresented = isPresented
+        
+        let profile = UserProfileEntry(
+            nickname: state.user?.nickname?.description,
+            bio: state.user?.bio?.text
+        )
+        return update(
+            state: model,
+            action: .editProfileSheet(.populate(profile)),
+            environment: environment
+        )
+    }
+    
+    static func requestEditProfile(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let profile = UserProfileEntry(
+            nickname: state.editProfileSheet.nicknameField.validated?.description,
+            bio: state.editProfileSheet.bioField.validated?.text
+        )
+        
+        let fx: Fx<UserProfileDetailAction> = Future.detached {
+            try await environment.userProfile.writeOurProfile(
+                profile: profile
+            )
+            return UserProfileDetailAction.succeedEditProfile
+        }.recover({ error in
+            UserProfileDetailAction.failEditProfile(
+                error: error.localizedDescription
+            )
+        }).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedEditProfile(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        var model = state
+        model.isEditProfileSheetPresented = false
+        
+        return update(
+            state: model,
+            action: .refresh,
+            environment: environment
+        )
+    }
+    
+    static func failEditProfile(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        var model = state
+        model.failEditProfileMessage = error
+        return Update(state: model)
+    }
+    
+    static func dismissEditProfileError(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        var model = state
+        model.failEditProfileMessage = nil
+        return Update(state: model)
     }
 }
