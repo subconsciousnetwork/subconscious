@@ -135,12 +135,6 @@ enum AppAction: CustomLogStringConvertible {
     case succeedRefreshSphereVersion(_ version: String)
     case failRefreshSphereVersion(_ error: String)
 
-    /// Set and persist Noosphere enabled state
-    case persistNoosphereEnabled(_ isEnabled: Bool)
-    /// Handle changes to AppDefaults.standard.isNoosphereEnabled, and
-    /// sync the value to our store state.
-    case notifyNoosphereEnabled(_ isEnabled: Bool)
-
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
     /// Set first run complete value on model.
@@ -407,16 +401,6 @@ enum FirstRunStep {
 
 // MARK: Model
 struct AppModel: ModelProtocol {
-    /// Is Noosphere enabled?
-    ///
-    /// This property is updated at `.start` with the corresponding value
-    /// stored in `AppDefaults`.
-    ///
-    /// This property is changed via `persistNoosphereEnabled`, which will
-    /// update both the model property (triggering a view re-render)
-    /// and persist the new value to UserDefaults.
-    var isNoosphereEnabled = false
-    
     /// Has first run completed?
     ///
     /// This property is updated at `.start` with the corresponding value
@@ -431,10 +415,7 @@ struct AppModel: ModelProtocol {
 
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
-        guard isNoosphereEnabled else {
-            return false
-        }
-        return !isFirstRunComplete
+        !isFirstRunComplete
     }
     
     /// Is database connected and migrated?
@@ -682,18 +663,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 url: url
-            )
-        case let .persistNoosphereEnabled(isEnabled):
-            return persistNoosphereEnabled(
-                state: state,
-                environment: environment,
-                isEnabled: isEnabled
-            )
-        case let .notifyNoosphereEnabled(isEnabled):
-            return notifyNoosphereEnabled(
-                state: state,
-                environment: environment,
-                isEnabled: isEnabled
             )
         case let .notifyFirstRunComplete(isComplete):
             return notifyFirstRunComplete(
@@ -953,11 +922,6 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        // Subscribe to changes in AppDefaults.isNoosphereEnabled
-        let fx: Fx<AppAction> = AppDefaults.standard.$isNoosphereEnabled
-            .map(AppAction.notifyNoosphereEnabled)
-            .eraseToAnyPublisher()
-        
         var model = state
         
         model.gatewayURL = AppDefaults.standard.gatewayURL
@@ -967,9 +931,6 @@ struct AppModel: ModelProtocol {
         return update(
             state: model,
             actions: [
-                .notifyNoosphereEnabled(
-                    AppDefaults.standard.isNoosphereEnabled
-                ),
                 .setSphereIdentity(
                     AppDefaults.standard.sphereIdentity
                 ),
@@ -984,7 +945,7 @@ struct AppModel: ModelProtocol {
                 )
             ],
             environment: environment
-        ).mergeFx(fx)
+        )
     }
     
     /// Handle scene phase change
@@ -1010,14 +971,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let sphereIdentity = state.sphereIdentity ?? "nil"
-        let isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
         logger.debug(
             "appear",
             metadata: [
                 "documents": environment.documentURL.absoluteString,
                 "database": environment.database.database.path,
-                "sphereIdentity": sphereIdentity,
-                "isNoosphereEnabled": String(describing: isNoosphereEnabled)
+                "sphereIdentity": sphereIdentity
             ]
         )
         return update(
@@ -1252,35 +1211,6 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         logger.log("Failed to refresh sphere version: \(error)")
         return Update(state: state)
-    }
-    
-    /// Persist Noosphere enabled state.
-    /// Note that this updates the model state (triggering a re-render),
-    /// and ALSO perists the state to UserDefaults.
-    static func persistNoosphereEnabled(
-        state: AppModel,
-        environment: AppEnvironment,
-        isEnabled: Bool
-    ) -> Update<AppModel> {
-        // Persist setting to UserDefaults
-        AppDefaults.standard.isNoosphereEnabled = isEnabled
-        var model = state
-        model.isNoosphereEnabled = isEnabled
-        return Update(state: model)
-    }
-    
-    /// Update model to match persisted enabled state.
-    /// A notification is generated for every
-    /// This will take care of cases where the enabled state has been set
-    /// in some other place outside of our store.
-    static func notifyNoosphereEnabled(
-        state: AppModel,
-        environment: AppEnvironment,
-        isEnabled: Bool
-    ) -> Update<AppModel> {
-        var model = state
-        model.isNoosphereEnabled = isEnabled
-        return Update(state: model)
     }
     
     /// Set first run complete state on model, but do not persist.

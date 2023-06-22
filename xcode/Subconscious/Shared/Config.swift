@@ -16,9 +16,7 @@ struct Config: Equatable, Codable {
 
     var appTabs = false
     var addByQRCode = true
-    var userProfile: Bool {
-        AppDefaults.standard.isNoosphereEnabled
-    }
+    var userProfile = true
     
     #if targetEnvironment(simulator)
     /// Are we currently running in the iOS simlator (aka dev mode)

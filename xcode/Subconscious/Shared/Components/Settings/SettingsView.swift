@@ -121,8 +121,8 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                if app.state.isNoosphereEnabled {
-                    Section(header: Text("Noosphere")) {
+                Section(
+                    content:  {
                         NavigationLink(
                             destination: {
                                 ProfileSettingsView(app: app)
@@ -164,16 +164,24 @@ struct SettingsView: View {
                             }
                         )
                         .disabled(app.state.gatewayProvisioningStatus == .pending)
+                    },
+                    header: {
+                        Text("Noosphere")
+                    },
+                    footer: {
+                        Text("Noosphere is a protocol for thought. It's decentralized, so your data belongs to you.")
                     }
-                    
-                    GatewayProvisioningSection(app: app)
-                }
+                )
+                
+                GatewayProvisioningSection(app: app)
+                
                 SwiftUI.Link(
                     destination: Config.default.feedbackURL,
                     label: {
                         Text("Share feedback")
                     }
                 )
+                
                 Section {
                     NavigationLink("Developer Settings") {
                         DeveloperSettingsView(app: app)

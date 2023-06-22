@@ -967,21 +967,19 @@ struct NotebookModel: ModelProtocol {
         slashlink: Slashlink,
         fallback: String
     ) -> Update<NotebookModel> {
-        // Intercept profile visits and use the correct view if noosphere is enabled
-        if AppDefaults.standard.isNoosphereEnabled {
-            guard !slashlink.slug.isProfile else {
-                return update(
-                    state: state,
-                    action: .pushDetail(
-                        .profile(
-                            UserProfileDetailDescription(
-                                address: slashlink
-                            )
+        // Intercept profile visits and use the correct view
+        guard !slashlink.slug.isProfile else {
+            return update(
+                state: state,
+                action: .pushDetail(
+                    .profile(
+                        UserProfileDetailDescription(
+                            address: slashlink
                         )
-                    ),
-                    environment: environment
-                )
-            }
+                    )
+                ),
+                environment: environment
+            )
         }
         
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
@@ -997,27 +995,19 @@ struct NotebookModel: ModelProtocol {
             )
         }
         
-        if AppDefaults.standard.isNoosphereEnabled {
-            // If Noosphere is enabled, and slashlink pointing to other sphere,
-            // dispatch action for viewer.
-            return update(
-                state: state,
-                action: .pushDetail(
-                    .viewer(
-                        MemoViewerDetailDescription(
-                            address: slashlink
-                        )
+        // If slashlink pointing to other sphere, dispatch action
+        // for viewer.
+        return update(
+            state: state,
+            action: .pushDetail(
+                .viewer(
+                    MemoViewerDetailDescription(
+                        address: slashlink
                     )
-                ),
-                environment: environment
-            )
-        } else {
-            // Otherwise debug log and do nothing.
-            logger.debug(
-                "Slashlink to other sphere requested, but viewing other sphere content is disabled. Doing nothing."
-            )
-            return Update(state: state)
-        }
+                )
+            ),
+            environment: environment
+        )
     }
     
     /// Find and push a specific detail for slug

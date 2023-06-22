@@ -29,15 +29,13 @@ struct MemoEditorDetailMetaSheetView: View {
                         }
                     }
                     .font(.callout)
-                    if AppDefaults.standard.isNoosphereEnabled {
-                        AudienceMenuButtonView(
-                            audience: Binding(
-                                get: { state.audience },
-                                send: send,
-                                tag: MemoEditorDetailMetaSheetAction.requestUpdateAudience
-                            )
+                    AudienceMenuButtonView(
+                        audience: Binding(
+                            get: { state.audience },
+                            send: send,
+                            tag: MemoEditorDetailMetaSheetAction.requestUpdateAudience
                         )
-                    }
+                    )
                 }
                 Spacer()
                 CloseButtonView(action: { dismiss() })
