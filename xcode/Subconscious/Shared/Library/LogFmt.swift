@@ -41,7 +41,6 @@ struct LogFmt {
     }
 }
 
-
 /// Extend logger to provide a LogFmt variant that allows you to log
 /// `KeyValuePairs` as a LogFmt string.
 extension Logger {
