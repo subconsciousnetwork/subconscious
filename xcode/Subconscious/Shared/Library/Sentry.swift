@@ -23,7 +23,8 @@ extension SentryIntegration {
                     ev.breadcrumbs = []
                 }
                 
-                ev.breadcrumbs?.append(contentsOf: getCrumbs())
+                let crumbs = getCrumbs()
+                ev.breadcrumbs?.append(contentsOf: crumbs)
                 return ev
             }
         }
@@ -50,6 +51,8 @@ extension SentryIntegration {
                     category: item.category
                 )
                 crumb.message = item.composedMessage
+                crumb.timestamp = item.date
+                crumb.type = "log"
                 crumbs.append(crumb)
             }
         } catch {
