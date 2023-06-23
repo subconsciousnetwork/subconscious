@@ -316,24 +316,11 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-            
         case .fetchTranscludes:
-            let links = state.dom.slashlinks
-                .map { value in value.toSlashlink() }
-                .compactMap { value in value }
-            
-            let fx: Fx<MemoViewerDetailAction> =
-                environment.transclude
-                .fetchTranscludesPublisher(slashlinks: links)
-                .map { entries in
-                    MemoViewerDetailAction.succeedFetchTranscludes(entries)
-                }
-                .recover { error in
-                    MemoViewerDetailAction.failFetchTranscludes(error.localizedDescription)
-                }
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
+            return fetchTranscludes(
+                state: state,
+                environment: environment
+            )
         case .succeedFetchTranscludes(let transcludes):
             var model = state
             model.transcludes = transcludes
@@ -409,6 +396,28 @@ struct MemoViewerDetailModel: ModelProtocol {
             action: .fetchTranscludes,
             environment: environment
         )
+    }
+    
+    static func fetchTranscludes(
+        state: MemoViewerDetailModel,
+        environment: MemoViewerDetailModel.Environment
+    ) -> Update<MemoViewerDetailModel> {
+        let links = state.dom.slashlinks
+            .map { value in value.toSlashlink() }
+            .compactMap { value in value }
+        
+        let fx: Fx<MemoViewerDetailAction> =
+        environment.transclude
+            .fetchTranscludesPublisher(slashlinks: links)
+            .map { entries in
+                MemoViewerDetailAction.succeedFetchTranscludes(entries)
+            }
+            .recover { error in
+                MemoViewerDetailAction.failFetchTranscludes(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func presentMetaSheet(
