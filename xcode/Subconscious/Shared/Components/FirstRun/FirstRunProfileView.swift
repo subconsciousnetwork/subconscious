@@ -26,7 +26,7 @@ struct FirstRunProfileView: View {
                         send: app.send,
                         tag: AppAction.nicknameFormField
                     ),
-                    caption: "Lowercase letters, numbers and dashes only.",
+                    caption: Text("Lowercase letters, numbers and dashes only."),
                     autoFocus: true,
                     submitLabel: .go,
                     onSubmit: {

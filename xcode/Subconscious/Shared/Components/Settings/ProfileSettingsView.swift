@@ -21,7 +21,9 @@ struct ProfileSettingsView: View {
                         send: app.send,
                         tag: AppAction.nicknameFormField
                     ),
-                    caption: "Lowercase letters, numbers and dashes only."
+                    caption: Text(
+                        "Lowercase letters, numbers and dashes only."
+                    )
                 )
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)

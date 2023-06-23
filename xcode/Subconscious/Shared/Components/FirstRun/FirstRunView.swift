@@ -88,15 +88,21 @@ struct FirstRunView: View {
                         caption: Func.run {
                             switch app.state.inviteCodeRedemptionStatus {
                             case .failed(_):
-                                return "Could not redeem invite code"
+                                return Text("Could not redeem invite code")
                             case _:
-                                return "You can find your invite code in your welcome email"
+                                return Text("You can find your invite code in your welcome email")
                             }
                         },
                         onFocusChanged: { focused in
                             // User finished editing the field
                             if !focused {
                                 app.send(.submitInviteCodeForm)
+                            }
+                        },
+                        submitLabel: .go,
+                        onSubmit: {
+                            if app.state.inviteCodeFormField.isValid {
+                                app.send(.pushFirstRunStep(.nickname))
                             }
                         }
                     )

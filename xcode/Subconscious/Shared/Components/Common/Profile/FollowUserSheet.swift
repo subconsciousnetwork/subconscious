@@ -189,7 +189,7 @@ struct FollowUserSheet: View {
                     send: send,
                     tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
                 ),
-                caption: state.petnameFieldCaption ?? ""
+                caption: Text(verbatim: state.petnameFieldCaption ?? "")
             )
             .textFieldStyle(.roundedBorder)
             .lineLimit(1)
