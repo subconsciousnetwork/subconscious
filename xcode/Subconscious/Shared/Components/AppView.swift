@@ -2046,7 +2046,7 @@ struct AppEnvironment {
         
         self.feed = FeedService()
         self.gatewayProvisioningService = GatewayProvisioningService()
-        self.transclude = TranscludeService(database: database)
+        self.transclude = TranscludeService(database: database, noosphere: noosphere)
     }
 }
 

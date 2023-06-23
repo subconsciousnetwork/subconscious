@@ -363,8 +363,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             // Set meta sheet address as well
             actions: [
-                .setMetaSheetAddress(description.address),
-                .fetchTranscludes
+                .setMetaSheetAddress(description.address)
             ],
             environment: environment
         ).mergeFx(fx)
@@ -405,7 +404,11 @@ struct MemoViewerDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.dom = dom
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .fetchTranscludes,
+            environment: environment
+        )
     }
     
     static func presentMetaSheet(
