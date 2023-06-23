@@ -42,18 +42,6 @@ struct ValidatedFormField<Output: Equatable, Caption: View>: View {
                     axis: axis
                 )
                 .focused($focused)
-                .overlay(alignment: .trailing) {
-                    VStack {
-                        Image(systemName: "exclamationmark.circle")
-                            .frame(width: 24, height: 22)
-                            .padding(.horizontal, 8)
-                            .foregroundColor(.red)
-                            .background(backgroundColor)
-                    }
-                    .padding(.trailing, 1)
-                    .opacity(field.shouldPresentAsInvalid ? 1 : 0)
-                    .animation(.default, value: field.shouldPresentAsInvalid)
-                }
                 .onChange(of: focused) { focused in
                     send(.focusChange(focused: focused))
                     onFocusChanged(focused)
@@ -62,7 +50,8 @@ struct ValidatedFormField<Output: Equatable, Caption: View>: View {
                     send(.setValue(input: innerText))
                 }
                 .onChange(of: field) { field in
-                    // The has been reset, sync inner value
+                    // The store value has been reset via side-effect
+                    // we must re-sync our inner value
                     if !field.touched && innerText != field.value {
                         innerText = field.value
                     }
@@ -75,6 +64,12 @@ struct ValidatedFormField<Output: Equatable, Caption: View>: View {
                         self.focused = true
                     }
                 }
+                Image(systemName: "exclamationmark.circle")
+                    .frame(width: 24, height: 22)
+                    .foregroundColor(.red)
+                    .background(backgroundColor)
+                    .opacity(field.shouldPresentAsInvalid ? 1 : 0)
+                    .animation(.default, value: field.shouldPresentAsInvalid)
             }
             caption
                 .foregroundColor(
