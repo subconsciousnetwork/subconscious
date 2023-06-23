@@ -15,3 +15,16 @@ extension Bundle {
         return try Data(contentsOf: url)
     }
 }
+
+/// Extend Bundle to expose version helpers
+extension Bundle {
+    /// Get app version
+    var version: String? {
+        infoDictionary?["CFBundleShortVersionString"] as? String
+    }
+    
+    /// Get app build version
+    var buildVersion: String? {
+        infoDictionary?["CFBundleVersion"] as? String
+    }
+}

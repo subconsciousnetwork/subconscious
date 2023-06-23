@@ -116,7 +116,7 @@ struct GatewayProvisioningSection: View {
 
 struct SettingsView: View {
     @ObservedObject var app: Store<AppModel>
-    var unknown = "Unknown"
+    var unknown = String(localized: "Unknown")
     
     var body: some View {
         NavigationStack {
@@ -182,11 +182,22 @@ struct SettingsView: View {
                     }
                 )
                 
-                Section {
-                    NavigationLink("Developer Settings") {
-                        DeveloperSettingsView(app: app)
+                Section(
+                    content: {
+                        NavigationLink("Developer Settings") {
+                            DeveloperSettingsView(app: app)
+                        }
+                    },
+                    footer: {
+                        VStack(
+                            alignment: .leading,
+                            spacing: AppTheme.unit
+                        ) {
+                            Text("Version: v\(Bundle.main.version ?? unknown) (\(Bundle.main.buildVersion ?? unknown))")
+                            Text("Noosphere: \(Config.default.noosphere.version)")
+                        }
                     }
-                }
+                )
             }
             .navigationTitle("Settings")
             .toolbar {
