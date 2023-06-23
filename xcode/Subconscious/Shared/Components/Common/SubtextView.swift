@@ -12,36 +12,34 @@ struct SubtextView: View {
     var subtext: Subtext
     var transcludes: [Slashlink: EntryStub]
     var onViewTransclude: (Slashlink) -> Void
+    
+    private func entries(for block: Subtext.Block) -> [EntryStub] {
+        block.slashlinks
+            .compactMap { link in
+                guard let slashlink = link.toSlashlink() else {
+                    return nil
+                }
+                
+                return transcludes[slashlink]
+            }
+            .filter { entry in
+                // Avoid empty transclude blocks
+                entry.excerpt.count > 0
+            }
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
             ForEach(subtext.blocks, id: \.self) { block in
                 Text(Self.renderer.render(block.description))
-                
-                let entries: [EntryStub] =
-                    block.slashlinks
-                    .compactMap { link in
-                        guard let slashlink = link.toSlashlink() else {
-                            return nil
+                ForEach(self.entries(for: block), id: \.self) { entry in
+                    Transclude2View(
+                        address: entry.address,
+                        excerpt: entry.excerpt,
+                        action: {
+                            onViewTransclude(entry.address)
                         }
-                        
-                        return transcludes[slashlink]
-                    }
-                    .filter { entry in
-                        // Avoid empty transclude blocks
-                        entry.excerpt.count > 0
-                    }
-                
-                if entries.count > 0 {
-                    ForEach(entries, id: \.self) { entry in
-                        Transclude2View(
-                            address: entry.address,
-                            excerpt: entry.excerpt,
-                            action: {
-                                onViewTransclude(entry.address)
-                            }
-                        )
-                    }
+                    )
                 }
             }
         }
