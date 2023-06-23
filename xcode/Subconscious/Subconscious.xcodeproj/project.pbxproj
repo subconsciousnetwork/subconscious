@@ -2522,8 +2522,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/twostraws/CodeScanner";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
+				kind = exactVersion;
+				version = 2.3.2;
 			};
 		};
 		B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */ = {
