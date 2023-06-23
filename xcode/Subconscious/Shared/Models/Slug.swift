@@ -92,23 +92,20 @@ public struct Slug:
     /// This requires that the string already be formatted like a
     /// valid slug.
     public init?(_ description: String) {
-        self.init(description, allowHidden: false)
-    }
-    
-    /// Losslessly create a slug from a string.
-    /// This requires that the string already be formatted like a
-    /// valid slug.
-    public init?(_ description: String, allowHidden: Bool) {
         guard description.wholeMatch(of: Self.slugRegex) != nil else {
-            return nil
-        }
-        
-        guard allowHidden || !description.starts(with: Self.hiddenPrefix) else {
             return nil
         }
         
         self.description = description.lowercased()
         self.verbatim = description
+    }
+    
+    public init?(visible: String) {
+        guard !visible.starts(with: Self.hiddenPrefix) else {
+            return nil
+        }
+        
+        self.init(visible)
     }
     
     /// Convert a string into a slug.
