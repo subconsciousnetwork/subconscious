@@ -297,9 +297,10 @@ struct FollowUserFormView: View {
                         send: send,
                         tag: FollowUserFormAction.didField
                     ),
-                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                    axis: .vertical
                 )
-                .lineLimit(1)
+                .lineLimit(12)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
             }
