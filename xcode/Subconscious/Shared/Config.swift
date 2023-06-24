@@ -9,11 +9,12 @@ import Foundation
 
 /// Feature flags and settings
 struct Config: Equatable, Codable {
+    /// App version.
     var rdns = "com.subconscious.Subconscious"
     var debug = false
-
+    
     var noosphere = NoosphereConfig()
-
+    
     var appTabs = false
     var addByQRCode = true
     var userProfile = true
@@ -41,15 +42,15 @@ struct Config: Equatable, Codable {
     
     /// URL for built-in web service
     var cloudCtlUrl: URL = URL(string: "https://cloudctl.sphere.test.subconscious.cloud")!
-
+    
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
-
+    
     var untitled = "Untitled"
-
+    
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
-
+    
     /// Toggle on/off simple Tracery-based Geists
     var traceryZettelkasten = "zettelkasten"
     var traceryCombo = "combo"
@@ -62,6 +63,12 @@ extension Config {
 
 // MARK: Noosphere configuration
 struct NoosphereConfig: Equatable, Codable {
+    /// Hard-coded version number for Noosphere.
+    /// NOTE: be sure to update this when we update Noosphere.
+    /// We include this here so we can display it in settings.
+    /// In future, Noosphere may expose an FFI to dynamically query for the
+    /// version.
+    var version = "v0.11.1"
     /// Name of directory used for Noosphere storage
     var globalStoragePath = "noosphere"
     /// Name of directory used for sphere storage.
