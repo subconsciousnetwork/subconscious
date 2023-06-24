@@ -235,6 +235,10 @@ enum MemoViewerDetailAction: Hashable {
     case succeedFetchTranscludes([Slashlink: EntryStub])
     case failFetchTranscludes(_ error: String)
     
+    case fetchOwnerProfile
+    case succeedFetchOwnerProfile(UserProfile)
+    case failFetchOwnerProfile(_ error: String)
+    
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
@@ -264,6 +268,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     
     var loadingState = LoadingState.loading
     
+    var owner: UserProfile?
     var address: Slashlink?
     var defaultAudience = Audience.local
     var title = ""
@@ -329,6 +334,32 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .failFetchTranscludes(let error):
             logger.error("Failed to fetch transcludes: \(error)")
             return Update(state: state)
+            
+        case .fetchOwnerProfile:
+            let fx: Fx<MemoViewerDetailAction> = Future.detached {
+                if let petname = state.address?.toPetname() {
+                    return try await environment.userProfile.requestUserProfile(petname: petname)
+                        .profile
+                } else {
+                    return try await environment.userProfile.requestOurProfile().profile
+                }
+            }
+            .map { profile in
+                .succeedFetchOwnerProfile(profile)
+            }
+            .recover { error in
+                .failFetchOwnerProfile(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedFetchOwnerProfile(let profile):
+            var model = state
+            model.owner = profile
+            return update(state: model, action: .fetchTranscludes, environment: environment)
+        case .failFetchOwnerProfile(let error):
+            logger.error("Failed to fetch owner: \(error)")
+            return Update(state: state)
         }
     }
     
@@ -350,7 +381,8 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             // Set meta sheet address as well
             actions: [
-                .setMetaSheetAddress(description.address)
+                .setMetaSheetAddress(description.address),
+                .fetchOwnerProfile
             ],
             environment: environment
         ).mergeFx(fx)
@@ -402,13 +434,18 @@ struct MemoViewerDetailModel: ModelProtocol {
         state: MemoViewerDetailModel,
         environment: MemoViewerDetailModel.Environment
     ) -> Update<MemoViewerDetailModel> {
+        
+        guard let owner = state.owner else {
+            return Update(state: state)
+        }
+        
         let links = state.dom.slashlinks
             .map { value in value.toSlashlink() }
             .compactMap { value in value }
         
         let fx: Fx<MemoViewerDetailAction> =
         environment.transclude
-            .fetchTranscludesPublisher(slashlinks: links)
+            .fetchTranscludesPublisher(slashlinks: links, owner: owner)
             .map { entries in
                 MemoViewerDetailAction.succeedFetchTranscludes(entries)
             }

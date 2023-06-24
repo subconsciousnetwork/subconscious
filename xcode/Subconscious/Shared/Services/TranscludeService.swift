@@ -18,10 +18,20 @@ actor TranscludeService {
     }
     
     func fetchTranscludes(
-        slashlinks: [Slashlink]
+        slashlinks: [Slashlink],
+        owner: UserProfile
     ) async throws -> [Slashlink: EntryStub] {
-        let identity = try await noosphere.identity()
-        let entries = try database.listEntries(for: slashlinks, owner: identity)
+        let petname = owner.address.petname
+        
+        let slashlinks = slashlinks.map { s in
+            if case let .petname(basePetname) = s.peer {
+                return s.rebaseIfNeeded(petname: basePetname)
+            } else {
+                return Slashlink(peer: owner.address.peer, slug: s.slug)
+            }
+        }
+        
+        let entries = try database.listEntries(for: slashlinks, owner: petname)
         
         return
             Dictionary(
@@ -30,7 +40,7 @@ actor TranscludeService {
                         return (Slashlink(slug: entry.address.slug), entry)
                     }
                     
-                    return (entry.address, entry)
+                    return (entry.address.relativizeIfNeeded(petname: petname), entry)
                 },
                 uniquingKeysWith: { a, b in a}
             )
@@ -38,10 +48,11 @@ actor TranscludeService {
 
     
     nonisolated func fetchTranscludesPublisher(
-        slashlinks: [Slashlink]
+        slashlinks: [Slashlink],
+        owner: UserProfile
     ) -> AnyPublisher<[Slashlink: EntryStub], Error> {
         Future.detached(priority: .utility) {
-            try await self.fetchTranscludes(slashlinks: slashlinks)
+            try await self.fetchTranscludes(slashlinks: slashlinks, owner: owner)
         }
         .eraseToAnyPublisher()
     }

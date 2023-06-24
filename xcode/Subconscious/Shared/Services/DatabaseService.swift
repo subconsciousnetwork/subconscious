@@ -434,20 +434,20 @@ final class DatabaseService {
         return results.col(0)?.toInt()
     }
     
-    func listEntries(for slashlinks: [Slashlink], owner: Did?) throws -> [EntryStub] {
+    func listEntries(for slashlinks: [Slashlink], owner: Petname?) throws -> [EntryStub] {
         return try slashlinks.compactMap({ slashlink in
             return try readEntry(for: slashlink, owner: owner)
         })
     }
     
-    func readEntry(for slashlink: Slashlink, owner: Did?) throws -> EntryStub? {
+    func readEntry(for slashlink: Slashlink, owner: Petname?) throws -> EntryStub? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
 
         let results = try database.execute(
             sql: """
-        SELECT id, modified, excerpt
+        SELECT slashlink, modified, excerpt
         FROM memo
         WHERE slashlink = ?
         ORDER BY modified DESC
@@ -462,9 +462,8 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?
                     .toString()?
-                    .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
+                    .relativizeIfNeeded(petname: owner),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -507,9 +506,7 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?
                     .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
+                    .toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {

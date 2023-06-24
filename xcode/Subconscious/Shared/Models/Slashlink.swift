@@ -224,6 +224,15 @@ extension Slashlink {
             return self
         }
     }
+    
+    func relativizeIfNeeded(petname base: Petname?) -> Slashlink {
+        switch self.peer {
+        case .petname(let name) where name == base:
+            return Slashlink(slug: self.slug)
+        default:
+            return self
+        }
+    }
 
     /// Get petname from slashlink (if any)
     func toPetname() -> Petname? {
