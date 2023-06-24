@@ -12,6 +12,8 @@
 		B508957029E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B508957129E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
+		B5293B892A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
+		B5293B8A2A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
 		B540F8BA2A0C748C00876256 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = B540F8B92A0C748C00876256 /* Line.swift */; };
 		B54187B829EF5CA00056E4A9 /* FollowUserFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */; };
@@ -450,6 +452,7 @@
 		B508956D29E7862A0048106B /* Tests_AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AddressBookService.swift; sourceTree = "<group>"; };
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
+		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
 		B540F8B92A0C748C00876256 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserFormSheet.swift; sourceTree = "<group>"; };
@@ -1283,6 +1286,7 @@
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 				B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */,
 				B8E1A9452A12F69E00B757A5 /* LogFmt.swift */,
+				B5293B882A426645001C4DA7 /* Sentry.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1732,6 +1736,7 @@
 				B58862C829F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B58A46AF29D3C62B00491E43 /* StoryEntryView.swift in Sources */,
+				B5293B892A426645001C4DA7 /* Sentry.swift in Sources */,
 				B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
 				B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */,
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
@@ -1967,6 +1972,7 @@
 				B8DA32B629CB999500EA166E /* AppUpgradeView.swift in Sources */,
 				B58C73A829DBB3B500B00EA1 /* UserProfileView.swift in Sources */,
 				B8B4250D28FB43C90081B8D5 /* ContentType.swift in Sources */,
+				B5293B8A2A426645001C4DA7 /* Sentry.swift in Sources */,
 				B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */,
