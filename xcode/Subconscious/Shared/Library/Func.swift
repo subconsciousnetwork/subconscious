@@ -77,8 +77,8 @@ struct Func {
                     powf(2.0, Float(attempts))
                 )
             )
-            sleep(seconds)
-            
+            try await Task.sleep(for: .seconds(seconds))
+
             return try await self.retryWithBackoff(
                 maxAttempts: maxAttempts,
                 maxWaitSeconds: maxWaitSeconds,
