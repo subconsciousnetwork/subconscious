@@ -281,6 +281,8 @@ struct MemoViewerDetailModel: ModelProtocol {
     
     var transcludePreviews: [Slashlink: EntryStub] = [:]
     
+    
+    
     static func update(
         state: Self,
         action: Action,
@@ -335,27 +337,18 @@ struct MemoViewerDetailModel: ModelProtocol {
             return Update(state: state)
             
         case .fetchOwnerProfile:
-            let fx: Fx<MemoViewerDetailAction> = Future.detached {
-                if let petname = state.address?.toPetname() {
-                    return try await environment.userProfile.requestUserProfile(petname: petname)
-                        .profile
-                } else {
-                    return try await environment.userProfile.requestOurProfile().profile
-                }
-            }
-            .map { profile in
-                .succeedFetchOwnerProfile(profile)
-            }
-            .recover { error in
-                .failFetchOwnerProfile(error.localizedDescription)
-            }
-            .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
+            return fetchOwnerProfile(
+                state: state,
+                environment: environment
+            )
         case .succeedFetchOwnerProfile(let profile):
             var model = state
             model.owner = profile
-            return update(state: model, action: .fetchTranscludePreviews, environment: environment)
+            return update(
+                state: model,
+                action: .fetchTranscludePreviews,
+                environment: environment
+            )
         case .failFetchOwnerProfile(let error):
             logger.error("Failed to fetch owner: \(error)")
             return Update(state: state)
@@ -450,6 +443,36 @@ struct MemoViewerDetailModel: ModelProtocol {
             }
             .recover { error in
                 MemoViewerDetailAction.failFetchTranscludePreviews(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func fetchOwnerProfile(
+        state: MemoViewerDetailModel,
+        environment: MemoViewerDetailModel.Environment
+    ) -> Update<MemoViewerDetailModel> {
+        let fx: Fx<MemoViewerDetailAction> =
+            Future.detached {
+                guard let petname = state.address?.toPetname() else {
+                     return try await environment
+                        .userProfile
+                        .requestOurProfile()
+                        .profile
+   
+                }
+                
+                return try await environment
+                    .userProfile
+                    .requestUserProfile(petname: petname)
+                    .profile
+            }
+            .map { profile in
+                .succeedFetchOwnerProfile(profile)
+            }
+            .recover { error in
+                .failFetchOwnerProfile(error.localizedDescription)
             }
             .eraseToAnyPublisher()
         
