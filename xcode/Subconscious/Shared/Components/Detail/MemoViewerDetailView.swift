@@ -284,8 +284,6 @@ struct MemoViewerDetailModel: ModelProtocol {
     
     var transcludePreviews: [Slashlink: EntryStub] = [:]
     
-    
-    
     static func update(
         state: Self,
         action: Action,
@@ -463,7 +461,6 @@ struct MemoViewerDetailModel: ModelProtocol {
                         .userProfile
                         .requestOurProfile()
                         .profile
-   
                 }
                 
                 return try await environment
