@@ -164,11 +164,14 @@ struct MemoViewerDetailLoadedView: View {
     private func onViewTransclude(
         address: Slashlink
     ) {
-        if address.isOurs {
-            notify(.requestDetail(.editor(MemoEditorDetailDescription(address: address))))
-        } else {
-            notify(.requestDetail(.viewer(MemoViewerDetailDescription(address: address))))
-        }
+        notify(
+            .requestDetail(
+                MemoDetailDescription.from(
+                    address: address,
+                    fallback: address.description
+                )
+            )
+        )
     }
     
 
