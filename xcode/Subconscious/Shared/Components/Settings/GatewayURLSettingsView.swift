@@ -109,16 +109,14 @@ struct GatewayURLSettingsView: View {
                     .autocapitalization(.none)
                     .keyboardType(.URL)
                     .onDisappear {
-                        guard let url = app.state.gatewayURLField.validated else {
-                            return
-                        }
-                        
-                        app.send(.submitGatewayURL(url))
+                        app.send(.submitGatewayURLForm)
                     }
                     
                     if app.state.gatewayProvisioningStatus != .pending {
                         Button(
                             action: {
+                                // Ensure URL is updated before trying to sync
+                                app.send(.submitGatewayURLForm)
                                 app.send(.syncSphereWithGateway)
                             },
                             label: {

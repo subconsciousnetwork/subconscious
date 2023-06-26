@@ -121,6 +121,7 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set gateway URL
     case submitGatewayURL(_ url: URL)
+    case submitGatewayURLForm
     case succeedResetGatewayURL(_ url: URL)
 
     /// Create a new sphere given an owner key name
@@ -658,6 +659,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 url: url
             )
+        case .submitGatewayURLForm:
+            return submitGatewayURLForm(
+                state: state,
+                environment: environment
+            )
         case let .succeedResetGatewayURL(url):
             return succeedResetGatewayURL(
                 state: state,
@@ -1093,6 +1099,10 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         url: URL
     ) -> Update<AppModel> {
+        guard state.gatewayURL != url.absoluteString else {
+            return Update(state: state)
+        }
+        
         var model = state
         model.gatewayURL = url.absoluteString
 
@@ -1113,6 +1123,21 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
         .mergeFx(fx)
+    }
+    
+    static func submitGatewayURLForm(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard let url = state.gatewayURLField.validated else {
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            action: .submitGatewayURL(url),
+            environment: environment
+        )
     }
     
     static func succeedResetGatewayURL(
