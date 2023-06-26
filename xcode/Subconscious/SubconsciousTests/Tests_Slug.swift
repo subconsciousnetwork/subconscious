@@ -17,6 +17,22 @@ class Tests_Slug: XCTestCase {
         XCTAssertNotNil(Slug("-_-"))
     }
     
+    func testVisibleInitializer() {
+        XCTAssertNil(Slug(visible: "_test"))
+        XCTAssertNil(Slug(visible: Slug.profile.description))
+        XCTAssertNil(Slug(visible: "__test__"))
+        XCTAssertNil(Slug(visible: "$__test__"))
+        XCTAssertNil(Slug(visible: "_$__test__"))
+        XCTAssertNil(Slug(visible: "$_$__test__"))
+        XCTAssertNotNil(Slug(visible: "valid-slug"))
+    }
+    
+    func testHiddenInitializer() {
+        XCTAssertEqual(Slug(hidden: "test")!.description, "_test")
+        // Does not attach second leading _
+        XCTAssertEqual(Slug(hidden: "_test")!.description, "_test")
+    }
+    
     func testNotValid() throws {
         XCTAssertNil(Slug("/invalid-slug"))
         XCTAssertNil(Slug("@invalid-slug"))
@@ -85,6 +101,15 @@ class Tests_Slug: XCTestCase {
             "the-quick-brown-fox-jumps-over-the-lazy-dog",
             "Formats the string into a valid slug-string"
         )
+    }
+    
+    func testFormatStripsLeadingUnderscores() throws {
+        XCTAssertEqual(Slug(formatting: "_test")!.description, "test")
+        XCTAssertEqual(Slug(formatting: "__test")!.description, "test")
+        XCTAssertEqual(Slug(formatting: "__test__")!.description, "test__")
+        XCTAssertEqual(Slug(formatting: "$___test__")!.description, "test__")
+        XCTAssertEqual(Slug(formatting: "__$___test__")!.description, "test__")
+        XCTAssertEqual(Slug(formatting: "$__$___test__")!.description, "test__")
     }
     
     func testFormatUnicodeCharacters() throws {
