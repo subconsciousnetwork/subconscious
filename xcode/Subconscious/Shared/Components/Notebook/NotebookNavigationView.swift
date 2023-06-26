@@ -25,8 +25,9 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .pushDetail(
-                                MemoViewerDetailDescription(
-                                    address: entry.address
+                                MemoEditorDetailDescription(
+                                    address: entry.address,
+                                    fallback: entry.excerpt
                                 )
                             )
                         )
