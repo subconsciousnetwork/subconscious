@@ -462,8 +462,7 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?
                     .toString()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(petname: owner),
+                    .toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {

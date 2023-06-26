@@ -17,18 +17,19 @@ actor TranscludeService {
         self.noosphere = noosphere
     }
     
-    func fetchTranscludes(
+    func fetchTranscludePreviews(
         slashlinks: [Slashlink],
         owner: UserProfile
     ) async throws -> [Slashlink: EntryStub] {
         let petname = owner.address.petname
         
-        let slashlinks = slashlinks.map { s in
-            if case let .petname(basePetname) = s.peer {
-                return s.rebaseIfNeeded(petname: basePetname)
-            } else {
-                return Slashlink(peer: owner.address.peer, slug: s.slug)
+        let slashlinks = slashlinks.map { address in
+            guard case .petname(_) = address.peer else {
+                // Rebase relative slashlinks to the owner's handle
+                return Slashlink(peer: owner.address.peer, slug: address.slug)
             }
+            
+            return address
         }
         
         let entries = try database.listEntries(for: slashlinks, owner: petname)
@@ -36,29 +37,31 @@ actor TranscludeService {
         return
             Dictionary(
                 entries.map { entry in
+                    // If it's did:local we know where to look
                     if entry.address.isLocal {
                         return (Slashlink(slug: entry.address.slug), entry)
                     }
                     
-                    guard let petname = petname else {
-                        return (entry.address.relativizeIfNeeded(petname: petname), entry)
-                    }
+                    // Ensure links to the owner's content are relativized to match
+                    // the in-text representation
+                    let displayAddress = entry.address.relativizeIfNeeded(petname: petname)
                     
-                    let x = EntryStub(address: entry.address.rebaseIfNeeded(petname: petname), excerpt: entry.excerpt, modified: entry.modified)
-                    
-                    return (entry.address.relativizeIfNeeded(petname: petname), x)
+                    return (displayAddress, entry)
                 },
                 uniquingKeysWith: { a, b in a}
             )
     }
 
     
-    nonisolated func fetchTranscludesPublisher(
+    nonisolated func fetchTranscludePreviewsPublisher(
         slashlinks: [Slashlink],
         owner: UserProfile
     ) -> AnyPublisher<[Slashlink: EntryStub], Error> {
         Future.detached(priority: .utility) {
-            try await self.fetchTranscludes(slashlinks: slashlinks, owner: owner)
+            try await self.fetchTranscludePreviews(
+                slashlinks: slashlinks,
+                owner: owner
+            )
         }
         .eraseToAnyPublisher()
     }

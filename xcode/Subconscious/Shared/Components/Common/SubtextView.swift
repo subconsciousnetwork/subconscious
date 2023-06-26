@@ -10,7 +10,7 @@ import SwiftUI
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
-    var transcludes: [Slashlink: EntryStub]
+    var transcludePreviews: [Slashlink: EntryStub]
     var onViewTransclude: (Slashlink) -> Void
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
@@ -20,7 +20,7 @@ struct SubtextView: View {
                     return nil
                 }
                 
-                return transcludes[slashlink]
+                return transcludePreviews[slashlink]
             }
             .filter { entry in
                 // Avoid empty transclude blocks
@@ -78,7 +78,7 @@ struct SubtextView_Previews: PreviewProvider {
                     Yea, I shall return with the tide,
                     """
                 ),
-                transcludes: [
+                transcludePreviews: [
                     Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!, excerpt: "hello mother", modified: Date.now),
                     Slashlink("/voice")!: EntryStub(address: Slashlink("/voice")!, excerpt: "hello father", modified: Date.now),
                     Slashlink("/memory")!: EntryStub(address: Slashlink("/memory")!, excerpt: "hello world", modified: Date.now)

@@ -35,7 +35,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     dom: store.state.dom,
-                    transcludes: store.state.transcludes,
+                    transcludePreviews: store.state.transcludePreviews,
                     address: description.address,
                     backlinks: store.state.backlinks,
                     send: store.send,
@@ -128,7 +128,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var dom: Subtext
-    var transcludes: [Slashlink: EntryStub]
+    var transcludePreviews: [Slashlink: EntryStub]
     var address: Slashlink
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
@@ -179,7 +179,7 @@ struct MemoViewerDetailLoadedView: View {
                     VStack {
                         SubtextView(
                             subtext: dom,
-                            transcludes: transcludes,
+                            transcludePreviews: transcludePreviews,
                             onViewTransclude: self.onViewTransclude
                         ).textSelection(
                             .enabled
@@ -231,9 +231,9 @@ enum MemoViewerDetailAction: Hashable {
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
     
-    case fetchTranscludes
-    case succeedFetchTranscludes([Slashlink: EntryStub])
-    case failFetchTranscludes(_ error: String)
+    case fetchTranscludePreviews
+    case succeedFetchTranscludePreviews([Slashlink: EntryStub])
+    case failFetchTranscludePreviews(_ error: String)
     
     case fetchOwnerProfile
     case succeedFetchOwnerProfile(UserProfile)
@@ -280,7 +280,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     var metaSheet = MemoViewerDetailMetaSheetModel()
     
     /// Transclude block preview cache
-    var transcludes: [Slashlink: EntryStub] = [:]
+    var transcludePreviews: [Slashlink: EntryStub] = [:]
     
     static func update(
         state: Self,
@@ -321,17 +321,17 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-        case .fetchTranscludes:
-            return fetchTranscludes(
+        case .fetchTranscludePreviews:
+            return fetchTranscludePreviews(
                 state: state,
                 environment: environment
             )
-        case .succeedFetchTranscludes(let transcludes):
+        case .succeedFetchTranscludePreviews(let transcludes):
             var model = state
-            model.transcludes = transcludes
+            model.transcludePreviews = transcludes
             return Update(state: model)
             
-        case .failFetchTranscludes(let error):
+        case .failFetchTranscludePreviews(let error):
             logger.error("Failed to fetch transcludes: \(error)")
             return Update(state: state)
             
@@ -356,7 +356,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .succeedFetchOwnerProfile(let profile):
             var model = state
             model.owner = profile
-            return update(state: model, action: .fetchTranscludes, environment: environment)
+            return update(state: model, action: .fetchTranscludePreviews, environment: environment)
         case .failFetchOwnerProfile(let error):
             logger.error("Failed to fetch owner: \(error)")
             return Update(state: state)
@@ -425,12 +425,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         model.dom = dom
         return update(
             state: model,
-            action: .fetchTranscludes,
+            action: .fetchTranscludePreviews,
             environment: environment
         )
     }
     
-    static func fetchTranscludes(
+    static func fetchTranscludePreviews(
         state: MemoViewerDetailModel,
         environment: MemoViewerDetailModel.Environment
     ) -> Update<MemoViewerDetailModel> {
@@ -445,12 +445,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         
         let fx: Fx<MemoViewerDetailAction> =
         environment.transclude
-            .fetchTranscludesPublisher(slashlinks: links, owner: owner)
+            .fetchTranscludePreviewsPublisher(slashlinks: links, owner: owner)
             .map { entries in
-                MemoViewerDetailAction.succeedFetchTranscludes(entries)
+                MemoViewerDetailAction.succeedFetchTranscludePreviews(entries)
             }
             .recover { error in
-                MemoViewerDetailAction.failFetchTranscludes(error.localizedDescription)
+                MemoViewerDetailAction.failFetchTranscludePreviews(error.localizedDescription)
             }
             .eraseToAnyPublisher()
         
@@ -512,7 +512,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
-            transcludes: [
+            transcludePreviews: [
                 Slashlink("/infinity-paths")!: EntryStub(
                     address: Slashlink("/infinity-paths")!,
                     excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
