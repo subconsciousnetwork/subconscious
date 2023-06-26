@@ -84,14 +84,8 @@ public struct Slug:
             return nil
         }
         
-        // Consider the case where this slug is already prefixed
-        if hidden.starts(with: Self.hiddenPrefix) {
-            self.description = hidden.lowercased()
-            self.verbatim = hidden
-        } else {
-            self.description = "\(Self.hiddenPrefix)\(hidden.lowercased())"
-            self.verbatim = "\(Self.hiddenPrefix)\(hidden)"
-        }
+        self.description = "\(Self.hiddenPrefix)\(hidden.lowercased())"
+        self.verbatim = "\(Self.hiddenPrefix)\(hidden)"
     }
     
     /// Losslessly create a slug from a string.

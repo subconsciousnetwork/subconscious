@@ -29,8 +29,7 @@ class Tests_Slug: XCTestCase {
     
     func testHiddenInitializer() {
         XCTAssertEqual(Slug(hidden: "test")!.description, "_test")
-        // Does not attach second leading _
-        XCTAssertEqual(Slug(hidden: "_test")!.description, "_test")
+        XCTAssertEqual(Slug(hidden: "_test")!.description, "__test")
     }
     
     func testNotValid() throws {
