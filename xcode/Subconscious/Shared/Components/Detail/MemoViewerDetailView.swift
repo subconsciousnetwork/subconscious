@@ -279,7 +279,6 @@ struct MemoViewerDetailModel: ModelProtocol {
     var isMetaSheetPresented = false
     var metaSheet = MemoViewerDetailMetaSheetModel()
     
-    /// Transclude block preview cache
     var transcludePreviews: [Slashlink: EntryStub] = [:]
     
     static func update(
