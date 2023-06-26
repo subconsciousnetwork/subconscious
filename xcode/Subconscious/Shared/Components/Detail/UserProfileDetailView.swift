@@ -168,7 +168,7 @@ struct UserProfileStatistics: Equatable, Codable, Hashable {
 enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
     case human
     case geist
-    case you
+    case ourself
 }
 
 struct UserProfile: Equatable, Codable, Hashable {
@@ -698,7 +698,7 @@ struct UserProfileDetailModel: ModelProtocol {
         // Refresh our profile & show the following list if we followed someone new
         // This matters if we used the manual "Follow User" form
         if let user = state.user {
-            if user.category == .you {
+            if user.category == .ourself {
                 actions.append(.tabIndexSelected(Self.followingTabIndex))
             }
         }

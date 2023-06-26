@@ -188,7 +188,7 @@ actor UserProfileService {
             address: address,
             pfp: .none(did),
             bio: UserProfileBio(userProfileData?.bio ?? ""),
-            category: isOurs ? UserCategory.you : UserCategory.human,
+            category: isOurs ? UserCategory.ourself : UserCategory.human,
             resolutionStatus: resolutionStatus,
             ourFollowStatus: followingStatus
         )

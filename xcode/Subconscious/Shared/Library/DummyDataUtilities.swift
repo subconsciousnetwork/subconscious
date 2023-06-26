@@ -180,6 +180,22 @@ extension UserProfile: DummyData {
             ourFollowStatus: .notFollowing
         )
     }
+    
+    static func dummyData(category: UserCategory) -> UserProfile {
+        let nickname = Petname.Name.dummyData()
+        return UserProfile(
+            did: Did.dummyData(),
+            nickname: nickname,
+            address: category == .ourself
+                ? Slashlink.ourProfile
+                : Slashlink(petname: nickname.toPetname()),
+            pfp: .image(String.dummyProfilePicture()),
+            bio: UserProfileBio.dummyData(),
+            category: category,
+            resolutionStatus: .unresolved,
+            ourFollowStatus: .notFollowing
+        )
+    }
 }
 
 extension UserProfileStatistics: DummyData {

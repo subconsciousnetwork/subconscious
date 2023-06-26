@@ -25,7 +25,7 @@ actor TranscludeService {
         
         let slashlinks = slashlinks.map { address in
             guard case .petname(_) = address.peer else {
-                // Rebase relative slashlinks to the owner's handle
+                // Rebase relative slashlinks to the owner's handle (if they have one)
                 return Slashlink(peer: owner.address.peer, slug: address.slug)
             }
             

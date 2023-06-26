@@ -284,7 +284,7 @@ extension NotebookAction {
         case let .requestNavigateToProfile(user):
             let user = Func.run {
                 switch (user.category, user.ourFollowStatus) {
-                case (.you, _):
+                case (.ourself, _):
                     // Loop back to our profile
                     return user.overrideAddress(Slashlink.ourProfile)
                 case (_, .following(let name)):

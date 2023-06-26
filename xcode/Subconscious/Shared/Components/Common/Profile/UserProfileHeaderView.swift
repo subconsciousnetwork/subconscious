@@ -40,7 +40,7 @@ struct UserProfileHeaderView: View {
                     Button(
                         action: {
                             switch (user.category, user.ourFollowStatus) {
-                            case (.you, _):
+                            case (.ourself, _):
                                 action(.editOwnProfile)
                             case (_, .following(_)):
                                 action(.requestUnfollow)
@@ -50,7 +50,7 @@ struct UserProfileHeaderView: View {
                         },
                         label: {
                             switch (user.category, user.ourFollowStatus) {
-                            case (.you, _):
+                            case (.ourself, _):
                                 Label("Edit Profile", systemImage: AppIcon.edit.systemName)
                             case (_, .following(_)):
                                 Label("Following", systemImage: AppIcon.following.systemName)
@@ -60,7 +60,7 @@ struct UserProfileHeaderView: View {
                         }
                     )
                     .buttonStyle(GhostPillButtonStyle(size: .small))
-                    .frame(maxWidth: user.category == .you ? 120 : 100)
+                    .frame(maxWidth: user.category == .ourself ? 120 : 100)
                 }
             }
             
@@ -123,7 +123,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     address: Slashlink.ourProfile,
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
-                    category: .you,
+                    category: .ourself,
                     resolutionStatus: .resolved(Cid("ok")),
                     ourFollowStatus: .notFollowing
                 )
