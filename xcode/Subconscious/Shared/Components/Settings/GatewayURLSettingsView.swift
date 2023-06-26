@@ -111,22 +111,24 @@ struct GatewayURLSettingsView: View {
                     .onDisappear {
                         app.send(.submitGatewayURLForm)
                     }
+                    .disabled(app.state.gatewayOperationInProgress)
                     
-                    if app.state.gatewayProvisioningStatus != .pending {
-                        Button(
-                            action: {
-                                // Ensure URL is updated before trying to sync
-                                app.send(.submitGatewayURLForm)
-                                app.send(.syncSphereWithGateway)
-                            },
-                            label: {
-                                GatewaySyncLabel(
-                                    status: app.state.lastGatewaySyncStatus
-                                )
-                            }
-                        )
-                        .disabled(app.state.gatewayURL.count == 0)
-                    }
+                    Button(
+                        action: {
+                            // Ensure URL is updated before trying to sync
+                            app.send(.submitGatewayURLForm)
+                            app.send(.syncSphereWithGateway)
+                        },
+                        label: {
+                            GatewaySyncLabel(
+                                status: app.state.lastGatewaySyncStatus
+                            )
+                        }
+                    )
+                    .disabled(
+                        app.state.gatewayURL.count == 0 ||
+                        app.state.gatewayOperationInProgress
+                    )
                 }, header: {
                     Text("Gateway")
                 }, footer: {

@@ -490,6 +490,11 @@ struct AppModel: ModelProtocol {
     )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
+    var gatewayOperationInProgress: Bool {
+        lastGatewaySyncStatus == .pending ||
+        gatewayProvisioningStatus == .pending
+    }
+    
     /// Show settings sheet?
     var isSettingsSheetPresented = false
     

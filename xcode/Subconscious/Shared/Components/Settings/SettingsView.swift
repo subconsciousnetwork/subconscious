@@ -65,7 +65,7 @@ struct GatewayProvisioningSection: View {
                 .onDisappear {
                     app.send(.setInviteCode(app.state.inviteCodeFormField.value))
                 }
-                .disabled(app.state.gatewayProvisioningStatus == .pending)
+                .disabled(app.state.gatewayOperationInProgress)
                 
                 Button(
                     action: {
@@ -81,7 +81,7 @@ struct GatewayProvisioningSection: View {
                 )
                 .disabled(
                     !app.state.inviteCodeFormField.isValid ||
-                    app.state.gatewayProvisioningStatus == .pending
+                    app.state.gatewayOperationInProgress
                 )
             },
             header: {
