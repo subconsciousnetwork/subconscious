@@ -40,7 +40,13 @@ actor TranscludeService {
                         return (Slashlink(slug: entry.address.slug), entry)
                     }
                     
-                    return (entry.address.relativizeIfNeeded(petname: petname), entry)
+                    guard let petname = petname else {
+                        return (entry.address.relativizeIfNeeded(petname: petname), entry)
+                    }
+                    
+                    let x = EntryStub(address: entry.address.rebaseIfNeeded(petname: petname), excerpt: entry.excerpt, modified: entry.modified)
+                    
+                    return (entry.address.relativizeIfNeeded(petname: petname), x)
                 },
                 uniquingKeysWith: { a, b in a}
             )
