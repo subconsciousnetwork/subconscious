@@ -1142,7 +1142,10 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: state,
-            action: .submitGatewayURL(url),
+            actions: [
+                .submitGatewayURL(url),
+                .syncSphereWithGateway
+            ],
             environment: environment
         )
     }

@@ -115,9 +115,7 @@ struct GatewayURLSettingsView: View {
                     
                     Button(
                         action: {
-                            // Ensure URL is updated before trying to sync
                             app.send(.submitGatewayURLForm)
-                            app.send(.syncSphereWithGateway)
                         },
                         label: {
                             GatewaySyncLabel(
