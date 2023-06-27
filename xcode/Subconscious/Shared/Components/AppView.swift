@@ -1105,6 +1105,7 @@ struct AppModel: ModelProtocol {
         url: URL
     ) -> Update<AppModel> {
         guard state.gatewayURL != url.absoluteString else {
+            logger.log("Gateway URL is identical to current value, doing nothing")
             return Update(state: state)
         }
         
@@ -1135,6 +1136,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         guard let url = state.gatewayURLField.validated else {
+            logger.log("Gateway URL field is invalid, doing nothing")
             return Update(state: state)
         }
         
