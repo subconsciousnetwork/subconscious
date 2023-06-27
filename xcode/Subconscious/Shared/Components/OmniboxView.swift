@@ -83,7 +83,6 @@ struct OmniboxView: View {
                     value: phase
                 )
                 // Keep the view mounted but invisible
-                // This prevents a race condition where SwiftUI animates the position
                 .opacity(status == .loading ? 0.5 : 0)
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
