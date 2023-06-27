@@ -14,6 +14,11 @@ struct SentryIntegration {}
 
 extension SentryIntegration {
     public static func start() {
+        // If we're in test mode we skip sentry initialization altogether
+        if ProcessInfo.processInfo.environment["TEST"] != nil {
+            return
+        }
+       
         SentrySDK.start { options in
             // per https://docs.sentry.io/product/sentry-basics/dsn-explainer/#dsn-utilization this is fine to be public, unless it's abused (e.g. someone sending us /extra/ errors.
             options.dsn = "https://72ea1a54aeb04f60880d75fcffe705ed@o4505393671569408.ingest.sentry.io/4505393756438528"
