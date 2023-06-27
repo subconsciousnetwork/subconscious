@@ -937,8 +937,12 @@ actor DataService {
     }
 
     /// Choose a random entry and publish slug
-    func readRandomEntryLink() throws -> EntryLink {
-        guard let link = database.readRandomEntryLink() else {
+    func readRandomEntryLink() async throws -> EntryLink {
+        guard let identity = try? await noosphere.identity() else {
+            throw DatabaseServiceError.randomEntryFailed
+        }
+        
+        guard let link = database.readRandomEntryLink(owner: identity) else {
             throw DatabaseServiceError.randomEntryFailed
         }
         return link

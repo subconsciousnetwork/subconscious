@@ -95,16 +95,26 @@ struct MementoGeist: Geist {
     func ask(query: String) -> Story? {
         // Check all possible variant cases and keep the ones that actually yield entries
         let storyPool = MementoGeistVariant.allCases
-            .map({ variant -> Story? in
+            .map({
+                variant -> Story? in
                 guard let range = dateFromVariant(variant: variant) else {
                     return nil
                 }
                 
-                guard let entry = database.readRandomEntryInDateRange(startDate: range.beginning, endDate: range.end) else {
+                guard let entry = database.readRandomEntryInDateRange(
+                    startDate: range.beginning,
+                    endDate: range.end,
+                    owner: nil
+                ) else {
                     return nil
                 }
                 
-                return Story.prompt(StoryPrompt(entry: entry, prompt: readableDescription(variant: variant)))
+                return Story.prompt(
+                    StoryPrompt(
+                        entry: entry,
+                        prompt: readableDescription(variant: variant)
+                   )
+                )
             })
             .compactMap({ $0 }) // Filter out nil cases
         
