@@ -31,6 +31,7 @@ struct TestUtilities {
         var local: HeaderSubtextMemoStore
         var addressBook: AddressBookService
         var userProfile: UserProfileService
+        var transclude: TranscludeService
     }
     
     /// Set up and return a data service instance
@@ -86,13 +87,19 @@ struct TestUtilities {
             database: database,
             addressBook: addressBook
         )
+        
+        let transclude = TranscludeService(
+            database: database,
+            noosphere: noosphere
+        )
 
         return DataServiceEnvironment(
             data: data,
             noosphere: noosphere,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            transclude: transclude
         )
     }
 }

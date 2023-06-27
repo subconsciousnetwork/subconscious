@@ -434,6 +434,49 @@ final class DatabaseService {
         return results.col(0)?.toInt()
     }
     
+    func listEntries(for slashlinks: [Slashlink], owner: Petname?) throws -> [EntryStub] {
+        return try slashlinks.compactMap({ slashlink in
+            return try readEntry(for: slashlink, owner: owner)
+        })
+    }
+    
+    func readEntry(for slashlink: Slashlink, owner: Petname?) throws -> EntryStub? {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+
+        let results = try database.execute(
+            sql: """
+        SELECT slashlink, modified, excerpt
+        FROM memo
+        WHERE slashlink = ?
+        ORDER BY modified DESC
+        LIMIT 1000
+        """,
+            parameters: [
+                .text(slashlink.markup),
+            ]
+        )
+
+        return results.compactMap({ row in
+            guard
+                let address = row.col(0)?
+                    .toString()?
+                    .toSlashlink(),
+                let modified = row.col(1)?.toDate(),
+                let excerpt = row.col(2)?.toString()
+            else {
+                return nil
+            }
+            return EntryStub(
+                address: address,
+                excerpt: excerpt,
+                modified: modified
+            )
+        })
+        .first
+    }
+    
     /// List recent entries
     func listRecentMemos(owner: Did?) throws -> [EntryStub] {
         guard self.state == .ready else {

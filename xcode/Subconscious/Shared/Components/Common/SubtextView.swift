@@ -10,11 +10,37 @@ import SwiftUI
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
+    var transcludePreviews: [Slashlink: EntryStub]
+    var onViewTransclude: (Slashlink) -> Void
+    
+    private func entries(for block: Subtext.Block) -> [EntryStub] {
+        block.slashlinks
+            .compactMap { link in
+                guard let slashlink = link.toSlashlink() else {
+                    return nil
+                }
+                
+                return transcludePreviews[slashlink]
+            }
+            .filter { entry in
+                // Avoid empty transclude blocks
+                entry.excerpt.count > 0
+            }
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
             ForEach(subtext.blocks, id: \.self) { block in
                 Text(Self.renderer.render(block.description))
+                ForEach(self.entries(for: block), id: \.self) { entry in
+                    Transclude2View(
+                        address: entry.address,
+                        excerpt: entry.excerpt,
+                        action: {
+                            onViewTransclude(entry.address)
+                        }
+                    )
+                }
             }
         }
         .expandAlignedLeading()
@@ -45,13 +71,19 @@ struct SubtextView_Previews: PreviewProvider {
                     
                     Brief were my days among you, and briefer still the words I have spoken.
                     
-                    But should my voice fade in your ears, and my love vanish in your memory, then I will come again,
+                    But should my /voice fade in your ears, and my love vanish in your /memory, then I will come again,
                     
                     And with a richer heart and lips more yielding to the spirit will I speak.
                     
                     Yea, I shall return with the tide,
                     """
-                )
+                ),
+                transcludePreviews: [
+                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!, excerpt: "hello mother", modified: Date.now),
+                    Slashlink("/voice")!: EntryStub(address: Slashlink("/voice")!, excerpt: "hello father", modified: Date.now),
+                    Slashlink("/memory")!: EntryStub(address: Slashlink("/memory")!, excerpt: "hello world", modified: Date.now)
+                ],
+                onViewTransclude: { _ in }
             )
         }
     }

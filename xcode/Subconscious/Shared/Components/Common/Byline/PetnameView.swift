@@ -21,7 +21,7 @@ extension UserProfile {
             self.nickname,
             self.address.petname?.leaf
         ) {
-        case (.you, _, .some(let selfNickname), _):
+        case (.ourself, _, .some(let selfNickname), _):
             return NameVariant.petname(Slashlink.ourProfile, selfNickname)
         case (_, .following(let petname), _, _):
             return NameVariant.petname(self.address, petname)

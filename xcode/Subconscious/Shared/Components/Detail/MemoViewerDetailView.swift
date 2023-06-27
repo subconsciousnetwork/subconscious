@@ -35,6 +35,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     dom: store.state.dom,
+                    transcludePreviews: store.state.transcludePreviews,
                     address: description.address,
                     backlinks: store.state.backlinks,
                     send: store.send,
@@ -127,6 +128,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var dom: Subtext
+    var transcludePreviews: [Slashlink: EntryStub]
     var address: Slashlink
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
@@ -158,6 +160,20 @@ struct MemoViewerDetailLoadedView: View {
         )
         return .handled
     }
+    
+    private func onViewTransclude(
+        address: Slashlink
+    ) {
+        notify(
+            .requestDetail(
+                MemoDetailDescription.from(
+                    address: address,
+                    fallback: address.description
+                )
+            )
+        )
+    }
+    
 
     var body: some View {
         GeometryReader { geometry in
@@ -165,7 +181,9 @@ struct MemoViewerDetailLoadedView: View {
                 VStack {
                     VStack {
                         SubtextView(
-                            subtext: dom
+                            subtext: dom,
+                            transcludePreviews: transcludePreviews,
+                            onViewTransclude: self.onViewTransclude
                         ).textSelection(
                             .enabled
                         ).environment(\.openURL, OpenURLAction { url in
@@ -216,6 +234,14 @@ enum MemoViewerDetailAction: Hashable {
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
     
+    case fetchTranscludePreviews
+    case succeedFetchTranscludePreviews([Slashlink: EntryStub])
+    case failFetchTranscludePreviews(_ error: String)
+    
+    case fetchOwnerProfile
+    case succeedFetchOwnerProfile(UserProfile)
+    case failFetchOwnerProfile(_ error: String)
+    
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
@@ -245,6 +271,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     
     var loadingState = LoadingState.loading
     
+    var owner: UserProfile?
     var address: Slashlink?
     var defaultAudience = Audience.local
     var title = ""
@@ -254,6 +281,8 @@ struct MemoViewerDetailModel: ModelProtocol {
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
     var metaSheet = MemoViewerDetailMetaSheetModel()
+    
+    var transcludePreviews: [Slashlink: EntryStub] = [:]
     
     static func update(
         state: Self,
@@ -294,6 +323,36 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+        case .fetchTranscludePreviews:
+            return fetchTranscludePreviews(
+                state: state,
+                environment: environment
+            )
+        case .succeedFetchTranscludePreviews(let transcludes):
+            var model = state
+            model.transcludePreviews = transcludes
+            return Update(state: model)
+            
+        case .failFetchTranscludePreviews(let error):
+            logger.error("Failed to fetch transcludes: \(error)")
+            return Update(state: state)
+            
+        case .fetchOwnerProfile:
+            return fetchOwnerProfile(
+                state: state,
+                environment: environment
+            )
+        case .succeedFetchOwnerProfile(let profile):
+            var model = state
+            model.owner = profile
+            return update(
+                state: model,
+                action: .fetchTranscludePreviews,
+                environment: environment
+            )
+        case .failFetchOwnerProfile(let error):
+            logger.error("Failed to fetch owner: \(error)")
+            return Update(state: state)
         }
     }
     
@@ -314,7 +373,10 @@ struct MemoViewerDetailModel: ModelProtocol {
         return update(
             state: model,
             // Set meta sheet address as well
-            action: .setMetaSheetAddress(description.address),
+            actions: [
+                .setMetaSheetAddress(description.address),
+                .fetchOwnerProfile
+            ],
             environment: environment
         ).mergeFx(fx)
     }
@@ -354,7 +416,67 @@ struct MemoViewerDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.dom = dom
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .fetchTranscludePreviews,
+            environment: environment
+        )
+    }
+    
+    static func fetchTranscludePreviews(
+        state: MemoViewerDetailModel,
+        environment: MemoViewerDetailModel.Environment
+    ) -> Update<MemoViewerDetailModel> {
+        
+        guard let owner = state.owner else {
+            return Update(state: state)
+        }
+        
+        let links = state.dom.slashlinks
+            .map { value in value.toSlashlink() }
+            .compactMap { value in value }
+        
+        let fx: Fx<MemoViewerDetailAction> =
+        environment.transclude
+            .fetchTranscludePreviewsPublisher(slashlinks: links, owner: owner)
+            .map { entries in
+                MemoViewerDetailAction.succeedFetchTranscludePreviews(entries)
+            }
+            .recover { error in
+                MemoViewerDetailAction.failFetchTranscludePreviews(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func fetchOwnerProfile(
+        state: MemoViewerDetailModel,
+        environment: MemoViewerDetailModel.Environment
+    ) -> Update<MemoViewerDetailModel> {
+        let fx: Fx<MemoViewerDetailAction> =
+            Future.detached {
+                guard let petname = state.address?.toPetname() else {
+                     return try await environment
+                        .userProfile
+                        .requestOurProfile()
+                        .profile
+                }
+                
+                return try await environment
+                    .userProfile
+                    .requestUserProfile(petname: petname)
+                    .profile
+            }
+            .map { profile in
+                .succeedFetchOwnerProfile(profile)
+            }
+            .recover { error in
+                .failFetchOwnerProfile(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func presentMetaSheet(
@@ -403,13 +525,22 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
 
                 Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
 
-                For the soul walks upon all paths. /infinity-paths
+                For the soul walks upon all paths.
+                
+                /infinity-paths
 
                 The soul walks not upon a line, neither does it grow like a reed.
 
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
+            transcludePreviews: [
+                Slashlink("/infinity-paths")!: EntryStub(
+                    address: Slashlink("/infinity-paths")!,
+                    excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
+                    modified: Date.now
+                )
+            ],
             address: Slashlink(slug: Slug("truth-the-prophet")!),
             backlinks: [],
             send: { action in },

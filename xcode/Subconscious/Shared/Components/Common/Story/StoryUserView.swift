@@ -69,7 +69,7 @@ struct StoryUserView: View {
                         case (.following(_), _):
                             Image.from(appIcon: .following)
                                 .foregroundColor(.secondary)
-                        case (_, .you):
+                        case (_, .ourself):
                             Image.from(appIcon: .you(colorScheme))
                                 .foregroundColor(.secondary)
                         case (_, _):
@@ -113,7 +113,7 @@ struct StoryUserView: View {
                             .background(.background)
                             .foregroundColor(.secondary)
                     }
-                ).disabled(story.user.category == .you)
+                ).disabled(story.user.category == .ourself)
             }
             .padding(AppTheme.tightPadding)
             .frame(height: AppTheme.unit * 13)
@@ -181,7 +181,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                        category: .you,
+                        category: .ourself,
                         resolutionStatus: .resolved(Cid("ok")),
                         ourFollowStatus: .notFollowing
                     )
@@ -196,7 +196,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
-                        category: .you,
+                        category: .ourself,
                         resolutionStatus: .pending,
                         ourFollowStatus: .notFollowing
                     )

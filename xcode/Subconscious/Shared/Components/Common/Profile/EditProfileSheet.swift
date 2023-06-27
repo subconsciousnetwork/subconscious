@@ -134,7 +134,7 @@ struct EditProfileSheet: View {
             address: user.address,
             pfp: pfp,
             bio: UserProfileBio(state.bioField.validated?.text ?? ""),
-            category: .you,
+            category: .ourself,
             resolutionStatus: .resolved(Cid("fake-for-preview")),
             ourFollowStatus: .notFollowing
         )

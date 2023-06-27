@@ -247,7 +247,7 @@ struct UserProfileView: View {
                     status: state.loadingState
                 )
                 if let user = state.user,
-                   user.category == .you {
+                   user.category == .ourself {
                     ToolbarItem(placement: .confirmationAction) {
                         Button(
                             action: {

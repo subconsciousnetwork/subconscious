@@ -1993,6 +1993,7 @@ struct AppEnvironment {
     var database: DatabaseService
     var data: DataService
     var feed: FeedService
+    var transclude: TranscludeService
     
     var recoveryPhrase: RecoveryPhraseEnvironment = RecoveryPhraseEnvironment()
     
@@ -2080,6 +2081,7 @@ struct AppEnvironment {
         
         self.feed = FeedService()
         self.gatewayProvisioningService = GatewayProvisioningService()
+        self.transclude = TranscludeService(database: database, noosphere: noosphere)
     }
 }
 
