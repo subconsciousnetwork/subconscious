@@ -63,6 +63,7 @@ struct OmniboxView: View {
         .padding(.leading, 8)
         .padding(.trailing, 12)
         .frame(height: 34)
+        .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
                 .stroke(Color.separator, lineWidth: 0.5)
@@ -86,8 +87,7 @@ struct OmniboxView: View {
                 // This prevents a race condition where SwiftUI animates the position
                 .opacity(status == .loading ? 0.5 : 0)
         )
-        .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
-        .onAppear {
+        .task {
             phase += Double.pi * 2
         }
     }
