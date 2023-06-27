@@ -121,6 +121,7 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set gateway URL
     case submitGatewayURL(_ url: URL)
+    case submitGatewayURLForm
     case succeedResetGatewayURL(_ url: URL)
 
     /// Create a new sphere given an owner key name
@@ -489,6 +490,11 @@ struct AppModel: ModelProtocol {
     )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
+    var gatewayOperationInProgress: Bool {
+        lastGatewaySyncStatus == .pending ||
+        gatewayProvisioningStatus == .pending
+    }
+    
     /// Show settings sheet?
     var isSettingsSheetPresented = false
     
@@ -657,6 +663,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 url: url
+            )
+        case .submitGatewayURLForm:
+            return submitGatewayURLForm(
+                state: state,
+                environment: environment
             )
         case let .succeedResetGatewayURL(url):
             return succeedResetGatewayURL(
@@ -1093,6 +1104,11 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         url: URL
     ) -> Update<AppModel> {
+        guard state.gatewayURL != url.absoluteString else {
+            logger.log("Gateway URL is identical to current value, doing nothing")
+            return Update(state: state)
+        }
+        
         var model = state
         model.gatewayURL = url.absoluteString
 
@@ -1113,6 +1129,25 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
         .mergeFx(fx)
+    }
+    
+    static func submitGatewayURLForm(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard let url = state.gatewayURLField.validated else {
+            logger.log("Gateway URL field is invalid, doing nothing")
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            actions: [
+                .submitGatewayURL(url),
+                .syncSphereWithGateway
+            ],
+            environment: environment
+        )
     }
     
     static func succeedResetGatewayURL(

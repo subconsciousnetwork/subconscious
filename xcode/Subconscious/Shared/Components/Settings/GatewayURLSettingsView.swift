@@ -109,26 +109,24 @@ struct GatewayURLSettingsView: View {
                     .autocapitalization(.none)
                     .keyboardType(.URL)
                     .onDisappear {
-                        guard let url = app.state.gatewayURLField.validated else {
-                            return
-                        }
-                        
-                        app.send(.submitGatewayURL(url))
+                        app.send(.submitGatewayURLForm)
                     }
+                    .disabled(app.state.gatewayOperationInProgress)
                     
-                    if app.state.gatewayProvisioningStatus != .pending {
-                        Button(
-                            action: {
-                                app.send(.syncSphereWithGateway)
-                            },
-                            label: {
-                                GatewaySyncLabel(
-                                    status: app.state.lastGatewaySyncStatus
-                                )
-                            }
-                        )
-                        .disabled(app.state.gatewayURL.count == 0)
-                    }
+                    Button(
+                        action: {
+                            app.send(.submitGatewayURLForm)
+                        },
+                        label: {
+                            GatewaySyncLabel(
+                                status: app.state.lastGatewaySyncStatus
+                            )
+                        }
+                    )
+                    .disabled(
+                        app.state.gatewayURL.count == 0 ||
+                        app.state.gatewayOperationInProgress
+                    )
                 }, header: {
                     Text("Gateway")
                 }, footer: {

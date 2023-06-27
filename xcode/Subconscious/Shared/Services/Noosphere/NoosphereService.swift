@@ -117,6 +117,11 @@ actor NoosphereService:
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
     func resetGateway(url: URL?) {
+        guard self.gatewayURL != url else {
+            logger.debug("Reset gateway to identical URL, ignoring")
+            return
+        }
+       
         logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
         self.gatewayURL = url
         self._noosphere = nil
