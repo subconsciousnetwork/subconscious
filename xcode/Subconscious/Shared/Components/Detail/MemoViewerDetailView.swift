@@ -429,7 +429,11 @@ struct MemoViewerDetailModel: ModelProtocol {
     ) -> Update<MemoViewerDetailModel> {
         
         guard let owner = state.owner else {
-            return Update(state: state)
+            return update(
+                state: state,
+                action: .failFetchTranscludePreviews("Owner profile is not loaded"),
+                environment: environment
+            )
         }
         
         let links = state.dom.slashlinks
