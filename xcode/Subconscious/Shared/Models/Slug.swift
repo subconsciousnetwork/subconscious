@@ -17,7 +17,8 @@ public struct Slug:
     LosslessStringConvertible
 {
     private static let slugRegex = /([\w\d\-]+)(\/[\w\d\-]+)*/
-    public static let profile = Slug("_profile_")!
+    private static let hiddenPrefix = "_"
+    public static let profile = Slug(hidden: "profile_")!
 
     public static func < (lhs: Slug, rhs: Slug) -> Bool {
         lhs.id < rhs.id
@@ -33,6 +34,12 @@ public struct Slug:
         // Strip all non-allowed characters
         let formatted = string.replacingOccurrences(
             of: #"[^\w\d\-\s]"#,
+            with: "",
+            options: .regularExpression,
+            range: nil
+        )
+        .replacingOccurrences(
+            of: "^\(Self.hiddenPrefix)+",
             with: "",
             options: .regularExpression,
             range: nil
@@ -69,7 +76,16 @@ public struct Slug:
     
     /// Excludes "internal" slugs like `Slug.profile`
     public var isHidden: Bool {
-        verbatim.hasPrefix("_")
+        verbatim.hasPrefix(Self.hiddenPrefix)
+    }
+    
+    public init?(hidden: String) {
+        guard hidden.wholeMatch(of: Self.slugRegex) != nil else {
+            return nil
+        }
+        
+        self.description = "\(Self.hiddenPrefix)\(hidden.lowercased())"
+        self.verbatim = "\(Self.hiddenPrefix)\(hidden)"
     }
     
     /// Losslessly create a slug from a string.
@@ -79,8 +95,17 @@ public struct Slug:
         guard description.wholeMatch(of: Self.slugRegex) != nil else {
             return nil
         }
+        
         self.description = description.lowercased()
         self.verbatim = description
+    }
+    
+    public init?(visible: String) {
+        guard !visible.starts(with: Self.hiddenPrefix) else {
+            return nil
+        }
+        
+        self.init(visible)
     }
     
     /// Convert a string into a slug.
