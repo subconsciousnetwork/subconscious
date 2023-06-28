@@ -872,8 +872,12 @@ struct AppModel: ModelProtocol {
                 return Update(state: state)
             }
             
+            var model = state
+            model.inviteCode = inviteCode
+            AppDefaults.standard.inviteCode = inviteCode.description
+            
             return update(
-                state: state,
+                state: model,
                 action: .requestRedeemInviteCode(inviteCode),
                 environment: environment
             )
@@ -1973,8 +1977,6 @@ struct AppModel: ModelProtocol {
         
         var model = state
         model.inviteCodeRedemptionStatus = .pending
-        model.inviteCode = inviteCode
-        AppDefaults.standard.inviteCode = inviteCode.description
         
         return Update(state: model, fx: fx)
     }
