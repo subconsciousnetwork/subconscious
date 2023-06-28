@@ -100,11 +100,20 @@ struct MementoGeist: Geist {
                     return nil
                 }
                 
-                guard let entry = database.readRandomEntryInDateRange(startDate: range.beginning, endDate: range.end) else {
+                guard let entry = database.readRandomEntryInDateRange(
+                    startDate: range.beginning,
+                    endDate: range.end,
+                    owner: nil
+                ) else {
                     return nil
                 }
                 
-                return Story.prompt(StoryPrompt(entry: entry, prompt: readableDescription(variant: variant)))
+                return Story.prompt(
+                    StoryPrompt(
+                        entry: entry,
+                        prompt: readableDescription(variant: variant)
+                   )
+                )
             })
             .compactMap({ $0 }) // Filter out nil cases
         

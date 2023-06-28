@@ -24,7 +24,7 @@ struct RandomPromptGeist: Geist {
     }
 
     func ask(query: String) -> Story? {
-        guard let stub = database.readRandomEntry() else {
+        guard let stub = database.readRandomEntry(owner: nil) else {
             return nil
         }
         let prompt = tracery.expand("#origin#")

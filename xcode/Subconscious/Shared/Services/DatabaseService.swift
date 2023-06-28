@@ -982,7 +982,8 @@ final class DatabaseService {
     
     func readRandomEntryInDateRange(
         startDate: Date,
-        endDate: Date
+        endDate: Date,
+        owner: Did?
     ) -> EntryStub? {
         guard self.state == .ready else {
             return nil
@@ -991,8 +992,9 @@ final class DatabaseService {
         return try? database.execute(
             sql: """
             SELECT id, modified, excerpt
-            FROM memo
-            WHERE memo.modified BETWEEN ? AND ?
+            FROM modified
+            WHERE modified.modified BETWEEN ? AND ?
+                AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -1003,7 +1005,11 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -1019,7 +1025,7 @@ final class DatabaseService {
     }
 
     /// Select a random entry
-    func readRandomEntry() -> EntryStub? {
+    func readRandomEntry(owner: Did?) -> EntryStub? {
         guard self.state == .ready else {
             return nil
         }
@@ -1029,12 +1035,17 @@ final class DatabaseService {
             SELECT id, modified, excerpt
             FROM memo
             ORDER BY RANDOM()
+                AND substr(memo.slug, 1, 1) != '_'
             LIMIT 1
             """
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -1051,7 +1062,8 @@ final class DatabaseService {
     
     /// Select a random entry who's body matches a query string
     func readRandomEntryMatching(
-        query: String
+        query: String,
+        owner: Did?
     ) -> EntryStub? {
         guard self.state == .ready else {
             return nil
@@ -1061,7 +1073,8 @@ final class DatabaseService {
             sql: """
             SELECT id, modified, excerpt
             FROM memo_search
-            WHERE memo_search MATCH ?
+            WHERE memo_search.description MATCH ?
+                AND substr(memo.slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -1071,7 +1084,11 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -1087,23 +1104,35 @@ final class DatabaseService {
     }
     
     /// Choose a random entry and publish slug
-    func readRandomEntryLink() -> EntryLink? {
+    func readRandomEntryLink(owner: Did) -> EntryLink? {
         guard self.state == .ready else {
             return nil
         }
-
+        
+        let dids = [
+            Did.local.description,
+            owner.description]
+        
         return try? database.execute(
             sql: """
             SELECT id, title
             FROM memo
-            WHERE substr(memo.slug, 1, 1) != '_'
+            WHERE did IN (SELECT value FROM json_each(?))
+                AND substr(slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1
-            """
+            """,
+            parameters: [
+                .json(dids, or: "[]")
+            ]
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let title = row.col(1)?.toString()
             else {
                 return nil

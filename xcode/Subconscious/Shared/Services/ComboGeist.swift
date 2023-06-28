@@ -19,10 +19,10 @@ struct ComboGeist: Geist {
 
     func ask(query: String) -> Story? {
         let prompt = tracery.expand("#combo_followup#")
-        guard let stubA = database.readRandomEntry() else {
+        guard let stubA = database.readRandomEntry(owner: nil) else {
             return nil
         }
-        guard let stubB = database.readRandomEntry() else {
+        guard let stubB = database.readRandomEntry(owner: nil) else {
             return nil
         }
         return Story.combo(StoryCombo(prompt: prompt, entryA: stubA, entryB: stubB))

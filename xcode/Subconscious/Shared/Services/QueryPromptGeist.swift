@@ -31,7 +31,7 @@ struct QueryPromptGeist: Geist {
 
     func ask(query: String) -> Story? {
         guard
-            let stub = database.readRandomEntryMatching(query: self.query)
+            let stub = database.readRandomEntryMatching(query: self.query, owner: nil)
         else {
             return nil
         }
