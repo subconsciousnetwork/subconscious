@@ -217,7 +217,6 @@ enum AppAction: CustomLogStringConvertible {
     case failRedeemInviteCode(_ error: String)
     
     /// Check gateway
-    case submitProvisionGatewayForm
     case requestGatewayProvisioningStatus
     case succeedProvisionGateway(_ gatewayURL: URL)
     case failProvisionGateway(_ error: String)
@@ -898,13 +897,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
-            )
-        case .submitProvisionGatewayForm:
-            // Superfluous event?
-            return update(
-                state: state,
-                action: .requestGatewayProvisioningStatus,
-                environment: environment
             )
         case .requestGatewayProvisioningStatus:
             return requestGatewayProvisioningStatus(

@@ -212,7 +212,7 @@ struct GatewayProvisioningSection: View {
                 
                 Button(
                     action: {
-                        app.send(.submitProvisionGatewayForm)
+                        app.send(.requestGatewayProvisioningStatus)
                     },
                     label: {
                         GatewayProvisionLabel(
