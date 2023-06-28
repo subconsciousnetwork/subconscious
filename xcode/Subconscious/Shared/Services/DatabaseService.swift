@@ -1108,18 +1108,22 @@ final class DatabaseService {
         guard self.state == .ready else {
             return nil
         }
-
+        
+        let dids = [
+            Did.local.description,
+            owner.description]
+        
         return try? database.execute(
             sql: """
             SELECT id, title
             FROM memo
-            WHERE substr(memo.slug, 1, 1) != '_'
-                AND did = ?
+            WHERE did IN (SELECT value FROM json_each(?))
+                AND substr(slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1
             """,
             parameters: [
-                .text(owner.did.description)
+                .json(dids, or: "[]")
             ]
         )
         .compactMap({ row in
