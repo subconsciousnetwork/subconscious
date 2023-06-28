@@ -434,25 +434,25 @@ final class DatabaseService {
         return results.col(0)?.toInt()
     }
     
-    func listEntries(for slashlinks: [Slashlink], owner: Petname?) throws -> [EntryStub] {
+    func listEntries(for slashlinks: [Slashlink]) throws -> [EntryStub] {
         return try slashlinks.compactMap({ slashlink in
-            return try readEntry(for: slashlink, owner: owner)
+            return try readEntry(for: slashlink)
         })
     }
     
-    func readEntry(for slashlink: Slashlink, owner: Petname?) throws -> EntryStub? {
+    func readEntry(for slashlink: Slashlink) throws -> EntryStub? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
 
         let results = try database.execute(
             sql: """
-        SELECT slashlink, modified, excerpt
-        FROM memo
-        WHERE slashlink = ?
-        ORDER BY modified DESC
-        LIMIT 1000
-        """,
+            SELECT slashlink, modified, excerpt
+            FROM memo
+            WHERE slashlink = ?
+            ORDER BY modified DESC
+            LIMIT 1000
+            """,
             parameters: [
                 .text(slashlink.markup),
             ]

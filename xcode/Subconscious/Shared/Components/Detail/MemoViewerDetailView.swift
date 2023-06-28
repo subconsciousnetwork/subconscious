@@ -437,11 +437,10 @@ struct MemoViewerDetailModel: ModelProtocol {
         }
         
         let links = state.dom.slashlinks
-            .map { value in value.toSlashlink() }
-            .compactMap { value in value }
+            .compactMap { value in value.toSlashlink() }
         
         let fx: Fx<MemoViewerDetailAction> =
-        environment.transclude
+            environment.transclude
             .fetchTranscludePreviewsPublisher(slashlinks: links, owner: owner)
             .map { entries in
                 MemoViewerDetailAction.succeedFetchTranscludePreviews(entries)
