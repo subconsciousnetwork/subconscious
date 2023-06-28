@@ -43,7 +43,6 @@ struct GatewaySyncLabel: View {
     }
 }
 
-
 // MARK: Settings
 
 struct SettingsView: View {

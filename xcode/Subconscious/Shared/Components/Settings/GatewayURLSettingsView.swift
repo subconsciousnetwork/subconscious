@@ -207,7 +207,7 @@ struct GatewayProvisioningSection: View {
                 .disabled(app.state.gatewayOperationInProgress)
             },
             header: {
-                Text("Provision Gateway")
+                Text("Your Gateway")
             },
             footer: {
                 VStack {
@@ -223,7 +223,6 @@ struct GatewayProvisioningSection: View {
         )
     }
 }
-
 
 struct GatewayURLSettingsView: View {
     @ObservedObject var app: Store<AppModel>
@@ -279,6 +278,7 @@ struct GatewayURLSettingsView: View {
             if let gatewayId = app.state.gatewayId {
                 GatewayProvisioningSection(app: app, gatewayId: gatewayId)
             }
+            
             InviteCodeSection(app: app)
         }
         .navigationTitle("Gateway URL")
