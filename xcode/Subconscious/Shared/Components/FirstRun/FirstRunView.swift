@@ -33,26 +33,6 @@ struct InviteCodeRedeemedView: View {
     }
 }
 
-struct InviteCodeErrorView: View {
-    var error: String
-    
-    var body: some View {
-        VStack(spacing: AppTheme.unit2) {
-            HStack(spacing: AppTheme.unit2) {
-                Image(systemName: "exclamationmark.circle")
-                    .resizable()
-                    .frame(width: 16, height: 16)
-                    .opacity(0.5)
-                Text("Could not redeem invite code")
-            }
-            .font(.body)
-            .bold()
-        }
-        .foregroundColor(.red)
-    }
-}
-
-
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
@@ -123,10 +103,6 @@ struct FirstRunView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
-                }
-                
-                if case let .failed(message) = app.state.inviteCodeRedemptionStatus {
-                    InviteCodeErrorView(error: message)
                 }
                 
                 if !app.state.inviteCodeFormField.hasFocus {
