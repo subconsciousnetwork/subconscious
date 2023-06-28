@@ -68,6 +68,12 @@ struct ValidatedFormField<T: Equatable>: View {
                 .onChange(of: innerText, perform: { innerText in
                     send(.setValue(input: innerText))
                 })
+                .onChange(of: field, perform: { field in
+                    // AKA field has been reset
+                    if !field.touched && innerText != field.value {
+                        innerText = field.value
+                    }
+                })
                 .submitLabel(submitLabel)
                 .onSubmit {
                     onSubmit()

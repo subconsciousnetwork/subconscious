@@ -76,21 +76,21 @@ struct FirstRunView: View {
                             tag: AppAction.inviteCodeFormField
                         ),
                         caption: Func.run {
-                            switch app.state.gatewayProvisioningStatus {
+                            switch app.state.inviteCodeRedemptionStatus {
                             case .failed(_):
                                 return "Failed to redeem invite code"
                             case _:
-                                return "Look for this in your welcome email"
+                                return "Your ticket to the Noosphere"
                             }
                         },
                         onFocusChanged: { focused in
-                            if let inviteCode = app.state.inviteCodeFormField.validated,
-                               !focused {
-                                app.send(.requestProvisionGateway(inviteCode))
+                            // User finished editing the field
+                            if !focused {
+                                app.send(.submitInviteCodeForm)
                             }
                         },
                         isValid: Func.run {
-                            switch app.state.gatewayProvisioningStatus {
+                            switch app.state.inviteCodeRedemptionStatus {
                             case .failed(_):
                                 return false
                             case _:

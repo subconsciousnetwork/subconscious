@@ -117,8 +117,6 @@ enum AppAction: CustomLogStringConvertible {
     case succeedFetchNicknameFromProfile(_ nickname: Petname.Name)
     case failFetchNicknameFromProfile(_ message: String)
     
-    case setInviteCode(_ inviteCode: String)
-
     /// Set gateway URL
     case submitGatewayURL(_ url: URL)
     case submitGatewayURLForm
@@ -212,9 +210,14 @@ enum AppAction: CustomLogStringConvertible {
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
     
+    /// Invite code
+    case submitInviteCodeForm
+    case requestRedeemInviteCode(_ inviteCode: InviteCode)
+    case succeedRedeemInviteCode(_ gatewayId: String)
+    case failRedeemInviteCode(_ error: String)
+    
+    /// Check gateway
     case submitProvisionGatewayForm
-    case requestProvisionGateway(_ inviteCode: InviteCode)
-    case receiveGatewayId(_ gatewayId: String)
     case requestGatewayProvisioningStatus
     case succeedProvisionGateway(_ gatewayURL: URL)
     case failProvisionGateway(_ error: String)
@@ -378,10 +381,8 @@ struct InviteCodeFormFieldCursor: CursorProtocol {
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
-        case .setValue(let input):
-            return .setInviteCode(input)
         default:
-            return .nicknameFormField(action)
+            return .inviteCodeFormField(action)
         }
     }
 }
@@ -445,10 +446,12 @@ struct AppModel: ModelProtocol {
         validate: { value in Petname.Name(value) }
     )
     
+    var inviteCode: InviteCode?
     var inviteCodeFormField = InviteCodeFormField(
         value: "",
         validate: { value in InviteCode(value) }
     )
+    var inviteCodeRedemptionStatus = ResourceStatus.initial
     var gatewayProvisioningStatus = ResourceStatus.initial
     
     /// Default sphere identity
@@ -492,6 +495,7 @@ struct AppModel: ModelProtocol {
     
     var gatewayOperationInProgress: Bool {
         lastGatewaySyncStatus == .pending ||
+        inviteCodeRedemptionStatus == .pending ||
         gatewayProvisioningStatus == .pending
     }
     
@@ -579,12 +583,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isUpgraded: isUpgraded
-            )
-        case let .setInviteCode(inviteCode):
-            return setInviteCode(
-                state: state,
-                environment: environment,
-                text: inviteCode
             )
         case .createSphere:
             return createSphere(
@@ -854,34 +852,39 @@ struct AppModel: ModelProtocol {
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
             
-        case .submitProvisionGatewayForm:
-            switch (state.inviteCodeFormField.validated, state.gatewayId) {
-            case (.some(let inviteCode), .none):
-                return update(
-                    state: state,
-                    action: .requestProvisionGateway(inviteCode),
-                    environment: environment
-                )
-            case _:
-                return update(
-                    state: state,
-                    action: .requestGatewayProvisioningStatus,
-                    environment: environment
-                )
+        case .submitInviteCodeForm:
+            guard let inviteCode = state.inviteCodeFormField.validated else {
+                logger.log("Invalid invite code submitted")
+                return Update(state: state)
             }
-        case .requestProvisionGateway(let inviteCode):
-            return requestProvisionGateway(
+            
+            return update(
+                state: state,
+                action: .requestRedeemInviteCode(inviteCode),
+                environment: environment
+            )
+        case .requestRedeemInviteCode(let inviteCode):
+            return requestRedeemInviteCode(
                 state: state,
                 environment: environment,
                 inviteCode: inviteCode
             )
-        case .receiveGatewayId(let gatewayId):
-            var model = state
-            model.gatewayId = gatewayId
-            AppDefaults.standard.gatewayId = gatewayId
-            
+        case .succeedRedeemInviteCode(let gatewayId):
+            return succeedRedeemInviteCode(
+                state: state,
+                environment: environment,
+                gatewayId: gatewayId
+            )
+        case .failRedeemInviteCode(let error):
+            return failRedeemInviteCode(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .submitProvisionGatewayForm:
+            // Superfluous event?
             return update(
-                state: model,
+                state: state,
                 action: .requestGatewayProvisioningStatus,
                 environment: environment
             )
@@ -937,6 +940,7 @@ struct AppModel: ModelProtocol {
         
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
+        model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
         
         // Update model from app defaults
         return update(
@@ -947,9 +951,6 @@ struct AppModel: ModelProtocol {
                 ),
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
-                ),
-                .inviteCodeFormField(
-                    .setValue(input: AppDefaults.standard.inviteCode ?? "")
                 ),
                 .gatewayURLField(
                     .setValue(input: AppDefaults.standard.gatewayURL)
@@ -1084,21 +1085,6 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    static func setInviteCode(
-        state: AppModel,
-        environment: AppEnvironment,
-        text: String
-    ) -> Update<AppModel> {
-        
-        return update(
-            state: state,
-            actions: [
-                .inviteCodeFormField(.setValue(input: text))
-            ],
-            environment: environment
-        )
-    }
-    
     static func submitGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
@@ -1106,7 +1092,16 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         guard state.gatewayURL != url.absoluteString else {
             logger.log("Gateway URL is identical to current value, doing nothing")
-            return Update(state: state)
+            return update(
+                state: state,
+                actions: [
+                    .gatewayURLField(.reset),
+                    .gatewayURLField(
+                        .setValue(input: url.absoluteString)
+                    )
+                ],
+                environment: environment
+            )
         }
         
         var model = state
@@ -1123,9 +1118,12 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .gatewayURLField(
-                .setValue(input: url.absoluteString)
-            ),
+            actions: [
+                .gatewayURLField(.reset),
+                .gatewayURLField(
+                    .setValue(input: url.absoluteString)
+                )
+            ],
             environment: environment
         )
         .mergeFx(fx)
@@ -1184,15 +1182,11 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: SphereReceipt
     ) -> Update<AppModel> {
-        var actions: [AppAction] = [
+        let actions: [AppAction] = [
             .setSphereIdentity(receipt.identity),
             .setRecoveryPhrase(receipt.mnemonic),
             .followDefaultGeist,
         ]
-        
-        if let inviteCode = state.inviteCodeFormField.validated {
-            actions.append(.requestProvisionGateway(inviteCode))
-        }
         
         return update(
             state: state,
@@ -1849,31 +1843,33 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    static func requestProvisionGateway(
+    static func requestRedeemInviteCode(
         state: AppModel,
         environment: AppEnvironment,
         inviteCode: InviteCode
     ) -> Update<AppModel> {
         guard let did = state.sphereIdentity,
               let did = Did(did) else {
+            logger.error("Missing identity, cannot redeem invite code")
             return Update(state: state)
         }
         
         let fx: Fx<AppAction> = environment.gatewayProvisioningService
-            .provisionGatewayPublisher(
+            .redeemInviteCodePublisher(
                 inviteCode: inviteCode,
                 sphere: did
             )
             .map { res in
-                .receiveGatewayId(res.gateway_id)
+                .succeedRedeemInviteCode(res.gateway_id)
             }
             .recover { error in
-                .failProvisionGateway(error.localizedDescription)
+                .failRedeemInviteCode(error.localizedDescription)
             }
             .eraseToAnyPublisher()
         
         var model = state
-        model.gatewayProvisioningStatus = .pending
+        model.inviteCodeRedemptionStatus = .pending
+        model.inviteCode = inviteCode
         AppDefaults.standard.inviteCode = inviteCode.description
         
         return Update(state: model, fx: fx)
@@ -1909,6 +1905,26 @@ struct AppModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
+    static func succeedRedeemInviteCode(
+        state: AppModel,
+        environment: AppEnvironment,
+        gatewayId: String
+    ) -> Update<AppModel> {
+        var model = state
+        model.gatewayId = gatewayId
+        model.inviteCodeRedemptionStatus = .succeeded
+        AppDefaults.standard.gatewayId = gatewayId
+        
+        return update(
+            state: model,
+            actions: [
+                .inviteCodeFormField(.reset),
+                .requestGatewayProvisioningStatus
+            ],
+            environment: environment
+        )
+    }
+    
     static func succeedProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
@@ -1927,12 +1943,25 @@ struct AppModel: ModelProtocol {
         )
     }
     
+    static func failRedeemInviteCode(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.error("Failed to redeem invite code: \(error)")
+        var model = state
+        model.inviteCodeRedemptionStatus = .failed(error)
+        
+        return Update(state: model)
+    }
+    
+    
     static func failProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.error("Failed to provision gateway: \(error)")
+        logger.error("Failed to check gateway status: \(error)")
         var model = state
         model.gatewayProvisioningStatus = .failed(error)
         
