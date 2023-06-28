@@ -94,7 +94,6 @@ struct SettingsView: View {
                                 .lineLimit(1)
                             }
                         )
-                        .disabled(app.state.gatewayProvisioningStatus == .pending)
                     },
                     header: {
                         Text("Noosphere")

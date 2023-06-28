@@ -1346,6 +1346,8 @@ struct AppModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
+                    .inviteCodeFormField(.reset),
+                    .nicknameFormField(.reset),
                     .persistFirstRunComplete(true)
                 ],
                 environment: environment

@@ -119,24 +119,40 @@ struct GatewayProvisionLabel: View {
 
 // MARK: Provisioning
 
+struct ValidatedInviteCodeFormField: View {
+    @ObservedObject var app: Store<AppModel>
+    
+    var body: some View {
+        ValidatedFormField(
+            placeholder: "Enter an invite code",
+            field: app.state.inviteCodeFormField,
+            send: Address.forward(
+                send: app.send,
+                tag: AppAction.inviteCodeFormField
+            ),
+            caption: Func.run {
+                switch app.state.inviteCodeRedemptionStatus {
+                case .failed(_):
+                    return "Could not redeem invite code"
+                case _:
+                    return "Your ticket to the Noosphere"
+                }
+            }
+        )
+        .autocapitalization(.none)
+        .autocorrectionDisabled(true)
+        .textInputAutocapitalization(.never)
+        .disabled(app.state.gatewayOperationInProgress)
+    }
+}
+
 struct InviteCodeSection: View {
     @ObservedObject var app: Store<AppModel>
     
     var body: some View {
         Section(
             content: {
-                ValidatedFormField(
-                    placeholder: "Enter an invite code",
-                    field: app.state.inviteCodeFormField,
-                    send: Address.forward(
-                        send: app.send,
-                        tag: AppAction.inviteCodeFormField
-                    ),
-                    caption: "Your ticket to Noosphere"
-                )
-                .autocapitalization(.none)
-                .autocorrectionDisabled(true)
-                .disabled(app.state.gatewayOperationInProgress)
+                ValidatedInviteCodeFormField(app: app)
                 
                 Button(
                     action: {

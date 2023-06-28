@@ -103,6 +103,7 @@ struct FirstRunView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                    .disabled(app.state.gatewayOperationInProgress)
                 }
                 
                 if !app.state.inviteCodeFormField.hasFocus {
