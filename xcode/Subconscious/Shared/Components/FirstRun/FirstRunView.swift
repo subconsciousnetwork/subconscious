@@ -78,7 +78,7 @@ struct FirstRunView: View {
                         caption: Func.run {
                             switch app.state.inviteCodeRedemptionStatus {
                             case .failed(_):
-                                return "Failed to redeem invite code"
+                                return "Could not redeem invite code"
                             case _:
                                 return "Your ticket to the Noosphere"
                             }
