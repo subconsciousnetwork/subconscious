@@ -61,34 +61,7 @@ struct EntryListView: View {
                 }
                 .listStyle(.plain)
             } else {
-                VStack(spacing: AppTheme.unit * 6) {
-                    Spacer()
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 64))
-                    Text("Your Subconscious is empty")
-                    VStack(spacing: AppTheme.unit) {
-                        Text(
-                            "If your mind is empty, it is always ready for anything, it is open to everything. In the beginner's mind there are many possibilities, but in the expert's mind there are few."
-                        )
-                        .italic()
-                        Text(
-                            "Shunryū Suzuki"
-                        )
-                    }
-                    .frame(maxWidth: 240)
-                    // Some extra padding to visually center the group.
-                    // The icon is large and rather heavy. This offset
-                    // helps prevent the illusion of being off-center.
-                    .padding(.bottom, AppTheme.unit * 24)
-                    .font(.caption)
-                    Spacer()
-                }
-                .multilineTextAlignment(.center)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .foregroundColor(Color.secondary)
-                .background(Color.background)
-                .transition(.opacity)
+                EntryListEmptyView(onRefresh: onRefresh)
             }
         } else {
             ProgressScrimView()
