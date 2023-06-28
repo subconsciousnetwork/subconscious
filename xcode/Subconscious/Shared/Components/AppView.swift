@@ -1100,6 +1100,8 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         url: URL
     ) -> Update<AppModel> {
+        // We always ensure the field reflects this value
+        // even if nothing changes from a Noosphere perspective 
         let actions: [AppAction] = [
             .gatewayURLField(.reset),
             .gatewayURLField(
