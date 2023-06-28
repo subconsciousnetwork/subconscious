@@ -127,7 +127,7 @@ struct FirstRunView: View {
                                 .foregroundColor(.secondary)
                             
                             Button(action: {
-                                app.send(.submitFirstRunStep(current: .initial))
+                                app.send(.requestOfflineMode)
                             }, label: {
                                 Text("Use offline")
                                     .font(.caption)

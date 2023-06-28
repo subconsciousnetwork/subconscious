@@ -225,6 +225,7 @@ enum AppAction: CustomLogStringConvertible {
     case setFirstRunPath([FirstRunStep])
     case pushFirstRunStep(FirstRunStep)
     case submitFirstRunStep(current: FirstRunStep)
+    case requestOfflineMode
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
@@ -585,6 +586,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 current: current
+            )
+        case .requestOfflineMode:
+            return requestOfflineMode(
+                state: state,
+                environment: environment
             )
         case let .setAppUpgraded(isUpgraded):
             return setAppUpgraded(
@@ -1285,6 +1291,23 @@ struct AppModel: ModelProtocol {
         }
         
         return Update(state: model).animation(.default)
+    }
+    
+    static func requestOfflineMode(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        var model = state
+        model.inviteCode = nil
+        
+        return update(
+            state: model,
+            actions: [
+                .inviteCodeFormField(.reset),
+                .submitFirstRunStep(current: .initial)
+            ],
+            environment: environment
+        )
     }
     
     static func submitFirstRunStep(
