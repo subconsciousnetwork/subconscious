@@ -8,6 +8,7 @@
 
 import XCTest
 import ObservableStore
+import SwiftUI
 @testable import Subconscious
 
 class Tests_FormField: XCTestCase {
@@ -124,5 +125,19 @@ class Tests_FormField: XCTestCase {
         XCTAssertEqual(state.validated, nil, "Validated output is nil")
         XCTAssertEqual(state.isValid, false, "Validator fails")
         XCTAssertEqual(state.shouldPresentAsInvalid, false, "No error is displayed")
+        
+        update = FormField.update(state: update.state, action: .setValue(input: "hello"), environment: environment)
+        update = FormField.update(state: update.state, action: .markAsTouched, environment: environment)
+        update = FormField.update(state: update.state, action: .setValidationStatus(valid: false), environment: environment)
+        
+        XCTAssertEqual(update.state.validated, "hello", "Validated output returned")
+        XCTAssertEqual(update.state.isValid, false, "Validation status overridden")
+        XCTAssertEqual(update.state.shouldPresentAsInvalid, true, "Error message is displayed")
+        
+        update = FormField.update(state: update.state, action: .setValue(input: "anything else"), environment: environment)
+        XCTAssertEqual(update.state.isValid, false, "Field is invalid after update")
+        
+        update = FormField.update(state: update.state, action: .setValidationStatus(valid: false), environment: environment)
+        XCTAssertEqual(update.state.isValid, false, "Validation status overridden")
     }
 }

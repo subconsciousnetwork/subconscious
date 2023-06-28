@@ -298,7 +298,6 @@ struct GatewayURLSettingsView: View {
             InviteCodeSection(app: app)
         }
         .navigationTitle("Gateway URL")
-        
     }
 }
 
