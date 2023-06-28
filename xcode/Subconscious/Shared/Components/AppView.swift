@@ -2031,9 +2031,12 @@ struct AppModel: ModelProtocol {
         var model = state
         model.inviteCodeRedemptionStatus = .failed(error)
         
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .inviteCodeFormField(.setValidationStatus(valid: false)),
+            environment: environment
+        )
     }
-    
     
     static func failProvisionGateway(
         state: AppModel,
