@@ -33,7 +33,13 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up1.state.firstRunPath, [.nickname], "proceed in offline mode by default")
+        XCTAssertNil(up1.state.inviteCode)
+        XCTAssertNil(up1.state.gatewayId)
+        XCTAssertEqual(
+            up1.state.firstRunPath,
+            [.nickname],
+            "proceed in offline mode by default"
+        )
         
         let up2 = AppModel.update(
             state: model,
@@ -43,7 +49,13 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up2.state.firstRunPath, [.nickname], "proceed if the user requests offline mode")
+        XCTAssertNil(up2.state.inviteCode)
+        XCTAssertNil(up2.state.gatewayId)
+        XCTAssertEqual(
+            up2.state.firstRunPath,
+            [.nickname],
+            "proceed if the user requests offline mode"
+        )
         
         let up3 = AppModel.update(
             state: model,
@@ -55,7 +67,13 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up3.state.firstRunPath, [.nickname], "proceed if the user requests offline mode after using form")
+        XCTAssertNil(up3.state.inviteCode)
+        XCTAssertNil(up3.state.gatewayId)
+        XCTAssertEqual(
+            up3.state.firstRunPath,
+            [.nickname],
+            "proceed if the user requests offline mode after using form"
+        )
         
         let up4 = AppModel.update(
             state: model,
@@ -67,7 +85,13 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up4.state.firstRunPath, [], "cannot proceed with invite code but no gateway ID")
+        XCTAssertEqual(up4.state.inviteCode, InviteCode("one two three four")!)
+        XCTAssertNil(up4.state.gatewayId)
+        XCTAssertEqual(
+            up4.state.firstRunPath,
+            [],
+            "cannot proceed with invite code but no gateway ID"
+        )
         
         let up5 = AppModel.update(
             state: model,
@@ -80,8 +104,37 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up5.state.firstRunPath, [.nickname],  "proceed with invite code + gateway ID")
+        XCTAssertEqual(
+            up5.state.firstRunPath,
+            [.nickname],
+            "proceed with invite code + gateway ID"
+        )
+        XCTAssertEqual(up5.state.inviteCode, InviteCode("one two three four")!)
+        XCTAssertEqual(up5.state.gatewayId, "my-gateway")
         XCTAssertTrue(up5.state.gatewayProvisioningStatus == .pending)
+        
+        let up6 = AppModel.update(
+            state: model,
+            actions: [
+                .inviteCodeFormField(.setValue(input: "one two three four")),
+                .submitInviteCodeForm,
+                .succeedRedeemInviteCode("my-gateway"),
+                .requestOfflineMode,
+            ],
+            environment: AppEnvironment()
+        )
+        
+        XCTAssertEqual(
+            up6.state.firstRunPath,
+            [.nickname],
+            "clear invite code + gateway ID when requesting offline"
+        )
+        XCTAssertNil(up6.state.inviteCode)
+        XCTAssertNil(up6.state.gatewayId)
+        
+        // We should CANCEL the provisioniong process when offline mode is requested
+        // ...but we can't do that until we add support for store-driven cancellation
+        // XCTAssertTrue(up6.state.gatewayProvisioningStatus == .initial)
     }
     
     func testFirstRunProfileStep() throws {

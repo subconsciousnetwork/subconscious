@@ -1101,7 +1101,7 @@ struct AppModel: ModelProtocol {
         url: URL
     ) -> Update<AppModel> {
         // We always ensure the field reflects this value
-        // even if nothing changes from a Noosphere perspective 
+        // even if nothing changes from a Noosphere perspective
         let actions: [AppAction] = [
             .gatewayURLField(.reset),
             .gatewayURLField(
@@ -1294,6 +1294,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.inviteCode = nil
+        model.gatewayId = nil
         
         return update(
             state: model,
