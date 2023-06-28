@@ -32,24 +32,22 @@ actor TranscludeService {
             return address
         }
         
-        let entries = try database.listEntries(for: slashlinks, owner: petname)
+        let entries = try database.listEntries(for: slashlinks)
+        var dict: [Slashlink: EntryStub] = [:]
         
-        return
-            Dictionary(
-                entries.map { entry in
-                    // If it's did:local we know where to look
-                    if entry.address.isLocal {
-                        return (Slashlink(slug: entry.address.slug), entry)
-                    }
-                    
-                    // Ensure links to the owner's content are relativized to match
-                    // the in-text representation
-                    let displayAddress = entry.address.relativizeIfNeeded(petname: petname)
-                    
-                    return (displayAddress, entry)
-                },
-                uniquingKeysWith: { a, b in a}
-            )
+        for entry in entries {
+            if entry.address.isLocal {
+                dict.updateValue(entry, forKey: Slashlink(slug: entry.address.slug))
+                continue
+            }
+            
+            // Ensure links to the owner's content are relativized to match
+            // the in-text representation
+            let displayAddress = entry.address.relativizeIfNeeded(petname: petname)
+            dict.updateValue(entry, forKey: displayAddress)
+        }
+        
+        return dict
     }
 
     
