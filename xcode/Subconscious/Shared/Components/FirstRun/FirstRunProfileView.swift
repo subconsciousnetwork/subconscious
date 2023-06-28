@@ -30,9 +30,7 @@ struct FirstRunProfileView: View {
                     autoFocus: true,
                     submitLabel: .go,
                     onSubmit: {
-                        if app.state.nicknameFormField.isValid {
-                            app.send(.pushFirstRunStep(.sphere))
-                        }
+                        app.send(.submitFirstRunStep(current: .nickname))
                     }
                 )
                 .textFieldStyle(.roundedBorder)
@@ -48,12 +46,11 @@ struct FirstRunProfileView: View {
             Spacer()
             
             if !app.state.nicknameFormField.hasFocus {
-                NavigationLink(
-                    value: FirstRunStep.sphere,
-                    label: {
-                        Text("Continue")
-                    }
-                )
+                Button(action: {
+                    app.send(.submitFirstRunStep(current: .nickname))
+                }, label: {
+                    Text("Continue")
+                })
                 .buttonStyle(PillButtonStyle())
                 .disabled(!app.state.nicknameFormField.isValid)
             }
@@ -65,13 +62,6 @@ struct FirstRunProfileView: View {
             AppTheme.onboarding
                 .appBackgroundGradient(colorScheme)
         )
-        .onDisappear {
-            guard let nickname = app.state.nicknameFormField.validated else {
-                return
-            }
-            
-            app.send(.submitNickname(nickname))
-        }
     }
 }
 

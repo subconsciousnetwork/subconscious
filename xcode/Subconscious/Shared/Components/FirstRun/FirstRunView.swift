@@ -7,6 +7,52 @@
 import ObservableStore
 import SwiftUI
 
+struct InviteCodeRedeemedView: View {
+    var gatewayId: String
+    
+    var body: some View {
+        VStack(spacing: AppTheme.unit2) {
+            HStack(spacing: AppTheme.unit2) {
+                Image(systemName: "checkmark.circle")
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .opacity(0.5)
+                Text("Invitation accepted")
+            }
+            .font(.body)
+            .bold()
+            
+            HStack(spacing: AppTheme.unit) {
+                Text("Gateway ID")
+                    .bold()
+                Text(gatewayId)
+            }
+            .font(.caption)
+        }
+        .foregroundColor(.secondary)
+    }
+}
+
+struct InviteCodeErrorView: View {
+    var error: String
+    
+    var body: some View {
+        VStack(spacing: AppTheme.unit2) {
+            HStack(spacing: AppTheme.unit2) {
+                Image(systemName: "exclamationmark.circle")
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .opacity(0.5)
+                Text("Could not redeem invite code")
+            }
+            .font(.body)
+            .bold()
+        }
+        .foregroundColor(.red)
+    }
+}
+
+
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
@@ -47,25 +93,9 @@ struct FirstRunView: View {
                 Spacer()
                 
                 if let gatewayId = app.state.gatewayId {
-                    VStack(spacing: AppTheme.unit2) {
-                        HStack(spacing: AppTheme.unit2) {
-                            Text("Invite code redeemed")
-                        Image(systemName: "checkmark.circle")
-                            .resizable()
-                            .frame(width: 16, height: 16)
-                            .opacity(0.5)
-                        }
-                        .font(.body)
-                        .bold()
-                        
-                        HStack(spacing: AppTheme.unit) {
-                            Text("Gateway ID")
-                                .bold()
-                            Text(gatewayId)
-                        }
-                        .font(.caption)
-                    }
-                    .foregroundColor(.secondary)
+                    InviteCodeRedeemedView(
+                        gatewayId: gatewayId
+                    )
                 } else {
                     ValidatedFormField(
                         alignment: .center,
@@ -88,14 +118,6 @@ struct FirstRunView: View {
                             if !focused {
                                 app.send(.submitInviteCodeForm)
                             }
-                        },
-                        isValid: Func.run {
-                            switch app.state.inviteCodeRedemptionStatus {
-                            case .failed(_):
-                                return false
-                            case _:
-                                return true
-                            }
                         }
                     )
                     .textFieldStyle(.roundedBorder)
@@ -103,15 +125,18 @@ struct FirstRunView: View {
                     .disableAutocorrection(true)
                 }
                 
+                if case let .failed(message) = app.state.inviteCodeRedemptionStatus {
+                    InviteCodeErrorView(error: message)
+                }
+                
                 if !app.state.inviteCodeFormField.hasFocus {
                     Spacer()
                     
-                    NavigationLink(
-                        value: FirstRunStep.nickname,
-                        label: {
-                            Text("Get Started")
-                        }
-                    )
+                    Button(action: {
+                        app.send(.submitFirstRunStep(current: .initial))
+                    }, label: {
+                        Text("Get Started")
+                    })
                     .buttonStyle(PillButtonStyle())
                     .disabled(app.state.gatewayId == nil)
                 }
@@ -124,13 +149,12 @@ struct FirstRunView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
-                            NavigationLink(
-                                value: FirstRunStep.nickname,
-                                label: {
-                                    Text("Use offline")
-                                        .font(.caption)
-                                }
-                            )
+                            Button(action: {
+                                app.send(.submitFirstRunStep(current: .initial))
+                            }, label: {
+                                Text("Use offline")
+                                    .font(.caption)
+                            })
                         }
                     }
                 }.padding(
@@ -153,6 +177,8 @@ struct FirstRunView: View {
                 for: FirstRunStep.self
             ) { step in
                 switch step {
+                case .initial:
+                    EmptyView()
                 case .nickname:
                     FirstRunProfileView(app: app)
                 case .sphere:
@@ -164,10 +190,6 @@ struct FirstRunView: View {
                 }
             }
             .onAppear {
-                guard app.state.sphereIdentity == nil else {
-                    return
-                }
-                
                 app.send(.createSphere)
             }
         }

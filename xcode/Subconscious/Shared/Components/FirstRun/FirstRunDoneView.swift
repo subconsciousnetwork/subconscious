@@ -92,7 +92,7 @@ struct FirstRunDoneView: View {
             Spacer()
             Button(
                 action: {
-                    app.send(.persistFirstRunComplete(true))
+                    app.send(.submitFirstRunStep(current: .connect))
                 }
             ) {
                 Text("Begin")

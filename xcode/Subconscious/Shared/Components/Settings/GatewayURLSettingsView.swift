@@ -132,7 +132,7 @@ struct InviteCodeSection: View {
                         send: app.send,
                         tag: AppAction.inviteCodeFormField
                     ),
-                    caption: "Your ticket to the Noosphere"
+                    caption: "Your ticket to Noosphere"
                 )
                 .autocapitalization(.none)
                 .autocorrectionDisabled(true)

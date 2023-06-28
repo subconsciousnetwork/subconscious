@@ -24,9 +24,6 @@ struct ValidatedFormField<T: Equatable>: View {
     var onSubmit: () -> Void = {}
     var onFocusChanged: (_ focused: Bool) -> Void = { _ in }
     
-    /// Indicate if this field should appear invalid due to a side effect failing etc.
-    var isValid: Bool = true
-    
     var backgroundColor = Color.background
     
     /// When appearing in a form the background colour of a should change
@@ -34,10 +31,6 @@ struct ValidatedFormField<T: Equatable>: View {
         var this = self
         this.backgroundColor = Color.formFieldBackground
         return this
-    }
-    
-    var shouldRenderAsValid: Bool {
-        isValid && !field.shouldPresentAsInvalid
     }
     
     var body: some View {
@@ -58,8 +51,8 @@ struct ValidatedFormField<T: Equatable>: View {
                             .background(backgroundColor)
                     }
                     .padding(.trailing, 1)
-                    .opacity(shouldRenderAsValid ? 0 : 1)
-                    .animation(.default, value: shouldRenderAsValid)
+                    .opacity(field.shouldPresentAsInvalid ? 1 : 0)
+                    .animation(.default, value: field.shouldPresentAsInvalid)
                 }
                 .onChange(of: focused) { focused in
                     send(.focusChange(focused: focused))
@@ -85,9 +78,9 @@ struct ValidatedFormField<T: Equatable>: View {
             }
             Text(caption)
                 .foregroundColor(
-                    shouldRenderAsValid ? Color.secondary : Color.red
+                    field.shouldPresentAsInvalid ? Color.red : Color.secondary
                 )
-                .animation(.default, value: shouldRenderAsValid)
+                .animation(.default, value: field.shouldPresentAsInvalid)
                 .font(.caption)
         }
         .onAppear {

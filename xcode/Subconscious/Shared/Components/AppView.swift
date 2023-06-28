@@ -224,6 +224,7 @@ enum AppAction: CustomLogStringConvertible {
     
     case setFirstRunPath([FirstRunStep])
     case pushFirstRunStep(FirstRunStep)
+    case submitFirstRunStep(current: FirstRunStep)
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
@@ -395,6 +396,7 @@ enum AppDatabaseState {
 }
 
 enum FirstRunStep {
+    case initial
     case nickname
     case sphere
     case recovery
@@ -578,6 +580,12 @@ struct AppModel: ModelProtocol {
             model.firstRunPath.append(step)
             
             return Update(state: model)
+        case let .submitFirstRunStep(current):
+            return submitFirstRunStep(
+                state: state,
+                environment: environment,
+                current: current
+            )
         case let .setAppUpgraded(isUpgraded):
             return setAppUpgraded(
                 state: state,
@@ -1161,6 +1169,11 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        guard state.sphereIdentity == nil else {
+            logger.log("Attempted to re-create sphere, doing nothing")
+            return Update(state: state)
+        }
+        
         // We always use the default owner key name for the user's default
         // sphere.
         let ownerKeyName = Config.default.noosphere.ownerKeyName
@@ -1272,6 +1285,72 @@ struct AppModel: ModelProtocol {
         }
         
         return Update(state: model).animation(.default)
+    }
+    
+    static func submitFirstRunStep(
+        state: AppModel,
+        environment: AppEnvironment,
+        current: FirstRunStep
+    ) -> Update<AppModel> {
+        switch (current) {
+        case .initial:
+            guard state.inviteCode == nil || // Offline mode: no code
+                  state.gatewayId != nil // Otherwise we need an ID to proceed
+            else {
+                logger.error("Missing gateway ID but user is trying to use invite code")
+                return Update(state: state)
+            }
+            
+            return update(
+                state: state,
+                actions: [
+                    .pushFirstRunStep(.nickname)
+                ],
+                environment: environment
+            )
+            
+        case .nickname:
+            guard let nickname = state.nicknameFormField.validated else {
+                logger.error("Cannot advance, nickname is invalid")
+                return Update(state: state)
+            }
+            
+            return update(
+                state: state,
+                actions: [
+                    .submitNickname(nickname),
+                    .pushFirstRunStep(.sphere)
+                ],
+                environment: environment
+            )
+            
+        case .sphere:
+            return update(
+                state: state,
+                actions: [
+                    .pushFirstRunStep(.recovery)
+                ],
+                environment: environment
+            )
+            
+        case .recovery:
+            return update(
+                state: state,
+                actions: [
+                    .pushFirstRunStep(.connect)
+                ],
+                environment: environment
+            )
+            
+        case .connect:
+            return update(
+                state: state,
+                actions: [
+                    .persistFirstRunComplete(true)
+                ],
+                environment: environment
+            )
+        }
     }
     
     /// Reset NoosphereService managed instances of `Noosphere` and `Sphere`.

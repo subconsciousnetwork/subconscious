@@ -50,12 +50,11 @@ struct FirstRunSphereView: View {
             
             Spacer()
             
-            NavigationLink(
-                value: FirstRunStep.recovery,
-                label: {
-                    Text("Got it")
-                }
-            )
+            Button(action: {
+                app.send(.submitFirstRunStep(current: .sphere))
+            }, label: {
+                Text("Got it")
+            })
             .buttonStyle(PillButtonStyle())
         }
         .padding()
