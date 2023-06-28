@@ -244,6 +244,9 @@ public actor Noosphere {
         _ perform: (UnsafeMutablePointer<OpaquePointer?>) -> Z
     ) throws -> Z {
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
+        // Explicitly clear this memory before use
+        error.pointee = nil
+        
         defer {
             error.deallocate()
         }
