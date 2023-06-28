@@ -1100,16 +1100,18 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         url: URL
     ) -> Update<AppModel> {
+        let actions: [AppAction] = [
+            .gatewayURLField(.reset),
+            .gatewayURLField(
+                .setValue(input: url.absoluteString)
+            )
+        ]
+        
         guard state.gatewayURL != url.absoluteString else {
             logger.log("Gateway URL is identical to current value, doing nothing")
             return update(
                 state: state,
-                actions: [
-                    .gatewayURLField(.reset),
-                    .gatewayURLField(
-                        .setValue(input: url.absoluteString)
-                    )
-                ],
+                actions: actions,
                 environment: environment
             )
         }
@@ -1128,12 +1130,7 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            actions: [
-                .gatewayURLField(.reset),
-                .gatewayURLField(
-                    .setValue(input: url.absoluteString)
-                )
-            ],
+            actions: actions,
             environment: environment
         )
         .mergeFx(fx)
