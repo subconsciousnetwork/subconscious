@@ -402,7 +402,7 @@ enum AppDatabaseState {
 }
 
 enum FirstRunStep {
-    case nickname
+    case profile
     case sphere
     case recovery
     case connect
@@ -1342,7 +1342,7 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .pushFirstRunStep(.nickname)
+                .pushFirstRunStep(.profile)
             ],
             environment: environment
         )

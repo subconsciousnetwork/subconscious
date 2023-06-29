@@ -37,7 +37,7 @@ final class Tests_FirstRun: XCTestCase {
         XCTAssertNil(up1.state.gatewayId)
         XCTAssertEqual(
             up1.state.firstRunPath,
-            [.nickname],
+            [.profile],
             "proceed in offline mode by default"
         )
         
@@ -53,7 +53,7 @@ final class Tests_FirstRun: XCTestCase {
         XCTAssertNil(up2.state.gatewayId)
         XCTAssertEqual(
             up2.state.firstRunPath,
-            [.nickname],
+            [.profile],
             "proceed if the user requests offline mode"
         )
         
@@ -71,7 +71,7 @@ final class Tests_FirstRun: XCTestCase {
         XCTAssertNil(up3.state.gatewayId)
         XCTAssertEqual(
             up3.state.firstRunPath,
-            [.nickname],
+            [.profile],
             "proceed if the user requests offline mode after using form"
         )
         
@@ -106,7 +106,7 @@ final class Tests_FirstRun: XCTestCase {
         
         XCTAssertEqual(
             up5.state.firstRunPath,
-            [.nickname],
+            [.profile],
             "proceed with invite code + gateway ID"
         )
         XCTAssertEqual(up5.state.inviteCode, InviteCode("one two three four")!)
@@ -126,7 +126,7 @@ final class Tests_FirstRun: XCTestCase {
         
         XCTAssertEqual(
             up6.state.firstRunPath,
-            [.nickname],
+            [.profile],
             "clear invite code + gateway ID when requesting offline"
         )
         XCTAssertNil(up6.state.inviteCode)
@@ -138,14 +138,14 @@ final class Tests_FirstRun: XCTestCase {
     }
     
     func testFirstRunProfileStep() throws {
-        let model = AppModel(firstRunPath: [.nickname])
+        let model = AppModel(firstRunPath: [.profile])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunProfileStep,
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up1.state.firstRunPath, [.nickname], "cannot advance without a nickname")
+        XCTAssertEqual(up1.state.firstRunPath, [.profile], "cannot advance without a nickname")
         
         let up2 = AppModel.update(
             state: model,
@@ -156,7 +156,7 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up2.state.firstRunPath, [.nickname, .sphere], "proceed with valid nickname")
+        XCTAssertEqual(up2.state.firstRunPath, [.profile, .sphere], "proceed with valid nickname")
         
         let up3 = AppModel.update(
             state: model,
@@ -167,33 +167,33 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up3.state.firstRunPath, [.nickname], "cannot proceed with invalid nickname")
+        XCTAssertEqual(up3.state.firstRunPath, [.profile], "cannot proceed with invalid nickname")
     }
     
     func testFirstRunSphereStep() throws {
-        let model = AppModel(firstRunPath: [.nickname, .sphere])
+        let model = AppModel(firstRunPath: [.profile, .sphere])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunSphereStep,
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up1.state.firstRunPath, [.nickname, .sphere, .recovery], "proceed to recovery")
+        XCTAssertEqual(up1.state.firstRunPath, [.profile, .sphere, .recovery], "proceed to recovery")
     }
     
     func testFirstRunRecoveryStep() throws {
-        let model = AppModel(firstRunPath: [.nickname, .sphere, .recovery])
+        let model = AppModel(firstRunPath: [.profile, .sphere, .recovery])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunRecoveryStep,
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up1.state.firstRunPath, [.nickname, .sphere, .recovery, .connect], "proceed to connect")
+        XCTAssertEqual(up1.state.firstRunPath, [.profile, .sphere, .recovery, .connect], "proceed to connect")
     }
     
     func testFirstRunConnectStep() throws {
-        let model = AppModel(firstRunPath: [.nickname, .sphere, .recovery, .connect])
+        let model = AppModel(firstRunPath: [.profile, .sphere, .recovery, .connect])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunDoneStep,

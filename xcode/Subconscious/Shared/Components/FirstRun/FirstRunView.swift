@@ -154,7 +154,7 @@ struct FirstRunView: View {
                 for: FirstRunStep.self
             ) { step in
                 switch step {
-                case .nickname:
+                case .profile:
                     FirstRunProfileView(app: app)
                 case .sphere:
                     FirstRunSphereView(app: app)
