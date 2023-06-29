@@ -29,7 +29,7 @@ final class Tests_FirstRun: XCTestCase {
         let model = AppModel()
         let up1 = AppModel.update(
             state: model,
-            action: .submitFirstRunStep(current: .initial),
+            action: .submitFirstRunWelcomeStep,
             environment: AppEnvironment()
         )
         
@@ -80,7 +80,7 @@ final class Tests_FirstRun: XCTestCase {
             actions: [
                 .inviteCodeFormField(.setValue(input: "one two three four")),
                 .submitInviteCodeForm,
-                .submitFirstRunStep(current: .initial)
+                .submitFirstRunWelcomeStep
             ],
             environment: AppEnvironment()
         )
@@ -99,7 +99,7 @@ final class Tests_FirstRun: XCTestCase {
                 .inviteCodeFormField(.setValue(input: "one two three four")),
                 .submitInviteCodeForm,
                 .succeedRedeemInviteCode("my-gateway"),
-                .submitFirstRunStep(current: .initial)
+                .submitFirstRunWelcomeStep
             ],
             environment: AppEnvironment()
         )
@@ -141,7 +141,7 @@ final class Tests_FirstRun: XCTestCase {
         let model = AppModel(firstRunPath: [.nickname])
         let up1 = AppModel.update(
             state: model,
-            action: .submitFirstRunStep(current: .nickname),
+            action: .submitFirstRunProfileStep,
             environment: AppEnvironment()
         )
         
@@ -151,7 +151,7 @@ final class Tests_FirstRun: XCTestCase {
             state: model,
             actions: [
                 .nicknameFormField(.setValue(input: "my-name")),
-                .submitFirstRunStep(current: .nickname)
+                .submitFirstRunProfileStep
             ],
             environment: AppEnvironment()
         )
@@ -162,7 +162,7 @@ final class Tests_FirstRun: XCTestCase {
             state: model,
             actions: [
                 .nicknameFormField(.setValue(input: "My Crazy Name!")),
-                .submitFirstRunStep(current: .nickname)
+                .submitFirstRunProfileStep
             ],
             environment: AppEnvironment()
         )
@@ -174,7 +174,7 @@ final class Tests_FirstRun: XCTestCase {
         let model = AppModel(firstRunPath: [.nickname, .sphere])
         let up1 = AppModel.update(
             state: model,
-            action: .submitFirstRunStep(current: .sphere),
+            action: .submitFirstRunSphereStep,
             environment: AppEnvironment()
         )
         
@@ -185,7 +185,7 @@ final class Tests_FirstRun: XCTestCase {
         let model = AppModel(firstRunPath: [.nickname, .sphere, .recovery])
         let up1 = AppModel.update(
             state: model,
-            action: .submitFirstRunStep(current: .recovery),
+            action: .submitFirstRunRecoveryStep,
             environment: AppEnvironment()
         )
         
@@ -196,7 +196,7 @@ final class Tests_FirstRun: XCTestCase {
         let model = AppModel(firstRunPath: [.nickname, .sphere, .recovery, .connect])
         let up1 = AppModel.update(
             state: model,
-            action: .submitFirstRunStep(current: .connect),
+            action: .submitFirstRunDoneStep,
             environment: AppEnvironment()
         )
         

@@ -110,7 +110,7 @@ struct FirstRunView: View {
                     Spacer()
                     
                     Button(action: {
-                        app.send(.submitFirstRunStep(current: .initial))
+                        app.send(.submitFirstRunWelcomeStep)
                     }, label: {
                         Text("Get Started")
                     })
@@ -154,8 +154,6 @@ struct FirstRunView: View {
                 for: FirstRunStep.self
             ) { step in
                 switch step {
-                case .initial:
-                    EmptyView()
                 case .nickname:
                     FirstRunProfileView(app: app)
                 case .sphere:

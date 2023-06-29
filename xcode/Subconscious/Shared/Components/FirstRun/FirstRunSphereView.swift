@@ -51,7 +51,7 @@ struct FirstRunSphereView: View {
             Spacer()
             
             Button(action: {
-                app.send(.submitFirstRunStep(current: .sphere))
+                app.send(.submitFirstRunSphereStep)
             }, label: {
                 Text("Got it")
             })

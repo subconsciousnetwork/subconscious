@@ -30,7 +30,7 @@ struct FirstRunProfileView: View {
                     autoFocus: true,
                     submitLabel: .go,
                     onSubmit: {
-                        app.send(.submitFirstRunStep(current: .nickname))
+                        app.send(.submitFirstRunProfileStep)
                     }
                 )
                 .textFieldStyle(.roundedBorder)
@@ -47,7 +47,7 @@ struct FirstRunProfileView: View {
             
             if !app.state.nicknameFormField.hasFocus {
                 Button(action: {
-                    app.send(.submitFirstRunStep(current: .nickname))
+                    app.send(.submitFirstRunProfileStep)
                 }, label: {
                     Text("Continue")
                 })

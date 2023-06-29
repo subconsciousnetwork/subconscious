@@ -223,7 +223,13 @@ enum AppAction: CustomLogStringConvertible {
     
     case setFirstRunPath([FirstRunStep])
     case pushFirstRunStep(FirstRunStep)
-    case submitFirstRunStep(current: FirstRunStep)
+    
+    case submitFirstRunWelcomeStep
+    case submitFirstRunProfileStep
+    case submitFirstRunSphereStep
+    case submitFirstRunRecoveryStep
+    case submitFirstRunDoneStep
+    
     case requestOfflineMode
 
     /// Set settings sheet presented?
@@ -396,7 +402,6 @@ enum AppDatabaseState {
 }
 
 enum FirstRunStep {
-    case initial
     case nickname
     case sphere
     case recovery
@@ -580,11 +585,30 @@ struct AppModel: ModelProtocol {
             model.firstRunPath.append(step)
             
             return Update(state: model)
-        case let .submitFirstRunStep(current):
-            return submitFirstRunStep(
+        case .submitFirstRunWelcomeStep:
+            return submitFirstRunWelcomeStep(
                 state: state,
-                environment: environment,
-                current: current
+                environment: environment
+            )
+        case .submitFirstRunProfileStep:
+            return submitFirstRunProfileStep(
+                state: state,
+                environment: environment
+            )
+        case .submitFirstRunSphereStep:
+            return submitFirstRunSphereStep(
+                state: state,
+                environment: environment
+            )
+        case .submitFirstRunRecoveryStep:
+            return submitFirstRunRecoveryStep(
+                state: state,
+                environment: environment
+            )
+        case .submitFirstRunDoneStep:
+            return submitFirstRunDoneStep(
+                state: state,
+                environment: environment
             )
         case .requestOfflineMode:
             return requestOfflineMode(
@@ -1298,78 +1322,90 @@ struct AppModel: ModelProtocol {
             state: model,
             actions: [
                 .inviteCodeFormField(.reset),
-                .submitFirstRunStep(current: .initial)
+                .submitFirstRunWelcomeStep
             ],
             environment: environment
         )
     }
     
-    static func submitFirstRunStep(
+    static func submitFirstRunWelcomeStep(
         state: AppModel,
-        environment: AppEnvironment,
-        current: FirstRunStep
+        environment: AppEnvironment
     ) -> Update<AppModel> {
-        switch (current) {
-        case .initial:
-            guard state.inviteCode == nil || // Offline mode: no code
-                  state.gatewayId != nil // Otherwise we need an ID to proceed
-            else {
-                logger.error("Missing gateway ID but user is trying to use invite code")
-                return Update(state: state)
-            }
-            
-            return update(
-                state: state,
-                actions: [
-                    .pushFirstRunStep(.nickname)
-                ],
-                environment: environment
-            )
-            
-        case .nickname:
-            guard let nickname = state.nicknameFormField.validated else {
-                logger.error("Cannot advance, nickname is invalid")
-                return Update(state: state)
-            }
-            
-            return update(
-                state: state,
-                actions: [
-                    .submitNickname(nickname),
-                    .pushFirstRunStep(.sphere)
-                ],
-                environment: environment
-            )
-            
-        case .sphere:
-            return update(
-                state: state,
-                actions: [
-                    .pushFirstRunStep(.recovery)
-                ],
-                environment: environment
-            )
-            
-        case .recovery:
-            return update(
-                state: state,
-                actions: [
-                    .pushFirstRunStep(.connect)
-                ],
-                environment: environment
-            )
-            
-        case .connect:
-            return update(
-                state: state,
-                actions: [
-                    .inviteCodeFormField(.reset),
-                    .nicknameFormField(.reset),
-                    .persistFirstRunComplete(true)
-                ],
-                environment: environment
-            )
+        guard state.inviteCode == nil || // Offline mode: no code
+              state.gatewayId != nil // Otherwise we need an ID to proceed
+        else {
+            logger.error("Missing gateway ID but user is trying to use invite code")
+            return Update(state: state)
         }
+        
+        return update(
+            state: state,
+            actions: [
+                .pushFirstRunStep(.nickname)
+            ],
+            environment: environment
+        )
+    }
+    
+    static func submitFirstRunProfileStep(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard let nickname = state.nicknameFormField.validated else {
+            logger.error("Cannot advance, nickname is invalid")
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            actions: [
+                .submitNickname(nickname),
+                .pushFirstRunStep(.sphere)
+            ],
+            environment: environment
+        )
+    }
+    
+    static func submitFirstRunSphereStep(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .pushFirstRunStep(.recovery)
+            ],
+            environment: environment
+        )
+    }
+    
+    static func submitFirstRunRecoveryStep(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .pushFirstRunStep(.connect)
+            ],
+            environment: environment
+        )
+    }
+    
+    static func submitFirstRunDoneStep(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .inviteCodeFormField(.reset),
+                .nicknameFormField(.reset),
+                .persistFirstRunComplete(true)
+            ],
+            environment: environment
+        )
     }
     
     /// Reset NoosphereService managed instances of `Noosphere` and `Sphere`.

@@ -1086,12 +1086,12 @@
 		B8B3EE712979DEDF00779B7F /* FirstRun */ = {
 			isa = PBXGroup;
 			children = (
-				B8B3EE74297AEE6600779B7F /* FirstRunSphereView.swift */,
-				B8B3EE76297AEE8B00779B7F /* FirstRunDoneView.swift */,
-				B8B3EE78297AF6E500779B7F /* FirstRunProfileView.swift */,
 				B8B3EE722979DEE900779B7F /* FirstRunView.swift */,
-				B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */,
+				B8B3EE78297AF6E500779B7F /* FirstRunProfileView.swift */,
+				B8B3EE74297AEE6600779B7F /* FirstRunSphereView.swift */,
 				B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */,
+				B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */,
+				B8B3EE76297AEE8B00779B7F /* FirstRunDoneView.swift */,
 			);
 			path = FirstRun;
 			sourceTree = "<group>";

@@ -43,7 +43,7 @@ struct FirstRunRecoveryView: View {
             Spacer()
             
             Button(action: {
-                app.send(.submitFirstRunStep(current: .recovery))
+                app.send(.submitFirstRunRecoveryStep)
             }, label: {
                 Text("Ok, I wrote it down")
             })
