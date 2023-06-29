@@ -1196,15 +1196,13 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: SphereReceipt
     ) -> Update<AppModel> {
-        let actions: [AppAction] = [
-            .setSphereIdentity(receipt.identity),
-            .setRecoveryPhrase(receipt.mnemonic),
-            .followDefaultGeist,
-        ]
-        
         return update(
             state: state,
-            actions: actions,
+            actions: [
+                .setSphereIdentity(receipt.identity),
+                .setRecoveryPhrase(receipt.mnemonic),
+                .followDefaultGeist
+            ],
             environment: environment
         )
     }
