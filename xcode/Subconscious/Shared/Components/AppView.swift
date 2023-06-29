@@ -1948,8 +1948,17 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         guard let did = state.sphereIdentity,
               let did = Did(did) else {
-            logger.error("Missing identity, cannot redeem invite code")
-            return Update(state: state)
+            // Attempt to create the sphere if it's missing.
+            // We could retry redeeming the code automatically but
+            // if .createSphere fails we'll end up in an infinite loop
+            return update(
+                state: state,
+                actions: [
+                    .failRedeemInviteCode("Missing identity, cannot redeem invite code"),
+                    .createSphere
+                ],
+                environment: environment
+           )
         }
         
         let fx: Fx<AppAction> = environment.gatewayProvisioningService
