@@ -405,7 +405,7 @@ enum FirstRunStep {
     case profile
     case sphere
     case recovery
-    case connect
+    case done
 }
 
 // MARK: Model
@@ -1387,7 +1387,7 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .pushFirstRunStep(.connect)
+                .pushFirstRunStep(.done)
             ],
             environment: environment
         )

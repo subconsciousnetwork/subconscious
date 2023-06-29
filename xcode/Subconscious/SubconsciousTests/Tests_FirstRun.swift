@@ -189,11 +189,11 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up1.state.firstRunPath, [.profile, .sphere, .recovery, .connect], "proceed to connect")
+        XCTAssertEqual(up1.state.firstRunPath, [.profile, .sphere, .recovery, .done], "proceed to connect")
     }
     
     func testFirstRunConnectStep() throws {
-        let model = AppModel(firstRunPath: [.profile, .sphere, .recovery, .connect])
+        let model = AppModel(firstRunPath: [.profile, .sphere, .recovery, .done])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunDoneStep,

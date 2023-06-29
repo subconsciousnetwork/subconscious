@@ -160,7 +160,7 @@ struct FirstRunView: View {
                     FirstRunSphereView(app: app)
                 case .recovery:
                     FirstRunRecoveryView(app: app)
-                case .connect:
+                case .done:
                     FirstRunDoneView(app: app)
                 }
             }
