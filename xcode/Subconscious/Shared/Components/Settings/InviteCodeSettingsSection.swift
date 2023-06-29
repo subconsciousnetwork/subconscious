@@ -63,7 +63,7 @@ struct ValidatedInviteCodeFormField: View {
                 case .failed(_):
                     return "Could not redeem invite code"
                 case _:
-                    return "Your ticket to the Noosphere"
+                    return "You can find your invite code in your welcome email"
                 }
             }
         )
