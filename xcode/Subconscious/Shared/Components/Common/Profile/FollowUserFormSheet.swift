@@ -173,7 +173,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .form(.didField(.markAsTouched)),
+                    .form(.didField(.reset)),
                     .form(.didField(.setValue(input: content)))
                 ],
                 environment: environment

@@ -7,6 +7,32 @@
 import ObservableStore
 import SwiftUI
 
+struct InviteCodeRedeemedView: View {
+    var gatewayId: String
+    
+    var body: some View {
+        VStack(spacing: AppTheme.unit2) {
+            HStack(spacing: AppTheme.unit2) {
+                Image(systemName: "checkmark.circle")
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .opacity(0.5)
+                Text("Invitation accepted")
+            }
+            .font(.body)
+            .bold()
+            
+            HStack(spacing: AppTheme.unit) {
+                Text("Gateway ID")
+                    .bold()
+                Text(gatewayId)
+            }
+            .font(.caption)
+        }
+        .foregroundColor(.secondary)
+    }
+}
+
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
@@ -46,55 +72,69 @@ struct FirstRunView: View {
                 
                 Spacer()
                 
-                ValidatedFormField(
-                    alignment: .center,
-                    placeholder: "Enter your invite code",
-                    field: app.state.inviteCodeFormField,
-                    send: Address.forward(
-                        send: app.send,
-                        tag: AppAction.inviteCodeFormField
-                    ),
-                    caption: "Look for this in your welcome email.",
-                    submitLabel: .go,
-                    onSubmit: {
-                        if app.state.inviteCodeFormField.isValid {
-                            app.send(.pushFirstRunStep(.nickname))
+                if let gatewayId = app.state.gatewayId {
+                    InviteCodeRedeemedView(
+                        gatewayId: gatewayId
+                    )
+                } else {
+                    ValidatedFormField(
+                        alignment: .center,
+                        placeholder: "Enter your invite code",
+                        field: app.state.inviteCodeFormField,
+                        send: Address.forward(
+                            send: app.send,
+                            tag: AppAction.inviteCodeFormField
+                        ),
+                        caption: Func.run {
+                            switch app.state.inviteCodeRedemptionStatus {
+                            case .failed(_):
+                                return "Could not redeem invite code"
+                            case _:
+                                return "You can find your invite code in your welcome email"
+                            }
+                        },
+                        onFocusChanged: { focused in
+                            // User finished editing the field
+                            if !focused {
+                                app.send(.submitInviteCodeForm)
+                            }
                         }
-                    }
-                )
-                .textFieldStyle(.roundedBorder)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .disabled(app.state.gatewayOperationInProgress)
+                }
                 
                 if !app.state.inviteCodeFormField.hasFocus {
                     Spacer()
                     
-                    NavigationLink(
-                        value: FirstRunStep.nickname,
-                        label: {
-                            Text("Get Started")
-                        }
-                    )
+                    Button(action: {
+                        app.send(.submitFirstRunWelcomeStep)
+                    }, label: {
+                        Text("Get Started")
+                    })
                     .buttonStyle(PillButtonStyle())
-                    .disabled(!app.state.inviteCodeFormField.isValid)
+                    .disabled(app.state.gatewayId == nil)
                 }
                 
                 // MARK: Use Offline
-                HStack(spacing: AppTheme.unit) {
-                    Text("No invite code?")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    NavigationLink(
-                        value: FirstRunStep.nickname,
-                        label: {
-                            Text("Use offline")
+                VStack {
+                    if app.state.gatewayId == .none {
+                        HStack(spacing: AppTheme.unit) {
+                            Text("No invite code?")
                                 .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Button(action: {
+                                app.send(.requestOfflineMode)
+                            }, label: {
+                                Text("Use offline")
+                                    .font(.caption)
+                            })
                         }
-                    )
-                }
-                .padding(
+                    }
+                }.padding(
                     .init(
                         top: 0,
                         leading: 0,
@@ -114,15 +154,18 @@ struct FirstRunView: View {
                 for: FirstRunStep.self
             ) { step in
                 switch step {
-                case .nickname:
+                case .profile:
                     FirstRunProfileView(app: app)
                 case .sphere:
                     FirstRunSphereView(app: app)
                 case .recovery:
                     FirstRunRecoveryView(app: app)
-                case .connect:
+                case .done:
                     FirstRunDoneView(app: app)
                 }
+            }
+            .onAppear {
+                app.send(.createSphere)
             }
         }
     }

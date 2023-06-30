@@ -19,6 +19,7 @@ enum FormFieldAction<Input: Equatable>: Equatable {
     case markAsTouched
     case focusChange(focused: Bool)
     case setValue(input: Input)
+    case setValidationStatus(valid: Bool)
 }
 
 typealias FormFieldEnvironment = Void
@@ -28,6 +29,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
         return (
             lhs.value == rhs.value &&
             lhs.defaultValue == rhs.defaultValue &&
+            lhs.isValid == rhs.isValid &&
             lhs.touched == rhs.touched &&
             lhs.hasFocus == rhs.hasFocus &&
             lhs.hasBeenFocusedAtLeastOnce == rhs.hasBeenFocusedAtLeastOnce
@@ -38,6 +40,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
     var defaultValue: Input
     /// Should be a pure, static function
     var validate: FormFieldValidator<Input, Output>
+    var isValid: Bool = false
     var touched: Bool
     var hasFocus: Bool
     var hasBeenFocusedAtLeastOnce: Bool
@@ -49,6 +52,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
         self.touched = false
         self.hasFocus = false
         self.hasBeenFocusedAtLeastOnce = false
+        self.isValid = false
     }
     
     init(value: Input, validate: @escaping FormFieldValidator<Input, Output>) {
@@ -58,16 +62,14 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
         self.touched = false
         self.hasFocus = false
         self.hasBeenFocusedAtLeastOnce = false
+        self.isValid = false
     }
     
     /// Attempt to validate the input and produce the backing type
     var validated: Output? {
         validate(value)
     }
-    /// Is the current value valid?
-    var isValid: Bool {
-        validated != nil
-    }
+    
     /// Should this field visually display an error?
     var shouldPresentAsInvalid: Bool {
         !isValid && hasBeenFocusedAtLeastOnce
@@ -110,6 +112,12 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
         case .setValue(input: let input):
             var model = state
             model.value = input
+            model.isValid = state.validate(input) != nil
+            return Update(state: model)
+            
+        case .setValidationStatus(let valid):
+            var model = state
+            model.isValid = valid
             return Update(state: model)
         }
     }

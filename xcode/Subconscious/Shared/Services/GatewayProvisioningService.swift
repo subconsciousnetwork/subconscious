@@ -9,16 +9,17 @@ import Foundation
 import Combine
 import os
 
-struct ProvisionGatewayRequest: Codable {
+struct RedeemInviteCodeRequest: Codable {
     var invite_code: String
     var sphere: String
 }
 
-struct ProvisionGatewayErrorResponse: Codable {
+struct ErrorResponse: Codable {
     var error: String?
+    var type: String?
 }
 
-struct ProvisionGatewayResponse: Codable {
+struct RedeemInviteCodeResponse: Codable {
     var gateway_id: String
 }
 
@@ -29,6 +30,7 @@ struct ProvisionGatewayStatusResponse: Codable {
 }
 
 enum GatewayProvisioningServiceError: Error {
+    case failedToRedeemInviteCode(String)
     case failedToProvisionGateway(String)
     case failedToCheckGatewayProvisioningStatus(String)
     case gatewayIsNotReady
@@ -38,14 +40,19 @@ enum GatewayProvisioningServiceError: Error {
 extension GatewayProvisioningServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .failedToProvisionGateway(let contentType):
+        case .failedToRedeemInviteCode(let error):
             return String(
-                localized: "Failed to provision gateway: \(contentType)",
+                localized: "Failed to redeem invite code: \(error)",
                 comment: "GatewayProvisioningService error description"
             )
-        case .failedToCheckGatewayProvisioningStatus(let contentType):
+        case .failedToProvisionGateway(let error):
             return String(
-                localized: "Failed to check gateway status: \(contentType)",
+                localized: "Failed to provision gateway: \(error)",
+                comment: "GatewayProvisioningService error description"
+            )
+        case .failedToCheckGatewayProvisioningStatus(let error):
+            return String(
+                localized: "Failed to check gateway status: \(error)",
                 comment: "GatewayProvisioningService error description"
             )
         case .gatewayIsNotReady:
@@ -86,16 +93,16 @@ actor GatewayProvisioningService {
         self.jsonDecoder = JSONDecoder()
     }
     
-    func provisionGateway(
+    func redeemInviteCode(
         inviteCode: InviteCode,
         sphere: Did
-    ) async throws -> ProvisionGatewayResponse {
+    ) async throws -> RedeemInviteCodeResponse {
         
         var request = URLRequest(url: Self.provisionGatewayEndpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body = ProvisionGatewayRequest(
+        let body = RedeemInviteCodeRequest(
             invite_code: inviteCode.description,
             sphere: sphere.description
         )
@@ -103,30 +110,30 @@ actor GatewayProvisioningService {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let response = response as? HTTPURLResponse else {
-            throw GatewayProvisioningServiceError.failedToProvisionGateway(
+            throw GatewayProvisioningServiceError.failedToRedeemInviteCode(
                 "Could not read response"
             )
         }
         
         guard response.success else {
             let responseBody = try self.jsonDecoder.decode(
-                ProvisionGatewayErrorResponse.self,
+                ErrorResponse.self,
                 from: data
             )
             
             if let error = responseBody.error {
-                throw GatewayProvisioningServiceError.failedToProvisionGateway(
+                throw GatewayProvisioningServiceError.failedToRedeemInviteCode(
                     "HTTP \(response.statusCode): \(error)"
                 )
             } else {
-                throw GatewayProvisioningServiceError.failedToProvisionGateway(
+                throw GatewayProvisioningServiceError.failedToRedeemInviteCode(
                     "Unexpected status code \(response.statusCode)"
                 )
             }
         }
         
         return try self.jsonDecoder.decode(
-            ProvisionGatewayResponse.self,
+            RedeemInviteCodeResponse.self,
             from: data
         )
     }
@@ -196,12 +203,12 @@ actor GatewayProvisioningService {
         .eraseToAnyPublisher()
     }
     
-    nonisolated func provisionGatewayPublisher(
+    nonisolated func redeemInviteCodePublisher(
         inviteCode: InviteCode,
         sphere: Did
-    ) -> AnyPublisher<ProvisionGatewayResponse, Error> {
+    ) -> AnyPublisher<RedeemInviteCodeResponse, Error> {
         Future.detached {
-            try await self.provisionGateway(inviteCode: inviteCode, sphere: sphere)
+            try await self.redeemInviteCode(inviteCode: inviteCode, sphere: sphere)
         }
         .eraseToAnyPublisher()
     }

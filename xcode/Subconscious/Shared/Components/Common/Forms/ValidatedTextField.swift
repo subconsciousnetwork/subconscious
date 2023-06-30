@@ -22,6 +22,7 @@ struct ValidatedFormField<T: Equatable>: View {
     var autoFocus: Bool = false
     var submitLabel: SubmitLabel = .done
     var onSubmit: () -> Void = {}
+    var onFocusChanged: (_ focused: Bool) -> Void = { _ in }
     
     var backgroundColor = Color.background
     
@@ -30,10 +31,6 @@ struct ValidatedFormField<T: Equatable>: View {
         var this = self
         this.backgroundColor = Color.formFieldBackground
         return this
-    }
-    
-    var isValid: Bool {
-        !field.shouldPresentAsInvalid
     }
     
     var body: some View {
@@ -54,16 +51,22 @@ struct ValidatedFormField<T: Equatable>: View {
                             .background(backgroundColor)
                     }
                     .padding(.trailing, 1)
-                    .opacity(isValid ? 0 : 1)
-                    .animation(.default, value: isValid)
+                    .opacity(field.shouldPresentAsInvalid ? 1 : 0)
+                    .animation(.default, value: field.shouldPresentAsInvalid)
                 }
                 .onChange(of: focused) { focused in
                     send(.focusChange(focused: focused))
+                    onFocusChanged(focused)
                 }
-                .onChange(of: innerText, perform: { innerText in
+                .onChange(of: innerText) { innerText in
                     send(.setValue(input: innerText))
-                })
-                .submitLabel(submitLabel)
+                }
+                .onChange(of: field) { field in
+                    // The has been reset, sync inner value
+                    if !field.touched && innerText != field.value {
+                        innerText = field.value
+                    }
+                }
                 .onSubmit {
                     onSubmit()
                 }
@@ -75,9 +78,9 @@ struct ValidatedFormField<T: Equatable>: View {
             }
             Text(caption)
                 .foregroundColor(
-                    isValid ? Color.secondary : Color.red
+                    field.shouldPresentAsInvalid ? Color.red : Color.secondary
                 )
-                .animation(.default, value: isValid)
+                .animation(.default, value: field.shouldPresentAsInvalid)
                 .font(.caption)
         }
         .onAppear {

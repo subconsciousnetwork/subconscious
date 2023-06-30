@@ -41,12 +41,12 @@ struct FirstRunRecoveryView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
-            NavigationLink(
-                value: FirstRunStep.connect,
-                label: {
-                    Text("Ok, I wrote it down")
-                }
-            )
+            
+            Button(action: {
+                app.send(.submitFirstRunRecoveryStep)
+            }, label: {
+                Text("Ok, I wrote it down")
+            })
             .buttonStyle(PillButtonStyle())
         }
         .padding()

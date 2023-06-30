@@ -43,75 +43,6 @@ struct GatewaySyncLabel: View {
     }
 }
 
-// MARK: Provisioning
-
-struct GatewayProvisioningSection: View {
-    @ObservedObject var app: Store<AppModel>
-    
-    var body: some View {
-        Section(
-            content: {
-                ValidatedFormField(
-                    placeholder: "Enter your invite code",
-                    field: app.state.inviteCodeFormField,
-                    send: Address.forward(
-                        send: app.send,
-                        tag: AppAction.inviteCodeFormField
-                    ),
-                    caption: "Look for this in your welcome email."
-                )
-                .autocapitalization(.none)
-                .autocorrectionDisabled(true)
-                .onDisappear {
-                    app.send(.setInviteCode(app.state.inviteCodeFormField.value))
-                }
-                .disabled(app.state.gatewayOperationInProgress)
-                
-                Button(
-                    action: {
-                        app.send(.submitProvisionGatewayForm)
-                    },
-                    label: {
-                        GatewayProvisionLabel(
-                            status: app.state.gatewayProvisioningStatus,
-                            inviteCode: app.state.inviteCodeFormField.validated,
-                            gatewayId: app.state.gatewayId
-                        )
-                    }
-                )
-                .disabled(
-                    !app.state.inviteCodeFormField.isValid ||
-                    app.state.gatewayOperationInProgress
-                )
-            },
-            header: {
-                Text("Provision Gateway")
-            },
-            footer: {
-                VStack {
-                    if let gatewayId = app.state.gatewayId {
-                        VStack(alignment: .leading) {
-                            Text("Gateway ID")
-                                .foregroundColor(.secondary)
-                                .bold()
-                            Text(gatewayId)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    switch app.state.gatewayProvisioningStatus {
-                    case let .failed(message):
-                        Text(message)
-                    default:
-                        EmptyView()
-                    }
-                        
-                }
-            }
-        )
-    }
-}
-
 // MARK: Settings
 
 struct SettingsView: View {
@@ -163,7 +94,6 @@ struct SettingsView: View {
                                 .lineLimit(1)
                             }
                         )
-                        .disabled(app.state.gatewayProvisioningStatus == .pending)
                     },
                     header: {
                         Text("Noosphere")
@@ -172,8 +102,6 @@ struct SettingsView: View {
                         Text("Noosphere is a protocol for thought. It's decentralized, so your data belongs to you.")
                     }
                 )
-                
-                GatewayProvisioningSection(app: app)
                 
                 SwiftUI.Link(
                     destination: Config.default.feedbackURL,
