@@ -385,8 +385,10 @@ struct FollowUserFormModel: ModelProtocol {
                 environment: environment
             )
         case .reset:
+            var model = state
+            model.failFollowMessage = nil
             return update(
-                state: state,
+                state: model,
                 actions: [
                     .didField(.reset),
                     .petnameField(.reset)
