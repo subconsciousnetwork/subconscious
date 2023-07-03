@@ -53,7 +53,7 @@ extension AddressBookError: LocalizedError {
             )
         case .invalidAttemptToOverwitePetname:
             return String(
-                localized: "This petname is already in use.",
+                localized: "Petname already in use.",
                 comment: "Address Book error description"
             )
         case .other(let msg):
