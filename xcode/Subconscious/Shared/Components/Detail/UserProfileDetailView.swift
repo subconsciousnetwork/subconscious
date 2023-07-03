@@ -742,7 +742,7 @@ struct UserProfileDetailModel: ModelProtocol {
             state: state,
             actions: [
                 .followNewUserFormSheet(
-                    .failFollow(
+                    .failFollowDueToPetnameCollision(
                         error: AddressBookError
                             .invalidAttemptToOverwitePetname
                             .localizedDescription,
