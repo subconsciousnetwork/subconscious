@@ -264,7 +264,7 @@ struct FollowUserFormView: View {
                         send: send,
                         tag: FollowUserFormAction.petnameField
                     ),
-                    caption: "Lowercase letters, numbers and dashes only."
+                    caption: state.failFollowMessage ?? "Lowercase letters, numbers and dashes only."
                 )
                 .lineLimit(1)
                 .textInputAutocapitalization(.never)
@@ -279,6 +279,7 @@ struct FollowUserFormView: View {
 enum FollowUserFormAction: Equatable {
     case didField(FormFieldAction<String>)
     case petnameField(FormFieldAction<String>)
+    case failFollow(_ error: String)
     case reset
 }
 
@@ -297,6 +298,8 @@ struct FollowUserFormModel: ModelProtocol {
         value: "",
         validate: Self.validatePetname
     )
+    
+    var failFollowMessage: String? = nil
     
     static func validateDid(key: String) -> Did? {
         Did(key)
@@ -324,6 +327,10 @@ struct FollowUserFormModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
+        case .failFollow(let error):
+            var model = state
+            model.failFollowMessage = error
+            return Update(state: model)
         case .reset:
             return update(
                 state: state,

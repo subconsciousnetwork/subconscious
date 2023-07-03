@@ -717,7 +717,24 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.failFollowErrorMessage = error
-        return Update(state: model)
+        return update(
+            state: model,
+            actions: [
+                .followNewUserFormSheet(
+                    .form(
+                        .failFollow(error)
+                    )
+                ),
+                .followNewUserFormSheet(
+                    .form(
+                        .petnameField(
+                            .setValidationStatus(valid: false)
+                        )
+                    )
+                )
+            ],
+            environment: environment
+        )
     }
     
     static func dismissFailFollowError(

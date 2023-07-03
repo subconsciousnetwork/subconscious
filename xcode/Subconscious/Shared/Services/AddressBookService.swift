@@ -400,7 +400,11 @@ actor AddressBookService {
         preventOverwrite: Bool = false
     ) -> AnyPublisher<Void, Error> {
         Future.detached {
-            try await self.followUser(did: did, petname: petname)
+            try await self.followUser(
+                did: did,
+                petname: petname,
+                preventOverwrite: preventOverwrite
+            )
         }
         .eraseToAnyPublisher()
     }
