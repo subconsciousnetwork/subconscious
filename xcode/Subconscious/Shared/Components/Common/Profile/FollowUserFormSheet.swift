@@ -5,6 +5,7 @@
 //  Created by Ben Follington on 2/27/23.
 //
 
+import os
 import SwiftUI
 import ObservableStore
 import CodeScanner
@@ -134,14 +135,24 @@ enum FollowNewUserFormSheetAction {
     case presentQRCodeScanner(_ isPresented: Bool)
     case qrCodeScanned(scannedContent: String)
     case qrCodeScanError(error: String)
+    
+    case failFollow(error: String, petname: Petname.Name)
+    case attemptToFindUniquePetname(petname: Petname.Name)
+    case succeedFindUniquePetname(petname: Petname.Name)
+    case failToFindUniquePetname(_ error: String)
 }
 
-typealias FollowNewUserFormSheetEnvironment = Void
+typealias FollowNewUserFormSheetEnvironment = AppEnvironment
 
 // MARK: Model
 struct FollowNewUserFormSheetModel: ModelProtocol {
     typealias Action = FollowNewUserFormSheetAction
     typealias Environment = FollowNewUserFormSheetEnvironment
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "FollowNewUserFormSheetModel"
+    )
     
     var isQrCodeScannerPresented = false
     
@@ -160,7 +171,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             return FollowUserFormCursor.update(
                 state: state,
                 action: action,
-                environment: environment
+                environment: ()
             )
             
         case .presentQRCodeScanner(let isPresented):
@@ -183,6 +194,42 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             var model = state
             model.failQRCodeScanErrorMessage = error
             return Update(state: model)
+            
+        case .failFollow(let error, let petname):
+            return update(
+                state: state,
+                actions: [
+                    .attemptToFindUniquePetname(petname: petname),
+                    .form(.failFollow(error))
+                ],
+                environment: environment
+            )
+            
+        case .attemptToFindUniquePetname(let petname):
+            let fx: Fx<FollowNewUserFormSheetAction> = environment
+                .addressBook
+                .findAvailablePetnamePublisher(name: petname)
+                .map { petname in
+                    .succeedFindUniquePetname(petname: petname)
+                }
+                .recover { error in
+                    .failToFindUniquePetname(error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedFindUniquePetname(let petname):
+            return update(
+                state: state,
+                action: .form(
+                    .petnameField(.setValue(input: petname.verbatim))
+                ),
+                environment: environment
+            )
+        case .failToFindUniquePetname(let error):
+            // Not a huge deal, the user will have to enter a name themselves
+            logger.warning("Failed to find a unique petname: \(error)")
+            return Update(state: state)
         }
     }
 }
@@ -330,7 +377,13 @@ struct FollowUserFormModel: ModelProtocol {
         case .failFollow(let error):
             var model = state
             model.failFollowMessage = error
-            return Update(state: model)
+            return update(
+                state: model,
+                actions: [
+                    .petnameField(.setValidationStatus(valid: false))
+                ],
+                environment: environment
+            )
         case .reset:
             return update(
                 state: state,

@@ -130,7 +130,7 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     
     case requestFollow(UserProfile)
     case attemptFollow(Did, Petname)
-    case failFollow(error: String)
+    case failFollow(error: String, petname: Petname)
     case dismissFailFollowError
     case succeedFollow(_ petname: Petname)
     
@@ -347,7 +347,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return FollowNewUserFormSheetCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: environment
             )
         case .editProfileSheet(let action):
             return EditProfileSheetCursor.update(
@@ -426,10 +426,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 petname: petname
             )
-        case .failFollow(error: let error):
+        case .failFollow(let error, let petname):
             return failFollow(
                 state: state,
                 environment: environment,
+                petname: petname,
                 error: error
             )
         case .dismissFailFollowError:
@@ -674,7 +675,8 @@ struct UserProfileDetailModel: ModelProtocol {
             .catch { error in
                 Just(
                     UserProfileDetailAction.failFollow(
-                        error: error.localizedDescription
+                        error: error.localizedDescription,
+                        petname: petname
                     )
                 )
             }
@@ -713,6 +715,7 @@ struct UserProfileDetailModel: ModelProtocol {
     static func failFollow(
         state: Self,
         environment: Environment,
+        petname: Petname,
         error: String
     ) -> Update<Self> {
         var model = state
@@ -721,16 +724,7 @@ struct UserProfileDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .followNewUserFormSheet(
-                    .form(
-                        .failFollow(error)
-                    )
-                ),
-                .followNewUserFormSheet(
-                    .form(
-                        .petnameField(
-                            .setValidationStatus(valid: false)
-                        )
-                    )
+                    .failFollow(error: error, petname: petname.root)
                 )
             ],
             environment: environment
