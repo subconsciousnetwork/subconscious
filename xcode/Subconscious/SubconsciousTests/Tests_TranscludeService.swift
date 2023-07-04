@@ -16,6 +16,94 @@ final class Tests_TranscludeService: XCTestCase {
     
     var data: DataService?
     
+    func testOurAddressComposition() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let base = Slashlink(slug: Slug("note")!)
+        let link = Slashlink(petname: Petname("hello")!, slug: Slug("ok")!)
+        
+        let combined = await environment
+            .transclude
+            .combineAddresses(base: base, link: link)
+        
+        XCTAssertEqual(combined, Slashlink(petname: Petname("hello")!, slug: Slug("ok")!))
+    }
+    
+    
+    func testRelativeAddressComposition() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let base = Slashlink(petname: Petname("ben.gordon")!, slug: Slug("note")!)
+        let link = Slashlink(slug: Slug("ok")!)
+        
+        let combined = await environment
+            .transclude
+            .combineAddresses(base: base, link: link)
+        
+        XCTAssertEqual(combined, Slashlink(petname: Petname("ben.gordon")!, slug: Slug("ok")!))
+    }
+    
+    func testComplexAddressComposition() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let base = Slashlink(petname: Petname("ben.gordon")!, slug: Slug("note")!)
+        let link = Slashlink(petname: Petname("jordan.chris"), slug: Slug("ok")!)
+        
+        let combined = await environment
+            .transclude
+            .combineAddresses(base: base, link: link)
+        
+        XCTAssertEqual(combined, Slashlink(petname: Petname("jordan.chris.ben.gordon")!, slug: Slug("ok")!))
+    }
+    
+    func testResolveToOurDid() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let base = Slashlink(slug: Slug("note")!)
+        let link = Slashlink(slug: Slug("ok")!)
+        
+        let (did, slug) = try await environment
+            .transclude
+            .resolveAddresses(base: base, link: link)
+        
+        let identity = try await environment.noosphere.identity()
+        XCTAssertEqual(did, identity)
+        XCTAssertEqual(slug, link.slug)
+    }
+    
+    func testResolveToKnownDid() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let sarah = Did.dummyData()
+        try await environment.noosphere.setPetname(did: sarah, petname: Petname("sarah")!)
+        try await environment.noosphere.save()
+        
+        let base = Slashlink(slug: Slug("note")!)
+        let link = Slashlink(petname: Petname("sarah")!, slug: Slug("ok")!)
+        
+        let (did, slug) = try await environment
+            .transclude
+            .resolveAddresses(base: base, link: link)
+        
+        XCTAssertEqual(did, sarah)
+        XCTAssertEqual(slug, link.slug)
+    }
+    
     func testFetchLocalTranscludes() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(

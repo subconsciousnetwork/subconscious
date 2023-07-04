@@ -17,6 +17,22 @@ actor TranscludeService {
         self.noosphere = noosphere
     }
     
+    func combineAddresses(base: Slashlink, link: Slashlink) -> Slashlink {
+        switch (base.peer) {
+        case .petname(let petname):
+            return link.rebaseIfNeeded(petname: petname)
+        case .none, .did:
+            return link
+        }
+    }
+    
+    func resolveAddresses(base: Slashlink, link: Slashlink) async throws -> (Did, Slug) {
+        let address = combineAddresses(base: base, link: link)
+        let did = try await noosphere.resolve(peer: address.peer)
+        
+        return (did, address.slug)
+    }
+    
     func fetchTranscludePreviews(
         slashlinks: [Slashlink],
         owner: UserProfile
