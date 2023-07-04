@@ -233,6 +233,16 @@ extension Slashlink {
             return self
         }
     }
+    
+    /// Get petname from slashlink (if any)
+    func toDid() -> Did? {
+        switch self.peer {
+        case .did(let did):
+            return did
+        default:
+            return nil
+        }
+    }
 
     /// Get petname from slashlink (if any)
     func toPetname() -> Petname? {
