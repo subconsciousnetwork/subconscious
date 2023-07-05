@@ -45,7 +45,6 @@ actor TranscludeService {
         slashlinks: [Slashlink],
         owner: UserProfile
     ) async throws -> [Slashlink: EntryStub] {
-        let petname = owner.address.petname
         var dict: [Slashlink: EntryStub] = [:]
         
         for link in slashlinks {
