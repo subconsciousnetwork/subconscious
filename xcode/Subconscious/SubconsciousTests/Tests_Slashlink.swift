@@ -322,4 +322,39 @@ final class Tests_Slashlink: XCTestCase {
         let stillDidSlashlink = didSlashlink.rebaseIfNeeded(petname: alice)
         XCTAssertEqual(stillDidSlashlink, didSlashlink)
     }
+    
+    func testRebaseIfNeededSlashlink() throws {
+        let alice = Slashlink("@alice.bob")!
+        let charlie = Slashlink("@charlie/foo")!
+        let aliceBobCharlieFoo = charlie.rebaseIfNeeded(slashlink: alice)
+        XCTAssertEqual(aliceBobCharlieFoo, Slashlink("@charlie.alice.bob/foo")!)
+    }
+    
+    func testOurAddressRebase() async throws {
+        let base = Slashlink(slug: Slug("note")!)
+        let link = Slashlink(petname: Petname("hello")!, slug: Slug("ok")!)
+        
+        let combined = link.rebaseIfNeeded(slashlink: base)
+        
+        XCTAssertEqual(combined, Slashlink(petname: Petname("hello")!, slug: Slug("ok")!))
+    }
+    
+    
+    func testRelativeAddressRebase() async throws {
+        let base = Slashlink(petname: Petname("ben.gordon")!, slug: Slug("note")!)
+        let link = Slashlink(slug: Slug("ok")!)
+        
+        let combined = link.rebaseIfNeeded(slashlink: base)
+        
+        XCTAssertEqual(combined, Slashlink(petname: Petname("ben.gordon")!, slug: Slug("ok")!))
+    }
+    
+    func testComplexAddressRebase() async throws {
+        let base = Slashlink(petname: Petname("ben.gordon")!, slug: Slug("note")!)
+        let link = Slashlink(petname: Petname("jordan.chris"), slug: Slug("ok")!)
+        
+        let combined = link.rebaseIfNeeded(slashlink: base)
+        
+        XCTAssertEqual(combined, Slashlink(petname: Petname("jordan.chris.ben.gordon")!, slug: Slug("ok")!))
+    }
 }
