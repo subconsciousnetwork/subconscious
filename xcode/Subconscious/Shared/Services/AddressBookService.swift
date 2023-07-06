@@ -53,7 +53,7 @@ extension AddressBookError: LocalizedError {
             )
         case .invalidAttemptToOverwitePetname:
             return String(
-                localized: "This petname is already in use.",
+                localized: "Petname already in use.",
                 comment: "Address Book error description"
             )
         case .other(let msg):
@@ -400,7 +400,11 @@ actor AddressBookService {
         preventOverwrite: Bool = false
     ) -> AnyPublisher<Void, Error> {
         Future.detached {
-            try await self.followUser(did: did, petname: petname)
+            try await self.followUser(
+                did: did,
+                petname: petname,
+                preventOverwrite: preventOverwrite
+            )
         }
         .eraseToAnyPublisher()
     }

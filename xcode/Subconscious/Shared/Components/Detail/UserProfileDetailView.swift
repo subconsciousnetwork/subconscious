@@ -131,6 +131,7 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     case requestFollow(UserProfile)
     case attemptFollow(Did, Petname)
     case failFollow(error: String)
+    case failFollowDueToPetnameCollision(petname: Petname)
     case dismissFailFollowError
     case succeedFollow(_ petname: Petname)
     
@@ -347,7 +348,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return FollowNewUserFormSheetCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: environment
             )
         case .editProfileSheet(let action):
             return EditProfileSheetCursor.update(
@@ -426,11 +427,17 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 petname: petname
             )
-        case .failFollow(error: let error):
+        case .failFollow(let error):
             return failFollow(
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case .failFollowDueToPetnameCollision(let petname):
+            return failFollowDueToPetnameCollision(
+                state: state,
+                environment: environment,
+                petname: petname
             )
         case .dismissFailFollowError:
             return dismissFailFollowError(
@@ -671,12 +678,17 @@ struct UserProfileDetailModel: ModelProtocol {
             .map({ _ in
                 UserProfileDetailAction.succeedFollow(petname)
             })
-            .catch { error in
-                Just(
-                    UserProfileDetailAction.failFollow(
+            .recover { error in
+                switch error {
+                case AddressBookError.invalidAttemptToOverwitePetname:
+                    return .failFollowDueToPetnameCollision(
+                        petname: petname
+                    )
+                case _:
+                    return .failFollow(
                         error: error.localizedDescription
                     )
-                )
+                }
             }
             .eraseToAnyPublisher()
         
@@ -717,7 +729,29 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.failFollowErrorMessage = error
+        
         return Update(state: model)
+    }
+    
+    static func failFollowDueToPetnameCollision(
+        state: Self,
+        environment: Environment,
+        petname: Petname
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .followNewUserFormSheet(
+                    .failFollowDueToPetnameCollision(
+                        error: AddressBookError
+                            .invalidAttemptToOverwitePetname
+                            .localizedDescription,
+                        petname: petname.root
+                    )
+                )
+            ],
+            environment: environment
+        )
     }
     
     static func dismissFailFollowError(
