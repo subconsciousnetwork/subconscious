@@ -1348,6 +1348,7 @@
 				B8AC648B278F757B0099E96B /* ProgressScrimView.swift */,
 				B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */,
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
+				B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 				B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */,
 				B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */,
@@ -1365,9 +1366,6 @@
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
-				B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */,
-				B5D71D182A32B2AF000E058A /* NotFoundView.swift */,
-				B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -2598,7 +2596,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
-				branch = "swift-noosphere-v0.11.1";
+				branch = "swift-noosphere-v0.12.1";
 				kind = branch;
 			};
 		};

@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/subconsciousnetwork/noosphere",
       "state" : {
-        "branch" : "swift-noosphere-v0.11.1",
-        "revision" : "e857c9bdf9e5b6a428f64ead94ea2c6d1a6182f1"
+        "branch" : "swift-noosphere-v0.12.1",
+        "revision" : "fa990ab1d675e2b6a9cbb89e2c7db6e3cd790511"
       }
     },
     {
