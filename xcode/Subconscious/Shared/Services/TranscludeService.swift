@@ -23,7 +23,11 @@ actor TranscludeService {
     }
     
     func resolveAddresses(base: Peer?, link: Slashlink) async throws -> Transclusion {
-        let address = link.rebaseIfNeeded(peer: base)
+        let address = base.map { base in
+            link.rebaseIfNeeded(peer: base)
+        }
+        .unwrap(or: link)
+       
         let did = try await noosphere.resolve(peer: address.peer)
         
         return Transclusion(
