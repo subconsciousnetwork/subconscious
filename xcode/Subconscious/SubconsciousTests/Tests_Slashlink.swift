@@ -322,4 +322,22 @@ final class Tests_Slashlink: XCTestCase {
         let stillDidSlashlink = didSlashlink.rebaseIfNeeded(petname: alice)
         XCTAssertEqual(stillDidSlashlink, didSlashlink)
     }
+    
+    func testRelativeAddressRebase() async throws {
+        let base = Petname("ben.gordon")!
+        let link = Slashlink(slug: Slug("ok")!)
+        
+        let combined = link.rebaseIfNeeded(peer: .petname(base))
+        
+        XCTAssertEqual(combined, Slashlink(petname: base, slug: Slug("ok")!))
+    }
+    
+    func testComplexAddressRebase() async throws {
+        let base = Petname("ben.gordon")!
+        let link = Slashlink(petname: Petname("jordan.chris"), slug: Slug("ok")!)
+        
+        let combined = link.rebaseIfNeeded(peer: .petname(base))
+        
+        XCTAssertEqual(combined, Slashlink(petname: Petname("jordan.chris.ben.gordon")!, slug: Slug("ok")!))
+    }
 }

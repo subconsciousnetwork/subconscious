@@ -16,6 +16,45 @@ final class Tests_TranscludeService: XCTestCase {
     
     var data: DataService?
     
+    func testResolveToOurDid() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let link = Slashlink(slug: Slug("ok")!)
+        
+        let newLink = try await environment
+            .transclude
+            .resolveAddresses(base: nil, link: link)
+        
+        let identity = try await environment.noosphere.identity()
+        let did = newLink.address.toDid()!
+        XCTAssertEqual(did, identity)
+        XCTAssertEqual(newLink.address.slug, link.slug)
+    }
+    
+    func testResolveToKnownDid() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let sarah = Did.dummyData()
+        try await environment.noosphere.setPetname(did: sarah, petname: Petname("sarah")!)
+        try await environment.noosphere.save()
+        
+        let link = Slashlink(petname: Petname("sarah")!, slug: Slug("ok")!)
+        
+        let newLink = try await environment
+            .transclude
+            .resolveAddresses(base: nil, link: link)
+        
+        let did = newLink.address.toDid()!
+        XCTAssertEqual(did, sarah)
+        XCTAssertEqual(newLink.address.slug, link.slug)
+    }
+    
     func testFetchLocalTranscludes() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(

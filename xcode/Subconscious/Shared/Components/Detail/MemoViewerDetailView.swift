@@ -331,7 +331,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .succeedFetchTranscludePreviews(let transcludes):
             var model = state
             model.transcludePreviews = transcludes
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
             
         case .failFetchTranscludePreviews(let error):
             logger.error("Failed to fetch transcludes: \(error)")

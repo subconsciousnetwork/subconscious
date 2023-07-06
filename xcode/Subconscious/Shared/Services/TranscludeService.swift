@@ -8,6 +8,11 @@
 import Foundation
 import Combine
 
+struct Transclusion {
+    let displayAddress: Slashlink
+    let address: Slashlink
+}
+
 actor TranscludeService {
     private var database: DatabaseService
     private var noosphere: NoosphereService
@@ -17,34 +22,41 @@ actor TranscludeService {
         self.noosphere = noosphere
     }
     
+    func resolveAddresses(base: Peer?, link: Slashlink) async throws -> Transclusion {
+        let address = base.map { base in
+            link.rebaseIfNeeded(peer: base)
+        }
+        .unwrap(or: link)
+       
+        let did = try await noosphere.resolve(peer: address.peer)
+        
+        return Transclusion(
+            displayAddress: link,
+            address: Slashlink(peer: .did(did), slug: address.slug)
+        )
+    }
+    
     func fetchTranscludePreviews(
         slashlinks: [Slashlink],
         owner: UserProfile
     ) async throws -> [Slashlink: EntryStub] {
-        let petname = owner.address.petname
-        
-        let slashlinks = slashlinks.map { address in
-            guard case .petname(_) = address.peer else {
-                // Rebase relative slashlinks to the owner's handle (if they have one)
-                return Slashlink(peer: owner.address.peer, slug: address.slug)
-            }
-            
-            return address
-        }
-        
-        let entries = try database.listEntries(for: slashlinks)
         var dict: [Slashlink: EntryStub] = [:]
         
-        for entry in entries {
+        for link in slashlinks {
+            let transclusion = try await resolveAddresses(
+                base: owner.address.peer,
+                link: link
+            )
+            guard let entry = try database.readEntry(for: transclusion.address) else {
+                continue
+            }
+            
             if entry.address.isLocal {
                 dict.updateValue(entry, forKey: Slashlink(slug: entry.address.slug))
                 continue
             }
             
-            // Ensure links to the owner's content are relativized to match
-            // the in-text representation
-            let displayAddress = entry.address.relativizeIfNeeded(petname: petname)
-            dict.updateValue(entry, forKey: displayAddress)
+            dict.updateValue(entry, forKey: transclusion.displayAddress)
         }
         
         return dict

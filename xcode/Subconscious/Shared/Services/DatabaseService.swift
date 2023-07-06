@@ -444,17 +444,23 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
+        
+        guard case let .did(did) = slashlink.peer else {
+            throw DatabaseServiceError.slashlinkMustBeAbsolute
+        }
 
         let results = try database.execute(
             sql: """
             SELECT slashlink, modified, excerpt
             FROM memo
-            WHERE slashlink = ?
+            WHERE did = ?
+                AND slug = ?
             ORDER BY modified DESC
             LIMIT 1000
             """,
             parameters: [
-                .text(slashlink.markup),
+                .text(did.description),
+                .text(slashlink.slug.description),
             ]
         )
 

@@ -206,6 +206,18 @@ extension Slashlink {
         }
     }
     
+    /// Given an address, re-base relative to the passed peer.
+    /// If `@alice.bob/test` appears in a note owned by `@donna.charlie`
+    /// then we want `@alice.bob.donna.charlie/test`
+    func rebaseIfNeeded(peer: Peer) -> Slashlink {
+        switch (peer) {
+        case .petname(let petname):
+            return self.rebaseIfNeeded(petname: petname)
+        case .did:
+            return self
+        }
+    }
+    
     /// "Relativize" a slashlink relative to some base did.
     /// If did is the base did, returns a relative slashlink without a peer.
     /// Otherwise, returns slashlink unchanged.
@@ -231,6 +243,16 @@ extension Slashlink {
             return Slashlink(slug: self.slug)
         default:
             return self
+        }
+    }
+    
+    /// Get DID from slashlink (if any)
+    func toDid() -> Did? {
+        switch self.peer {
+        case .did(let did):
+            return did
+        default:
+            return nil
         }
     }
 

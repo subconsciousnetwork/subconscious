@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+struct RenderableBlock: Hashable {
+    var block: Subtext.Block
+    var entries: [EntryStub]
+}
+
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
@@ -27,12 +32,18 @@ struct SubtextView: View {
                 entry.excerpt.count > 0
             }
     }
+    
+    var blocks: [RenderableBlock] {
+        subtext.blocks.map { block in
+            return RenderableBlock(block: block, entries: self.entries(for: block))
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
-            ForEach(subtext.blocks, id: \.self) { block in
-                Text(Self.renderer.render(block.description))
-                ForEach(self.entries(for: block), id: \.self) { entry in
+            ForEach(blocks, id: \.self) { renderable in
+                Text(Self.renderer.render(renderable.block.description))
+                ForEach(renderable.entries, id: \.self) { entry in
                     Transclude2View(
                         address: entry.address,
                         excerpt: entry.excerpt,
@@ -43,6 +54,7 @@ struct SubtextView: View {
                 }
             }
         }
+        .transition(.slide)
         .expandAlignedLeading()
     }
 }
