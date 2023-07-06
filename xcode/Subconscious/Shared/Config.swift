@@ -15,7 +15,6 @@ struct Config: Equatable, Codable {
     
     var noosphere = NoosphereConfig()
     
-    var appTabs = false
     var addByQRCode = true
     var userProfile = true
     

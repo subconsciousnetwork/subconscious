@@ -193,6 +193,8 @@
 		B85EC46A296F11F000558761 /* BylineSmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EC468296F11F000558761 /* BylineSmView.swift */; };
 		B8616DF829C38775001C666A /* TranscludeButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8616DF729C38775001C666A /* TranscludeButtonStyle.swift */; };
 		B8616DF929C3877F001C666A /* TranscludeButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8616DF729C38775001C666A /* TranscludeButtonStyle.swift */; };
+		B86423352A5728860011E63D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86423342A5728860011E63D /* ProfileView.swift */; };
+		B86423372A5729C70011E63D /* DetailStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86423362A5729C70011E63D /* DetailStack.swift */; };
 		B866868127AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */; };
 		B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */; };
 		B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */; };
@@ -587,6 +589,8 @@
 		B85EC45F296F099700558761 /* ProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePic.swift; sourceTree = "<group>"; };
 		B85EC468296F11F000558761 /* BylineSmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BylineSmView.swift; sourceTree = "<group>"; };
 		B8616DF729C38775001C666A /* TranscludeButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeButtonStyle.swift; sourceTree = "<group>"; };
+		B86423342A5728860011E63D /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		B86423362A5729C70011E63D /* DetailStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailStack.swift; sourceTree = "<group>"; };
 		B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRangeUtilities.swift; sourceTree = "<group>"; };
 		B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailKeyboardToolbarView.swift; sourceTree = "<group>"; };
 		B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Subtext.swift; sourceTree = "<group>"; };
@@ -956,6 +960,24 @@
 			path = Suggestion;
 			sourceTree = "<group>";
 		};
+		B86423322A5726950011E63D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B82F053628D60EE60025A8B5 /* AppTabView.swift */,
+				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
+				B8EB29F526F27794006E97C3 /* AppView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		B86423332A5728780011E63D /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				B86423342A5728860011E63D /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
 		B86BC75B29B27D45005B5833 /* Byline */ = {
 			isa = PBXGroup;
 			children = (
@@ -992,6 +1014,7 @@
 			isa = PBXGroup;
 			children = (
 				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
+				B86423362A5729C70011E63D /* DetailStack.swift */,
 				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */,
 				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
@@ -1266,9 +1289,7 @@
 		B8EB2A3826F27CD1006E97C3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				B82F053628D60EE60025A8B5 /* AppTabView.swift */,
-				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
-				B8EB29F526F27794006E97C3 /* AppView.swift */,
+				B86423322A5726950011E63D /* App */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
 				B87288E2299C02E200EF7E07 /* Detail */,
@@ -1277,6 +1298,7 @@
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B87288E1299C02BA00EF7E07 /* Notebook */,
 				B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */,
+				B86423332A5728780011E63D /* Profile */,
 				B88B1CDC298DE65E0062CB7F /* Settings */,
 				B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */,
 			);
@@ -1776,6 +1798,7 @@
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
 				B87288DE299AB02400EF7E07 /* Sphere.swift in Sources */,
+				B86423352A5728860011E63D /* ProfileView.swift in Sources */,
 				B81A1A6D29DF267200B4CD1C /* LoadingState.swift in Sources */,
 				B5CA448929D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
@@ -1840,6 +1863,7 @@
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */,
+				B86423372A5729C70011E63D /* DetailStack.swift in Sources */,
 				B8D328B729A671DA00850A37 /* Transclude2View.swift in Sources */,
 				B81A1A6F29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift in Sources */,
 				B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */,

@@ -22,14 +22,8 @@ struct AppView: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                if Config.default.appTabs {
-                    AppTabView(store: store)
-                } else {
-                    NotebookView(app: store)
-                }
-            }
-            .zIndex(0)
+            AppTabView(store: store)
+                .zIndex(0)
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
                     state: store.state.appUpgrade,
