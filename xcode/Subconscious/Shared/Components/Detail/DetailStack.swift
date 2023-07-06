@@ -3,14 +3,60 @@
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/23.
-//
-//  This file defines a model and actions, but not view. Instead, you can
-//  use the model and actions to drive a `NavigationStack`.
 
 import SwiftUI
 import os
 import Combine
 import ObservableStore
+
+struct DetailStackView<Root: View>: View {
+    @ObservedObject var app: Store<AppModel>
+    var state: DetailStackModel
+    var send: (DetailStackAction) -> Void
+    var root: () -> Root
+
+    var body: some View {
+        NavigationStack(
+            path: Binding(
+                get: { state.details },
+                send: send,
+                tag: DetailStackAction.setDetails
+            )
+        ) {
+            root().navigationDestination(
+                for: MemoDetailDescription.self
+            ) { detail in
+                switch detail {
+                case .editor(let description):
+                    MemoEditorDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: send,
+                            tag: DetailStackAction.tag
+                        )
+                    )
+                case .viewer(let description):
+                    MemoViewerDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: send,
+                            tag: DetailStackAction.tag
+                        )
+                    )
+                case .profile(let description):
+                    UserProfileDetailView(
+                        app: app,
+                        description: description,
+                        notify: Address.forward(
+                            send: send,
+                            tag: DetailStackAction.tag
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
 
 enum DetailStackAction: Hashable {
     /// Set entire navigation stack
@@ -43,6 +89,12 @@ enum DetailStackAction: Hashable {
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
     
+    /// Detail lifecycle notifications that affect stack state
+    case requestDelete(Slashlink?)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedSaveEntry(address: Slashlink, modified: Date)
+    case succeedUpdateAudience(MoveReceipt)
     
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
@@ -132,6 +184,16 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 user: user
             )
+        case .requestDelete:
+            return Update(state: state)
+        case .succeedMoveEntry:
+            return Update(state: state)
+        case .succeedMergeEntry:
+            return Update(state: state)
+        case .succeedSaveEntry:
+            return Update(state: state)
+        case .succeedUpdateAudience:
+            return Update(state: state)
         }
     }
     
@@ -320,3 +382,69 @@ struct DetailStackModel: Hashable, ModelProtocol {
     }
 }
 
+extension DetailStackAction {
+    static func tag(_ action: MemoEditorDetailNotification) -> Self {
+        switch action {
+        case .requestDelete(let address):
+            return .requestDelete(address)
+        case let .requestDetail(detail):
+            return .pushDetail(detail)
+        case let .requestFindLinkDetail(link):
+            return .findAndPushDetail(
+                address: Slashlink.ourProfile,
+                link: link
+            )
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(address: address, modified: modified)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+        }
+    }
+    
+    static func tag(_ action: MemoViewerDetailNotification) -> Self {
+        switch action {
+        case let .requestDetail(detail):
+            return .pushDetail(detail)
+        case let .requestFindLinkDetail(address, link):
+            return .findAndPushDetail(
+                address: address,
+                link: link
+            )
+        }
+    }
+    
+    static func tag(_ action: UserProfileDetailNotification) -> Self {
+        switch action {
+        case let .requestDetail(detail):
+            return .pushDetail(detail)
+        case let .requestNavigateToProfile(user):
+            let user = Func.run {
+                switch (user.category, user.ourFollowStatus) {
+                case (.ourself, _):
+                    // Loop back to our profile
+                    return user.overrideAddress(Slashlink.ourProfile)
+                case (_, .following(let name)):
+                    // Rewrite address using our name
+                    return user.overrideAddress(Slashlink(petname: name.toPetname()))
+                case _:
+                    return user
+                }
+            }
+            
+            
+            guard user.resolutionStatus.isReady else {
+                return .failPushDetail("Attempted to navigate to unresolved user")
+            }
+            return .pushDetail(.profile(
+                UserProfileDetailDescription(
+                    address: user.address,
+                    user: user
+                )
+            ))
+        }
+    }
+}

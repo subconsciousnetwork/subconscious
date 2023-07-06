@@ -16,7 +16,6 @@ struct Config: Equatable, Codable {
     var noosphere = NoosphereConfig()
     
     var addByQRCode = true
-    var userProfile = true
     
     #if targetEnvironment(simulator)
     /// Are we currently running in the iOS simlator (aka dev mode)

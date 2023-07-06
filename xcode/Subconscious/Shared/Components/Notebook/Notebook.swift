@@ -144,52 +144,42 @@ enum NotebookAction {
     /// Search suggestion was activated
     case activatedSuggestion(Suggestion)
     
-    /// Set entire navigation stack
-    case setDetails([MemoDetailDescription])
-    
-    /// Find a detail a given slashlink.
-    /// If slashlink has a peer part, this will request
-    /// a detail for 3p content.
-    /// If slashlink does not have a peer part, this will
-    /// request an editor detail.
-    case findAndPushDetail(
-        address: Slashlink,
-        link: SubSlashlinkLink
-    )
-    
-    /// Find a detail for content that belongs to us.
-    /// Detail could exist in either local or sphere content.
-    case findAndPushMemoEditorDetail(
-        slug: Slug,
-        fallback: String
-    )
-    
-    /// Push detail onto navigation stack
-    case pushDetail(MemoDetailDescription)
-    case requestOurProfileDetail
-    case pushOurProfileDetail(UserProfile)
-    case failPushDetail(_ message: String)
-    
-    case pushRandomDetail(autofocus: Bool)
-    case failPushRandomDetail(String)
-    
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
+    }
+    
+    /// Set entire navigation stack
+    static func setDetails(_ details: [MemoDetailDescription]) -> Self {
+        .detailStack(.setDetails(details))
+    }
+    
+    /// Synonym for tagged `DetailStackAction.pushDetail`
+    static func pushDetail(
+        _ detail: MemoDetailDescription
+    ) -> Self {
+        .detailStack(.pushDetail(detail))
     }
     
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
         _ detail: MemoEditorDetailDescription
     ) -> Self {
-        .pushDetail(.editor(detail))
+        .detailStack(.pushDetail(.editor(detail)))
     }
     
     /// Synonym for `.pushDetail` that wraps viewer detail in `.viewer()`
     static func pushDetail(
         _ detail: MemoViewerDetailDescription
     ) -> Self {
-        .pushDetail(.viewer(detail))
+        .detailStack(.pushDetail(.viewer(detail)))
+    }
+    
+    /// Synonym for tagged `DetailStackAction.pushRandomDetail`
+    static func pushRandomDetail(
+        autofocus: Bool
+    ) -> Self {
+        .detailStack(.pushRandomDetail(autofocus: autofocus))
     }
 }
 
@@ -243,73 +233,6 @@ extension NotebookAction: CustomLogStringConvertible {
 }
 
 //  MARK: Cursors and tagging functions
-
-extension NotebookAction {
-    static func tag(_ action: MemoEditorDetailNotification) -> Self {
-        switch action {
-        case .requestDelete(let address):
-            return .deleteEntry(address)
-        case let .requestDetail(detail):
-            return .pushDetail(detail)
-        case let .requestFindLinkDetail(link):
-            return .findAndPushDetail(
-                address: Slashlink.ourProfile,
-                link: link
-            )
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedSaveEntry(slug, modified):
-            return .succeedSaveEntry(slug: slug, modified: modified)
-        case let .succeedUpdateAudience(receipt):
-            return .succeedUpdateAudience(receipt)
-        }
-    }
-    
-    static func tag(_ action: MemoViewerDetailNotification) -> Self {
-        switch action {
-        case let .requestDetail(detail):
-            return .pushDetail(detail)
-        case let .requestFindLinkDetail(address, link):
-            return .findAndPushDetail(
-                address: address,
-                link: link
-            )
-        }
-    }
-    
-    static func tag(_ action: UserProfileDetailNotification) -> Self {
-        switch action {
-        case let .requestDetail(detail):
-            return .pushDetail(detail)
-        case let .requestNavigateToProfile(user):
-            let user = Func.run {
-                switch (user.category, user.ourFollowStatus) {
-                case (.ourself, _):
-                    // Loop back to our profile
-                    return user.overrideAddress(Slashlink.ourProfile)
-                case (_, .following(let name)):
-                    // Rewrite address using our name
-                    return user.overrideAddress(Slashlink(petname: name.toPetname()))
-                case _:
-                    return user
-                }
-            }
-            
-            
-            guard user.resolutionStatus.isReady else {
-                return .failPushDetail("Attempted to navigate to unresolved user")
-            }
-            return .pushDetail(.profile(
-                UserProfileDetailDescription(
-                    address: user.address,
-                    user: user
-                )
-            ))
-        }
-    }
-}
 
 extension NotebookAction {
     /// Map select app actions to `NotebookAction`
@@ -383,8 +306,10 @@ struct NotebookModel: ModelProtocol {
     )
     
     /// Contains notebook detail panels
-    var details: [MemoDetailDescription] = []
     var detailStack = DetailStackModel()
+    var details: [MemoDetailDescription] {
+        detailStack.details
+    }
     
     /// Count of entries
     var entryCount: Int? = nil
@@ -569,74 +494,6 @@ struct NotebookModel: ModelProtocol {
                 action: NotebookAction.fromSuggestion(suggestion),
                 environment: environment
             )
-        case .setDetails(let details):
-            var model = state
-            model.details = details
-            return Update(state: model)
-        case let .findAndPushDetail(address, link):
-            // Stitch the base address on to the tapped link, making any
-            // bare slashlinks relative to the sphere they belong to.
-            //
-            // This is needed in the viewer but address will always based
-            // on our sphere in the editor case.
-            let slashlink: Slashlink = Func.run {
-                guard case let .petname(basePetname) = address.peer else {
-                    return link.slashlink
-                }
-                return link.slashlink.rebaseIfNeeded(petname: basePetname)
-            }
-            
-            return findAndPushDetail(
-                state: state,
-                environment: environment,
-                slashlink: slashlink,
-                fallback: link.fallback
-            )
-        case let .findAndPushMemoEditorDetail(slug, fallback):
-            return findAndPushMemoEditorDetail(
-                state: state,
-                environment: environment,
-                slug: slug,
-                fallback: fallback
-            )
-        case let .pushDetail(detail):
-            var model = state
-            model.details.append(detail)
-            return Update(state: model)
-        case let .failPushDetail(error):
-            logger.log("Attempt to push invalid detail: \(error)")
-            return Update(state: state)
-        case .pushRandomDetail(let autofocus):
-            return pushRandomDetail(
-                state: state,
-                environment: environment,
-                autofocus: autofocus
-            )
-        case .requestOurProfileDetail:
-            let fx: Fx<NotebookAction> = environment.userProfile
-                .loadOurProfileFromMemoPublisher()
-                .map { user in
-                    NotebookAction.pushOurProfileDetail(user)
-                }
-                .recover { error in
-                    NotebookAction.failPushDetail(error.localizedDescription)
-                }
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
-        case .pushOurProfileDetail(let user):
-            let detail = UserProfileDetailDescription(
-                address: Slashlink.ourProfile,
-                user: user,
-                // Focus following list by default
-                // We can already see our recent notes in our notebook so no
-                // point showing it again
-                initialTabIndex: UserProfileDetailModel.followingTabIndex
-            )
-            return update(state: state, action: .pushDetail(.profile(detail)), environment: environment)
-        case .failPushRandomDetail(let error):
-            logger.log("Failed to get random note: \(error)")
-            return Update(state: state)
         }
     }
     
@@ -830,13 +687,15 @@ struct NotebookModel: ModelProtocol {
         address: Slashlink
     ) -> Update<NotebookModel> {
         logger.log("Deleted entry: \(address)")
-        var model = state
-        model.details = state.details.filter({ detail in
+        let details = state.details.filter({ detail in
             detail.address != address
         })
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .setDetails(details),
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -849,10 +708,8 @@ struct NotebookModel: ModelProtocol {
         from: Slashlink,
         to: Slashlink
     ) -> Update<NotebookModel> {
-        var model = state
-
         /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: MemoDetailDescription) in
+        let details = state.details.map({ (detail: MemoDetailDescription) in
             guard detail.address == from else {
                 return detail
             }
@@ -869,8 +726,11 @@ struct NotebookModel: ModelProtocol {
         })
         
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .setDetails(details),
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -883,10 +743,8 @@ struct NotebookModel: ModelProtocol {
         parent: Slashlink,
         child: Slashlink
     ) -> Update<NotebookModel> {
-        var model = state
-
         /// Find all instances of child and update them to become parent
-        model.details = state.details.map({ (detail: MemoDetailDescription) in
+        let details = state.details.map({ (detail: MemoDetailDescription) in
             guard detail.address == child else {
                 return detail
             }
@@ -903,8 +761,11 @@ struct NotebookModel: ModelProtocol {
         })
         
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .setDetails(details),
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -916,10 +777,8 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: MoveReceipt
     ) -> Update<NotebookModel> {
-        var model = state
-
         /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: MemoDetailDescription) in
+        let details = state.details.map({ (detail: MemoDetailDescription) in
             guard let address = detail.address else {
                 return detail
             }
@@ -939,8 +798,11 @@ struct NotebookModel: ModelProtocol {
         })
         
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .setDetails(details),
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -986,104 +848,5 @@ struct NotebookModel: ModelProtocol {
         .eraseToAnyPublisher()
         
         return update.mergeFx(fx)
-    }
-    
-    /// Find and push a specific detail for slug
-    static func findAndPushDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slashlink: Slashlink,
-        fallback: String
-    ) -> Update<NotebookModel> {
-        // Intercept profile visits and use the correct view
-        guard !slashlink.slug.isProfile else {
-            return update(
-                state: state,
-                action: .pushDetail(
-                    .profile(
-                        UserProfileDetailDescription(
-                            address: slashlink
-                        )
-                    )
-                ),
-                environment: environment
-            )
-        }
-        
-        // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
-        // to find in local or sphere content and then push editor detail.
-        guard slashlink.peer != nil else {
-            return update(
-                state: state,
-                action: .findAndPushMemoEditorDetail(
-                    slug: slashlink.toSlug(),
-                    fallback: fallback
-                ),
-                environment: environment
-            )
-        }
-        
-        // If slashlink pointing to other sphere, dispatch action
-        // for viewer.
-        return update(
-            state: state,
-            action: .pushDetail(
-                .viewer(
-                    MemoViewerDetailDescription(
-                        address: slashlink
-                    )
-                )
-            ),
-            environment: environment
-        )
-    }
-    
-    /// Find and push a specific detail for slug
-    static func findAndPushMemoEditorDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug,
-        fallback: String
-    ) -> Update<NotebookModel> {
-        let fallbackAddress = slug.toLocalSlashlink()
-        let fx: Fx<NotebookAction> = environment.data
-            .findAddressInOursPublisher(slug: slug)
-            .map({ address in
-                NotebookAction.pushDetail(
-                    MemoEditorDetailDescription(
-                        address: address ?? fallbackAddress,
-                        fallback: fallback
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
-
-    /// Request detail for a random entry
-    static func pushRandomDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        autofocus: Bool
-    ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data
-            .readRandomEntryLinkPublisher()
-            .map({ link in
-                NotebookAction.pushDetail(
-                    MemoEditorDetailDescription(
-                        address: link.address,
-                        fallback: link.title
-                    )
-                )
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failPushRandomDetail(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 }
