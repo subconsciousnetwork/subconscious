@@ -227,8 +227,12 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
                 environment: environment
             )
         case .failToFindUniquePetname(let error):
-            // Not a huge deal, the user will have to enter a name themselves
             logger.warning("Failed to find a unique petname: \(error)")
+            // We do not need to surface an error to the UI here.
+            // If we tried to find a unique name in the first place then
+            // the input field will already be marked as invalid and have
+            // the caption changed to the message "Petname already in use" or whatever
+            // the localizedDescription for the relevant AddressBookServiceError.
             return Update(state: state)
         }
     }
