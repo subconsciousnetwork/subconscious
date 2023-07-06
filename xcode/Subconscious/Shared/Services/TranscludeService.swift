@@ -22,8 +22,8 @@ actor TranscludeService {
         self.noosphere = noosphere
     }
     
-    func resolveAddresses(base: Slashlink, link: Slashlink) async throws -> Transclusion {
-        let address = link.rebaseIfNeeded(slashlink: base)
+    func resolveAddresses(base: Peer?, link: Slashlink) async throws -> Transclusion {
+        let address = link.rebaseIfNeeded(peer: base)
         let did = try await noosphere.resolve(peer: address.peer)
         
         return Transclusion(
@@ -39,7 +39,10 @@ actor TranscludeService {
         var dict: [Slashlink: EntryStub] = [:]
         
         for link in slashlinks {
-            let transclusion = try await resolveAddresses(base: owner.address, link: link)
+            let transclusion = try await resolveAddresses(
+                base: owner.address.peer,
+                link: link
+            )
             guard let entry = try database.readEntry(for: transclusion.address) else {
                 continue
             }

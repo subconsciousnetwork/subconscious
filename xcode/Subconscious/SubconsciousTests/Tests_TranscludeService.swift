@@ -22,12 +22,11 @@ final class Tests_TranscludeService: XCTestCase {
             tmp: tmp
         )
         
-        let base = Slashlink(slug: Slug("note")!)
         let link = Slashlink(slug: Slug("ok")!)
         
         let newLink = try await environment
             .transclude
-            .resolveAddresses(base: base, link: link)
+            .resolveAddresses(base: nil, link: link)
         
         let identity = try await environment.noosphere.identity()
         let did = newLink.address.toDid()!
@@ -45,12 +44,11 @@ final class Tests_TranscludeService: XCTestCase {
         try await environment.noosphere.setPetname(did: sarah, petname: Petname("sarah")!)
         try await environment.noosphere.save()
         
-        let base = Slashlink(slug: Slug("note")!)
         let link = Slashlink(petname: Petname("sarah")!, slug: Slug("ok")!)
         
         let newLink = try await environment
             .transclude
-            .resolveAddresses(base: base, link: link)
+            .resolveAddresses(base: nil, link: link)
         
         let did = newLink.address.toDid()!
         XCTAssertEqual(did, sarah)
