@@ -246,7 +246,7 @@ extension Slashlink {
         }
     }
     
-    /// Get petname from slashlink (if any)
+    /// Get DID from slashlink (if any)
     func toDid() -> Did? {
         switch self.peer {
         case .did(let did):
