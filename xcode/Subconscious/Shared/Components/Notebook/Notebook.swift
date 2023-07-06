@@ -84,6 +84,8 @@ struct NotebookView: View {
 enum NotebookAction {
     /// Tagged action for search HUD
     case search(SearchAction)
+    /// Tagged action for detail stack
+    case detailStack(DetailStackAction)
     
     /// Sent by `task` when the view first appears
     case appear
@@ -324,6 +326,25 @@ extension NotebookAction {
     }
 }
 
+struct NotebookDetailStackCursor: CursorProtocol {
+    typealias Model = NotebookModel
+    typealias ViewModel = DetailStackModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.detailStack
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.detailStack = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
+        .detailStack(action)
+    }
+}
+
 struct NotebookSearchCursor: CursorProtocol {
     static func get(state: NotebookModel) -> SearchModel {
         state.search
@@ -363,6 +384,7 @@ struct NotebookModel: ModelProtocol {
     
     /// Contains notebook detail panels
     var details: [MemoDetailDescription] = []
+    var detailStack = DetailStackModel()
     
     /// Count of entries
     var entryCount: Int? = nil
@@ -399,8 +421,14 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
         switch action {
-        case .search(let action):
+        case let .search(action):
             return NotebookSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case let .detailStack(action):
+            return NotebookDetailStackCursor.update(
                 state: state,
                 action: action,
                 environment: environment

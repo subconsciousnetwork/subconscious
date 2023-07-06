@@ -63,7 +63,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
     typealias Action = DetailStackAction
     typealias Environment = AppEnvironment
     
-    var details: [MemoDetailDescription]
+    var details: [MemoDetailDescription] = []
     
     // Logger for actions
     static let logger = Logger(
