@@ -69,6 +69,11 @@ struct NotebookView: View {
             app.actions.compactMap(NotebookAction.from),
             perform: store.send
         )
+        /// Replay select notebook actions on app
+        .onReceive(
+            store.actions.compactMap(AppAction.from),
+            perform: app.send
+        )
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             NotebookModel.logger.debug("[action] \(message)")
@@ -121,9 +126,11 @@ enum NotebookAction {
     /// from the list before requesting delete for the animation to work.
     case stageDeleteEntry(Slashlink)
     /// Delete entry identified by slug.
-    case deleteEntry(Slashlink?)
-    case failDeleteEntry(String)
-    case succeedDeleteEntry(Slashlink)
+    /// This request gets forwarded to the app store, which handles the
+    /// actual deletion, so other components can respond.
+    case requestDeleteMemo(Slashlink?)
+    case failDeleteMemo(String)
+    case succeedDeleteMemo(Slashlink)
     
     /// Entry was saved
     case succeedSaveEntry(slug: Slashlink, modified: Date)
@@ -243,6 +250,21 @@ extension NotebookAction {
             return .ready
         case .succeedSyncLocalFilesWithDatabase:
             return .ready
+        case let .succeedDeleteMemo(address):
+            return .succeedDeleteMemo(address)
+        case let .failDeleteMemo(error):
+            return .failDeleteMemo(error)
+        default:
+            return nil
+        }
+    }
+}
+
+extension AppAction {
+    static func from(_ action: NotebookAction) -> Self? {
+        switch action {
+        case let .requestDeleteMemo(address):
+            return .deleteMemo(address)
         default:
             return nil
         }
@@ -439,20 +461,23 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .deleteEntry(let address):
-            return deleteEntry(
+        case let .requestDeleteMemo(address):
+            return requestDeleteMemo(
                 state: state,
                 environment: environment,
                 address: address
             )
-        case .failDeleteEntry(let error):
-            logger.log("failDeleteEntry: \(error)")
-            return Update(state: state)
-        case .succeedDeleteEntry(let address):
-            return succeedDeleteEntry(
+        case .succeedDeleteMemo(let address):
+            return succeedDeleteMemo(
                 state: state,
                 environment: environment,
                 address: address
+            )
+        case let .failDeleteMemo(error):
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
             )
         case .succeedSaveEntry:
             // Just refresh note after save, for now.
@@ -647,7 +672,7 @@ struct NotebookModel: ModelProtocol {
             model.recent = recent
         }
         
-        let fx: Fx<NotebookAction> = Just(NotebookAction.deleteEntry(address))
+        let fx: Fx<NotebookAction> = Just(NotebookAction.requestDeleteMemo(address))
             .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
@@ -655,51 +680,65 @@ struct NotebookModel: ModelProtocol {
     }
     
     /// Entry delete succeeded
-    static func deleteEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
+    static func requestDeleteMemo(
+        state: Self,
+        environment: Environment,
         address: Slashlink?
     ) -> Update<NotebookModel> {
-        guard let address = address else {
-            logger.log(
-                "Delete requested for nil address. Doing nothing."
-            )
-            return Update(state: state)
-        }
-        let fx: Fx<NotebookAction> = environment.data
-            .deleteMemoPublisher(address)
-            .map({ _ in
-                NotebookAction.succeedDeleteEntry(address)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failDeleteEntry(error.localizedDescription)
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        logger.log(
+            "Request delete memo",
+            metadata: [
+                "address": address?.description ?? ""
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.requestDeleteMemo(address)),
+            environment: environment
+        )
     }
-
+    
     /// Entry delete succeeded
-    static func succeedDeleteEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
         address: Slashlink
     ) -> Update<NotebookModel> {
-        logger.log("Deleted entry: \(address)")
-        let details = state.details.filter({ detail in
-            detail.address != address
-        })
+        logger.log(
+            "Memo was deleted",
+            metadata: [
+                "address": address.description
+            ]
+        )
         return update(
             state: state,
             actions: [
-                .setDetails(details),
+                .detailStack(.succeedDeleteMemo(address)),
                 .refreshLists
             ],
             environment: environment
         )
     }
-
+    
+    /// Entry delete succeeded
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<NotebookModel> {
+        logger.log(
+            "Failed to delete memo",
+            metadata: [
+                "error": error
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.failDeleteMemo(error)),
+            environment: environment
+        )
+    }
+    
     /// Move success lifecycle handler.
     /// Updates UI in response.
     static func succeedMoveEntry(
