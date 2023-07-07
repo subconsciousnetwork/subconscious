@@ -64,12 +64,11 @@ struct ValidatedFormField<Output: Equatable, Caption: View>: View {
                         self.focused = true
                     }
                 }
-                Image(systemName: "exclamationmark.circle")
-                    .frame(width: 24, height: 22)
-                    .foregroundColor(.red)
-                    .background(backgroundColor)
-                    .opacity(field.shouldPresentAsInvalid ? 1 : 0)
-                    .animation(.default, value: field.shouldPresentAsInvalid)
+                if field.shouldPresentAsInvalid {
+                    Image(systemName: "exclamationmark.circle")
+                        .frame(width: 24, height: 22)
+                        .foregroundColor(.red)
+                }
             }
             caption
                 .foregroundColor(
