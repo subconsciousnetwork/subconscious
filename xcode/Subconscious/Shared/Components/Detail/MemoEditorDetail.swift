@@ -612,7 +612,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
-        category: "detail"
+        category: "MemoEditorDetail"
     )
     
     //  MARK: Update
@@ -1614,7 +1614,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         // 2022-02-09 Gordon Brander
         if
             model.saveState == .saving &&
-                model.stateMatches(entry: entry)
+            model.stateMatches(entry: entry)
         {
             model.saveState = .saved
         }

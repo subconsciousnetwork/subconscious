@@ -97,9 +97,9 @@ enum DetailStackAction: Hashable {
     /// Deletion attempt succeeded. Forwarded down from parent.
     case succeedDeleteMemo(Slashlink)
 
-    case succeedMoveEntry(from: Slashlink, to: Slashlink)
-    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedSaveEntry(address: Slashlink, modified: Date)
+    case succeedMoveMemo(from: Slashlink, to: Slashlink)
+    case succeedMergeMemo(parent: Slashlink, child: Slashlink)
+    case succeedSaveMemo(address: Slashlink, modified: Date)
     case succeedUpdateAudience(MoveReceipt)
     
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
@@ -208,11 +208,11 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .succeedMoveEntry:
+        case .succeedMoveMemo:
             return Update(state: state)
-        case .succeedMergeEntry:
+        case .succeedMergeMemo:
             return Update(state: state)
-        case .succeedSaveEntry:
+        case .succeedSaveMemo:
             return Update(state: state)
         case .succeedUpdateAudience:
             return Update(state: state)
@@ -453,11 +453,11 @@ extension DetailStackAction {
                 link: link
             )
         case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
+            return .succeedMoveMemo(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
+            return .succeedMergeMemo(parent: parent, child: child)
         case let .succeedSaveEntry(address, modified):
-            return .succeedSaveEntry(address: address, modified: modified)
+            return .succeedSaveMemo(address: address, modified: modified)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
         }

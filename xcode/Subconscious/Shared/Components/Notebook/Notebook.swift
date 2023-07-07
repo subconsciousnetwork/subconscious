@@ -610,8 +610,8 @@ struct NotebookModel: ModelProtocol {
             .catch({ error in
                 Just(NotebookAction.failEntryCount(error))
             })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     /// Set entry count
