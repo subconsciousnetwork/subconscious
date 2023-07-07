@@ -68,7 +68,7 @@ struct NoosphereConfig: Equatable, Codable {
     /// We include this here so we can display it in settings.
     /// In future, Noosphere may expose an FFI to dynamically query for the
     /// version.
-    var version = "v0.11.1"
+    var version = "v0.12.1"
     /// Name of directory used for Noosphere storage
     var globalStoragePath = "noosphere"
     /// Name of directory used for sphere storage.
