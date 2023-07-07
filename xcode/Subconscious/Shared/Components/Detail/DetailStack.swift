@@ -89,8 +89,14 @@ enum DetailStackAction: Hashable {
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
     
-    /// Detail lifecycle notifications that affect stack state
-    case requestDelete(Slashlink?)
+    /// Request delete memo.
+    /// Gets forwarded up to parent for handling.
+    case requestDeleteMemo(Slashlink?)
+    /// Deletion attempt failed. Forwarded down from parent.
+    case failDeleteMemo(String)
+    /// Deletion attempt succeeded. Forwarded down from parent.
+    case succeedDeleteMemo(Slashlink)
+
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -184,8 +190,24 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 user: user
             )
-        case .requestDelete:
-            return Update(state: state)
+        case let .requestDeleteMemo(address):
+            return requestDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .succeedDeleteMemo(address):
+            return succeedDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .failDeleteMemo(error):
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .succeedMoveEntry:
             return Update(state: state)
         case .succeedMergeEntry:
@@ -380,13 +402,49 @@ struct DetailStackModel: Hashable, ModelProtocol {
             environment: environment
         )
     }
+    
+    static func requestDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink?
+    ) -> Update<Self> {
+        // No-op. Should be handled by parent.
+        return Update(state: state)
+    }
+    
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        logger.debug(
+            "Removing deleted memo from detail stack",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        var model = state
+        let details = state.details.filter({ detail in
+            detail.address != address
+        })
+        model.details = details
+        return Update(state: model)
+    }
+    
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        return Update(state: state)
+    }
 }
 
 extension DetailStackAction {
     static func tag(_ action: MemoEditorDetailNotification) -> Self {
         switch action {
         case .requestDelete(let address):
-            return .requestDelete(address)
+            return .requestDeleteMemo(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
         case let .requestFindLinkDetail(link):
