@@ -248,6 +248,24 @@ enum AppAction: CustomLogStringConvertible {
         .appUpgrade(.setComplete(isComplete))
     }
 
+    //  Note management actions.
+    //  These actions manage note actions which have an effect on the global
+    //  list of notes (deletion, creation, etc).
+    //
+    //  Other components may subscribe to the app store actions publisher to
+    //  be notified when these global things change.
+    //
+    //  The general pattern is to send a "request" action in the component's
+    //  own store, and then replay these as equivalent actions on the app
+    //  store. The component subscribes to the app store's actions publisher
+    //  and responds to "succeed" actions.
+    /// Attempt to delete a memo
+    case deleteMemo(Slashlink?)
+    /// Deletion attempt failed
+    case failDeleteMemo(String)
+    /// Deletion attempt succeeded
+    case succeedDeleteMemo(Slashlink)
+
     var logDescription: String {
         switch self {
         case let .succeedMigrateDatabase(version):
@@ -415,7 +433,7 @@ struct AppModel: ModelProtocol {
     /// and persist the new value to UserDefaults.
     var isFirstRunComplete = false
     var firstRunPath: [FirstRunStep] = []
-
+    
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
         !isFirstRunComplete
@@ -947,6 +965,24 @@ struct AppModel: ModelProtocol {
                 identity: did,
                 petname: petname
             )
+        case let .deleteMemo(address):
+            return deleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .failDeleteMemo(error):
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedDeleteMemo(address):
+            return succeedDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
         }
     }
     
@@ -1055,7 +1091,7 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func submitNickname(
         state: AppModel,
         environment: AppEnvironment,
@@ -1084,11 +1120,9 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = Future.detached {
             try await environment.userProfile.updateOurNickname(nickname: nickname)
             return AppAction.succeedCreateUpdateNickname
-        }
-        .recover { error in
-            return AppAction.failUpdateNickname(error.localizedDescription)
-        }
-        .eraseToAnyPublisher()
+        }.recover { error in
+            AppAction.failUpdateNickname(error.localizedDescription)
+        }.eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
@@ -1104,11 +1138,9 @@ struct AppModel: ModelProtocol {
             }
             
             return AppAction.failFetchNicknameFromProfile("No nickname saved in profile")
-        }
-        .recover { error in
+        }.recover { error in
             AppAction.failFetchNicknameFromProfile(error.localizedDescription)
-        }
-        .eraseToAnyPublisher()
+        }.eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
@@ -1138,10 +1170,10 @@ struct AppModel: ModelProtocol {
         
         var model = state
         model.gatewayURL = url.absoluteString
-
+        
         // Persist to UserDefaults
         AppDefaults.standard.gatewayURL = url.absoluteString
-
+        
         // Reset gateway on environment
         let fx: Fx<AppAction> = Future.detached {
             await environment.noosphere.resetGateway(url: url)
@@ -1326,8 +1358,9 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard state.inviteCode == nil || // Offline mode: no code
-              state.gatewayId != nil // Otherwise we need an ID to proceed
+        guard
+            state.inviteCode == nil || // Offline mode: no code
+            state.gatewayId != nil // Otherwise we need an ID to proceed
         else {
             logger.error("Missing gateway ID but user is trying to use invite code")
             return Update(state: state)
@@ -1654,7 +1687,7 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func indexOurSphere(
         state: AppModel,
         environment: AppEnvironment
@@ -1988,7 +2021,7 @@ struct AppModel: ModelProtocol {
                     .createSphere
                 ],
                 environment: environment
-           )
+            )
         }
         
         let fx: Fx<AppAction> = environment.gatewayProvisioningService
@@ -2144,6 +2177,60 @@ struct AppModel: ModelProtocol {
             action: .purgePeer(identity),
             environment: environment
         )
+    }
+    
+    /// Entry delete succeeded
+    static func deleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink?
+    ) -> Update<Self> {
+        guard let address = address else {
+            logger.log(
+                "Delete requested for nil address. Doing nothing."
+            )
+            return Update(state: state)
+        }
+        let fx: Fx<Action> = environment.data
+            .deleteMemoPublisher(address)
+            .map({ _ in
+                Action.succeedDeleteMemo(address)
+            })
+            .recover({ error in
+                Action.failDeleteMemo(error.localizedDescription)
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Entry delete succeeded
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to delete entry",
+            metadata: [
+                "error": error
+            ]
+        )
+        return Update(state: state)
+    }
+
+    /// Entry delete succeeded
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        logger.log(
+            "Deleted entry",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        return Update(state: state)
     }
 }
 
