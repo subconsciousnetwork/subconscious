@@ -33,6 +33,12 @@ struct ValidatedFormField<Output: Equatable, Caption: View>: View {
         return this
     }
     
+    var invalidBadge: some View {
+        Image(systemName: "exclamationmark.circle")
+            .frame(width: 24, height: 22)
+            .foregroundColor(.red)
+    }
+    
     var body: some View {
         VStack(alignment: alignment, spacing: AppTheme.unit2) {
             HStack {
@@ -64,10 +70,15 @@ struct ValidatedFormField<Output: Equatable, Caption: View>: View {
                         self.focused = true
                     }
                 }
-                if field.shouldPresentAsInvalid {
-                    Image(systemName: "exclamationmark.circle")
-                        .frame(width: 24, height: 22)
-                        .foregroundColor(.red)
+                
+                // In the multiline scenario we want to reserve space for the badge
+                // this avoids the text suddenly wrapping when the validation status changes
+                if axis == .vertical {
+                    invalidBadge
+                        .opacity(field.shouldPresentAsInvalid ? 1 : 0)
+                } else if field.shouldPresentAsInvalid {
+                    // Actually add/remove badge from layout in the axis == .horizontal case
+                    invalidBadge
                 }
             }
             caption
