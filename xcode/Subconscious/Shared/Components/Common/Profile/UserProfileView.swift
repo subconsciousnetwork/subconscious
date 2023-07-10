@@ -203,8 +203,10 @@ struct UserProfileView: View {
                         )
                     }
                 )
-                .padding(.horizontal, AppTheme.padding)
-                .padding(.top, AppTheme.padding)
+                .padding(
+                    .init([.top, .horizontal]),
+                    AppTheme.padding
+                )
             }
             
             switch state.loadingState {
