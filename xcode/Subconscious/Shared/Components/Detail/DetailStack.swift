@@ -10,50 +10,56 @@ import Combine
 import ObservableStore
 
 struct DetailStackView<Root: View>: View {
+    @State private var detailsStack: [MemoDetailDescription] = []
     @ObservedObject var app: Store<AppModel>
     var state: DetailStackModel
     var send: (DetailStackAction) -> Void
     var root: () -> Root
 
     var body: some View {
-        NavigationStack(
-            path: Binding(
-                get: { state.details },
-                send: send,
-                tag: DetailStackAction.setDetails
-            )
-        ) {
-            root().navigationDestination(
-                for: MemoDetailDescription.self
-            ) { detail in
-                switch detail {
-                case .editor(let description):
-                    MemoEditorDetailView(
-                        description: description,
-                        notify: Address.forward(
-                            send: send,
-                            tag: DetailStackAction.tag
+        NavigationStack(path: $detailsStack) {
+            root()
+                .navigationDestination(
+                    for: MemoDetailDescription.self
+                ) { detail in
+                    switch detail {
+                    case .editor(let description):
+                        MemoEditorDetailView(
+                            description: description,
+                            notify: Address.forward(
+                                send: send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
-                case .viewer(let description):
-                    MemoViewerDetailView(
-                        description: description,
-                        notify: Address.forward(
-                            send: send,
-                            tag: DetailStackAction.tag
+                    case .viewer(let description):
+                        MemoViewerDetailView(
+                            description: description,
+                            notify: Address.forward(
+                                send: send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
-                case .profile(let description):
-                    UserProfileDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: send,
-                            tag: DetailStackAction.tag
+                    case .profile(let description):
+                        UserProfileDetailView(
+                            app: app,
+                            description: description,
+                            notify: Address.forward(
+                                send: send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
+                    }
                 }
-            }
+                .onChange(of: state.details) { details in
+                    if self.detailsStack != details {
+                        self.detailsStack = details
+                    }
+                }
+                .onChange(of: detailsStack) { details in
+                    if state.details != details {
+                        send(.setDetails(details))
+                    }
+                }
         }
     }
 }
@@ -224,6 +230,9 @@ struct DetailStackModel: Hashable, ModelProtocol {
         environment: Environment,
         details: [MemoDetailDescription]
     ) -> Update<Self> {
+        guard state.details != details else {
+            return Update(state: state)
+        }
         var model = state
         model.details = details
         return Update(state: model)
