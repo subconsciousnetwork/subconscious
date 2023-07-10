@@ -30,11 +30,15 @@ struct ProfileHeaderButtonStyle: ButtonStyle {
     }
     
     private var defaultBackgroundColor: Color {
-        (variant == .primary ? Color.primaryButtonBackground : Color.secondaryBackground)
+        variant == .primary
+            ? Color.primaryButtonBackground
+            : Color.secondaryBackground
     }
     
     private var pressedBackgroundColor: Color {
-        (variant == .primary ? Color.primaryButtonBackgroundPressed : Color.backgroundPressed)
+        variant == .primary
+            ? Color.primaryButtonBackgroundPressed
+            : Color.backgroundPressed
     }
     
     private func backgroundColor(_ configuration: Configuration) -> Color {
