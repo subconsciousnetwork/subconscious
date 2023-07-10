@@ -15,6 +15,10 @@
 		B50B045B2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
 		B50B045C2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
+		B528CB352A5B8955001E3B8F /* MagneticScrollStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB342A5B8955001E3B8F /* MagneticScrollStack.swift */; };
+		B528CB362A5B8955001E3B8F /* MagneticScrollStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB342A5B8955001E3B8F /* MagneticScrollStack.swift */; };
+		B528CB382A5B8DB4001E3B8F /* MagneticScrollStack2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB372A5B8DB4001E3B8F /* MagneticScrollStack2.swift */; };
+		B528CB392A5B8DB4001E3B8F /* MagneticScrollStack2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB372A5B8DB4001E3B8F /* MagneticScrollStack2.swift */; };
 		B5293B892A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B5293B8A2A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
@@ -462,6 +466,8 @@
 		B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FirstRun.swift; sourceTree = "<group>"; };
 		B50B045A2A04B61000AA584B /* TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeService.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
+		B528CB342A5B8955001E3B8F /* MagneticScrollStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagneticScrollStack.swift; sourceTree = "<group>"; };
+		B528CB372A5B8DB4001E3B8F /* MagneticScrollStack2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagneticScrollStack2.swift; sourceTree = "<group>"; };
 		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
 		B540F8B92A0C748C00876256 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
@@ -1279,6 +1285,8 @@
 				B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */,
 				B88B1CDC298DE65E0062CB7F /* Settings */,
 				B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */,
+				B528CB342A5B8955001E3B8F /* MagneticScrollStack.swift */,
+				B528CB372A5B8DB4001E3B8F /* MagneticScrollStack2.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1713,7 +1721,9 @@
 				B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */,
 				B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
+				B528CB352A5B8955001E3B8F /* MagneticScrollStack.swift in Sources */,
 				B8A59D7228B693100010DB2F /* StoryView.swift in Sources */,
+				B528CB382A5B8DB4001E3B8F /* MagneticScrollStack2.swift in Sources */,
 				B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
 				B8B6BCBB29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */,
 				B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */,
@@ -1916,6 +1926,7 @@
 				B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */,
 				B85BF47627BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,
+				B528CB392A5B8DB4001E3B8F /* MagneticScrollStack2.swift in Sources */,
 				B8DEBF202798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B5690C3C29FB4DEF00067580 /* FollowUserViaQRCodeView.swift in Sources */,
 				B85DF78D29B660C60042D725 /* Prose.swift in Sources */,
@@ -1930,6 +1941,7 @@
 				B82D145529EF157B009E21FF /* SubtextView.swift in Sources */,
 				B8A1621929B39337008322EB /* ExpandAlignedLeadingViewModifier.swift in Sources */,
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
+				B528CB362A5B8955001E3B8F /* MagneticScrollStack.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B58C1FBB2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */,
@@ -2259,7 +2271,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2300,7 +2312,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
