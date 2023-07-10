@@ -13,6 +13,37 @@ enum UserProfileAction {
     case editOwnProfile
 }
 
+enum ProfileHeaderButtonVariant {
+    case primary
+    case secondary
+}
+
+/// Underlays a fill on tap when active, much like a UITableView row.
+struct ProfileHeaderButtonStyle: ButtonStyle {
+    var insets: EdgeInsets = AppTheme.defaultRowButtonInsets
+    var variant: ProfileHeaderButtonVariant = .primary
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+        .bold()
+        .foregroundColor(
+            configuration.role == .destructive ?
+                Color.red :
+                Color.accentColor
+        )
+        .padding(insets)
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: AppTheme.minTouchSize)
+        .background(
+            configuration.isPressed ?
+            (variant == .primary ? Color.primaryButtonBackgroundPressed : Color.backgroundPressed)
+                 :
+                (variant == .primary ? Color.primaryButtonBackground : Color.secondaryBackground)
+        )
+        .cornerRadius(AppTheme.cornerRadius)
+    }
+}
+
 struct UserProfileHeaderView: View {
     var user: UserProfile
     var statistics: UserProfileStatistics?
@@ -21,6 +52,17 @@ struct UserProfileHeaderView: View {
     var hideActionButton: Bool = false
     
     var onTapStatistics: () -> Void = { }
+    
+    var profileAction: UserProfileAction {
+        switch (user.category, user.ourFollowStatus) {
+        case (.ourself, _):
+            return .editOwnProfile
+        case (_, .following(_)):
+            return .requestUnfollow
+        case (_, .notFollowing):
+            return .requestFollow
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
@@ -34,34 +76,6 @@ struct UserProfileHeaderView: View {
                     )
                }
                 
-                Spacer()
-                
-                if !hideActionButton {
-                    Button(
-                        action: {
-                            switch (user.category, user.ourFollowStatus) {
-                            case (.ourself, _):
-                                action(.editOwnProfile)
-                            case (_, .following(_)):
-                                action(.requestUnfollow)
-                            case (_, .notFollowing):
-                                action(.requestFollow)
-                            }
-                        },
-                        label: {
-                            switch (user.category, user.ourFollowStatus) {
-                            case (.ourself, _):
-                                Label("Edit Profile", systemImage: AppIcon.edit.systemName)
-                            case (_, .following(_)):
-                                Label("Following", systemImage: AppIcon.following.systemName)
-                            case (_, .notFollowing):
-                                Text("Follow")
-                            }
-                        }
-                    )
-                    .buttonStyle(GhostPillButtonStyle(size: .small))
-                    .frame(maxWidth: user.category == .ourself ? 120 : 100)
-                }
             }
             
             Button(
@@ -84,13 +98,36 @@ struct UserProfileHeaderView: View {
                bio.hasVisibleContent {
                 Text(verbatim: bio.text)
             }
+            
+            
+            if !hideActionButton {
+                Button(
+                    action: {
+                        action(profileAction)
+                    },
+                    label: {
+                        switch (user.category, user.ourFollowStatus) {
+                        case (.ourself, _):
+                            Label("Edit Profile", systemImage: AppIcon.edit.systemName)
+                        case (_, .following(_)):
+                            Label("Following", systemImage: AppIcon.following.systemName)
+                        case (_, .notFollowing):
+                            Text("Follow")
+                        }
+                    }
+                )
+                .buttonStyle(ProfileHeaderButtonStyle(variant: profileAction == .requestFollow ? .primary : .secondary))
+                .font(.callout)
+//                .buttonStyle(GhostPillButtonStyle(size: .small))
+//                .frame(maxWidth: user.category == .ourself ? 120 : 100)
+            }
         }
     }
 }
 
 struct BylineLgView_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
+        VStack(spacing: 32) {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
@@ -129,5 +166,6 @@ struct BylineLgView_Previews: PreviewProvider {
                 )
             )
         }
+        .padding()
     }
 }
