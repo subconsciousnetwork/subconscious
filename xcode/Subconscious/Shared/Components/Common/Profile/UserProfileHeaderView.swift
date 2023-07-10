@@ -18,28 +18,37 @@ enum ProfileHeaderButtonVariant {
     case secondary
 }
 
-/// Underlays a fill on tap when active, much like a UITableView row.
+/// A rounded rectanglular row button style designed for the header
+/// This may outgrow its narrow role and the name should be updated if it it used elsewhere
 struct ProfileHeaderButtonStyle: ButtonStyle {
-    var insets: EdgeInsets = AppTheme.defaultRowButtonInsets
     var variant: ProfileHeaderButtonVariant = .primary
+    
+    private func foregroundColor(_ configuration: Configuration) -> Color {
+        configuration.role == .destructive ?
+            Color.red :
+            Color.accentColor
+    }
+    
+    private var defaultBackgroundColor: Color {
+        (variant == .primary ? Color.primaryButtonBackground : Color.secondaryBackground)
+    }
+    
+    private var pressedBackgroundColor: Color {
+        (variant == .primary ? Color.primaryButtonBackgroundPressed : Color.backgroundPressed)
+    }
+    
+    private func backgroundColor(_ configuration: Configuration) -> Color {
+        configuration.isPressed
+            ? pressedBackgroundColor
+            : defaultBackgroundColor
+    }
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
         .bold()
-        .foregroundColor(
-            configuration.role == .destructive ?
-                Color.red :
-                Color.accentColor
-        )
-        .padding(insets)
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: AppTheme.minTouchSize)
-        .background(
-            configuration.isPressed ?
-            (variant == .primary ? Color.primaryButtonBackgroundPressed : Color.backgroundPressed)
-                 :
-                (variant == .primary ? Color.primaryButtonBackground : Color.secondaryBackground)
-        )
+        .foregroundColor(foregroundColor(configuration))
+        .frame(maxWidth: .infinity, minHeight: AppTheme.minTouchSize)
+        .background(backgroundColor(configuration))
         .cornerRadius(AppTheme.cornerRadius)
     }
 }
@@ -116,10 +125,14 @@ struct UserProfileHeaderView: View {
                         }
                     }
                 )
-                .buttonStyle(ProfileHeaderButtonStyle(variant: profileAction == .requestFollow ? .primary : .secondary))
-                .font(.callout)
-//                .buttonStyle(GhostPillButtonStyle(size: .small))
-//                .frame(maxWidth: user.category == .ourself ? 120 : 100)
+                .buttonStyle(
+                    // Button has primary style when we can follow
+                    ProfileHeaderButtonStyle(
+                        variant: profileAction == .requestFollow
+                            ? .primary
+                            : .secondary
+                    )
+                )
             }
         }
     }
