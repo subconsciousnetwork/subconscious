@@ -927,7 +927,7 @@ actor DataService {
         
         var backlinks: [AuthoredEntryStub] = []
         for entry in entries {
-            guard let user = try? await userProfile.loadFullProfileData(address: address) else {
+            guard let user = try? await userProfile.loadFullProfileData(address: entry.address) else {
                 logger.error("Failed to load author for \(address)")
                 continue
             }

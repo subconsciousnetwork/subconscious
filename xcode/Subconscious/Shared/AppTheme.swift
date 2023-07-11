@@ -36,6 +36,7 @@ extension AppTheme {
     static let cornerRadius: Double = 8
     static let cornerRadiusLg: Double = 16
     
+    static let iconPfpSize: CGFloat = 18
     static let smPfpSize: CGFloat = 24
     static let mdPfpSize: CGFloat = 32
     static let lgPfpSize: CGFloat = 48

@@ -14,6 +14,7 @@ struct OmniboxView: View {
     @State private var phase = Double.pi / 8
     
     var address: Slashlink?
+    var user: UserProfile?
     var defaultAudience: Audience
     var status: LoadingState = .loaded
 
@@ -41,11 +42,17 @@ struct OmniboxView: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            if status != .loading {
-                icon()
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 17, height: 17)
+            if let user = user,
+               let order = address?.petname?.parts.count,
+                order <= 1 {
+                ProfilePic(pfp: user.pfp, size: .icon)
+            } else {
+                if status != .loading {
+                    icon()
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 17, height: 17)
+                }
             }
             
             Spacer(minLength: AppTheme.unit)

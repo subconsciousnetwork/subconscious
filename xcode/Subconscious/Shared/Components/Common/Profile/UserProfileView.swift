@@ -246,6 +246,7 @@ struct UserProfileView: View {
             if let address = state.address {
                 DetailToolbarContent(
                     address: address,
+                    user: state.user,
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))

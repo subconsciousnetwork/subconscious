@@ -10,6 +10,7 @@ import SwiftUI
 /// Toolbar for detail view
 struct DetailToolbarContent: ToolbarContent {
     var address: Slashlink?
+    var user: UserProfile?
     var defaultAudience: Audience
     var onTapOmnibox: () -> Void
     var status: LoadingState = .loaded
@@ -19,6 +20,7 @@ struct DetailToolbarContent: ToolbarContent {
             Button(action: onTapOmnibox) {
                 OmniboxView(
                     address: address,
+                    user: user,
                     defaultAudience: defaultAudience,
                     status: status
                 )

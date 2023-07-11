@@ -34,6 +34,7 @@ struct MemoViewerDetailView: View {
             case .loaded:
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
+                    user: store.state.owner,
                     dom: store.state.dom,
                     transcludePreviews: store.state.transcludePreviews,
                     address: description.address,
@@ -55,6 +56,7 @@ struct MemoViewerDetailView: View {
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
+                user: store.state.owner,
                 defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
@@ -127,6 +129,7 @@ struct MemoViewerDetailLoadingView: View {
 
 struct MemoViewerDetailLoadedView: View {
     var title: String
+    var user: UserProfile?
     var dom: Subtext
     var transcludePreviews: [Slashlink: AuthoredEntryStub]
     var address: Slashlink
@@ -349,7 +352,7 @@ struct MemoViewerDetailModel: ModelProtocol {
                 state: model,
                 action: .fetchTranscludePreviews,
                 environment: environment
-            )
+            ).animation(.easeOutCubic())
         case .failFetchOwnerProfile(let error):
             logger.error("Failed to fetch owner: \(error)")
             return Update(state: state)
