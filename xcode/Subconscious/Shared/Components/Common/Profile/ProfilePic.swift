@@ -13,7 +13,6 @@ enum ProfilePicVariant: Equatable, Codable, Hashable {
 }
 
 enum ProfilePicSize {
-    case icon
     case small
     case medium
     case large
@@ -25,8 +24,6 @@ struct ProfilePic: View {
 
     private var imageSize: CGFloat {
         switch (size) {
-        case .icon:
-            return AppTheme.iconPfpSize
         case .small:
             return AppTheme.smPfpSize
         case .medium:
@@ -38,8 +35,6 @@ struct ProfilePic: View {
     
     private var lineWidth: CGFloat {
         switch (size) {
-        case .icon:
-            return 1
         case .small:
             return 1
         case .medium:
