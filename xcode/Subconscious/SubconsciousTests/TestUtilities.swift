@@ -75,22 +75,24 @@ struct TestUtilities {
             database: database
         )
         
-        let data = DataService(
-            noosphere: noosphere,
-            database: database,
-            local: local,
-            addressBook: addressBook
-        )
-        
         let userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
             addressBook: addressBook
         )
         
+        let data = DataService(
+            noosphere: noosphere,
+            database: database,
+            local: local,
+            addressBook: addressBook,
+            userProfile: userProfile
+        )
+        
         let transclude = TranscludeService(
             database: database,
-            noosphere: noosphere
+            noosphere: noosphere,
+            userProfile: userProfile
         )
 
         return DataServiceEnvironment(
