@@ -38,11 +38,33 @@ struct SubtextView: View {
             return RenderableBlock(block: block, entries: self.entries(for: block))
         }
     }
+    
+    func shouldReplaceBlockWithTransclude(block: Subtext.Block) -> Bool {
+        var count = 0
+        for inline in block.inline {
+            switch (inline) {
+            case .slashlink(let slashlink):
+                count += slashlink.span.count
+                continue
+            case _:
+                continue
+            }
+        }
+        
+        return block.body()
+            .trimmingCharacters(in: .punctuationCharacters)
+            .trimmingCharacters(in: .whitespaces)
+            .count <= count
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
             ForEach(blocks, id: \.self) { renderable in
-                Text(Self.renderer.render(renderable.block.description))
+                if renderable.entries.isEmpty ||
+                    !shouldReplaceBlockWithTransclude(block: renderable.block) {
+                    Text(Self.renderer.render(renderable.block.description))
+                }
+                
                 ForEach(renderable.entries, id: \.self) { entry in
                     TranscludeView(
                         author: entry.author,
