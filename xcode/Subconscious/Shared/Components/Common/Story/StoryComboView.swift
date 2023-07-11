@@ -29,7 +29,7 @@ struct StoryComboView: View {
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
                 Text(story.prompt)
                 
-                Transclude2View(
+                TranscludeView(
                     author: UserProfile.dummyData(),
                     address: story.entryA.address,
                     excerpt: story.entryA.excerpt,
@@ -41,7 +41,7 @@ struct StoryComboView: View {
                     }
                 )
                 
-                Transclude2View(
+                TranscludeView(
                     author: UserProfile.dummyData(),
                     address: story.entryB.address,
                     excerpt: story.entryB.excerpt,

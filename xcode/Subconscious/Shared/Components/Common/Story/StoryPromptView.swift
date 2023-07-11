@@ -28,7 +28,7 @@ struct StoryPromptView: View {
             Divider()
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
                 Text(story.prompt)
-                Transclude2View(
+                TranscludeView(
                     author: UserProfile.dummyData(),
                     address: story.entry.address,
                     excerpt: story.entry.excerpt,

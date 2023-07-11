@@ -44,7 +44,7 @@ struct SubtextView: View {
             ForEach(blocks, id: \.self) { renderable in
                 Text(Self.renderer.render(renderable.block.description))
                 ForEach(renderable.entries, id: \.self) { entry in
-                    Transclude2View(
+                    TranscludeView(
                         author: entry.author,
                         address: entry.entry.address,
                         excerpt: entry.entry.excerpt,

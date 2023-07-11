@@ -20,7 +20,7 @@ struct BacklinksView: View {
             }
             if backlinks.count > 0 {
                 ForEach(backlinks) { entry in
-                    Transclude2View(
+                    TranscludeView(
                         author: entry.author,
                         address: entry.entry.address,
                         excerpt: entry.entry.excerpt,
