@@ -27,8 +27,6 @@ struct Transclude2View: View {
                     )
                     Text(excerpt)
                         .lineLimit(5)
-//                    SlashlinkDisplayView(slashlink: address)
-//                        .theme(base: .secondary, slug: .secondary)
                 }
             }
         )

@@ -43,8 +43,7 @@ struct OmniboxView: View {
     var body: some View {
         HStack(spacing: 8) {
             if let user = user,
-               let order = address?.petname?.parts.count,
-                order <= 1 {
+               user.isFollowedByUs {
                 ProfilePic(pfp: user.pfp, size: .icon)
             } else {
                 if status != .loading {
