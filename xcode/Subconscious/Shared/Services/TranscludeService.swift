@@ -59,7 +59,9 @@ actor TranscludeService {
                 continue
             }
             
-            guard let author = try? await userProfile.loadFullProfileData(address: transclusion.address) else {
+            guard let author = try? await userProfile.loadFullProfileData(
+                address: transclusion.address
+            ) else {
                 continue
             }
             let authoredEntry = AuthoredEntryStub(author: author.profile, entry: entry)

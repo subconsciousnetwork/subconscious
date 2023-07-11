@@ -850,7 +850,13 @@ actor DataService {
         
         var backlinks: [AuthoredEntryStub] = []
         for entry in entries {
-            let author = try await userProfile.loadFullProfileData(address: entry.address)
+            guard let author = try? await userProfile.loadFullProfileData(
+                address: entry.address
+            ) else {
+                logger.error("Failed to load author for \(entry.address)")
+                continue
+            }
+            
             backlinks.append(AuthoredEntryStub(author: author.profile, entry: entry))
         }
         
@@ -927,11 +933,19 @@ actor DataService {
         
         var backlinks: [AuthoredEntryStub] = []
         for entry in entries {
-            guard let user = try? await userProfile.loadFullProfileData(address: entry.address) else {
-                logger.error("Failed to load author for \(address)")
+            guard let user = try? await userProfile.loadFullProfileData(
+                address: entry.address
+            ) else {
+                logger.error("Failed to load author for \(entry.address)")
                 continue
             }
-            backlinks.append(AuthoredEntryStub(author: user.profile, entry: entry))
+            
+            backlinks.append(
+                AuthoredEntryStub(
+                    author: user.profile,
+                    entry: entry
+                )
+            )
         }
 
         return MemoDetailResponse(

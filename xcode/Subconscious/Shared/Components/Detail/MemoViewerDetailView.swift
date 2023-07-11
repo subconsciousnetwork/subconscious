@@ -541,12 +541,10 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 """
             ),
             transcludePreviews: [
-                Slashlink(
-                    "/infinity-paths"
-                )!: AuthoredEntryStub(
-                    author:UserProfile.dummyData(
+                Slashlink("/infinity-paths")!: AuthoredEntryStub(
+                    author: UserProfile.dummyData(
                     ),
-                    entry:EntryStub(
+                    entry: EntryStub(
                         address: Slashlink(
                             "/infinity-paths"
                         )!,
