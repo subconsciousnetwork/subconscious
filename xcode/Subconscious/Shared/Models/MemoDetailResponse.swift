@@ -10,7 +10,7 @@ import Foundation
 /// Response when reading info for a view-only memo detail from data source.
 struct MemoDetailResponse: Hashable {
     var entry: MemoEntry
-    var backlinks: [EntryStub] = []
+    var backlinks: [AuthoredEntryStub] = []
 }
 
 extension MemoDetailResponse: CustomLogStringConvertible {

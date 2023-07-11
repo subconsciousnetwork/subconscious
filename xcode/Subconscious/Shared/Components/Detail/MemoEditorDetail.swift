@@ -570,7 +570,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     )
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
-    var backlinks: [EntryStub] = []
+    var backlinks: [AuthoredEntryStub] = []
     
     /// Is editor saved?
     var saveState = SaveState.saved

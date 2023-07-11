@@ -48,6 +48,7 @@ actor DataService {
     private var addressBook: AddressBookService
     private var noosphere: NoosphereService
     private var database: DatabaseService
+    private var userProfile: UserProfileService
     private var local: HeaderSubtextMemoStore
     private var logger: Logger = logger
 
@@ -55,12 +56,14 @@ actor DataService {
         noosphere: NoosphereService,
         database: DatabaseService,
         local: HeaderSubtextMemoStore,
-        addressBook: AddressBookService
+        addressBook: AddressBookService,
+        userProfile: UserProfileService
     ) {
         self.database = database
         self.noosphere = noosphere
         self.local = local
         self.addressBook = addressBook
+        self.userProfile = userProfile
     }
     
     /// Create a default sphere for user if needed, and persist sphere details.
@@ -839,11 +842,17 @@ actor DataService {
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
         
-        let backlinks = try database.readEntryBacklinks(
+        let entries = try database.readEntryBacklinks(
             owner: identity,
             did: did,
             slug: address.slug
         )
+        
+        var backlinks: [AuthoredEntryStub] = []
+        for entry in entries {
+            let author = try await userProfile.loadFullProfileData(address: entry.address)
+            backlinks.append(AuthoredEntryStub(author: author.profile, entry: entry))
+        }
         
         guard let memo = memo else {
             logger.log(
@@ -908,12 +917,21 @@ actor DataService {
             return nil
         }
         
-        guard let backlinks = try? database.readEntryBacklinks(
+        guard let entries = try? database.readEntryBacklinks(
             owner: identity,
             did: did,
             slug: address.slug
         ) else {
             return nil
+        }
+        
+        var backlinks: [AuthoredEntryStub] = []
+        for entry in entries {
+            guard let user = try? await userProfile.loadFullProfileData(address: address) else {
+                logger.error("Failed to load author for \(address)")
+                continue
+            }
+            backlinks.append(AuthoredEntryStub(author: user.profile, entry: entry))
         }
 
         return MemoDetailResponse(

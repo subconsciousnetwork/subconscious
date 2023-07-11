@@ -29,21 +29,8 @@ struct StoryComboView: View {
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
                 Text(story.prompt)
 
-                Transclude2View(
-                    address: story.entryA.address,
-                    excerpt: story.entryA.excerpt,
-                    action: {
-                        action(story.entryA.address, story.entryA.excerpt)
-                    }
-                )
-                
-                Transclude2View(
-                    address: story.entryB.address,
-                    excerpt: story.entryB.excerpt,
-                    action: {
-                        action(story.entryB.address, story.entryB.excerpt)
-                    }
-                )
+                Text(story.entryA.excerpt)
+                Text(story.entryB.excerpt)
             }
             .padding()
             Divider()

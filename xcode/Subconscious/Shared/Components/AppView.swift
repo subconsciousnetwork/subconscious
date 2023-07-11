@@ -2249,12 +2249,17 @@ struct AppEnvironment {
             noosphere: noosphere,
             database: database,
             local: local,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userProfile: userProfile
         )
         
         self.feed = FeedService()
         self.gatewayProvisioningService = GatewayProvisioningService()
-        self.transclude = TranscludeService(database: database, noosphere: noosphere)
+        self.transclude = TranscludeService(
+            database: database,
+            noosphere: noosphere,
+            userProfile: userProfile
+        )
     }
 }
 
