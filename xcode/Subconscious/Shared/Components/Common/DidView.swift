@@ -18,9 +18,11 @@ struct DidView: View {
                     .font(.callout.monospaced())
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.leading)
+                
                 Spacer(minLength: AppTheme.unit2)
-                    Image(systemName: "square.and.arrow.up")
-                }
+                
+                Image(systemName: "square.and.arrow.up")
+            }
         }
     }
 }

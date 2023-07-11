@@ -62,12 +62,12 @@ struct FollowNewUserFormSheetView: View {
                         }
                         
                         if let did = did {
+                            Section(header: Text("Your DID")) {
+                                DidView(did: did)
+                            }
+                            
                             Section(header: Text("Your QR Code")) {
-                                VStack {
-                                    DidQrCodeView(did: did, color: Color.gray)
-                                        .frame(maxWidth: 256)
-                                    DidView(did: did)
-                                }
+                                ShareableDidQrCodeView(did: did, color: Color.gray)
                             }
                         }
                     }
