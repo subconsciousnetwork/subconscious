@@ -318,6 +318,8 @@ extension NotebookAction {
             return .ready
         case .succeedSyncLocalFilesWithDatabase:
             return .ready
+        case .succeedIndexOurSphere(_):
+            return .ready
         default:
             return nil
         }
