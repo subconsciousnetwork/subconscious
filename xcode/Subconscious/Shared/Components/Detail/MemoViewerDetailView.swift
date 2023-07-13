@@ -56,7 +56,6 @@ struct MemoViewerDetailView: View {
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
-                user: store.state.owner,
                 defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
