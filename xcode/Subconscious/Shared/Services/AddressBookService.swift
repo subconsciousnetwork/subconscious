@@ -348,8 +348,17 @@ actor AddressBookService {
         await self.addressBook.invalidateCache()
     }
     
-    func isPendingResolution(petname: Petname) -> Bool {
-        self.pendingFollows.contains(petname)
+    func resolutionStatus(petname: Petname) async throws -> ResolutionStatus {
+        if self.pendingFollows.contains(petname) {
+            return .pending
+        }
+        
+        guard let record = try await self.listEntries()
+            .first(where: { entry in entry.petname == petname }) else {
+            return .unresolved
+        }
+        
+        return record.status
     }
     
     func waitForPetnameResolution(

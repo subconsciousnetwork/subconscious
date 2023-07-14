@@ -32,6 +32,7 @@ enum UserProfileServiceError: Error {
     case failedToDeserializeProfile(Error, String?)
     case other(String)
     case profileAlreadyExists
+    case couldNotLoadSphereForProfile
 }
 
 extension UserProfileServiceError: LocalizedError {
@@ -75,6 +76,11 @@ extension UserProfileServiceError: LocalizedError {
                 localized: "An unknown error occurred: \(msg)",
                 comment: "Unknown UserProfileService error description"
             )
+        case .couldNotLoadSphereForProfile:
+            return String(
+                localized: "Failed to find or construct a sphere",
+                comment: "UserProfileService error description"
+            )
         }
     }
 }
@@ -115,6 +121,8 @@ actor UserProfileService {
     
     private static let profileContentType = "application/vnd.subconscious.profile+json"
     
+    private var cache: [Petname:UserProfile] = [:]
+    
     init(
         noosphere: NoosphereService,
         database: DatabaseService,
@@ -128,6 +136,10 @@ actor UserProfileService {
         self.jsonEncoder = JSONEncoder()
         // ensure keys are sorted on write to maintain content hash
         self.jsonEncoder.outputFormatting = .sortedKeys
+    }
+    
+    public func invalidateCache() {
+        self.cache.removeAll()
     }
     
     /// Attempt to read & deserialize a user `_profile_.json` at the given address.
@@ -247,13 +259,10 @@ actor UserProfileService {
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
         let sphere = try await self.noosphere.sphere(address: address)
-        
         let localAddressBook = AddressBook(sphere: sphere)
-        
         let entries = try await localAddressBook.listEntries(refetch: true)
         
         for entry in entries {
-            
             let slashlink = Func.run {
                 guard case let .petname(basePetname) = address.peer else {
                     return Slashlink(petname: entry.name.toPetname())
@@ -261,18 +270,10 @@ actor UserProfileService {
                 return Slashlink(petname: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
-            let address = slashlink
-            
-            let followingStatus = await self.addressBook.followingStatus(did: entry.did)
-            let isPendingFollow = await self.addressBook.isPendingResolution(petname: entry.petname)
-            let resolutionStatus =
-                followingStatus.isFollowing &&
-                isPendingFollow ? .pending : entry.status
-            
             let user = try await self.loadProfileFromMemo(
                 did: entry.did,
-                address: address,
-                resolutionStatus: resolutionStatus
+                address: slashlink,
+                resolutionStatus: entry.status
             )
             
             following.append(
@@ -344,6 +345,39 @@ actor UserProfileService {
         .eraseToAnyPublisher()
     }
     
+    func buildUserProfile(
+        address: Slashlink
+    ) async throws -> UserProfile {
+        if let petname = address.petname,
+           let cacheHit = self.cache[petname] {
+            return cacheHit
+        }
+        
+        let did = try await self.noosphere.resolve(peer: address.peer)
+        
+        let resolutionStatus: ResolutionStatus = try await Func.run {
+            guard let petname = address.petname else {
+                let sphere = try await self.noosphere.sphere(address: address)
+                let cid = try await sphere.version()
+                return .resolved(cid)
+            }
+            
+            return try await self.addressBook.resolutionStatus(petname: petname)
+        }
+        
+        let profile = try await self.loadProfileFromMemo(
+            did: did,
+            address: address,
+            resolutionStatus: resolutionStatus
+        )
+        
+        if let petname = address.petname {
+            self.cache.updateValue(profile, forKey: petname)
+        }
+        
+        return profile
+    }
+    
     func loadFullProfileData(
         address: Slashlink
     ) async throws -> UserProfileContentResponse {
@@ -361,12 +395,9 @@ actor UserProfileService {
             slugs: notes
         )
         let recentEntries = sortEntriesByModified(entries: entries)
-        let cid = try await sphere.version()
         
-        let profile = try await self.loadProfileFromMemo(
-            did: did,
-            address: address,
-            resolutionStatus: .resolved(cid)
+        let profile = try await self.buildUserProfile(
+            address: address
         )
         
         return UserProfileContentResponse(

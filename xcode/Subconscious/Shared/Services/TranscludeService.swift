@@ -59,12 +59,12 @@ actor TranscludeService {
                 continue
             }
             
-            guard let author = try? await userProfile.loadFullProfileData(
+            guard let author = try? await userProfile.buildUserProfile(
                 address: transclusion.address
             ) else {
                 continue
             }
-            let authoredEntry = AuthoredEntryStub(author: author.profile, entry: entry)
+            let authoredEntry = AuthoredEntryStub(author: author, entry: entry)
             
             if entry.address.isLocal {
                 dict.updateValue(authoredEntry, forKey: Slashlink(slug: entry.address.slug))
