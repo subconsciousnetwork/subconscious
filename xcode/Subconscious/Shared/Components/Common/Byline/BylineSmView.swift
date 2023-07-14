@@ -16,6 +16,7 @@ struct BylineSmView: View {
         HStack {
             ProfilePic(pfp: pfp, size: .small)
             SlashlinkDisplayView(slashlink: slashlink)
+                .theme(slug: .secondary)
         }
     }
 }
