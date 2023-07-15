@@ -9,15 +9,15 @@ import SwiftUI
 import Combine
 import ObservableStore
 
-struct ValidatedFormField<T: Equatable>: View {
+struct ValidatedFormField<Output: Equatable, Caption: View>: View {
     @State private var innerText: String = ""
     @FocusState private var focused: Bool
     
     var alignment: HorizontalAlignment = .leading
     var placeholder: String
-    var field: FormField<String, T>
+    var field: FormField<String, Output>
     var send: (FormFieldAction<String>) -> Void
-    var caption: String
+    var caption: Caption
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
     var submitLabel: SubmitLabel = .done
@@ -33,6 +33,12 @@ struct ValidatedFormField<T: Equatable>: View {
         return this
     }
     
+    var invalidBadge: some View {
+        Image(systemName: "exclamationmark.circle")
+            .frame(width: 24, height: 22)
+            .foregroundColor(.red)
+    }
+    
     var body: some View {
         VStack(alignment: alignment, spacing: AppTheme.unit2) {
             HStack {
@@ -42,18 +48,6 @@ struct ValidatedFormField<T: Equatable>: View {
                     axis: axis
                 )
                 .focused($focused)
-                .overlay(alignment: .trailing) {
-                    VStack {
-                        Image(systemName: "exclamationmark.circle")
-                            .frame(width: 24, height: 22)
-                            .padding(.horizontal, 8)
-                            .foregroundColor(.red)
-                            .background(backgroundColor)
-                    }
-                    .padding(.trailing, 1)
-                    .opacity(field.shouldPresentAsInvalid ? 1 : 0)
-                    .animation(.default, value: field.shouldPresentAsInvalid)
-                }
                 .onChange(of: focused) { focused in
                     send(.focusChange(focused: focused))
                     onFocusChanged(focused)
@@ -62,7 +56,8 @@ struct ValidatedFormField<T: Equatable>: View {
                     send(.setValue(input: innerText))
                 }
                 .onChange(of: field) { field in
-                    // The has been reset, sync inner value
+                    // The store value has been reset via side-effect
+                    // we must re-sync our inner value
                     if !field.touched && innerText != field.value {
                         innerText = field.value
                     }
@@ -75,8 +70,18 @@ struct ValidatedFormField<T: Equatable>: View {
                         self.focused = true
                     }
                 }
+                
+                // In the multiline scenario we want to reserve space for the badge
+                // this avoids the text suddenly wrapping when the validation status changes
+                if axis == .vertical {
+                    invalidBadge
+                        .opacity(field.shouldPresentAsInvalid ? 1 : 0)
+                } else if field.shouldPresentAsInvalid {
+                    // Actually add/remove badge from layout in the axis == .horizontal case
+                    invalidBadge
+                }
             }
-            Text(caption)
+            caption
                 .foregroundColor(
                     field.shouldPresentAsInvalid ? Color.red : Color.secondary
                 )
@@ -96,26 +101,26 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in "" }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: Text("Lowercase letters and numbers only.")
             )
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in nil as String? }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: Text("Lowercase letters and numbers only.")
             )
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in "" }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: Text("Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "A very long run of text to test how this interacts with the icon", validate: { _ in nil as String? }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: Text("Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
             
@@ -127,7 +132,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     placeholder: "nickname",
                     field: FormField(value: "", validate: { _ in "" }),
                     send: { _ in },
-                    caption: "Lowercase letters and numbers only.",
+                    caption: Text("Lowercase letters and numbers only."),
                     autoFocus: true
                 )
                 .formField()
@@ -135,7 +140,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     placeholder: "nickname",
                     field: FormField(value: "", validate: { _ in nil as String? }),
                     send: { _ in },
-                    caption: "Lowercase letters and numbers only."
+                    caption: Text("Lowercase letters and numbers only.")
                 )
                 .formField()
             }

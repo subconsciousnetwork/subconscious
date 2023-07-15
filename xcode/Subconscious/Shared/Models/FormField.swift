@@ -86,7 +86,7 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
             model.touched = false
             model.value = state.defaultValue
             model.hasBeenFocusedAtLeastOnce = false
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
             
         case .focusChange(let focused):
             var model = state
@@ -101,24 +101,24 @@ struct FormField<Input: Equatable, Output>: ModelProtocol {
             if focused {
                 model.hasBeenFocusedAtLeastOnce = true
             }
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
             
         case .markAsTouched:
             var model = state
             model.hasBeenFocusedAtLeastOnce = true
             model.touched = true
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
             
         case .setValue(input: let input):
             var model = state
             model.value = input
             model.isValid = state.validate(input) != nil
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
             
         case .setValidationStatus(let valid):
             var model = state
             model.isValid = valid
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         }
     }
 }

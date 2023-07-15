@@ -154,7 +154,9 @@ struct EditProfileSheet: View {
                                 send: send,
                                 tag: EditProfileSheetAction.nicknameField
                             ),
-                            caption: "Lowercase letters, numbers and dashes only."
+                            caption: Text(
+                                "Lowercase letters, numbers and dashes only."
+                            )
                         )
                         .lineLimit(1)
                         .textInputAutocapitalization(.never)
@@ -172,7 +174,9 @@ struct EditProfileSheet: View {
                                 send: send,
                                 tag: EditProfileSheetAction.bioField
                             ),
-                            caption: "A short description of yourself (\(state.bioField.value.count)/280)",
+                            caption: Text(
+                                "A short description of yourself (\(state.bioField.value.count)/280)"
+                            ),
                             axis: .vertical
                         )
                         .textInputAutocapitalization(.never)

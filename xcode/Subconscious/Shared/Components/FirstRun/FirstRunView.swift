@@ -85,12 +85,12 @@ struct FirstRunView: View {
                             send: app.send,
                             tag: AppAction.inviteCodeFormField
                         ),
-                        caption: Func.run {
+                        caption: Group {
                             switch app.state.inviteCodeRedemptionStatus {
                             case .failed(_):
-                                return "Could not redeem invite code"
+                                Text("Could not redeem invite code")
                             case _:
-                                return "You can find your invite code in your welcome email"
+                                Text("You can find your invite code in your welcome email")
                             }
                         },
                         onFocusChanged: { focused in
