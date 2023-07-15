@@ -9,20 +9,21 @@ import Foundation
 import SwiftUI
 import CoreImage.CIFilterBuiltins
 
-struct DidQrCodeView: View {
-    var did: Did
-    var color: Color
-    
-    let context = CIContext()
-    let filter = CIFilter.qrCodeGenerator()
-    let colorInvertFilter = CIFilter.colorInvert()
-    let maskFilter = CIFilter.blendWithMask()
-    
-    func generateQRCode(from string: String) -> UIImage? {
-        filter.message = Data(string.utf8)
+extension DidQrCodeView {
+    static func generate(from did: String, color: Color) -> UIImage {
+        let context = CIContext()
+        let filter = CIFilter.qrCodeGenerator()
+        let colorInvertFilter = CIFilter.colorInvert()
+        let maskFilter = CIFilter.blendWithMask()
+        
+        let fallback = UIImage(systemName: "xmark.circle") ?? UIImage()
+        
+        filter.message = Data(did.utf8)
         
         colorInvertFilter.inputImage = filter.outputImage
-        guard let inverted = colorInvertFilter.outputImage else { return nil }
+        guard let inverted = colorInvertFilter.outputImage else {
+            return fallback
+        }
         
         maskFilter.maskImage = inverted
         // This is the only way I managed to produce a CIColor from a SwiftUI.Color
@@ -36,21 +37,77 @@ struct DidQrCodeView: View {
         let col = CIColor(red: r, green: g, blue: b, alpha: a)
         maskFilter.inputImage = CIImage(color: col)
         
-        guard let img = maskFilter.outputImage else { return nil }
-        guard let cgImg = context.createCGImage(img, from: img.extent) else { return nil }
+        guard let img = maskFilter.outputImage else {
+            return fallback
+        }
+        
+        let scaleFactor = 10.0
+        let upscaleImg = img
+            .samplingNearest()
+            .transformed(
+                by: CGAffineTransformMakeScale(scaleFactor, scaleFactor)
+            )
+        
+        guard let cgImg = context.createCGImage(
+            upscaleImg,
+            from: upscaleImg.extent
+        ) else {
+            return fallback
+        }
         
         return UIImage(cgImage: cgImg)
     }
+}
+
+struct DidQrCodeView: View {
+    var did: Did
+    var color: Color
     
+    var img: UIImage {
+        Self.generate(from: did.did, color: color)
+    }
     
     var body: some View {
-        let img = generateQRCode(from: "\(did.did)") ?? UIImage(systemName: "xmark.circle") ?? UIImage()
-        
-        Image(uiImage: img)
+        DidQrCodeImage(image: img)
+    }
+}
+
+struct DidQrCodeImage: View {
+    var image: UIImage
+    
+    var body: some View {
+        Image(uiImage: image)
             .resizable()
             .interpolation(.none)
             .scaledToFit()
             .padding(AppTheme.unit2)
+    }
+}
+
+struct ShareableDidQrCodeView: View {
+    var did: Did
+    var color: Color
+    
+    var img: UIImage {
+        DidQrCodeView.generate(from: did.did, color: color)
+    }
+    
+    var body: some View {
+        let shareable = Image(uiImage: img)
+        
+        ShareLink(
+            item: shareable,
+            preview: SharePreview(
+                "Your QR Code",
+                image: shareable
+            )
+        ) {
+            HStack(alignment: .center) {
+                DidQrCodeImage(image: img)
+                Spacer(minLength: AppTheme.unit2)
+                Image(systemName: "square.and.arrow.up")
+            }
+        }
     }
 }
 
