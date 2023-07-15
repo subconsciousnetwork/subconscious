@@ -43,16 +43,8 @@ struct EntryListView: View {
                         }
                     }
                     .background(Color.background)
-                    // Add space at the bottom of the list so that FAB
-                    // does not cover up swipe actions of last item.
-                    Color.clear
-                        .frame(
-                            height: (
-                                AppTheme.fabSize +
-                                (AppTheme.unit * 6)
-                            )
-                        )
-                        .listRowSeparator(.hidden)
+                    
+                    FabSpacerView()
                 }
                 .animation(.easeOutCubic(), value: entries)
                 .transition(.opacity)

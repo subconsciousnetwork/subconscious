@@ -65,6 +65,8 @@ struct RecentTabView: View {
             
             if state.recentEntries.count == 0 {
                 EmptyStateView()
+            } else {
+                FabSpacerView()
             }
         }
         .refreshable {
@@ -114,6 +116,8 @@ struct FollowTabView: View {
             
             if state.following.count == 0 {
                 EmptyStateView()
+            } else {
+                FabSpacerView()
             }
         }
         .refreshable {
