@@ -42,7 +42,6 @@ struct LoadingTabView: View {
     }
 }
 
-
 struct RecentTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
@@ -208,7 +207,10 @@ struct UserProfileView: View {
                         )
                     }
                 )
-                .padding(AppTheme.padding)
+                .padding(
+                    .init([.top, .horizontal]),
+                    AppTheme.padding
+                )
             }
             
             switch state.loadingState {
