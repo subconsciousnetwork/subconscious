@@ -7,11 +7,35 @@
 
 import SwiftUI
 
+struct ExcerptView: View {
+    var excerpt: String
+    var lineLimit: Int = 5
+    var spacing: CGFloat = AppTheme.unit
+    var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
+        Array(excerpt.split(separator: "\n").enumerated())
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach(excerptLines, id: \.offset) { idx, line in
+                Text("\(String(line))")
+                    .fontWeight(idx == 0 && excerptLines.count > 1 ? .medium : .regular)
+                    .opacity(idx > 0 ? 0.8 : 1) // Helps massively in dark mode
+                    .lineLimit(lineLimit)
+            }
+        }
+    }
+}
+
 struct TranscludeView: View {
     var author: UserProfile
     var address: Slashlink
     var excerpt: String
     var action: () -> Void
+    
+    var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
+        Array(excerpt.split(separator: "\n").enumerated())
+    }
 
     var body: some View {
         Button(
@@ -22,8 +46,8 @@ struct TranscludeView: View {
                         pfp: author.pfp,
                         slashlink: address
                     )
-                    Text(excerpt)
-                        .lineLimit(5)
+                    
+                    ExcerptView(excerpt: excerpt)
                 }
             }
         )
@@ -55,7 +79,10 @@ struct TranscludeView_Previews: PreviewProvider {
             TranscludeView(
                 author: UserProfile.dummyData(),
                 address: Slashlink("did:subconscious:local/loomings")!,
-                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
+                excerpt: """
+                        Call me Ishmael.
+                        Some years ago- never mind how long precisely
+                        """,
                 action: { }
             )
             TranscludeView(

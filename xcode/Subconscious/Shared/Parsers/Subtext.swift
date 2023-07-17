@@ -643,16 +643,18 @@ extension Subtext {
 extension Subtext {
     /// Derive an excerpt
     func excerpt(fallback: String = "") -> String {
-        for block in blocks {
-            switch block {
-            case .empty:
-                continue
-            default:
-                let block = String(block.body())
-                return block.isEmpty ? fallback : block
+        // Filter out empty blocks
+        let validBlocks = blocks.compactMap { block -> String? in
+            if case .empty = block {
+                return nil
+            } else {
+                return String(block.body())
             }
-        }
-        return fallback
+        }.prefix(2) // Take first two blocks
+        
+        let output = validBlocks.joined(separator: "\n")
+        
+        return output.isEmpty ? fallback : output
     }
     
     static func excerpt(markup: String, fallback: String = "") -> String {

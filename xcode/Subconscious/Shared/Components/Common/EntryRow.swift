@@ -15,10 +15,10 @@ struct EntryRow: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
-                .lineLimit(2)
+            ExcerptView(excerpt: entry.excerpt, lineLimit: 2, spacing: AppTheme.unitHalf)
                 .font(.callout)
                 .multilineTextAlignment(.leading)
+            
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
@@ -53,7 +53,10 @@ struct EntryRow_Previews: PreviewProvider {
                         peer: Peer.did(Did.local),
                         slug: Slug(formatting: "Anything that can be derived should be derived")!
                     ),
-                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    excerpt: """
+                             Anything that can be derived should be derived.
+                             Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.
+                             """,
                     modified: Date.now
                 )
             )
