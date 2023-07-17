@@ -288,8 +288,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     // MARK: Tab Indices
     static let recentEntriesTabIndex: Int = 0
-    static let topEntriesTabIndex: Int = 1
-    static let followingTabIndex: Int = 2
+    static let followingTabIndex: Int = 1
     
     var loadingState = LoadingState.loading
     

@@ -74,21 +74,6 @@ struct RecentTabView: View {
     }
 }
 
-struct TopTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onRefresh: () async -> Void
-    
-    var body: some View {
-        ScrollView {
-            EmptyStateView()
-        }
-        .refreshable {
-            await onRefresh()
-        }
-    }
-}
-
 struct FollowTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
@@ -155,21 +140,11 @@ struct UserProfileView: View {
     
     var columnRecent: TabbedColumnItem<RecentTabView> {
         TabbedColumnItem(
-            label: "Recent",
+            label: "Notes",
             view: RecentTabView(
                 state: state,
                 send: send,
                 onNavigateToNote: onNavigateToNote,
-                onRefresh: onRefresh
-            )
-        )
-    }
-    var columnTop: TabbedColumnItem<TopTabView> {
-        TabbedColumnItem(
-            label: "Top",
-            view: TopTabView(
-                state: state,
-                send: send,
                 onRefresh: onRefresh
             )
         )
@@ -215,20 +190,18 @@ struct UserProfileView: View {
             
             switch state.loadingState {
             case .loading:
-                TabbedThreeColumnView(
+                TabbedTwoColumnView(
                     columnA: columnLoading(label: "Recent"),
-                    columnB: columnLoading(label: "Top"),
-                    columnC: columnLoading(label: "Following"),
+                    columnB: columnLoading(label: "Following"),
                     selectedColumnIndex: state.currentTabIndex,
                     changeColumn: { index in
                         send(.tabIndexSelected(index))
                     }
                 )
             case .loaded:
-                TabbedThreeColumnView(
+                TabbedTwoColumnView(
                     columnA: columnRecent,
-                    columnB: columnTop,
-                    columnC: columnFollowing,
+                    columnB: columnFollowing,
                     selectedColumnIndex: state.currentTabIndex,
                     changeColumn: { index in
                         send(.tabIndexSelected(index))
