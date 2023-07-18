@@ -11,6 +11,7 @@ import SwiftNoosphere
 import os
 
 public typealias Cid = String
+public typealias Authorization = String
 
 /// Describes a Sphere.
 /// See `Sphere` for a concrete implementation.
@@ -914,7 +915,35 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
     }
     
-    public func authorize(name: String, did: Did) async throws -> String {
+    public func listAuthorizations() async throws -> [Authorization] {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityAuthorizationsList(
+                noosphere.noosphere,
+                self.sphere
+            ) { error, authorizations in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                guard let authorizations = authorizations else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                
+                defer {
+                    ns_string_array_free(authorizations)
+                }
+                
+                continuation.resume(returning: authorizations.toStringArray())
+                return
+            }
+        }
+    }
+    
+    public func authorize(name: String, did: Did) async throws -> Authorization {
         try await withCheckedThrowingContinuation { continuation in
             nsSphereAuthorityAuthorize(
                 noosphere.noosphere,
@@ -943,7 +972,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
     }
     
-    public func revoke(authorization: String) async throws -> Void {
+    public func revoke(authorization: Authorization) async throws -> Void {
         let _: String = try await withCheckedThrowingContinuation { continuation in
             nsSphereAuthorityAuthorizationRevoke(
                 noosphere.noosphere,

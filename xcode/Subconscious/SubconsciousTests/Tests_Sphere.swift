@@ -612,8 +612,19 @@ final class Tests_Sphere: XCTestCase {
         
         let authorization = try await sphere.authorize(name: "ben", did: did)
         
-        let version = try await sphere.save()
+        let _ = try await sphere.save()
+        
+        let authorizations = try await sphere.listAuthorizations()
+        XCTAssertEqual(authorizations.count, 2)
+        XCTAssertTrue(authorizations.contains(where: { auth in auth == authorization }))
         
         try await sphere.revoke(authorization: authorization)
+        
+        let _ = try await sphere.save()
+        
+        let authorizations2 = try await sphere.listAuthorizations()
+        XCTAssertEqual(authorizations2.count, 1)
+        XCTAssertFalse(authorizations2.contains(where: { auth in auth == authorization }))
+        
     }
 }
