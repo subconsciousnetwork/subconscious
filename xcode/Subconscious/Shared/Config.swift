@@ -41,7 +41,7 @@ struct Config: Equatable, Codable {
     var feedbackURL: URL = URL(string: "https://docs.google.com/forms/d/e/1FAIpQLSeQHRBacSLtE2scIeezlgW6ou_xq_CLBUawJeMmOZv4O9NuEw/viewform?usp=sf_link")!
     
     /// URL for built-in web service
-    var cloudCtlUrl: URL = URL(string: "https://cloudctl.sphere.test.subconscious.cloud")!
+    var cloudCtlUrl: URL = URL(string: "https://cloudctl.sphere.plato.subconscious.cloud")!
     
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
