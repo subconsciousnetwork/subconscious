@@ -882,6 +882,87 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         let identity = self._identity
         logger.debug("deinit with identity \(identity)")
     }
+    
+    public func escalateAuthority(mnemonic: String) async throws -> Sphere {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityEscalate(
+                noosphere.noosphere,
+                self.sphere,
+                mnemonic
+            ) { error, sphere in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                guard sphere != nil else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                
+                do {
+                    let sphere = try Sphere(noosphere: self.noosphere, sphere: sphere)
+                    continuation.resume(returning: sphere)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+                
+                return
+            }
+        }
+    }
+    
+    public func authorize(name: String, did: Did) async throws -> String {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityAuthorize(
+                noosphere.noosphere,
+                self.sphere,
+                name,
+                did.did
+            ) { error, authorization in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                guard let authorization = authorization else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                defer {
+                    ns_string_free(authorization)
+                }
+                
+                continuation.resume(returning: String(cString: authorization))
+                return
+            }
+        }
+    }
+    
+    public func revoke(authorization: String) async throws -> Void {
+        let _: String = try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityAuthorizationRevoke(
+                noosphere.noosphere,
+                self.sphere,
+                authorization
+            ) { error in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                // We have to return something other than Void or () here to appease the compiler?
+                continuation.resume(returning: authorization)
+                return
+            }
+        }
+    }
 }
 
 extension slice_boxed_char_ptr_t {

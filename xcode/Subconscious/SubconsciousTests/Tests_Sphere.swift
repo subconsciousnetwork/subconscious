@@ -584,4 +584,36 @@ final class Tests_Sphere: XCTestCase {
 
         XCTAssertEqual(did, bobKey, "Resolves did")
     }
+    
+    func testAuthorize() async throws {
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
+                
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+        
+        let did = Did.dummyData()
+        
+        let authorization = try await sphere.authorize(name: "ben", did: did)
+        
+        let version = try await sphere.save()
+        
+        try await sphere.revoke(authorization: authorization)
+    }
 }
