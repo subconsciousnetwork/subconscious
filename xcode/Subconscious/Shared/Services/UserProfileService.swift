@@ -234,7 +234,8 @@ actor UserProfileService {
                         slug: slug
                     ),
                     excerpt: memo.excerpt(),
-                    modified: memo.modified
+                    modified: memo.modified,
+                    author: nil
                 )
             )
         }

@@ -9,16 +9,16 @@ import SwiftUI
 
 struct RenderableBlock: Hashable {
     var block: Subtext.Block
-    var entries: [AuthoredEntryStub]
+    var entries: [EntryStub]
 }
 
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
-    var transcludePreviews: [Slashlink: AuthoredEntryStub]
+    var transcludePreviews: [Slashlink: EntryStub]
     var onViewTransclude: (Slashlink) -> Void
     
-    private func entries(for block: Subtext.Block) -> [AuthoredEntryStub] {
+    private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks
             .compactMap { link in
                 guard let slashlink = link.toSlashlink() else {
@@ -29,7 +29,7 @@ struct SubtextView: View {
             }
             .filter { entry in
                 // Avoid empty transclude blocks
-                entry.entry.excerpt.count > 0
+                entry.excerpt.count > 0
             }
     }
     
@@ -66,14 +66,16 @@ struct SubtextView: View {
                 }
                 
                 ForEach(renderable.entries, id: \.self) { entry in
-                    TranscludeView(
-                        author: entry.author,
-                        address: entry.entry.address,
-                        excerpt: entry.entry.excerpt,
-                        action: {
-                            onViewTransclude(entry.entry.address)
-                        }
-                    )
+                    if let author = entry.author {
+                        TranscludeView(
+                            author: author,
+                            address: entry.address,
+                            excerpt: entry.excerpt,
+                            action: {
+                                onViewTransclude(entry.address)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -114,44 +116,29 @@ struct SubtextView_Previews: PreviewProvider {
                     """
                 ),
                 transcludePreviews: [
-                    Slashlink(
-                        "/wanderer-your-footsteps-are-the-road"
-                    )!: AuthoredEntryStub(
-                        author: UserProfile.dummyData(
-                        ),
-                        entry: EntryStub(
-                            address: Slashlink(
-                                "/wanderer-your-footsteps-are-the-road"
-                            )!,
-                            excerpt: "hello mother",
-                            modified: Date.now
-                        )
+                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(
+                        address: Slashlink(
+                            "/wanderer-your-footsteps-are-the-road"
+                        )!,
+                        excerpt: "hello mother",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     ),
-                    Slashlink(
-                        "/voice"
-                    )!: AuthoredEntryStub(
-                        author: UserProfile.dummyData(
-                        ),
-                        entry: EntryStub(
-                            address: Slashlink(
-                                "/voice"
-                            )!,
-                            excerpt: "hello father",
-                            modified: Date.now
-                        )
+                    Slashlink("/voice")!: EntryStub(
+                        address: Slashlink(
+                            "/voice"
+                        )!,
+                        excerpt: "hello father",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     ),
-                    Slashlink(
-                        "/memory"
-                    )!: AuthoredEntryStub(
-                        author: UserProfile.dummyData(
-                        ),
-                        entry: EntryStub(
-                            address: Slashlink(
-                                "/memory"
-                            )!,
-                            excerpt: "hello world",
-                            modified: Date.now
-                        )
+                    Slashlink("/memory")!: EntryStub(
+                        address: Slashlink(
+                            "/memory"
+                        )!,
+                        excerpt: "hello world",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     )
                 ],
                 onViewTransclude: {

@@ -848,16 +848,17 @@ actor DataService {
             slug: address.slug
         )
         
-        var backlinks: [AuthoredEntryStub] = []
+        var backlinks: [EntryStub] = []
         for entry in entries {
             guard let author = try? await userProfile.buildUserProfile(
                 address: entry.address
             ) else {
                 logger.error("Failed to load author for \(entry.address)")
+                backlinks.append(entry)
                 continue
             }
             
-            backlinks.append(AuthoredEntryStub(author: author, entry: entry))
+            backlinks.append(entry.withAuthor(author))
         }
         
         guard let memo = memo else {
@@ -931,21 +932,17 @@ actor DataService {
             return nil
         }
         
-        var backlinks: [AuthoredEntryStub] = []
+        var backlinks: [EntryStub] = []
         for entry in entries {
-            guard let user = try? await userProfile.buildUserProfile(
+            guard let author = try? await userProfile.buildUserProfile(
                 address: entry.address
             ) else {
                 logger.error("Failed to load author for \(entry.address)")
+                backlinks.append(entry)
                 continue
             }
             
-            backlinks.append(
-                AuthoredEntryStub(
-                    author: user,
-                    entry: entry
-                )
-            )
+            backlinks.append(entry.withAuthor(author))
         }
 
         return MemoDetailResponse(

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BacklinksView: View {
-    var backlinks: [AuthoredEntryStub]
+    var backlinks: [EntryStub]
     var onSelect: (EntryLink) -> Void
 
     var body: some View {
@@ -20,14 +20,16 @@ struct BacklinksView: View {
             }
             if backlinks.count > 0 {
                 ForEach(backlinks) { entry in
-                    TranscludeView(
-                        author: entry.author,
-                        address: entry.entry.address,
-                        excerpt: entry.entry.excerpt,
-                        action: {
-                            onSelect(EntryLink(entry.entry))
-                        }
-                    )
+                    if let author = entry.author {
+                        TranscludeView(
+                            author: author,
+                            address: entry.address,
+                            excerpt: entry.excerpt,
+                            action: {
+                                onSelect(EntryLink(entry))
+                            }
+                        )
+                    }
                 }
             } else {
                 TitleGroupView(
@@ -49,29 +51,23 @@ struct BacklinksView_Previews: PreviewProvider {
         VStack {
             BacklinksView(
                 backlinks: [
-                    AuthoredEntryStub(
-                        author: UserProfile.dummyData(),
-                        entry: EntryStub(
-                            address: Slashlink("@handle/short")!,
-                            excerpt: "Short",
-                            modified: Date.now
-                        )
+                    EntryStub(
+                        address: Slashlink("@handle/short")!,
+                        excerpt: "Short",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     ),
-                    AuthoredEntryStub(
-                        author: UserProfile.dummyData(),
-                        entry: EntryStub(
-                            address: Slashlink("/loomings")!,
-                            excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                            modified: Date.now
-                        )
+                    EntryStub(
+                        address: Slashlink("/loomings")!,
+                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     ),
-                    AuthoredEntryStub(
-                        author: UserProfile.dummyData(),
-                        entry: EntryStub(
-                            address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
-                            excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                            modified: Date.now
-                        )
+                    EntryStub(
+                        address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
+                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     )
                 ],
                 onSelect: { title in }

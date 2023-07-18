@@ -7,13 +7,6 @@
 
 import Foundation
 
-struct AuthoredEntryStub: Identifiable, Equatable, Hashable {
-    let author: UserProfile
-    let entry: EntryStub
-    
-    var id: Slashlink { entry.id }
-}
-
 /// A EntryLink is a model that contains a title and slug description of a note
 /// suitable for list views.
 struct EntryStub:
@@ -26,10 +19,20 @@ struct EntryStub:
     let address: Slashlink
     let excerpt: String
     let modified: Date
+    let author: UserProfile?
 
     var id: Slashlink { address }
     var debugDescription: String {
         "Subconscious.EntryStub(\(address))"
+    }
+    
+    func withAuthor(_ author: UserProfile) -> Self {
+        return Self(
+            address: address,
+            excerpt: excerpt,
+            modified: modified,
+            author: author
+        )
     }
 }
 

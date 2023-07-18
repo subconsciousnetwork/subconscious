@@ -90,7 +90,7 @@ struct MemoViewerDetailView: View {
 
 /// View for the "not found" state of content
 struct MemoViewerDetailNotFoundView: View {
-    var backlinks: [AuthoredEntryStub]
+    var backlinks: [EntryStub]
     var notify: (MemoViewerDetailNotification) -> Void
     var contentFrameHeight = UIFont.appTextMono.lineHeight * 8
     
@@ -130,9 +130,9 @@ struct MemoViewerDetailLoadedView: View {
     var title: String
     var user: UserProfile?
     var dom: Subtext
-    var transcludePreviews: [Slashlink: AuthoredEntryStub]
+    var transcludePreviews: [Slashlink: EntryStub]
     var address: Slashlink
-    var backlinks: [AuthoredEntryStub]
+    var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
     
@@ -237,7 +237,7 @@ enum MemoViewerDetailAction: Hashable {
     case presentMetaSheet(_ isPresented: Bool)
     
     case fetchTranscludePreviews
-    case succeedFetchTranscludePreviews([Slashlink: AuthoredEntryStub])
+    case succeedFetchTranscludePreviews([Slashlink: EntryStub])
     case failFetchTranscludePreviews(_ error: String)
     
     case fetchOwnerProfile
@@ -278,13 +278,13 @@ struct MemoViewerDetailModel: ModelProtocol {
     var defaultAudience = Audience.local
     var title = ""
     var dom: Subtext = Subtext.empty
-    var backlinks: [AuthoredEntryStub] = []
+    var backlinks: [EntryStub] = []
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
     var metaSheet = MemoViewerDetailMetaSheetModel()
     
-    var transcludePreviews: [Slashlink: AuthoredEntryStub] = [:]
+    var transcludePreviews: [Slashlink: EntryStub] = [:]
     
     static func update(
         state: Self,
@@ -540,16 +540,13 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 """
             ),
             transcludePreviews: [
-                Slashlink("/infinity-paths")!: AuthoredEntryStub(
-                    author: UserProfile.dummyData(
-                    ),
-                    entry: EntryStub(
-                        address: Slashlink(
-                            "/infinity-paths"
-                        )!,
-                        excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
-                        modified: Date.now
-                    )
+                Slashlink("/infinity-paths")!: EntryStub(
+                    address: Slashlink(
+                        "/infinity-paths"
+                    )!,
+                    excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
+                    modified: Date.now,
+                    author: UserProfile.dummyData()
                 )
             ],
             address: Slashlink(slug: Slug("truth-the-prophet")!),
@@ -562,22 +559,17 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
 
         MemoViewerDetailNotFoundView(
             backlinks: [
-                AuthoredEntryStub(
-                    author: UserProfile.dummyData(),
-                    entry:
-                        EntryStub(
-                            address: Slashlink("@bob/bar")!,
-                            excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
-                            modified: Date.now
-                        )
+                EntryStub(
+                    address: Slashlink("@bob/bar")!,
+                    excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
+                    modified: Date.now,
+                    author: UserProfile.dummyData()
                 ),
-                AuthoredEntryStub(
-                    author: UserProfile.dummyData(),
-                    entry: EntryStub(
-                        address: Slashlink("@bob/baz")!,
-                        excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
-                        modified: Date.now
-                    )
+                EntryStub(
+                    address: Slashlink("@bob/baz")!,
+                    excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
+                    modified: Date.now,
+                    author: UserProfile.dummyData()
                 )
             ],
             notify: {

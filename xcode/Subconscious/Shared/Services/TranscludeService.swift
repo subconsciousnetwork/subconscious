@@ -47,8 +47,8 @@ actor TranscludeService {
     func fetchTranscludePreviews(
         slashlinks: [Slashlink],
         owner: UserProfile
-    ) async throws -> [Slashlink: AuthoredEntryStub] {
-        var dict: [Slashlink: AuthoredEntryStub] = [:]
+    ) async throws -> [Slashlink: EntryStub] {
+        var dict: [Slashlink: EntryStub] = [:]
         
         for link in slashlinks {
             let transclusion = try await resolveAddresses(
@@ -64,7 +64,7 @@ actor TranscludeService {
             ) else {
                 continue
             }
-            let authoredEntry = AuthoredEntryStub(author: author, entry: entry)
+            let authoredEntry = entry.withAuthor(author)
             
             if entry.address.isLocal {
                 dict.updateValue(authoredEntry, forKey: Slashlink(slug: entry.address.slug))
@@ -81,7 +81,7 @@ actor TranscludeService {
     nonisolated func fetchTranscludePreviewsPublisher(
         slashlinks: [Slashlink],
         owner: UserProfile
-    ) -> AnyPublisher<[Slashlink: AuthoredEntryStub], Error> {
+    ) -> AnyPublisher<[Slashlink: EntryStub], Error> {
         Future.detached(priority: .utility) {
             try await self.fetchTranscludePreviews(
                 slashlinks: slashlinks,
