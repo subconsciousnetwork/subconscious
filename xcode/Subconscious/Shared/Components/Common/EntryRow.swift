@@ -15,7 +15,7 @@ struct EntryRow: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-            ExcerptView(excerpt: entry.excerpt, lineLimit: 2, spacing: AppTheme.unitHalf)
+            ExcerptView(excerpt: entry.excerpt, spacing: AppTheme.unitHalf)
                 .font(.callout)
                 .multilineTextAlignment(.leading)
             

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ExcerptView: View {
     var excerpt: String
-    var lineLimit: Int = 5
     var spacing: CGFloat = AppTheme.unit
     var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
         Array(excerpt.split(separator: "\n").enumerated())
@@ -24,7 +23,6 @@ struct ExcerptView: View {
                             ? .medium
                             : .regular
                     )
-                    .lineLimit(lineLimit)
             }
         }
     }
