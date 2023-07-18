@@ -28,7 +28,7 @@ struct ExcerptView: View {
 }
 
 struct TranscludeView: View {
-    var author: UserProfile
+    var author: UserProfile?
     var address: Slashlink
     var excerpt: String
     var action: () -> Void
@@ -43,10 +43,9 @@ struct TranscludeView: View {
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     BylineSmView(
-                        pfp: author.pfp,
+                        pfp: author?.pfp,
                         slashlink: address
                     )
-                    
                     ExcerptView(excerpt: excerpt)
                 }
             }

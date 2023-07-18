@@ -66,16 +66,14 @@ struct SubtextView: View {
                 }
                 
                 ForEach(renderable.entries, id: \.self) { entry in
-                    if let author = entry.author {
-                        TranscludeView(
-                            author: author,
-                            address: entry.address,
-                            excerpt: entry.excerpt,
-                            action: {
-                                onViewTransclude(entry.address)
-                            }
-                        )
-                    }
+                    TranscludeView(
+                        author: entry.author,
+                        address: entry.address,
+                        excerpt: entry.excerpt,
+                        action: {
+                            onViewTransclude(entry.address)
+                        }
+                    )
                 }
             }
         }

@@ -20,16 +20,14 @@ struct BacklinksView: View {
             }
             if backlinks.count > 0 {
                 ForEach(backlinks) { entry in
-                    if let author = entry.author {
-                        TranscludeView(
-                            author: author,
-                            address: entry.address,
-                            excerpt: entry.excerpt,
-                            action: {
-                                onSelect(EntryLink(entry))
-                            }
-                        )
-                    }
+                    TranscludeView(
+                        author: entry.author,
+                        address: entry.address,
+                        excerpt: entry.excerpt,
+                        action: {
+                            onSelect(EntryLink(entry))
+                        }
+                    )
                 }
             } else {
                 TitleGroupView(

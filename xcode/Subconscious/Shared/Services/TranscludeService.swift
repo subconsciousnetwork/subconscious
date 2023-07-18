@@ -55,23 +55,23 @@ actor TranscludeService {
                 base: owner.address.peer,
                 link: link
             )
-            guard let entry = try database.readEntry(for: transclusion.absoluteAddress) else {
+            
+            guard var entry = try database.readEntry(for: transclusion.absoluteAddress) else {
                 continue
             }
             
-            guard let author = try? await userProfile.buildUserProfile(
+            if let author = try? await userProfile.buildUserProfile(
                 address: transclusion.address
-            ) else {
-                continue
+            ) {
+                entry = entry.withAuthor(author)
             }
-            let authoredEntry = entry.withAuthor(author)
             
             if entry.address.isLocal {
-                dict.updateValue(authoredEntry, forKey: Slashlink(slug: entry.address.slug))
+                dict.updateValue(entry, forKey: Slashlink(slug: entry.address.slug))
                 continue
             }
             
-            dict.updateValue(authoredEntry, forKey: transclusion.displayAddress)
+            dict.updateValue(entry, forKey: transclusion.displayAddress)
         }
         
         return dict
