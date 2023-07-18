@@ -34,7 +34,11 @@ struct SubtextView: View {
     }
     
     var blocks: [RenderableBlock] {
-        subtext.blocks.map { block in
+        subtext.blocks.compactMap { block in
+            guard !block.isEmpty else {
+                return nil
+            }
+            
             return RenderableBlock(block: block, entries: self.entries(for: block))
         }
     }
@@ -58,7 +62,7 @@ struct SubtextView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
             ForEach(blocks, id: \.self) { renderable in
                 if renderable.entries.isEmpty ||
                     !shouldReplaceBlockWithTransclude(block: renderable.block) {
