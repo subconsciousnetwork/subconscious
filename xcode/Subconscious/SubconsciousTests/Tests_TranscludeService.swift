@@ -108,8 +108,8 @@ final class Tests_TranscludeService: XCTestCase {
         
         XCTAssertEqual(transcludes.count, 2)
         XCTAssertTrue(transcludes[address] != nil)
-        XCTAssertEqual(transcludes[address]!.entry.excerpt, "Test content")
+        XCTAssertEqual(transcludes[address]!.excerpt, "Test content")
         XCTAssertTrue(transcludes[address2] != nil)
-        XCTAssertEqual(transcludes[address2]!.entry.excerpt, "With different content")
+        XCTAssertEqual(transcludes[address2]!.excerpt, "With different content")
     }
 }
