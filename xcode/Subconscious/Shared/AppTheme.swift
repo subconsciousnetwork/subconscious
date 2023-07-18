@@ -93,6 +93,9 @@ extension Color {
     static let secondaryBackground = SwiftUI.Color(
         uiColor: UIColor.secondarySystemBackground
     )
+    static let tertiarySystemGroupedBackground = SwiftUI.Color(
+        uiColor: UIColor.tertiarySystemGroupedBackground
+    )
     static let formFieldBackground = SwiftUI.Color(
         uiColor: UIColor.secondarySystemGroupedBackground
     )

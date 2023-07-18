@@ -18,21 +18,15 @@ struct TranscludeButtonStyle: ButtonStyle {
         switch (colorScheme) {
         case .dark:
             return configuration.isPressed
-                ? Color.secondaryBackground
-                : Color.secondaryBackground.opacity(0.5)
+                ? Color.backgroundPressed
+                : Color.secondaryBackground
         case .light:
             return configuration.isPressed
                 ? Color.backgroundPressed
-                : Color.clear
+                : Color.tertiarySystemGroupedBackground
         default:
             return Color.clear
         }
-    }
-    
-    var stroke: Color {
-        colorScheme == .light
-            ? Color.separator
-            : Color.clear
     }
     
     func makeBody(configuration: Configuration) -> some View {
@@ -45,7 +39,6 @@ struct TranscludeButtonStyle: ButtonStyle {
             )
             .contentShape(roundedRect)
             .clipShape(roundedRect)
-            .overlay(roundedRect.stroke(stroke, lineWidth: 0.5))
             .animation(.default, value: configuration.isPressed)
     }
 }
