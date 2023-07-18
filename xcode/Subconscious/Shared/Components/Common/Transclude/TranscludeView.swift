@@ -19,8 +19,11 @@ struct ExcerptView: View {
         VStack(alignment: .leading, spacing: spacing) {
             ForEach(excerptLines, id: \.offset) { idx, line in
                 Text("\(String(line))")
-                    .fontWeight(idx == 0 && excerptLines.count > 1 ? .medium : .regular)
-                    .opacity(idx > 0 ? 0.8 : 1) // Helps massively in dark mode
+                    .fontWeight(
+                        idx == 0 && excerptLines.count > 1
+                            ? .medium
+                            : .regular
+                    )
                     .lineLimit(lineLimit)
             }
         }
