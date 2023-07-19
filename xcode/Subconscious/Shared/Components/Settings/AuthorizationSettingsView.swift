@@ -65,7 +65,28 @@ struct AuthorizationSettingsView: View {
                 content: {
                     List {
                         ForEach(app.state.authorization.authorizations, id: \.self) { auth in
-                            Text(auth)
+                            HStack {
+                                Text(auth)
+                                    .lineLimit(1)
+                                Menu(
+                                    content: {
+                                        Button(
+                                            action: {
+                                                app.send(.authorization(.requestRevoke(auth)))
+                                            },
+                                            label: {
+                                                Label(
+                                                    title: { Text("Revoke") },
+                                                    icon: { Image(systemName: "exclamationmark.octagon.fill") }
+                                                )
+                                            }
+                                        )
+                                    },
+                                    label: {
+                                        EllipsisLabelView()
+                                    }
+                                )
+                            }
                         }
                     }
                 },
@@ -174,6 +195,10 @@ enum AuthorizationSettingsAction {
     case presentQRCodeScanner(_ isPresented: Bool)
     case qrCodeScanned(scannedContent: String)
     case qrCodeScanError(error: String)
+    
+    case requestRevoke(Authorization)
+    case succeedRevoke
+    case failRevoke(_ error: String)
 }
 
 typealias AuthorizationSettingsEnvironment = AppEnvironment
@@ -283,6 +308,24 @@ struct AuthorizationSettingsModel: ModelProtocol {
             return update(state: state, action: .listAuthorizations, environment: environment)
         case .failAuthorize(let message):
             logger.log("authorize failed: \(message)")
+            return Update(state: state)
+        case .requestRevoke(let auth):
+            let fx: Fx<AuthorizationSettingsAction> = Future.detached {
+                do {
+                    try await environment.noosphere.revoke(authorization: auth)
+                    let _ = try await environment.noosphere.save()
+                    return .succeedRevoke
+                } catch {
+                    return .failRevoke(error.localizedDescription)
+                }
+            }.eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedRevoke:
+            logger.error("Revoked!")
+            return update(state: state, action: .listAuthorizations, environment: environment)
+        case .failRevoke(let message):
+            logger.error("Fail to revoke: \(message)")
             return Update(state: state)
         }
     }
