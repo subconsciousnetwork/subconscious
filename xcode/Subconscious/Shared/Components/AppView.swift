@@ -243,6 +243,8 @@ enum AppAction: CustomLogStringConvertible {
     /// We cache user profiles for performance during browsing, but we should clear this cache on sync
     case resetUserProfileCache
     case succeedResetUserProfileCache
+    
+    case authorization(_ action: AuthorizationSettingsAction)
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -485,6 +487,8 @@ struct AppModel: ModelProtocol {
     /// one-time long-running migration tasks at startup.
     var appUpgrade = AppUpgradeModel()
     
+    var authorization = AuthorizationSettingsModel()
+    
     /// Preferred Gateway URL.
     ///
     /// This property is updated at `.start` with the corresponding value
@@ -568,6 +572,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
+            )
+        case .authorization(let action):
+            return AuthorizationSettingsCursor.update(
+                state: state,
+                action: action,
+                environment: environment
             )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
