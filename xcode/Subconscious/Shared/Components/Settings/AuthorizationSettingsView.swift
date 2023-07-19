@@ -60,8 +60,31 @@ struct AuthorizationSettingsView: View {
                 }, footer: {
                     Text("List authorizations here?")
                 })
+            
+            Section(
+                content: {
+                    List {
+                        ForEach(app.state.authorization.authorizations, id: \.self) { auth in
+                            Text(auth)
+                        }
+                    }
+                },
+                header: { Text("Authorizations") }
+            )
         }
         .navigationTitle("Authorization Settings")
+        .onAppear {
+            app.send(.authorization(.appear))
+        }
+        .onReceive(app.actions) { action in
+            switch action {
+            case .authorization(.succeedAuthorize(_)):
+                app.send(.syncAll)
+                break
+            case _:
+                break
+            }
+        }
     }
 }
 
@@ -138,6 +161,11 @@ struct AuthorizationSettingsFormModel: ModelProtocol {
 
 // MARK: Actions
 enum AuthorizationSettingsAction {
+    case appear
+    case listAuthorizations
+    case succeedListAuthorizations([Authorization])
+    case failListAuthorizations(_ error: String)
+    
     case form(AuthorizationSettingsFormAction)
     case submitAuthorizeForm
     case succeedAuthorize(Authorization)
@@ -163,6 +191,7 @@ struct AuthorizationSettingsModel: ModelProtocol {
     var isQrCodeScannerPresented = false
     
     var form: AuthorizationSettingsFormModel = AuthorizationSettingsFormModel()
+    var authorizations: [Authorization] = ["Test"]
     
     var failQRCodeScanErrorMessage: String? = nil
     
@@ -178,6 +207,31 @@ struct AuthorizationSettingsModel: ModelProtocol {
                 action: action,
                 environment: ()
             )
+        case .appear:
+            return update(
+                state: state,
+                actions: [.listAuthorizations, .form(.reset)],
+                environment: environment
+            )
+        case .listAuthorizations:
+            let fx: Fx<AuthorizationSettingsAction> = Future.detached {
+                do {
+                    let authorizations = try await environment.noosphere.listAuthorizations()
+                    return .succeedListAuthorizations(authorizations)
+                } catch {
+                    return .failListAuthorizations(error.localizedDescription)
+                }
+            }.eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedListAuthorizations(let authorizations):
+            var model = state
+            model.authorizations = authorizations
+            
+            return Update(state: model)
+        case .failListAuthorizations(let message):
+            logger.error("Failed to list authorizations: \(message)")
+            return Update(state: state)
             
         case .presentQRCodeScanner(let isPresented):
             var model = state
@@ -215,6 +269,8 @@ struct AuthorizationSettingsModel: ModelProtocol {
                         .noosphere
                         .authorize(name: name, did: did)
                     
+                    let _ = try await environment.noosphere.save()
+                    
                     return .succeedAuthorize(auth)
                 } catch {
                     return .failAuthorize(error.localizedDescription)
@@ -224,7 +280,7 @@ struct AuthorizationSettingsModel: ModelProtocol {
             return Update(state: state, fx: fx)
         case .succeedAuthorize(let auth):
             logger.log("authorize succeeded!", metadata: ["auth": auth])
-            return Update(state: state)
+            return update(state: state, action: .listAuthorizations, environment: environment)
         case .failAuthorize(let message):
             logger.log("authorize failed: \(message)")
             return Update(state: state)
