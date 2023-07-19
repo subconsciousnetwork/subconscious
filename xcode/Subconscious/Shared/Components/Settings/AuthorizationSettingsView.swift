@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ObservableStore
+import Combine
 import os
 
 struct AuthorizationSettingsView: View {
@@ -139,6 +140,8 @@ struct AuthorizationSettingsFormModel: ModelProtocol {
 enum AuthorizationSettingsAction {
     case form(AuthorizationSettingsFormAction)
     case submitAuthorizeForm
+    case succeedAuthorize(Authorization)
+    case failAuthorize(_ error: String)
     
     case presentQRCodeScanner(_ isPresented: Bool)
     case qrCodeScanned(scannedContent: String)
@@ -198,6 +201,32 @@ struct AuthorizationSettingsModel: ModelProtocol {
             return Update(state: model)
             
         case .submitAuthorizeForm:
+            guard let did = state.form.did.validated else {
+                return Update(state: state)
+            }
+            
+            guard let name = state.form.name.validated else {
+                return Update(state: state)
+            }
+            
+            let fx: Fx<AuthorizationSettingsAction> = Future.detached {
+                do {
+                    let auth = try await environment
+                        .noosphere
+                        .authorize(name: name, did: did)
+                    
+                    return .succeedAuthorize(auth)
+                } catch {
+                    return .failAuthorize(error.localizedDescription)
+                }
+            }.eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedAuthorize(let auth):
+            logger.log("authorize succeeded!", metadata: ["auth": auth])
+            return Update(state: state)
+        case .failAuthorize(let message):
+            logger.log("authorize failed: \(message)")
             return Update(state: state)
         }
     }

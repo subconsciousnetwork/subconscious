@@ -64,6 +64,11 @@ public protocol SphereProtocol {
     /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
     ///
     func traverse(petname: Petname) async throws -> Sphere
+    
+    func escalateAuthority(mnemonic: String) async throws -> Sphere
+    func authorize(name: String, did: Did) async throws -> Authorization
+    func revoke(authorization: Authorization) async throws -> Void
+    func listAuthorizations() async throws -> [Authorization]
 }
 
 extension SphereProtocol {
