@@ -439,6 +439,10 @@ actor NoosphereService:
         try await self.sphere().listAuthorizations()
     }
     
+    func verify(authorization: Authorization) async throws -> Bool {
+        try await self.sphere().verify(authorization: authorization)
+    }
+    
     /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.
     func sphere(address: Slashlink) async throws -> Sphere {
         let identity = try await self.identity()

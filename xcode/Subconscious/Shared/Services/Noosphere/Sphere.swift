@@ -69,6 +69,7 @@ public protocol SphereProtocol {
     func authorize(name: String, did: Did) async throws -> Authorization
     func revoke(authorization: Authorization) async throws -> Void
     func listAuthorizations() async throws -> [Authorization]
+    func verify(authorization: Authorization) async throws -> Bool
 }
 
 extension SphereProtocol {
@@ -995,6 +996,32 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
                 continuation.resume(returning: authorization)
                 return
             }
+        }
+    }
+    
+    public func verify(authorization: Authorization) async throws -> Bool {
+        do {
+            let _: Int = try await withCheckedThrowingContinuation { continuation in
+                nsSphereAuthorityAuthorizationVerify(
+                    noosphere.noosphere,
+                    self.sphere,
+                    authorization
+                ) { error in
+                    if let error = Noosphere.readErrorMessage(error) {
+                        continuation.resume(
+                            throwing: NoosphereError.foreignError(error)
+                        )
+                        return
+                    }
+                    
+                    continuation.resume(returning: 1)
+                    return
+                }
+            }
+            
+            return true
+        } catch {
+            return false
         }
     }
 }
