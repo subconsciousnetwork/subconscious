@@ -191,13 +191,14 @@ struct UserProfileView: View {
             switch state.loadingState {
             case .loading:
                 TabbedTwoColumnView(
-                    columnA: columnLoading(label: "Recent"),
+                    columnA: columnLoading(label: "Notes"),
                     columnB: columnLoading(label: "Following"),
                     selectedColumnIndex: state.currentTabIndex,
                     changeColumn: { index in
                         send(.tabIndexSelected(index))
                     }
                 )
+                .edgesIgnoringSafeArea([.bottom])
             case .loaded:
                 TabbedTwoColumnView(
                     columnA: columnRecent,
@@ -207,6 +208,7 @@ struct UserProfileView: View {
                         send(.tabIndexSelected(index))
                     }
                 )
+                .edgesIgnoringSafeArea([.bottom])
             case .notFound:
                 NotFoundView()
                     // extra padding to visually center the group
