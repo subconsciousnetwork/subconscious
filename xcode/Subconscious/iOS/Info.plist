@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLOUDCTL_URL</key>
+	<string>https://$(CLOUDCTL_URL)</string>
+	<key>DEFAULT_GEIST_DID</key>
+	<string>$(DEFAULT_GEIST_DID)</string>
+	<key>DEFAULT_GEIST_PETNAME</key>
+	<string>$(DEFAULT_GEIST_PETNAME)</string>
+	<key>FEEDBACK_URL</key>
+	<string>https://$(FEEDBACK_URL)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>IBMPlexMono-Bold.ttf</string>

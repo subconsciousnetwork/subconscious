@@ -34,14 +34,19 @@ struct Config: Equatable, Codable {
             ? "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
             : ""
     }
-    var subconsciousGeistDid: Did = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
-    var subconsciousGeistPetname: Petname = Petname("subconscious")!
+    
+    var subconsciousGeistDid: Did = Did(
+        Bundle.main.object(forInfoDictionaryKey: "DEFAULT_GEIST_DID") as! String
+    )!
+    var subconsciousGeistPetname: Petname = Petname(
+        Bundle.main.object(forInfoDictionaryKey: "DEFAULT_GEIST_PETNAME") as! String
+    )!
     
     /// URL for sending feedback to developers
-    var feedbackURL: URL = URL(string: "https://docs.google.com/forms/d/e/1FAIpQLSeQHRBacSLtE2scIeezlgW6ou_xq_CLBUawJeMmOZv4O9NuEw/viewform?usp=sf_link")!
+    var feedbackURL: URL = URL(string: Bundle.main.object(forInfoDictionaryKey: "FEEDBACK_URL") as! String)!
     
     /// URL for built-in web service
-    var cloudCtlUrl: URL = URL(string: "https://cloudctl.sphere.socrates.subconscious.cloud")!
+    var cloudCtlUrl: URL = URL(string: Bundle.main.object(forInfoDictionaryKey: "CLOUDCTL_URL") as! String)!
     
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
