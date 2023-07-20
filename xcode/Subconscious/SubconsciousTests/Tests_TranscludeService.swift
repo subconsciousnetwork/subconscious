@@ -29,11 +29,9 @@ final class Tests_TranscludeService: XCTestCase {
             .resolveAddresses(base: nil, link: link)
         
         let identity = try await environment.noosphere.identity()
-        let did = newLink.absoluteAddress.toDid()!
-        XCTAssertEqual(did, identity)
+        XCTAssertEqual(newLink.authorDid, identity)
         XCTAssertEqual(newLink.displayAddress.slug, link.slug)
         XCTAssertEqual(newLink.address.slug, link.slug)
-        XCTAssertEqual(newLink.absoluteAddress.slug, link.slug)
     }
     
     func testResolveToKnownDid() async throws {
@@ -52,11 +50,9 @@ final class Tests_TranscludeService: XCTestCase {
             .transclude
             .resolveAddresses(base: nil, link: link)
         
-        let did = newLink.absoluteAddress.toDid()!
-        XCTAssertEqual(did, sarah)
+        XCTAssertEqual(newLink.authorDid, sarah)
         XCTAssertEqual(newLink.displayAddress.slug, link.slug)
         XCTAssertEqual(newLink.address.slug, link.slug)
-        XCTAssertEqual(newLink.absoluteAddress.slug, link.slug)
     }
     
     func testFetchLocalTranscludes() async throws {
