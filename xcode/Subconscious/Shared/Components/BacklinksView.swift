@@ -38,6 +38,8 @@ struct BacklinksView: View {
                     )
                 )
             }
+            
+            FabSpacerView()
         }
         .padding(.horizontal, AppTheme.unit4)
         .padding(.vertical, AppTheme.unit2)
