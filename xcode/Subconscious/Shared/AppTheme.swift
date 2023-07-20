@@ -36,7 +36,7 @@ extension AppTheme {
     static let cornerRadius: Double = 8
     static let cornerRadiusLg: Double = 16
     
-    static let smPfpSize: CGFloat = 24
+    static let smPfpSize: CGFloat = 22
     static let mdPfpSize: CGFloat = 32
     static let lgPfpSize: CGFloat = 48
     
@@ -92,6 +92,9 @@ extension Color {
     static let background = SwiftUI.Color(uiColor: UIColor.systemBackground)
     static let secondaryBackground = SwiftUI.Color(
         uiColor: UIColor.secondarySystemBackground
+    )
+    static let tertiarySystemGroupedBackground = SwiftUI.Color(
+        uiColor: UIColor.tertiarySystemGroupedBackground
     )
     static let formFieldBackground = SwiftUI.Color(
         uiColor: UIColor.secondarySystemGroupedBackground

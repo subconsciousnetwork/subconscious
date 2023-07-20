@@ -94,6 +94,15 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
                 return span.dropFirst().trimming(" ")
             }
         }
+        
+        var isEmpty: Bool {
+            switch self {
+            case .empty(_):
+                return true
+            case _:
+                return false
+            }
+        }
     }
 
     struct Link: Hashable, Equatable, CustomStringConvertible {
@@ -643,16 +652,15 @@ extension Subtext {
 extension Subtext {
     /// Derive an excerpt
     func excerpt(fallback: String = "") -> String {
-        for block in blocks {
-            switch block {
-            case .empty:
-                continue
-            default:
-                let block = String(block.body())
-                return block.isEmpty ? fallback : block
-            }
-        }
-        return fallback
+        // Filter out empty blocks
+        let validBlocks = blocks
+            .filter { block in !block.isEmpty }
+            .map { block in String(block.body()) }
+            .prefix(2) // Take first two blocks
+        
+        let output = validBlocks.joined(separator: "\n")
+        
+        return output.isEmpty ? fallback : output
     }
     
     static func excerpt(markup: String, fallback: String = "") -> String {

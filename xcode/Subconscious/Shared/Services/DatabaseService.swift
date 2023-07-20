@@ -477,7 +477,8 @@ final class DatabaseService {
             return EntryStub(
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                author: nil
             )
         })
         .first
@@ -522,7 +523,8 @@ final class DatabaseService {
             return EntryStub(
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                author: nil
             )
         })
     }
@@ -968,7 +970,8 @@ final class DatabaseService {
                         slug: slug
                     ),
                     excerpt: excerpt,
-                    modified: modified
+                    modified: modified,
+                    author: nil
                 )
             case let (.some(did), .none, .some(slug), .some(modified)):
                 let address = Slashlink(
@@ -978,7 +981,8 @@ final class DatabaseService {
                 return EntryStub(
                     address: address,
                     excerpt: excerpt,
-                    modified: modified
+                    modified: modified,
+                    author: nil
                 )
             default:
                 return nil
@@ -1024,7 +1028,8 @@ final class DatabaseService {
             return EntryStub(
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                author: nil
             )
         })
         .first
@@ -1060,7 +1065,8 @@ final class DatabaseService {
             return EntryStub(
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                author: nil
             )
         })
         .first
@@ -1103,7 +1109,8 @@ final class DatabaseService {
             return EntryStub(
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                author: nil
             )
         })
         .first

@@ -29,8 +29,8 @@ final class Tests_TranscludeService: XCTestCase {
             .resolveAddresses(base: nil, link: link)
         
         let identity = try await environment.noosphere.identity()
-        let did = newLink.address.toDid()!
-        XCTAssertEqual(did, identity)
+        XCTAssertEqual(newLink.authorDid, identity)
+        XCTAssertEqual(newLink.displayAddress.slug, link.slug)
         XCTAssertEqual(newLink.address.slug, link.slug)
     }
     
@@ -50,8 +50,8 @@ final class Tests_TranscludeService: XCTestCase {
             .transclude
             .resolveAddresses(base: nil, link: link)
         
-        let did = newLink.address.toDid()!
-        XCTAssertEqual(did, sarah)
+        XCTAssertEqual(newLink.authorDid, sarah)
+        XCTAssertEqual(newLink.displayAddress.slug, link.slug)
         XCTAssertEqual(newLink.address.slug, link.slug)
     }
     

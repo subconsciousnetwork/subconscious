@@ -48,7 +48,7 @@ struct StoryEntryView: View {
                     
                     Divider()
                     
-                    Text(story.entry.excerpt)
+                    ExcerptView(excerpt: story.entry.excerpt)
                         .padding(AppTheme.tightPadding)
                 }
                 .background(Color.background)

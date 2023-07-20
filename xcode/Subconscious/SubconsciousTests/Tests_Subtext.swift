@@ -1172,12 +1172,16 @@ class Tests_Subtext: XCTestCase {
             markup: """
             Here comes the sun, doo da doo doo
             Here comes the sun, and I say
+            It's alright
             """
         )
         XCTAssertEqual(
             subtext.excerpt(),
-            "Here comes the sun, doo da doo doo",
-            "Excerpt returns string for first block"
+            """
+            Here comes the sun, doo da doo doo
+            Here comes the sun, and I say
+            """,
+            "Excerpt returns string for first two blocks"
         )
     }
 
@@ -1187,12 +1191,19 @@ class Tests_Subtext: XCTestCase {
 
 
             Here comes the sun, doo da doo doo
+            
+            
             Here comes the sun, and I say
+            
+            It's alright
             """
         )
         XCTAssertEqual(
             subtext.excerpt(),
-            "Here comes the sun, doo da doo doo",
+            """
+            Here comes the sun, doo da doo doo
+            Here comes the sun, and I say
+            """,
             "Excerpt returns string for first non-empty block"
         )
     }

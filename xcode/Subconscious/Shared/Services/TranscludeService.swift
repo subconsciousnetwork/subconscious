@@ -11,15 +11,22 @@ import Combine
 struct Transclusion {
     let displayAddress: Slashlink
     let address: Slashlink
+    let authorDid: Did
 }
 
 actor TranscludeService {
     private var database: DatabaseService
     private var noosphere: NoosphereService
+    private var userProfile: UserProfileService
     
-    init(database: DatabaseService, noosphere: NoosphereService) {
+    init(
+        database: DatabaseService,
+        noosphere: NoosphereService,
+        userProfile: UserProfileService
+    ) {
         self.database = database
         self.noosphere = noosphere
+        self.userProfile = userProfile
     }
     
     func resolveAddresses(base: Peer?, link: Slashlink) async throws -> Transclusion {
@@ -32,7 +39,8 @@ actor TranscludeService {
         
         return Transclusion(
             displayAddress: link,
-            address: Slashlink(peer: .did(did), slug: address.slug)
+            address: address,
+            authorDid: did
         )
     }
     
@@ -47,8 +55,16 @@ actor TranscludeService {
                 base: owner.address.peer,
                 link: link
             )
-            guard let entry = try database.readEntry(for: transclusion.address) else {
+            
+            let address = Slashlink(peer: .did(transclusion.authorDid), slug: link.slug)
+            guard var entry = try database.readEntry(for: address) else {
                 continue
+            }
+            
+            if let author = try? await userProfile.buildUserProfile(
+                address: transclusion.address
+            ) {
+                entry = entry.withAuthor(author)
             }
             
             if entry.address.isLocal {

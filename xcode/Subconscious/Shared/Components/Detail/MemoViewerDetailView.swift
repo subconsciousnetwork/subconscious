@@ -34,6 +34,7 @@ struct MemoViewerDetailView: View {
             case .loaded:
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
+                    user: store.state.owner,
                     dom: store.state.dom,
                     transcludePreviews: store.state.transcludePreviews,
                     address: description.address,
@@ -127,6 +128,7 @@ struct MemoViewerDetailLoadingView: View {
 
 struct MemoViewerDetailLoadedView: View {
     var title: String
+    var user: UserProfile?
     var dom: Subtext
     var transcludePreviews: [Slashlink: EntryStub]
     var address: Slashlink
@@ -349,7 +351,7 @@ struct MemoViewerDetailModel: ModelProtocol {
                 state: model,
                 action: .fetchTranscludePreviews,
                 environment: environment
-            )
+            ).animation(.easeOutCubic())
         case .failFetchOwnerProfile(let error):
             logger.error("Failed to fetch owner: \(error)")
             return Update(state: state)
@@ -539,14 +541,19 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
             ),
             transcludePreviews: [
                 Slashlink("/infinity-paths")!: EntryStub(
-                    address: Slashlink("/infinity-paths")!,
+                    address: Slashlink(
+                        "/infinity-paths"
+                    )!,
                     excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
-                    modified: Date.now
+                    modified: Date.now,
+                    author: UserProfile.dummyData()
                 )
             ],
             address: Slashlink(slug: Slug("truth-the-prophet")!),
             backlinks: [],
-            send: { action in },
+            send: {
+                action in 
+            },
             notify: { action in }
         )
 
@@ -555,15 +562,19 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 EntryStub(
                     address: Slashlink("@bob/bar")!,
                     excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
-                    modified: Date.now
+                    modified: Date.now,
+                    author: UserProfile.dummyData()
                 ),
                 EntryStub(
                     address: Slashlink("@bob/baz")!,
                     excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
-                    modified: Date.now
+                    modified: Date.now,
+                    author: UserProfile.dummyData()
                 )
             ],
-            notify: { action in }
+            notify: {
+                action in 
+            }
         )
     }
 }

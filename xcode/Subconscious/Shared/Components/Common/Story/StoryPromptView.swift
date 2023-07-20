@@ -28,22 +28,17 @@ struct StoryPromptView: View {
             Divider()
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
                 Text(story.prompt)
-                Button(
+                TranscludeView(
+                    author: UserProfile.dummyData(),
+                    address: story.entry.address,
+                    excerpt: story.entry.excerpt,
                     action: {
                         action(
                             story.entry.address,
                             story.entry.excerpt
                         )
-                    },
-                    label: {
-                        TranscludeView(
-                            pfp: .image("pfp-dog"),
-                            slashlink: story.entry.address,
-                            excerpt: story.entry.excerpt
-                        )
                     }
                 )
-                .buttonStyle(.plain)
             }
             .padding()
             Divider()

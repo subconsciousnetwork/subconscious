@@ -20,7 +20,8 @@ struct BacklinksView: View {
             }
             if backlinks.count > 0 {
                 ForEach(backlinks) { entry in
-                    Transclude2View(
+                    TranscludeView(
+                        author: entry.author,
                         address: entry.address,
                         excerpt: entry.excerpt,
                         action: {
@@ -37,6 +38,8 @@ struct BacklinksView: View {
                     )
                 )
             }
+            
+            FabSpacerView()
         }
         .padding(.horizontal, AppTheme.unit4)
         .padding(.vertical, AppTheme.unit2)
@@ -51,17 +54,20 @@ struct BacklinksView_Previews: PreviewProvider {
                     EntryStub(
                         address: Slashlink("@handle/short")!,
                         excerpt: "Short",
-                        modified: Date.now
-                    ),
-                    EntryStub(
-                        address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
-                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                        modified: Date.now
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     ),
                     EntryStub(
                         address: Slashlink("/loomings")!,
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                        modified: Date.now
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
+                    ),
+                    EntryStub(
+                        address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
+                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
                     )
                 ],
                 onSelect: { title in }

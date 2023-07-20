@@ -12,19 +12,20 @@ struct TranscludeButtonStyle: ButtonStyle {
         cornerRadius: AppTheme.cornerRadiusLg
     )
     @Environment(\.isEnabled) private var isEnabled
-
+    @Environment(\.colorScheme) var colorScheme
+    
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.vertical, AppTheme.unit3)
             .padding(.horizontal, AppTheme.unit4)
             .expandAlignedLeading()
             .background(
-                configuration.isPressed ?
-                    Color.backgroundPressed : Color.clear
+                configuration.isPressed
+                   ? Color.backgroundPressed
+                   : Color.tertiarySystemGroupedBackground
             )
             .contentShape(roundedRect)
             .clipShape(roundedRect)
-            .overlay(roundedRect.stroke(Color.separator, lineWidth: 0.5))
             .animation(.default, value: configuration.isPressed)
     }
 }

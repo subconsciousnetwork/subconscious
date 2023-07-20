@@ -34,17 +34,44 @@ struct SubtextView: View {
     }
     
     var blocks: [RenderableBlock] {
-        subtext.blocks.map { block in
+        subtext.blocks.compactMap { block in
+            guard !block.isEmpty else {
+                return nil
+            }
+            
             return RenderableBlock(block: block, entries: self.entries(for: block))
         }
     }
+    
+    func shouldReplaceBlockWithTransclude(block: Subtext.Block) -> Bool {
+        var count = 0
+        for inline in block.inline {
+            switch (inline) {
+            case .slashlink(let slashlink):
+                count += slashlink.span.count
+                continue
+            case _:
+                continue
+            }
+        }
+        
+        return block.body()
+            .trimmingCharacters(in: .punctuationCharacters)
+            .trimmingCharacters(in: .whitespaces)
+            .count <= count
+    }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
             ForEach(blocks, id: \.self) { renderable in
-                Text(Self.renderer.render(renderable.block.description))
+                if renderable.entries.isEmpty ||
+                    !shouldReplaceBlockWithTransclude(block: renderable.block) {
+                    Text(Self.renderer.render(renderable.block.description))
+                }
+                
                 ForEach(renderable.entries, id: \.self) { entry in
-                    Transclude2View(
+                    TranscludeView(
+                        author: entry.author,
                         address: entry.address,
                         excerpt: entry.excerpt,
                         action: {
@@ -91,11 +118,34 @@ struct SubtextView_Previews: PreviewProvider {
                     """
                 ),
                 transcludePreviews: [
-                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!, excerpt: "hello mother", modified: Date.now),
-                    Slashlink("/voice")!: EntryStub(address: Slashlink("/voice")!, excerpt: "hello father", modified: Date.now),
-                    Slashlink("/memory")!: EntryStub(address: Slashlink("/memory")!, excerpt: "hello world", modified: Date.now)
+                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(
+                        address: Slashlink(
+                            "/wanderer-your-footsteps-are-the-road"
+                        )!,
+                        excerpt: "hello mother",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
+                    ),
+                    Slashlink("/voice")!: EntryStub(
+                        address: Slashlink(
+                            "/voice"
+                        )!,
+                        excerpt: "hello father",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
+                    ),
+                    Slashlink("/memory")!: EntryStub(
+                        address: Slashlink(
+                            "/memory"
+                        )!,
+                        excerpt: "hello world",
+                        modified: Date.now,
+                        author: UserProfile.dummyData()
+                    )
                 ],
-                onViewTransclude: { _ in }
+                onViewTransclude: {
+                    _ in 
+                }
             )
         }
     }

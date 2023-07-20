@@ -19,10 +19,20 @@ struct EntryStub:
     let address: Slashlink
     let excerpt: String
     let modified: Date
+    let author: UserProfile?
 
     var id: Slashlink { address }
     var debugDescription: String {
         "Subconscious.EntryStub(\(address))"
+    }
+    
+    func withAuthor(_ author: UserProfile) -> Self {
+        return Self(
+            address: address,
+            excerpt: excerpt,
+            modified: modified,
+            author: author
+        )
     }
 }
 

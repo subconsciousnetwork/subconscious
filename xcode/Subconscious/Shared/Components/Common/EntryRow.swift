@@ -15,10 +15,10 @@ struct EntryRow: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
-                .lineLimit(2)
+            ExcerptView(excerpt: entry.excerpt, spacing: AppTheme.unitHalf)
                 .font(.callout)
                 .multilineTextAlignment(.leading)
+            
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
@@ -53,8 +53,12 @@ struct EntryRow_Previews: PreviewProvider {
                         peer: Peer.did(Did.local),
                         slug: Slug(formatting: "Anything that can be derived should be derived")!
                     ),
-                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now
+                    excerpt: """
+                             Anything that can be derived should be derived.
+                             Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.
+                             """,
+                    modified: Date.now,
+                    author: nil
                 )
             )
             EntryRow(
@@ -63,7 +67,8 @@ struct EntryRow_Previews: PreviewProvider {
                         "@here/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now
+                    modified: Date.now,
+                    author: nil
                 )
             )
             EntryRow(
@@ -72,7 +77,8 @@ struct EntryRow_Previews: PreviewProvider {
                         "did:key:abc123/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now
+                    modified: Date.now,
+                    author: nil
                 )
             )
             EntryRow(
@@ -81,7 +87,8 @@ struct EntryRow_Previews: PreviewProvider {
                         "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now
+                    modified: Date.now,
+                    author: nil
                 )
             )
         }

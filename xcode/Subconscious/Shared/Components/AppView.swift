@@ -239,6 +239,10 @@ enum AppAction: CustomLogStringConvertible {
     case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
     /// Notification that an unfollow happened somewhere else
     case notifySucceedUnfollow(identity: Did, petname: Petname)
+    
+    /// We cache user profiles for performance during browsing, but we should clear this cache on sync
+    case resetUserProfileCache
+    case succeedResetUserProfileCache
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -953,6 +957,13 @@ struct AppModel: ModelProtocol {
                 identity: did,
                 petname: petname
             )
+        case .resetUserProfileCache:
+            return resetUserProfileCache(
+                state: state,
+                environment: environment
+            )
+        case .succeedResetUserProfileCache:
+            return Update(state: state)
         }
     }
     
@@ -1590,7 +1601,8 @@ struct AppModel: ModelProtocol {
             actions: [
                 .syncSphereWithGateway,
                 .syncLocalFilesWithDatabase,
-                .setAppUpgradeProgressMessage("Transferring notes to database...")
+                .setAppUpgradeProgressMessage("Transferring notes to database..."),
+                .resetUserProfileCache
             ],
             environment: environment
         )
@@ -2151,6 +2163,19 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
+    
+    static func resetUserProfileCache(
+        state: Self,
+        environment: AppEnvironment
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = Future.detached {
+            await environment.userProfile.invalidateCache()
+            return .succeedResetUserProfileCache
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
 }
 
 // MARK: Environment
@@ -2249,12 +2274,17 @@ struct AppEnvironment {
             noosphere: noosphere,
             database: database,
             local: local,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userProfile: userProfile
         )
         
         self.feed = FeedService()
         self.gatewayProvisioningService = GatewayProvisioningService()
-        self.transclude = TranscludeService(database: database, noosphere: noosphere)
+        self.transclude = TranscludeService(
+            database: database,
+            noosphere: noosphere,
+            userProfile: userProfile
+        )
     }
 }
 
