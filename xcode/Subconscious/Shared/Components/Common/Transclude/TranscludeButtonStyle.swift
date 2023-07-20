@@ -14,28 +14,15 @@ struct TranscludeButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) var colorScheme
     
-    func background(_ configuration: Configuration) -> Color {
-        switch (colorScheme) {
-        case .dark:
-            return configuration.isPressed
-                ? Color.backgroundPressed
-                : Color.secondaryBackground
-        case .light:
-            return configuration.isPressed
-                ? Color.backgroundPressed
-                : Color.tertiarySystemGroupedBackground
-        default:
-            return Color.clear
-        }
-    }
-    
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.vertical, AppTheme.unit3)
             .padding(.horizontal, AppTheme.unit4)
             .expandAlignedLeading()
             .background(
-                background(configuration)
+                configuration.isPressed
+                   ? Color.backgroundPressed
+                   : Color.tertiarySystemGroupedBackground
             )
             .contentShape(roundedRect)
             .clipShape(roundedRect)
