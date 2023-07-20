@@ -11,7 +11,7 @@ import Combine
 struct Transclusion {
     let displayAddress: Slashlink
     let address: Slashlink
-    let absoluteAddress: Slashlink
+    let authorDid: Did
 }
 
 actor TranscludeService {
@@ -40,7 +40,7 @@ actor TranscludeService {
         return Transclusion(
             displayAddress: link,
             address: address,
-            absoluteAddress: Slashlink(peer: .did(did), slug: address.slug)
+            authorDid: did
         )
     }
     
@@ -56,7 +56,8 @@ actor TranscludeService {
                 link: link
             )
             
-            guard var entry = try database.readEntry(for: transclusion.absoluteAddress) else {
+            let address = Slashlink(peer: .did(transclusion.authorDid), slug: link.slug)
+            guard var entry = try database.readEntry(for: address) else {
                 continue
             }
             
