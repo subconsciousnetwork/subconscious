@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftNoosphere
 
 /// Feature flags and settings
 struct Config: Equatable, Codable {
@@ -70,12 +71,11 @@ extension Config {
 
 // MARK: Noosphere configuration
 struct NoosphereConfig: Equatable, Codable {
-    /// Hard-coded version number for Noosphere.
-    /// NOTE: be sure to update this when we update Noosphere.
-    /// We include this here so we can display it in settings.
-    /// In future, Noosphere may expose an FFI to dynamically query for the
-    /// version.
-    var version = "v0.13.0"
+    /// Noosphere package version in semver format.
+    var version: String {
+        "\(NOOSPHERE_VERSION_MAJOR).\(NOOSPHERE_VERSION_MINOR).\(NOOSPHERE_VERSION_PATCH)"
+    }
+    
     /// Name of directory used for Noosphere storage
     var globalStoragePath = "noosphere"
     /// Name of directory used for sphere storage.
