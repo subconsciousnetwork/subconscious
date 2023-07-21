@@ -4,6 +4,8 @@
 <dict>
 	<key>CLOUDCTL_URL</key>
 	<string>https://$(CLOUDCTL_URL)</string>
+	<key>DEBUG</key>
+	<string>$(DEBUG)</string>
 	<key>DEFAULT_GEIST_DID</key>
 	<string>$(DEFAULT_GEIST_DID)</string>
 	<key>DEFAULT_GEIST_PETNAME</key>

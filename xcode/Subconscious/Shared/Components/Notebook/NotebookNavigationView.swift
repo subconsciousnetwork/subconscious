@@ -109,15 +109,13 @@ struct NotebookNavigationView: View {
                         Image(systemName: "gearshape")
                     }
                 }
-                if Config.default.userProfile {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button(
-                            action: {
-                                store.send(.requestOurProfileDetail)
-                            }
-                        ) {
-                            Image(systemName: "person")
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(
+                        action: {
+                            store.send(.requestOurProfileDetail)
                         }
+                    ) {
+                        Image(systemName: "person")
                     }
                 }
             }

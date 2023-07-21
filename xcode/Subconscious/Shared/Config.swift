@@ -11,13 +11,11 @@ import Foundation
 struct Config: Equatable, Codable {
     /// App version.
     var rdns = "com.subconscious.Subconscious"
-    var debug = false
+    var debug = (Bundle.main.object(forInfoDictionaryKey: "DEBUG") as! String == "YES")
     
     var noosphere = NoosphereConfig()
     
     var appTabs = false
-    var addByQRCode = true
-    var userProfile = true
     
     #if targetEnvironment(simulator)
     /// Are we currently running in the iOS simlator (aka dev mode)
@@ -43,10 +41,14 @@ struct Config: Equatable, Codable {
     )!
     
     /// URL for sending feedback to developers
-    var feedbackURL: URL = URL(string: Bundle.main.object(forInfoDictionaryKey: "FEEDBACK_URL") as! String)!
+    var feedbackURL: URL = URL(
+        string: Bundle.main.object(forInfoDictionaryKey: "FEEDBACK_URL") as! String
+    )!
     
     /// URL for built-in web service
-    var cloudCtlUrl: URL = URL(string: Bundle.main.object(forInfoDictionaryKey: "CLOUDCTL_URL") as! String)!
+    var cloudCtlUrl: URL = URL(
+        string: Bundle.main.object(forInfoDictionaryKey: "CLOUDCTL_URL") as! String
+    )!
     
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
