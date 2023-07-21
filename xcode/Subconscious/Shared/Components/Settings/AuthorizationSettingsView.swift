@@ -31,10 +31,13 @@ struct AuthorizationView: View {
 
 struct AuthorizationSettingsView: View {
     @ObservedObject var app: Store<AppModel>
+    var state: AuthorizationSettingsModel {
+        app.state.authorization
+    }
 
     var body: some View {
         Form {
-            if let lastAuth = app.state.authorization.lastAuthorization {
+            if let lastAuth = state.lastAuthorization {
                 Section(
                     content: {
                         AuthorizationView(authorization: lastAuth)
@@ -49,7 +52,7 @@ struct AuthorizationSettingsView: View {
                     
                     ValidatedFormField(
                         placeholder: "DID",
-                        field: app.state.authorization.form.did,
+                        field: state.form.did,
                         send: Address.forward(
                             send: app.send,
                             tag: { a in .authorization(.form(.didField(a))) }
@@ -66,7 +69,7 @@ struct AuthorizationSettingsView: View {
                     
                     ValidatedFormField(
                         placeholder: "name",
-                        field: app.state.authorization.form.name,
+                        field: state.form.name,
                         send: Address.forward(
                             send: app.send,
                             tag: { a in .authorization(.form(.nameField(a))) }
@@ -97,7 +100,7 @@ struct AuthorizationSettingsView: View {
                 }, header: {
                     Text("Authorization Settings")
                 }, footer: {
-                    if let message = app.state.authorization.errorMessage {
+                    if let message = state.errorMessage {
                         Text(message)
                             .foregroundStyle(.red)
                     }
@@ -106,7 +109,7 @@ struct AuthorizationSettingsView: View {
             Section(
                 content: {
                     List {
-                        ForEach(app.state.authorization.authorizations, id: \.self) { auth in
+                        ForEach(state.authorizations, id: \.self) { auth in
                             HStack {
                                 Text(auth)
                                     .font(.callout.monospaced())
@@ -121,8 +124,12 @@ struct AuthorizationSettingsView: View {
                                             },
                                             label: {
                                                 Label(
-                                                    title: { Text("Revoke") },
-                                                    icon: { Image(systemName: "exclamationmark.octagon.fill") }
+                                                    title: {
+                                                        Text("Revoke")
+                                                    },
+                                                    icon: {
+                                                        Image(systemName: "exclamationmark.octagon.fill")
+                                                    }
                                                 )
                                             }
                                         )
@@ -142,8 +149,12 @@ struct AuthorizationSettingsView: View {
             "This may revoke other authorizations that depend on this authorization, are you sure?",
             isPresented:
                 Binding(
-                    get: { app.state.authorization.isConfirmRevokePresented },
-                    set: { _ in app.send(.authorization(.presentRevokeConfirmation(false))) }
+                    get: { state.isConfirmRevokePresented },
+                    set: { _ in
+                        app.send(.authorization(
+                            .presentRevokeConfirmation(false)
+                        ))
+                    }
                 )
         ) {
             Button(
