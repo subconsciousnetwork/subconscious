@@ -10,24 +10,56 @@ import ObservableStore
 import Combine
 import os
 
+struct AuthorizationView: View {
+    var authorization: Authorization
+    
+    var body: some View {
+        ShareLink(item: authorization) {
+            HStack {
+                Text(authorization)
+                    .font(.callout.monospaced())
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+                
+                Spacer(minLength: AppTheme.unit2)
+                
+                Image(systemName: "square.and.arrow.up")
+            }
+        }
+    }
+}
+
 struct AuthorizationSettingsView: View {
     @ObservedObject var app: Store<AppModel>
 
     var body: some View {
         Form {
+            if let lastAuth = app.state.authorization.lastAuthorization {
+                Section(
+                    content: {
+                        AuthorizationView(authorization: lastAuth)
+                    },
+                    header: { Text("Authorization Code") },
+                    footer: { }
+                )
+            }
+            
             Section(
                 content: {
+                    
                     ValidatedFormField(
-                        placeholder: "did:key:mmm",
+                        placeholder: "DID",
                         field: app.state.authorization.form.did,
                         send: Address.forward(
                             send: app.send,
                             tag: { a in .authorization(.form(.didField(a))) }
                         ),
                         caption: Text(
-                            "The DID of the client to authorize"
-                        )
+                            "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+                        ),
+                        axis: .vertical
                     )
+                    .lineLimit(12)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .autocapitalization(.none)
@@ -52,13 +84,23 @@ struct AuthorizationSettingsView: View {
                             app.send(.authorization(.submitAuthorizeForm))
                         },
                         label: {
-                            Text("Authorize")
+                            Label(
+                                title: {
+                                    Text("Authorize")
+                                },
+                                icon: {
+                                    Image(systemName: "person.badge.key")
+                               }
+                            )
                         }
                     )
                 }, header: {
                     Text("Authorization Settings")
                 }, footer: {
-                    Text("List authorizations here?")
+                    if let message = app.state.authorization.errorMessage {
+                        Text(message)
+                            .foregroundStyle(.red)
+                    }
                 })
             
             Section(
@@ -67,7 +109,10 @@ struct AuthorizationSettingsView: View {
                         ForEach(app.state.authorization.authorizations, id: \.self) { auth in
                             HStack {
                                 Text(auth)
-                                    .lineLimit(1)
+                                    .font(.callout.monospaced())
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                                
                                 Menu(
                                     content: {
                                         Button(
@@ -92,6 +137,23 @@ struct AuthorizationSettingsView: View {
                 },
                 header: { Text("Authorizations") }
             )
+        }
+        .confirmationDialog(
+            "This may revoke other authorizations that depend on this authorization, are you sure?",
+            isPresented:
+                Binding(
+                    get: { app.state.authorization.isConfirmRevokePresented },
+                    set: { _ in app.send(.authorization(.presentRevokeConfirmation(false))) }
+                )
+        ) {
+            Button(
+                "Revoke Authorization",
+                role: .destructive
+            ) {
+                app.send(.authorization(.confirmRevoke))
+            }
+        } message: {
+            Text("You cannot undo this action")
         }
         .navigationTitle("Authorization Settings")
         .onAppear {
@@ -167,9 +229,8 @@ struct AuthorizationSettingsFormModel: ModelProtocol {
                 environment: FormFieldEnvironment()
             )
         case .reset:
-            var model = state
             return update(
-                state: model,
+                state: state,
                 actions: [
                     .didField(.reset),
                     .nameField(.reset)
@@ -197,8 +258,12 @@ enum AuthorizationSettingsAction {
     case qrCodeScanError(error: String)
     
     case requestRevoke(Authorization)
+    case confirmRevoke
+    case cancelRevoke
     case succeedRevoke
     case failRevoke(_ error: String)
+
+    case presentRevokeConfirmation(Bool)
 }
 
 typealias AuthorizationSettingsEnvironment = AppEnvironment
@@ -214,11 +279,15 @@ struct AuthorizationSettingsModel: ModelProtocol {
     )
     
     var isQrCodeScannerPresented = false
+    var isConfirmRevokePresented = false
     
     var form: AuthorizationSettingsFormModel = AuthorizationSettingsFormModel()
     var authorizations: [Authorization] = ["Test"]
     
-    var failQRCodeScanErrorMessage: String? = nil
+    var errorMessage: String? = nil
+    var lastAuthorization: Authorization? = nil
+    
+    var revokeCandidate: Authorization? = nil
     
     static func update(
         state: Self,
@@ -233,8 +302,11 @@ struct AuthorizationSettingsModel: ModelProtocol {
                 environment: ()
             )
         case .appear:
+            var model = state
+            model.errorMessage = nil
+            model.lastAuthorization = nil
             return update(
-                state: state,
+                state: model,
                 actions: [.listAuthorizations, .form(.reset)],
                 environment: environment
             )
@@ -253,14 +325,15 @@ struct AuthorizationSettingsModel: ModelProtocol {
             var model = state
             model.authorizations = authorizations
             
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         case .failListAuthorizations(let message):
+            var model = state
+            model.errorMessage = message
             logger.error("Failed to list authorizations: \(message)")
-            return Update(state: state)
+            return Update(state: model)
             
         case .presentQRCodeScanner(let isPresented):
             var model = state
-            model.failQRCodeScanErrorMessage = nil
             model.isQrCodeScannerPresented = isPresented
             return Update(state: model)
             
@@ -276,7 +349,7 @@ struct AuthorizationSettingsModel: ModelProtocol {
             
         case .qrCodeScanError(error: let error):
             var model = state
-            model.failQRCodeScanErrorMessage = error
+            model.errorMessage = error
             return Update(state: model)
             
         case .submitAuthorizeForm:
@@ -304,15 +377,37 @@ struct AuthorizationSettingsModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
         case .succeedAuthorize(let auth):
+            var model = state
+            model.lastAuthorization = auth
             logger.log("authorize succeeded!", metadata: ["auth": auth])
-            return update(state: state, action: .listAuthorizations, environment: environment)
+            return update(
+                state: model,
+                actions: [.listAuthorizations, .form(.reset)],
+                environment: environment
+            ).animation(.easeOutCubic())
         case .failAuthorize(let message):
+            var model = state
+            model.errorMessage = message
             logger.log("authorize failed: \(message)")
-            return Update(state: state)
+            return Update(state: model)
         case .requestRevoke(let auth):
+            var model = state
+            model.revokeCandidate = auth
+            model.isConfirmRevokePresented = true
+            return Update(state: model)
+        case .confirmRevoke:
+            var model = state
+            model.isConfirmRevokePresented = false
+            
+            guard let candidate = state.revokeCandidate else {
+                return Update(state: model)
+            }
+            
+            model.revokeCandidate = nil
+            
             let fx: Fx<AuthorizationSettingsAction> = Future.detached {
                 do {
-                    try await environment.noosphere.revoke(authorization: auth)
+                    try await environment.noosphere.revoke(authorization: candidate)
                     let _ = try await environment.noosphere.save()
                     return .succeedRevoke
                 } catch {
@@ -320,13 +415,24 @@ struct AuthorizationSettingsModel: ModelProtocol {
                 }
             }.eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return Update(state: model, fx: fx)
+        case .cancelRevoke:
+            var model = state
+            model.isConfirmRevokePresented = false
+            model.revokeCandidate = nil
+            return Update(state: model)
         case .succeedRevoke:
             logger.error("Revoked!")
             return update(state: state, action: .listAuthorizations, environment: environment)
         case .failRevoke(let message):
+            var model = state
+            model.errorMessage = message
             logger.error("Fail to revoke: \(message)")
-            return Update(state: state)
+            return Update(state: model)
+        case .presentRevokeConfirmation(let presented):
+            var model = state
+            model.isConfirmRevokePresented = presented
+            return Update(state: model)
         }
     }
 }
