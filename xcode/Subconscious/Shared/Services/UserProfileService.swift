@@ -271,10 +271,21 @@ actor UserProfileService {
                 return Slashlink(petname: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
+            let resolutionStatus = try await Func.run {
+                switch (entry.status, slashlink.peer) {
+                case (.resolved(_), _):
+                    return entry.status
+                case (_, .petname(let petname)):
+                    return try await self.addressBook.resolutionStatus(petname: petname)
+                case _:
+                    return entry.status
+                }
+            }
+            
             let user = try await self.loadProfileFromMemo(
                 did: entry.did,
                 address: slashlink,
-                resolutionStatus: entry.status
+                resolutionStatus: resolutionStatus
             )
             
             following.append(
