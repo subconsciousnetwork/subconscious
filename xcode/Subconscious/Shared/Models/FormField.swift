@@ -13,7 +13,9 @@ import Combine
 
 typealias FormFieldValidator<Input, Output> = (Input) -> Output?
 
-enum FormFieldAction<Input: Equatable>: Equatable {
+typealias FormFieldInput = Equatable & Hashable
+
+enum FormFieldAction<Input: FormFieldInput>: FormFieldInput {
     case reset
     /// Intended for triggering validation errors when a user submits a form containing this field
     case markAsTouched
@@ -24,7 +26,7 @@ enum FormFieldAction<Input: Equatable>: Equatable {
 
 typealias FormFieldEnvironment = Void
 
-struct FormField<Input: Equatable, Output>: ModelProtocol {
+struct FormField<Input: FormFieldInput, Output>: ModelProtocol {
     static func == (lhs: FormField<Input, Output>, rhs: FormField<Input, Output>) -> Bool {
         return (
             lhs.value == rhs.value &&

@@ -18,6 +18,13 @@ struct RenameSearchView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                ValidatedFormField(
+                    placeholder: String(localized: "Enter link for note"),
+                    field: state.queryField,
+                    send: { action in send(.queryField(action))},
+                    caption: AnyView(EmptyView())
+                )
+                
                 SearchTextField(
                     placeholder: String(localized: "Enter link for note"),
                     text: Binding(
@@ -62,6 +69,7 @@ enum RenameSearchAction: Hashable {
     case setSubject(_ address: Slashlink?)
     /// Set the query string for the search input field
     case setQuery(_ query: String)
+    case queryField(FormFieldAction<String>)
     case refreshRenameSuggestions
     case setRenameSuggestions([RenameSuggestion])
     case failRenameSuggestions(String)
@@ -71,6 +79,7 @@ enum RenameSearchAction: Hashable {
 struct RenameSearchModel: ModelProtocol {
     var subject: Slashlink? = nil
     var query = ""
+    var queryField: FormField<String, String> = FormField(value: "", validate: { s in s })
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
     
@@ -85,6 +94,12 @@ struct RenameSearchModel: ModelProtocol {
         environment: AppEnvironment
     ) -> ObservableStore.Update<RenameSearchModel> {
         switch action {
+        case let .queryField(action):
+            return QueryFieldCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
         case let .setSubject(subject):
             return setSubject(
                 state: state,
@@ -217,5 +232,24 @@ struct RenameSearchView_Previews: PreviewProvider {
                 send: { action in }
             )
         }
+    }
+}
+
+struct QueryFieldCursor: CursorProtocol {
+    typealias Model = RenameSearchModel
+    typealias ViewModel = FormField<String, String>
+
+    static func get(state: Model) -> ViewModel {
+        state.queryField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.queryField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .queryField(action)
     }
 }
