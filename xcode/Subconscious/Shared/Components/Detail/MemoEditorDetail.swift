@@ -1690,6 +1690,15 @@ struct MemoEditorDetailModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
+    static func tryWikilink(link: EntryLink) -> String {
+        switch (link.address.peer) {
+        case .none:
+            return Markup.Wikilink(text: link.linkableTitle).markup
+        case _:
+            return link.address.verbatimMarkup
+        }
+    }
+    
     static func selectLinkSuggestion(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
@@ -1721,16 +1730,23 @@ struct MemoEditorDetailModel: ModelProtocol {
                     )
                     return (range, replacement)
                 case .wikilink(let wikilink):
-                    let text = link.linkableTitle
-                    let replacement = Markup.Wikilink(text: text).markup
+                    let replacement = Func.run {
+                        switch (link.address.peer) {
+                            case .none:
+                                return Markup.Wikilink(
+                                    text: link.linkableTitle
+                                ).markup
+                            case _:
+                                return link.address.verbatimMarkup
+                        }
+                    }
                     let range = NSRange(
                         wikilink.span.range,
                         in: state.editor.text
                     )
                     return (range, replacement)
                 case .none:
-                    let text = link.linkableTitle
-                    let replacement = Markup.Wikilink(text: text).markup
+                    let replacement = link.address.verbatimMarkup
                     return (state.editor.selection, replacement)
                 }
             }
