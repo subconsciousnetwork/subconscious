@@ -45,30 +45,28 @@ struct FollowNewUserFormSheetView: View {
                         )
                     )
                     
-                    if Config.default.addByQRCode {
-                        Section(header: Text("Add via QR Code")) {
-                            Button(
-                                action: {
-                                    send(.presentQRCodeScanner(true))
-                                },
-                                label: {
-                                    HStack {
-                                        Image(systemName: "qrcode")
-                                        Text("Scan Code")
-                                    }
-                                    .foregroundColor(.accentColor)
+                    Section(header: Text("Add via QR Code")) {
+                        Button(
+                            action: {
+                                send(.presentQRCodeScanner(true))
+                            },
+                            label: {
+                                HStack {
+                                    Image(systemName: "qrcode")
+                                    Text("Scan Code")
                                 }
-                            )
+                                .foregroundColor(.accentColor)
+                            }
+                        )
+                    }
+                    
+                    if let did = did {
+                        Section(header: Text("Your DID")) {
+                            DidView(did: did)
                         }
                         
-                        if let did = did {
-                            Section(header: Text("Your DID")) {
-                                DidView(did: did)
-                            }
-                            
-                            Section(header: Text("Your QR Code")) {
-                                ShareableDidQrCodeView(did: did, color: Color.gray)
-                            }
+                        Section(header: Text("Your QR Code")) {
+                            ShareableDidQrCodeView(did: did, color: Color.gray)
                         }
                     }
                 }
@@ -100,7 +98,7 @@ struct FollowNewUserFormSheetView: View {
             }
             .fullScreenCover(
                 isPresented: Binding(
-                    get: { state.isQrCodeScannerPresented && Config.default.addByQRCode },
+                    get: { state.isQrCodeScannerPresented },
                     send: send,
                     tag: FollowNewUserFormSheetAction.presentQRCodeScanner
                 )

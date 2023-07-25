@@ -1,0 +1,15 @@
+//
+//  config.xcconfig
+//  Subconscious
+//
+//  Created by Ben Follington on 20/7/2023.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+DEBUG = YES
+DEFAULT_GEIST_PETNAME = subconscious
+DEFAULT_GEIST_DID = did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7
+FEEDBACK_URL = docs.google.com/forms/d/e/1FAIpQLSeQHRBacSLtE2scIeezlgW6ou_xq_CLBUawJeMmOZv4O9NuEw/viewform?usp=sf_link
+CLOUDCTL_URL = cloudctl.sphere.socrates.subconscious.cloud

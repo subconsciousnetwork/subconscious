@@ -27,6 +27,7 @@
 		B549B16B2A0CDAC10070C6AD /* FirstRunRecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */; };
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
 		B550E04029AF219100050F19 /* Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D30029AF1F9B0011D820 /* Did.swift */; };
+		B5604DAE2A6A263E004C9590 /* Tests_Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5604DAD2A6A263E004C9590 /* Tests_Config.swift */; };
 		B5690C3C29FB4DEF00067580 /* FollowUserViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */; };
 		B5690C3D29FB4DEF00067580 /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971529B6A0DF003204FC /* DidQrCodeView.swift */; };
 		B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */; };
@@ -66,6 +67,8 @@
 		B59D556329BBFF56007915E2 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59D556229BBFF56007915E2 /* FormField.swift */; };
 		B5A7AD322A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
 		B5A7AD332A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
+		B5C918FA2A68D0F3004C6CD5 /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = B5C918F82A68D0F3004C6CD5 /* Release.xcconfig */; };
+		B5C918FB2A68D0F3004C6CD5 /* Development.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = B5C918F92A68D0F3004C6CD5 /* Development.xcconfig */; };
 		B5CA12A029FF732A00860E9E /* GatewayProvisioningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */; };
 		B5CA12A129FF732A00860E9E /* GatewayProvisioningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */; };
 		B5CA448929D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */; };
@@ -472,6 +475,7 @@
 		B54930B02A2F0FE300958F12 /* StoryPlaceholderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryPlaceholderView.swift; sourceTree = "<group>"; };
 		B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunRecoveryView.swift; sourceTree = "<group>"; };
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
+		B5604DAD2A6A263E004C9590 /* Tests_Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Config.swift; sourceTree = "<group>"; };
 		B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserViaQRCodeView.swift; sourceTree = "<group>"; };
 		B569971529B6A0DF003204FC /* DidQrCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
 		B56C2D4D2A4962D00062DAC0 /* Tests_TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_TranscludeService.swift; sourceTree = "<group>"; };
@@ -503,6 +507,8 @@
 		B5908BEA29DAB05B00225B1A /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		B5C918F82A68D0F3004C6CD5 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		B5C918F92A68D0F3004C6CD5 /* Development.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Development.xcconfig; sourceTree = "<group>"; };
 		B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayProvisioningService.swift; sourceTree = "<group>"; };
 		B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyDataUtilities.swift; sourceTree = "<group>"; };
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
@@ -916,6 +922,7 @@
 				B8099F012A3B6FA50014FC2E /* Tests_MemoRecord.swift */,
 				B56C2D4D2A4962D00062DAC0 /* Tests_TranscludeService.swift */,
 				B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */,
+				B5604DAD2A6A263E004C9590 /* Tests_Config.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -1231,6 +1238,8 @@
 		B8EB29FD26F27797006E97C3 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				B5C918F92A68D0F3004C6CD5 /* Development.xcconfig */,
+				B5C918F82A68D0F3004C6CD5 /* Release.xcconfig */,
 				B8EB29FE26F27797006E97C3 /* Info.plist */,
 			);
 			path = iOS;
@@ -1549,8 +1558,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5C918FA2A68D0F3004C6CD5 /* Release.xcconfig in Resources */,
 				B8CA8F1E288F07F9005F8802 /* zettelkasten.json in Resources */,
 				B88C97A22764270000B27DF0 /* LICENSE.txt in Resources */,
+				B5C918FB2A68D0F3004C6CD5 /* Development.xcconfig in Resources */,
 				B88C979D2764266A00B27DF0 /* IBMPlexSans-Light.ttf in Resources */,
 				B88C97972764264300B27DF0 /* IBMPlexSans-BoldItalic.ttf in Resources */,
 				B88C9785276425E900B27DF0 /* IBMPlexMono-Bold.ttf in Resources */,
@@ -1638,6 +1649,7 @@
 				B8E1A9492A13F49F00B757A5 /* Tests_LogFmt.swift in Sources */,
 				B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */,
 				B8B604EB29148C82006FCB77 /* Tests_AppMigrations.swift in Sources */,
+				B5604DAE2A6A263E004C9590 /* Tests_Config.swift in Sources */,
 				B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */,
 				B8E62AE829D61E69008F7E74 /* Tests_UserDefaultProperty.swift in Sources */,
 				B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */,
@@ -2240,6 +2252,7 @@
 		};
 		B8EB2A2A26F27797006E97C3 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B5C918F92A68D0F3004C6CD5 /* Development.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -2281,6 +2294,7 @@
 		};
 		B8EB2A2B26F27797006E97C3 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B5C918F82A68D0F3004C6CD5 /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
