@@ -230,7 +230,8 @@ extension Slashlink {
     /// - Returns Slashlink
     func relativizeIfNeeded(did base: Did?) -> Slashlink {
         switch self.peer {
-        case .did(let did) where did == base:
+        case .did(let did) where did == base,
+             .did(let did) where did.isLocal:
             return Slashlink(slug: self.slug)
         default:
             return self
