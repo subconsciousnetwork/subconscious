@@ -423,6 +423,26 @@ actor NoosphereService:
         try await self.sphere().traverse(petname: petname)
     }
     
+    func authorize(name: String, did: Did) async throws -> Authorization {
+        try await self.sphere().authorize(name: name, did: did)
+    }
+    
+    func revoke(authorization: Authorization) async throws -> Void {
+        try await self.sphere().revoke(authorization: authorization)
+    }
+    
+    func escalateAuthority(mnemonic: String) async throws -> Sphere {
+        try await self.sphere().escalateAuthority(mnemonic: mnemonic)
+    }
+    
+    func listAuthorizations() async throws -> [Authorization] {
+        try await self.sphere().listAuthorizations()
+    }
+    
+    func verify(authorization: Authorization) async throws -> Bool {
+        try await self.sphere().verify(authorization: authorization)
+    }
+    
     /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.
     func sphere(address: Slashlink) async throws -> Sphere {
         let identity = try await self.identity()

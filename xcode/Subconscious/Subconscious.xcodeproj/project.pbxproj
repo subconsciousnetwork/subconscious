@@ -69,6 +69,9 @@
 		B5A7AD332A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
 		B5C918FA2A68D0F3004C6CD5 /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = B5C918F82A68D0F3004C6CD5 /* Release.xcconfig */; };
 		B5C918FB2A68D0F3004C6CD5 /* Development.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = B5C918F92A68D0F3004C6CD5 /* Development.xcconfig */; };
+		B5C918EE2A67A16A004C6CD5 /* AuthorizationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */; };
+		B5C918F02A67ADEF004C6CD5 /* SphereSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */; };
+		B5C918F62A67BB35004C6CD5 /* EllipsisLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C918F52A67BB35004C6CD5 /* EllipsisLabelView.swift */; };
 		B5CA12A029FF732A00860E9E /* GatewayProvisioningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */; };
 		B5CA12A129FF732A00860E9E /* GatewayProvisioningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */; };
 		B5CA448929D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */; };
@@ -509,6 +512,9 @@
 		B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		B5C918F82A68D0F3004C6CD5 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		B5C918F92A68D0F3004C6CD5 /* Development.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Development.xcconfig; sourceTree = "<group>"; };
+		B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationSettingsView.swift; sourceTree = "<group>"; };
+		B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereSettingsView.swift; sourceTree = "<group>"; };
+		B5C918F52A67BB35004C6CD5 /* EllipsisLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EllipsisLabelView.swift; sourceTree = "<group>"; };
 		B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayProvisioningService.swift; sourceTree = "<group>"; };
 		B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyDataUtilities.swift; sourceTree = "<group>"; };
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
@@ -1050,12 +1056,14 @@
 		B88B1CDC298DE65E0062CB7F /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */,
 				B848FDA82991836900245115 /* DeveloperSettingsView.swift */,
 				B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */,
 				B88B1CE6298EEC240062CB7F /* GatewayURLSettingsView.swift */,
 				B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */,
 				B88B1CDD298DE66E0062CB7F /* SettingsView.swift */,
 				B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */,
+				B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1376,6 +1384,7 @@
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
 				B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */,
+				B5C918F52A67BB35004C6CD5 /* EllipsisLabelView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1767,6 +1776,7 @@
 				B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B82F053728D60EE60025A8B5 /* AppTabView.swift in Sources */,
 				B8B4251828FDE8AA0081B8D5 /* MemoData.swift in Sources */,
+				B5C918F02A67ADEF004C6CD5 /* SphereSettingsView.swift in Sources */,
 				B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */,
 				B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */,
 				B57701962A650C92001F874F /* ProfileHeaderButtonStyle.swift in Sources */,
@@ -1835,6 +1845,7 @@
 				B8CAA6CB2A02FA7000F4A0F6 /* Link.swift in Sources */,
 				B8B3EE77297AEE8B00779B7F /* FirstRunDoneView.swift in Sources */,
 				B8099F002A3B5A820014FC2E /* MemoRecord.swift in Sources */,
+				B5C918EE2A67A16A004C6CD5 /* AuthorizationSettingsView.swift in Sources */,
 				B85A805E296F08720007F957 /* AudienceMenuButtonView.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
@@ -1888,6 +1899,7 @@
 				B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8E1A9572A16E98D00B757A5 /* PeerRecord.swift in Sources */,
+				B5C918F62A67BB35004C6CD5 /* EllipsisLabelView.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B54187B829EF5CA00056E4A9 /* FollowUserFormSheet.swift in Sources */,
 				B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */,
@@ -2612,7 +2624,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
-				branch = "swift-noosphere-v0.12.1";
+				branch = "swift-noosphere-v0.13.1";
 				kind = branch;
 			};
 		};

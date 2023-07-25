@@ -108,10 +108,7 @@ struct StoryUserView: View {
                         }
                     },
                     label: {
-                        Image(systemName: "ellipsis")
-                            .frame(width: AppTheme.minTouchSize, height: AppTheme.minTouchSize)
-                            .background(.background)
-                            .foregroundColor(.secondary)
+                        EllipsisLabelView()
                     }
                 ).disabled(story.user.category == .ourself)
             }

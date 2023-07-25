@@ -68,12 +68,18 @@ struct SettingsView: View {
                             }
                         )
                         
-                        LabeledContent(
-                            "Sphere",
-                            value: app.state.sphereIdentity ?? unknown
+                        NavigationLink(
+                            destination: {
+                                SphereSettingsView(app: app)
+                            },
+                            label: {
+                                LabeledContent(
+                                    "Sphere",
+                                    value: app.state.sphereIdentity ?? unknown
+                                )
+                                .lineLimit(1)
+                            }
                         )
-                        .lineLimit(1)
-                        .textSelection(.enabled)
 
                         LabeledContent(
                             "Version",
@@ -98,9 +104,7 @@ struct SettingsView: View {
                     header: {
                         Text("Noosphere")
                     },
-                    footer: {
-                        Text("Noosphere is a protocol for thought. It's decentralized, so your data belongs to you.")
-                    }
+                    footer: { }
                 )
                 
                 SwiftUI.Link(

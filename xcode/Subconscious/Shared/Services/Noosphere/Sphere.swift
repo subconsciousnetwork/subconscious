@@ -11,6 +11,7 @@ import SwiftNoosphere
 import os
 
 public typealias Cid = String
+public typealias Authorization = String
 
 /// Describes a Sphere.
 /// See `Sphere` for a concrete implementation.
@@ -63,6 +64,12 @@ public protocol SphereProtocol {
     /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
     ///
     func traverse(petname: Petname) async throws -> Sphere
+    
+    func escalateAuthority(mnemonic: String) async throws -> Sphere
+    func authorize(name: String, did: Did) async throws -> Authorization
+    func revoke(authorization: Authorization) async throws -> Void
+    func listAuthorizations() async throws -> [Authorization]
+    func verify(authorization: Authorization) async throws -> Bool
 }
 
 extension SphereProtocol {
@@ -881,6 +888,141 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         ns_sphere_free(sphere)
         let identity = self._identity
         logger.debug("deinit with identity \(identity)")
+    }
+    
+    public func escalateAuthority(mnemonic: String) async throws -> Sphere {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityEscalate(
+                noosphere.noosphere,
+                self.sphere,
+                mnemonic
+            ) { error, sphere in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                guard sphere != nil else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                
+                do {
+                    let sphere = try Sphere(noosphere: self.noosphere, sphere: sphere)
+                    continuation.resume(returning: sphere)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+                
+                return
+            }
+        }
+    }
+    
+    public func listAuthorizations() async throws -> [Authorization] {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityAuthorizationsList(
+                noosphere.noosphere,
+                self.sphere
+            ) { error, authorizations in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                guard let authorizations = authorizations else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                
+                defer {
+                    ns_string_array_free(authorizations)
+                }
+                
+                continuation.resume(returning: authorizations.toStringArray())
+                return
+            }
+        }
+    }
+    
+    public func authorize(name: String, did: Did) async throws -> Authorization {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityAuthorize(
+                noosphere.noosphere,
+                self.sphere,
+                name,
+                did.did
+            ) { error, authorization in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                guard let authorization = authorization else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                defer {
+                    ns_string_free(authorization)
+                }
+                
+                continuation.resume(returning: String(cString: authorization))
+                return
+            }
+        }
+    }
+    
+    public func revoke(authorization: Authorization) async throws -> Void {
+        let _: String = try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityAuthorizationRevoke(
+                noosphere.noosphere,
+                self.sphere,
+                authorization
+            ) { error in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                // We have to return something other than Void or () here to appease the compiler?
+                continuation.resume(returning: authorization)
+                return
+            }
+        }
+    }
+    
+    public func verify(authorization: Authorization) async throws -> Bool {
+        do {
+            let _: Int = try await withCheckedThrowingContinuation { continuation in
+                nsSphereAuthorityAuthorizationVerify(
+                    noosphere.noosphere,
+                    self.sphere,
+                    authorization
+                ) { error in
+                    if let error = Noosphere.readErrorMessage(error) {
+                        continuation.resume(
+                            throwing: NoosphereError.foreignError(error)
+                        )
+                        return
+                    }
+                    
+                    continuation.resume(returning: 1)
+                    return
+                }
+            }
+            
+            return true
+        } catch {
+            return false
+        }
     }
 }
 

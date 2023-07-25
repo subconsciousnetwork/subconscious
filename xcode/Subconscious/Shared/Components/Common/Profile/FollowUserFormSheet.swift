@@ -405,7 +405,7 @@ struct FollowUserFormModel: ModelProtocol {
 
 // MARK: Cursors
 
-struct PetnameFieldCursor: CursorProtocol {
+private struct PetnameFieldCursor: CursorProtocol {
     typealias Model = FollowUserFormModel
     typealias ViewModel = FormField<String, Petname.Name>
 
@@ -424,7 +424,7 @@ struct PetnameFieldCursor: CursorProtocol {
     }
 }
 
-struct DidFieldCursor: CursorProtocol {
+private struct DidFieldCursor: CursorProtocol {
     typealias Model = FollowUserFormModel
     typealias ViewModel = FormField<String, Did>
 
