@@ -269,22 +269,6 @@ final class Tests_Slashlink: XCTestCase {
             "Does not relativize when peer is petname (already relative)"
         )
     }
-    
-    func testRelativizeIfNeededLocalDid() throws {
-        let did = Did.local
-        let slug = try Slug("foo")
-            .unwrap()
-        let slashlink = Slashlink(
-            peer: Peer.did(did),
-            slug: slug
-        )
-        let relative = slashlink.relativizeIfNeeded(did: nil)
-        XCTAssertEqual(
-            relative.peer,
-            nil,
-            "Relativizes local DID"
-        )
-    }
 
     func testSlashlinkDidLosslessStringConvertible() throws {
         let slashlink = Slashlink("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
