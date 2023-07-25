@@ -22,9 +22,7 @@ struct GatewayURLSettingsView: View {
                             send: app.send,
                             tag: AppAction.gatewayURLField
                         ),
-                        caption: .text(
-                            "The URL of your preferred Noosphere gateway"
-                        )
+                        caption: "The URL of your preferred Noosphere gateway" 
                     )
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)

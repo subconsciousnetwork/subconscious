@@ -50,6 +50,15 @@ struct RedeemInviteCodeLabel: View {
 struct ValidatedInviteCodeFormField: View {
     @ObservedObject var app: Store<AppModel>
     
+    var caption: String.LocalizationValue {
+        switch app.state.inviteCodeRedemptionStatus {
+        case .failed(_):
+            return "Could not redeem invite code"
+        case _:
+            return "You can find your invite code in your welcome email"
+        }
+    }
+    
     var body: some View {
         ValidatedFormField(
             placeholder: "Enter an invite code",
@@ -58,14 +67,7 @@ struct ValidatedInviteCodeFormField: View {
                 send: app.send,
                 tag: AppAction.inviteCodeFormField
             ),
-            caption: .text(Func.run {
-                switch app.state.inviteCodeRedemptionStatus {
-                case .failed(_):
-                    return "Could not redeem invite code"
-                case _:
-                    return "You can find your invite code in your welcome email"
-                }}
-            )
+            caption: caption
         )
         .autocapitalization(.none)
         .autocorrectionDisabled(true)

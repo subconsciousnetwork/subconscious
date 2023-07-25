@@ -168,6 +168,10 @@ struct FollowUserSheet: View {
     var failFollowError: String?
     var onDismissError: () -> Void
     
+    var caption: String.LocalizationValue {
+        String.LocalizationValue(state.petnameFieldCaption ?? "")
+    }
+    
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
             if let user = state.user {
@@ -189,7 +193,7 @@ struct FollowUserSheet: View {
                     send: send,
                     tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
                 ),
-                caption: .text(state.petnameFieldCaption ?? "")
+                caption: caption
             )
             .textFieldStyle(.roundedBorder)
             .lineLimit(1)

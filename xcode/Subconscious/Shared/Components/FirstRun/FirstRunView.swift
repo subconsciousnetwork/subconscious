@@ -37,6 +37,15 @@ struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
+    var inviteCodeCaption: String.LocalizationValue {
+        switch app.state.inviteCodeRedemptionStatus {
+        case .failed(_):
+            return "Could not redeem invite code"
+        case _:
+            return "You can find your invite code in your welcome email"
+        }
+    }
+    
     var body: some View {
         NavigationStack(
             path: Binding(
@@ -85,14 +94,7 @@ struct FirstRunView: View {
                             send: app.send,
                             tag: AppAction.inviteCodeFormField
                         ),
-                        caption: .text(Func.run {
-                            switch app.state.inviteCodeRedemptionStatus {
-                            case .failed(_):
-                                return "Could not redeem invite code"
-                            case _:
-                                return "You can find your invite code in your welcome email"
-                            }
-                        }),
+                        caption: inviteCodeCaption,
                         onFocusChanged: { focused in
                             // User finished editing the field
                             if !focused {

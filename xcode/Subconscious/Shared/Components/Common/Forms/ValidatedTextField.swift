@@ -9,11 +9,6 @@ import SwiftUI
 import Combine
 import ObservableStore
 
-enum FieldCaption {
-    case none
-    case text(String)
-}
-
 struct ValidatedFormField<Output: Equatable>: View {
     @State private var innerText: String = ""
     @FocusState private var focused: Bool
@@ -22,7 +17,7 @@ struct ValidatedFormField<Output: Equatable>: View {
     var placeholder: String
     var field: FormField<String, Output>
     var send: (FormFieldAction<String>) -> Void
-    var caption: FieldCaption = .none
+    var caption: String.LocalizationValue? = nil
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
     var submitLabel: SubmitLabel = .done
@@ -86,20 +81,15 @@ struct ValidatedFormField<Output: Equatable>: View {
                     invalidBadge
                 }
             }
-            Group {
-                switch (caption) {
-                case .text(let caption):
-                    Text(caption)
-                        .lineLimit(1)
-                case _:
-                    EmptyView()
-                }
+            if let caption = caption {
+                Text(String(localized: caption))
+                    .lineLimit(1)
+                    .foregroundColor(
+                        field.shouldPresentAsInvalid ? Color.red : Color.secondary
+                    )
+                    .animation(.default, value: field.shouldPresentAsInvalid)
+                    .font(.caption)
             }
-            .foregroundColor(
-                field.shouldPresentAsInvalid ? Color.red : Color.secondary
-            )
-            .animation(.default, value: field.shouldPresentAsInvalid)
-            .font(.caption)
         }
         .onAppear {
             innerText = field.value
@@ -114,26 +104,26 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in "" }),
                 send: { _ in },
-                caption: .text("Lowercase letters and numbers only.")
+                caption: "Lowercase letters and numbers only."
             )
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in nil as String? }),
                 send: { _ in },
-                caption: .text("Lowercase letters and numbers only.")
+                caption: "Lowercase letters and numbers only."
             )
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in "" }),
                 send: { _ in },
-                caption: .text("Lowercase letters and numbers only.")
+                caption: "Lowercase letters and numbers only."
             )
             .textFieldStyle(.roundedBorder)
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "A very long run of text to test how this interacts with the icon", validate: { _ in nil as String? }),
                 send: { _ in },
-                caption: .text("Lowercase letters and numbers only.")
+                caption: "Lowercase letters and numbers only."
             )
             .textFieldStyle(.roundedBorder)
             
@@ -145,7 +135,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     placeholder: "nickname",
                     field: FormField(value: "", validate: { _ in "" }),
                     send: { _ in },
-                    caption: .text("Lowercase letters and numbers only."),
+                    caption: "Lowercase letters and numbers only.",
                     autoFocus: true
                 )
                 .formField()
@@ -153,7 +143,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     placeholder: "nickname",
                     field: FormField(value: "", validate: { _ in nil as String? }),
                     send: { _ in },
-                    caption: .text("Lowercase letters and numbers only.")
+                    caption: "Lowercase letters and numbers only."
                 )
                 .formField()
             }
