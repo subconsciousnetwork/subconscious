@@ -58,14 +58,14 @@ struct ValidatedInviteCodeFormField: View {
                 send: app.send,
                 tag: AppAction.inviteCodeFormField
             ),
-            caption: Group {
+            caption: .text(Func.run {
                 switch app.state.inviteCodeRedemptionStatus {
                 case .failed(_):
-                    Text("Could not redeem invite code")
+                    return "Could not redeem invite code"
                 case _:
-                    Text("You can find your invite code in your welcome email")
-                }
-            }
+                    return "You can find your invite code in your welcome email"
+                }}
+            )
         )
         .autocapitalization(.none)
         .autocorrectionDisabled(true)

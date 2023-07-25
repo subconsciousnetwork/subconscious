@@ -154,7 +154,7 @@ struct EditProfileSheet: View {
                                 send: send,
                                 tag: EditProfileSheetAction.nicknameField
                             ),
-                            caption: Text(
+                            caption: .text(
                                 "Lowercase letters, numbers and dashes only."
                             )
                         )
@@ -174,7 +174,7 @@ struct EditProfileSheet: View {
                                 send: send,
                                 tag: EditProfileSheetAction.bioField
                             ),
-                            caption: Text(
+                            caption: .text(
                                 "A short description of yourself (\(state.bioField.value.count)/280)"
                             ),
                             axis: .vertical

@@ -22,7 +22,7 @@ struct GatewayURLSettingsView: View {
                             send: app.send,
                             tag: AppAction.gatewayURLField
                         ),
-                        caption: Text(
+                        caption: .text(
                             "The URL of your preferred Noosphere gateway"
                         )
                     )

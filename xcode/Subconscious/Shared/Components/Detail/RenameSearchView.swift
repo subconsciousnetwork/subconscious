@@ -22,7 +22,6 @@ struct RenameSearchView: View {
                     placeholder: String(localized: "Enter link for note"),
                     field: state.queryField,
                     send: { action in send(QueryFieldCursor.tag(action)) },
-                    caption: AnyView(EmptyView()),
                     autoFocus: true
                 )
                 .modifier(RoundedTextFieldViewModifier())

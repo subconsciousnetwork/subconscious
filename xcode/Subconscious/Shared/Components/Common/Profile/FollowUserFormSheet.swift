@@ -295,8 +295,7 @@ struct FollowUserFormView: View {
                         send: send,
                         tag: FollowUserFormAction.didField
                     ),
-                    caption: Text("e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
-                        .lineLimit(1),
+                    caption: .text("e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"),
                     axis: .vertical
                 )
                 .lineLimit(12)
@@ -315,7 +314,7 @@ struct FollowUserFormView: View {
                         send: send,
                         tag: FollowUserFormAction.petnameField
                     ),
-                    caption: Text(state.failFollowMessage ?? "Lowercase letters, numbers and dashes only.")
+                    caption: .text(state.failFollowMessage ?? "Lowercase letters, numbers and dashes only.")
                 )
                 .lineLimit(1)
                 .textInputAutocapitalization(.never)
