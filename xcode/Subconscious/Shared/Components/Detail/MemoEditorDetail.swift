@@ -1690,15 +1690,6 @@ struct MemoEditorDetailModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
-    static func tryWikilink(link: EntryLink) -> String {
-        switch (link.address.peer) {
-        case .none:
-            return Markup.Wikilink(text: link.linkableTitle).markup
-        case _:
-            return link.address.verbatimMarkup
-        }
-    }
-    
     static func selectLinkSuggestion(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
