@@ -33,6 +33,8 @@ public enum Peer: Hashable, Codable, CustomStringConvertible {
     /// Get markup form of peer (Either DID or petname)
     public var markup: String {
         switch self {
+        case .did(let did) where did.isLocal:
+            return ""
         case .did(let did):
             return did.description
         case .petname(let petname):
