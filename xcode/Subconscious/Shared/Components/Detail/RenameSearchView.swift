@@ -21,23 +21,15 @@ struct RenameSearchView: View {
                 ValidatedFormField(
                     placeholder: String(localized: "Enter link for note"),
                     field: state.queryField,
-                    send: { action in send(.queryField(action))},
-                    caption: AnyView(EmptyView())
+                    send: { action in send(QueryFieldCursor.tag(action)) },
+                    caption: AnyView(EmptyView()),
+                    autoFocus: true
                 )
-                
-                SearchTextField(
-                    placeholder: String(localized: "Enter link for note"),
-                    text: Binding(
-                        get: { state.query },
-                        send: send,
-                        tag: RenameSearchAction.setQuery
-                    ),
-                    autofocus: true,
-                    autofocusDelay: 0.5
-                )
+                .modifier(RoundedTextFieldViewModifier())
                 .submitLabel(.done)
                 .padding(.bottom, AppTheme.padding)
                 .padding(.horizontal, AppTheme.padding)
+                
                 List(state.renameSuggestions) { suggestion in
                     Button(
                         action: {
@@ -78,7 +70,6 @@ enum RenameSearchAction: Hashable {
 
 struct RenameSearchModel: ModelProtocol {
     var subject: Slashlink? = nil
-    var query = ""
     var queryField: FormField<String, String> = FormField(value: "", validate: { s in s })
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
@@ -115,7 +106,7 @@ struct RenameSearchModel: ModelProtocol {
         case .refreshRenameSuggestions:
             return update(
                 state: state,
-                action: .setQuery(state.query),
+                action: .setQuery(state.queryField.value),
                 environment: environment
             )
         case .setRenameSuggestions(let suggestions):
@@ -157,11 +148,9 @@ struct RenameSearchModel: ModelProtocol {
         environment: AppEnvironment,
         query: String
     ) -> Update<RenameSearchModel> {
-        var model = state
-        model.query = query
         guard let current = state.subject else {
             logger.log("Rename query updated, but no subject set. Doing nothing.")
-            return Update(state: model)
+            return Update(state: state)
         }
         let fx: Fx<RenameSearchAction> = environment.data
             .searchRenameSuggestionsPublisher(
@@ -179,7 +168,12 @@ struct RenameSearchModel: ModelProtocol {
                 )
             })
             .eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
+        
+        return update(
+            state: state,
+            action: .queryField(.setValue(input: query)),
+            environment: environment
+        ).mergeFx(fx)
     }
     
     /// Set rename suggestions
@@ -250,6 +244,11 @@ struct QueryFieldCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .queryField(action)
+        switch (action) {
+        case .setValue(let query):
+            return .setQuery(query)
+        case _:
+            return .queryField(action)
+        }
     }
 }
