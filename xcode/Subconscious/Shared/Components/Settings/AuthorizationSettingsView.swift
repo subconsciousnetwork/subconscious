@@ -49,7 +49,6 @@ struct AuthorizationSettingsView: View {
             
             Section(
                 content: {
-                    
                     ValidatedFormField(
                         placeholder: "DID",
                         field: state.form.did,
@@ -57,8 +56,9 @@ struct AuthorizationSettingsView: View {
                             send: app.send,
                             tag: { a in .authorization(.form(.didField(a))) }
                         ),
-                        caption: Text(
-                            "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+                        caption: String(
+                            localized:
+                                "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
                         ),
                         axis: .vertical
                     )
@@ -74,8 +74,8 @@ struct AuthorizationSettingsView: View {
                             send: app.send,
                             tag: { a in .authorization(.form(.nameField(a))) }
                         ),
-                        caption: Text(
-                            "The name for this authorization"
+                        caption: String(
+                            localized: "The name for this authorization"
                         )
                     )
                     .textInputAutocapitalization(.never)
