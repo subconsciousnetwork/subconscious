@@ -340,4 +340,12 @@ final class Tests_Slashlink: XCTestCase {
         
         XCTAssertEqual(combined, Slashlink(petname: Petname("jordan.chris.ben.gordon")!, slug: Slug("ok")!))
     }
+    
+    func testLocalAddressIsNotEqualToPublicAddress() {
+        let slug = Slug("lmao")!
+        let a = Slashlink(peer: .did(Did.local), slug: slug)
+        let b = Slashlink(peer: .none, slug: slug)
+        
+        XCTAssertFalse(a == b)
+    }
 }
