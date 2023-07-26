@@ -588,10 +588,10 @@ actor DataService {
         let from = from.relativizeIfNeeded(did: identity)
         let to = to.relativizeIfNeeded(did: identity)
         guard from != to else {
-            throw DataServiceError.fileExists(to.description)
+            throw DataServiceError.fileExists(to.verbatim)
         }
         guard await !self.exists(to) else {
-            throw DataServiceError.fileExists(to.description)
+            throw DataServiceError.fileExists(to.verbatim)
         }
         let fromMemo = try await readMemo(address: from)
         // Make a copy representing new location and set new title and slug

@@ -43,7 +43,7 @@ public struct Slashlink:
         return "\(peer.verbatimMarkup)\(slug.verbatimMarkup)"
     }
 
-    public var id: String { description }
+    public var id: String { verbatim }
     
     // The normalized markup form of the slashlink
     public var markup: String { description }
