@@ -282,8 +282,8 @@ struct FollowUserFormView: View {
     var state: FollowUserFormModel
     var send: (FollowUserFormAction) -> Void
     
-    var petnameCaption: String.LocalizationValue {
-        String.LocalizationValue(state.failFollowMessage ?? "Lowercase letters, numbers and dashes only.")
+    var petnameCaption: String {
+        state.failFollowMessage ?? "Lowercase letters, numbers and dashes only."
     }
     
     var body: some View {
@@ -299,7 +299,9 @@ struct FollowUserFormView: View {
                         send: send,
                         tag: FollowUserFormAction.didField
                     ),
-                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                    caption: String(
+                        localized: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+                    ),
                     axis: .vertical
                 )
                 .lineLimit(12)

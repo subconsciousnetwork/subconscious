@@ -37,12 +37,12 @@ struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
-    var inviteCodeCaption: String.LocalizationValue {
+    var inviteCodeCaption: String {
         switch app.state.inviteCodeRedemptionStatus {
         case .failed(_):
-            return "Could not redeem invite code"
+            return String(localized: "Could not redeem invite code")
         case _:
-            return "You can find your invite code in your welcome email"
+            return String(localized: "You can find your invite code in your welcome email")
         }
     }
     

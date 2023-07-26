@@ -17,7 +17,7 @@ struct ValidatedFormField<Output: Equatable>: View {
     var placeholder: String
     var field: FormField<String, Output>
     var send: (FormFieldAction<String>) -> Void
-    var caption: String.LocalizationValue? = nil
+    var caption: String? = nil
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
     var submitLabel: SubmitLabel = .done
@@ -82,7 +82,7 @@ struct ValidatedFormField<Output: Equatable>: View {
                 }
             }
             if let caption = caption {
-                Text(String(localized: caption))
+                Text(verbatim: caption)
                     .lineLimit(1)
                     .foregroundColor(
                         field.shouldPresentAsInvalid ? Color.red : Color.secondary
@@ -104,26 +104,26 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in "" }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: String(localized: "Lowercase letters and numbers only.")
             )
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in nil as String? }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: String(localized: "Lowercase letters and numbers only.")
             )
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "", validate: { _ in "" }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: String(localized: "Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
             ValidatedFormField(
                 placeholder: "nickname",
                 field: FormField(value: "A very long run of text to test how this interacts with the icon", validate: { _ in nil as String? }),
                 send: { _ in },
-                caption: "Lowercase letters and numbers only."
+                caption: String(localized: "Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
             
@@ -135,7 +135,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     placeholder: "nickname",
                     field: FormField(value: "", validate: { _ in "" }),
                     send: { _ in },
-                    caption: "Lowercase letters and numbers only.",
+                    caption: String(localized: "Lowercase letters and numbers only."),
                     autoFocus: true
                 )
                 .formField()
@@ -143,7 +143,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     placeholder: "nickname",
                     field: FormField(value: "", validate: { _ in nil as String? }),
                     send: { _ in },
-                    caption: "Lowercase letters and numbers only."
+                    caption: String(localized: "Lowercase letters and numbers only.")
                 )
                 .formField()
             }

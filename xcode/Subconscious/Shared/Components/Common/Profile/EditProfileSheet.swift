@@ -140,10 +140,8 @@ struct EditProfileSheet: View {
         )
     }
     
-    var bioCaption: String.LocalizationValue {
-        String.LocalizationValue(
-            "A short description of yourself (\(state.bioField.value.count)/280)"
-        )
+    var bioCaption: String {
+        "A short description of yourself (\(state.bioField.value.count)/280)"
     }
     
     var body: some View {
@@ -160,7 +158,9 @@ struct EditProfileSheet: View {
                                 send: send,
                                 tag: EditProfileSheetAction.nicknameField
                             ),
-                            caption: "Lowercase letters, numbers and dashes only."
+                            caption: String(
+                                localized: "Lowercase letters, numbers and dashes only."
+                            )
                         )
                         .lineLimit(1)
                         .textInputAutocapitalization(.never)

@@ -168,8 +168,8 @@ struct FollowUserSheet: View {
     var failFollowError: String?
     var onDismissError: () -> Void
     
-    var caption: String.LocalizationValue {
-        String.LocalizationValue(state.petnameFieldCaption ?? "")
+    var caption: String {
+        state.petnameFieldCaption ?? ""
     }
     
     var body: some View {
