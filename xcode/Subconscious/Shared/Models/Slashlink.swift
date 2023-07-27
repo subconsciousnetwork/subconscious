@@ -31,7 +31,7 @@ public struct Slashlink:
     
     public var description: String {
         guard let peer = peer else {
-            return slug.description
+            return slug.markup
         }
         return "\(peer.description)\(slug.markup)"
     }

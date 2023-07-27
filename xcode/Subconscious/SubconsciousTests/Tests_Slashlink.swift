@@ -358,4 +358,14 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertEqual(link.verbatim, "did:subconscious:local/lmao")
         XCTAssertEqual(link.verbatimMarkup, "did:subconscious:local/lmao")
     }
+    
+    func testPeerlessPublicAddressStringFormatting() {
+        let slug = Slug("lmao")!
+        let link = Slashlink(peer: nil, slug: slug)
+        
+        XCTAssertEqual(link.markup, "/lmao")
+        XCTAssertEqual(link.description, "/lmao")
+        XCTAssertEqual(link.verbatim, "/lmao")
+        XCTAssertEqual(link.verbatimMarkup, "/lmao")
+    }
 }
