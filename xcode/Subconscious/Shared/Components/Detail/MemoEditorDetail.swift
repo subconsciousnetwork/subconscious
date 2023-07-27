@@ -1714,7 +1714,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             through: { markup in
                 switch markup {
                 case .slashlink(let slashlink):
-                    let replacement = link.address.verbatimMarkup
+                    let replacement = link.address.markup
                     let range = NSRange(
                         slashlink.span.range,
                         in: state.editor.text
@@ -1728,7 +1728,7 @@ struct MemoEditorDetailModel: ModelProtocol {
                                     text: link.linkableTitle
                                 ).markup
                             case _:
-                                return link.address.verbatimMarkup
+                                return link.address.markup
                         }
                     }
                     let range = NSRange(
@@ -1737,7 +1737,7 @@ struct MemoEditorDetailModel: ModelProtocol {
                     )
                     return (range, replacement)
                 case .none:
-                    let replacement = link.address.verbatimMarkup
+                    let replacement = link.address.markup
                     return (state.editor.selection, replacement)
                 }
             }
