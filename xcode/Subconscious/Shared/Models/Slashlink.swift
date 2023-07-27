@@ -30,10 +30,7 @@ public struct Slashlink:
     let slug: Slug
     
     public var description: String {
-        guard let peer = peer else {
-            return slug.markup
-        }
-        return "\(peer.description)\(slug.markup)"
+        verbatim.lowercased()
     }
 
     public var verbatim: String {

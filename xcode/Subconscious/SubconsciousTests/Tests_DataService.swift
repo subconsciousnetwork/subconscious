@@ -277,7 +277,7 @@ final class Tests_DataService: XCTestCase {
         
         let addressA2 = await environment.data
             .findUniqueAddressFor(title, audience: .local)
-        XCTAssertEqual(addressA2?.description, "/a-2")
+        XCTAssertEqual(addressA2?.markup, "/a-2")
     }
     
     func testReadMemoDetail() async throws {
