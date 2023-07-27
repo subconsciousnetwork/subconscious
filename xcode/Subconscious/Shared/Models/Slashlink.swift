@@ -31,9 +31,9 @@ public struct Slashlink:
     
     public var description: String {
         guard let peer = peer else {
-            return slug.markup
+            return slug.description
         }
-        return "\(peer.markup)\(slug.markup)"
+        return "\(peer.description)\(slug.markup)"
     }
 
     public var verbatim: String {
@@ -43,10 +43,15 @@ public struct Slashlink:
         return "\(peer.verbatimMarkup)\(slug.verbatimMarkup)"
     }
 
-    public var id: String { verbatim }
+    public var id: String { description }
     
     // The normalized markup form of the slashlink
-    public var markup: String { description }
+    public var markup: String {
+        guard let peer = peer else {
+            return slug.markup
+        }
+        return "\(peer.markup)\(slug.markup)"
+    }
 
     // The non-normalized markup form of the slashlink
     public var verbatimMarkup: String { verbatim }
