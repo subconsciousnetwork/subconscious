@@ -18,19 +18,17 @@ struct RenameSearchView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                SearchTextField(
+                ValidatedFormField(
                     placeholder: String(localized: "Enter link for note"),
-                    text: Binding(
-                        get: { state.query },
-                        send: send,
-                        tag: RenameSearchAction.setQuery
-                    ),
-                    autofocus: true,
-                    autofocusDelay: 0.5
+                    field: state.queryField,
+                    send: { action in send(QueryFieldCursor.tag(action)) },
+                    autoFocus: true
                 )
+                .modifier(RoundedTextFieldViewModifier())
                 .submitLabel(.done)
                 .padding(.bottom, AppTheme.padding)
                 .padding(.horizontal, AppTheme.padding)
+                
                 List(state.renameSuggestions) { suggestion in
                     Button(
                         action: {
@@ -62,6 +60,7 @@ enum RenameSearchAction: Hashable {
     case setSubject(_ address: Slashlink?)
     /// Set the query string for the search input field
     case setQuery(_ query: String)
+    case queryField(FormFieldAction<String>)
     case refreshRenameSuggestions
     case setRenameSuggestions([RenameSuggestion])
     case failRenameSuggestions(String)
@@ -70,7 +69,7 @@ enum RenameSearchAction: Hashable {
 
 struct RenameSearchModel: ModelProtocol {
     var subject: Slashlink? = nil
-    var query = ""
+    var queryField: FormField<String, String> = FormField(value: "", validate: { s in s })
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
     
@@ -85,6 +84,12 @@ struct RenameSearchModel: ModelProtocol {
         environment: AppEnvironment
     ) -> ObservableStore.Update<RenameSearchModel> {
         switch action {
+        case let .queryField(action):
+            return QueryFieldCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
         case let .setSubject(subject):
             return setSubject(
                 state: state,
@@ -100,7 +105,7 @@ struct RenameSearchModel: ModelProtocol {
         case .refreshRenameSuggestions:
             return update(
                 state: state,
-                action: .setQuery(state.query),
+                action: .setQuery(state.queryField.value),
                 environment: environment
             )
         case .setRenameSuggestions(let suggestions):
@@ -142,11 +147,9 @@ struct RenameSearchModel: ModelProtocol {
         environment: AppEnvironment,
         query: String
     ) -> Update<RenameSearchModel> {
-        var model = state
-        model.query = query
         guard let current = state.subject else {
             logger.log("Rename query updated, but no subject set. Doing nothing.")
-            return Update(state: model)
+            return Update(state: state)
         }
         let fx: Fx<RenameSearchAction> = environment.data
             .searchRenameSuggestionsPublisher(
@@ -164,7 +167,12 @@ struct RenameSearchModel: ModelProtocol {
                 )
             })
             .eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
+        
+        return update(
+            state: state,
+            action: .queryField(.setValue(input: query)),
+            environment: environment
+        ).mergeFx(fx)
     }
     
     /// Set rename suggestions
@@ -216,6 +224,30 @@ struct RenameSearchView_Previews: PreviewProvider {
                 ),
                 send: { action in }
             )
+        }
+    }
+}
+
+struct QueryFieldCursor: CursorProtocol {
+    typealias Model = RenameSearchModel
+    typealias ViewModel = FormField<String, String>
+
+    static func get(state: Model) -> ViewModel {
+        state.queryField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.queryField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch (action) {
+        case .setValue(let query):
+            return .setQuery(query)
+        case _:
+            return .queryField(action)
         }
     }
 }

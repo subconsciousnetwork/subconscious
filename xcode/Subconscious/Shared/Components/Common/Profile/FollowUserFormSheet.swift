@@ -282,6 +282,10 @@ struct FollowUserFormView: View {
     var state: FollowUserFormModel
     var send: (FollowUserFormAction) -> Void
     
+    var petnameCaption: String {
+        state.failFollowMessage ?? "Lowercase letters, numbers and dashes only."
+    }
+    
     var body: some View {
         Section(header: Text("User To Follow")) {
             HStack(alignment: .top) {
@@ -295,8 +299,9 @@ struct FollowUserFormView: View {
                         send: send,
                         tag: FollowUserFormAction.didField
                     ),
-                    caption: Text("e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
-                        .lineLimit(1),
+                    caption: String(
+                        localized: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+                    ),
                     axis: .vertical
                 )
                 .lineLimit(12)
@@ -315,7 +320,7 @@ struct FollowUserFormView: View {
                         send: send,
                         tag: FollowUserFormAction.petnameField
                     ),
-                    caption: Text(state.failFollowMessage ?? "Lowercase letters, numbers and dashes only.")
+                    caption: petnameCaption
                 )
                 .lineLimit(1)
                 .textInputAutocapitalization(.never)

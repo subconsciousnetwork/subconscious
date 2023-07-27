@@ -140,6 +140,10 @@ struct EditProfileSheet: View {
         )
     }
     
+    var bioCaption: String {
+        "A short description of yourself (\(state.bioField.value.count)/280)"
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -154,8 +158,8 @@ struct EditProfileSheet: View {
                                 send: send,
                                 tag: EditProfileSheetAction.nicknameField
                             ),
-                            caption: Text(
-                                "Lowercase letters, numbers and dashes only."
+                            caption: String(
+                                localized: "Lowercase letters, numbers and dashes only."
                             )
                         )
                         .lineLimit(1)
@@ -174,9 +178,7 @@ struct EditProfileSheet: View {
                                 send: send,
                                 tag: EditProfileSheetAction.bioField
                             ),
-                            caption: Text(
-                                "A short description of yourself (\(state.bioField.value.count)/280)"
-                            ),
+                            caption: bioCaption,
                             axis: .vertical
                         )
                         .textInputAutocapitalization(.never)
