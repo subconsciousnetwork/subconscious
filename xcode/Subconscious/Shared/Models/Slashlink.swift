@@ -30,10 +30,7 @@ public struct Slashlink:
     let slug: Slug
     
     public var description: String {
-        guard let peer = peer else {
-            return slug.markup
-        }
-        return "\(peer.markup)\(slug.markup)"
+        verbatim.lowercased()
     }
 
     public var verbatim: String {
@@ -46,7 +43,12 @@ public struct Slashlink:
     public var id: String { description }
     
     // The normalized markup form of the slashlink
-    public var markup: String { description }
+    public var markup: String {
+        guard let peer = peer else {
+            return slug.markup
+        }
+        return "\(peer.markup)\(slug.markup)"
+    }
 
     // The non-normalized markup form of the slashlink
     public var verbatimMarkup: String { verbatim }
