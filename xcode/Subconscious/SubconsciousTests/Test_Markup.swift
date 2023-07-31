@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import Subconscious
+@testable import SubconsciousCore
 
 class Test_Markup: XCTestCase {
     func testWikilinkLosslessStringConvertable() throws {

@@ -8,6 +8,7 @@
 import XCTest
 import ObservableStore
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_MarkupText: XCTestCase {
     func testRequestFocus() {

@@ -254,9 +254,6 @@
 		B80890AA2A0693C40087E091 /* Tests_HeaderSubtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80890A92A0693C40087E091 /* Tests_HeaderSubtext.swift */; };
 		B8099F022A3B6FA50014FC2E /* Tests_MemoRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8099F012A3B6FA50014FC2E /* Tests_MemoRecord.swift */; };
 		B809AFF428D8E7BC00D0589A /* Tests_MarkupText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */; };
-		B80C9E432A2A7CE400E152FB /* Tests_HeaderSubtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80C9E422A2A7CE400E152FB /* Tests_HeaderSubtext.swift */; };
-		B80C9E452A2A7CF100E152FB /* Tests_Audience.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80C9E442A2A7CF100E152FB /* Tests_Audience.swift */; };
-		B80C9E472A2A7D1400E152FB /* LoadingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80C9E462A2A7D1400E152FB /* LoadingState.swift */; };
 		B80CC805299D14C900C4D7C0 /* Tests_Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */; };
 		B80CC807299D4DF000C4D7C0 /* Tests_SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80CC806299D4DF000C4D7C0 /* Tests_SQLite3Database.swift */; };
 		B81D063D29F1C1E400593BBA /* Tests_SphereFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81D063C29F1C1E400593BBA /* Tests_SphereFile.swift */; };
@@ -1891,9 +1888,7 @@
 				B8E62AE829D61E69008F7E74 /* Tests_UserDefaultProperty.swift in Sources */,
 				B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */,
 				B80CC805299D14C900C4D7C0 /* Tests_Memo.swift in Sources */,
-				B80C9E432A2A7CE400E152FB /* Tests_HeaderSubtext.swift in Sources */,
 				B8F27EE42970CD8F00A33E78 /* Tests_Sphere.swift in Sources */,
-				B80C9E452A2A7CF100E152FB /* Tests_Audience.swift in Sources */,
 				B56C2D4E2A4962D00062DAC0 /* Tests_TranscludeService.swift in Sources */,
 				B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */,
 				B8099F022A3B6FA50014FC2E /* Tests_MemoRecord.swift in Sources */,
@@ -1913,7 +1908,6 @@
 				B8EA3757299EBA5500D98E2B /* Tests_NoosphereService.swift in Sources */,
 				B88CC95B284FF64300994928 /* Tests_OrderedCollectionUtilities.swift in Sources */,
 				B83B19A92A0183AA007657D9 /* Tests_Did+SubconsciousLocal.swift in Sources */,
-				B80C9E472A2A7D1400E152FB /* LoadingState.swift in Sources */,
 				B8C80F0329FC20A300BAC84D /* Tests_Peer.swift in Sources */,
 				B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */,
 				B5F6ADCC29C1323900690DE4 /* Tests_FormField.swift in Sources */,

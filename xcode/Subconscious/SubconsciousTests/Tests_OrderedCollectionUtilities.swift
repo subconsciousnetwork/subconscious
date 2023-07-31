@@ -8,6 +8,7 @@
 import XCTest
 import OrderedCollections
 @testable import Subconscious
+@testable import SubconsciousCore
 
 class Tests_OrderedCollectionUtilities: XCTestCase {
     func testSetDefault() throws {

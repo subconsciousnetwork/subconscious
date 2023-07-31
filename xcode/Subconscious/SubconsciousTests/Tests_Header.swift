@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import Subconscious
+@testable import SubconsciousCore
 
 class Tests_Header: XCTestCase {
     func testHeaderTitleNormalization() throws {

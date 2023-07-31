@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_Config: XCTestCase {
     func testLoadBuildVars() throws {
