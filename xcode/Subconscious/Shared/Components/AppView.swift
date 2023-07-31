@@ -11,7 +11,9 @@ import os
 import Combine
 
 /// Top-level view for app
-struct AppView: View {
+public struct AppView: View {
+    public init() {}
+
     /// Store for global application state
     @StateObject private var store = Store(
         state: AppModel(),
@@ -20,7 +22,7 @@ struct AppView: View {
     )
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
 
-    var body: some View {
+    public var body: some View {
         ZStack {
             VStack(spacing: 0) {
                 if Config.default.appTabs {

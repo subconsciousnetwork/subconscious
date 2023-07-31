@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B8EB29FA26F27797006E97C3"
                BuildableName = "Subconscious.app"
-               BlueprintName = "Subconscious (iOS)"
+               BlueprintName = "Unconscious (iOS)"
                ReferencedContainer = "container:Subconscious.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -76,7 +76,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B8EB29FA26F27797006E97C3"
             BuildableName = "Subconscious.app"
-            BlueprintName = "Subconscious (iOS)"
+            BlueprintName = "Unconscious (iOS)"
             ReferencedContainer = "container:Subconscious.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -100,7 +100,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B8EB29FA26F27797006E97C3"
             BuildableName = "Subconscious.app"
-            BlueprintName = "Subconscious (iOS)"
+            BlueprintName = "Unconscious (iOS)"
             ReferencedContainer = "container:Subconscious.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
