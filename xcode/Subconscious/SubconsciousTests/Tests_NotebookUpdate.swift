@@ -8,6 +8,7 @@
 import XCTest
 import ObservableStore
 @testable import Subconscious
+@testable import SubconsciousCore
 
 /// Tests for Notebook.update
 class Tests_NotebookUpdate: XCTestCase {

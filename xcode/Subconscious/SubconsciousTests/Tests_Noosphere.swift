@@ -8,6 +8,7 @@
 import XCTest
 import Noosphere
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_Noosphere: XCTestCase {
     func testCallWithError() throws {

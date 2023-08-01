@@ -9,6 +9,7 @@ import XCTest
 import ObservableStore
 import Combine
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_MemoViewerDetailMetaSheet: XCTestCase {
     func testSetAddress() throws {

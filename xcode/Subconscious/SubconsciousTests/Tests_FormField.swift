@@ -10,6 +10,7 @@ import XCTest
 import ObservableStore
 import SwiftUI
 @testable import Subconscious
+@testable import SubconsciousCore
 
 class Tests_FormField: XCTestCase {
     static func validateStringIsHello(input: String) -> String? {

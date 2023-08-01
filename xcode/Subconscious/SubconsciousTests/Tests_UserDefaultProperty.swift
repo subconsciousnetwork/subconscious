@@ -8,6 +8,7 @@
 import XCTest
 import Combine
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_UserDefaultProperty: XCTestCase {
     struct Defaults {

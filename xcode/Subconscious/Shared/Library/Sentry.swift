@@ -10,7 +10,7 @@ import os
 import OSLog
 import Sentry
 
-struct SentryIntegration {}
+public struct SentryIntegration {}
 
 extension SentryIntegration {
     public static func start() {

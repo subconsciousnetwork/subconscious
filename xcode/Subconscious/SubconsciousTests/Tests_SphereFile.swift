@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_SphereFile: XCTestCase {
     func createNoosphere() async throws -> Noosphere {

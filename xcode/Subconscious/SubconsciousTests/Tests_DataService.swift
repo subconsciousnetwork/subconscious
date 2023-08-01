@@ -9,6 +9,7 @@ import XCTest
 import Combine
 import ObservableStore
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_DataService: XCTestCase {
     /// A place to put cancellables from publishers

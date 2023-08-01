@@ -9,6 +9,7 @@ import XCTest
 import Combine
 import ObservableStore
 @testable import Subconscious
+@testable import SubconsciousCore
 
 struct TestUtilities {
     /// Create a unique temp dir and return URL

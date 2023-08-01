@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import Subconscious
+@testable import SubconsciousCore
 
 final class Tests_SQLite3Database: XCTestCase {
     /// Get URL to temp dir for this test instance

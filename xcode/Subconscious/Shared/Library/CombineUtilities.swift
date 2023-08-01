@@ -84,7 +84,7 @@ extension Publisher {
     /// Recover from a failure.
     /// Similar to `catch` but allows you to map an `Error` to an `Output`,
     /// without having to wrap in a publisher.
-    func recover(
+    public func recover(
         _ transform: @escaping (Error) -> Output
     ) -> Publishers.Catch<Self, Just<Output>> {
         self.catch({ error in

@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import Subconscious
+@testable import SubconsciousCore
 
 class Tests_StringUtilities: XCTestCase {
     func testTrimming0() throws {

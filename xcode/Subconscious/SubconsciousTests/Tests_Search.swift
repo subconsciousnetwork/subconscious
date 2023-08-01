@@ -8,6 +8,7 @@
 import XCTest
 import ObservableStore
 @testable import Subconscious
+@testable import SubconsciousCore
 
 class Tests_Search: XCTestCase {
     let environment = AppEnvironment()

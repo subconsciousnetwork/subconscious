@@ -5,6 +5,7 @@
 //  Created by Gordon Brander on 9/15/21.
 //
 
+import SubconsciousCore
 import SwiftUI
 import Sentry
 import OSLog
