@@ -14,7 +14,7 @@ struct BacklinksView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             HStack {
-                Text("Related Notes")
+                Text("Backlinks")
                     .font(.caption)
                 Spacer()
             }
@@ -31,7 +31,7 @@ struct BacklinksView: View {
                 }
             } else {
                 TitleGroupView(
-                    title: Text("No related notes yet")
+                    title: Text("No backlinks yet")
                         .foregroundColor(Color.secondary),
                     subtitle: Text(
                         "Links to this note will appear here"
