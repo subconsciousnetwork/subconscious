@@ -925,6 +925,8 @@ struct UserProfileDetailModel: ModelProtocol {
             nickname: state.editProfileSheet.nicknameField.validated?.description,
             bio: state.editProfileSheet.bioField.validated?.text
         )
+        var model = state
+        model.isEditProfileSheetPresented = false
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
             try await environment.userProfile.writeOurProfile(
@@ -937,7 +939,7 @@ struct UserProfileDetailModel: ModelProtocol {
             )
         }).eraseToAnyPublisher()
         
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
     
     static func succeedEditProfile(
@@ -961,6 +963,7 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.failEditProfileMessage = error
+        model.isEditProfileSheetPresented = true
         return Update(state: model)
     }
     

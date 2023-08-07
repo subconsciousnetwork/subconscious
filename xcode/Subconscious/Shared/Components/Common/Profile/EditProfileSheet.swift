@@ -125,6 +125,10 @@ struct EditProfileSheet: View {
     var onCancel: () -> Void
     var onDismissError: () -> Void
     
+    var formIsValid: Bool {
+        state.bioField.isValid && state.nicknameField.isValid
+    }
+    
     func makePreview(nickname: Petname.Name) -> UserProfile {
         let pfp: ProfilePicVariant = ProfilePicVariant.generated(user.did)
         
@@ -212,10 +216,11 @@ struct EditProfileSheet: View {
             .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         onEditProfile()
                     }
+                    .disabled(!formIsValid)
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel", role: .cancel) {
