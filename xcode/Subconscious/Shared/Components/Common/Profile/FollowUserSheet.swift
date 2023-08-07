@@ -169,18 +169,20 @@ struct FollowUserSheet: View {
     var onDismissError: () -> Void
     
     var caption: String {
-        state.petnameFieldCaption ?? ""
+        state.petnameFieldCaption ?? "Choose a nickname"
     }
     
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
+            Spacer()
+            
             if let user = state.user {
-                ProfilePic(pfp: user.pfp, size: .large)
-                
-                Text(user.did.did)
-                    .font(.caption.monospaced())
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
+                HStack(alignment: .center) {
+                    ProfilePic(pfp: user.pfp, size: .large)
+                    if let name = state.followUserForm.petname.validated {
+                        PetnameView(name: .proposedName(user.address, name))
+                    }
+                }
                 
                 Spacer()
             }
@@ -216,7 +218,7 @@ struct FollowUserSheet: View {
             .disabled(!state.followUserForm.petname.isValid)
         }
         .padding(AppTheme.padding)
-        .presentationDetents([.fraction(0.33)])
+        .presentationDetents([.medium])
         .alert(
             isPresented: Binding(
                 get: { failFollowError != nil },
