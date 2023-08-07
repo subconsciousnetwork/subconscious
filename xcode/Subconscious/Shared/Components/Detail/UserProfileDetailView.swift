@@ -604,7 +604,7 @@ struct UserProfileDetailModel: ModelProtocol {
         var model = state
         model.selectedTabIndex = index
         
-        return Update(state: model).animation(.default)
+        return Update(state: model).animation(.easeOutCubic())
     }
     
     static func presentMetaSheet(
