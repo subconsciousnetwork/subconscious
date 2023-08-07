@@ -399,13 +399,32 @@ actor UserProfileService {
         let following = try await self.getFollowingList(
             address: address
         )
-        let notes = try await sphere.list()
         let followingStatus = await self.addressBook.followingStatus(did: did)
         
-        let entries = try await self.loadEntries(
-            address: address,
-            slugs: notes
-        )
+        let entries = try await Func.run {
+            switch (followingStatus) {
+            // Read from DB if we follow this user
+            case .following(let name):
+                return try
+                    self.database.listRecentMemos(owner: did)
+                    .map { memo in
+                        memo.withAddress(
+                            Slashlink(
+                                petname: name.toPetname(),
+                                slug: memo.address.slug
+                            )
+                        )
+                    }
+            // Otherwise, traverse the noosphere
+            case .notFollowing:
+                let notes = try await sphere.list()
+                return try await self.loadEntries(
+                    address: address,
+                    slugs: notes
+                )
+            }
+        }
+        
         let recentEntries = sortEntriesByModified(entries: entries)
         
         let profile = try await self.buildUserProfile(

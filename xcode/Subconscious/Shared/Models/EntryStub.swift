@@ -34,6 +34,15 @@ struct EntryStub:
             author: author
         )
     }
+    
+    func withAddress(_ address: Slashlink) -> Self {
+        return Self(
+            address: address,
+            excerpt: excerpt,
+            modified: modified,
+            author: author
+        )
+    }
 }
 
 extension EntryLink {
