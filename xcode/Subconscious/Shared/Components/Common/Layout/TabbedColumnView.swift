@@ -35,21 +35,19 @@ struct TabbedTwoColumnView<A: View, B: View>: View {
             focusedTabIndex: selectedColumnIndex
         )
         
-        VStack {
-            TabView(selection: Binding(
-                get: { selectedColumnIndex },
-                set: changeColumn
-            )) {
-                columnA.view
-                    .tabItem { Text(columnA.label) }
-                    .tag(0)
-                
-                columnB.view
-                    .tabItem { Text(columnB.label) }
-                    .tag(1)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+        TabView(selection: Binding(
+            get: { selectedColumnIndex },
+            set: changeColumn
+        )) {
+            columnA.view
+                .tabItem { Text(columnA.label) }
+                .tag(0)
+            
+            columnB.view
+                .tabItem { Text(columnB.label) }
+                .tag(1)
         }
+        .tabViewStyle(.page(indexDisplayMode: .never))
         .background(Color.secondaryBackground)
     }
 }
