@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum ProfilePicVariant: Equatable, Codable, Hashable {
-    case none(Did)
+    case generated(Did)
     case image(String)
 }
 
@@ -19,7 +19,7 @@ enum ProfilePicSize {
 }
 
 struct ProfilePic: View {
-    var pfp: ProfilePicVariant
+    var pfp: ProfilePicVariant?
     var size: ProfilePicSize
 
     private var imageSize: CGFloat {
@@ -45,14 +45,24 @@ struct ProfilePic: View {
     }
 
     var body: some View {
-        switch pfp {
-        case .none(let did):
-            GenerativeProfilePic(did: did, size: imageSize)
-                .profilePicFrame(size: imageSize, lineWidth: lineWidth)
-        case .image(let img):
-            Image(img)
+        if let pfp = pfp {
+            switch pfp {
+            case .generated(let did):
+                GenerativeProfilePic(did: did, size: imageSize)
+                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
+            case .image(let img):
+                Image(img)
+                    .resizable()
+                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
+            }
+        } else {
+            Image(audience: .local)
                 .resizable()
-                .profilePicFrame(size: imageSize, lineWidth: lineWidth)
+                .foregroundStyle(Color.separator)
+                .frame(
+                    width: imageSize,
+                    height: imageSize
+                )
         }
     }
 }
@@ -61,12 +71,16 @@ struct ProfilePic_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             ProfilePic(
-                pfp: .none(Did.dummyData()),
+                pfp: .generated(Did.dummyData()),
                 size: .small
             )
             ProfilePic(
                 pfp: .image("pfp-dog"),
                 size: .large
+            )
+            ProfilePic(
+                pfp: .none,
+                size: .small
             )
         }
     }

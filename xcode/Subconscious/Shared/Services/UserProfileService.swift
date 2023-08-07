@@ -198,7 +198,7 @@ actor UserProfileService {
             did: did,
             nickname: Petname.Name(userProfileData?.nickname ?? ""),
             address: address,
-            pfp: .none(did),
+            pfp: .generated(did),
             bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: isOurs ? UserCategory.ourself : UserCategory.human,
             resolutionStatus: resolutionStatus,

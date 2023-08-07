@@ -14,9 +14,7 @@ struct BylineSmView: View {
     
     var body: some View {
         HStack {
-            if let pfp = pfp {
-                ProfilePic(pfp: pfp, size: .small)
-            }
+            ProfilePic(pfp: pfp, size: .small)
             SlashlinkDisplayView(slashlink: slashlink)
                 .theme(slug: .secondary)
         }
@@ -25,9 +23,16 @@ struct BylineSmView: View {
 
 struct BylineSmView_Previews: PreviewProvider {
     static var previews: some View {
-        BylineSmView(
-            pfp: .image("pfp-dog"),
-            slashlink: Slashlink("@name/path")!
-        )
+        VStack {
+            BylineSmView(
+                pfp: .image("pfp-dog"),
+                slashlink: Slashlink("@name/path")!
+            )
+            
+            BylineSmView(
+                pfp: .none,
+                slashlink: Slashlink("@name/path")!
+            )
+        }
     }
 }

@@ -126,7 +126,7 @@ struct EditProfileSheet: View {
     var onDismissError: () -> Void
     
     func makePreview(nickname: Petname.Name) -> UserProfile {
-        let pfp: ProfilePicVariant = ProfilePicVariant.none(user.did)
+        let pfp: ProfilePicVariant = ProfilePicVariant.generated(user.did)
         
         return UserProfile(
             did: user.did,
