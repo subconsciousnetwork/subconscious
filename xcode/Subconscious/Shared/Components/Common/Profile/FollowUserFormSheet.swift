@@ -24,6 +24,10 @@ struct FollowNewUserFormSheetView: View {
     
     var onDismissFailFollowError: () -> Void
     
+    var formIsValid: Bool {
+        form.did.isValid && form.petname.isValid
+    }
+    
     func onQRCodeScanResult(res: Result<ScanResult, ScanError>) {
         switch res {
         case .success(let result):
@@ -76,6 +80,7 @@ struct FollowNewUserFormSheetView: View {
                         Button("Done") {
                             onAttemptFollow()
                         }
+                        .disabled(!formIsValid)
                     }
                     ToolbarItem(placement: .navigation) {
                         Button("Cancel", role: .cancel) {
