@@ -663,10 +663,11 @@ extension Subtext {
         return output.isEmpty ? fallback : output
     }
     
+    static let maxExcerptSize = 280
     static let maxGeneratedSlugSize = 128
     
     static func excerpt(markup: String, fallback: String = "") -> String {
-        let prefix = markup.prefix(512)
+        let prefix = markup.prefix(maxExcerptSize)
         return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
     }
     
