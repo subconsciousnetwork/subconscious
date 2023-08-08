@@ -74,3 +74,14 @@ extension StringProtocol {
         self.prefix(1).capitalized + self.dropFirst()
     }
 }
+
+extension String {
+    /// Similar to `prefix` but inserts an ellipsis (…) if truncation occurs
+    func truncatedPrefix(_ count: Int) -> String {
+        let truncated =
+            String(self.prefix(count - (self.count > count ? 1 : 0)))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return self.count > count ? truncated + "…" : truncated
+    }
+}

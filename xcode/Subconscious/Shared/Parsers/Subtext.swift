@@ -667,7 +667,7 @@ extension Subtext {
     static let maxGeneratedSlugSize = 128
     
     static func excerpt(markup: String, fallback: String = "") -> String {
-        let prefix = markup.prefix(maxExcerptSize)
+        let prefix = markup.truncatedPrefix(maxExcerptSize)
         return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
     }
     
