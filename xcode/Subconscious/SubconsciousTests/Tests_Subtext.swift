@@ -1184,6 +1184,47 @@ class Tests_Subtext: XCTestCase {
             "Excerpt returns string for first two blocks"
         )
     }
+    
+    func testGenerateSlug() throws {
+        let text = "Hello world"
+        XCTAssertEqual(Subtext.generateSlug(markup: text), Slug("hello-world"))
+        
+        let longText =
+            """
+            More lines
+            Infinite markup
+            Endless slugs
+            """
+        
+        XCTAssertEqual(Subtext.generateSlug(markup: longText), Slug("more-lines"))
+        
+        let markupText =
+            """
+            
+            *More lines* /link
+            
+            # Infinite markup
+            
+            Endless slugs /and-links
+            """
+        
+        XCTAssertEqual(Subtext.generateSlug(markup: markupText), Slug("more-lines-link"))
+        
+        let veryLongText =
+            """
+            Too many characters Too many characters Too many characters Too many characters \
+            Too many characters Too many characters Too many characters \
+            Too many characters Too many characters Too many characters
+            Infinite markup
+            Endless slugs
+            """
+        let slug = Subtext.generateSlug(markup: veryLongText)
+        XCTAssertEqual(slug?.description.count ?? 0, Subtext.maxGeneratedSlugSize)
+        XCTAssertEqual(
+            Subtext.generateSlug(markup: veryLongText),
+            Slug("too-many-characters-too-many-characters-too-many-characters-too-many-characters-too-many-characters-too-many-characters-too-many")
+        )
+    }
 
     func testExcerptEmptyFirstLines() throws {
         let subtext = Subtext.parse(
