@@ -653,9 +653,7 @@ actor DataService {
         return try self.database.listRecentMemos(owner: identity, includeDrafts: true)
     }
     
-    nonisolated func listRecentMemosPublisher(
-        includeDrafts: Bool
-    ) -> AnyPublisher<[EntryStub], Error> {
+    nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
         Future.detached {
             try await self.listRecentMemos()
         }
