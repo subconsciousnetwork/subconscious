@@ -650,7 +650,7 @@ actor DataService {
     
     func listRecentMemos() async throws -> [EntryStub] {
         let identity = try? await noosphere.identity()
-        return try self.database.listRecentMemos(owner: identity)
+        return try self.database.listRecentMemos(owner: identity, includeDrafts: true)
     }
     
     nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {

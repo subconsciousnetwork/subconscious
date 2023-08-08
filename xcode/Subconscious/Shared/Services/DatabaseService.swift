@@ -485,12 +485,15 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentMemos(owner: Did?) throws -> [EntryStub] {
+    func listRecentMemos(owner: Did?, includeDrafts: Bool = false) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         
-        var dids = [Did.local.description]
+        var dids: [String] = []
+        if includeDrafts {
+            dids.append(Did.local.description)
+        }
         if let owner = owner {
             dids.append(owner.description)
         }
