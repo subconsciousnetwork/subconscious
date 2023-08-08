@@ -406,7 +406,7 @@ actor UserProfileService {
             // Read from DB if we follow this user
             case .following(let name):
                 return try
-                    self.database.listRecentMemos(owner: did)
+                    self.database.listRecentMemos(owner: did, includeDrafts: false)
                     .map { memo in
                         memo.withAddress(
                             Slashlink(
