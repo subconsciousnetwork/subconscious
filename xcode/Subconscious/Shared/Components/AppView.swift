@@ -280,7 +280,7 @@ enum AppAction: CustomLogStringConvertible {
 extension AppAction {
     public static func from(action: UserProfileDetailAction) -> AppAction? {
         switch action {
-        case .refresh:
+        case .refresh(let forceSync) where forceSync:
             return .syncAll
         case .succeedEditProfile:
             return .fetchNicknameFromProfile

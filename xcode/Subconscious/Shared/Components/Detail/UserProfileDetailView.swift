@@ -111,7 +111,7 @@ struct UserProfileDetailDescription: Hashable {
 
 enum UserProfileDetailAction: CustomLogStringConvertible {
     case appear(Slashlink, Int, UserProfile?)
-    case refresh
+    case refresh(forceSync: Bool)
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
     
@@ -355,8 +355,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: EditProfileSheetEnvironment()
             )
-            // MARK: Lifecycle
-        case .refresh:
+        // MARK: Lifecycle
+        // The forceSync parameter for this action dictates whether .syncAll is dispatched to the
+        // at the same time. See UserProfileView.
+        case .refresh(_):
             return refresh(
                 state: state,
                 environment: environment
@@ -702,7 +704,7 @@ struct UserProfileDetailModel: ModelProtocol {
         var actions: [UserProfileDetailAction] = [
             .presentFollowSheet(false),
             .presentFollowNewUserFormSheet(false),
-            .refresh,
+            .refresh(forceSync: true),
             .requestWaitForFollowedUserResolution(petname)
         ]
         
@@ -779,7 +781,7 @@ struct UserProfileDetailModel: ModelProtocol {
         
         return update(
             state: state,
-            action: .refresh,
+            action: .refresh(forceSync: true),
             environment: environment
         ).mergeFx(fx)
     }
@@ -790,7 +792,7 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         update(
             state: state,
-            action: .refresh,
+            action: .refresh(forceSync: true),
             environment: environment
         )
     }
@@ -801,7 +803,11 @@ struct UserProfileDetailModel: ModelProtocol {
         error: String
     ) -> Update<Self> {
         logger.log("Failed to resolve followed user: \(error)")
-        return update(state: state, action: .refresh, environment: environment)
+        return update(
+            state: state,
+            action: .refresh(forceSync: true),
+            environment: environment
+        )
     }
     
     static func presentUnfollowConfirmation(
@@ -873,7 +879,7 @@ struct UserProfileDetailModel: ModelProtocol {
             state: state,
             actions: [
                 .presentUnfollowConfirmation(false),
-                .refresh
+                .refresh(forceSync: true)
             ],
             environment: environment
         )
@@ -951,7 +957,7 @@ struct UserProfileDetailModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .refresh,
+            action: .refresh(forceSync: true),
             environment: environment
         )
     }

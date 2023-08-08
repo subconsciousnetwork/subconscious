@@ -107,6 +107,11 @@ struct UserProfileEntry: Codable, Equatable {
     let bio: String?
 }
 
+struct UserProfileCacheEntry {
+    let profile: UserProfile
+    let version: Cid
+}
+
 actor UserProfileService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
@@ -121,7 +126,7 @@ actor UserProfileService {
     
     private static let profileContentType = "application/vnd.subconscious.profile+json"
     
-    private var cache: [Petname:UserProfile] = [:]
+    private var cache: [Petname:UserProfileCacheEntry] = [:]
     
     init(
         noosphere: NoosphereService,
@@ -360,9 +365,12 @@ actor UserProfileService {
     func buildUserProfile(
         address: Slashlink
     ) async throws -> UserProfile {
+        let version = try await self.noosphere.version()
+        
         if let petname = address.petname,
-           let cacheHit = self.cache[petname] {
-            return cacheHit
+           let cacheHit = self.cache[petname],
+           cacheHit.version == version {
+            return cacheHit.profile
         }
         
         let did = try await self.noosphere.resolve(peer: address.peer)
@@ -384,7 +392,10 @@ actor UserProfileService {
         )
         
         if let petname = address.petname {
-            self.cache.updateValue(profile, forKey: petname)
+            self.cache.updateValue(
+                UserProfileCacheEntry(profile: profile, version: version),
+                forKey: petname
+            )
         }
         
         return profile
