@@ -650,6 +650,9 @@ extension Subtext {
 }
 
 extension Subtext {
+    private static let maxExcerptSize = 280
+    private static let maxGeneratedSlugSize = 128
+    
     /// Derive an excerpt
     func excerpt(fallback: String = "") -> String {
         // Filter out empty blocks
@@ -662,9 +665,6 @@ extension Subtext {
         
         return output.isEmpty ? fallback : output
     }
-    
-    static let maxExcerptSize = 280
-    static let maxGeneratedSlugSize = 128
     
     static func excerpt(markup: String, fallback: String = "") -> String {
         let prefix = markup.truncate(maxLength: maxExcerptSize)
