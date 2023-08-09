@@ -72,14 +72,4 @@ class Tests_StringUtilities: XCTestCase {
             "The quick brown fox jumped over the lazy dog"
         )
     }
-    
-    func testTruncatingPrefix() throws {
-        let text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        
-        let prefix = text.truncatedPrefix(16)
-        XCTAssertEqual(prefix, "Lorem ipsum dol…")
-        
-        let shortText = "a short string"
-        XCTAssertEqual(shortText.truncatedPrefix(128), shortText)
-    }
 }
