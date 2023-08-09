@@ -1986,7 +1986,8 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = environment.addressBook
             .followUserPublisher(
                 did: Config.default.subconsciousGeistDid,
-                petname: Config.default.subconsciousGeistPetname
+                petname: Config.default.subconsciousGeistPetname,
+                preventOverwrite: true
             )
             .map {
                 AppAction.succeedFollowDefaultGeist
