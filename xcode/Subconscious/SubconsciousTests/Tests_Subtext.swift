@@ -1219,7 +1219,7 @@ class Tests_Subtext: XCTestCase {
             Endless slugs
             """
         let slug = Subtext.generateSlug(markup: veryLongText)
-        XCTAssertEqual(slug?.description.count ?? 0, Subtext.maxGeneratedSlugSize)
+        XCTAssertEqual(slug?.description.count ?? 0, 128)
         XCTAssertEqual(
             Subtext.generateSlug(markup: veryLongText),
             Slug("too-many-characters-too-many-characters-too-many-characters-too-many-characters-too-many-characters-too-many-characters-too-many")
