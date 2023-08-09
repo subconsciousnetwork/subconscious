@@ -1281,6 +1281,16 @@ struct MemoEditorDetailModel: ModelProtocol {
             left: FileFingerprint(state),
             right: FileFingerprint(detail)
         )
+        
+        // Our entries may be identical, but if the backlinks differ then we need to refresh
+        if state.backlinks != detail.backlinks {
+            return update(
+                state: model,
+                action: .forceSetDetail(detail),
+                environment: environment
+            )
+        }
+        
         // Last write wins strategy
         switch change {
         // Our editor state is newer. Do nothing.
