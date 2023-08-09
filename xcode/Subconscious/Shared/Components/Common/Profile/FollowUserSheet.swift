@@ -169,56 +169,52 @@ struct FollowUserSheet: View {
     var onDismissError: () -> Void
     
     var caption: String {
-        state.petnameFieldCaption ?? "Choose a nickname"
+        let name = state.user?.address.toPetname()?.markup ?? "user"
+        return state.petnameFieldCaption ?? String(localized: "Choose a nickname for \(name)")
     }
     
     var body: some View {
-        VStack(alignment: .center, spacing: AppTheme.unit2) {
-            Spacer()
-            
-            if let user = state.user {
-                HStack(alignment: .center) {
-                    ProfilePic(pfp: user.pfp, size: .large)
-                    if let name = state.followUserForm.petname.validated {
-                        PetnameView(name: .proposedName(user.address, name))
-                    }
-                }
+        ScrollView {
+            VStack(alignment: .center, spacing: AppTheme.unit2) {
+                ValidatedFormField(
+                    alignment: .center,
+                    placeholder: "petname",
+                    field: state.followUserForm.petname,
+                    send: Address.forward(
+                        send: send,
+                        tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
+                    ),
+                    caption: caption
+                )
+                .textFieldStyle(.roundedBorder)
+                .lineLimit(1)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
                 
                 Spacer()
-            }
-            
-            ValidatedFormField(
-                alignment: .center,
-                placeholder: "petname",
-                field: state.followUserForm.petname,
-                send: Address.forward(
-                    send: send,
-                    tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
-                ),
-                caption: caption
-            )
-            .textFieldStyle(.roundedBorder)
-            .lineLimit(1)
-            .textInputAutocapitalization(.never)
-            .disableAutocorrection(true)
-            
-            Spacer()
-            
-            Button(
-                action: onAttemptFollow,
-                label: {
-                    if let petname = state.followUserForm.petname.validated {
-                        Text("Follow \(petname.toPetname().markup)")
-                    } else {
-                        Text("Invalid petname")
+                
+                if let user = state.user,
+                   let name = state.followUserForm.petname.validated {
+                    HStack(spacing: AppTheme.padding) {
+                        ProfilePic(pfp: user.pfp, size: .large)
+                        PetnameView(name: .proposedName(user.address, name))
                     }
+                    
+                    Spacer()
                 }
-            )
-            .buttonStyle(PillButtonStyle())
-            .disabled(!state.followUserForm.petname.isValid)
+                
+                Button(
+                    action: onAttemptFollow,
+                    label: {
+                        Text("Follow")
+                    }
+                )
+                .buttonStyle(PillButtonStyle())
+                .disabled(!state.followUserForm.petname.isValid)
+            }
         }
         .padding(AppTheme.padding)
-        .presentationDetents([.medium])
+        .presentationDetents([.fraction(0.33)])
         .alert(
             isPresented: Binding(
                 get: { failFollowError != nil },
