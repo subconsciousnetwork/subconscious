@@ -47,16 +47,11 @@ typealias LoggingMetadata = KeyValuePairs<String, String?>
 /// `KeyValuePairs` as a LogFmt string.
 extension Logger {
     /// Log `parameters` to JSON string, using given log `level`
-    func log(
+    func log_lines(
         level: OSLogType,
         message: String,
         metadata: LoggingMetadata
     ) {
-        let string = LogFmt.format(
-            message: message,
-            metadata: metadata
-        )
-        
         for kv in metadata {
             self.log(
                 level: level,
@@ -69,7 +64,7 @@ extension Logger {
     }
     
     /// Log `parameters` to JSON string, using given log `level`
-    func log_old(
+    func log(
         level: OSLogType,
         message: String,
         metadata: LoggingMetadata

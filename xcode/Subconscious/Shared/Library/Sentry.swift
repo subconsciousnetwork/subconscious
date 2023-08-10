@@ -51,10 +51,6 @@ extension SentryIntegration {
                     continue
                 }
                 
-                guard item.subsystem == Bundle.main.bundleIdentifier else {
-                    continue
-                }
-                
                 let crumb = Breadcrumb(
                     level: item.level.toSentry(),
                     category: item.category
