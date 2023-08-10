@@ -11,7 +11,7 @@ import SwiftNoosphere
 /// Feature flags and settings
 struct Config: Equatable, Codable {
     /// App version.
-    var rdns = "com.subconscious.Subconscious"
+    var rdns = Bundle.main.bundleIdentifier ?? "com.subconscious.Subconscious"
     var debug = (Bundle.main.object(forInfoDictionaryKey: "DEBUG") as! String == "YES")
     
     var noosphere = NoosphereConfig()
