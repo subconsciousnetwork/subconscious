@@ -200,8 +200,8 @@ actor DataService {
             logger.log(
                 "Indexed peer",
                 metadata: [
-                    "petname": petname,
-                    "identity": identity,
+                    "petname": petname.description,
+                    "identity": identity.description,
                     "version": version,
                     "since": peer?.since ?? "nil"
                 ]
@@ -211,8 +211,8 @@ actor DataService {
             logger.log(
                 "Failed to index peer. Rolling back.",
                 metadata: [
-                    "petname": petname,
-                    "identity": identity,
+                    "petname": petname.description,
+                    "identity": identity.description,
                     "version": version,
                     "since": peer?.since ?? "nil"
                 ]
@@ -350,7 +350,7 @@ actor DataService {
             logger.log(
                 "Indexed our sphere",
                 metadata: [
-                    "identity": identity,
+                    "identity": identity.description,
                     "version": version
                 ]
             )
@@ -364,7 +364,7 @@ actor DataService {
             logger.log(
                 "Failed to index our sphere. Rolling back.",
                 metadata: [
-                    "identity": identity,
+                    "identity": identity.description,
                     "version": version
                 ]
             )

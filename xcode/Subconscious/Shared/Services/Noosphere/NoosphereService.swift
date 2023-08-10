@@ -87,7 +87,7 @@ actor NoosphereService:
                 "globalStorageURL": globalStorageURL.absoluteString,
                 "sphereStorageURL": sphereStorageURL.absoluteString,
                 "gatewayURL": gatewayURL?.absoluteString ?? "nil",
-                "sphereIdentity": sphereIdentity
+                "sphereIdentity": sphereIdentity?.description
             ]
         )
 

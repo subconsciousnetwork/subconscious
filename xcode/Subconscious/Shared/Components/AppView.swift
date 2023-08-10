@@ -1043,7 +1043,7 @@ struct AppModel: ModelProtocol {
             metadata: [
                 "documents": environment.documentURL.absoluteString,
                 "database": environment.database.database.path,
-                "sphereIdentity": state.sphereIdentity
+                "sphereIdentity": state.sphereIdentity?.description
             ]
         )
         return update(
@@ -1260,7 +1260,7 @@ struct AppModel: ModelProtocol {
         var model = state
         model.sphereIdentity = sphereIdentity
         if let sphereIdentity = sphereIdentity {
-            logger.debug("Set sphere ID: \(sphereIdentity)")
+            logger.info("Set sphere ID: \(sphereIdentity.did, privacy: .private(mask: .hash))")
         }
         return Update(state: model)
     }
@@ -1581,7 +1581,7 @@ struct AppModel: ModelProtocol {
             logger.log(
                 "Last index for our sphere",
                 metadata: [
-                    "identity": info.identity,
+                    "identity": info.identity.description,
                     "version": info.since
                 ]
             )
@@ -1709,7 +1709,7 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Indexed our sphere",
             metadata: [
-                "identity": receipt.identity,
+                "identity": receipt.identity.description,
                 "version": receipt.since
             ]
         )
@@ -1893,8 +1893,8 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Indexed peer",
             metadata: [
-                "petname": peer.petname,
-                "identity": peer.identity,
+                "petname": peer.petname.description,
+                "identity": peer.identity.description,
                 "since": peer.since ?? "nil"
             ]
         )
