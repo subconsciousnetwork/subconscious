@@ -59,7 +59,7 @@ extension Logger {
         
         self.log(
             level: level,
-            "\(LogFmt.formatParameter(key: "msg", value: message)) \(string, privacy: .private(mask: .hash))"
+            "\(LogFmt.formatParameter(key: "msg", value: message), privacy: .public) \(string, privacy: .private(mask: .hash))"
         )
     }
     
