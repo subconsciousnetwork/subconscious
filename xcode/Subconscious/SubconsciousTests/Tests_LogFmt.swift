@@ -11,7 +11,6 @@ import XCTest
 final class Tests_LogFmt: XCTestCase {
     func testFormat() throws {
         let string = LogFmt.format(
-            message: "Foo",
             metadata: [
                 "code": "bar",
                 "etc": "baz"
@@ -19,13 +18,12 @@ final class Tests_LogFmt: XCTestCase {
         )
         XCTAssertEqual(
             string,
-            #"msg="Foo" code="bar" etc="baz""#
+            #"code="bar" etc="baz""#
         )
     }
 
     func testFormatEscaping() throws {
         let string = LogFmt.format(
-            message: #""Foo""#,
             metadata: [
                 "code": "bar",
                 "etc": "baz"
@@ -33,7 +31,7 @@ final class Tests_LogFmt: XCTestCase {
         )
         XCTAssertEqual(
             string,
-            #"msg="\"Foo\"" code="bar" etc="baz""#
+            #"code="bar" etc="baz""#
         )
     }
 }
