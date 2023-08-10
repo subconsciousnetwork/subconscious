@@ -57,9 +57,33 @@ extension Logger {
             metadata: metadata
         )
         
+        for kv in metadata {
+            self.log(
+                level: level,
+                """
+                \(message, privacy: .public) \
+                [\(kv.key): \(String(describing: kv.value), privacy: .private(mask: .hash))]
+                """
+            )
+        }
+    }
+    
+    /// Log `parameters` to JSON string, using given log `level`
+    func log_old(
+        level: OSLogType,
+        message: String,
+        metadata: LoggingMetadata
+    ) {
+        let string = LogFmt.format(
+            message: message,
+            metadata: metadata
+        )
+        
+        let msg = LogFmt.formatParameter(key: "msg", value: message)
+        
         self.log(
             level: level,
-            "\(LogFmt.formatParameter(key: "msg", value: message), privacy: .public) \(string, privacy: .private(mask: .hash))"
+            "\(msg, privacy: .public) \(string, privacy: .private(mask: .hash))"
         )
     }
     
