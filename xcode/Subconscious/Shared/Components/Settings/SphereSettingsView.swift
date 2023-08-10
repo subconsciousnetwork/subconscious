@@ -23,7 +23,7 @@ struct SphereSettingsView: View {
                 }
             )
             
-            if let did = Did(app.state.sphereIdentity ?? "") {
+            if let did = app.state.sphereIdentity {
                 Section(header: Text("Your DID")) {
                     DidView(did: did)
                 }

@@ -128,7 +128,7 @@ enum AppAction: CustomLogStringConvertible {
     case failCreateSphere(_ message: String)
 
     /// Set identity of sphere
-    case setSphereIdentity(String?)
+    case setSphereIdentity(Did?)
     /// Fetch the latest sphere version, and store on model
     case refreshSphereVersion
     case succeedRefreshSphereVersion(_ version: String)
@@ -471,7 +471,7 @@ struct AppModel: ModelProtocol {
     ///
     /// This property is updated at `.start` with the corresponding value
     /// stored in `AppDefaults`.
-    var sphereIdentity: String?
+    var sphereIdentity: Did?
     /// Default sphere version, if any.
     var sphereVersion: String?
     /// State for rendering mnemonic/recovery phrase UI.
@@ -996,13 +996,14 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
+        let identity = Did(AppDefaults.standard.sphereIdentity ?? "")
         
         // Update model from app defaults
         return update(
             state: model,
             actions: [
                 .setSphereIdentity(
-                    AppDefaults.standard.sphereIdentity
+                    identity
                 ),
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
@@ -1037,13 +1038,12 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let sphereIdentity = state.sphereIdentity ?? "nil"
         logger.debug(
             "appear",
             metadata: [
                 "documents": environment.documentURL.absoluteString,
                 "database": environment.database.database.path,
-                "sphereIdentity": sphereIdentity
+                "sphereIdentity": state.sphereIdentity
             ]
         )
         return update(
@@ -1244,7 +1244,7 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .setSphereIdentity(receipt.identity),
+                .setSphereIdentity(Did(receipt.identity)),
                 .setRecoveryPhrase(receipt.mnemonic),
                 .followDefaultGeist
             ],
@@ -1255,7 +1255,7 @@ struct AppModel: ModelProtocol {
     static func setSphereIdentity(
         state: AppModel,
         environment: AppEnvironment,
-        sphereIdentity: String?
+        sphereIdentity: Did?
     ) -> Update<AppModel> {
         var model = state
         model.sphereIdentity = sphereIdentity
@@ -1581,7 +1581,7 @@ struct AppModel: ModelProtocol {
             logger.log(
                 "Last index for our sphere",
                 metadata: [
-                    "identity": info.identity.description,
+                    "identity": info.identity,
                     "version": info.since
                 ]
             )
@@ -1709,7 +1709,7 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Indexed our sphere",
             metadata: [
-                "identity": receipt.identity.description,
+                "identity": receipt.identity,
                 "version": receipt.since
             ]
         )
@@ -1893,8 +1893,8 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Indexed peer",
             metadata: [
-                "petname": peer.petname.description,
-                "identity": peer.identity.description,
+                "petname": peer.petname,
+                "identity": peer.identity,
                 "since": peer.since ?? "nil"
             ]
         )
@@ -2004,8 +2004,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         inviteCode: InviteCode
     ) -> Update<AppModel> {
-        guard let did = state.sphereIdentity,
-              let did = Did(did) else {
+        guard let did = state.sphereIdentity else {
             // Attempt to create the sphere if it's missing.
             // We could retry redeeming the code automatically but
             // if .createSphere fails we'll end up in an infinite loop
@@ -2246,7 +2245,7 @@ struct AppEnvironment {
             path: Config.default.noosphere.sphereStoragePath
         )
         let defaultGateway = URL(string: AppDefaults.standard.gatewayURL)
-        let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
+        let defaultSphereIdentity = Did(AppDefaults.standard.sphereIdentity ?? "")
 
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,

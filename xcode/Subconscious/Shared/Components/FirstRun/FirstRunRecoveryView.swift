@@ -12,10 +12,6 @@ struct FirstRunRecoveryView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
-    var did: Did? {
-        Did(app.state.sphereIdentity ?? "")
-    }
-    
     var body: some View {
         VStack(spacing: AppTheme.padding) {
             Spacer()

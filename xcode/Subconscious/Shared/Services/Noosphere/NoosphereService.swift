@@ -39,7 +39,7 @@ protocol NoosphereServiceProtocol {
     func createSphere(ownerKeyName: String) async throws -> SphereReceipt
 
     /// Set a new default sphere
-    func resetSphere(_ identity: String?) async
+    func resetSphere(_ identity: Did?) async
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
@@ -69,7 +69,7 @@ actor NoosphereService:
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
     /// Identity of default sphere
-    private var _sphereIdentity: String?
+    private var _sphereIdentity: Did?
     /// Memoized Sphere instance
     private var _sphere: Sphere?
     
@@ -77,7 +77,7 @@ actor NoosphereService:
         globalStorageURL: URL,
         sphereStorageURL: URL,
         gatewayURL: URL? = nil,
-        sphereIdentity: String? = nil,
+        sphereIdentity: Did? = nil,
         noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic,
         logger: Logger = logger
     ) {
@@ -87,9 +87,10 @@ actor NoosphereService:
                 "globalStorageURL": globalStorageURL.absoluteString,
                 "sphereStorageURL": sphereStorageURL.absoluteString,
                 "gatewayURL": gatewayURL?.absoluteString ?? "nil",
-                "sphereIdentity": sphereIdentity ?? "nil"
+                "sphereIdentity": sphereIdentity
             ]
         )
+
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
@@ -108,8 +109,13 @@ actor NoosphereService:
     }
     
     /// Set a new default sphere
-    func resetSphere(_ identity: String?) {
-        logger.debug("Reset sphere identity: \(identity ?? "none")")
+    func resetSphere(_ identity: Did?) {
+        if let identity = identity {
+            logger.debug("Reset sphere identity: \(identity)")
+        } else {
+            logger.debug("Cleared sphere identity")
+        }
+        
         self._sphereIdentity = identity
         self._sphere = nil
     }
@@ -164,7 +170,7 @@ actor NoosphereService:
         logger.debug("init Sphere with identity: \(identity)")
         let sphere = try Sphere(
             noosphere: noosphere,
-            identity: identity
+            identity: identity.did
         )
         self._sphere = sphere
         return sphere

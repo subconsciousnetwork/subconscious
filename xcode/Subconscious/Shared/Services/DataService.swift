@@ -10,7 +10,8 @@ import os
 
 enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
-    case sphereExists(_ sphereIdentity: String)
+    case sphereExists(_ sphereIdentity: Did?)
+    case invalidIdentity(_ sphereIdentity: String)
     case cannotWriteToSphere(did: Did? = nil, petname: Petname? = nil)
     case unknownPetname(Petname)
     
@@ -19,7 +20,9 @@ enum DataServiceError: Error, LocalizedError {
         case .fileExists(let message):
             return "File exists: \(message)"
         case let .sphereExists(sphereIdentity):
-            return "Sphere exists: \(sphereIdentity)"
+            return "Sphere exists: \(String(describing: sphereIdentity))"
+        case let .invalidIdentity(sphereIdentity):
+            return "Sphere created with invalid identity: \(sphereIdentity)"
         case let .cannotWriteToSphere(did, petname):
             let did = did?.description ?? "unknown"
             let petname = petname?.description ?? "unknown"
@@ -73,18 +76,23 @@ actor DataService {
     func createSphere(ownerKeyName: String) async throws -> SphereReceipt {
         // Do not create sphere if one already exists
         if let sphereIdentity = AppDefaults.standard.sphereIdentity {
-            throw DataServiceError.sphereExists(sphereIdentity)
+            throw DataServiceError.sphereExists(Did(sphereIdentity))
         }
         let sphereReceipt = try await noosphere.createSphere(
             ownerKeyName: ownerKeyName
         )
+        guard let did = Did(sphereReceipt.identity) else {
+            throw DataServiceError.invalidIdentity(sphereReceipt.identity)
+        }
+        
         // Persist sphere identity to user defaults.
         // NOTE: we do not persist the mnemonic, since it would be insecure.
         // Instead, we return the receipt so that mnemonic can be displayed
         // and discarded.
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
+        
         // Set sphere identity on NoosphereService
-        await noosphere.resetSphere(sphereReceipt.identity)
+        await noosphere.resetSphere(did)
         logger.log(
             "User sphere created and persisted",
             metadata: [
@@ -192,8 +200,8 @@ actor DataService {
             logger.log(
                 "Indexed peer",
                 metadata: [
-                    "petname": petname.description,
-                    "identity": identity.description,
+                    "petname": petname,
+                    "identity": identity,
                     "version": version,
                     "since": peer?.since ?? "nil"
                 ]
@@ -203,8 +211,8 @@ actor DataService {
             logger.log(
                 "Failed to index peer. Rolling back.",
                 metadata: [
-                    "petname": petname.description,
-                    "identity": identity.description,
+                    "petname": petname,
+                    "identity": identity,
                     "version": version,
                     "since": peer?.since ?? "nil"
                 ]
@@ -342,7 +350,7 @@ actor DataService {
             logger.log(
                 "Indexed our sphere",
                 metadata: [
-                    "identity": identity.description,
+                    "identity": identity,
                     "version": version
                 ]
             )
@@ -356,7 +364,7 @@ actor DataService {
             logger.log(
                 "Failed to index our sphere. Rolling back.",
                 metadata: [
-                    "identity": identity.description,
+                    "identity": identity,
                     "version": version
                 ]
             )
