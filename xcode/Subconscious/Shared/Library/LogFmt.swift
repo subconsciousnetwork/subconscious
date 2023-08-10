@@ -15,9 +15,9 @@ struct LogFmt {
     
     private static func formatParameter(
         key: String,
-        value: String
+        value: String?
     ) -> String {
-        let value = Self.escapeValuePart(value)
+        let value = Self.escapeValuePart(value ?? "nil")
         return #"\#(key)="\#(value)""#
     }
 
@@ -29,10 +29,9 @@ struct LogFmt {
     ///
     /// See https://brandur.org/logfmt
     static func format(
-        message: String,
-        metadata: KeyValuePairs<String, String>
+        metadata: KeyValuePairs<String, String?>
     ) -> String {
-        var parameters = [formatParameter(key: "msg", value: message)]
+        var parameters: [String] = []
         for (key, value) in metadata {
             let parameter = Self.formatParameter(key: key, value: value)
             parameters.append(parameter)
@@ -44,41 +43,46 @@ struct LogFmt {
 /// Extend logger to provide a LogFmt variant that allows you to log
 /// `KeyValuePairs` as a LogFmt string.
 extension Logger {
+    typealias LoggingMetadata = KeyValuePairs<String, String?>
+
     /// Log `parameters` to JSON string, using given log `level`
     func log(
         level: OSLogType,
         message: String,
-        metadata: KeyValuePairs<String, String>
+        metadata: LoggingMetadata
     ) {
         let string = LogFmt.format(
-            message: message,
             metadata: metadata
         )
-        self.log(level: level, "\(string)")
+        
+        self.log(
+            level: level,
+            "\(message, privacy: .public) \(string, privacy: .private(mask: .hash))"
+        )
     }
     
     /// Log `parameters` at default log level.
-    func log(_ message: String, metadata: KeyValuePairs<String, String>) {
+    func log(_ message: String, metadata: LoggingMetadata) {
         log(level: .default, message: message, metadata: metadata)
     }
     
     /// Log `parameters` at info log level.
-    func info(_ message: String, metadata: KeyValuePairs<String, String>) {
+    func info(_ message: String, metadata: LoggingMetadata) {
         log(level: .info, message: message, metadata: metadata)
     }
     
     /// Log `parameters` at debug log level.
-    func debug(_ message: String, metadata: KeyValuePairs<String, String>) {
+    func debug(_ message: String, metadata: LoggingMetadata) {
         log(level: .debug, message: message, metadata: metadata)
     }
     
     /// Log `parameters` at error log level.
-    func error(_ message: String, metadata: KeyValuePairs<String, String>) {
+    func error(_ message: String, metadata: LoggingMetadata) {
         log(level: .error, message: message, metadata: metadata)
     }
     
     /// Log `parameters` at fault log level.
-    func fault(_ message: String, metadata: KeyValuePairs<String, String>) {
+    func fault(_ message: String, metadata: LoggingMetadata) {
         log(level: .fault, message: message, metadata: metadata)
     }
 }
