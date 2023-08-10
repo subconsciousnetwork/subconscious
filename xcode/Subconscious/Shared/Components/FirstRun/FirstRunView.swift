@@ -56,18 +56,21 @@ struct FirstRunView: View {
         ) {
             VStack(spacing: AppTheme.padding) {
                 Spacer()
-                StackedGlowingImage() {
-                    Image("sub_logo").resizable()
-                }
-                .aspectRatio(contentMode: .fit)
-                .frame(
-                    minWidth: 32,
-                    maxWidth: AppTheme.onboarding.heroIconSize,
-                    minHeight: 32,
-                    maxHeight: AppTheme.onboarding.heroIconSize
-                )
                 
-                Spacer()
+                if !app.state.inviteCodeFormField.hasFocus {
+                    StackedGlowingImage() {
+                        Image("sub_logo").resizable()
+                    }
+                    .aspectRatio(contentMode: .fit)
+                    .frame(
+                        minWidth: 32,
+                        maxWidth: AppTheme.onboarding.heroIconSize,
+                        minHeight: 32,
+                        maxHeight: AppTheme.onboarding.heroIconSize
+                    )
+                    
+                    Spacer()
+                }
                 
                 Text("Subconscious is a place to garden thoughts and share them with others.")
                     .foregroundColor(.secondary)
