@@ -650,6 +650,9 @@ extension Subtext {
 }
 
 extension Subtext {
+    private static let maxExcerptSize = 280
+    private static let maxGeneratedSlugSize = 128
+    
     /// Derive an excerpt
     func excerpt(fallback: String = "") -> String {
         // Filter out empty blocks
@@ -664,8 +667,25 @@ extension Subtext {
     }
     
     static func excerpt(markup: String, fallback: String = "") -> String {
-        let prefix = markup.prefix(512)
+        let prefix = markup.truncate(maxLength: maxExcerptSize)
         return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
+    }
+    
+    static func generateSlug(markup: String) -> Slug? {
+        Subtext(markup: String(markup.prefix(maxGeneratedSlugSize))).generateSlug()
+    }
+    
+    func generateSlug() -> Slug? {
+        guard let candidate = blocks.first(where: { block in !block.isEmpty }) else {
+            return nil
+        }
+        
+        // If we can't derive slug from text, exit early.
+        guard let slug = Slug(formatting: String(candidate.body())) else {
+            return nil
+        }
+                              
+        return slug
     }
 }
 

@@ -775,10 +775,8 @@ actor DataService {
         _ text: String,
         audience: Audience
     ) async -> Slashlink? {
-        let excerpt = Subtext.excerpt(markup: text, fallback: text)
-        
         // If we can't derive slug from text, exit early.
-        guard let slug = Slug(formatting: excerpt) else {
+        guard let slug = Subtext.generateSlug(markup: text) else {
             return nil
         }
         // If slug does not exist in any address space, return it.
