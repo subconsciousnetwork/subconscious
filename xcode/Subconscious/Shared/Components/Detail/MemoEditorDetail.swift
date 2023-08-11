@@ -1048,13 +1048,11 @@ struct MemoEditorDetailModel: ModelProtocol {
         // Address? Attempt to load detail.
         return update(
             state: state,
-            actions: [
-                .loadDetail(
-                    address: address,
-                    fallback: info.fallback,
-                    autofocus: false
-                ),
-            ],
+            action: .loadDetail(
+                address: address,
+                fallback: info.fallback,
+                autofocus: false
+            ),
             environment: environment
         )
     }
@@ -1215,7 +1213,11 @@ struct MemoEditorDetailModel: ModelProtocol {
         }).eraseToAnyPublisher()
         
         let model = prepareLoadDetail(state)
-        return update(state: model, action: .refreshBacklinks(address), environment: environment).mergeFx(fx)
+        return update(
+            state: model,
+            action: .refreshBacklinks(address),
+            environment: environment
+        ).mergeFx(fx)
     }
     
     /// Reload detail
@@ -1330,7 +1332,6 @@ struct MemoEditorDetailModel: ModelProtocol {
             left: FileFingerprint(state),
             right: FileFingerprint(detail)
         )
-        
         // Last write wins strategy
         switch change {
         // Our editor state is newer. Do nothing.
