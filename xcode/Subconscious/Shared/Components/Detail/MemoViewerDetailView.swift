@@ -351,18 +351,11 @@ struct MemoViewerDetailModel: ModelProtocol {
             return Update(state: state)
             
         case .refreshBacklinks(let address):
-            let fx: Fx<MemoViewerDetailAction> = Future.detached {
-                try await environment.data.readMemoBacklinks(address: address)
-            }
-            .map { backlinks in
-                .succeedRefreshBacklinks(backlinks)
-            }
-            .recover { error in
-                .failRefreshBacklinks(error.localizedDescription)
-            }
-            .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
+            return refreshBacklinks(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case .succeedRefreshBacklinks(let backlinks):
             var model = state
             model.backlinks = backlinks
@@ -461,6 +454,25 @@ struct MemoViewerDetailModel: ModelProtocol {
             action: .setDom(dom),
             environment: environment
         ).animation(.easeOut)
+    }
+    
+    static func refreshBacklinks(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        let fx: Fx<MemoViewerDetailAction> = Future.detached {
+            try await environment.data.readMemoBacklinks(address: address)
+        }
+        .map { backlinks in
+            .succeedRefreshBacklinks(backlinks)
+        }
+        .recover { error in
+            .failRefreshBacklinks(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func setDom(

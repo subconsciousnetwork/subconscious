@@ -769,18 +769,11 @@ struct MemoEditorDetailModel: ModelProtocol {
             )
             
         case .refreshBacklinks(let address):
-            let fx: Fx<MemoEditorDetailAction> = Future.detached {
-                try await environment.data.readMemoBacklinks(address: address)
-            }
-            .map { backlinks in
-                .succeedRefreshBacklinks(backlinks)
-            }
-            .recover { error in
-                .failRefreshBacklinks(error.localizedDescription)
-            }
-            .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
+            return refreshBacklinks(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case .succeedRefreshBacklinks(let backlinks):
             var model = state
             model.backlinks = backlinks
@@ -1461,6 +1454,25 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.isLoading = true
         model.saveState = .saved
         return Update(state: model)
+    }
+    
+    static func refreshBacklinks(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        address: Slashlink
+    ) -> Update<MemoEditorDetailModel> {
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            try await environment.data.readMemoBacklinks(address: address)
+        }
+        .map { backlinks in
+            .succeedRefreshBacklinks(backlinks)
+        }
+        .recover { error in
+            .failRefreshBacklinks(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func updateAudience(
