@@ -266,7 +266,7 @@ actor UserProfileService {
         var following: [StoryUser] = []
         let sphere = try await self.noosphere.sphere(address: address)
         let localAddressBook = AddressBook(sphere: sphere)
-        let entries = try await localAddressBook.listEntries(refetch: true)
+        let entries = try await localAddressBook.listEntries()
         
         for entry in entries {
             let slashlink = Func.run {
