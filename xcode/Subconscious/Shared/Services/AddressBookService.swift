@@ -69,7 +69,7 @@ extension AddressBookError: LocalizedError {
 /// An AddressBook can wrap any Sphere and provide a higher-level interface to manage petnames.
 actor AddressBook<Sphere: SphereProtocol> {
     private var sphere: Sphere
-    private var addressBook: [Petname:AddressBookEntry] = [:]
+    private var cache: [Petname:AddressBookEntry] = [:]
     
     /// Logger cannot be static because actor is generic
     private let logger = Logger(
@@ -79,7 +79,7 @@ actor AddressBook<Sphere: SphereProtocol> {
     
     init(sphere: Sphere, addressBook: [Petname:AddressBookEntry] = [:]) {
         self.sphere = sphere
-        self.addressBook = addressBook
+        self.cache = addressBook
     }
     
     /// Get the full list of entries in the address book.
@@ -91,7 +91,8 @@ actor AddressBook<Sphere: SphereProtocol> {
         var entries: [AddressBookEntry] = []
         
         for petname in petnames {
-            if let entry = self.addressBook[petname],
+            // Re-use the cached result if the version matches
+            if let entry = self.cache[petname],
                version == entry.version {
                 entries.append(entry)
                 
@@ -115,8 +116,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             )
             
             entries.append(entry)
-            
-            self.addressBook.updateValue(entry, forKey: petname)
+            self.cache.updateValue(entry, forKey: petname)
         }
         
         // Maintain consistent order
@@ -409,7 +409,7 @@ actor AddressBookService {
     }
     
     /// Disassociates the passed Petname from any DID within the sphere,
-    /// cachesaves the changes and updates the database.
+    /// saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws -> Did {
         let ourIdentity = try await noosphere.identity()
         let did = try await self.noosphere.getPetname(petname: petname)
