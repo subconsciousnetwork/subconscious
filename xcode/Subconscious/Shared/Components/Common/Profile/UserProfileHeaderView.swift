@@ -11,6 +11,7 @@ enum UserProfileAction {
     case requestFollow
     case requestUnfollow
     case editOwnProfile
+    case requestRename
 }
 
 enum ProfileHeaderButtonVariant {

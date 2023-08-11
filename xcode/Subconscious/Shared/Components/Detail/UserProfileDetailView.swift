@@ -41,6 +41,8 @@ struct UserProfileDetailView: View {
             store.send(.requestFollow(user))
         case .requestUnfollow:
             store.send(.requestUnfollow(user))
+        case .requestRename:
+            store.send(.requestRename(user))
         case .editOwnProfile:
             store.send(.presentEditProfile(true))
         }
@@ -122,6 +124,7 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     case presentUnfollowConfirmation(Bool)
     case presentEditProfile(Bool)
     case presentFollowNewUserFormSheet(Bool)
+    case presentRenameSheet(Bool)
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
@@ -134,6 +137,12 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     case failFollowDueToPetnameCollision(petname: Petname)
     case dismissFailFollowError
     case succeedFollow(_ petname: Petname)
+    
+    case requestRename(UserProfile)
+    case attemptRename(from: Petname, to: Petname)
+    case failRename(error: String)
+    case succeedRename(from: Petname, to: Petname)
+    case dismissFailRenameErrorMessage
     
     case requestWaitForFollowedUserResolution(_ petname: Petname)
     case succeedResolveFollowedUser(petname: Petname, cid: Cid?)
@@ -299,6 +308,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var failFollowErrorMessage: String?
     var failUnfollowErrorMessage: String?
     var failEditProfileMessage: String?
+    var failRenameMessage: String?
     
     // This view can be invoked with an initial tab focused
     // but if the user has changed the tab we should remember that across profile refreshes
@@ -314,6 +324,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var isFollowNewUserFormSheetPresented = false
     var isUnfollowConfirmationPresented = false
     var isEditProfileSheetPresented = false
+    var isRenameSheetPresented = false
     
     var address: Slashlink? = nil
     var user: UserProfile? = nil
@@ -323,6 +334,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var statistics: UserProfileStatistics? = nil
     var unfollowCandidate: UserProfile? = nil
+    var renameCandidate: Petname? = nil
     
     static func update(
         state: Self,
@@ -434,6 +446,43 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
+        // MARK: Rename
+        case .presentRenameSheet(let isPresented):
+            return presentRenameSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .requestRename(let user):
+            return requestRename(
+                state: state,
+                environment: environment,
+                user: user
+            )
+        case let .attemptRename(from, to):
+            return attemptRename(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .succeedRename(from, to):
+            return succeedRename(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .failRename(let error):
+            return failRename(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .dismissFailRenameErrorMessage:
+            var model = state
+            model.failRenameMessage = nil
+            return Update(state: model)
         case .failFollowDueToPetnameCollision(let petname):
             return failFollowDueToPetnameCollision(
                 state: state,
@@ -526,6 +575,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        
         }
     }
     
@@ -730,6 +780,87 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.failFollowErrorMessage = error
+        
+        return Update(state: model)
+    }
+    
+    static func presentRenameSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isRenameSheetPresented = isPresented
+        return Update(state: model)
+    }
+    
+    static func requestRename(
+        state: Self,
+        environment: Environment,
+        user: UserProfile
+    ) -> Update<Self> {
+        var model = state
+        
+        guard case let .following(name) = user.ourFollowStatus else {
+            logger.error("Cannot rename a user we do not follow")
+            return Update(state: state)
+        }
+        
+        model.renameCandidate = name.toPetname()
+        
+        return update(
+            state: model,
+            actions: [
+                .presentRenameSheet(true),
+                .followUserSheet(.populate(user))
+            ],
+            environment: environment
+        )
+    }
+    
+    static func attemptRename(
+        state: Self,
+        environment: Environment,
+        from: Petname,
+        to: Petname
+    ) -> Update<Self> {
+        let fx: Fx<UserProfileDetailAction> =
+        Future.detached {
+            let did = try await environment.addressBook.unfollowUser(petname: from)
+            try await environment.addressBook.followUser(did: did, petname: to)
+            
+            return .succeedRename(from: from, to: to)
+        }
+        .recover { error in
+            .failRename(error: error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRename(
+        state: Self,
+        environment: Environment,
+        from: Petname,
+        to: Petname
+    ) -> Update<Self> {
+        var model = state
+        model.renameCandidate = nil
+        model.failRenameMessage = nil
+        return update(state: model, actions: [
+            .presentRenameSheet(false),
+            .refresh(forceSync: true)
+        ], environment: environment)
+    }
+    
+    static func failRename(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        var model = state
+        model.failRenameMessage = error
         
         return Update(state: model)
     }

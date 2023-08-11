@@ -254,6 +254,7 @@ struct UserProfileView: View {
         .unfollow(state: state, send: send)
         .editProfile(app: app, store: store)
         .followNewUser(state: state, send: send)
+        .rename(state: state, send: send)
     }
 }
 
@@ -271,6 +272,13 @@ private extension View {
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
         self.modifier(FollowModifier(state: state, send: send))
+    }
+    
+    func rename(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
+        self.modifier(RenameModifier(state: state, send: send))
     }
     
     func metaSheet(
@@ -350,9 +358,50 @@ private struct FollowModifier: ViewModifier {
                         
                         send(.attemptFollow(did, name.toPetname()))
                     },
+                    label: Text("Follow"),
                     failFollowError: state.failFollowErrorMessage,
                     onDismissError: {
                         send(.dismissFailFollowError)
+                    }
+                )
+            }
+    }
+}
+
+private struct RenameModifier: ViewModifier {
+    let state: UserProfileDetailModel
+    let send: (UserProfileDetailAction) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .sheet(
+                isPresented: Binding(
+                    get: { state.isRenameSheetPresented },
+                    send: send,
+                    tag: UserProfileDetailAction.presentRenameSheet
+                )
+            ) {
+                FollowUserSheet(
+                    state: state.followUserSheet,
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowUserSheetCursor.tag
+                    ),
+                    onAttemptFollow: {
+                        let form = state.followUserSheet.followUserForm
+                        guard let name = form.petname.validated else {
+                            return
+                        }
+                        guard let candidate = state.renameCandidate else {
+                            return
+                        }
+                        
+                        send(.attemptRename(from: candidate, to: name.toPetname()))
+                    },
+                    label: Text("Rename"),
+                    failFollowError: state.failRenameMessage,
+                    onDismissError: {
+                        send(.dismissFailRenameErrorMessage)
                     }
                 )
             }
