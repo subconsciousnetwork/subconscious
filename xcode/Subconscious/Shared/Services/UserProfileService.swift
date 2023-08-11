@@ -143,10 +143,6 @@ actor UserProfileService {
         self.jsonEncoder.outputFormatting = .sortedKeys
     }
     
-    public func invalidateCache() {
-        self.cache.removeAll()
-    }
-    
     /// Attempt to read & deserialize a user `_profile_.json` at the given address.
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.

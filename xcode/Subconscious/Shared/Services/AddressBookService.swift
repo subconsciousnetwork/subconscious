@@ -311,8 +311,8 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
-    /// Associates the passed DID with the passed petname within the sphere, clears the cache,
-    /// clears the cache, saves the changes and updates the database.
+    /// Associates the passed DID with the passed petname within the sphere,
+    /// saves the changes and updates the database.
     func followUser(
         did: Did,
         petname: Petname,
@@ -392,7 +392,7 @@ actor AddressBookService {
     }
     
     /// Associates the passed DID with the passed petname within the sphere,
-    /// clears the cache, saves the changes and updates the database.
+    /// saves the changes and updates the database.
     nonisolated func followUserPublisher(
         did: Did,
         petname: Petname,
@@ -409,7 +409,7 @@ actor AddressBookService {
     }
     
     /// Disassociates the passed Petname from any DID within the sphere,
-    /// clears the cache, saves the changes and updates the database.
+    /// cachesaves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws -> Did {
         let ourIdentity = try await noosphere.identity()
         let did = try await self.noosphere.getPetname(petname: petname)
