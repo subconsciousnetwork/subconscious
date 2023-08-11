@@ -816,6 +816,33 @@ actor DataService {
     ) async -> Memo? {
         local.read(slug)
     }
+    
+    func readMemoBacklinks(
+        did: Did,
+        address: Slashlink
+    ) async throws -> [EntryStub] {
+        let identity = try? await noosphere.identity()
+        let entries = try database.readEntryBacklinks(
+            owner: identity,
+            did: did,
+            slug: address.slug
+        )
+        
+        var backlinks: [EntryStub] = []
+        for entry in entries {
+            guard let author = try? await userProfile.buildUserProfile(
+                address: entry.address
+            ) else {
+                logger.error("Failed to load author for \(entry.address)")
+                backlinks.append(entry)
+                continue
+            }
+            
+            backlinks.append(entry.withAuthor(author))
+        }
+        
+        return backlinks
+    }
 
     /// Read editor detail for address.
     /// Addresses with petnames will throw an exception, since we don't
@@ -838,25 +865,7 @@ actor DataService {
         
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
-        
-        let entries = try database.readEntryBacklinks(
-            owner: identity,
-            did: did,
-            slug: address.slug
-        )
-        
-        var backlinks: [EntryStub] = []
-        for entry in entries {
-            guard let author = try? await userProfile.buildUserProfile(
-                address: entry.address
-            ) else {
-                logger.error("Failed to load author for \(entry.address)")
-                backlinks.append(entry)
-                continue
-            }
-            
-            backlinks.append(entry.withAuthor(author))
-        }
+        let backlinks = try await readMemoBacklinks(did: did, address: address)
         
         guard let memo = memo else {
             logger.log(
@@ -921,26 +930,7 @@ actor DataService {
             return nil
         }
         
-        guard let entries = try? database.readEntryBacklinks(
-            owner: identity,
-            did: did,
-            slug: address.slug
-        ) else {
-            return nil
-        }
-        
-        var backlinks: [EntryStub] = []
-        for entry in entries {
-            guard let author = try? await userProfile.buildUserProfile(
-                address: entry.address
-            ) else {
-                logger.error("Failed to load author for \(entry.address)")
-                backlinks.append(entry)
-                continue
-            }
-            
-            backlinks.append(entry.withAuthor(author))
-        }
+        let backlinks = (try? await readMemoBacklinks(did: did, address: address)) ?? []
 
         return MemoDetailResponse(
             entry: MemoEntry(

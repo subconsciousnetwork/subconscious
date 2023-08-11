@@ -305,6 +305,11 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Reload detail from source of truth
     case refreshDetail
     case refreshDetailIfStale
+    
+    case refreshBacklinks
+    case succeedRefreshBacklinks(_ backlinks: [EntryStub])
+    case failRefreshBacklinks(_ error: String)
+    
     /// Unable to load detail
     case failLoadDetail(String)
     /// Set entry detail.
@@ -734,6 +739,34 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+            
+        case .refreshBacklinks:
+            let fx: Fx<MemoEditorDetailAction> = Future.detached {
+                guard let address = state.address else {
+                    logger.error("Missing address, cannot load backlinks")
+                    return []
+                }
+                
+                let did = try await environment.noosphere.resolve(peer: address.peer)
+                return try await environment.data.readMemoBacklinks(did: did, address: address)
+            }
+            .map { backlinks in
+                .succeedRefreshBacklinks(backlinks)
+            }
+            .recover { error in
+                .failRefreshBacklinks(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedRefreshBacklinks(let backlinks):
+            var model = state
+            model.backlinks = backlinks
+            return Update(state: model)
+        case .failRefreshBacklinks(let error):
+            logger.error("Failed to refresh backlinks: \(error)")
+            return Update(state: state)
+            
         case .requestDelete(let address):
             return requestDelete(
                 state: state,
@@ -1000,11 +1033,14 @@ struct MemoEditorDetailModel: ModelProtocol {
         // Address? Attempt to load detail.
         return update(
             state: state,
-            action: .loadDetail(
-                address: address,
-                fallback: info.fallback,
-                autofocus: false
-            ),
+            actions: [
+                .loadDetail(
+                    address: address,
+                    fallback: info.fallback,
+                    autofocus: false
+                ),
+                .refreshBacklinks
+            ],
             environment: environment
         )
     }
@@ -1281,15 +1317,6 @@ struct MemoEditorDetailModel: ModelProtocol {
             left: FileFingerprint(state),
             right: FileFingerprint(detail)
         )
-        
-        // Our entries may be identical, but if the backlinks differ then we need to refresh
-        if state.backlinks != detail.backlinks {
-            return update(
-                state: model,
-                action: .forceSetDetail(detail),
-                environment: environment
-            )
-        }
         
         // Last write wins strategy
         switch change {
