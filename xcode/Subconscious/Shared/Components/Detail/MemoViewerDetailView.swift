@@ -13,6 +13,8 @@ import ObservableStore
 /// Display a read-only memo detail view.
 /// Used for content from other spheres that we don't have write access to.
 struct MemoViewerDetailView: View {
+    @ObservedObject var app: Store<AppModel>
+    
     @StateObject private var store = Store(
         state: MemoViewerDetailModel(),
         environment: AppEnvironment.default
@@ -69,6 +71,11 @@ struct MemoViewerDetailView: View {
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             MemoViewerDetailModel.logger.debug("[action] \(message)")
+        }
+        .onReceive(app.actions) { action in
+            MemoViewerDetailAction
+                .fromAppAction(action: action, description: description)
+                .forEach(store.send)
         }
         .sheet(
             isPresented: Binding(
@@ -261,6 +268,25 @@ extension MemoViewerDetailAction: CustomLogStringConvertible {
             return "setDetail(...)"
         default:
             return String(describing: self)
+        }
+    }
+}
+
+/// React to actions from the root app store
+extension MemoViewerDetailAction {
+    static func fromAppAction(
+        action: AppAction,
+        description: MemoViewerDetailDescription
+    ) -> [MemoViewerDetailAction] {
+        switch (action) {
+        case .succeedIndexOurSphere(_),
+             .succeedIndexPeer(_):
+            return [
+                .refreshBacklinks(description.address),
+                .fetchTranscludePreviews
+            ]
+        case _:
+            return []
         }
     }
 }

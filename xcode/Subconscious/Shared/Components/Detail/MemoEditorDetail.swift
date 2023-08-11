@@ -12,6 +12,8 @@ import Combine
 
 //  MARK: View
 struct MemoEditorDetailView: View {
+    @ObservedObject var app: Store<AppModel>
+    
     /// Detail keeps a separate internal store for editor state that does not
     /// need to be surfaced in higher level views.
     ///
@@ -196,6 +198,12 @@ struct MemoEditorDetailView: View {
         ) { action in
             notify(action)
         }
+        .onReceive(
+            app.actions.compactMap { action in
+                MemoEditorDetailAction.fromAppAction(action: action, description: description)
+            },
+            perform: store.send
+        )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
@@ -478,6 +486,26 @@ extension MemoEditorDetailAction {
             return .moveEntry(from: from, to: to)
         case let .merge(parent, child):
             return .mergeEntry(parent: parent, child: child)
+        }
+    }
+}
+
+/// React to actions from the root app store
+extension MemoEditorDetailAction {
+    static func fromAppAction(
+        action: AppAction,
+        description: MemoEditorDetailDescription
+    ) -> MemoEditorDetailAction? {
+        guard let address = description.address else {
+            return nil
+        }
+        
+        switch (action) {
+        case .succeedIndexOurSphere(_),
+             .succeedIndexPeer(_):
+            return .refreshBacklinks(address)
+        case _:
+            return nil
         }
     }
 }
@@ -2061,6 +2089,7 @@ extension MemoEntry {
 struct Detail_Previews: PreviewProvider {
     static var previews: some View {
         MemoEditorDetailView(
+            app: Store(state: AppModel(), environment: AppEnvironment()),
             description: MemoEditorDetailDescription(
                 address: Slashlink("/nothing-is-lost-in-the-universe")!,
                 fallback: "Nothing is lost in the universe"

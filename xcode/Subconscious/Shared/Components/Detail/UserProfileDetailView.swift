@@ -169,6 +169,21 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     }
 }
 
+/// React to actions from the root app store
+extension UserProfileDetailAction {
+    static func fromAppAction(
+        action: AppAction,
+        state: UserProfileDetailModel
+    ) -> UserProfileDetailAction? {
+        switch (action) {
+        case .succeedIndexPeer(let peer) where peer.identity == state.user?.did:
+            return .refresh(forceSync: false)
+        case _:
+            return nil
+        }
+    }
+}
+
 struct UserProfileStatistics: Equatable, Codable, Hashable {
     let noteCount: Int
     let backlinkCount: Int
