@@ -918,14 +918,11 @@ actor DataService {
             return nil
         }
         
-        let backlinks = (try? await readMemoBacklinks(address: address)) ?? []
-
         return MemoDetailResponse(
             entry: MemoEntry(
                 address: address,
                 contents: memo
-            ),
-            backlinks: backlinks
+            )
         )
     }
 

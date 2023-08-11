@@ -236,6 +236,10 @@ enum MemoViewerDetailAction: Hashable {
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
     
+    case refreshBacklinks(_ address: Slashlink)
+    case succeedRefreshBacklinks(_ backlinks: [EntryStub])
+    case failRefreshBacklinks(_ error: String)
+    
     case fetchTranscludePreviews
     case succeedFetchTranscludePreviews([Slashlink: EntryStub])
     case failFetchTranscludePreviews(_ error: String)
@@ -319,6 +323,28 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .failLoadDetail(let message):
             logger.log("\(message)")
             return Update(state: state)
+            
+        case .refreshBacklinks(let address):
+            let fx: Fx<MemoViewerDetailAction> = Future.detached {
+                try await environment.data.readMemoBacklinks(address: address)
+            }
+            .map { backlinks in
+                .succeedRefreshBacklinks(backlinks)
+            }
+            .recover { error in
+                .failRefreshBacklinks(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedRefreshBacklinks(let backlinks):
+            var model = state
+            model.backlinks = backlinks
+            return Update(state: model)
+        case .failRefreshBacklinks(let error):
+            logger.error("Failed to refresh backlinks: \(error)")
+            return Update(state: state)
+           
         case .presentMetaSheet(let isPresented):
             return presentMetaSheet(
                 state: state,
@@ -377,7 +403,8 @@ struct MemoViewerDetailModel: ModelProtocol {
             // Set meta sheet address as well
             actions: [
                 .setMetaSheetAddress(description.address),
-                .fetchOwnerProfile
+                .fetchOwnerProfile,
+                .refreshBacklinks(description.address)
             ],
             environment: environment
         ).mergeFx(fx)
@@ -400,7 +427,6 @@ struct MemoViewerDetailModel: ModelProtocol {
         let memo = response.entry.contents
         model.address = response.entry.address
         model.title = memo.title()
-        model.backlinks = response.backlinks
         
         let dom = memo.dom()
         
