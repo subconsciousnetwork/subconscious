@@ -11,7 +11,6 @@ import Foundation
 struct MemoEditorDetailResponse: Hashable {
     var saveState: SaveState
     var entry: MemoEntry
-    var backlinks: [EntryStub] = []
 }
 
 extension MemoEditorDetailResponse: CustomLogStringConvertible {

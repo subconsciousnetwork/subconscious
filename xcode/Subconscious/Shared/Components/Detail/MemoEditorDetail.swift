@@ -306,7 +306,7 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     case refreshDetail
     case refreshDetailIfStale
     
-    case refreshBacklinks
+    case refreshBacklinks(_ address: Slashlink)
     case succeedRefreshBacklinks(_ backlinks: [EntryStub])
     case failRefreshBacklinks(_ error: String)
     
@@ -740,15 +740,9 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment
             )
             
-        case .refreshBacklinks:
+        case .refreshBacklinks(let address):
             let fx: Fx<MemoEditorDetailAction> = Future.detached {
-                guard let address = state.address else {
-                    logger.error("Missing address, cannot load backlinks")
-                    return []
-                }
-                
-                let did = try await environment.noosphere.resolve(peer: address.peer)
-                return try await environment.data.readMemoBacklinks(did: did, address: address)
+                try await environment.data.readMemoBacklinks(address: address)
             }
             .map { backlinks in
                 .succeedRefreshBacklinks(backlinks)
@@ -1039,7 +1033,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                     fallback: info.fallback,
                     autofocus: false
                 ),
-                .refreshBacklinks
             ],
             environment: environment
         )
@@ -1201,7 +1194,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         }).eraseToAnyPublisher()
         
         let model = prepareLoadDetail(state)
-        return Update(state: model, fx: fx)
+        return update(state: model, action: .refreshBacklinks(address), environment: environment).mergeFx(fx)
     }
     
     /// Reload detail
@@ -1279,7 +1272,6 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
         model.additionalHeaders = detail.entry.contents.additionalHeaders
-        model.backlinks = detail.backlinks
         model.saveState = detail.saveState
         
         let subtext = detail.entry.contents.body

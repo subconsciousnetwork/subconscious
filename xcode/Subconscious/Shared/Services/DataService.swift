@@ -818,10 +818,11 @@ actor DataService {
     }
     
     func readMemoBacklinks(
-        did: Did,
         address: Slashlink
     ) async throws -> [EntryStub] {
         let identity = try? await noosphere.identity()
+        let did = try await noosphere.resolve(peer: address.peer)
+        
         let entries = try database.readEntryBacklinks(
             owner: identity,
             did: did,
@@ -865,7 +866,6 @@ actor DataService {
         
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
-        let backlinks = try await readMemoBacklinks(did: did, address: address)
         
         guard let memo = memo else {
             logger.log(
@@ -876,8 +876,7 @@ actor DataService {
                 entry: Entry(
                     address: address,
                     contents: Memo.draft(body: fallback)
-                ),
-                backlinks: backlinks
+                )
             )
         }
         
@@ -886,8 +885,7 @@ actor DataService {
             entry: Entry(
                 address: address,
                 contents: memo
-            ),
-            backlinks: backlinks
+            )
         )
     }
 
@@ -913,16 +911,6 @@ actor DataService {
     func readMemoDetail(
         address: Slashlink
     ) async -> MemoDetailResponse? {
-        guard let identity = try? await noosphere.identity() else {
-            return nil
-        }
-        
-        guard let did = try? await noosphere.resolve(
-            peer: address.peer
-        ) else {
-            return nil
-        }
-        
         // Read memo from local or sphere.
         guard let memo = try? await readMemo(
             address: address
@@ -930,7 +918,7 @@ actor DataService {
             return nil
         }
         
-        let backlinks = (try? await readMemoBacklinks(did: did, address: address)) ?? []
+        let backlinks = (try? await readMemoBacklinks(address: address)) ?? []
 
         return MemoDetailResponse(
             entry: MemoEntry(
