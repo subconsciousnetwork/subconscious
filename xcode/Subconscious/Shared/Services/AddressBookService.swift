@@ -69,7 +69,9 @@ extension AddressBookError: LocalizedError {
 /// An AddressBook can wrap any Sphere and provide a higher-level interface to manage petnames.
 actor AddressBook<Sphere: SphereProtocol> {
     private var sphere: Sphere
-    private var cache: [Petname:AddressBookEntry] = [:]
+    
+    private var cacheVersion: Cid?
+    private var cache: [AddressBookEntry] = []
     
     /// Logger cannot be static because actor is generic
     private let logger = Logger(
@@ -77,7 +79,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         category: "AddressBookService"
     )
     
-    init(sphere: Sphere, addressBook: [Petname:AddressBookEntry] = [:]) {
+    init(sphere: Sphere, addressBook: [AddressBookEntry] = []) {
         self.sphere = sphere
         self.cache = addressBook
     }
@@ -88,17 +90,14 @@ actor AddressBook<Sphere: SphereProtocol> {
         let petnames = try await sphere.listPetnames()
         let version = try await sphere.version()
         
+        if let cachedVersion = self.cacheVersion,
+           version == cachedVersion {
+            return self.cache
+        }
+        
         var entries: [AddressBookEntry] = []
         
         for petname in petnames {
-            // Re-use the cached result if the version matches
-            if let entry = self.cache[petname],
-               version == entry.version {
-                entries.append(entry)
-                
-                continue
-            }
-            
             let did = try await sphere.getPetname(petname: petname)
             let status = await Func.run {
                 do {
@@ -116,7 +115,6 @@ actor AddressBook<Sphere: SphereProtocol> {
             )
             
             entries.append(entry)
-            self.cache.updateValue(entry, forKey: petname)
         }
         
         // Maintain consistent order
@@ -124,6 +122,8 @@ actor AddressBook<Sphere: SphereProtocol> {
             a.name < b.name
         }
         
+        self.cache = entries
+        self.cacheVersion = version
         return entries
     }
 
