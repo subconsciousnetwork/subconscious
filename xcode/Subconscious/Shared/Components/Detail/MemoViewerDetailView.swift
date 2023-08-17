@@ -88,7 +88,22 @@ struct MemoViewerDetailView: View {
                 send: Address.forward(
                     send: store.send,
                     tag: MemoViewerDetailMetaSheetCursor.tag
-                )
+                ),
+                onViewAuthorProfile: {
+                    guard let owner = store.state.owner else {
+                        return
+                    }
+                    notify(
+                        .requestDetail(
+                            MemoDetailDescription.profile(
+                                UserProfileDetailDescription(
+                                    address: owner.address,
+                                    user: owner
+                                )
+                            )
+                        )
+                    )
+                }
             )
         }
     }

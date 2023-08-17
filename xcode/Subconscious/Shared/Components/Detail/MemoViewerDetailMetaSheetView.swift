@@ -14,7 +14,8 @@ struct MemoViewerDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
     var state: MemoViewerDetailMetaSheetModel
     var send: (MemoViewerDetailMetaSheetAction) -> Void
-
+    var onViewAuthorProfile: () -> Void
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -45,6 +46,20 @@ struct MemoViewerDetailMetaSheetView: View {
                             item: state.shareableLink ?? ""
                         )
                         .disabled(state.shareableLink == nil)
+                        
+                        Button(
+                            action: {
+                                onViewAuthorProfile()
+                                send(.requestDismiss)
+                            },
+                            label: {
+                                Label(
+                                    "View Author Profile",
+                                    systemImage: "person"
+                                )
+                            }
+                        )
+                        .buttonStyle(RowButtonStyle())
                     }
                 }
                 .padding()
@@ -107,7 +122,8 @@ struct MemoViewerDetailMetaSheetView_Previews: PreviewProvider {
                 state: MemoViewerDetailMetaSheetModel(
                     address: Slashlink("@bob/foo")!
                 ),
-                send: { action in }
+                send: { action in },
+                onViewAuthorProfile: {}
             )
         }
     }
