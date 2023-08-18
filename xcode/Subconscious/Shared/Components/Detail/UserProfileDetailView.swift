@@ -848,10 +848,15 @@ struct UserProfileDetailModel: ModelProtocol {
         var model = state
         model.renameCandidate = nil
         model.failRenameMessage = nil
-        return update(state: model, actions: [
-            .presentRenameSheet(false),
-            .refresh(forceSync: true)
-        ], environment: environment)
+        
+        return update(
+            state: model,
+            actions: [
+                .presentRenameSheet(false),
+                .refresh(forceSync: true)
+            ],
+            environment: environment
+        )
     }
     
     static func failRename(
