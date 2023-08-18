@@ -143,10 +143,6 @@ actor UserProfileService {
         self.jsonEncoder.outputFormatting = .sortedKeys
     }
     
-    public func invalidateCache() {
-        self.cache.removeAll()
-    }
-    
     /// Attempt to read & deserialize a user `_profile_.json` at the given address.
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
@@ -266,7 +262,7 @@ actor UserProfileService {
         var following: [StoryUser] = []
         let sphere = try await self.noosphere.sphere(address: address)
         let localAddressBook = AddressBook(sphere: sphere)
-        let entries = try await localAddressBook.listEntries(refetch: true)
+        let entries = try await localAddressBook.listEntries()
         
         for entry in entries {
             let slashlink = Func.run {

@@ -13,6 +13,7 @@ struct AddressBookEntry: Equatable, Hashable, Codable {
     let petname: Petname
     let did: Did
     let status: ResolutionStatus
+    let version: Cid
     
     var name: Petname.Name {
         petname.root
@@ -68,7 +69,9 @@ extension AddressBookError: LocalizedError {
 /// An AddressBook can wrap any Sphere and provide a higher-level interface to manage petnames.
 actor AddressBook<Sphere: SphereProtocol> {
     private var sphere: Sphere
-    private var addressBook: [AddressBookEntry]?
+    
+    private var cacheVersion: Cid?
+    private var cache: [AddressBookEntry] = []
     
     /// Logger cannot be static because actor is generic
     private let logger = Logger(
@@ -76,27 +79,23 @@ actor AddressBook<Sphere: SphereProtocol> {
         category: "AddressBookService"
     )
     
-    init(sphere: Sphere, addressBook: [AddressBookEntry]? = nil) {
+    init(sphere: Sphere, addressBook: [AddressBookEntry] = []) {
         self.sphere = sphere
-        self.addressBook = addressBook
-    }
-    
-    func invalidateCache() {
-        addressBook = nil
+        self.cache = addressBook
     }
     
     /// Get the full list of entries in the address book.
-    /// This is cached after the first use unless requested using refetch.
     /// If an error occurs producing the entries the resulting list will be empty.
-    func listEntries(
-        refetch: Bool = false
-    ) async throws -> [AddressBookEntry] {
-        if let addressBook = addressBook {
-            if !refetch {
-                return addressBook
-            }
+    func listEntries() async throws -> [AddressBookEntry] {
+        let version = try await sphere.version()
+        
+        if let cachedVersion = self.cacheVersion,
+           version == cachedVersion {
+            return self.cache
         }
-        var addressBook: [AddressBookEntry] = []
+        
+        var entries: [AddressBookEntry] = []
+        
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
             let did = try await sphere.getPetname(petname: petname)
@@ -108,33 +107,31 @@ actor AddressBook<Sphere: SphereProtocol> {
                     return ResolutionStatus.unresolved
                 }
             }
-            
-            addressBook.append(
-                AddressBookEntry(
-                    petname: petname,
-                    did: did,
-                    status: status
-                )
+            let entry = AddressBookEntry(
+                petname: petname,
+                did: did,
+                status: status,
+                version: version
             )
+            
+            entries.append(entry)
         }
         
         // Maintain consistent order
-        addressBook.sort { a, b in
+        entries.sort { a, b in
             a.name < b.name
         }
         
-        self.addressBook = addressBook
-        return addressBook
+        self.cache = entries
+        self.cacheVersion = version
+        return entries
     }
 
     /// Get the full list of entries in the address book.
-    /// This is cached after the first use unless requested using refetch.
     /// If an error occurs producing the entries the resulting list will be empty.
-    nonisolated func listEntriesPublisher(
-        refetch: Bool = false
-    ) -> AnyPublisher<[AddressBookEntry], Error> {
+    nonisolated func listEntriesPublisher() -> AnyPublisher<[AddressBookEntry], Error> {
         Future.detached {
-            try await self.listEntries(refetch: refetch)
+            try await self.listEntries()
         }
         .eraseToAnyPublisher()
     }
@@ -253,7 +250,7 @@ actor AddressBook<Sphere: SphereProtocol> {
     
     func followingStatus(did: Did) async -> UserProfileFollowStatus {
         do {
-            let found = try await listEntries(refetch: false)
+            let found = try await listEntries()
                 .filter{ f in
                     f.did == did
                 }
@@ -300,28 +297,22 @@ actor AddressBookService {
     }
     
     /// Get the full list of entries in the address book.
-    /// This is cached after the first use unless requested using refetch.
     /// If an error occurs producing the entries the resulting list will be empty.
-    func listEntries(
-        refetch: Bool = false
-    ) async throws -> [AddressBookEntry] {
-        return try await self.addressBook.listEntries(refetch: refetch)
+    func listEntries() async throws -> [AddressBookEntry] {
+        return try await self.addressBook.listEntries()
     }
 
     /// Get the full list of entries in the address book.
-    /// This is cached after the first use unless requested using refetch.
     /// If an error occurs producing the entries the resulting list will be empty.
-    nonisolated func listEntriesPublisher(
-        refetch: Bool = false
-    ) -> AnyPublisher<[AddressBookEntry], Error> {
+    nonisolated func listEntriesPublisher() -> AnyPublisher<[AddressBookEntry], Error> {
         Future.detached {
-            try await self.addressBook.listEntries(refetch: refetch)
+            try await self.addressBook.listEntries()
         }
         .eraseToAnyPublisher()
     }
     
-    /// Associates the passed DID with the passed petname within the sphere, clears the cache,
-    /// clears the cache, saves the changes and updates the database.
+    /// Associates the passed DID with the passed petname within the sphere,
+    /// saves the changes and updates the database.
     func followUser(
         did: Did,
         petname: Petname,
@@ -345,7 +336,6 @@ actor AddressBookService {
                 since: version
             )
         )
-        await self.addressBook.invalidateCache()
     }
     
     func resolutionStatus(petname: Petname) async throws -> ResolutionStatus {
@@ -402,7 +392,7 @@ actor AddressBookService {
     }
     
     /// Associates the passed DID with the passed petname within the sphere,
-    /// clears the cache, saves the changes and updates the database.
+    /// saves the changes and updates the database.
     nonisolated func followUserPublisher(
         did: Did,
         petname: Petname,
@@ -419,7 +409,7 @@ actor AddressBookService {
     }
     
     /// Disassociates the passed Petname from any DID within the sphere,
-    /// clears the cache, saves the changes and updates the database.
+    /// saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws -> Did {
         let ourIdentity = try await noosphere.identity()
         let did = try await self.noosphere.getPetname(petname: petname)
@@ -431,7 +421,6 @@ actor AddressBookService {
                 since: version
             )
         )
-        await self.addressBook.invalidateCache()
         return did
     }
     
