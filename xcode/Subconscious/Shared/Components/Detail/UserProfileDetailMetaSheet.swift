@@ -13,7 +13,7 @@ struct UserProfileMetaSheetDetailsView: View {
     var qrCodeSize = 240.0
     
     var body: some View {
-        DidQrCodeView(did: user.did, color: Color.gray)
+        ShareableDidQrCodeView(did: user.did, color: Color.gray)
             .frame(maxWidth: qrCodeSize)
         
         Spacer(minLength: AppTheme.padding)
