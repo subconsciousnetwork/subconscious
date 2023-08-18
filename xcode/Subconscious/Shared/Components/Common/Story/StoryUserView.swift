@@ -93,6 +93,17 @@ struct StoryUserView: View {
                                     )
                                 }
                             )
+                            Button(
+                                action: {
+                                    profileAction(story.user, .requestRename)
+                                },
+                                label: {
+                                    Label(
+                                        title: { Text("Rename") },
+                                        icon: { Image(systemName: "pencil") }
+                                    )
+                                }
+                            )
                         } else {
                             Button(
                                 action: {

@@ -50,7 +50,16 @@ struct FollowUserSheetModel: ModelProtocol {
             var model = state
             model.user = user
             
-            guard let bestFollowName = user.nickname ?? user.address.petname?.leaf else {
+            let initialName: Petname.Name? = Func.run {
+                switch (user.ourFollowStatus) {
+                case .following(let name):
+                    return name
+                case .notFollowing:
+                    return user.nickname ?? user.address.petname?.leaf
+                }
+            }
+            
+            guard let bestFollowName = initialName else {
                 return Update(state: model)
             }
             
@@ -164,6 +173,7 @@ struct FollowUserSheet: View {
     var send: (FollowUserSheetAction) -> Void
     
     var onAttemptFollow: () -> Void
+    var label: Text
     
     var failFollowError: String?
     var onDismissError: () -> Void
@@ -206,7 +216,7 @@ struct FollowUserSheet: View {
                 Button(
                     action: onAttemptFollow,
                     label: {
-                        Text("Follow")
+                        label
                     }
                 )
                 .buttonStyle(PillButtonStyle())
