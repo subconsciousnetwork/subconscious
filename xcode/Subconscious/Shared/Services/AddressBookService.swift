@@ -87,7 +87,6 @@ actor AddressBook<Sphere: SphereProtocol> {
     /// Get the full list of entries in the address book.
     /// If an error occurs producing the entries the resulting list will be empty.
     func listEntries() async throws -> [AddressBookEntry] {
-        let petnames = try await sphere.listPetnames()
         let version = try await sphere.version()
         
         if let cachedVersion = self.cacheVersion,
@@ -97,6 +96,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         
         var entries: [AddressBookEntry] = []
         
+        let petnames = try await sphere.listPetnames()
         for petname in petnames {
             let did = try await sphere.getPetname(petname: petname)
             let status = await Func.run {
