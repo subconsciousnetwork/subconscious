@@ -73,9 +73,11 @@ struct MemoViewerDetailView: View {
             MemoViewerDetailModel.logger.debug("[action] \(message)")
         }
         .onReceive(app.actions) { action in
-            MemoViewerDetailAction
-                .fromAppAction(action: action, description: description)
-                .forEach(store.send)
+            guard let action = MemoViewerDetailAction.fromAppAction(action) else {
+                return
+            }
+            
+            store.send(action)
         }
         .sheet(
             isPresented: Binding(
@@ -255,6 +257,8 @@ enum MemoViewerDetailAction: Hashable {
     case succeedFetchOwnerProfile(UserProfile)
     case failFetchOwnerProfile(_ error: String)
     
+    case succeedIndexBackgroundSphere
+    
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
@@ -275,18 +279,14 @@ extension MemoViewerDetailAction: CustomLogStringConvertible {
 /// React to actions from the root app store
 extension MemoViewerDetailAction {
     static func fromAppAction(
-        action: AppAction,
-        description: MemoViewerDetailDescription
-    ) -> [MemoViewerDetailAction] {
+        _ action: AppAction
+    ) -> MemoViewerDetailAction? {
         switch (action) {
         case .succeedIndexOurSphere(_),
              .succeedIndexPeer(_):
-            return [
-                .refreshBacklinks(description.address),
-                .fetchTranscludePreviews
-            ]
+            return .succeedIndexBackgroundSphere
         case _:
-            return []
+            return nil
         }
     }
 }
@@ -400,6 +400,11 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .failFetchOwnerProfile(let error):
             logger.error("Failed to fetch owner: \(error)")
             return Update(state: state)
+        case .succeedIndexBackgroundSphere:
+            return succeedIndexBackgroundSphere(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -557,6 +562,25 @@ struct MemoViewerDetailModel: ModelProtocol {
         model.isMetaSheetPresented = isPresented
         return Update(state: model)
     }
+    
+    static func succeedIndexBackgroundSphere(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            actions: [
+                .refreshBacklinks(address),
+                .fetchTranscludePreviews
+            ],
+            environment: environment
+        )
+    }
+    
 }
 
 /// Meta sheet cursor
