@@ -248,11 +248,11 @@ actor AddressBook<Sphere: SphereProtocol> {
         .eraseToAnyPublisher()
     }
     
-    func followingStatus(did: Did) async -> UserProfileFollowStatus {
+    func followingStatus(did: Did, expectedName: Petname.Name?) async -> UserProfileFollowStatus {
         do {
             let found = try await listEntries()
                 .filter{ f in
-                    f.did == did
+                    f.did == did && (expectedName == nil || f.name == expectedName)
                 }
                 .first
             
@@ -474,14 +474,17 @@ actor AddressBookService {
     }
     
     /// Is this user in the AddressBook?
-    func followingStatus(did: Did) async -> UserProfileFollowStatus {
-        await self.addressBook.followingStatus(did: did)
+    func followingStatus(did: Did, expectedName: Petname.Name?) async -> UserProfileFollowStatus {
+        await self.addressBook.followingStatus(did: did, expectedName: expectedName)
     }
     
     /// Is this user in the AddressBook?
-    nonisolated func followingStatusPublisher(did: Did) -> AnyPublisher<UserProfileFollowStatus, Error> {
+    nonisolated func followingStatusPublisher(
+        did: Did,
+        expectedName: Petname.Name?
+    ) -> AnyPublisher<UserProfileFollowStatus, Error> {
         Future.detached {
-            await self.addressBook.followingStatus(did: did)
+            await self.addressBook.followingStatus(did: did, expectedName: expectedName)
         }
         .eraseToAnyPublisher()
     }
