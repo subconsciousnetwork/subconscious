@@ -251,8 +251,8 @@ actor AddressBook<Sphere: SphereProtocol> {
     func followingStatus(did: Did, expectedName: Petname.Name?) async -> UserProfileFollowStatus {
         do {
             let found = try await listEntries()
-                .filter{ f in
-                    f.did == did && (expectedName == nil || f.name == expectedName)
+                .filter { entry in
+                    entry.did == did && (expectedName == nil || entry.name == expectedName)
                 }
                 .first
             
