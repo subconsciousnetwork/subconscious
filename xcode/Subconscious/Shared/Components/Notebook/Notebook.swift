@@ -33,11 +33,16 @@ struct NotebookView: View {
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
         ZStack {
-            NotebookNavigationView(
-                app: app,
-                store: store
-            )
-            .zIndex(1)
+            if true {
+                NotebookFeedView(app: app, store: store)
+            } else {
+                NotebookNavigationView(
+                    app: app,
+                    store: store
+                )
+                .zIndex(1)
+            }
+            
             if store.state.isSearchPresented {
                 SearchView(
                     state: store.state.search,
@@ -117,6 +122,10 @@ enum NotebookAction {
     case listRecent
     case setRecent([EntryStub])
     case listRecentFailure(String)
+    
+    case requestFeed
+    case succeedFeed([EntryStub])
+    case failFeed(String)
     
     // Delete entries
     case confirmDelete(Slashlink?)
@@ -343,6 +352,8 @@ struct NotebookModel: ModelProtocol {
     ///  Recent entries (nil means "hasn't been loaded from DB")
     var recent: [EntryStub]? = nil
     
+    var feed: [EntryStub]? = nil
+    
     //  Note deletion action sheet
     /// Delete confirmation action sheet
     var entryToDelete: Slashlink? = nil
@@ -525,6 +536,15 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestFeed:
+            return requestFeed(state: state, environment: environment)
+        case .succeedFeed(let entries):
+            var model = state
+            model.feed = entries
+            return Update(state: model)
+        case .failFeed(let error):
+            logger.log("Failed to get feed: \(error)")
+            return Update(state: state)
         }
     }
     
@@ -903,5 +923,24 @@ struct NotebookModel: ModelProtocol {
             environment: environment
         )
     }
-    
+  
+    static func requestFeed(
+        state: NotebookModel,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel> {
+        let fx: Fx<NotebookAction> = environment.data
+            .listFeedPublisher()
+            .map({ feed in
+                NotebookAction.succeedFeed(feed)
+            })
+            .catch({ error in
+                Just(
+                    NotebookAction.failFeed(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
 }
