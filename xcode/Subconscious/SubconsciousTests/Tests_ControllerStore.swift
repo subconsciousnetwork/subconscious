@@ -57,21 +57,27 @@ final class Tests_ControllerStore: XCTestCase {
             state: TestModel,
             text: String
         ) -> Update {
+            var model = state
+            model.text = text
+            
             let render = {
                 self.textView.text = text
             }
-            return Update(state: state, render: render)
+            
+            return Update(state: model, render: render)
         }
     }
 
     @MainActor
-    func testRunsRender() throws {
-        var store = ControllerStore.Store<TestViewController>(
+    func testUpdatesStateAndRunsRender() throws {
+        let store = ControllerStore.Store<TestViewController>(
             state: TestModel()
         )
-        var controller = TestViewController()
+        let controller = TestViewController()
         store.connect(controller)
+        
         store.transact(TestAction.setText("Foo"))
+        XCTAssertEqual(store.state.text, "Foo", "Store updates state")
         XCTAssertEqual(controller.textView.text, "Foo", "Store renders text")
     }
 }
