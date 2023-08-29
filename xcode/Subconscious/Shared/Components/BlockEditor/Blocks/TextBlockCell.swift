@@ -19,7 +19,7 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
-        lazy var textView = UITextView(frame: .zero)
+        lazy var textView = SubtextTextView(frame: .zero)
         
         private lazy var divider = UIView.divider()
         

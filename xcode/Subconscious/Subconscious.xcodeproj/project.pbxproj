@@ -395,6 +395,7 @@
 		B8CA8F2828909FBA005F8802 /* StoryPromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */; };
 		B8CAA6CB2A02FA7000F4A0F6 /* Link.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CAA6CA2A02FA7000F4A0F6 /* Link.swift */; };
 		B8CAA6CD2A02FF9B00F4A0F6 /* Tests_Link.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CAA6CC2A02FF9B00F4A0F6 /* Tests_Link.swift */; };
+		B8CAF20F2A9E7C8C0057D5DE /* SubtextTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */; };
 		B8CBAFA229930C660079107E /* ValidatedTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFA129930C660079107E /* ValidatedTextField.swift */; };
 		B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFA32994491B0079107E /* MenuButtonView.swift */; };
 		B8CBAFA72994499A0079107E /* AudienceIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFA62994499A0079107E /* AudienceIconView.swift */; };
@@ -771,6 +772,7 @@
 		B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPromptView.swift; sourceTree = "<group>"; };
 		B8CAA6CA2A02FA7000F4A0F6 /* Link.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Link.swift; sourceTree = "<group>"; };
 		B8CAA6CC2A02FF9B00F4A0F6 /* Tests_Link.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Link.swift; sourceTree = "<group>"; };
+		B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextTextView.swift; sourceTree = "<group>"; };
 		B8CBAFA129930C660079107E /* ValidatedTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidatedTextField.swift; sourceTree = "<group>"; };
 		B8CBAFA32994491B0079107E /* MenuButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuButtonView.swift; sourceTree = "<group>"; };
 		B8CBAFA62994499A0079107E /* AudienceIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceIconView.swift; sourceTree = "<group>"; };
@@ -1014,6 +1016,7 @@
 				B8AB08AF2A9D4FB600998099 /* Blocks */,
 				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
 				B8AB08C22A9D509F00998099 /* SubtextEditorMarkup.swift */,
+				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
 			);
 			path = BlockEditor;
 			sourceTree = "<group>";
@@ -2015,6 +2018,7 @@
 				B5E60C8B2A145F04007065A1 /* UserProfileBio.swift in Sources */,
 				B88B1CE1298EAE730062CB7F /* PillButtonStyle.swift in Sources */,
 				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
+				B8CAF20F2A9E7C8C0057D5DE /* SubtextTextView.swift in Sources */,
 				B8C0A1B4297C938000D59532 /* Error.swift in Sources */,
 				B8CBAFA229930C660079107E /* ValidatedTextField.swift in Sources */,
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
@@ -2760,7 +2764,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
-				branch = "swift-noosphere-v0.14.1";
+				branch = "swift-noosphere-v0.14.2";
 				kind = branch;
 			};
 		};
