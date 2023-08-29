@@ -10,6 +10,16 @@ import Foundation
 extension BlockEditor {
     //  MARK: Model
     struct Model: Hashable {
+        /// Create a BlockEditor "draft" document.
+        /// A draft is a document with a heading block and nothing else.
+        static func draft() -> Self {
+            Model(
+                blocks: [
+                    BlockModel.heading(TextBlockModel())
+                ]
+            )
+        }
+
         var blocks: [BlockModel] = []
     }
 }

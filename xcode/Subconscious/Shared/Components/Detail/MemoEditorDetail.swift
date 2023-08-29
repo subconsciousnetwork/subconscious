@@ -609,6 +609,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     /// The text editor
     var editor = SubtextTextModel()
+    /// Block editor
+    var blockEditor = BlockEditor.Model.draft()
     
     /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false
