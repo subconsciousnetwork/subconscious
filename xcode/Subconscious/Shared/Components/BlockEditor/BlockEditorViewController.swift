@@ -679,7 +679,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         replace: (
             String,
             Range<String.Index>
-        ) -> SubtextEditorMarkup.Replacement?
+        ) -> BlockEditor.SubtextEditorMarkup.Replacement?
     ) -> Update {
         guard let i = state.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
@@ -740,7 +740,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             state: state,
             id: id,
             selection: selection,
-            replace: SubtextEditorMarkup.wrapBold
+            replace: BlockEditor.SubtextEditorMarkup.wrapBold
         )
     }
     
@@ -753,7 +753,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             state: state,
             id: id,
             selection: selection,
-            replace: SubtextEditorMarkup.wrapItalic
+            replace: BlockEditor.SubtextEditorMarkup.wrapItalic
         )
     }
     
@@ -766,7 +766,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             state: state,
             id: id,
             selection: selection,
-            replace: SubtextEditorMarkup.wrapCode
+            replace: BlockEditor.SubtextEditorMarkup.wrapCode
         )
     }
 }

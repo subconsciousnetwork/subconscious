@@ -7,9 +7,11 @@
 
 import Foundation
 
-enum SubtextEditorMarkup {}
+extension BlockEditor {
+    enum SubtextEditorMarkup {}
+}
 
-extension SubtextEditorMarkup {
+extension BlockEditor.SubtextEditorMarkup {
     struct Replacement {
         var string: String
         var replacement: Range<String.Index>
