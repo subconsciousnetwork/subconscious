@@ -58,26 +58,50 @@ struct MemoEditorDetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        SubtextTextViewRepresentable(
-                            state: store.state.editor,
-                            send: Address.forward(
-                                send: store.send,
-                                tag: MemoEditorDetailSubtextTextCursor.tag
-                            ),
-                            frame: geometry.frame(in: .local),
-                            onLink: self.onLink
-                        )
-                        .insets(
-                            EdgeInsets(
-                                top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
+                        if AppDefaults.standard.isBlockEditorEnabled {
+                            BlockEditor.Representable(
+                                state: .constant(
+                                    BlockEditor.Model(
+                                        blocks: [
+                                            BlockEditor.BlockModel.heading(
+                                                BlockEditor.TextBlockModel(
+                                                    text: "Foo"
+                                                )
+                                            ),
+                                            BlockEditor.BlockModel.text(
+                                                BlockEditor.TextBlockModel(
+                                                    text: "Bar"
+                                                )
+                                            )
+                                        ]
+                                    )
+                                )
                             )
-                        )
-                        .frame(
-                            minHeight: UIFont.appTextMono.lineHeight * 8
-                        )
+                            .frame(
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+                            )
+                        } else {
+                            SubtextTextViewRepresentable(
+                                state: store.state.editor,
+                                send: Address.forward(
+                                    send: store.send,
+                                    tag: MemoEditorDetailSubtextTextCursor.tag
+                                ),
+                                frame: geometry.frame(in: .local),
+                                onLink: self.onLink
+                            )
+                            .insets(
+                                EdgeInsets(
+                                    top: AppTheme.padding,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
+                                )
+                            )
+                            .frame(
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+                            )
+                        }
                         ThickDividerView()
                             .padding(.bottom, AppTheme.unit4)
                         BacklinksView(

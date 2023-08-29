@@ -25,4 +25,7 @@ struct AppDefaults {
     
     @UserDefaultsProperty(forKey: "inviteCode")
     var inviteCode: String? = nil
+    
+    @UserDefaultsProperty(forKey: "blockEditor")
+    var isBlockEditorEnabled: Bool = true
 }

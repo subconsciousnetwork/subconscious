@@ -1,5 +1,5 @@
 //
-//  BlockStackEditorRepresentable.swift
+//  BlockEditorRepresentable.swift
 //  SubconsciousExperiments
 //
 //  Created by Gordon Brander on 6/6/23.
