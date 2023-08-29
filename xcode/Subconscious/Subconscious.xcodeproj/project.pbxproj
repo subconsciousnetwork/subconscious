@@ -1185,7 +1185,7 @@
 			path = Blocks;
 			sourceTree = "<group>";
 		};
-		B8AB08C82A9D516700998099 /* UIView */ = {
+		B8AB08C82A9D516700998099 /* UIKit */ = {
 			isa = PBXGroup;
 			children = (
 				B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */,
@@ -1197,7 +1197,7 @@
 				B8AB08D12A9D523600998099 /* UIViewIconButton.swift */,
 				B8AB08D32A9D524300998099 /* UIViewSpacer.swift */,
 			);
-			path = UIView;
+			path = UIKit;
 			sourceTree = "<group>";
 		};
 		B8B3EE712979DEDF00779B7F /* FirstRun */ = {
@@ -1329,7 +1329,7 @@
 				B831BDBD2825BA6900C4CE92 /* Parsers */,
 				B8879E9B26F8F3BD00A0B4FF /* Services */,
 				B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */,
-				B8AB08C82A9D516700998099 /* UIView */,
+				B8AB08C82A9D516700998099 /* UIKit */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
