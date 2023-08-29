@@ -195,9 +195,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
-            self.renderer = SubtextAttributedStringRenderer(
-                bodySize: representable.bodySize
-            )
+            self.renderer = SubtextAttributedStringRenderer()
         }
         
         /// NSTextStorageDelegate method
@@ -379,6 +377,9 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         view.textColor = textColor
         view.isScrollEnabled = false
         view.isEditable = state.isEditable
+        // Tell UITextView to automatically adjust font size based on
+        // system font size
+        view.adjustsFontForContentSizeCategory = true
         return view
     }
 
@@ -402,17 +403,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             context.coordinator.isUIViewUpdating = false
         }
 
-        // Update/re-render text if text changed or font size
-        // preferences changed.
-        if (
-            view.text != state.text ||
-            self.bodySize != context.coordinator.renderer.bodySize
-        ) {
+        if (view.text != state.text) {
             SubtextTextViewRepresentable.logger.debug("updateUIView: set text")
-            // Set body size on renderer. This costs nothing, and makes sure
-            // that the next text render will have the new body size if the
-            // body size preferenced changed.
-            context.coordinator.renderer.bodySize = bodySize
             view.text = state.text
         }
 
