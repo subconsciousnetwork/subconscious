@@ -215,6 +215,7 @@
 		B8682DCD2804C379001CD8DD /* Tests_CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */; };
 		B86BC75429B143CD005B5833 /* Identified.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75329B143CD005B5833 /* Identified.swift */; };
 		B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */; };
+		B86DD5632A9FD0A700E1DEA5 /* BlockEditorFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2C27C0280B002E57ED /* EntryListView.swift */; };
@@ -319,7 +320,6 @@
 		B8AB08C52A9D50AB00998099 /* BlockToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */; };
 		B8AB08C72A9D50E700998099 /* BlockFormatMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */; };
 		B8AB08CA2A9D518800998099 /* UIBarButtonItemUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */; };
-		B8AB08CC2A9D51A500998099 /* UICollectionViewUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08CB2A9D51A500998099 /* UICollectionViewUtilities.swift */; };
 		B8AB08CE2A9D51D200998099 /* IndexPathUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */; };
 		B8AB08D02A9D522D00998099 /* UIViewDivider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */; };
 		B8AB08D22A9D523600998099 /* UIViewIconButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08D12A9D523600998099 /* UIViewIconButton.swift */; };
@@ -641,6 +641,7 @@
 		B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86BC75329B143CD005B5833 /* Identified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identified.swift; sourceTree = "<group>"; };
 		B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetailMetaSheetView.swift; sourceTree = "<group>"; };
+		B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorFooter.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2C27C0280B002E57ED /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
@@ -716,7 +717,6 @@
 		B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockToolbar.swift; sourceTree = "<group>"; };
 		B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockFormatMenu.swift; sourceTree = "<group>"; };
 		B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIBarButtonItemUtilities.swift; sourceTree = "<group>"; };
-		B8AB08CB2A9D51A500998099 /* UICollectionViewUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UICollectionViewUtilities.swift; sourceTree = "<group>"; };
 		B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexPathUtilities.swift; sourceTree = "<group>"; };
 		B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewDivider.swift; sourceTree = "<group>"; };
 		B8AB08D12A9D523600998099 /* UIViewIconButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewIconButton.swift; sourceTree = "<group>"; };
@@ -1186,6 +1186,7 @@
 				B8AB08B82A9D501600998099 /* TextBlockCell.swift */,
 				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
 				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
+				B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */,
 			);
 			path = Blocks;
 			sourceTree = "<group>";
@@ -1195,7 +1196,6 @@
 			children = (
 				B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */,
 				B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */,
-				B8AB08CB2A9D51A500998099 /* UICollectionViewUtilities.swift */,
 				B8CAF2102A9E89A30057D5DE /* UIFontHelpers.swift */,
 				B8AB08D52A9D52B300998099 /* UITextViewHelpers.swift */,
 				B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */,
@@ -1928,7 +1928,6 @@
 				B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
 				B87288DE299AB02400EF7E07 /* Sphere.swift in Sources */,
-				B8AB08CC2A9D51A500998099 /* UICollectionViewUtilities.swift in Sources */,
 				B81A1A6D29DF267200B4CD1C /* LoadingState.swift in Sources */,
 				B5CA448929D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
@@ -2034,6 +2033,7 @@
 				B8AB08C32A9D509F00998099 /* SubtextEditorMarkup.swift in Sources */,
 				B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */,
 				B8B6BCB529CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
+				B86DD5632A9FD0A700E1DEA5 /* BlockEditorFooter.swift in Sources */,
 				B8AB08B92A9D501600998099 /* TextBlockCell.swift in Sources */,
 				B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,

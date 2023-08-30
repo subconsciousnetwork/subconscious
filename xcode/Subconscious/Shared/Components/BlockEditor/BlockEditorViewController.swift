@@ -23,12 +23,28 @@ extension BlockEditor {
             category: "BlockEditorViewController"
         )
         
-        static var actionLogger = Logger(
-            subsystem: Config.default.rdns,
-            category: "BlockEditorViewController.Action"
-        )
+        /// Create a configured collection view suitable for our block editor
+        private static func createCollectionView(
+            frame: CGRect
+        ) -> UICollectionView {
+            var config = UICollectionLayoutListConfiguration(
+                appearance: .plain
+            )
+            config.footerMode = .supplementary
+            config.showsSeparators = false
+            let layout = UICollectionViewCompositionalLayout.list(
+                using: config
+            )
+
+            return UICollectionView(
+                frame: frame,
+                collectionViewLayout: layout
+            )
+        }
         
-        private var collectionView = UICollectionView.plainList(frame: .zero)
+        private lazy var collectionView = Self.createCollectionView(
+            frame: .zero
+        )
         let store: ControllerStore.Store<BlockEditor.ViewController>
         
         init(store: Store) {
@@ -43,6 +59,12 @@ extension BlockEditor {
         
         override func viewDidLoad() {
             super.viewDidLoad()
+            collectionView.register(
+                Footer.self,
+                forSupplementaryViewOfKind:
+                    UICollectionView.elementKindSectionFooter,
+                withReuseIdentifier: Footer.identifier
+            )
             collectionView.register(
                 TextBlockCell.self,
                 forCellWithReuseIdentifier: TextBlockCell.identifier
@@ -75,6 +97,23 @@ extension BlockEditor {
             self.store.connect(self)
         }
         
+        /// Provides supplementary views for our UICollection such as headers
+        /// and footers.
+        func collectionView(
+            _ collectionView: UICollectionView,
+            viewForSupplementaryElementOfKind kind: String,
+            at indexPath: IndexPath
+        ) -> UICollectionReusableView {
+            // We currentl only implement footers, so always dequeue a footer
+            // for now.
+            collectionView.dequeueReusableSupplementaryView(
+                ofKind: UICollectionView.elementKindSectionFooter,
+                withReuseIdentifier: Footer.identifier,
+                for: indexPath
+            )
+        }
+        
+        /// Provides a count for data in a particular section
         func collectionView(
             _ collectionView: UICollectionView,
             numberOfItemsInSection section: Int
@@ -82,6 +121,9 @@ extension BlockEditor {
             store.state.blocks.count
         }
         
+        /// Provides a UICollectionViewCell for an index path.
+        /// This method is responsible for looking up data from a data source
+        /// (state in our case) using the index path.
         func collectionView(
             _ collectionView: UICollectionView,
             cellForItemAt indexPath: IndexPath
@@ -171,7 +213,6 @@ extension BlockEditor {
             return cell
         }
     }
-
 }
 
 extension BlockEditor.ViewController: TextBlockDelegate {
