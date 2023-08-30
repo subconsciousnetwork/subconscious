@@ -12,6 +12,7 @@ import Combine
 
 //  MARK: View
 struct MemoEditorDetailView: View {
+    typealias Action = MemoEditorDetailAction
     /// Detail keeps a separate internal store for editor state that does not
     /// need to be surfaced in higher level views.
     ///
@@ -60,21 +61,10 @@ struct MemoEditorDetailView: View {
                     VStack(spacing: 0) {
                         if AppDefaults.standard.isBlockEditorEnabled {
                             BlockEditor.Representable(
-                                state: .constant(
-                                    BlockEditor.Model(
-                                        blocks: [
-                                            BlockEditor.BlockModel.heading(
-                                                BlockEditor.TextBlockModel(
-                                                    text: "Foo"
-                                                )
-                                            ),
-                                            BlockEditor.BlockModel.text(
-                                                BlockEditor.TextBlockModel(
-                                                    text: "Bar"
-                                                )
-                                            )
-                                        ]
-                                    )
+                                state: Binding(
+                                    get: { store.state.blockEditor },
+                                    send: store.send,
+                                    tag: Action.forceSetBlockEditor
                                 )
                             )
                             .frame(
@@ -317,6 +307,10 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
+
+    //  Block editor actions
+    /// Force set the block editor's state
+    case forceSetBlockEditor(BlockEditor.Model)
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -677,6 +671,12 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 info: info
             )
+        case let .forceSetBlockEditor(blockEditor):
+            return forceSetBlockEditor(
+                state: state,
+                environment: environment,
+                blockEditor: blockEditor
+            )
         case let .setEditor(text, saveState, modified):
             return setEditor(
                 state: state,
@@ -1035,6 +1035,16 @@ struct MemoEditorDetailModel: ModelProtocol {
         )
     }
     
+    static func forceSetBlockEditor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        blockEditor: BlockEditor.Model
+    ) -> Update<MemoEditorDetailModel> {
+        var model = state
+        model.blockEditor = blockEditor
+        return Update(state: model)
+    }
+
     /// Set the contents of the editor and mark save state and modified time.
     static func setEditor(
         state: MemoEditorDetailModel,
