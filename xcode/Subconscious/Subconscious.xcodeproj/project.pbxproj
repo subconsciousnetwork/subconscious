@@ -215,9 +215,9 @@
 		B8682DCD2804C379001CD8DD /* Tests_CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */; };
 		B86BC75429B143CD005B5833 /* Identified.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75329B143CD005B5833 /* Identified.swift */; };
 		B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */; };
-		B86DD5632A9FD0A700E1DEA5 /* BlockEditorFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */; };
-		B86DD5652A9FE70300E1DEA5 /* TranscludeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5642A9FE70300E1DEA5 /* TranscludeCell.swift */; };
-		B86DD5682A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5672A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift */; };
+		B86DD5652A9FE70300E1DEA5 /* RelatedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5642A9FE70300E1DEA5 /* RelatedCell.swift */; };
+		B86DD56A2A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */; };
+		B86DD56C2A9FF77600E1DEA5 /* ErrorCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2C27C0280B002E57ED /* EntryListView.swift */; };
@@ -643,9 +643,9 @@
 		B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86BC75329B143CD005B5833 /* Identified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identified.swift; sourceTree = "<group>"; };
 		B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetailMetaSheetView.swift; sourceTree = "<group>"; };
-		B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorFooter.swift; sourceTree = "<group>"; };
-		B86DD5642A9FE70300E1DEA5 /* TranscludeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeCell.swift; sourceTree = "<group>"; };
-		B86DD5672A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorTranscludeModel.swift; sourceTree = "<group>"; };
+		B86DD5642A9FE70300E1DEA5 /* RelatedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelatedCell.swift; sourceTree = "<group>"; };
+		B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorRelatedModel.swift; sourceTree = "<group>"; };
+		B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorCell.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2C27C0280B002E57ED /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
@@ -1065,7 +1065,7 @@
 			isa = PBXGroup;
 			children = (
 				B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */,
-				B86DD5672A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift */,
+				B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */,
 				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
 				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
 			);
@@ -1194,13 +1194,13 @@
 		B8AB08AF2A9D4FB600998099 /* Cells */ = {
 			isa = PBXGroup;
 			children = (
-				B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */,
 				B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */,
+				B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */,
 				B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */,
 				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
 				B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */,
+				B86DD5642A9FE70300E1DEA5 /* RelatedCell.swift */,
 				B8AB08B82A9D501600998099 /* TextBlockCell.swift */,
-				B86DD5642A9FE70300E1DEA5 /* TranscludeCell.swift */,
 			);
 			path = Cells;
 			sourceTree = "<group>";
@@ -1910,6 +1910,7 @@
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B82F053728D60EE60025A8B5 /* AppTabView.swift in Sources */,
+				B86DD56A2A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift in Sources */,
 				B8B4251828FDE8AA0081B8D5 /* MemoData.swift in Sources */,
 				B5C918F02A67ADEF004C6CD5 /* SphereSettingsView.swift in Sources */,
 				B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */,
@@ -1948,6 +1949,7 @@
 				B8E1A94B2A14198400B757A5 /* OurSphereRecord.swift in Sources */,
 				B88A91A12A4C9C0100422ABF /* EntryListEmptyView.swift in Sources */,
 				B58FD6732A4E4C0E00826548 /* InviteCodeSettingsSection.swift in Sources */,
+				B86DD56C2A9FF77600E1DEA5 /* ErrorCell.swift in Sources */,
 				B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */,
 				B8AB08D42A9D524300998099 /* UIViewSpacer.swift in Sources */,
 				B5BBA7352A89E20300864220 /* UserProfileSheets.swift in Sources */,
@@ -1957,7 +1959,7 @@
 				B8A1621429B2AB3A008322EB /* CloseButtonView.swift in Sources */,
 				B80890A72A056A130087E091 /* SlashlinkDisplayView.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
-				B86DD5652A9FE70300E1DEA5 /* TranscludeCell.swift in Sources */,
+				B86DD5652A9FE70300E1DEA5 /* RelatedCell.swift in Sources */,
 				B8AB08B72A9D500C00998099 /* QuoteBlockCell.swift in Sources */,
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
@@ -2048,7 +2050,6 @@
 				B8AB08C32A9D509F00998099 /* SubtextEditorMarkup.swift in Sources */,
 				B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */,
 				B8B6BCB529CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
-				B86DD5632A9FD0A700E1DEA5 /* BlockEditorFooter.swift in Sources */,
 				B8AB08B92A9D501600998099 /* TextBlockCell.swift in Sources */,
 				B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
@@ -2064,7 +2065,6 @@
 				B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8E1A9542A16E8EA00B757A5 /* NoospherePeerChange.swift in Sources */,
-				B86DD5682A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift in Sources */,
 				B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */,

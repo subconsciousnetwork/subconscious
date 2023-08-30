@@ -21,5 +21,6 @@ extension BlockEditor {
         }
 
         var blocks: [BlockModel] = []
+        var appendix = RelatedModel()
     }
 }

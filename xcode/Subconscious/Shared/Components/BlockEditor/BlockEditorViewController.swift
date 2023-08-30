@@ -30,7 +30,6 @@ extension BlockEditor {
             var config = UICollectionLayoutListConfiguration(
                 appearance: .plain
             )
-            config.footerMode = .supplementary
             config.showsSeparators = false
             let layout = UICollectionViewCompositionalLayout.list(
                 using: config
@@ -60,10 +59,8 @@ extension BlockEditor {
         override func viewDidLoad() {
             super.viewDidLoad()
             collectionView.register(
-                Footer.self,
-                forSupplementaryViewOfKind:
-                    UICollectionView.elementKindSectionFooter,
-                withReuseIdentifier: Footer.identifier
+                ErrorCell.self,
+                forCellWithReuseIdentifier: ErrorCell.identifier
             )
             collectionView.register(
                 TextBlockCell.self,
@@ -81,6 +78,10 @@ extension BlockEditor {
                 ListBlockCell.self,
                 forCellWithReuseIdentifier: ListBlockCell.identifier
             )
+            collectionView.register(
+                RelatedCell.self,
+                forCellWithReuseIdentifier: RelatedCell.identifier
+            )
             collectionView.translatesAutoresizingMaskIntoConstraints = false
             collectionView.autoresizingMask = [.flexibleHeight]
             collectionView.delegate = self
@@ -97,28 +98,26 @@ extension BlockEditor {
             self.store.connect(self)
         }
         
-        /// Provides supplementary views for our UICollection such as headers
-        /// and footers.
-        func collectionView(
-            _ collectionView: UICollectionView,
-            viewForSupplementaryElementOfKind kind: String,
-            at indexPath: IndexPath
-        ) -> UICollectionReusableView {
-            // We currentl only implement footers, so always dequeue a footer
-            // for now.
-            collectionView.dequeueReusableSupplementaryView(
-                ofKind: UICollectionView.elementKindSectionFooter,
-                withReuseIdentifier: Footer.identifier,
-                for: indexPath
-            )
+        /// Return 2 sections
+        /// - 1 blocks
+        /// - 2 "footer" containing related notes
+        func numberOfSections(in collectionView: UICollectionView) -> Int {
+            2
         }
-        
+
         /// Provides a count for data in a particular section
         func collectionView(
             _ collectionView: UICollectionView,
             numberOfItemsInSection section: Int
         ) -> Int {
-            store.state.blocks.count
+            switch section {
+            case 0:
+                return store.state.blocks.count
+            case 1:
+                return 1
+            default:
+                return 0
+            }
         }
         
         /// Provides a UICollectionViewCell for an index path.
@@ -127,6 +126,36 @@ extension BlockEditor {
         func collectionView(
             _ collectionView: UICollectionView,
             cellForItemAt indexPath: IndexPath
+        ) -> UICollectionViewCell {
+            switch indexPath.section {
+            case 0:
+                return blockCell(collectionView, forItemAt: indexPath)
+            case 1:
+                return appendixCell(collectionView, forItemAt: indexPath)
+            default:
+                return errorCell(collectionView, forItemAt: indexPath)
+            }
+        }
+        
+        /// Error cells are dequeued when we don't know what else to display.
+        ///
+        /// Error cells should never be displayed in practice, but we must
+        /// have something to dequeue since `collectionView(_:cellForItemAt:)`
+        /// requires a cell to be returned for every case.
+        private func errorCell(
+            _ collectionView: UICollectionView,
+            forItemAt indexPath: IndexPath
+        ) -> UICollectionViewCell {
+            let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: ErrorCell.identifier,
+                for: indexPath
+            ) as! ErrorCell
+            return cell
+        }
+        
+        private func blockCell(
+            _ collectionView: UICollectionView,
+            forItemAt indexPath: IndexPath
         ) -> UICollectionViewCell {
             let block = store.state.blocks[indexPath.row]
             switch block {
@@ -156,7 +185,7 @@ extension BlockEditor {
                 )
             }
         }
-        
+
         private func textCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
@@ -209,6 +238,19 @@ extension BlockEditor {
                 for: indexPath
             ) as! ListBlockCell
             cell.delegate = self
+            cell.render(state)
+            return cell
+        }
+
+        private func appendixCell(
+            _ collectionView: UICollectionView,
+            forItemAt indexPath: IndexPath
+        ) -> UICollectionViewCell {
+            let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: RelatedCell.identifier,
+                for: indexPath
+            ) as! RelatedCell
+            var state = store.state.appendix
             cell.render(state)
             return cell
         }

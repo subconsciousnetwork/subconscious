@@ -1,5 +1,5 @@
 //
-//  FooterCell.swift
+//  EmptyCell.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 8/30/23.
@@ -9,25 +9,25 @@ import Foundation
 import UIKit
 
 extension BlockEditor {
-    class TranscludeCell:
+    /// An error cell for when we don't know what else to display
+    class ErrorCell:
         UICollectionViewCell,
         Identifiable
     {
-        static let identifier = "TranscludeCell"
+        static let identifier = "ErrorCell"
         
         var id: UUID = UUID()
+        private lazy var label = UILabel(frame: .zero)
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .red
+            self.backgroundColor = .systemBackground
+            label.text = String(localized: "Unknown cell type")
+            addSubview(label)
         }
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
-        }
-        
-        func render(_ state: TranscludeModel) {
-            self.id = state.id
         }
     }
 }
