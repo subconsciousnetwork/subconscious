@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 import os
 
 extension BlockEditor {
@@ -14,7 +15,7 @@ extension BlockEditor {
         @Binding var state: Model
         
         func makeCoordinator() -> Coordinator {
-            Coordinator(representable: self)
+            Coordinator(state: self.$state)
         }
         
         func makeUIViewController(context: Context) -> ViewController {
@@ -29,27 +30,36 @@ extension BlockEditor {
         ) {
             uiViewController.store.reset(
                 controller: uiViewController,
-                state: context.coordinator.representable.state
+                state: context.coordinator.state
             )
         }
         
         /// The coordinator acts as a delegate and coordinator between the
         /// SwiftUI representable, and the UIViewController.
         class Coordinator: NSObject {
-            var representable: Representable
+            private var controllerStoreChanges: AnyCancellable?
+            /// Reference to the outer `@State` variable
+            @Binding var state: Model
             var store: ControllerStore.Store<ViewController>
             
-            init(representable: Representable) {
-                self.representable = representable
+            init(state: Binding<Model>) {
+                self._state = state
                 self.store = ControllerStore.Store(
-                    state: representable.state
+                    state: state.wrappedValue
                 )
-            }
-
-            func setOuterState(_ state: Model) {
-                DispatchQueue.main.async {
-                    self.representable.state = state
-                }
+                super.init()
+                // Replay internal changes to state on to SwiftUI binding
+                // We debounce the updates so that at most, we get one state
+                // change every half second.
+                self.controllerStoreChanges = self.store.changes
+                    .debounce(
+                        for: .seconds(0.5),
+                        scheduler: DispatchQueue.main
+                    )
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] state in
+                        self?.state = state
+                    }
             }
         }
     }
