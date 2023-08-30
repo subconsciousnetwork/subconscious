@@ -214,13 +214,13 @@ actor UserProfileService {
         address: Slashlink,
         slugs: [Slug]
     ) async throws -> [EntryStub] {
+        let sphere = try await self.noosphere.sphere(address: address)
         var entries: [EntryStub] = []
         for slug in slugs {
             guard !slug.isHidden else {
                 continue
             }
             
-            let sphere = try await self.noosphere.sphere(address: address)
             let slashlink = Slashlink(slug: slug)
             let memo = try await sphere.read(slashlink: slashlink)
             
