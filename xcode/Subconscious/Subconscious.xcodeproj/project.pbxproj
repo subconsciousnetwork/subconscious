@@ -216,6 +216,8 @@
 		B86BC75429B143CD005B5833 /* Identified.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75329B143CD005B5833 /* Identified.swift */; };
 		B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */; };
 		B86DD5632A9FD0A700E1DEA5 /* BlockEditorFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */; };
+		B86DD5652A9FE70300E1DEA5 /* TranscludeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5642A9FE70300E1DEA5 /* TranscludeCell.swift */; };
+		B86DD5682A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5672A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2C27C0280B002E57ED /* EntryListView.swift */; };
@@ -642,6 +644,8 @@
 		B86BC75329B143CD005B5833 /* Identified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identified.swift; sourceTree = "<group>"; };
 		B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetailMetaSheetView.swift; sourceTree = "<group>"; };
 		B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorFooter.swift; sourceTree = "<group>"; };
+		B86DD5642A9FE70300E1DEA5 /* TranscludeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeCell.swift; sourceTree = "<group>"; };
+		B86DD5672A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorTranscludeModel.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2C27C0280B002E57ED /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
@@ -1010,12 +1014,12 @@
 		B83E0E282A9D13CE009F18AE /* BlockEditor */ = {
 			isa = PBXGroup;
 			children = (
+				B86DD5662A9FEB0300E1DEA5 /* Models */,
 				B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */,
-				B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */,
 				B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */,
 				B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */,
 				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
-				B8AB08AF2A9D4FB600998099 /* Blocks */,
+				B8AB08AF2A9D4FB600998099 /* Cells */,
 				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
 				B8AB08C22A9D509F00998099 /* SubtextEditorMarkup.swift */,
 				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
@@ -1055,6 +1059,17 @@
 				B57C0AE829D2782C00D352E3 /* PetnameView.swift */,
 			);
 			path = Byline;
+			sourceTree = "<group>";
+		};
+		B86DD5662A9FEB0300E1DEA5 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */,
+				B86DD5672A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift */,
+				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
+				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		B87288DA299AB00700EF7E07 /* Noosphere */ = {
@@ -1176,19 +1191,18 @@
 			path = Fonts;
 			sourceTree = "<group>";
 		};
-		B8AB08AF2A9D4FB600998099 /* Blocks */ = {
+		B8AB08AF2A9D4FB600998099 /* Cells */ = {
 			isa = PBXGroup;
 			children = (
-				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
+				B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */,
 				B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */,
 				B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */,
+				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
 				B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */,
 				B8AB08B82A9D501600998099 /* TextBlockCell.swift */,
-				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
-				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
-				B86DD5622A9FD0A700E1DEA5 /* BlockEditorFooter.swift */,
+				B86DD5642A9FE70300E1DEA5 /* TranscludeCell.swift */,
 			);
-			path = Blocks;
+			path = Cells;
 			sourceTree = "<group>";
 		};
 		B8AB08C82A9D516700998099 /* UIKit */ = {
@@ -1943,6 +1957,7 @@
 				B8A1621429B2AB3A008322EB /* CloseButtonView.swift in Sources */,
 				B80890A72A056A130087E091 /* SlashlinkDisplayView.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
+				B86DD5652A9FE70300E1DEA5 /* TranscludeCell.swift in Sources */,
 				B8AB08B72A9D500C00998099 /* QuoteBlockCell.swift in Sources */,
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
@@ -2049,6 +2064,7 @@
 				B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8E1A9542A16E8EA00B757A5 /* NoospherePeerChange.swift in Sources */,
+				B86DD5682A9FEB0E00E1DEA5 /* BlockEditorTranscludeModel.swift in Sources */,
 				B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */,
