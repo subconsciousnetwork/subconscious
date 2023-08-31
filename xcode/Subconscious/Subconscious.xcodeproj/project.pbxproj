@@ -218,6 +218,7 @@
 		B86DD5652A9FE70300E1DEA5 /* RelatedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5642A9FE70300E1DEA5 /* RelatedCell.swift */; };
 		B86DD56A2A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */; };
 		B86DD56C2A9FF77600E1DEA5 /* ErrorCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */; };
+		B86DD56E2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2C27C0280B002E57ED /* EntryListView.swift */; };
@@ -318,7 +319,7 @@
 		B8AB08BD2A9D502C00998099 /* ListBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */; };
 		B8AB08BF2A9D506300998099 /* BlockEditorRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */; };
 		B8AB08C12A9D508500998099 /* BlockEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */; };
-		B8AB08C32A9D509F00998099 /* SubtextEditorMarkup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C22A9D509F00998099 /* SubtextEditorMarkup.swift */; };
+		B8AB08C32A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */; };
 		B8AB08C52A9D50AB00998099 /* BlockToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */; };
 		B8AB08C72A9D50E700998099 /* BlockFormatMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */; };
 		B8AB08CA2A9D518800998099 /* UIBarButtonItemUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */; };
@@ -646,6 +647,7 @@
 		B86DD5642A9FE70300E1DEA5 /* RelatedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelatedCell.swift; sourceTree = "<group>"; };
 		B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorRelatedModel.swift; sourceTree = "<group>"; };
 		B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorCell.swift; sourceTree = "<group>"; };
+		B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorTranscludeView.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2C27C0280B002E57ED /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
@@ -717,7 +719,7 @@
 		B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListBlockCell.swift; sourceTree = "<group>"; };
 		B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorRepresentable.swift; sourceTree = "<group>"; };
 		B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorViewController.swift; sourceTree = "<group>"; };
-		B8AB08C22A9D509F00998099 /* SubtextEditorMarkup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextEditorMarkup.swift; sourceTree = "<group>"; };
+		B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorSubtextEditorMarkup.swift; sourceTree = "<group>"; };
 		B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockToolbar.swift; sourceTree = "<group>"; };
 		B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockFormatMenu.swift; sourceTree = "<group>"; };
 		B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIBarButtonItemUtilities.swift; sourceTree = "<group>"; };
@@ -1014,14 +1016,15 @@
 		B83E0E282A9D13CE009F18AE /* BlockEditor */ = {
 			isa = PBXGroup;
 			children = (
-				B86DD5662A9FEB0300E1DEA5 /* Models */,
 				B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */,
 				B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */,
+				B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */,
 				B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */,
 				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
-				B8AB08AF2A9D4FB600998099 /* Cells */,
 				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
-				B8AB08C22A9D509F00998099 /* SubtextEditorMarkup.swift */,
+				B8AB08AF2A9D4FB600998099 /* Cells */,
+				B86DD5662A9FEB0300E1DEA5 /* Models */,
+				B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */,
 				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
 			);
 			path = BlockEditor;
@@ -1982,6 +1985,7 @@
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */,
 				B8B3EE7D297B1A1000779B7F /* ViewDebugUtilities.swift in Sources */,
+				B86DD56E2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift in Sources */,
 				B826B27527B5D95F003D3C03 /* SaveState.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8A59D6928B692900010DB2F /* StoryPrompt.swift in Sources */,
@@ -2047,7 +2051,7 @@
 				B5D71D192A32B2AF000E058A /* NotFoundView.swift in Sources */,
 				B8CA8F2628909E66005F8802 /* Feed.swift in Sources */,
 				B85652202975BA9000B7FCA0 /* MetaTableView.swift in Sources */,
-				B8AB08C32A9D509F00998099 /* SubtextEditorMarkup.swift in Sources */,
+				B8AB08C32A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift in Sources */,
 				B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */,
 				B8B6BCB529CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B8AB08B92A9D501600998099 /* TextBlockCell.swift in Sources */,
