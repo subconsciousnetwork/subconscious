@@ -17,6 +17,7 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
             
+            self.translatesAutoresizingMaskIntoConstraints = false
             addressView.translatesAutoresizingMaskIntoConstraints = false
             excerptView.translatesAutoresizingMaskIntoConstraints = false
             
@@ -30,7 +31,7 @@ extension BlockEditor {
                 stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 stackView.topAnchor.constraint(equalTo: topAnchor),
-                self.bottomAnchor.constraint(equalTo: stackView.bottomAnchor)
+                bottomAnchor.constraint(equalTo: stackView.bottomAnchor)
             ])
         }
         

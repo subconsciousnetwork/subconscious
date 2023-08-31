@@ -615,6 +615,18 @@ struct MemoEditorDetailModel: ModelProtocol {
                     excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
                     modified: Date.now,
                     author: nil
+                ),
+                EntryStub(
+                    address: Slashlink("@example/bar")!,
+                    excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                    modified: Date.now,
+                    author: nil
+                ),
+                EntryStub(
+                    address: Slashlink("@example/baz")!,
+                    excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                    modified: Date.now,
+                    author: nil
                 )
             ]
         )

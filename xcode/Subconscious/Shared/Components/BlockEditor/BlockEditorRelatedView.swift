@@ -11,29 +11,35 @@ extension BlockEditor {
     class RelatedView: UIView, Identifiable {
         var id = UUID()
         private lazy var label = UILabel()
-        private lazy var stackView = UIStackView(frame: .zero)
+        private lazy var bodyView = UIStackView(frame: .zero)
+        private lazy var transcludesView = UIStackView(frame: .zero)
 
         override init(frame: CGRect) {
             super.init(frame: frame)
             
+            bodyView.axis = .vertical
+            bodyView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(bodyView)
+            
             label.text = String(localized: "Related notes")
             label.font = UIFont.preferredFont(forTextStyle: .caption2)
             label.numberOfLines = 2
+            label.setContentCompressionResistancePriority(
+                .defaultHigh,
+                for: .vertical
+            )
             label.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(label)
+            bodyView.addArrangedSubview(label)
             
-            stackView.axis = .vertical
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(stackView)
+            transcludesView.axis = .vertical
+            transcludesView.translatesAutoresizingMaskIntoConstraints = false
+            bodyView.addArrangedSubview(transcludesView)
             
             NSLayoutConstraint.activate([
-                label.leadingAnchor.constraint(equalTo: leadingAnchor),
-                label.trailingAnchor.constraint(equalTo: trailingAnchor),
-                label.topAnchor.constraint(equalTo: topAnchor),
-                stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
-                stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                stackView.topAnchor.constraint(equalTo: label.topAnchor),
-                bottomAnchor.constraint(equalTo: stackView.bottomAnchor)
+                bodyView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                bodyView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                bodyView.topAnchor.constraint(equalTo: topAnchor),
+                bottomAnchor.constraint(equalTo: bodyView.bottomAnchor)
             ])
         }
         
@@ -44,12 +50,12 @@ extension BlockEditor {
         func render(
             _ state: RelatedModel
         ) {
-            stackView.removeAllArrangedSubviews()
+            transcludesView.removeAllArrangedSubviews()
             for stub in state.related {
                 let transclude = TranscludeView(frame: .zero)
                 transclude.render(stub)
                 transclude.translatesAutoresizingMaskIntoConstraints = false
-                stackView.addArrangedSubview(transclude)
+                transcludesView.addArrangedSubview(transclude)
             }
         }
     }
