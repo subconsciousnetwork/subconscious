@@ -19,9 +19,11 @@ extension BlockEditor {
             label.text = String(localized: "Related notes")
             label.font = UIFont.preferredFont(forTextStyle: .caption2)
             label.numberOfLines = 2
+            label.translatesAutoresizingMaskIntoConstraints = false
             addSubview(label)
             
             stackView.axis = .vertical
+            stackView.translatesAutoresizingMaskIntoConstraints = false
             addSubview(stackView)
             
             NSLayoutConstraint.activate([
@@ -40,10 +42,10 @@ extension BlockEditor {
         }
         
         func render(
-            _ related: RelatedModel
+            _ state: RelatedModel
         ) {
             stackView.removeAllArrangedSubviews()
-            for stub in related.related {
+            for stub in state.related {
                 let transclude = TranscludeView(frame: .zero)
                 transclude.render(stub)
                 stackView.addArrangedSubview(transclude)

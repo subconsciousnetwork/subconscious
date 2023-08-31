@@ -14,13 +14,21 @@ extension BlockEditor {
         UICollectionViewCell,
         Identifiable
     {
-        static let identifier = "TranscludeCell"
+        static let identifier = "RelatedCell"
         
         var id: UUID = UUID()
+        private lazy var relatedView = RelatedView(frame: .zero)
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .red
+            relatedView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(relatedView)
+            NSLayoutConstraint.activate([
+                relatedView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                relatedView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                relatedView.topAnchor.constraint(equalTo: topAnchor),
+                bottomAnchor.constraint(equalTo: relatedView.bottomAnchor),
+            ])
         }
         
         required init?(coder: NSCoder) {
@@ -29,6 +37,7 @@ extension BlockEditor {
         
         func render(_ state: RelatedModel) {
             self.id = state.id
+            relatedView.render(state)
         }
     }
 }

@@ -250,7 +250,7 @@ extension BlockEditor {
                 withReuseIdentifier: RelatedCell.identifier,
                 for: indexPath
             ) as! RelatedCell
-            var state = store.state.appendix
+            let state = store.state.appendix
             cell.render(state)
             return cell
         }
