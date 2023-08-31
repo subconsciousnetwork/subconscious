@@ -222,6 +222,8 @@
 		B86DD5702AA0D28600E1DEA5 /* BlockEditorRelatedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */; };
 		B86DD5722AA0D33E00E1DEA5 /* UIStackViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */; };
 		B86DD5762AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5752AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift */; };
+		B86DD57D2AA1352900E1DEA5 /* UIRenderableViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5772AA1250200E1DEA5 /* UIRenderableViewProtocol.swift */; };
+		B86DD57E2AA1352B00E1DEA5 /* UIRenderableViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5772AA1250200E1DEA5 /* UIRenderableViewProtocol.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2C27C0280B002E57ED /* EntryListView.swift */; };
@@ -654,6 +656,7 @@
 		B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorRelatedView.swift; sourceTree = "<group>"; };
 		B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIStackViewHelpers.swift; sourceTree = "<group>"; };
 		B86DD5752AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UIStackViewHelpers.swift; sourceTree = "<group>"; };
+		B86DD5772AA1250200E1DEA5 /* UIRenderableViewProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIRenderableViewProtocol.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2C27C0280B002E57ED /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
@@ -1219,9 +1222,11 @@
 		B8AB08C82A9D516700998099 /* UIKit */ = {
 			isa = PBXGroup;
 			children = (
+				B83E0E282A9D13CE009F18AE /* BlockEditor */,
 				B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */,
 				B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */,
 				B8CAF2102A9E89A30057D5DE /* UIFontHelpers.swift */,
+				B86DD5772AA1250200E1DEA5 /* UIRenderableViewProtocol.swift */,
 				B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */,
 				B8AB08D52A9D52B300998099 /* UITextViewHelpers.swift */,
 				B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */,
@@ -1422,7 +1427,6 @@
 				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
-				B83E0E282A9D13CE009F18AE /* BlockEditor */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
 				B87288E2299C02E200EF7E07 /* Detail */,
 				B8CA8F2528909E66005F8802 /* Feed.swift */,
@@ -1883,6 +1887,7 @@
 				B8B6BCBB29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */,
 				B8AB08C52A9D50AB00998099 /* BlockToolbar.swift in Sources */,
 				B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */,
+				B86DD57D2AA1352900E1DEA5 /* UIRenderableViewProtocol.swift in Sources */,
 				B508957029E79BE70048106B /* UserProfileService.swift in Sources */,
 				B8AB08B32A9D4FDD00998099 /* BlockProtocols.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
@@ -2211,6 +2216,7 @@
 				B58C73A829DBB3B500B00EA1 /* UserProfileView.swift in Sources */,
 				B8B4250D28FB43C90081B8D5 /* ContentType.swift in Sources */,
 				B5293B8A2A426645001C4DA7 /* Sentry.swift in Sources */,
+				B86DD57E2AA1352B00E1DEA5 /* UIRenderableViewProtocol.swift in Sources */,
 				B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */,

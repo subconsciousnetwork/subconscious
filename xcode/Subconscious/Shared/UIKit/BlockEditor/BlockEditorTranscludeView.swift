@@ -8,7 +8,7 @@
 import UIKit
 
 extension BlockEditor {
-    class TranscludeView: UIView, Identifiable {
+    class TranscludeView: UIView, UIComponentViewProtocol {
         var id = UUID()
         private lazy var stackView = UIStackView(frame: .zero)
         private lazy var addressView = UILabel(frame: .zero)

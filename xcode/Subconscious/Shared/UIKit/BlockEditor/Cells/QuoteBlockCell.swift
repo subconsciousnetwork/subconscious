@@ -1,5 +1,5 @@
 //
-//  TextBlockCell.swift
+//  QuoteBlockCell.swift
 //  BlockEditor
 //
 //  Created by Gordon Brander on 7/20/23.
@@ -8,20 +8,21 @@
 import UIKit
 
 extension BlockEditor {
-    class TextBlockCell:
+    class QuoteBlockCell:
         UICollectionViewCell,
         UITextViewDelegate,
-        Identifiable
+        UIComponentViewProtocol
     {
-        static let identifier = "TextBlockCell"
+        static let identifier = "QuoteBlockCell"
         
         var id: UUID = UUID()
         
         weak var delegate: TextBlockDelegate?
         
-        lazy var textView = SubtextTextView(frame: .zero)
+        lazy var textView = UITextView(frame: .zero)
         
         private lazy var divider = UIView.divider()
+        private lazy var quoteIndent = createQuoteIndent()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
             upButtonPressed: { [weak self] in
@@ -83,6 +84,7 @@ extension BlockEditor {
             textView.inputAccessoryView = toolbar
             
             addSubview(textView)
+            addSubview(quoteIndent)
             addSubview(divider)
 
             NSLayoutConstraint.activate([
@@ -93,6 +95,14 @@ extension BlockEditor {
                 divider.leadingAnchor.constraint(equalTo: leadingAnchor),
                 divider.trailingAnchor.constraint(equalTo: trailingAnchor),
                 
+                quoteIndent.leadingAnchor.constraint(
+                    equalTo: leadingAnchor,
+                    constant: 4
+                ),
+                quoteIndent.widthAnchor.constraint(equalToConstant: 2),
+                quoteIndent.topAnchor.constraint(equalTo: topAnchor),
+                quoteIndent.bottomAnchor.constraint(equalTo: bottomAnchor),
+
                 bottomAnchor.constraint(equalTo: divider.bottomAnchor),
             ])
         }
@@ -101,6 +111,12 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
+        private func createQuoteIndent() -> UIView {
+            let view = UIView(frame: .zero)
+            view.translatesAutoresizingMaskIntoConstraints = false
+            return view
+        }
+
         func render(_ state: TextBlockModel) {
             self.id = state.id
             if textView.text != state.text {

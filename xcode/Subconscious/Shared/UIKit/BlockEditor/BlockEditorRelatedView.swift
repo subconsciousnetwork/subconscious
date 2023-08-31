@@ -8,7 +8,7 @@
 import UIKit
 
 extension BlockEditor {
-    class RelatedView: UIView, Identifiable {
+    class RelatedView: UIView, UIComponentViewProtocol {
         var id = UUID()
         private lazy var label = UILabel()
         private lazy var bodyView = UIStackView(frame: .zero)

@@ -1,5 +1,5 @@
 //
-//  QuoteBlockCell.swift
+//  HeadingBlockCell.swift
 //  BlockEditor
 //
 //  Created by Gordon Brander on 7/20/23.
@@ -7,61 +7,30 @@
 
 import UIKit
 
+protocol HeadingBlockCellDelegate:
+    BlockControlsDelegate &
+    BlockTextEditingDelegate
+{
+
+}
+
 extension BlockEditor {
-    class ListBlockCell:
+    class HeadingBlockCell:
         UICollectionViewCell,
         UITextViewDelegate,
-        Identifiable
+        UIComponentViewProtocol
     {
-        static let identifier = "ListBlockCell"
+        static let identifier = "HeadingBlockCell"
         
         var id: UUID = UUID()
         
-        weak var delegate: TextBlockDelegate?
+        weak var delegate: HeadingBlockCellDelegate?
         
         lazy var textView = UITextView(frame: .zero)
         
         private lazy var divider = UIView.divider()
-        private lazy var bullet = createBullet()
         
-        private lazy var toolbar = UIToolbar.blockToolbar(
-            upButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.upButtonPressed(id: self.id)
-            },
-            downButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.downButtonPressed(id: self.id)
-            },
-            boldButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.boldButtonPressed(
-                    id: self.id,
-                    text: self.textView.text,
-                    selection: self.textView.selectedRange
-                )
-            },
-            italicButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.italicButtonPressed(
-                    id: self.id,
-                    text: self.textView.text,
-                    selection: self.textView.selectedRange
-                )
-            },
-            codeButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.codeButtonPressed(
-                    id: self.id,
-                    text: self.textView.text,
-                    selection: self.textView.selectedRange
-                )
-            },
-            dismissKeyboardButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.dismissKeyboardButtonPressed(id: self.id)
-            }
-        )
+        private lazy var toolbar = self.createToolbar()
         
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -77,14 +46,13 @@ extension BlockEditor {
                 bottom: 12,
                 right: 12
             )
-            textView.font = .preferredFont(forTextStyle: .body)
+            textView.font = .preferredFont(forTextStyle: .headline)
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
             
             textView.inputAccessoryView = toolbar
             
             addSubview(textView)
-            addSubview(bullet)
             addSubview(divider)
 
             NSLayoutConstraint.activate([
@@ -95,19 +63,6 @@ extension BlockEditor {
                 divider.leadingAnchor.constraint(equalTo: leadingAnchor),
                 divider.trailingAnchor.constraint(equalTo: trailingAnchor),
                 
-    //            bullet.leadingAnchor.constraint(
-    //                equalTo: leadingAnchor,
-    //                constant: 4
-    //            ),
-    //            bullet.widthAnchor.constraint(
-    //                equalToConstant: 4
-    //            ),
-    //            bullet.heightAnchor.constraint(
-    //                equalToConstant: 4
-    //            ),
-    //            bullet.topAnchor.constraint(equalTo: topAnchor),
-    //            bullet.bottomAnchor.constraint(equalTo: bottomAnchor),
-
                 bottomAnchor.constraint(equalTo: divider.bottomAnchor),
             ])
         }
@@ -116,14 +71,6 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        private func createBullet() -> UIView {
-            let view = UIView(frame: .zero)
-            view.backgroundColor = .secondaryLabel
-            view.translatesAutoresizingMaskIntoConstraints = false
-            view.layer.cornerRadius = 4
-            return view
-        }
-
         func render(_ state: TextBlockModel) {
             self.id = state.id
             if textView.text != state.text {
@@ -155,7 +102,7 @@ extension BlockEditor {
             }
             return true
         }
-        
+
         func textViewDidChange(_ textView: UITextView) {
             UIView.performWithoutAnimation {
                 self.invalidateIntrinsicContentSize()
@@ -180,6 +127,52 @@ extension BlockEditor {
         
         func textViewDidEndEditing(_ textView: UITextView) {
             delegate?.didEndEditing(id: self.id)
+        }
+
+        private func createToolbar() -> UIToolbar {
+            let toolbar = UIToolbar()
+
+            let upButton = UIBarButtonItem(
+                title: String(localized: "Move block up"),
+                image: UIImage(systemName: "chevron.up"),
+                handle: { [weak self] in
+                    guard let self = self else { return }
+                    self.delegate?.upButtonPressed(id: self.id)
+                }
+            )
+
+            let downButton = UIBarButtonItem(
+                title: String(localized: "Move block down"),
+                image: UIImage(systemName: "chevron.down"),
+                handle: { [weak self] in
+                    guard let self = self else { return }
+                    self.delegate?.downButtonPressed(id: self.id)
+                }
+            )
+
+            let spacer = UIBarButtonItem.flexibleSpace()
+            
+            let dismissKeyboardButton = UIBarButtonItem(
+                title: String(localized: "Dismiss keyboard"),
+                image: UIImage(systemName: "keyboard.chevron.compact.down"),
+                handle: { [weak self] in
+                    guard let self = self else { return }
+                    self.delegate?.dismissKeyboardButtonPressed(id: self.id)
+                }
+            )
+
+            toolbar.setItems(
+                [
+                    upButton,
+                    downButton,
+                    spacer,
+                    dismissKeyboardButton
+                ],
+                animated: false
+            )
+            toolbar.isTranslucent = false
+            toolbar.sizeToFit()
+            return toolbar
         }
     }
 }
