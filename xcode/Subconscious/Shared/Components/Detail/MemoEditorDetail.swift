@@ -39,7 +39,7 @@ struct MemoEditorDetailView: View {
             return store.state.address?.markup ?? store.state.title
         }
     }
-
+    
     private func onLink(
         url: URL
     ) -> Bool {
@@ -53,102 +53,22 @@ struct MemoEditorDetailView: View {
         )
         return false
     }
-
+    
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                ScrollView(.vertical) {
-                    VStack(spacing: 0) {
-                        if AppDefaults.standard.isBlockEditorEnabled {
-                            BlockEditor.Representable(
-                                state: Binding(
-                                    get: { store.state.blockEditor },
-                                    send: store.send,
-                                    tag: Action.forceSetBlockEditor
-                                )
-                            )
-                            .frame(
-                                minHeight: UIFont.appTextMono.lineHeight * 8
-                            )
-                        } else {
-                            SubtextTextViewRepresentable(
-                                state: store.state.editor,
-                                send: Address.forward(
-                                    send: store.send,
-                                    tag: MemoEditorDetailSubtextTextCursor.tag
-                                ),
-                                frame: geometry.frame(in: .local),
-                                onLink: self.onLink
-                            )
-                            .insets(
-                                EdgeInsets(
-                                    top: AppTheme.padding,
-                                    leading: AppTheme.padding,
-                                    bottom: AppTheme.padding,
-                                    trailing: AppTheme.padding
-                                )
-                            )
-                            .frame(
-                                minHeight: UIFont.appTextMono.lineHeight * 8
-                            )
-                        }
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
-                        BacklinksView(
-                            backlinks: store.state.backlinks,
-                            onSelect: { link in
-                                notify(
-                                    .requestDetail(
-                                        MemoDetailDescription.from(
-                                            address: link.address,
-                                            fallback: link.title
-                                        )
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-                if store.state.editor.focus {
-                    DetailKeyboardToolbarView(
-                        isSheetPresented: Binding(
-                            get: { store.state.isLinkSheetPresented },
-                            send: store.send,
-                            tag: MemoEditorDetailAction.setLinkSheetPresented
-                        ),
-                        selectedShortlink: store.state.selectedShortlink,
-                        suggestions: store.state.linkSuggestions,
-                        onSelectLinkCompletion: { link in
-                            store.send(.selectLinkCompletion(link))
-                        },
-                        onInsertWikilink: {
-                            store.send(.insertEditorWikilinkAtSelection)
-                        },
-                        onInsertBold: {
-                            store.send(.insertEditorBoldAtSelection)
-                        },
-                        onInsertItalic: {
-                            store.send(.insertEditorItalicAtSelection)
-                        },
-                        onInsertCode: {
-                            store.send(.insertEditorCodeAtSelection)
-                        },
-                        onDoneEditing: {
-                            store.send(.doneEditing)
-                        }
+        VStack {
+            if AppDefaults.standard.isBlockEditorEnabled {
+                BlockEditor.Representable(
+                    state: Binding(
+                        get: { store.state.blockEditor },
+                        send: store.send,
+                        tag: Action.forceSetBlockEditor
                     )
-                    .transition(
-                        .asymmetric(
-                            insertion: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
-                                .delay(Duration.keyboard)
-                            ),
-                            removal: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
-                            )
-                        )
-                    )
-                }
+                )
+                .frame(
+                    minHeight: UIFont.appTextMono.lineHeight * 8
+                )
+            } else {
+                plainEditor()
             }
         }
         .navigationTitle(navigationTitle)
@@ -247,6 +167,93 @@ struct MemoEditorDetailView: View {
                     store.send(.selectLinkSuggestion(suggestion))
                 }
             )
+        }
+    }
+    
+    /// Constructs a plain text editor for the view
+    private func plainEditor() -> some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                ScrollView(.vertical) {
+                    VStack(spacing: 0) {
+                        SubtextTextViewRepresentable(
+                            state: store.state.editor,
+                            send: Address.forward(
+                                send: store.send,
+                                tag: MemoEditorDetailSubtextTextCursor.tag
+                            ),
+                            frame: geometry.frame(in: .local),
+                            onLink: self.onLink
+                        )
+                        .insets(
+                            EdgeInsets(
+                                top: AppTheme.padding,
+                                leading: AppTheme.padding,
+                                bottom: AppTheme.padding,
+                                trailing: AppTheme.padding
+                            )
+                        )
+                        .frame(
+                            minHeight: UIFont.appTextMono.lineHeight * 8
+                        )
+                    }
+                    ThickDividerView()
+                        .padding(.bottom, AppTheme.unit4)
+                    BacklinksView(
+                        backlinks: store.state.backlinks,
+                        onSelect: { link in
+                            notify(
+                                .requestDetail(
+                                    MemoDetailDescription.from(
+                                        address: link.address,
+                                        fallback: link.title
+                                    )
+                                )
+                            )
+                        }
+                    )
+                }
+                if store.state.editor.focus {
+                    DetailKeyboardToolbarView(
+                        isSheetPresented: Binding(
+                            get: { store.state.isLinkSheetPresented },
+                            send: store.send,
+                            tag: MemoEditorDetailAction.setLinkSheetPresented
+                        ),
+                        selectedShortlink: store.state.selectedShortlink,
+                        suggestions: store.state.linkSuggestions,
+                        onSelectLinkCompletion: { link in
+                            store.send(.selectLinkCompletion(link))
+                        },
+                        onInsertWikilink: {
+                            store.send(.insertEditorWikilinkAtSelection)
+                        },
+                        onInsertBold: {
+                            store.send(.insertEditorBoldAtSelection)
+                        },
+                        onInsertItalic: {
+                            store.send(.insertEditorItalicAtSelection)
+                        },
+                        onInsertCode: {
+                            store.send(.insertEditorCodeAtSelection)
+                        },
+                        onDoneEditing: {
+                            store.send(.doneEditing)
+                        }
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                                .delay(Duration.keyboard)
+                            ),
+                            removal: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                            )
+                        )
+                    )
+                }
+            }
         }
     }
 }
