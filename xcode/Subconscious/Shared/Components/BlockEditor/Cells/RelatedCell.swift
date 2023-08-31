@@ -17,6 +17,12 @@ extension BlockEditor {
         static let identifier = "RelatedCell"
         
         var id: UUID = UUID()
+        private var padding = UIEdgeInsets(
+            top: 16,
+            left: 16,
+            bottom: 16,
+            right: 16
+        )
         private lazy var relatedView = RelatedView(frame: .zero)
         
         override init(frame: CGRect) {
@@ -24,10 +30,22 @@ extension BlockEditor {
             relatedView.translatesAutoresizingMaskIntoConstraints = false
             addSubview(relatedView)
             NSLayoutConstraint.activate([
-                relatedView.leadingAnchor.constraint(equalTo: leadingAnchor),
-                relatedView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                relatedView.topAnchor.constraint(equalTo: topAnchor),
-                bottomAnchor.constraint(equalTo: relatedView.bottomAnchor),
+                relatedView.leadingAnchor.constraint(
+                    equalTo: leadingAnchor,
+                    constant: padding.left
+                ),
+                relatedView.trailingAnchor.constraint(
+                    equalTo: trailingAnchor,
+                    constant: -1 * padding.right
+                ),
+                relatedView.topAnchor.constraint(
+                    equalTo: topAnchor,
+                    constant: padding.top
+                ),
+                bottomAnchor.constraint(
+                    equalTo: relatedView.bottomAnchor,
+                    constant: padding.bottom
+                ),
             ])
         }
         
