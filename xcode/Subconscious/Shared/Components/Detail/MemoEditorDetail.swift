@@ -604,7 +604,21 @@ struct MemoEditorDetailModel: ModelProtocol {
     /// The text editor
     var editor = SubtextTextModel()
     /// Block editor
-    var blockEditor = BlockEditor.Model.draft()
+    var blockEditor = BlockEditor.Model(
+        blocks: [
+            BlockEditor.BlockModel.heading(BlockEditor.TextBlockModel())
+        ],
+        appendix: BlockEditor.RelatedModel(
+            related: [
+                EntryStub(
+                    address: Slashlink("@example/foo")!,
+                    excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                    modified: Date.now,
+                    author: nil
+                )
+            ]
+        )
+    )
     
     /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false

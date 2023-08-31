@@ -16,11 +16,16 @@ extension BlockEditor {
         
         override init(frame: CGRect) {
             super.init(frame: frame)
+            
+            addressView.translatesAutoresizingMaskIntoConstraints = false
+            excerptView.translatesAutoresizingMaskIntoConstraints = false
+            
+            stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.axis = .vertical
             stackView.addArrangedSubview(addressView)
             stackView.addArrangedSubview(excerptView)
             addSubview(stackView)
-
+            
             NSLayoutConstraint.activate([
                 stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
