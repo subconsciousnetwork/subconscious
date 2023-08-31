@@ -9,6 +9,8 @@ import UIKit
 import os
 
 extension UIView {
+    /// A subclass of UITextView that automatically renders Subtext
+    /// as attributes on text storage.
     class SubtextTextView: UITextView, Identifiable, NSTextStorageDelegate {
         var id = UUID()
         var renderer = SubtextAttributedStringRenderer()
