@@ -219,6 +219,9 @@
 		B86DD56A2A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */; };
 		B86DD56C2A9FF77600E1DEA5 /* ErrorCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */; };
 		B86DD56E2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */; };
+		B86DD5702AA0D28600E1DEA5 /* BlockEditorRelatedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */; };
+		B86DD5722AA0D33E00E1DEA5 /* UIStackViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */; };
+		B86DD5762AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DD5752AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2C27C0280B002E57ED /* EntryListView.swift */; };
@@ -648,6 +651,9 @@
 		B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorRelatedModel.swift; sourceTree = "<group>"; };
 		B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorCell.swift; sourceTree = "<group>"; };
 		B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorTranscludeView.swift; sourceTree = "<group>"; };
+		B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorRelatedView.swift; sourceTree = "<group>"; };
+		B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIStackViewHelpers.swift; sourceTree = "<group>"; };
+		B86DD5752AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UIStackViewHelpers.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2C27C0280B002E57ED /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
@@ -997,6 +1003,7 @@
 				B80890A92A0693C40087E091 /* Tests_HeaderSubtext.swift */,
 				B840CCC62A0C1F840000C025 /* Tests_Audience.swift */,
 				B83E0E2E2A9D16A5009F18AE /* Tests_ControllerStore.swift */,
+				B86DD5752AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -1017,14 +1024,15 @@
 			isa = PBXGroup;
 			children = (
 				B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */,
+				B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */,
 				B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */,
+				B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */,
 				B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */,
 				B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */,
 				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
 				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
 				B8AB08AF2A9D4FB600998099 /* Cells */,
 				B86DD5662A9FEB0300E1DEA5 /* Models */,
-				B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */,
 				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
 			);
 			path = BlockEditor;
@@ -1214,6 +1222,7 @@
 				B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */,
 				B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */,
 				B8CAF2102A9E89A30057D5DE /* UIFontHelpers.swift */,
+				B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */,
 				B8AB08D52A9D52B300998099 /* UITextViewHelpers.swift */,
 				B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */,
 				B8AB08D72A9D52D700998099 /* UIViewHelpers.swift */,
@@ -1784,6 +1793,7 @@
 				B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */,
 				B80CC807299D4DF000C4D7C0 /* Tests_SQLite3Database.swift in Sources */,
 				B83B19A52A015D93007657D9 /* Tests_Did.swift in Sources */,
+				B86DD5762AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift in Sources */,
 				B8CAA6CD2A02FF9B00F4A0F6 /* Tests_Link.swift in Sources */,
 				B8E1A9492A13F49F00B757A5 /* Tests_LogFmt.swift in Sources */,
 				B83E0E2F2A9D16A5009F18AE /* Tests_ControllerStore.swift in Sources */,
@@ -1880,6 +1890,7 @@
 				B8AB08B12A9D4FC300998099 /* BlockModel.swift in Sources */,
 				B8B3EE75297AEE6600779B7F /* FirstRunSphereView.swift in Sources */,
 				B8A59D6C28B692A00010DB2F /* Story.swift in Sources */,
+				B86DD5722AA0D33E00E1DEA5 /* UIStackViewHelpers.swift in Sources */,
 				B5F68F632A0B1E6900CE4DD7 /* OnboardingTheme.swift in Sources */,
 				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B8E1A9462A12F69E00B757A5 /* LogFmt.swift in Sources */,
@@ -2045,6 +2056,7 @@
 				B8CAF20F2A9E7C8C0057D5DE /* SubtextTextView.swift in Sources */,
 				B8C0A1B4297C938000D59532 /* Error.swift in Sources */,
 				B8CBAFA229930C660079107E /* ValidatedTextField.swift in Sources */,
+				B86DD5702AA0D28600E1DEA5 /* BlockEditorRelatedView.swift in Sources */,
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
