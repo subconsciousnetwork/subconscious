@@ -100,21 +100,21 @@ final class Tests_AddressBookService: XCTestCase {
         let did = Did("did:key:123")!
         let petname = Petname("ziggy-2")!
         
-        let a = await addressBook.followingStatus(did: did)
+        let a = await addressBook.followingStatus(did: did, expectedName: nil)
         let b = await addressBook.hasEntryForPetname(petname: petname)
         XCTAssertFalse(a.isFollowing)
         XCTAssertFalse(b)
     
         try await addressBook.followUser(did: did, petname: petname)
         
-        let c = await addressBook.followingStatus(did: did)
+        let c = await addressBook.followingStatus(did: did, expectedName: nil)
         let d = await addressBook.hasEntryForPetname(petname: petname)
         XCTAssertTrue(c.isFollowing)
         XCTAssertTrue(d)
         
-        try await addressBook.unfollowUser(petname: petname)
+        let _ = try await addressBook.unfollowUser(petname: petname)
         
-        let e = await addressBook.followingStatus(did: did)
+        let e = await addressBook.followingStatus(did: did, expectedName: nil)
         let f = await addressBook.hasEntryForPetname(petname: petname)
         XCTAssertFalse(e.isFollowing)
         XCTAssertFalse(f)
