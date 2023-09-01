@@ -242,7 +242,7 @@ enum MemoViewerDetailAction: Hashable {
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
     
-    case refreshBacklinks(_ address: Slashlink)
+    case refreshBacklinks
     case succeedRefreshBacklinks(_ backlinks: [EntryStub])
     case failRefreshBacklinks(_ error: String)
     
@@ -347,11 +347,10 @@ struct MemoViewerDetailModel: ModelProtocol {
             logger.log("\(message)")
             return Update(state: state)
             
-        case .refreshBacklinks(let address):
+        case .refreshBacklinks:
             return refreshBacklinks(
                 state: state,
-                environment: environment,
-                address: address
+                environment: environment
             )
         case .succeedRefreshBacklinks(let backlinks):
             var model = state
@@ -425,7 +424,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             actions: [
                 .setMetaSheetAddress(description.address),
                 .fetchOwnerProfile,
-                .refreshBacklinks(description.address)
+                .refreshBacklinks
             ],
             environment: environment
         ).mergeFx(fx)
@@ -460,9 +459,12 @@ struct MemoViewerDetailModel: ModelProtocol {
     
     static func refreshBacklinks(
         state: Self,
-        environment: Environment,
-        address: Slashlink
+        environment: Environment
     ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
         let fx: Fx<MemoViewerDetailAction> = Future.detached {
             try await environment.data.readMemoBacklinks(address: address)
         }
@@ -564,14 +566,10 @@ struct MemoViewerDetailModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
-        guard let address = state.address else {
-            return Update(state: state)
-        }
-        
         return update(
             state: state,
             actions: [
-                .refreshBacklinks(address),
+                .refreshBacklinks,
                 .fetchTranscludePreviews
             ],
             environment: environment
