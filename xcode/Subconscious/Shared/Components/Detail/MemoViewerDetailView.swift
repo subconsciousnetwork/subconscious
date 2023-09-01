@@ -240,7 +240,7 @@ struct MemoViewerDetailDescription: Hashable {
 enum MemoViewerDetailAction: Hashable {
     case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
-    case setDetail(_ detail: MemoDetailResponse?)
+    case setDetail(_ entry: MemoEntry?)
     case setDom(Subtext)
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
@@ -334,11 +334,11 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 description: description
             )
-        case .setDetail(let response):
+        case .setDetail(let entry):
             return setDetail(
                 state: state,
                 environment: environment,
-                response: response
+                entry: entry
             )
         case .setDom(let dom):
             return setDom(
@@ -437,19 +437,19 @@ struct MemoViewerDetailModel: ModelProtocol {
     static func setDetail(
         state: Self,
         environment: Environment,
-        response: MemoDetailResponse?
+        entry: MemoEntry?
     ) -> Update<Self> {
         var model = state
         
         // If no response, then mark not found
-        guard let response = response else {
+        guard let entry = entry else {
             model.loadingState = .notFound
             return Update(state: model)
         }
         
         model.loadingState = .loaded
-        let memo = response.entry.contents
-        model.address = response.entry.address
+        let memo = entry.contents
+        model.address = entry.address
         model.title = memo.title()
         
         let dom = memo.dom()

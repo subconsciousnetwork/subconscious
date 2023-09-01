@@ -910,7 +910,7 @@ actor DataService {
     /// - Returns `MemoDetailResponse`
     func readMemoDetail(
         address: Slashlink
-    ) async -> MemoDetailResponse? {
+    ) async -> MemoEntry? {
         // Read memo from local or sphere.
         guard let memo = try? await readMemo(
             address: address
@@ -918,11 +918,9 @@ actor DataService {
             return nil
         }
         
-        return MemoDetailResponse(
-            entry: MemoEntry(
-                address: address,
-                contents: memo
-            )
+        return MemoEntry(
+            address: address,
+            contents: memo
         )
     }
 
@@ -930,7 +928,7 @@ actor DataService {
     /// - Returns publisher for `MemoDetailResponse` or error
     nonisolated func readMemoDetailPublisher(
         address: Slashlink
-    ) -> AnyPublisher<MemoDetailResponse?, Never> {
+    ) -> AnyPublisher<MemoEntry?, Never> {
         Future.detached {
             await self.readMemoDetail(address: address)
         }
