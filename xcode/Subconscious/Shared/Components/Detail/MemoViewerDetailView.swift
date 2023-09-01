@@ -72,13 +72,10 @@ struct MemoViewerDetailView: View {
             let message = String.loggable(action)
             MemoViewerDetailModel.logger.debug("[action] \(message)")
         }
-        .onReceive(app.actions) { action in
-            guard let action = MemoViewerDetailAction.fromAppAction(action) else {
-                return
-            }
-            
-            store.send(action)
-        }
+        .onReceive(
+            app.actions.compactMap(MemoViewerDetailAction.fromAppAction),
+            perform: store.send
+        )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
