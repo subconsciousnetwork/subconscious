@@ -198,6 +198,8 @@ actor UserProfileService {
             expectedName: address.petname?.leaf
         )
         
+        let aliases = try await self.addressBook.listAliases(did: did)
+        
         let profile = UserProfile(
             did: did,
             nickname: Petname.Name(userProfileData?.nickname ?? ""),
@@ -206,7 +208,8 @@ actor UserProfileService {
             bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: isOurs ? UserCategory.ourself : UserCategory.human,
             resolutionStatus: resolutionStatus,
-            ourFollowStatus: followingStatus
+            ourFollowStatus: followingStatus,
+            aliases: aliases
         )
         
         return profile

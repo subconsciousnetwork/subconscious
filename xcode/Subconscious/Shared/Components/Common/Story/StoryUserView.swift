@@ -52,7 +52,7 @@ struct StoryUserView: View {
                     ProfilePic(pfp: story.user.pfp, size: .medium)
                     
                     if let name = story.user.toNameVariant() {
-                        PetnameView(name: name)
+                        PetnameView(name: name, aliases: story.user.aliases)
                     }
                     
                     Spacer()
@@ -161,7 +161,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
                         resolutionStatus: .unresolved,
-                        ourFollowStatus: .notFollowing
+                        ourFollowStatus: .notFollowing,
+                        aliases: []
                     )
                 ),
                 action: { _ in }
@@ -176,7 +177,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
                         resolutionStatus: .pending,
-                        ourFollowStatus: .following(Petname.Name("lol")!)
+                        ourFollowStatus: .following(Petname.Name("lol")!),
+                        aliases: []
                     )
                 ),
                 action: { _ in }
@@ -191,7 +193,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .ourself,
                         resolutionStatus: .resolved(Cid("ok")),
-                        ourFollowStatus: .notFollowing
+                        ourFollowStatus: .notFollowing,
+                        aliases: []
                     )
                 ),
                 action: { _ in }
@@ -206,7 +209,8 @@ struct StoryUserView_Previews: PreviewProvider {
                         bio: UserProfileBio.empty,
                         category: .ourself,
                         resolutionStatus: .pending,
-                        ourFollowStatus: .notFollowing
+                        ourFollowStatus: .notFollowing,
+                        aliases: []
                     )
                 ),
                 action: { _ in }
