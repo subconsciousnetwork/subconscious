@@ -199,9 +199,7 @@ struct MemoEditorDetailView: View {
             notify(action)
         }
         .onReceive(
-            app.actions.compactMap { action in
-                MemoEditorDetailAction.fromAppAction(action: action, description: description)
-            },
+            app.actions.compactMap(MemoEditorDetailAction.fromAppAction),
             perform: store.send
         )
         .sheet(
@@ -314,7 +312,7 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     case refreshDetail
     case refreshDetailIfStale
     
-    case refreshBacklinks(_ address: Slashlink)
+    case refreshBacklinks
     case succeedRefreshBacklinks(_ backlinks: [EntryStub])
     case failRefreshBacklinks(_ error: String)
     
@@ -493,17 +491,12 @@ extension MemoEditorDetailAction {
 /// React to actions from the root app store
 extension MemoEditorDetailAction {
     static func fromAppAction(
-        action: AppAction,
-        description: MemoEditorDetailDescription
+        action: AppAction
     ) -> MemoEditorDetailAction? {
-        guard let address = description.address else {
-            return nil
-        }
-        
         switch (action) {
         case .succeedIndexOurSphere(_),
              .succeedIndexPeer(_):
-            return .refreshBacklinks(address)
+            return .refreshBacklinks
         case _:
             return nil
         }
@@ -768,11 +761,10 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment
             )
             
-        case .refreshBacklinks(let address):
+        case .refreshBacklinks:
             return refreshBacklinks(
                 state: state,
-                environment: environment,
-                address: address
+                environment: environment
             )
         case .succeedRefreshBacklinks(let backlinks):
             var model = state
@@ -1212,10 +1204,12 @@ struct MemoEditorDetailModel: ModelProtocol {
             Just(MemoEditorDetailAction.failLoadDetail(error.localizedDescription))
         }).eraseToAnyPublisher()
         
-        let model = prepareLoadDetail(state)
+        var model = prepareLoadDetail(state)
+        model.address = address
+        
         return update(
             state: model,
-            action: .refreshBacklinks(address),
+            action: .refreshBacklinks,
             environment: environment
         ).mergeFx(fx)
     }
@@ -1459,9 +1453,12 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     static func refreshBacklinks(
         state: MemoEditorDetailModel,
-        environment: AppEnvironment,
-        address: Slashlink
+        environment: AppEnvironment
     ) -> Update<MemoEditorDetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
         let fx: Fx<MemoEditorDetailAction> = Future.detached {
             try await environment.data.readMemoBacklinks(address: address)
         }
