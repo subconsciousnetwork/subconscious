@@ -1,0 +1,47 @@
+//
+//  BlockEditorSlashlinkDisplayView.swift
+//  Subconscious (iOS)
+//
+//  Created by Gordon Brander on 9/5/23.
+//
+
+import UIKit
+
+extension BlockEditor {
+    class SlashlinkDisplayView: UIView, UIRenderableViewProtocol {
+        private var height: CGFloat = 22
+        private var stackView = UIStackView(frame: .zero)
+        private var petnameView = UILabel(frame: .zero)
+        private var slugView = UILabel(frame: .zero)
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+
+            stackView.axis = .horizontal
+            stackView.alignment = .center
+            addSubview(stackView)
+            
+            petnameView.textColor = .accent
+            stackView.addArrangedSubview(petnameView)
+            slugView.textColor = .secondaryLabel
+            stackView.addArrangedSubview(slugView)
+
+            NSLayoutConstraint.activate([
+                stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                stackView.topAnchor.constraint(equalTo: topAnchor),
+                stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                heightAnchor.constraint(equalToConstant: height),
+            ])
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        func render(_ slashlink: Slashlink) {
+            petnameView.text = slashlink.petname?.markup
+            slugView.text = slashlink.slug.description
+        }
+    }
+}

@@ -169,3 +169,12 @@ extension Color {
         colorScheme == .dark ? Color.brandMarkPink : Color.brandMarkPurple
     }
 }
+
+extension UIColor {
+    /// The accent color as a UIColor
+    /// We return this dynamically so that the accent color will be recomputed
+    /// for light/dark mode.
+    static var accent: UIColor {
+        UIColor(Color.accentColor)
+    }
+}
