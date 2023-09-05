@@ -93,7 +93,8 @@ extension StoryUser: DummyData {
                 ourFollowStatus: [
                     .following(Petname.Name.dummyData()),
                     .notFollowing
-                ].randomElement()!
+                ].randomElement()!,
+                aliases: []
             )
         )
     }
@@ -111,7 +112,8 @@ extension StoryUser: DummyData {
                 ourFollowStatus: [
                     .following(Petname.Name.dummyData()),
                     .notFollowing
-                ].randomElement()!
+                ].randomElement()!,
+                aliases: []
             )
         )
     }
@@ -177,7 +179,8 @@ extension UserProfile: DummyData {
             bio: UserProfileBio.dummyData(),
             category: .human,
             resolutionStatus: .unresolved,
-            ourFollowStatus: .notFollowing
+            ourFollowStatus: .notFollowing,
+            aliases: []
         )
     }
     
@@ -193,7 +196,8 @@ extension UserProfile: DummyData {
             bio: UserProfileBio.dummyData(),
             category: category,
             resolutionStatus: .unresolved,
-            ourFollowStatus: .notFollowing
+            ourFollowStatus: .notFollowing,
+            aliases: []
         )
     }
 }

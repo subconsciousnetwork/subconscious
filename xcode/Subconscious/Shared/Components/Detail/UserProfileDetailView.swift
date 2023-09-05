@@ -190,6 +190,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
     let resolutionStatus: ResolutionStatus
     let ourFollowStatus: UserProfileFollowStatus
+    let aliases: [Petname]
     
     var isFollowedByUs: Bool {
         ourFollowStatus.isFollowing
@@ -220,7 +221,8 @@ struct UserProfile: Equatable, Codable, Hashable {
             bio: bio,
             category: category,
             resolutionStatus: resolutionStatus,
-            ourFollowStatus: ourFollowStatus
+            ourFollowStatus: ourFollowStatus,
+            aliases: aliases
         )
     }
 }

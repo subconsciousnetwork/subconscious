@@ -140,7 +140,8 @@ struct EditProfileSheet: View {
             bio: UserProfileBio(state.bioField.validated?.text ?? ""),
             category: .ourself,
             resolutionStatus: .resolved(Cid("fake-for-preview")),
-            ourFollowStatus: .notFollowing
+            ourFollowStatus: .notFollowing,
+            aliases: []
         )
     }
     

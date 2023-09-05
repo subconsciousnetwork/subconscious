@@ -35,8 +35,8 @@ extension UserProfile {
     }
 }
 
-struct PeerView: View {
-    var peer: Peer
+struct AliasView: View {
+    var aliases: [Petname]
 
     var body: some View {
         HStack(spacing: AppTheme.unit) {
@@ -49,7 +49,7 @@ struct PeerView: View {
             }
             .frame(width: 28, height: 15)
 
-            Text(peer.markup)
+            Text(aliases.map(\.markup).joined(separator: ", "))
                 .foregroundColor(.secondary)
                 .fontWeight(.regular)
                 .font(.caption)
@@ -62,27 +62,31 @@ struct PeerView: View {
 /// Byline style for displaying a petname
 struct PetnameView: View {
     var name: NameVariant
+    var aliases: [Petname] = []
+    
     var showMaybePrefix = false
+    
+    var uniqueAliases: [Petname] {
+        switch name {
+        case .petname(_, let name):
+            return aliases.filter { alias in
+                name != alias.leaf
+            }
+        case _:
+            return []
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             switch name {
-            case .petname(let address, let name):
+            case .petname(_, let name):
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
                 
-                /// Prevent showing _exactly_ the same name above and below e.g.
-                /// @bob
-                /// AKA @bob
-                ///
-                /// We still permit:
-                /// @bob
-                /// AKA @bob.alice
-                if let peer = address.peer,
-                   let petname = address.petname,
-                   petname != name.toPetname() {
-                    PeerView(peer: peer)
+                if !uniqueAliases.isEmpty {
+                    AliasView(aliases: uniqueAliases)
                 }
             case .selfNickname(let address, let name),
                  .proposedName(let address, let name):
@@ -93,8 +97,8 @@ struct PetnameView: View {
                 .italic()
                 .fontWeight(.medium)
                 
-                if let peer = address.peer {
-                    PeerView(peer: peer)
+                if case let .petname(name) = address.peer {
+                    AliasView(aliases: [name])
                 }
             }
         }
@@ -123,6 +127,13 @@ struct PetnameView: View {
                         Slashlink(petname: Petname("robert")!),
                         Petname.Name("robert")!
                     )
+                )
+                PetnameView(
+                    name: .petname(
+                        Slashlink(petname: Petname("robert")!),
+                        Petname.Name("robert")!
+                    ),
+                    aliases: [Petname("bob")!, Petname("bobby")!]
                 )
             }
         }

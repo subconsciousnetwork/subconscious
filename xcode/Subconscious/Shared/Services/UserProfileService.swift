@@ -193,7 +193,12 @@ actor UserProfileService {
             address: isOurs ? Slashlink.ourProfile : address
         )
         
-        let followingStatus = await self.addressBook.followingStatus(did: did)
+        let followingStatus = await self.addressBook.followingStatus(
+            did: did,
+            expectedName: address.petname?.leaf
+        )
+        
+        let aliases = try await self.addressBook.listAliases(did: did)
         
         let profile = UserProfile(
             did: did,
@@ -203,7 +208,8 @@ actor UserProfileService {
             bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: isOurs ? UserCategory.ourself : UserCategory.human,
             resolutionStatus: resolutionStatus,
-            ourFollowStatus: followingStatus
+            ourFollowStatus: followingStatus,
+            aliases: aliases
         )
         
         return profile
@@ -406,7 +412,10 @@ actor UserProfileService {
         let following = try await self.getFollowingList(
             address: address
         )
-        let followingStatus = await self.addressBook.followingStatus(did: did)
+        let followingStatus = await self.addressBook.followingStatus(
+            did: did,
+            expectedName: address.petname?.leaf
+        )
         
         let entries = try await Func.run {
             switch (followingStatus) {
