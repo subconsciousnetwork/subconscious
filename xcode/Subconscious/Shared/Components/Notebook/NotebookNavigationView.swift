@@ -12,11 +12,12 @@ struct NotebookNavigationView: View {
     @ObservedObject var store: Store<NotebookModel>
 
     var body: some View {
-        NavigationStack(
-            path: Binding(
-                get: { store.state.details },
-                send: store.send,
-                tag: NotebookAction.setDetails
+        DetailStackView(
+            app: app,
+            store: ViewStore(
+                store: store,
+                get: NotebookDetailStackCursor.get,
+                tag: NotebookDetailStackCursor.tag
             )
         ) {
             VStack(spacing: 0) {
@@ -60,37 +61,6 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(
-                for: MemoDetailDescription.self
-            ) { detail in
-                switch detail {
-                case .editor(let description):
-                    MemoEditorDetailView(
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: NotebookAction.tag
-                        )
-                    )
-                case .viewer(let description):
-                    MemoViewerDetailView(
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: NotebookAction.tag
-                        )
-                    )
-                case .profile(let description):
-                    UserProfileDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: NotebookAction.tag
-                        )
-                    )
-                }
-            }
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -112,7 +82,7 @@ struct NotebookNavigationView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(
                         action: {
-                            store.send(.requestOurProfileDetail)
+                            store.send(.detailStack(.requestOurProfileDetail))
                         }
                     ) {
                         Image(systemName: "person")

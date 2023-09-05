@@ -612,7 +612,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
-        category: "detail"
+        category: "MemoEditorDetail"
     )
     
     //  MARK: Update

@@ -76,7 +76,7 @@ class Tests_NotebookUpdate: XCTestCase {
     }
     
     func testViewerSlashlinkConstruction() throws {
-        let model = NotebookModel()
+        let model = DetailStackModel()
         
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
@@ -86,8 +86,8 @@ class Tests_NotebookUpdate: XCTestCase {
             link: link
         )
         
-        let newAction = NotebookAction.tag(action)
-        let update = NotebookModel.update(
+        let newAction = DetailStackAction.tag(action)
+        let update = DetailStackModel.update(
             state: model,
             action: newAction,
             environment: environment
@@ -104,7 +104,7 @@ class Tests_NotebookUpdate: XCTestCase {
     }
     
     func testEditorSlashlinkConstruction() throws {
-        let model = NotebookModel()
+        let model = DetailStackModel()
         
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
@@ -113,8 +113,8 @@ class Tests_NotebookUpdate: XCTestCase {
             link: link
         )
         
-        let newAction = NotebookAction.tag(action)
-        let update = NotebookModel.update(
+        let newAction = DetailStackAction.tag(action)
+        let update = DetailStackModel.update(
             state: model,
             action: newAction,
             environment: environment
