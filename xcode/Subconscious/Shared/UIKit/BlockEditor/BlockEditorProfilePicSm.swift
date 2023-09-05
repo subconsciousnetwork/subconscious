@@ -14,6 +14,7 @@ extension BlockEditor {
 
         override init(frame: CGRect) {
             super.init(frame: frame)
+            imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.backgroundColor = .secondarySystemBackground
             imageView.contentMode = .scaleAspectFill
             imageView.layer.masksToBounds = false
@@ -34,7 +35,7 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func render(_ state: ProfilePicVariant) {
+        func render(_ state: ProfilePicVariant?) {
             // TODO: implement generative profile pics for UIKit code
         }
     }

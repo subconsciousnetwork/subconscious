@@ -9,7 +9,7 @@ import UIKit
 
 extension BlockEditor {
     struct BylineModel: Hashable {
-        var pfp: ProfilePicVariant
+        var pfp: ProfilePicVariant?
         var slashlink: Slashlink
     }
 
