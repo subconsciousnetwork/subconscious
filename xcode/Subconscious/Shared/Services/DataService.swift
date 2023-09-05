@@ -252,7 +252,7 @@ actor DataService {
                     //
                     // If this peer is not been indexed before, write it to DB
                     // with nil version, since we have never yet indexed it.
-                    if var existingPeer = try database.readPeer(
+                    if let existingPeer = try database.readPeer(
                         petname: peer.petname
                     ) {
                         let updatedPeer = existingPeer.update(
@@ -310,7 +310,6 @@ actor DataService {
             // Then index memo changes from our sphere.
             let memoChanges = try await sphere.changes(since: since)
             for change in memoChanges {
-                let link = Link(did: identity, slug: change)
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
                 // If memo does not exist, that means change was a remove.

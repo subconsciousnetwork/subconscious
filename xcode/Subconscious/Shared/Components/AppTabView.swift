@@ -15,13 +15,6 @@ struct AppTabView: View {
 
     var body: some View {
         TabView {
-            VStack {
-                Text("To come")
-            }
-            .tabItem {
-                Label("Profile", systemImage: "person.crop.circle")
-            }
-            
             FeedView(parent: store)
                 .tabItem {
                     Label("Feed", systemImage: "newspaper")
