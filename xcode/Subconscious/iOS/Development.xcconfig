@@ -13,3 +13,4 @@ DEFAULT_GEIST_PETNAME = subconscious
 DEFAULT_GEIST_DID = did:key:z6MkfUzJYTBW8Q7mwCvKbVjzBt5LvEPRbpZ3Ni7aZZZekMat
 FEEDBACK_URL = docs.google.com/forms/d/e/1FAIpQLSeQHRBacSLtE2scIeezlgW6ou_xq_CLBUawJeMmOZv4O9NuEw/viewform?usp=sf_link
 CLOUDCTL_URL = cloudctl.sphere.socrates.subconscious.cloud
+PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.Unconscious
