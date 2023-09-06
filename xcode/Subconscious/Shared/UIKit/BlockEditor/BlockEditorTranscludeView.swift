@@ -10,14 +10,28 @@ import UIKit
 extension BlockEditor {
     class TranscludeView: UIView, UIComponentViewProtocol {
         var id = UUID()
-        private lazy var stackView = UIStackView(frame: .zero)
-        private lazy var bylineView = BylineView(frame: .zero)
-        private lazy var excerptView = UILabel(frame: .zero)
+        private var margins = NSDirectionalEdgeInsets(
+            top: AppTheme.unit3,
+            leading: AppTheme.unit4,
+            bottom: AppTheme.unit3,
+            trailing: AppTheme.unit4
+        )
+        private var cornerRadius: CGFloat = AppTheme.cornerRadiusLg
+        private lazy var stackView = UIStackView()
+        private lazy var bylineView = BylineView()
+        private lazy var excerptView = UILabel()
         
         override init(frame: CGRect) {
             super.init(frame: frame)
             
             self.translatesAutoresizingMaskIntoConstraints = false
+            self.backgroundColor = .tertiarySystemGroupedBackground
+            self.layer.cornerRadius = cornerRadius
+            self.directionalLayoutMargins = margins
+            self.setContentCompressionResistancePriority(
+                .defaultHigh,
+                for: .vertical
+            )
             
             stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.axis = .vertical
@@ -26,10 +40,19 @@ extension BlockEditor {
             addSubview(stackView)
             
             NSLayoutConstraint.activate([
-                stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
-                stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                stackView.topAnchor.constraint(equalTo: topAnchor),
-                bottomAnchor.constraint(equalTo: stackView.bottomAnchor)
+                stackView.leadingAnchor.constraint(
+                    equalTo: layoutMarginsGuide.leadingAnchor
+                ),
+                stackView.trailingAnchor.constraint(
+                    equalTo: layoutMarginsGuide.trailingAnchor
+                ),
+                stackView.topAnchor.constraint(
+                    equalTo: layoutMarginsGuide.topAnchor
+                ),
+                heightAnchor.constraint(
+                    equalTo: stackView.heightAnchor,
+                    constant: layoutMargins.top + layoutMargins.bottom
+                )
             ])
         }
         

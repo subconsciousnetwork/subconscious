@@ -18,7 +18,7 @@ extension BlockEditor {
         private var spacing: CGFloat = 8
         private var stackView = UIStackView()
         private var pfpView = ProfilePicSmView()
-        private var slashlinkView = SlashlinkDisplayView(frame: .zero)
+        private var slashlinkView = SlashlinkDisplayView()
         
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -38,7 +38,7 @@ extension BlockEditor {
                 stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 stackView.topAnchor.constraint(equalTo: topAnchor),
-                stackView.bottomAnchor.constraint(equalTo: bottomAnchor)
+                heightAnchor.constraint(equalTo: stackView.heightAnchor)
             ])
         }
         

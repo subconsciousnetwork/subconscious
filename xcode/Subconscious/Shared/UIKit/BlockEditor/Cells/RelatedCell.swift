@@ -41,11 +41,7 @@ extension BlockEditor {
                 relatedView.topAnchor.constraint(
                     equalTo: topAnchor,
                     constant: padding.top
-                ),
-                bottomAnchor.constraint(
-                    equalTo: relatedView.bottomAnchor,
-                    constant: padding.bottom
-                ),
+                )
             ])
         }
         

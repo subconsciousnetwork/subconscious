@@ -34,8 +34,7 @@ extension BlockEditor {
                 stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 stackView.topAnchor.constraint(equalTo: topAnchor),
-                stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
-                heightAnchor.constraint(equalToConstant: height),
+                heightAnchor.constraint(equalTo: stackView.heightAnchor),
             ])
         }
         
