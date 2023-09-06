@@ -24,7 +24,7 @@ struct StoryUser:
         \(String(describing: user.nickname))
         Following? \(user.isFollowedByUs)
         
-        \(user.bio)
+        \(user.bio?.text ?? "")
         """
     }
 }

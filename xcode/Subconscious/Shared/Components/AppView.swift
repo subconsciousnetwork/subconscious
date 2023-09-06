@@ -241,6 +241,24 @@ enum AppAction: CustomLogStringConvertible {
     case notifySucceedUnfollow(identity: Did, petname: Petname)
     
     case authorization(_ action: AuthorizationSettingsAction)
+    
+    //  Note management actions.
+    //  These actions manage note actions which have an effect on the global
+    //  list of notes (deletion, creation, etc).
+    //
+    //  Other components may subscribe to the app store actions publisher to
+    //  be notified when these global things change.
+    //
+    //  The general pattern is to send a "request" action in the component's
+    //  own store, and then replay these as equivalent actions on the app
+    //  store. The component subscribes to the app store's actions publisher
+    //  and responds to "succeed" actions.
+    /// Attempt to delete a memo
+    case deleteMemo(Slashlink?)
+    /// Deletion attempt failed
+    case failDeleteMemo(String)
+    /// Deletion attempt succeeded
+    case succeedDeleteMemo(Slashlink)
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -962,6 +980,24 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 identity: did,
                 petname: petname
+            )
+        case let .deleteMemo(address):
+            return deleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .failDeleteMemo(error):
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedDeleteMemo(address):
+            return succeedDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
             )
         }
     }
@@ -2161,6 +2197,60 @@ struct AppModel: ModelProtocol {
             action: .purgePeer(identity),
             environment: environment
         )
+    }
+    
+    /// Entry delete succeeded
+    static func deleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink?
+    ) -> Update<Self> {
+        guard let address = address else {
+            logger.log(
+                "Delete requested for nil address. Doing nothing."
+            )
+            return Update(state: state)
+        }
+        let fx: Fx<Action> = environment.data
+            .deleteMemoPublisher(address)
+            .map({ _ in
+                Action.succeedDeleteMemo(address)
+            })
+            .recover({ error in
+                Action.failDeleteMemo(error.localizedDescription)
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Entry delete succeeded
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to delete entry",
+            metadata: [
+                "error": error
+            ]
+        )
+        return Update(state: state)
+    }
+
+    /// Entry delete succeeded
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        logger.log(
+            "Deleted entry",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        return Update(state: state)
     }
 }
 
