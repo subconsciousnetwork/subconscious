@@ -656,7 +656,7 @@ struct UserProfileDetailModel: ModelProtocol {
         model.following = content.following
         model.loadingState = .loaded
         
-        return Update(state: model).animation(.easeOut)
+        return Update(state: model)
     }
     
     static func failedToPopulate(
