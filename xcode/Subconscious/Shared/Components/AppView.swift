@@ -259,6 +259,9 @@ enum AppAction: CustomLogStringConvertible {
     case failDeleteMemo(String)
     /// Deletion attempt succeeded
     case succeedDeleteMemo(Slashlink)
+    
+    case requestHomeProfile
+    case requestNotebookRoot
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -999,6 +1002,10 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
+        case .requestHomeProfile:
+            return Update(state: state)
+        case .requestNotebookRoot:
+            return Update(state: state)
         }
     }
     
