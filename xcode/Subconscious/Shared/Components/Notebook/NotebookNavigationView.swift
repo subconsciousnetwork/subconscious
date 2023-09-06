@@ -14,8 +14,7 @@ struct NotebookNavigationView: View {
     var body: some View {
         DetailStackView(
             app: app,
-            store: ViewStore(
-                store: store,
+            store: store.viewStore(
                 get: NotebookDetailStackCursor.get,
                 tag: NotebookDetailStackCursor.tag
             )
