@@ -17,30 +17,33 @@ extension BlockEditor {
         static let identifier = "RelatedCell"
         
         var id: UUID = UUID()
-        private var padding = UIEdgeInsets(
+        private var margins = NSDirectionalEdgeInsets(
             top: 16,
-            left: 16,
+            leading: 16,
             bottom: 16,
-            right: 16
+            trailing: 16
         )
         private lazy var relatedView = RelatedView(frame: .zero)
         
         override init(frame: CGRect) {
             super.init(frame: frame)
+            self.directionalLayoutMargins = margins
             relatedView.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(relatedView)
+            contentView.addSubview(relatedView)
+            
+            let marginsGuide = self.layoutMarginsGuide
             NSLayoutConstraint.activate([
                 relatedView.leadingAnchor.constraint(
-                    equalTo: leadingAnchor,
-                    constant: padding.left
+                    equalTo: marginsGuide.leadingAnchor
                 ),
                 relatedView.trailingAnchor.constraint(
-                    equalTo: trailingAnchor,
-                    constant: -1 * padding.right
+                    equalTo: marginsGuide.trailingAnchor
                 ),
                 relatedView.topAnchor.constraint(
-                    equalTo: topAnchor,
-                    constant: padding.top
+                    equalTo: marginsGuide.topAnchor
+                ),
+                relatedView.bottomAnchor.constraint(
+                    equalTo: marginsGuide.bottomAnchor
                 )
             ])
         }
