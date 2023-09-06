@@ -149,6 +149,8 @@ enum NotebookAction {
     /// Search suggestion was activated
     case activatedSuggestion(Suggestion)
     
+    case requestNotebookRoot
+    
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
@@ -273,6 +275,8 @@ extension NotebookAction {
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
             return .failDeleteMemo(error)
+        case .requestNotebookRoot:
+            return .requestNotebookRoot
         default:
             return nil
         }
@@ -514,6 +518,11 @@ struct NotebookModel: ModelProtocol {
             return update(
                 state: state,
                 action: NotebookAction.fromSuggestion(suggestion),
+                environment: environment
+            )
+        case .requestNotebookRoot:
+            return requestNotebookRoot(
+                state: state,
                 environment: environment
             )
         }
@@ -883,4 +892,16 @@ struct NotebookModel: ModelProtocol {
         
         return update.mergeFx(fx)
     }
+    
+    static func requestNotebookRoot(
+        state: NotebookModel,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel> {
+        return NotebookDetailStackCursor.update(
+            state: state,
+            action: .setDetails([]),
+            environment: environment
+        )
+    }
+    
 }

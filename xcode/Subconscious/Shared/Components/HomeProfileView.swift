@@ -13,22 +13,25 @@ import Combine
 struct HomeProfileNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<HomeProfileModel>
+    var detailStack: ViewStore<DetailStackModel> {
+        store.viewStore(
+            get: HomeProfileDetailStackCursor.get,
+            tag: HomeProfileDetailStackCursor.tag
+        )
+    }
     
     var body: some View {
         DetailStackView(
             app: app,
-            store: store.viewStore(
-                get: HomeProfileDetailStackCursor.get,
-                tag: HomeProfileDetailStackCursor.tag
-            )
+            store: detailStack
         ) {
             VStack(spacing: 0) {
                 UserProfileDetailView(
                     app: app,
                     description: UserProfileDetailDescription(address: Slashlink.ourProfile),
                     notify: Address.forward(
-                        send: store.send,
-                        tag: { action in .detailStack(DetailStackAction.tag(action))} // TODO: ugly
+                        send: detailStack.send,
+                        tag: DetailStackAction.tag
                     )
                 )
             }
@@ -94,38 +97,8 @@ enum HomeProfileAction {
     case appear
     /// App database is ready. We rely on parent to notify us of this event.
     case ready
-    /// Set entire navigation stack
-    static func setDetails(_ details: [MemoDetailDescription]) -> Self {
-        .detailStack(.setDetails(details))
-    }
-
-    /// Synonym for tagged `DetailStackAction.pushDetail`
-    static func pushDetail(
-        _ detail: MemoDetailDescription
-    ) -> Self {
-        .detailStack(.pushDetail(detail))
-    }
-
-    /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
-    static func pushDetail(
-        _ detail: MemoEditorDetailDescription
-    ) -> Self {
-        .detailStack(.pushDetail(.editor(detail)))
-    }
-
-    /// Synonym for `.pushDetail` that wraps viewer detail in `.viewer()`
-    static func pushDetail(
-        _ detail: MemoViewerDetailDescription
-    ) -> Self {
-        .detailStack(.pushDetail(.viewer(detail)))
-    }
-
-    /// Synonym for tagged `DetailStackAction.pushRandomDetail`
-    static func pushRandomDetail(
-        autofocus: Bool
-    ) -> Self {
-        .detailStack(.pushRandomDetail(autofocus: autofocus))
-    }
+    
+    case requestHomeProfile
 }
 
 //  MARK: Cursors and tagging functions
@@ -156,6 +129,8 @@ extension HomeProfileAction {
         switch action {
         case .succeedIndexOurSphere(_):
             return .ready
+        case .requestHomeProfile:
+            return .requestHomeProfile
         default:
             return nil
         }
@@ -205,6 +180,11 @@ struct HomeProfileModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestHomeProfile:
+            return requestHomeProfile(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -228,5 +208,16 @@ struct HomeProfileModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<Self> {
         return Update(state: state)
+    }
+    
+    static func requestHomeProfile(
+        state: Self,
+        environment: AppEnvironment
+    ) -> Update<Self> {
+        return HomeProfileDetailStackCursor.update(
+            state: state,
+            action: .setDetails([]),
+            environment: environment
+        )
     }
 }
