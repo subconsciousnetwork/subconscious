@@ -2306,7 +2306,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.0.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.Subconscious;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -2348,7 +2348,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.0.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.Subconscious;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
