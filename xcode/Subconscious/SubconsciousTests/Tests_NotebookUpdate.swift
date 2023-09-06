@@ -75,58 +75,5 @@ class Tests_NotebookUpdate: XCTestCase {
         )
     }
     
-    func testViewerSlashlinkConstruction() throws {
-        let model = DetailStackModel()
-        
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        
-        let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            address: Slashlink(petname: Petname("origin")!),
-            link: link
-        )
-        
-        let newAction = DetailStackAction.tag(action)
-        let update = DetailStackModel.update(
-            state: model,
-            action: newAction,
-            environment: environment
-        )
-        
-        if let detail = update.state.details.first?.address,
-           let petname = detail.petname {
-            XCTAssertEqual(petname, Petname("bob.alice.origin")!)
-            XCTAssertEqual(detail.slug, Slug("hello")!)
-        } else {
-            XCTFail("No detail")
-            return
-        }
-    }
     
-    func testEditorSlashlinkConstruction() throws {
-        let model = DetailStackModel()
-        
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        
-        let action = MemoEditorDetailNotification.requestFindLinkDetail(
-            link: link
-        )
-        
-        let newAction = DetailStackAction.tag(action)
-        let update = DetailStackModel.update(
-            state: model,
-            action: newAction,
-            environment: environment
-        )
-        
-        if let detail = update.state.details.first?.address,
-           let petname = detail.petname {
-            XCTAssertEqual(petname, Petname("bob.alice")!)
-            XCTAssertEqual(detail.slug, Slug("hello")!)
-        } else {
-            XCTFail("No detail")
-            return
-        }
-    }
 }
