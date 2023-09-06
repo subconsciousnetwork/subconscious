@@ -17,6 +17,7 @@ extension BlockEditor {
             trailing: AppTheme.unit4
         )
         private var cornerRadius: CGFloat = AppTheme.cornerRadiusLg
+        private var stackSpacing = AppTheme.unit
         private lazy var stackView = UIStackView()
         private lazy var bylineView = BylineView()
         private lazy var excerptView = UILabel()
@@ -34,10 +35,15 @@ extension BlockEditor {
             )
             
             stackView.translatesAutoresizingMaskIntoConstraints = false
+            stackView.spacing = stackSpacing
             stackView.axis = .vertical
-            stackView.addArrangedSubview(bylineView)
-            stackView.addArrangedSubview(excerptView)
             addSubview(stackView)
+
+            stackView.addArrangedSubview(bylineView)
+
+            // A very large, but finite number of lines
+            excerptView.numberOfLines = 50
+            stackView.addArrangedSubview(excerptView)
             
             NSLayoutConstraint.activate([
                 stackView.leadingAnchor.constraint(
