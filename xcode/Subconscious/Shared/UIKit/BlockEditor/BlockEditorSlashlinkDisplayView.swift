@@ -17,13 +17,17 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
 
+            stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.axis = .horizontal
             stackView.alignment = .center
             addSubview(stackView)
             
             petnameView.textColor = .accent
+            petnameView.font = .preferredFont(forTextStyle: .body).bold()
             stackView.addArrangedSubview(petnameView)
+
             slugView.textColor = .secondaryLabel
+            slugView.font = .preferredFont(forTextStyle: .body)
             stackView.addArrangedSubview(slugView)
 
             NSLayoutConstraint.activate([
@@ -41,7 +45,7 @@ extension BlockEditor {
 
         func render(_ slashlink: Slashlink) {
             petnameView.text = slashlink.petname?.markup
-            slugView.text = slashlink.slug.description
+            slugView.text = slashlink.slug.markup
         }
     }
 }
