@@ -43,8 +43,7 @@ extension BlockEditor {
             // lifecycle hook the view frame has a height assigned by
             // autolayout.
             imageView.layer.cornerRadius = frame.height / 2
-            imageView.layer.backgroundColor =
-                UIColor.secondarySystemBackground.cgColor
+            imageView.backgroundColor = UIColor.secondarySystemBackground
         }
         
         func render(_ state: ProfilePicVariant?) {
