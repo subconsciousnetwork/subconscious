@@ -8,21 +8,13 @@
 import UIKit
 
 extension UIView {
+    /// Create a SwiftUI-like spacer view
     static func spacer() -> UIView {
-        let spacerView = UIView(frame: .zero)
+        let spacerView = UIView()
+        spacerView.isUserInteractionEnabled = false
         spacerView.translatesAutoresizingMaskIntoConstraints = false
-        let spacerWidthConstraint = spacerView.widthAnchor.constraint(
-            equalToConstant: .greatestFiniteMagnitude
-        )
-        // ensures it will not "overgrow"
-        spacerWidthConstraint.priority = .defaultLow
-        spacerWidthConstraint.isActive = true
-        let spacerHeightConstraint = spacerView.heightAnchor.constraint(
-            equalToConstant: .greatestFiniteMagnitude
-        )
-        // ensures it will not "overgrow"
-        spacerHeightConstraint.priority = .defaultLow
-        spacerHeightConstraint.isActive = true
+        spacerView.setContentHuggingPriority(.fittingSizeLevel, for: .horizontal)
+        spacerView.setContentHuggingPriority(.fittingSizeLevel, for: .vertical)
         return spacerView
     }
 }

@@ -15,18 +15,24 @@ extension BlockEditor {
 
     class BylineView: UIView, UIRenderableViewProtocol {
         private var height: CGFloat = 22
+        private var spacing: CGFloat = 8
         private var stackView = UIStackView()
         private var pfpView = ProfilePicSmView()
         private var slashlinkView = SlashlinkDisplayView(frame: .zero)
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-
+            
             stackView.translatesAutoresizingMaskIntoConstraints = false
+            stackView.spacing = spacing
+            stackView.axis = .horizontal
+            stackView.alignment = .center
+            stackView.distribution = .fill
             addSubview(stackView)
-
+            
             stackView.addArrangedSubview(pfpView)
             stackView.addArrangedSubview(slashlinkView)
+            stackView.addArrangedSubview(UIView.spacer())
 
             NSLayoutConstraint.activate([
                 stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
