@@ -75,6 +75,15 @@ struct FeedView: View {
                 .navigationTitle("Feed")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(
+                            action: {
+                                store.send(.detailStack(.requestOurProfileDetail))
+                            }
+                        ) {
+                            Image(systemName: "person")
+                        }
+                    }
                     ToolbarItemGroup(placement: .principal) {
                         HStack {
                             Text("Feed").bold()
