@@ -17,7 +17,6 @@ struct Config: Equatable, Codable {
     var noosphere = NoosphereConfig()
     
     var appTabs = true // TODO: turn into dev setting, not static flag
-    var profileTab = false
     var feed = true
     
     #if targetEnvironment(simulator)
