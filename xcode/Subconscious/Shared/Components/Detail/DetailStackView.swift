@@ -58,6 +58,42 @@ struct DetailStackView<Root: View>: View {
     }
 }
 
+extension DetailStackAction {
+    /// Generate a detail request from a suggestion
+    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
+        switch suggestion {
+        case let .memo(address, fallback):
+            // Determine whether content is ours or theirs, push
+            // corresponding memo detail type.
+            return .pushDetail(
+                MemoDetailDescription.from(
+                    address: address,
+                    fallback: fallback,
+                    defaultAudience: .local
+                )
+            )
+        case let .createLocalMemo(slug, fallback):
+            return .pushDetail(
+                MemoEditorDetailDescription(
+                    address: slug?.toLocalSlashlink(),
+                    fallback: fallback,
+                    defaultAudience: .local
+                )
+            )
+        case let .createPublicMemo(slug, fallback):
+            return .pushDetail(
+                MemoEditorDetailDescription(
+                    address: slug?.toSlashlink(),
+                    fallback: fallback,
+                    defaultAudience: .public
+                )
+            )
+        case .random:
+            return .pushRandomDetail(autofocus: false)
+        }
+    }
+}
+
 enum DetailStackAction: Hashable {
     /// Set entire navigation stack
     case setDetails([MemoDetailDescription])

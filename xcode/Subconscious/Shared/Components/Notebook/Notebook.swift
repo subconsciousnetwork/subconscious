@@ -33,15 +33,11 @@ struct NotebookView: View {
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
         ZStack {
-            if true {
-                NotebookFeedView(app: app, store: store)
-            } else {
-                NotebookNavigationView(
-                    app: app,
-                    store: store
-                )
-                .zIndex(1)
-            }
+            NotebookNavigationView(
+                app: app,
+                store: store
+            )
+            .zIndex(1)
             
             if store.state.isSearchPresented {
                 SearchView(
@@ -196,42 +192,6 @@ enum NotebookAction {
         autofocus: Bool
     ) -> Self {
         .detailStack(.pushRandomDetail(autofocus: autofocus))
-    }
-}
-
-extension NotebookAction {
-    /// Generate a detail request from a suggestion
-    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
-        switch suggestion {
-        case let .memo(address, fallback):
-            // Determine whether content is ours or theirs, push
-            // corresponding memo detail type.
-            return .pushDetail(
-                MemoDetailDescription.from(
-                    address: address,
-                    fallback: fallback,
-                    defaultAudience: .local
-                )
-            )
-        case let .createLocalMemo(slug, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: slug?.toLocalSlashlink(),
-                    fallback: fallback,
-                    defaultAudience: .local
-                )
-            )
-        case let .createPublicMemo(slug, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: slug?.toSlashlink(),
-                    fallback: fallback,
-                    defaultAudience: .public
-                )
-            )
-        case .random:
-            return .pushRandomDetail(autofocus: false)
-        }
     }
 }
 
@@ -526,9 +486,9 @@ struct NotebookModel: ModelProtocol {
                 query: query
             )
         case let .activatedSuggestion(suggestion):
-            return update(
+            return NotebookDetailStackCursor.update(
                 state: state,
-                action: NotebookAction.fromSuggestion(suggestion),
+                action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
         case .requestNotebookRoot:

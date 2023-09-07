@@ -36,13 +36,20 @@ struct AppTabView: View {
 
     var body: some View {
         TabView(selection: $tabStateHandler.tabSelected) {
-            HomeProfileView(app: store)
-                .tabItem {
-                    Label("Profile", systemImage: "person.crop.circle")
-                }
-                .tag(Tab.homeProfile)
+            if Config.default.profileTab {
+                HomeProfileView(app: store)
+                    .tabItem {
+                        Label("Profile", systemImage: "person.crop.circle")
+                    }
+                    .toolbar(.visible, for: .tabBar)
+                    .toolbarBackground(
+                        Color.yellow,
+                        for: .tabBar)
+                    .tag(Tab.homeProfile)
+            }
+            
             if Config.default.feed {
-                FeedView(parent: store)
+                FeedView(app: store)
                     .tabItem {
                         Label("Feed", systemImage: "newspaper")
                     }
@@ -60,8 +67,8 @@ struct AppTabView: View {
                 store.send(.requestHomeProfile)
             case .notebook:
                 store.send(.requestNotebookRoot)
-            default:
-                break
+            case .feed:
+                store.send(.requestFeedRoot)
             }
         })
     }

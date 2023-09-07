@@ -262,6 +262,7 @@ enum AppAction: CustomLogStringConvertible {
     
     case requestHomeProfile
     case requestNotebookRoot
+    case requestFeedRoot
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -1005,6 +1006,8 @@ struct AppModel: ModelProtocol {
         case .requestHomeProfile:
             return Update(state: state)
         case .requestNotebookRoot:
+            return Update(state: state)
+        case .requestFeedRoot:
             return Update(state: state)
         }
     }
