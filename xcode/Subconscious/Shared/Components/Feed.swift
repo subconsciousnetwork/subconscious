@@ -124,12 +124,12 @@ struct FeedView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
         }
-        /// Replay some app actions on notebook store
+        /// Replay some app actions on feed store
         .onReceive(
             app.actions.compactMap(FeedAction.from),
             perform: store.send
         )
-        /// Replay select notebook actions on app
+        /// Replay select feed actions on app
         .onReceive(
             store.actions.compactMap(AppAction.from),
             perform: app.send
@@ -138,8 +138,6 @@ struct FeedView: View {
 }
 
 extension FeedAction {
-    /// Map select app actions to `NotebookAction`
-    /// Used to replay select app actions on note store.
     static func from(_ action: AppAction) -> Self? {
         switch action {
         case .succeedIndexOurSphere(_):

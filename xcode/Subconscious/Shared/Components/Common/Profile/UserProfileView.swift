@@ -229,7 +229,7 @@ struct UserProfileView: View {
                 )
                 if let user = state.user,
                    user.category == .ourself {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .confirmationAction) {
                         Button(
                             action: {
                                 send(.presentFollowNewUserFormSheet(true))

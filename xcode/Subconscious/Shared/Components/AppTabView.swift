@@ -10,7 +10,6 @@ import ObservableStore
 import Combine
 
 enum Tab: String {
-    case homeProfile
     case feed
     case notebook
 }
@@ -52,8 +51,6 @@ struct AppTabView: View {
         }
         .onChange(of: appTabs.popStackToNavigationRoot, perform: { _ in
             switch (appTabs.tabSelected) {
-            case .homeProfile:
-                store.send(.requestHomeProfile)
             case .notebook:
                 store.send(.requestNotebookRoot)
             case .feed:

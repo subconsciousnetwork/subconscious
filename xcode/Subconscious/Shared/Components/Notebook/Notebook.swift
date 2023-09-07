@@ -119,10 +119,6 @@ enum NotebookAction {
     case setRecent([EntryStub])
     case listRecentFailure(String)
     
-    case requestFeed
-    case succeedFeed([EntryStub])
-    case failFeed(String)
-    
     // Delete entries
     case confirmDelete(Slashlink?)
     case setConfirmDeleteShowing(Bool)
@@ -496,15 +492,6 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .requestFeed:
-            return requestFeed(state: state, environment: environment)
-        case .succeedFeed(let entries):
-            var model = state
-            model.feed = entries
-            return Update(state: model)
-        case .failFeed(let error):
-            logger.log("Failed to get feed: \(error)")
-            return Update(state: state)
         }
     }
     
@@ -882,25 +869,5 @@ struct NotebookModel: ModelProtocol {
             action: .setDetails([]),
             environment: environment
         )
-    }
-  
-    static func requestFeed(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data
-            .listFeedPublisher()
-            .map({ feed in
-                NotebookAction.succeedFeed(feed)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failFeed(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 }

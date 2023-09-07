@@ -260,7 +260,6 @@ enum AppAction: CustomLogStringConvertible {
     /// Deletion attempt succeeded
     case succeedDeleteMemo(Slashlink)
     
-    case requestHomeProfile
     case requestNotebookRoot
     case requestFeedRoot
 
@@ -1003,8 +1002,6 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .requestHomeProfile:
-            return Update(state: state)
         case .requestNotebookRoot:
             return Update(state: state)
         case .requestFeedRoot:
