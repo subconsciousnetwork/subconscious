@@ -33,11 +33,12 @@ extension BlockEditor {
             addSubview(labelView)
             
             NSLayoutConstraint.activate([
-                topAnchor.constraint(
-                    equalTo: labelView.topAnchor
-                ),
-                bottomAnchor.constraint(
-                    equalTo: labelView.bottomAnchor
+                heightAnchor.constraint(
+                    equalToConstant: (
+                        labelHeight +
+                        layoutMargins.top +
+                        layoutMargins.bottom
+                    )
                 ),
                 labelView.heightAnchor.constraint(
                     equalToConstant: labelHeight

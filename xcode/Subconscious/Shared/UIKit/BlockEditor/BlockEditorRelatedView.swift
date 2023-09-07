@@ -29,6 +29,8 @@ extension BlockEditor {
             
             bodyView.axis = .vertical
             bodyView.spacing = bodySpacing
+            bodyView.distribution = .fill
+            bodyView.setContentHuggingPriority(.defaultHigh, for: .vertical)
             bodyView.translatesAutoresizingMaskIntoConstraints = false
             addSubview(bodyView)
             
@@ -40,8 +42,10 @@ extension BlockEditor {
             transcludesView.translatesAutoresizingMaskIntoConstraints = false
             transcludesView.spacing = transcludeSpacing
             bodyView.addArrangedSubview(transcludesView)
+            bodyView.addArrangedSubview(UIView.spacer())
             
             NSLayoutConstraint.activate([
+                heightAnchor.constraint(equalTo: bodyView.heightAnchor),
                 bodyView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 bodyView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 bodyView.topAnchor.constraint(equalTo: topAnchor)
