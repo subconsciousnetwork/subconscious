@@ -23,7 +23,7 @@ extension BlockEditor {
             super.init(frame: frame)
             self.backgroundColor = .systemBackground
             label.text = String(localized: "Unknown cell type")
-            addSubview(label)
+            contentView.addSubview(label)
         }
         
         required init?(coder: NSCoder) {

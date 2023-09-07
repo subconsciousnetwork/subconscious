@@ -28,8 +28,6 @@ extension BlockEditor {
         
         lazy var textView = UITextView(frame: .zero)
         
-        private lazy var divider = UIView.divider()
-        
         private lazy var toolbar = self.createToolbar()
         
         override init(frame: CGRect) {
@@ -52,18 +50,25 @@ extension BlockEditor {
             
             textView.inputAccessoryView = toolbar
             
-            addSubview(textView)
-            addSubview(divider)
+            contentView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(textView)
 
             NSLayoutConstraint.activate([
-                textView.widthAnchor.constraint(equalToConstant: frame.width),
                 textView.topAnchor.constraint(equalTo: topAnchor),
-                
-                divider.topAnchor.constraint(equalTo: textView.bottomAnchor),
-                divider.leadingAnchor.constraint(equalTo: leadingAnchor),
-                divider.trailingAnchor.constraint(equalTo: trailingAnchor),
-                
-                bottomAnchor.constraint(equalTo: divider.bottomAnchor),
+                textView.widthAnchor.constraint(equalTo: widthAnchor),
+                contentView.leadingAnchor.constraint(
+                    equalTo: textView.leadingAnchor
+                ),
+                contentView.trailingAnchor.constraint(
+                    equalTo: textView.trailingAnchor
+                ),
+                contentView.topAnchor.constraint(
+                    equalTo: textView.topAnchor
+                ),
+                contentView.bottomAnchor.constraint(
+                    equalTo: textView.bottomAnchor
+                ),
+                heightAnchor.constraint(equalTo: textView.heightAnchor),
             ])
         }
         

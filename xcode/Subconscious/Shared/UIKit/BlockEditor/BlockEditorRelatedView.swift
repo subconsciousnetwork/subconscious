@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 extension BlockEditor {
     class RelatedView: UIView, UIComponentViewProtocol {
@@ -42,7 +43,8 @@ extension BlockEditor {
             NSLayoutConstraint.activate([
                 bodyView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 bodyView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                bodyView.topAnchor.constraint(equalTo: topAnchor)
+                bodyView.topAnchor.constraint(equalTo: topAnchor),
+                heightAnchor.constraint(equalTo: bodyView.heightAnchor)
             ])
         }
         
@@ -51,15 +53,48 @@ extension BlockEditor {
         }
         
         func render(
-            _ state: RelatedModel
+            _ state: BlockEditor.RelatedModel
         ) {
             transcludesView.removeAllArrangedSubviews()
             for stub in state.related {
-                let transclude = TranscludeView(frame: .zero)
+                let transclude = BlockEditor.TranscludeView()
                 transclude.render(stub)
                 transclude.translatesAutoresizingMaskIntoConstraints = false
                 transcludesView.addArrangedSubview(transclude)
             }
+        }
+    }
+}
+
+struct BlockEditorRelatedView_Previews: PreviewProvider {
+    static var previews: some View {
+        UIViewPreviewRepresentable {
+            let related = BlockEditor.RelatedView()
+            related.render(
+                BlockEditor.RelatedModel(
+                    related: [
+                        EntryStub(
+                            address: Slashlink("@example/foo")!,
+                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/bar")!,
+                            excerpt: "Modularity is a form of hierarchy",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/baz")!,
+                            excerpt: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                            modified: Date.now,
+                            author: nil
+                        )
+                    ]
+                )
+            )
+            return related
         }
     }
 }

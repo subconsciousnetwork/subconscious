@@ -21,7 +21,6 @@ extension BlockEditor {
         
         lazy var textView = UITextView(frame: .zero)
         
-        private lazy var divider = UIView.divider()
         private lazy var bullet = createBullet()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
@@ -83,32 +82,12 @@ extension BlockEditor {
             
             textView.inputAccessoryView = toolbar
             
-            addSubview(textView)
-            addSubview(bullet)
-            addSubview(divider)
+            contentView.addSubview(textView)
 
             NSLayoutConstraint.activate([
                 textView.widthAnchor.constraint(equalToConstant: frame.width),
                 textView.topAnchor.constraint(equalTo: topAnchor),
-                
-                divider.topAnchor.constraint(equalTo: textView.bottomAnchor),
-                divider.leadingAnchor.constraint(equalTo: leadingAnchor),
-                divider.trailingAnchor.constraint(equalTo: trailingAnchor),
-                
-    //            bullet.leadingAnchor.constraint(
-    //                equalTo: leadingAnchor,
-    //                constant: 4
-    //            ),
-    //            bullet.widthAnchor.constraint(
-    //                equalToConstant: 4
-    //            ),
-    //            bullet.heightAnchor.constraint(
-    //                equalToConstant: 4
-    //            ),
-    //            bullet.topAnchor.constraint(equalTo: topAnchor),
-    //            bullet.bottomAnchor.constraint(equalTo: bottomAnchor),
-
-                bottomAnchor.constraint(equalTo: divider.bottomAnchor),
+                bottomAnchor.constraint(equalTo: textView.bottomAnchor),
             ])
         }
         

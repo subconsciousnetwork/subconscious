@@ -21,7 +21,6 @@ extension BlockEditor {
         
         lazy var textView = UITextView(frame: .zero)
         
-        private lazy var divider = UIView.divider()
         private lazy var quoteIndent = createQuoteIndent()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
@@ -83,17 +82,12 @@ extension BlockEditor {
             
             textView.inputAccessoryView = toolbar
             
-            addSubview(textView)
-            addSubview(quoteIndent)
-            addSubview(divider)
+            contentView.addSubview(textView)
+            contentView.addSubview(quoteIndent)
 
             NSLayoutConstraint.activate([
                 textView.widthAnchor.constraint(equalToConstant: frame.width),
                 textView.topAnchor.constraint(equalTo: topAnchor),
-                
-                divider.topAnchor.constraint(equalTo: textView.bottomAnchor),
-                divider.leadingAnchor.constraint(equalTo: leadingAnchor),
-                divider.trailingAnchor.constraint(equalTo: trailingAnchor),
                 
                 quoteIndent.leadingAnchor.constraint(
                     equalTo: leadingAnchor,
@@ -103,7 +97,7 @@ extension BlockEditor {
                 quoteIndent.topAnchor.constraint(equalTo: topAnchor),
                 quoteIndent.bottomAnchor.constraint(equalTo: bottomAnchor),
 
-                bottomAnchor.constraint(equalTo: divider.bottomAnchor),
+                bottomAnchor.constraint(equalTo: textView.bottomAnchor),
             ])
         }
         

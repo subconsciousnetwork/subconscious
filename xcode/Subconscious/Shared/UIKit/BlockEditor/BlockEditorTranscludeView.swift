@@ -7,9 +7,14 @@
 
 import UIKit
 
+protocol BlockEditorTranscludeDelegate: AnyObject {
+    func onTap(_ view: BlockEditor.TranscludeView)
+}
+
 extension BlockEditor {
     class TranscludeView: UIView, UIComponentViewProtocol {
         var id = UUID()
+        var delegate: BlockEditorTranscludeDelegate?
         private var margins = NSDirectionalEdgeInsets(
             top: AppTheme.unit3,
             leading: AppTheme.unit4,
@@ -29,14 +34,17 @@ extension BlockEditor {
             self.backgroundColor = .tertiarySystemGroupedBackground
             self.layer.cornerRadius = cornerRadius
             self.directionalLayoutMargins = margins
-            self.setContentCompressionResistancePriority(
-                .defaultHigh,
-                for: .vertical
+            self.isUserInteractionEnabled = true
+            let tapGesture = UITapGestureRecognizer(
+                target: self,
+                action: #selector(onTap)
             )
+            self.addGestureRecognizer(tapGesture)
             
             stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.spacing = stackSpacing
             stackView.axis = .vertical
+            stackView.isUserInteractionEnabled = false
             addSubview(stackView)
 
             stackView.addArrangedSubview(bylineView)
@@ -55,9 +63,8 @@ extension BlockEditor {
                 stackView.topAnchor.constraint(
                     equalTo: layoutMarginsGuide.topAnchor
                 ),
-                heightAnchor.constraint(
-                    equalTo: stackView.heightAnchor,
-                    constant: layoutMargins.top + layoutMargins.bottom
+                stackView.bottomAnchor.constraint(
+                    equalTo: layoutMarginsGuide.bottomAnchor
                 )
             ])
         }
@@ -66,6 +73,39 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
+        @objc private func onTap(sender: UITapGestureRecognizer) {
+            print("!!! hit")
+            self.delegate?.onTap(self)
+        }
+
+        override func touchesBegan(
+            _ touches: Set<UITouch>,
+            with event: UIEvent?
+        ) {
+            super.touchesBegan(touches, with: event)
+            next?.touchesBegan(touches, with: event)
+            self.backgroundColor = .secondarySystemGroupedBackground
+            print("!!! hit")
+        }
+        
+        override func touchesCancelled(
+            _ touches: Set<UITouch>,
+            with event: UIEvent?
+        ) {
+            super.touchesCancelled(touches, with: event)
+            next?.touchesCancelled(touches, with: event)
+            self.backgroundColor = .tertiarySystemGroupedBackground
+        }
+
+        override func touchesEnded(
+            _ touches: Set<UITouch>,
+            with event: UIEvent?
+        ) {
+            super.touchesEnded(touches, with: event)
+            next?.touchesEnded(touches, with: event)
+            self.backgroundColor = .tertiarySystemGroupedBackground
+        }
+
         func render(
             _ stub: EntryStub
         ) {
