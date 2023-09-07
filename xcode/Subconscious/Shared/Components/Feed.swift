@@ -12,17 +12,87 @@ import os
 
 //  MARK: View
 struct FeedView: View {
-    @ObservedObject var parent: Store<AppModel>
+    @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: FeedModel(),
         environment: AppEnvironment.default
     )
+    
+    var detailStack: ViewStore<DetailStackModel> {
+        store.viewStore(
+            get: FeedDetailStackCursor.get,
+            tag: FeedDetailStackCursor.tag
+        )
+    }
 
     var body: some View {
         ZStack {
-            NavigationStack {
+            DetailStackView(app: app, store: detailStack) {
+                ScrollView {
+                    LazyVStack() {
+                        if let feed = store.state.entries {
+                            ForEach(feed) { entry in
+                                if let author = entry.author {
+                                    StoryEntryView(
+                                        story: StoryEntry(
+                                            author: author,
+                                            entry: entry
+                                        ),
+                                        action: { address, _ in
+                                            store.send(.detailStack(.pushDetail(
+                                                MemoDetailDescription.from(
+                                                    address: address,
+                                                    fallback: ""
+                                                )
+                                            )))
+                                        }
+                                    )
+                                }
+                            }
+                            
+                        } else {
+                            StoryPlaceholderView(bioWidthFactor: 1.2)
+                            StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
+                            StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
+                        }
+                    }
+                    .background(Color.secondaryBackground)
+                    
+                    if let count = store.state.entries?.count,
+                       count == 0 {
+                        EmptyStateView()
+                    } else {
+                        FabSpacerView()
+                    }
+
+                }
+                .refreshable {
+                    app.send(.syncAll)
+                }
+                .onAppear {
+                    store.send(.fetchFeed)
+                }
+                .navigationTitle("Feed")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItemGroup(placement: .principal) {
+                        HStack {
+                            Text("Feed").bold()
+                        }
+                    }
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(
+                            action: {
+                                app.send(.presentSettingsSheet(true))
+                            }
+                        ) {
+                            Image(systemName: "gearshape")
+                        }
+                    }
+                }
             }
             .zIndex(1)
+            
             if store.state.isSearchPresented {
                 SearchView(
                     state: store.state.search,
@@ -45,13 +115,49 @@ struct FeedView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
         }
+        /// Replay some app actions on notebook store
+        .onReceive(
+            app.actions.compactMap(FeedAction.from),
+            perform: store.send
+        )
+        /// Replay select notebook actions on app
+        .onReceive(
+            store.actions.compactMap(AppAction.from),
+            perform: app.send
+        )
     }
 }
 
+extension FeedAction {
+    /// Map select app actions to `NotebookAction`
+    /// Used to replay select app actions on note store.
+    static func from(_ action: AppAction) -> Self? {
+        switch action {
+        case .succeedIndexOurSphere(_):
+            return .refreshAll
+        case .succeedIndexPeer(_):
+            return .refreshAll
+        case .requestFeedRoot:
+            return .requestFeedRoot
+        default:
+            return nil
+        }
+    }
+}
+
+extension AppAction {
+    static func from(_ action: FeedAction) -> Self? {
+        switch action {
+        default:
+            return nil
+        }
+    }
+}
 
 //  MARK: Action
 enum FeedAction {
     case search(SearchAction)
+    case detailStack(DetailStackAction)
 
     /// Set search view presented
     case setSearchPresented(Bool)
@@ -64,22 +170,12 @@ enum FeedAction {
     /// Fetch stories for feed
     case fetchFeed
     /// Set stories
-    case setFeed([Story])
+    case setFeed([EntryStub])
     /// Fetch feed failed
     case failFetchFeed(Error)
     case activatedSuggestion(Suggestion)
 
-    //  Entry deletion
-    case requestDeleteEntry(Slug?)
-    case entryDeleted(Slug)
-
-    // Rename and merge
-    /// Move entry succeeded. Lifecycle action from Detail.
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
-    /// Merge entry succeeded. Lifecycle action from Detail.
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    /// Retitle entry succeeded. Lifecycle action from Detail.
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    case requestFeedRoot
 }
 
 extension FeedAction: CustomLogStringConvertible {
@@ -121,6 +217,25 @@ struct FeedSearchCursor: CursorProtocol {
     }
 }
 
+struct FeedDetailStackCursor: CursorProtocol {
+    typealias Model = FeedModel
+    typealias ViewModel = DetailStackModel
+
+    static func get(state: Model) -> ViewModel {
+        state.detail
+    }
+
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.detail = inner
+        return model
+    }
+
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .detailStack(action)
+    }
+}
+
 //  MARK: Model
 /// A feed of stories
 struct FeedModel: ModelProtocol {
@@ -131,8 +246,8 @@ struct FeedModel: ModelProtocol {
         placeholder: "Search or create..."
     )
     /// Entry detail
-    var detail = MemoEditorDetailModel()
-    var stories: [Story] = []
+    var detail = DetailStackModel()
+    var entries: [EntryStub]? = nil
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -148,6 +263,12 @@ struct FeedModel: ModelProtocol {
         switch action {
         case .search(let action):
             return FeedSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .detailStack(let action):
+            return FeedDetailStackCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -173,50 +294,23 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .setFeed(let stories):
+        case .setFeed(let entries):
             return setFeed(
                 state: state,
                 environment: environment,
-                stories: stories
+                entries: entries
             )
         case .failFetchFeed(let error):
             return log(state: state, environment: environment, error: error)
-        case .activatedSuggestion:
-            logger.warning("Not implemented")
-            return Update(state: state)
-        case .requestDeleteEntry(_):
-            logger.debug(
-                "requestDeleteEntry should be handled by parent component"
-            )
-            return Update(state: state)
-        case .entryDeleted(let slug):
-            return entryDeleted(
+        case let .activatedSuggestion(suggestion):
+            return FeedDetailStackCursor.update(
                 state: state,
-                environment: environment,
-                slug: slug
-            )
-        case .succeedMoveEntry(_, _):
-            return update(
-                state: state,
-                actions: [
-                    .search(.refreshSuggestions)
-                ],
+                action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
-        case .succeedMergeEntry(_, _):
-            return update(
+        case .requestFeedRoot:
+            return requestFeedRoot(
                 state: state,
-                actions: [
-                    .search(.refreshSuggestions)
-                ],
-                environment: environment
-            )
-        case .succeedRetitleEntry(_, _):
-            return update(
-                state: state,
-                actions: [
-                    .search(.refreshSuggestions)
-                ],
                 environment: environment
             )
         }
@@ -253,8 +347,6 @@ struct FeedModel: ModelProtocol {
         return Update(state: model)
     }
 
-    /// Handle appear lifecycle action.
-    /// Currently this just calls out to `fetchFeed`. In future it may do more.
     static func ready(
         state: FeedModel,
         environment: AppEnvironment
@@ -282,7 +374,7 @@ struct FeedModel: ModelProtocol {
         state: FeedModel,
         environment: AppEnvironment
     ) -> Update<FeedModel> {
-        let fx: Fx<FeedAction> = environment.feed.generate(max: 10)
+        let fx: Fx<FeedAction> = environment.data.listFeedPublisher()
             .map({ stories in
                 FeedAction.setFeed(stories)
             })
@@ -297,10 +389,10 @@ struct FeedModel: ModelProtocol {
     static func setFeed(
         state: FeedModel,
         environment: AppEnvironment,
-        stories: [Story]
+        entries: [EntryStub]
     ) -> Update<FeedModel> {
         var model = state
-        model.stories = stories
+        model.entries = entries
         return Update(state: model)
     }
 
@@ -312,5 +404,16 @@ struct FeedModel: ModelProtocol {
     ) -> Update<FeedModel> {
         logger.warning("Not implemented")
         return Update(state: state)
+    }
+    
+    static func requestFeedRoot(
+        state: FeedModel,
+        environment: AppEnvironment
+    ) -> Update<FeedModel> {
+        return FeedDetailStackCursor.update(
+            state: state,
+            action: .setDetails([]),
+            environment: environment
+        )
     }
 }
