@@ -74,7 +74,6 @@ extension BlockEditor {
         }
         
         @objc private func onTap(sender: UITapGestureRecognizer) {
-            print("!!! hit")
             self.delegate?.onTap(self)
         }
 
@@ -85,7 +84,6 @@ extension BlockEditor {
             super.touchesBegan(touches, with: event)
             next?.touchesBegan(touches, with: event)
             self.backgroundColor = .secondarySystemGroupedBackground
-            print("!!! hit")
         }
         
         override func touchesCancelled(

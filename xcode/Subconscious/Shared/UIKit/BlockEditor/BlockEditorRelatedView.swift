@@ -43,8 +43,7 @@ extension BlockEditor {
             NSLayoutConstraint.activate([
                 bodyView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 bodyView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                bodyView.topAnchor.constraint(equalTo: topAnchor),
-                heightAnchor.constraint(equalTo: bodyView.heightAnchor)
+                bodyView.topAnchor.constraint(equalTo: topAnchor)
             ])
         }
         
