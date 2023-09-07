@@ -27,6 +27,7 @@ struct DetailStackView<Root: View>: View {
                 switch detail {
                 case .editor(let description):
                     MemoEditorDetailView(
+                        app: app,
                         description: description,
                         notify: Address.forward(
                             send: store.send,
@@ -35,6 +36,7 @@ struct DetailStackView<Root: View>: View {
                     )
                 case .viewer(let description):
                     MemoViewerDetailView(
+                        app: app,
                         description: description,
                         notify: Address.forward(
                             send: store.send,

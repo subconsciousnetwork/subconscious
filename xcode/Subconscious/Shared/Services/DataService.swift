@@ -816,6 +816,34 @@ actor DataService {
     ) async -> Memo? {
         local.read(slug)
     }
+    
+    func readMemoBacklinks(
+        address: Slashlink
+    ) async throws -> [EntryStub] {
+        let identity = try? await noosphere.identity()
+        let did = try await noosphere.resolve(peer: address.peer)
+        
+        let entries = try database.readEntryBacklinks(
+            owner: identity,
+            did: did,
+            slug: address.slug
+        )
+        
+        var backlinks: [EntryStub] = []
+        for entry in entries {
+            guard let author = try? await userProfile.buildUserProfile(
+                address: entry.address
+            ) else {
+                logger.error("Failed to load author for \(entry.address)")
+                backlinks.append(entry)
+                continue
+            }
+            
+            backlinks.append(entry.withAuthor(author))
+        }
+        
+        return backlinks
+    }
 
     /// Read editor detail for address.
     /// Addresses with petnames will throw an exception, since we don't
@@ -839,25 +867,6 @@ actor DataService {
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
         
-        let entries = try database.readEntryBacklinks(
-            owner: identity,
-            did: did,
-            slug: address.slug
-        )
-        
-        var backlinks: [EntryStub] = []
-        for entry in entries {
-            guard let author = try? await userProfile.buildUserProfile(
-                address: entry.address
-            ) else {
-                logger.error("Failed to load author for \(entry.address)")
-                backlinks.append(entry)
-                continue
-            }
-            
-            backlinks.append(entry.withAuthor(author))
-        }
-        
         guard let memo = memo else {
             logger.log(
                 "Memo does not exist at \(address). Returning new draft."
@@ -867,8 +876,7 @@ actor DataService {
                 entry: Entry(
                     address: address,
                     contents: Memo.draft(body: fallback)
-                ),
-                backlinks: backlinks
+                )
             )
         }
         
@@ -877,8 +885,7 @@ actor DataService {
             entry: Entry(
                 address: address,
                 contents: memo
-            ),
-            backlinks: backlinks
+            )
         )
     }
 
@@ -903,17 +910,7 @@ actor DataService {
     /// - Returns `MemoDetailResponse`
     func readMemoDetail(
         address: Slashlink
-    ) async -> MemoDetailResponse? {
-        guard let identity = try? await noosphere.identity() else {
-            return nil
-        }
-        
-        guard let did = try? await noosphere.resolve(
-            peer: address.peer
-        ) else {
-            return nil
-        }
-        
+    ) async -> MemoEntry? {
         // Read memo from local or sphere.
         guard let memo = try? await readMemo(
             address: address
@@ -921,33 +918,9 @@ actor DataService {
             return nil
         }
         
-        guard let entries = try? database.readEntryBacklinks(
-            owner: identity,
-            did: did,
-            slug: address.slug
-        ) else {
-            return nil
-        }
-        
-        var backlinks: [EntryStub] = []
-        for entry in entries {
-            guard let author = try? await userProfile.buildUserProfile(
-                address: entry.address
-            ) else {
-                logger.error("Failed to load author for \(entry.address)")
-                backlinks.append(entry)
-                continue
-            }
-            
-            backlinks.append(entry.withAuthor(author))
-        }
-
-        return MemoDetailResponse(
-            entry: MemoEntry(
-                address: address,
-                contents: memo
-            ),
-            backlinks: backlinks
+        return MemoEntry(
+            address: address,
+            contents: memo
         )
     }
 
@@ -955,7 +928,7 @@ actor DataService {
     /// - Returns publisher for `MemoDetailResponse` or error
     nonisolated func readMemoDetailPublisher(
         address: Slashlink
-    ) -> AnyPublisher<MemoDetailResponse?, Never> {
+    ) -> AnyPublisher<MemoEntry?, Never> {
         Future.detached {
             await self.readMemoDetail(address: address)
         }

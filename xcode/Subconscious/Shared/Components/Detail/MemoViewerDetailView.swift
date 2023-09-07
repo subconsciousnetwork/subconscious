@@ -13,6 +13,8 @@ import ObservableStore
 /// Display a read-only memo detail view.
 /// Used for content from other spheres that we don't have write access to.
 struct MemoViewerDetailView: View {
+    @ObservedObject var app: Store<AppModel>
+    
     @StateObject private var store = Store(
         state: MemoViewerDetailModel(),
         environment: AppEnvironment.default
@@ -70,6 +72,10 @@ struct MemoViewerDetailView: View {
             let message = String.loggable(action)
             MemoViewerDetailModel.logger.debug("[action] \(message)")
         }
+        .onReceive(
+            app.actions.compactMap(MemoViewerDetailAction.fromAppAction),
+            perform: store.send
+        )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
@@ -231,10 +237,14 @@ struct MemoViewerDetailDescription: Hashable {
 enum MemoViewerDetailAction: Hashable {
     case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
-    case setDetail(_ detail: MemoDetailResponse?)
+    case setDetail(_ entry: MemoEntry?)
     case setDom(Subtext)
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
+    
+    case refreshBacklinks
+    case succeedRefreshBacklinks(_ backlinks: [EntryStub])
+    case failRefreshBacklinks(_ error: String)
     
     case fetchTranscludePreviews
     case succeedFetchTranscludePreviews([Slashlink: EntryStub])
@@ -243,6 +253,8 @@ enum MemoViewerDetailAction: Hashable {
     case fetchOwnerProfile
     case succeedFetchOwnerProfile(UserProfile)
     case failFetchOwnerProfile(_ error: String)
+    
+    case succeedIndexBackgroundSphere
     
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
@@ -257,6 +269,21 @@ extension MemoViewerDetailAction: CustomLogStringConvertible {
             return "setDetail(...)"
         default:
             return String(describing: self)
+        }
+    }
+}
+
+/// React to actions from the root app store
+extension MemoViewerDetailAction {
+    static func fromAppAction(
+        _ action: AppAction
+    ) -> MemoViewerDetailAction? {
+        switch (action) {
+        case .succeedIndexOurSphere(_),
+             .succeedIndexPeer(_):
+            return .succeedIndexBackgroundSphere
+        case _:
+            return nil
         }
     }
 }
@@ -304,11 +331,11 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 description: description
             )
-        case .setDetail(let response):
+        case .setDetail(let entry):
             return setDetail(
                 state: state,
                 environment: environment,
-                response: response
+                entry: entry
             )
         case .setDom(let dom):
             return setDom(
@@ -319,6 +346,20 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .failLoadDetail(let message):
             logger.log("\(message)")
             return Update(state: state)
+            
+        case .refreshBacklinks:
+            return refreshBacklinks(
+                state: state,
+                environment: environment
+            )
+        case .succeedRefreshBacklinks(let backlinks):
+            var model = state
+            model.backlinks = backlinks
+            return Update(state: model)
+        case .failRefreshBacklinks(let error):
+            logger.error("Failed to refresh backlinks: \(error)")
+            return Update(state: state)
+           
         case .presentMetaSheet(let isPresented):
             return presentMetaSheet(
                 state: state,
@@ -355,6 +396,11 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .failFetchOwnerProfile(let error):
             logger.error("Failed to fetch owner: \(error)")
             return Update(state: state)
+        case .succeedIndexBackgroundSphere:
+            return succeedIndexBackgroundSphere(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -377,7 +423,8 @@ struct MemoViewerDetailModel: ModelProtocol {
             // Set meta sheet address as well
             actions: [
                 .setMetaSheetAddress(description.address),
-                .fetchOwnerProfile
+                .fetchOwnerProfile,
+                .refreshBacklinks
             ],
             environment: environment
         ).mergeFx(fx)
@@ -386,21 +433,20 @@ struct MemoViewerDetailModel: ModelProtocol {
     static func setDetail(
         state: Self,
         environment: Environment,
-        response: MemoDetailResponse?
+        entry: MemoEntry?
     ) -> Update<Self> {
         var model = state
         
         // If no response, then mark not found
-        guard let response = response else {
+        guard let entry = entry else {
             model.loadingState = .notFound
             return Update(state: model)
         }
         
         model.loadingState = .loaded
-        let memo = response.entry.contents
-        model.address = response.entry.address
+        let memo = entry.contents
+        model.address = entry.address
         model.title = memo.title()
-        model.backlinks = response.backlinks
         
         let dom = memo.dom()
         
@@ -409,6 +455,28 @@ struct MemoViewerDetailModel: ModelProtocol {
             action: .setDom(dom),
             environment: environment
         ).animation(.easeOut)
+    }
+    
+    static func refreshBacklinks(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<MemoViewerDetailAction> = Future.detached {
+            try await environment.data.readMemoBacklinks(address: address)
+        }
+        .map { backlinks in
+            .succeedRefreshBacklinks(backlinks)
+        }
+        .recover { error in
+            .failRefreshBacklinks(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func setDom(
@@ -493,6 +561,21 @@ struct MemoViewerDetailModel: ModelProtocol {
         model.isMetaSheetPresented = isPresented
         return Update(state: model)
     }
+    
+    static func succeedIndexBackgroundSphere(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .refreshBacklinks,
+                .fetchTranscludePreviews
+            ],
+            environment: environment
+        )
+    }
+    
 }
 
 /// Meta sheet cursor

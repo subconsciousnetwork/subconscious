@@ -159,12 +159,28 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     case dismissEditProfileError
     case succeedEditProfile
     
+    case succeedIndexPeer(_ peer: PeerRecord)
+    
     var logDescription: String {
         switch self {
         case .populate(_):
             return "populate(...)"
         default:
             return String(describing: self)
+        }
+    }
+}
+
+/// React to actions from the root app store
+extension UserProfileDetailAction {
+    static func fromAppAction(
+        action: AppAction
+    ) -> UserProfileDetailAction? {
+        switch (action) {
+        case let .succeedIndexPeer(peer):
+            return .succeedIndexPeer(peer)
+        case _:
+            return nil
         }
     }
 }
@@ -577,7 +593,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        
+        case .succeedIndexPeer(_):
+            return succeedIndexPeer(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -1118,5 +1138,16 @@ struct UserProfileDetailModel: ModelProtocol {
         var model = state
         model.failEditProfileMessage = nil
         return Update(state: model)
+    }
+    
+    static func succeedIndexPeer(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            action: .refresh(forceSync: false),
+            environment: environment
+        )
     }
 }

@@ -298,8 +298,8 @@ final class Tests_DataService: XCTestCase {
         
         let detail = await environment.data.readMemoDetail(address: addressA)
         
-        XCTAssertEqual(detail?.entry.address, addressA)
-        XCTAssertEqual(detail?.entry.contents.body, memo.body)
+        XCTAssertEqual(detail?.address, addressA)
+        XCTAssertEqual(detail?.contents.body, memo.body)
     }
     
     func testReadMemoDetailDoesNotExist() async throws {
