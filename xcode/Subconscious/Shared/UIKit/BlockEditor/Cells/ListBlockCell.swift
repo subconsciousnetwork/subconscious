@@ -11,7 +11,7 @@ extension BlockEditor {
     class ListBlockCell:
         UICollectionViewCell,
         UITextViewDelegate,
-        UIComponentViewProtocol
+        UIViewComponentProtocol
     {
         static let identifier = "ListBlockCell"
         

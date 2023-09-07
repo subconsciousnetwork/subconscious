@@ -12,7 +12,7 @@ extension BlockEditor {
     /// Displays related notes
     class RelatedCell:
         UICollectionViewCell,
-        UIComponentViewProtocol
+        UIViewComponentProtocol
     {
         static let identifier = "RelatedCell"
         

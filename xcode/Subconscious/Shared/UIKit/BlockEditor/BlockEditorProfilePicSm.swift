@@ -8,7 +8,7 @@
 import UIKit
 
 extension BlockEditor {
-    class ProfilePicSmView: UIView, UIRenderableViewProtocol {
+    class ProfilePicSmView: UIView, UIViewRenderableProtocol {
         private var size: CGFloat = 22
         private var imageView = UIImageView(frame: .zero)
 

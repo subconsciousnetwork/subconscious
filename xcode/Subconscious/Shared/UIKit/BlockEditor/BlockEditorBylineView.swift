@@ -14,7 +14,7 @@ extension BlockEditor {
         var slashlink: Slashlink
     }
 
-    class BylineView: UIView, UIRenderableViewProtocol {
+    class BylineView: UIView, UIViewRenderableProtocol {
         private var height: CGFloat = 22
         private var spacing: CGFloat = 8
         private var stackView = UIStackView()

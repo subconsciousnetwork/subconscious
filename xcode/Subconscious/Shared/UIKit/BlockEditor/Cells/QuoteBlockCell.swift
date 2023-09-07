@@ -11,7 +11,7 @@ extension BlockEditor {
     class QuoteBlockCell:
         UICollectionViewCell,
         UITextViewDelegate,
-        UIComponentViewProtocol
+        UIViewComponentProtocol
     {
         static let identifier = "QuoteBlockCell"
         

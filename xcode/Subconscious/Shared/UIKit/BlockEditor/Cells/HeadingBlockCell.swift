@@ -18,7 +18,7 @@ extension BlockEditor {
     class HeadingBlockCell:
         UICollectionViewCell,
         UITextViewDelegate,
-        UIComponentViewProtocol
+        UIViewComponentProtocol
     {
         static let identifier = "HeadingBlockCell"
         

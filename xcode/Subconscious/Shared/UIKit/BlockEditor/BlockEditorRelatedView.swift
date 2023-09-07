@@ -9,11 +9,18 @@ import UIKit
 import SwiftUI
 
 extension BlockEditor {
-    class RelatedView: UIView, UIComponentViewProtocol {
+    class RelatedView: UIView, UIViewComponentProtocol {
         var id = UUID()
+        private var labelHeight: CGFloat = 16
+        private var labelInsets = UIEdgeInsets(
+            top: 0,
+            left: 16,
+            bottom: 0,
+            right: 16
+        )
         private var bodySpacing: CGFloat = 8
         private var transcludeSpacing: CGFloat = 8
-        private lazy var label = UILabel()
+        private lazy var headingView = BlockEditor.AppendixHeadingView()
         private lazy var bodyView = UIStackView(frame: .zero)
         private lazy var transcludesView = UIStackView(frame: .zero)
 
@@ -25,15 +32,9 @@ extension BlockEditor {
             bodyView.translatesAutoresizingMaskIntoConstraints = false
             addSubview(bodyView)
             
-            label.text = String(localized: "Related notes")
-            label.font = UIFont.preferredFont(forTextStyle: .caption2)
-            label.numberOfLines = 2
-            label.setContentCompressionResistancePriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            label.translatesAutoresizingMaskIntoConstraints = false
-            bodyView.addArrangedSubview(label)
+            headingView.render(String(localized: "Related notes"))
+            headingView.translatesAutoresizingMaskIntoConstraints = false
+            bodyView.addArrangedSubview(headingView)
             
             transcludesView.axis = .vertical
             transcludesView.translatesAutoresizingMaskIntoConstraints = false

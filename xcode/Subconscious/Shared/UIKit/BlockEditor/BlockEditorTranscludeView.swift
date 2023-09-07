@@ -12,7 +12,7 @@ protocol BlockEditorTranscludeDelegate: AnyObject {
 }
 
 extension BlockEditor {
-    class TranscludeView: UIView, UIComponentViewProtocol {
+    class TranscludeView: UIView, UIViewComponentProtocol {
         var id = UUID()
         var delegate: BlockEditorTranscludeDelegate?
         private var margins = NSDirectionalEdgeInsets(
