@@ -17,7 +17,7 @@ enum Tab: String {
 }
 
 class AppTabState: ObservableObject {
-    @Published var tabSelected: Tab = .homeProfile {
+    @Published var tabSelected: Tab = .feed {
         didSet {
             if oldValue == tabSelected {
                 popStackToNavigationRoot.toggle()
@@ -41,10 +41,6 @@ struct AppTabView: View {
                     .tabItem {
                         Label("Profile", systemImage: "person.crop.circle")
                     }
-                    .toolbar(.visible, for: .tabBar)
-                    .toolbarBackground(
-                        Color.yellow,
-                        for: .tabBar)
                     .tag(Tab.homeProfile)
             }
             
