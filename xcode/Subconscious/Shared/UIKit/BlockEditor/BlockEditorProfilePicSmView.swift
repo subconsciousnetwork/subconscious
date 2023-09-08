@@ -1,5 +1,5 @@
 //
-//  BlockEditorProfilePicSm.swift
+//  BlockEditorProfilePicSmView.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 9/5/23.

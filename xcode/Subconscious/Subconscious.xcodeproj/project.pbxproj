@@ -315,7 +315,7 @@
 		B8A617222971E4860054D410 /* Tests_Slashlink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A617212971E4860054D410 /* Tests_Slashlink.swift */; };
 		B8A8F7922AA7B76800B21EEF /* BlockEditorBylineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A8F7912AA7B76800B21EEF /* BlockEditorBylineView.swift */; };
 		B8A8F7942AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A8F7932AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift */; };
-		B8A8F7962AA7BEA100B21EEF /* BlockEditorProfilePicSm.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSm.swift */; };
+		B8A8F7962AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift */; };
 		B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */; };
 		B8AAAADB28CBDED800DBC8A9 /* Tests_Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */; };
 		B8AB08AC2A9D4F8D00998099 /* BlockEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */; };
@@ -724,7 +724,7 @@
 		B8A617212971E4860054D410 /* Tests_Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slashlink.swift; sourceTree = "<group>"; };
 		B8A8F7912AA7B76800B21EEF /* BlockEditorBylineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorBylineView.swift; sourceTree = "<group>"; };
 		B8A8F7932AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorSlashlinkDisplayView.swift; sourceTree = "<group>"; };
-		B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorProfilePicSm.swift; sourceTree = "<group>"; };
+		B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorProfilePicSmView.swift; sourceTree = "<group>"; };
 		B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Detail.swift; sourceTree = "<group>"; };
 		B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Search.swift; sourceTree = "<group>"; };
 		B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditor.swift; sourceTree = "<group>"; };
@@ -1039,7 +1039,7 @@
 				B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */,
 				B85319ED2AAA502D0085044A /* BlockEditorAppendixHeadingView.swift */,
 				B8A8F7912AA7B76800B21EEF /* BlockEditorBylineView.swift */,
-				B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSm.swift */,
+				B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift */,
 				B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */,
 				B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */,
 				B8A8F7932AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift */,
@@ -2036,7 +2036,7 @@
 				B85319EA2AAA3D8A0085044A /* UIViewPreviewRepresentable.swift in Sources */,
 				B85A805E296F08720007F957 /* AudienceMenuButtonView.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
-				B8A8F7962AA7BEA100B21EEF /* BlockEditorProfilePicSm.swift in Sources */,
+				B8A8F7962AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift in Sources */,
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
