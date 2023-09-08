@@ -49,6 +49,7 @@ extension BlockEditor {
             bodyView.addArrangedSubview(headingView)
             
             transcludeListView.translatesAutoresizingMaskIntoConstraints = false
+            transcludeListView.directionalLayoutMargins = .zero
             bodyView.addArrangedSubview(transcludeListView)
             
             NSLayoutConstraint.activate([
