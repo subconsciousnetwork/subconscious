@@ -445,6 +445,7 @@
 		B8E00A2E299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */; };
 		B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */; };
 		B8E00A312992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */; };
+		B8E0BBAC2AAB951E00FBCB57 /* BlockEditorTranscludeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E0BBAB2AAB951E00FBCB57 /* BlockEditorTranscludeListView.swift */; };
 		B8E1A9462A12F69E00B757A5 /* LogFmt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9452A12F69E00B757A5 /* LogFmt.swift */; };
 		B8E1A9472A12F69E00B757A5 /* LogFmt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9452A12F69E00B757A5 /* LogFmt.swift */; };
 		B8E1A9492A13F49F00B757A5 /* Tests_LogFmt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1A9482A13F49F00B757A5 /* Tests_LogFmt.swift */; };
@@ -820,6 +821,7 @@
 		B8E00A2929928DD2003B40C1 /* AppDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDefaults.swift; sourceTree = "<group>"; };
 		B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsProperty.swift; sourceTree = "<group>"; };
 		B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsView.swift; sourceTree = "<group>"; };
+		B8E0BBAB2AAB951E00FBCB57 /* BlockEditorTranscludeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorTranscludeListView.swift; sourceTree = "<group>"; };
 		B8E1A9452A12F69E00B757A5 /* LogFmt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFmt.swift; sourceTree = "<group>"; };
 		B8E1A9482A13F49F00B757A5 /* Tests_LogFmt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_LogFmt.swift; sourceTree = "<group>"; };
 		B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OurSphereRecord.swift; sourceTree = "<group>"; };
@@ -1341,10 +1343,10 @@
 		B8E0BBA52AAB90D000FBCB57 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B8E0BBAA2AAB950800FBCB57 /* Transclude */,
 				B8A8F7912AA7B76800B21EEF /* BlockEditorBylineView.swift */,
 				B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift */,
 				B8A8F7932AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift */,
-				B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */,
 				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
 			);
 			path = Common;
@@ -1366,6 +1368,15 @@
 				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
 			);
 			path = Blocks;
+			sourceTree = "<group>";
+		};
+		B8E0BBAA2AAB950800FBCB57 /* Transclude */ = {
+			isa = PBXGroup;
+			children = (
+				B8E0BBAB2AAB951E00FBCB57 /* BlockEditorTranscludeListView.swift */,
+				B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */,
+			);
+			path = Transclude;
 			sourceTree = "<group>";
 		};
 		B8EB29ED26F27794006E97C3 = {
@@ -2142,6 +2153,7 @@
 				B8AB08B52A9D4FF000998099 /* HeadingBlockCell.swift in Sources */,
 				B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
+				B8E0BBAC2AAB951E00FBCB57 /* BlockEditorTranscludeListView.swift in Sources */,
 				B839029F28CA246A007A3A3F /* CustomLogStringConvertible.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */,

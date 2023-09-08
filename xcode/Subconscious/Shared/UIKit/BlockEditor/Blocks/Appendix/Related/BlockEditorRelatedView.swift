@@ -72,7 +72,6 @@ extension BlockEditor {
             for stub in state.related {
                 let transclude = BlockEditor.TranscludeView()
                 transclude.render(stub)
-                transclude.translatesAutoresizingMaskIntoConstraints = false
                 transcludesView.addArrangedSubview(transclude)
             }
         }
