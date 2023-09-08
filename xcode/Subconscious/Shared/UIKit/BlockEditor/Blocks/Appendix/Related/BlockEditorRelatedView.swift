@@ -20,9 +20,9 @@ extension BlockEditor {
         )
         private var bodySpacing: CGFloat = 8
         private var transcludeSpacing: CGFloat = 8
-        private lazy var headingView = BlockEditor.AppendixHeadingView()
-        private lazy var bodyView = UIStackView(frame: .zero)
-        private lazy var transcludesView = UIStackView(frame: .zero)
+        private var headingView = BlockEditor.AppendixHeadingView()
+        private var bodyView = UIStackView()
+        private var transcludeListView = BlockEditor.TranscludeListView()
 
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -48,10 +48,8 @@ extension BlockEditor {
             headingView.translatesAutoresizingMaskIntoConstraints = false
             bodyView.addArrangedSubview(headingView)
             
-            transcludesView.axis = .vertical
-            transcludesView.translatesAutoresizingMaskIntoConstraints = false
-            transcludesView.spacing = transcludeSpacing
-            bodyView.addArrangedSubview(transcludesView)
+            transcludeListView.translatesAutoresizingMaskIntoConstraints = false
+            bodyView.addArrangedSubview(transcludeListView)
             
             NSLayoutConstraint.activate([
                 bodyView.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -68,12 +66,7 @@ extension BlockEditor {
         func render(
             _ state: BlockEditor.RelatedModel
         ) {
-            transcludesView.removeAllArrangedSubviews()
-            for stub in state.related {
-                let transclude = BlockEditor.TranscludeView()
-                transclude.render(stub)
-                transcludesView.addArrangedSubview(transclude)
-            }
+            transcludeListView.render(state.related)
         }
     }
 }
