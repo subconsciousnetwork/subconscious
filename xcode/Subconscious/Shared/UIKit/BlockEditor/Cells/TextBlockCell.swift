@@ -80,13 +80,25 @@ extension BlockEditor {
             
             textView.inputAccessoryView = toolbar
             
+            contentView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
             contentView.addSubview(textView)
 
             NSLayoutConstraint.activate([
-                textView.widthAnchor.constraint(equalToConstant: frame.width),
-                textView.topAnchor.constraint(equalTo: topAnchor),
-                
-                bottomAnchor.constraint(equalTo: textView.bottomAnchor),
+                textView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor
+                ),
+                textView.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor
+                ),
+                textView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor
+                ),
+                textView.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor
+                )
             ])
         }
         
