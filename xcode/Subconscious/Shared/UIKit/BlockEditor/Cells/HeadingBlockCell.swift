@@ -39,10 +39,10 @@ extension BlockEditor {
             textView.backgroundColor = .systemBackground
             textView.isScrollEnabled = false
             textView.textContainerInset = UIEdgeInsets(
-                top: 12,
-                left: 12,
-                bottom: 12,
-                right: 12
+                top: 8,
+                left: 16,
+                bottom: 8,
+                right: 16
             )
             textView.font = .preferredFont(forTextStyle: .headline)
             textView.translatesAutoresizingMaskIntoConstraints = false
@@ -50,25 +50,25 @@ extension BlockEditor {
             
             textView.inputAccessoryView = toolbar
             
-            contentView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
             contentView.addSubview(textView)
 
             NSLayoutConstraint.activate([
-                textView.topAnchor.constraint(equalTo: topAnchor),
-                textView.widthAnchor.constraint(equalTo: widthAnchor),
-                contentView.leadingAnchor.constraint(
-                    equalTo: textView.leadingAnchor
+                textView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor
                 ),
-                contentView.trailingAnchor.constraint(
-                    equalTo: textView.trailingAnchor
+                textView.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor
                 ),
-                contentView.topAnchor.constraint(
-                    equalTo: textView.topAnchor
+                textView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor
                 ),
-                contentView.bottomAnchor.constraint(
-                    equalTo: textView.bottomAnchor
-                ),
-                heightAnchor.constraint(equalTo: textView.heightAnchor),
+                textView.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor
+                )
             ])
         }
         

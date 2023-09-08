@@ -69,10 +69,10 @@ extension BlockEditor {
             textView.backgroundColor = .systemBackground
             textView.isScrollEnabled = false
             textView.textContainerInset = UIEdgeInsets(
-                top: 12,
-                left: 12,
-                bottom: 12,
-                right: 12
+                top: 8,
+                left: 16,
+                bottom: 8,
+                right: 16
             )
             textView.font = .preferredFont(forTextStyle: .body)
             textView.translatesAutoresizingMaskIntoConstraints = false

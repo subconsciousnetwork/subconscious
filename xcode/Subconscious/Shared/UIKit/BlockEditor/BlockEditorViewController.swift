@@ -34,11 +34,18 @@ extension BlockEditor {
             let layout = UICollectionViewCompositionalLayout.list(
                 using: config
             )
-
-            return UICollectionView(
+            
+            let collectionView = UICollectionView(
                 frame: frame,
                 collectionViewLayout: layout
             )
+            collectionView.contentInset = UIEdgeInsets(
+                top: 8,
+                left: 0,
+                bottom: 8,
+                right: 0
+            )
+            return collectionView
         }
         
         private lazy var collectionView = Self.createCollectionView(
