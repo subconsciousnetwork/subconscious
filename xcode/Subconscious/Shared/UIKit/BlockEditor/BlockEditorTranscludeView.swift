@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 protocol BlockEditorTranscludeDelegate: AnyObject {
     func onTap(_ view: BlockEditor.TranscludeView)
@@ -30,11 +31,11 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
             
-            self.translatesAutoresizingMaskIntoConstraints = false
-            self.backgroundColor = .tertiarySystemGroupedBackground
-            self.layer.cornerRadius = cornerRadius
-            self.directionalLayoutMargins = margins
-            self.isUserInteractionEnabled = true
+            backgroundColor = .tertiarySystemGroupedBackground
+            layer.cornerRadius = cornerRadius
+            directionalLayoutMargins = margins
+            setContentHuggingPriority(.defaultHigh, for: .vertical)
+
             let tapGesture = UITapGestureRecognizer(
                 target: self,
                 action: #selector(onTap)
@@ -44,13 +45,18 @@ extension BlockEditor {
             stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.spacing = stackSpacing
             stackView.axis = .vertical
-            stackView.isUserInteractionEnabled = false
+            stackView.distribution = .fill
+            stackView.setContentHuggingPriority(.defaultHigh, for: .vertical)
             addSubview(stackView)
 
             stackView.addArrangedSubview(bylineView)
 
             // A very large, but finite number of lines
             excerptView.numberOfLines = 50
+            excerptView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
             stackView.addArrangedSubview(excerptView)
             
             NSLayoutConstraint.activate([
@@ -108,12 +114,29 @@ extension BlockEditor {
             _ stub: EntryStub
         ) {
             bylineView.render(
-                BylineModel(
+                BlockEditor.BylineModel(
                     pfp: stub.author?.pfp,
                     slashlink: stub.address
                 )
             )
             self.excerptView.text = stub.excerpt
+        }
+    }
+}
+
+struct BlockEditorTranscludeView_Previews: PreviewProvider {
+    static var previews: some View {
+        UIViewPreviewRepresentable {
+            let view = BlockEditor.TranscludeView()
+            view.render(
+                EntryStub(
+                    address: Slashlink("@example/foo")!,
+                    excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                    modified: Date.now,
+                    author: nil
+                )
+            )
+            return view
         }
     }
 }

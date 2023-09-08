@@ -13,8 +13,14 @@ extension UIView {
         let spacerView = UIView()
         spacerView.isUserInteractionEnabled = false
         spacerView.translatesAutoresizingMaskIntoConstraints = false
-        spacerView.setContentHuggingPriority(.fittingSizeLevel, for: .horizontal)
-        spacerView.setContentHuggingPriority(.fittingSizeLevel, for: .vertical)
+        spacerView.setContentHuggingPriority(
+            .fittingSizeLevel,
+            for: .horizontal
+        )
+        spacerView.setContentHuggingPriority(
+            .fittingSizeLevel,
+            for: .vertical
+        )
         return spacerView
     }
 }

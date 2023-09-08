@@ -1,12 +1,12 @@
 //
-//  FooterCell.swift
+//  RelatedCell.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 8/30/23.
 //
 
-import Foundation
 import UIKit
+import SwiftUI
 
 extension BlockEditor {
     /// Displays related notes
@@ -23,15 +23,20 @@ extension BlockEditor {
             bottom: 16,
             trailing: 16
         )
-        private lazy var relatedView = RelatedView(frame: .zero)
-        
+        private var relatedView = RelatedView(frame: .zero)
+
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.directionalLayoutMargins = margins
+            contentView.directionalLayoutMargins = margins
+            
             relatedView.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(relatedView)
             
-            let marginsGuide = self.layoutMarginsGuide
+            setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            let marginsGuide = contentView.layoutMarginsGuide
             NSLayoutConstraint.activate([
                 relatedView.leadingAnchor.constraint(
                     equalTo: marginsGuide.leadingAnchor
@@ -52,9 +57,42 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func render(_ state: RelatedModel) {
+        func render(_ state: BlockEditor.RelatedModel) {
             self.id = state.id
             relatedView.render(state)
+        }
+    }
+}
+
+struct BlockEditorRelatedCell_Previews: PreviewProvider {
+    static var previews: some View {
+        UIViewPreviewRepresentable {
+            let view = BlockEditor.RelatedCell()
+            view.render(
+                BlockEditor.RelatedModel(
+                    related: [
+                        EntryStub(
+                            address: Slashlink("@example/foo")!,
+                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/bar")!,
+                            excerpt: "Modularity is a form of hierarchy",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/baz")!,
+                            excerpt: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                            modified: Date.now,
+                            author: nil
+                        )
+                    ]
+                )
+            )
+            return view
         }
     }
 }

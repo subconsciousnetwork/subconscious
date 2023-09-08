@@ -88,11 +88,20 @@ extension BlockEditor {
             collectionView.dataSource = self
             view.addSubview(collectionView)
             
+            let guide = view.safeAreaLayoutGuide
             NSLayoutConstraint.activate([
-                collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-                collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                collectionView.leadingAnchor.constraint(
+                    equalTo: guide.leadingAnchor
+                ),
+                collectionView.trailingAnchor.constraint(
+                    equalTo: guide.trailingAnchor
+                ),
+                collectionView.topAnchor.constraint(
+                    equalTo: guide.topAnchor
+                ),
+                collectionView.bottomAnchor.constraint(
+                    equalTo: guide.bottomAnchor
+                ),
             ])
             
             self.store.connect(self)

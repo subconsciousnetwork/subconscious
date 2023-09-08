@@ -31,7 +31,7 @@ extension BlockEditor {
                 .defaultHigh,
                 for: .vertical
             )
-
+            
             stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.spacing = spacing
             stackView.axis = .horizontal
@@ -50,11 +50,12 @@ extension BlockEditor {
             stackView.addArrangedSubview(pfpView)
             stackView.addArrangedSubview(slashlinkView)
             stackView.addArrangedSubview(UIView.spacer())
-
+            
             NSLayoutConstraint.activate([
                 stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 stackView.topAnchor.constraint(equalTo: topAnchor),
+                stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
                 heightAnchor.constraint(equalToConstant: height)
             ])
         }
@@ -73,9 +74,6 @@ extension BlockEditor {
 struct BlockEditorBylineView_Previews: PreviewProvider {
     static var previews: some View {
         UIViewPreviewRepresentable {
-            let parent = UIStackView()
-            parent.distribution = .fill
-            
             let view = BlockEditor.BylineView()
             view.render(
                 BlockEditor.BylineModel(
@@ -85,9 +83,7 @@ struct BlockEditorBylineView_Previews: PreviewProvider {
                     )
                 )
             )
-            parent.addArrangedSubview(view)
-            
-            return parent
+            return view
         }
     }
 }
