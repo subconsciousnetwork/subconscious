@@ -11,15 +11,15 @@ import SwiftUI
 extension BlockEditor {
     class RelatedView: UIView, UIViewComponentProtocol {
         var id = UUID()
-        private var labelHeight: CGFloat = 16
+        private var labelHeight: CGFloat = AppTheme.unit4
         private var labelInsets = UIEdgeInsets(
             top: 0,
-            left: 16,
+            left: AppTheme.unit4,
             bottom: 0,
-            right: 16
+            right: AppTheme.unit4
         )
-        private var bodySpacing: CGFloat = 8
-        private var transcludeSpacing: CGFloat = 8
+        private var bodySpacing: CGFloat = AppTheme.unit2
+        private var transcludeSpacing: CGFloat = AppTheme.unit2
         private var headingView = BlockEditor.AppendixHeadingView()
         private var bodyView = UIStackView()
         private var transcludeListView = BlockEditor.TranscludeListView()

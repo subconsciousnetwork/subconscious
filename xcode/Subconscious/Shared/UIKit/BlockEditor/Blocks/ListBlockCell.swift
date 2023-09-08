@@ -20,6 +20,13 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
+        private var contentViewMargins = NSDirectionalEdgeInsets(
+            top: 0,
+            leading: AppTheme.unit4,
+            bottom: 0,
+            trailing: 0
+        )
+
         private lazy var textView = SubtextTextView()
         private lazy var bulletView = createBulletView()
         
@@ -69,12 +76,7 @@ extension BlockEditor {
                 for: .vertical
             )
             
-            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(
-                top: 0,
-                leading: 20,
-                bottom: 0,
-                trailing: 0
-            )
+            contentView.directionalLayoutMargins = contentViewMargins
             
             textView.isScrollEnabled = false
             textView.translatesAutoresizingMaskIntoConstraints = false
@@ -88,11 +90,11 @@ extension BlockEditor {
             NSLayoutConstraint.activate([
                 bulletView.leadingAnchor.constraint(
                     equalTo: contentView.leadingAnchor,
-                    constant: 16
+                    constant: AppTheme.unit4
                 ),
                 bulletView.topAnchor.constraint(
                     equalTo: contentView.topAnchor,
-                    constant: 8
+                    constant: AppTheme.unit2
                 ),
                 textView.leadingAnchor.constraint(
                     equalTo: guide.leadingAnchor

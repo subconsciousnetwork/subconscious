@@ -20,7 +20,14 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
-        lazy var textView = SubtextTextView()
+        private var contentViewMargins = NSDirectionalEdgeInsets(
+            top: 0,
+            leading: AppTheme.unit4,
+            bottom: 0,
+            trailing: 0
+        )
+
+        private lazy var textView = SubtextTextView()
         
         private lazy var quoteIndent = createQuoteIndent()
         
@@ -66,12 +73,7 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
             
-            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(
-                top: 0,
-                leading: 20,
-                bottom: 0,
-                trailing: 0
-            )
+            contentView.directionalLayoutMargins = contentViewMargins
             
             textView.isScrollEnabled = false
             textView.font = .preferredFont(forTextStyle: .body)
@@ -88,15 +90,15 @@ extension BlockEditor {
             NSLayoutConstraint.activate([
                 quoteIndent.leadingAnchor.constraint(
                     equalTo: contentView.leadingAnchor,
-                    constant: 16
+                    constant: AppTheme.unit4
                 ),
                 quoteIndent.topAnchor.constraint(
                     equalTo: contentView.topAnchor,
-                    constant: 8
+                    constant: AppTheme.unit2
                 ),
                 quoteIndent.bottomAnchor.constraint(
                     equalTo: contentView.bottomAnchor,
-                    constant: -8
+                    constant: -1 * AppTheme.unit2
                 ),
                 textView.leadingAnchor.constraint(
                     equalTo: guide.leadingAnchor
