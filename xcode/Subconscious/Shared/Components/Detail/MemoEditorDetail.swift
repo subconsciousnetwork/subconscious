@@ -613,7 +613,10 @@ struct MemoEditorDetailModel: ModelProtocol {
     /// Block editor
     var blockEditor = BlockEditor.Model(
         blocks: [
-            BlockEditor.BlockModel.heading(BlockEditor.TextBlockModel())
+            BlockEditor.BlockModel.heading(BlockEditor.TextBlockModel()),
+            BlockEditor.BlockModel.text(BlockEditor.TextBlockModel()),
+            BlockEditor.BlockModel.quote(BlockEditor.TextBlockModel()),
+            BlockEditor.BlockModel.list(BlockEditor.TextBlockModel()),
         ],
         appendix: BlockEditor.RelatedModel(
             related: [

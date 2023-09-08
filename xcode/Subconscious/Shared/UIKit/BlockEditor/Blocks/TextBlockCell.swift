@@ -64,20 +64,9 @@ extension BlockEditor {
             super.init(frame: frame)
             self.backgroundColor = .systemBackground
             
-            // Automatically adjust font size based on system font size
-            textView.adjustsFontForContentSizeCategory = true
-            textView.backgroundColor = .systemBackground
             textView.isScrollEnabled = false
-            textView.textContainerInset = UIEdgeInsets(
-                top: 8,
-                left: 16,
-                bottom: 8,
-                right: 16
-            )
-            textView.font = .preferredFont(forTextStyle: .body)
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
-            
             textView.inputAccessoryView = toolbar
             
             contentView.setContentHuggingPriority(

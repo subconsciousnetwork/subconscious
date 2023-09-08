@@ -16,12 +16,22 @@ extension UIView {
         var renderer = SubtextAttributedStringRenderer()
         lazy var logger = Logger(
             subsystem: Config.default.rdns,
-            category: "SubtextUIView#\(id)"
+            category: "SubtextTextView#\(id)"
         )
         
         override init(frame: CGRect, textContainer: NSTextContainer?) {
             super.init(frame: frame, textContainer: textContainer)
-            self.textStorage.delegate = self
+            textStorage.delegate = self
+            
+            // Automatically adjust font size based on system font size
+            adjustsFontForContentSizeCategory = true
+            textContainerInset = UIEdgeInsets(
+                top: 8,
+                left: 16,
+                bottom: 8,
+                right: 16
+            )
+            font = .preferredFont(forTextStyle: .body)
         }
                 
         required init?(coder: NSCoder) {

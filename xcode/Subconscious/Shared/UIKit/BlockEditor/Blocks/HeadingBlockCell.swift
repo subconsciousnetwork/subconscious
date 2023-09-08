@@ -26,7 +26,7 @@ extension BlockEditor {
         
         weak var delegate: HeadingBlockCellDelegate?
         
-        lazy var textView = UITextView(frame: .zero)
+        private lazy var textView = UITextView(frame: .zero)
         
         private lazy var toolbar = self.createToolbar()
         
@@ -35,19 +35,17 @@ extension BlockEditor {
             self.backgroundColor = .systemBackground
             
             // Automatically adjust font size based on system font size
-            textView.adjustsFontForContentSizeCategory = true
-            textView.backgroundColor = .systemBackground
             textView.isScrollEnabled = false
+            textView.font = .preferredFont(forTextStyle: .headline)
+            textView.adjustsFontForContentSizeCategory = true
             textView.textContainerInset = UIEdgeInsets(
                 top: 8,
                 left: 16,
                 bottom: 8,
                 right: 16
             )
-            textView.font = .preferredFont(forTextStyle: .headline)
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
-            
             textView.inputAccessoryView = toolbar
             
             contentView.setContentHuggingPriority(

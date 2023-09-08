@@ -19,8 +19,7 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
-        lazy var textView = UITextView(frame: .zero)
-        
+        private lazy var textView = SubtextTextView()
         private lazy var bullet = createBullet()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
@@ -64,30 +63,30 @@ extension BlockEditor {
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .systemBackground
-            
-            // Automatically adjust font size based on system font size
-            textView.adjustsFontForContentSizeCategory = true
-            textView.backgroundColor = .systemBackground
-            textView.isScrollEnabled = false
-            textView.textContainerInset = UIEdgeInsets(
-                top: 12,
-                left: 12,
-                bottom: 12,
-                right: 12
+            contentView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
             )
-            textView.font = .preferredFont(forTextStyle: .body)
+            
+            textView.isScrollEnabled = false
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
-            
             textView.inputAccessoryView = toolbar
-            
             contentView.addSubview(textView)
-
+                        
             NSLayoutConstraint.activate([
-                textView.widthAnchor.constraint(equalToConstant: frame.width),
-                textView.topAnchor.constraint(equalTo: topAnchor),
-                bottomAnchor.constraint(equalTo: textView.bottomAnchor),
+                textView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor
+                ),
+                textView.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor
+                ),
+                textView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor
+                ),
+                textView.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor
+                )
             ])
         }
         
