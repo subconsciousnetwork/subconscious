@@ -118,18 +118,36 @@ extension BlockEditor {
         }
         
         private func createQuoteIndent() -> UIView {
-            let view = UIView(frame: .zero)
-            view.backgroundColor = .accent
-            view.setContentHuggingPriority(
+            let frameView = UIView()
+            frameView.translatesAutoresizingMaskIntoConstraints = false
+
+            let quoteView = UIView()
+            quoteView.translatesAutoresizingMaskIntoConstraints = false
+            quoteView.backgroundColor = .accent
+            quoteView.setContentHuggingPriority(
                 .fittingSizeLevel,
                 for: .vertical
             )
+            frameView.addSubview(quoteView)
+            
             NSLayoutConstraint.activate([
-                view.widthAnchor.constraint(
-                    equalToConstant: 4
+                frameView.widthAnchor.constraint(
+                    equalToConstant: 8
+                ),
+                quoteView.widthAnchor.constraint(
+                    equalToConstant: 2
+                ),
+                quoteView.centerXAnchor.constraint(
+                    equalTo: frameView.centerXAnchor
+                ),
+                quoteView.topAnchor.constraint(
+                    equalTo: frameView.topAnchor
+                ),
+                quoteView.bottomAnchor.constraint(
+                    equalTo: frameView.bottomAnchor
                 )
             ])
-            return view
+            return frameView
         }
 
         func render(_ state: BlockEditor.TextBlockModel) {
