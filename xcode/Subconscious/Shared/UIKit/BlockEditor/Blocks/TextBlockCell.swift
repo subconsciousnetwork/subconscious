@@ -20,7 +20,9 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
-        lazy var textView = SubtextTextView(frame: .zero)
+        private lazy var stackView = UIStackView()
+        private lazy var textView = SubtextTextView()
+        private lazy var transcludeListView = BlockEditor.TranscludeListView()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
             upButtonPressed: { [weak self] in
@@ -63,30 +65,42 @@ extension BlockEditor {
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .systemBackground
-            
-            textView.isScrollEnabled = false
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            textView.delegate = self
-            textView.inputAccessoryView = toolbar
             
             contentView.setContentHuggingPriority(
                 .defaultHigh,
                 for: .vertical
             )
-            contentView.addSubview(textView)
+            
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+            stackView.axis = .vertical
+            stackView.spacing = AppTheme.unit
+            stackView.alignment = .fill
+            stackView.distribution = .fill
+            stackView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            contentView.addSubview(stackView)
 
+            textView.isScrollEnabled = false
+            textView.translatesAutoresizingMaskIntoConstraints = false
+            textView.delegate = self
+            textView.inputAccessoryView = toolbar
+            stackView.addArrangedSubview(textView)
+
+            stackView.addArrangedSubview(transcludeListView)
+            
             NSLayoutConstraint.activate([
-                textView.leadingAnchor.constraint(
+                stackView.leadingAnchor.constraint(
                     equalTo: contentView.leadingAnchor
                 ),
-                textView.trailingAnchor.constraint(
+                stackView.trailingAnchor.constraint(
                     equalTo: contentView.trailingAnchor
                 ),
-                textView.topAnchor.constraint(
+                stackView.topAnchor.constraint(
                     equalTo: contentView.topAnchor
                 ),
-                textView.bottomAnchor.constraint(
+                stackView.bottomAnchor.constraint(
                     equalTo: contentView.bottomAnchor
                 )
             ])
@@ -98,6 +112,7 @@ extension BlockEditor {
         
         func render(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
+            transcludeListView.render(state.transcludes)
             if textView.text != state.text {
                 textView.text = state.text
             }
@@ -162,7 +177,21 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
             let view = BlockEditor.TextBlockCell()
             view.render(
                 BlockEditor.TextBlockModel(
-                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."
+                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                    transcludes: [
+                        EntryStub(
+                            address: Slashlink("@example/foo")!,
+                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/bar")!,
+                            excerpt: "Modularity is a form of hierarchy",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                    ]
                 )
             )
             return view

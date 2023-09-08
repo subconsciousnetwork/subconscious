@@ -13,6 +13,7 @@ extension BlockEditor {
         var text = ""
         var selection: NSRange = NSMakeRange(0, 0)
         var isFocused = false
+        var transcludes: [EntryStub] = []
         
         /// Set text, updating selection
         func setText(
