@@ -27,11 +27,20 @@ extension BlockEditor {
             
             addSubview(stackView)
 
+            let guide = layoutMarginsGuide
             NSLayoutConstraint.activate([
-                stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
-                stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                stackView.topAnchor.constraint(equalTo: topAnchor),
-                stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                stackView.leadingAnchor.constraint(
+                    equalTo: guide.leadingAnchor
+                ),
+                stackView.trailingAnchor.constraint(
+                    equalTo: guide.trailingAnchor
+                ),
+                stackView.topAnchor.constraint(
+                    equalTo: guide.topAnchor
+                ),
+                stackView.bottomAnchor.constraint(
+                    equalTo: guide.bottomAnchor
+                ),
             ])
         }
         

@@ -22,6 +22,12 @@ extension BlockEditor {
         
         private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
+        private var transcludeMargins = NSDirectionalEdgeInsets(
+            top: AppTheme.unit,
+            leading: AppTheme.padding,
+            bottom: AppTheme.padding,
+            trailing: AppTheme.padding
+        )
         private lazy var transcludeListView = BlockEditor.TranscludeListView()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
@@ -88,6 +94,7 @@ extension BlockEditor {
             textView.inputAccessoryView = toolbar
             stackView.addArrangedSubview(textView)
 
+            transcludeListView.directionalLayoutMargins = transcludeMargins
             stackView.addArrangedSubview(transcludeListView)
             
             NSLayoutConstraint.activate([

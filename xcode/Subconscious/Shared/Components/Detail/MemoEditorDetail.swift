@@ -613,10 +613,45 @@ struct MemoEditorDetailModel: ModelProtocol {
     /// Block editor
     var blockEditor = BlockEditor.Model(
         blocks: [
-            BlockEditor.BlockModel.heading(BlockEditor.TextBlockModel()),
-            BlockEditor.BlockModel.text(BlockEditor.TextBlockModel()),
-            BlockEditor.BlockModel.quote(BlockEditor.TextBlockModel()),
-            BlockEditor.BlockModel.list(BlockEditor.TextBlockModel()),
+            BlockEditor.BlockModel.heading(
+                BlockEditor.TextBlockModel(
+                    text: "Autopoiesis"
+                )
+            ),
+            BlockEditor.BlockModel.text(
+                BlockEditor.TextBlockModel(
+                    text: "The property of a living system (such as a bacterial cell or a multicellular organism) that allows it to maintain and renew itself by regulating its composition and conserving its boundaries.",
+                    transcludes: [
+                        EntryStub(
+                            address: Slashlink("@example/foo")!,
+                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/bar")!,
+                            excerpt: "Modularity is a form of hierarchy",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                    ]
+                )
+            ),
+            BlockEditor.BlockModel.quote(
+                BlockEditor.TextBlockModel(
+                    text: "The notion of autopoiesis is at the core of a shift in perspective about biological phenomena: it expresses that the mechanisms of self-production are the key to understand both the diversity and the uniqueness of the living. (Francisco J. Varela, in Self-Organizing Systems: An Interdisciplinary Approach, 1981)"
+                )
+            ),
+            BlockEditor.BlockModel.list(
+                BlockEditor.TextBlockModel(
+                    text: "List item"
+                )
+            ),
+            BlockEditor.BlockModel.list(
+                BlockEditor.TextBlockModel(
+                    text: "List item"
+                )
+            ),
         ],
         appendix: BlockEditor.RelatedModel(
             related: [
