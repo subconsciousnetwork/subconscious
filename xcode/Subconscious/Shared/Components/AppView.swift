@@ -260,6 +260,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Deletion attempt succeeded
     case succeedDeleteMemo(Slashlink)
     
+    case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestFeedRoot
 
@@ -540,6 +541,8 @@ struct AppModel: ModelProtocol {
     var isReadyForInteraction: Bool {
         self.databaseMigrationStatus == .succeeded
     }
+    
+    var selectedAppTab: AppTab = .feed
     
     // Logger for actions
     static let logger = Logger(
@@ -1001,6 +1004,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 address: address
+            )
+        case .setSelectedAppTab(let tab):
+            return setSelectedAppTab(
+                state: state,
+                environment: environment,
+                tab: tab
             )
         case .requestNotebookRoot:
             return Update(state: state)
@@ -2259,6 +2268,39 @@ struct AppModel: ModelProtocol {
         )
         return Update(state: state)
     }
+    
+    static func setSelectedAppTab(
+        state: Self,
+        environment: Environment,
+        tab: AppTab
+    ) -> Update<Self> {
+        
+        // Double tap on the same tab?
+        if tab == state.selectedAppTab {
+            let action = Func.run {
+                switch (tab) {
+                case .feed:
+                    return AppAction.requestFeedRoot
+                case .notebook:
+                    return AppAction.requestNotebookRoot
+                }
+            }
+            
+            let fx: Fx<AppAction> = Future.detached {
+                return action
+            }
+            .eraseToAnyPublisher()
+            
+            // MUST be dispatched as an fx so that it will appear on the `store.actions` stream
+            // Which is consumed and replayed on the FeedStore and NotebookStore etc.
+            return Update(state: state, fx: fx)
+        }
+        
+        var model = state
+        model.selectedAppTab = tab
+        return Update(state: model)
+    }
+    
 }
 
 // MARK: Environment

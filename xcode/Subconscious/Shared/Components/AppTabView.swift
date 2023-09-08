@@ -9,14 +9,14 @@ import SwiftUI
 import ObservableStore
 import Combine
 
-enum Tab: String {
+enum AppTab: String {
     case feed
     case notebook
 }
 
 // Adapted from https://medium.com/geekculture/move-to-top-of-tab-on-selecting-same-tab-from-tab-bar-in-swiftui-a2b2cfd33872
 class AppTabState: ObservableObject {
-    @Published var tabSelected: Tab = .feed {
+    @Published var tabSelected: AppTab = .feed {
         didSet {
             if oldValue == tabSelected {
                 popStackToNavigationRoot.toggle()
@@ -31,31 +31,26 @@ class AppTabState: ObservableObject {
 /// Used when `Config.appTabs` is true.
 struct AppTabView: View {
     @ObservedObject var store: Store<AppModel>
-    @StateObject var appTabs: AppTabState = AppTabState()
 
     var body: some View {
-        TabView(selection: $appTabs.tabSelected) {
+        TabView(selection: Binding(
+            get: { store.state.selectedAppTab },
+            send: store.send,
+            tag: AppAction.setSelectedAppTab
+        )) {
             if Config.default.feed {
                 FeedView(app: store)
                     .tabItem {
                         Label("Feed", systemImage: "newspaper")
                     }
-                    .tag(Tab.feed)
+                    .tag(AppTab.feed)
             }
             
             NotebookView(app: store)
                 .tabItem {
                     Label("Notes", systemImage: "folder")
                 }
-                .tag(Tab.notebook)
+                .tag(AppTab.notebook)
         }
-        .onChange(of: appTabs.popStackToNavigationRoot, perform: { _ in
-            switch (appTabs.tabSelected) {
-            case .notebook:
-                store.send(.requestNotebookRoot)
-            case .feed:
-                store.send(.requestFeedRoot)
-            }
-        })
     }
 }
