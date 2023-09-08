@@ -1037,20 +1037,12 @@
 			isa = PBXGroup;
 			children = (
 				B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */,
-				B85319ED2AAA502D0085044A /* BlockEditorAppendixHeadingView.swift */,
-				B8A8F7912AA7B76800B21EEF /* BlockEditorBylineView.swift */,
-				B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift */,
-				B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */,
+				B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */,
 				B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */,
-				B8A8F7932AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift */,
 				B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */,
-				B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */,
 				B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */,
-				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
-				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
-				B8AB08AF2A9D4FB600998099 /* Cells */,
-				B86DD5662A9FEB0300E1DEA5 /* Models */,
-				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
+				B8E0BBA62AAB913A00FBCB57 /* Blocks */,
+				B8E0BBA52AAB90D000FBCB57 /* Common */,
 			);
 			path = BlockEditor;
 			sourceTree = "<group>";
@@ -1087,17 +1079,6 @@
 				B57C0AE829D2782C00D352E3 /* PetnameView.swift */,
 			);
 			path = Byline;
-			sourceTree = "<group>";
-		};
-		B86DD5662A9FEB0300E1DEA5 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */,
-				B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */,
-				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
-				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
-			);
-			path = Models;
 			sourceTree = "<group>";
 		};
 		B87288DA299AB00700EF7E07 /* Noosphere */ = {
@@ -1219,20 +1200,6 @@
 			path = Fonts;
 			sourceTree = "<group>";
 		};
-		B8AB08AF2A9D4FB600998099 /* Cells */ = {
-			isa = PBXGroup;
-			children = (
-				B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */,
-				B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */,
-				B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */,
-				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
-				B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */,
-				B86DD5642A9FE70300E1DEA5 /* RelatedCell.swift */,
-				B8AB08B82A9D501600998099 /* TextBlockCell.swift */,
-			);
-			path = Cells;
-			sourceTree = "<group>";
-		};
 		B8AB08C82A9D516700998099 /* UIKit */ = {
 			isa = PBXGroup;
 			children = (
@@ -1240,13 +1207,13 @@
 				B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */,
 				B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */,
 				B8CAF2102A9E89A30057D5DE /* UIFontHelpers.swift */,
-				B86DD5772AA1250200E1DEA5 /* UIViewRenderableProtocol.swift */,
 				B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */,
 				B8AB08D52A9D52B300998099 /* UITextViewHelpers.swift */,
 				B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */,
 				B8AB08D72A9D52D700998099 /* UIViewHelpers.swift */,
 				B8AB08D12A9D523600998099 /* UIViewIconButton.swift */,
 				B85319E92AAA3D890085044A /* UIViewPreviewRepresentable.swift */,
+				B86DD5772AA1250200E1DEA5 /* UIViewRenderableProtocol.swift */,
 				B8AB08D32A9D524300998099 /* UIViewSpacer.swift */,
 			);
 			path = UIKit;
@@ -1352,16 +1319,65 @@
 			path = Audience;
 			sourceTree = "<group>";
 		};
+		B8E0BBA32AAB903700FBCB57 /* Related */ = {
+			isa = PBXGroup;
+			children = (
+				B86DD5692A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift */,
+				B86DD56F2AA0D28600E1DEA5 /* BlockEditorRelatedView.swift */,
+				B86DD5642A9FE70300E1DEA5 /* RelatedCell.swift */,
+			);
+			path = Related;
+			sourceTree = "<group>";
+		};
+		B8E0BBA42AAB90AD00FBCB57 /* Appendix */ = {
+			isa = PBXGroup;
+			children = (
+				B85319ED2AAA502D0085044A /* BlockEditorAppendixHeadingView.swift */,
+				B8E0BBA32AAB903700FBCB57 /* Related */,
+			);
+			path = Appendix;
+			sourceTree = "<group>";
+		};
+		B8E0BBA52AAB90D000FBCB57 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				B8A8F7912AA7B76800B21EEF /* BlockEditorBylineView.swift */,
+				B8A8F7952AA7BEA100B21EEF /* BlockEditorProfilePicSmView.swift */,
+				B8A8F7932AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift */,
+				B86DD56D2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift */,
+				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		B8E0BBA62AAB913A00FBCB57 /* Blocks */ = {
+			isa = PBXGroup;
+			children = (
+				B8E0BBA42AAB90AD00FBCB57 /* Appendix */,
+				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
+				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
+				B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */,
+				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
+				B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */,
+				B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */,
+				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
+				B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */,
+				B8AB08B82A9D501600998099 /* TextBlockCell.swift */,
+				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
+			);
+			path = Blocks;
+			sourceTree = "<group>";
+		};
 		B8EB29ED26F27794006E97C3 = {
 			isa = PBXGroup;
 			children = (
-				B8EB29F226F27794006E97C3 /* Shared */,
 				B8EB29FD26F27797006E97C3 /* iOS */,
 				B8EB2A0426F27797006E97C3 /* macOS */,
+				B8EB29FC26F27797006E97C3 /* Products */,
+				B8EB29F226F27794006E97C3 /* Shared */,
+				B80057E927DC355E002C0129 /* SubconsciousTests */,
 				B8EB2A0E26F27797006E97C3 /* Tests iOS */,
 				B8EB2A1A26F27797006E97C3 /* Tests macOS */,
-				B80057E927DC355E002C0129 /* SubconsciousTests */,
-				B8EB29FC26F27797006E97C3 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
