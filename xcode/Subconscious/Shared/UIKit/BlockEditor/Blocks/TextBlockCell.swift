@@ -117,6 +117,10 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
+        override func prepareForReuse() {
+            self.render(BlockEditor.TextBlockModel())
+        }
+        
         func render(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
             transcludeListView.render(state.transcludes)

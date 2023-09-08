@@ -52,8 +52,8 @@ extension BlockEditor {
             stackView.removeAllArrangedSubviews()
             for stub in state {
                 let transclude = BlockEditor.TranscludeView()
-                transclude.render(stub)
                 stackView.addArrangedSubview(transclude)
+                transclude.render(stub)
             }
         }
     }

@@ -57,6 +57,10 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
+        override func prepareForReuse() {
+            relatedView.render(BlockEditor.RelatedModel())
+        }
+
         func render(_ state: BlockEditor.RelatedModel) {
             self.id = state.id
             relatedView.render(state)
