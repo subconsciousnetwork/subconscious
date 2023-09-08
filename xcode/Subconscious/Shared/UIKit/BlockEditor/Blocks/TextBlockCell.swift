@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 extension BlockEditor {
     class TextBlockCell:
@@ -95,7 +96,7 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func render(_ state: TextBlockModel) {
+        func render(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
             if textView.text != state.text {
                 textView.text = state.text
@@ -151,6 +152,20 @@ extension BlockEditor {
         
         func textViewDidEndEditing(_ textView: UITextView) {
             delegate?.didEndEditing(id: self.id)
+        }
+    }
+}
+
+struct BlockEditorTextBlockCell_Previews: PreviewProvider {
+    static var previews: some View {
+        UIViewPreviewRepresentable {
+            let view = BlockEditor.TextBlockCell()
+            view.render(
+                BlockEditor.TextBlockModel(
+                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."
+                )
+            )
+            return view
         }
     }
 }

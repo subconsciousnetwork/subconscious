@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 extension BlockEditor {
     class ListBlockCell:
@@ -20,7 +21,7 @@ extension BlockEditor {
         weak var delegate: TextBlockDelegate?
         
         private lazy var textView = SubtextTextView()
-        private lazy var bullet = createBullet()
+        private lazy var bulletView = createBulletView()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
             upButtonPressed: { [weak self] in
@@ -68,24 +69,42 @@ extension BlockEditor {
                 for: .vertical
             )
             
+            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(
+                top: 0,
+                leading: 20,
+                bottom: 0,
+                trailing: 0
+            )
+            
             textView.isScrollEnabled = false
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
             textView.inputAccessoryView = toolbar
             contentView.addSubview(textView)
-                        
+            
+            contentView.addSubview(bulletView)
+            
+            let guide = contentView.layoutMarginsGuide
             NSLayoutConstraint.activate([
+                bulletView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: 24
+                ),
+                bulletView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor,
+                    constant: 8
+                ),
                 textView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
+                    equalTo: guide.leadingAnchor
                 ),
                 textView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
+                    equalTo: guide.trailingAnchor
                 ),
                 textView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
+                    equalTo: guide.topAnchor
                 ),
                 textView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
+                    equalTo: guide.bottomAnchor
                 )
             ])
         }
@@ -94,15 +113,53 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        private func createBullet() -> UIView {
-            let view = UIView(frame: .zero)
-            view.backgroundColor = .secondaryLabel
-            view.translatesAutoresizingMaskIntoConstraints = false
-            view.layer.cornerRadius = 4
-            return view
+        private func createBulletView() -> UIView {
+            let bulletSize: CGFloat = 8
+            let frameWidth: CGFloat = 8
+            let lineHeight: CGFloat = 22
+            
+            let frameView = UIView()
+            frameView.isUserInteractionEnabled = false
+            frameView.translatesAutoresizingMaskIntoConstraints = false
+            frameView.setContentCompressionResistancePriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            frameView.setContentCompressionResistancePriority(
+                .defaultHigh,
+                for: .horizontal
+            )
+            
+            let bulletView = UIView()
+            bulletView.backgroundColor = .secondaryLabel
+            bulletView.translatesAutoresizingMaskIntoConstraints = false
+            bulletView.layer.cornerRadius = bulletSize / 2
+            frameView.addSubview(bulletView)
+
+            NSLayoutConstraint.activate([
+                frameView.widthAnchor.constraint(
+                    equalToConstant: frameWidth
+                ),
+                frameView.heightAnchor.constraint(
+                    equalToConstant: lineHeight
+                ),
+                bulletView.widthAnchor.constraint(
+                    equalToConstant: bulletSize
+                ),
+                bulletView.heightAnchor.constraint(
+                    equalToConstant: bulletSize
+                ),
+                bulletView.centerXAnchor.constraint(
+                    equalTo: frameView.centerXAnchor
+                ),
+                bulletView.centerYAnchor.constraint(
+                    equalTo: frameView.centerYAnchor
+                )
+            ])
+            return frameView
         }
 
-        func render(_ state: TextBlockModel) {
+        func render(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
             if textView.text != state.text {
                 textView.text = state.text
@@ -158,6 +215,20 @@ extension BlockEditor {
         
         func textViewDidEndEditing(_ textView: UITextView) {
             delegate?.didEndEditing(id: self.id)
+        }
+    }
+}
+
+struct BlockEditorListBlockCell_Previews: PreviewProvider {
+    static var previews: some View {
+        UIViewPreviewRepresentable {
+            let view = BlockEditor.ListBlockCell()
+            view.render(
+                BlockEditor.TextBlockModel(
+                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."
+                )
+            )
+            return view
         }
     }
 }
