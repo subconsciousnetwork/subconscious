@@ -88,7 +88,7 @@ extension BlockEditor {
             NSLayoutConstraint.activate([
                 bulletView.leadingAnchor.constraint(
                     equalTo: contentView.leadingAnchor,
-                    constant: 24
+                    constant: 16
                 ),
                 bulletView.topAnchor.constraint(
                     equalTo: contentView.topAnchor,
@@ -114,7 +114,7 @@ extension BlockEditor {
         }
         
         private func createBulletView() -> UIView {
-            let bulletSize: CGFloat = 8
+            let bulletSize: CGFloat = 6
             let frameWidth: CGFloat = 8
             let lineHeight: CGFloat = 22
             

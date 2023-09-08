@@ -25,13 +25,14 @@ extension UIView {
             
             // Automatically adjust font size based on system font size
             adjustsFontForContentSizeCategory = true
+            font = .preferredFont(forTextStyle: .body)
             textContainerInset = UIEdgeInsets(
                 top: 8,
                 left: 16,
                 bottom: 8,
                 right: 16
             )
-            font = .preferredFont(forTextStyle: .body)
+            self.textContainer.lineFragmentPadding = 0
         }
                 
         required init?(coder: NSCoder) {

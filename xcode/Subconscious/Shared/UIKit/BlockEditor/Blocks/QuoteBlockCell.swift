@@ -20,7 +20,7 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
-        lazy var textView = UITextView(frame: .zero)
+        lazy var textView = SubtextTextView()
         
         private lazy var quoteIndent = createQuoteIndent()
         
@@ -65,40 +65,51 @@ extension BlockEditor {
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .systemBackground
             
-            // Automatically adjust font size based on system font size
-            textView.adjustsFontForContentSizeCategory = true
-            textView.backgroundColor = .systemBackground
-            textView.isScrollEnabled = false
-            textView.textContainerInset = UIEdgeInsets(
-                top: 12,
-                left: 12,
-                bottom: 12,
-                right: 12
+            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(
+                top: 0,
+                leading: 20,
+                bottom: 0,
+                trailing: 0
             )
+            
+            textView.isScrollEnabled = false
             textView.font = .preferredFont(forTextStyle: .body)
+                .italic()
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
-            
             textView.inputAccessoryView = toolbar
-            
             contentView.addSubview(textView)
+
+            quoteIndent.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(quoteIndent)
 
+            let guide = contentView.layoutMarginsGuide
             NSLayoutConstraint.activate([
-                textView.widthAnchor.constraint(equalToConstant: frame.width),
-                textView.topAnchor.constraint(equalTo: topAnchor),
-                
                 quoteIndent.leadingAnchor.constraint(
-                    equalTo: leadingAnchor,
-                    constant: 4
+                    equalTo: contentView.leadingAnchor,
+                    constant: 16
                 ),
-                quoteIndent.widthAnchor.constraint(equalToConstant: 2),
-                quoteIndent.topAnchor.constraint(equalTo: topAnchor),
-                quoteIndent.bottomAnchor.constraint(equalTo: bottomAnchor),
-
-                bottomAnchor.constraint(equalTo: textView.bottomAnchor),
+                quoteIndent.topAnchor.constraint(
+                    equalTo: contentView.topAnchor,
+                    constant: 8
+                ),
+                quoteIndent.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor,
+                    constant: -8
+                ),
+                textView.leadingAnchor.constraint(
+                    equalTo: guide.leadingAnchor
+                ),
+                textView.trailingAnchor.constraint(
+                    equalTo: guide.trailingAnchor
+                ),
+                textView.topAnchor.constraint(
+                    equalTo: guide.topAnchor
+                ),
+                textView.bottomAnchor.constraint(
+                    equalTo: guide.bottomAnchor
+                )
             ])
         }
         
@@ -108,7 +119,16 @@ extension BlockEditor {
         
         private func createQuoteIndent() -> UIView {
             let view = UIView(frame: .zero)
-            view.translatesAutoresizingMaskIntoConstraints = false
+            view.backgroundColor = .accent
+            view.setContentHuggingPriority(
+                .fittingSizeLevel,
+                for: .vertical
+            )
+            NSLayoutConstraint.activate([
+                view.widthAnchor.constraint(
+                    equalToConstant: 4
+                )
+            ])
             return view
         }
 

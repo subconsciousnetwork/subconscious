@@ -45,6 +45,7 @@ extension BlockEditor {
                 bottom: 8,
                 right: 16
             )
+            textView.textContainer.lineFragmentPadding = 0
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
             textView.inputAccessoryView = toolbar
