@@ -10,32 +10,72 @@ import ObservableStore
 import Combine
 import os
 
-struct FeedListView: View {
+struct FeedNavigationView: View {
+    @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<FeedModel>
     
+    var detailStack: ViewStore<DetailStackModel> {
+        store.viewStore(
+            get: FeedDetailStackCursor.get,
+            tag: FeedDetailStackCursor.tag
+        )
+    }
+    
     var body: some View {
-        LazyVStack() {
-            if let feed = store.state.entries {
-                ForEach(feed) { entry in
-                    if let author = entry.author {
-                        StoryEntryView(
-                            story: StoryEntry(
-                                author: author,
-                                entry: entry
-                            ),
-                            action: { address, _ in
-                                store.send(.detailStack(.pushDetail(
-                                    MemoDetailDescription.from(
-                                        address: address,
-                                        fallback: ""
-                                    )
-                                )))
+        DetailStackView(app: app, store: detailStack) {
+            ScrollView {
+                LazyVStack() {
+                    if let feed = store.state.entries {
+                        ForEach(feed) { entry in
+                            if let author = entry.author {
+                                StoryEntryView(
+                                    story: StoryEntry(
+                                        author: author,
+                                        entry: entry
+                                    ),
+                                    action: { address, _ in
+                                        store.send(.detailStack(.pushDetail(
+                                            MemoDetailDescription.from(
+                                                address: address,
+                                                fallback: ""
+                                            )
+                                        )))
+                                    }
+                                )
                             }
-                        )
+                        }
+                    } else {
+                        FeedPlaceholderView()
                     }
                 }
-            } else {
-                FeedPlaceholderView()
+                .background(Color.secondaryBackground)
+                
+                if let count = store.state.entries?.count,
+                   count == 0 {
+                    EmptyStateView()
+                } else {
+                    FabSpacerView()
+                }
+            }
+            .background(Color.background)
+            .refreshable {
+                app.send(.syncAll)
+            }
+            .onAppear {
+                store.send(.fetchFeed)
+            }
+            .navigationTitle("Feed")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ProfileToolbarItem(action: {
+                    store.send(.detailStack(.requestOurProfileDetail))
+                })
+                ToolbarItemGroup(placement: .principal) {
+                    HStack {
+                        Text("Feed").bold()
+                    }
+                }
+                SettingsToolbarItem(app: app)
             }
         }
     }
@@ -49,48 +89,9 @@ struct FeedView: View {
         environment: AppEnvironment.default
     )
     
-    var detailStack: ViewStore<DetailStackModel> {
-        store.viewStore(
-            get: FeedDetailStackCursor.get,
-            tag: FeedDetailStackCursor.tag
-        )
-    }
-
     var body: some View {
         ZStack {
-            DetailStackView(app: app, store: detailStack) {
-                ScrollView {
-                    FeedListView(app: app)
-                        .background(Color.secondaryBackground)
-                    
-                    if let count = store.state.entries?.count,
-                       count == 0 {
-                        EmptyStateView()
-                    } else {
-                        FabSpacerView()
-                    }
-                }
-                .background(Color.background)
-                .refreshable {
-                    app.send(.syncAll)
-                }
-                .onAppear {
-                    store.send(.fetchFeed)
-                }
-                .navigationTitle("Feed")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ProfileToolbarItem(action: {
-                        store.send(.detailStack(.requestOurProfileDetail))
-                    })
-                    ToolbarItemGroup(placement: .principal) {
-                        HStack {
-                            Text("Feed").bold()
-                        }
-                    }
-                    SettingsToolbarItem(app: app)
-                }
-            }
+           FeedNavigationView(app: app, store: store)
             .zIndex(1)
             
             if store.state.isSearchPresented {
