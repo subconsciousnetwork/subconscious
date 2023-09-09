@@ -33,18 +33,18 @@ struct AppTabView: View {
     @ObservedObject var store: Store<AppModel>
 
     var body: some View {
-        TabView(selection: Binding(
-            get: { store.state.selectedAppTab },
-            send: store.send,
-            tag: AppAction.setSelectedAppTab
-        )) {
-            if Config.default.feed {
-                FeedView(app: store)
-                    .tabItem {
-                        Label("Feed", systemImage: "newspaper")
-                    }
-                    .tag(AppTab.feed)
-            }
+        TabView(
+            selection: Binding(
+                get: { store.state.selectedAppTab },
+                send: store.send,
+                tag: AppAction.setSelectedAppTab
+            )
+        ) {
+            FeedView(app: store)
+                .tabItem {
+                    Label("Feed", systemImage: "newspaper")
+                }
+                .tag(AppTab.feed)
             
             NotebookView(app: store)
                 .tabItem {

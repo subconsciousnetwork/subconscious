@@ -23,7 +23,7 @@ struct AppView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                if Config.default.appTabs {
+                if AppDefaults.standard.appTabs {
                     AppTabView(store: store)
                 } else {
                     NotebookView(app: store)
@@ -263,6 +263,8 @@ enum AppAction: CustomLogStringConvertible {
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestFeedRoot
+    
+    case setAppTabs(Bool)
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -484,6 +486,7 @@ struct AppModel: ModelProtocol {
     )
     var inviteCodeRedemptionStatus = ResourceStatus.initial
     var gatewayProvisioningStatus = ResourceStatus.initial
+    var appTabs = false
     
     /// Default sphere identity
     ///
@@ -1015,6 +1018,11 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         case .requestFeedRoot:
             return Update(state: state)
+        case .setAppTabs(let tabs):
+            var model = state
+            AppDefaults.standard.appTabs = tabs
+            model.appTabs = tabs
+            return Update(state: model)
         }
     }
     
@@ -1037,6 +1045,7 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
+        model.appTabs = AppDefaults.standard.appTabs
         
         // Update model from app defaults
         return update(
