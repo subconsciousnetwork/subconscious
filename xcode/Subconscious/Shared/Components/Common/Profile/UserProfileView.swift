@@ -32,9 +32,7 @@ struct LoadingTabView: View {
     
     var body: some View {
         ScrollView {
-            StoryPlaceholderView(bioWidthFactor: 1.2)
-            StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
-            StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
+            FeedPlaceholderView()
         }
         .refreshable {
             await onRefresh()

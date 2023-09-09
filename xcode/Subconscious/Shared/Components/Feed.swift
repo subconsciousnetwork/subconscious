@@ -10,31 +10,32 @@ import ObservableStore
 import Combine
 import os
 
-struct ProfileToolbarItem: ToolbarContent {
-    var action: () -> Void
+struct FeedListView: View {
+    @ObservedObject var store: Store<FeedModel>
     
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button(
-                action: action
-            ) {
-                Image(systemName: "person")
-            }
-        }
-    }
-}
-
-struct SettingsToolbarItem: ToolbarContent {
-    var app: Store<AppModel>
-    
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
-            Button(
-                action: {
-                    app.send(.presentSettingsSheet(true))
+    var body: some View {
+        LazyVStack() {
+            if let feed = store.state.entries {
+                ForEach(feed) { entry in
+                    if let author = entry.author {
+                        StoryEntryView(
+                            story: StoryEntry(
+                                author: author,
+                                entry: entry
+                            ),
+                            action: { address, _ in
+                                store.send(.detailStack(.pushDetail(
+                                    MemoDetailDescription.from(
+                                        address: address,
+                                        fallback: ""
+                                    )
+                                )))
+                            }
+                        )
+                    }
                 }
-            ) {
-                Image(systemName: "gearshape")
+            } else {
+                FeedPlaceholderView()
             }
         }
     }
@@ -57,70 +58,40 @@ struct FeedView: View {
 
     var body: some View {
         ZStack {
-                DetailStackView(app: app, store: detailStack) {
-                    ScrollView {
-                        Group {
-                            LazyVStack() {
-                                if let feed = store.state.entries {
-                                    ForEach(feed) { entry in
-                                        if let author = entry.author {
-                                            StoryEntryView(
-                                                story: StoryEntry(
-                                                    author: author,
-                                                    entry: entry
-                                                ),
-                                                action: { address, _ in
-                                                    store.send(.detailStack(.pushDetail(
-                                                        MemoDetailDescription.from(
-                                                            address: address,
-                                                            fallback: ""
-                                                        )
-                                                    )))
-                                                }
-                                            )
-                                        }
-                                    }
-                                    
-                                } else {
-                                    StoryPlaceholderView(bioWidthFactor: 1.2)
-                                    StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
-                                    StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
-                                }
-                                
-                            }
-                        }
+            DetailStackView(app: app, store: detailStack) {
+                ScrollView {
+                    FeedListView(app: app)
                         .background(Color.secondaryBackground)
-                        
-                        if let count = store.state.entries?.count,
-                           count == 0 {
-                            EmptyStateView()
-                        } else {
-                            FabSpacerView()
-                        }
+                    
+                    if let count = store.state.entries?.count,
+                       count == 0 {
+                        EmptyStateView()
+                    } else {
+                        FabSpacerView()
                     }
-                    .background(Color.background)
-                    .refreshable {
-                        app.send(.syncAll)
-                    }
-                    .onAppear {
-                        store.send(.fetchFeed)
-                    }
-                    .navigationTitle("Feed")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ProfileToolbarItem(action: {
-                            store.send(.detailStack(.requestOurProfileDetail))
-                        })
-                        ToolbarItemGroup(placement: .principal) {
-                            HStack {
-                                Text("Feed").bold()
-                            }
-                        }
-                        SettingsToolbarItem(app: app)
-                    }
-                    .toolbarBackground(Color.background)
                 }
-                .zIndex(1)
+                .background(Color.background)
+                .refreshable {
+                    app.send(.syncAll)
+                }
+                .onAppear {
+                    store.send(.fetchFeed)
+                }
+                .navigationTitle("Feed")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ProfileToolbarItem(action: {
+                        store.send(.detailStack(.requestOurProfileDetail))
+                    })
+                    ToolbarItemGroup(placement: .principal) {
+                        HStack {
+                            Text("Feed").bold()
+                        }
+                    }
+                    SettingsToolbarItem(app: app)
+                }
+            }
+            .zIndex(1)
             
             if store.state.isSearchPresented {
                 SearchView(

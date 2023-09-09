@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+struct FeedPlaceholderView: View {
+    var body: some View {
+        StoryPlaceholderView(bioWidthFactor: 1.2)
+        StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
+        StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
+    }
+}
+
 /// Show a placeholder story designed for a loading state
 struct StoryPlaceholderView: View {
     @State var opacity = 1.0
