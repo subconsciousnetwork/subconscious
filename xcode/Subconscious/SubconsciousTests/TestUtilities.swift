@@ -27,6 +27,7 @@ struct TestUtilities {
     
     struct DataServiceEnvironment {
         var data: DataService
+        var database: DatabaseService
         var noosphere: NoosphereService
         var local: HeaderSubtextMemoStore
         var addressBook: AddressBookService
@@ -97,6 +98,7 @@ struct TestUtilities {
 
         return DataServiceEnvironment(
             data: data,
+            database: database,
             noosphere: noosphere,
             local: local,
             addressBook: addressBook,
