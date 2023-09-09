@@ -14,19 +14,6 @@ enum AppTab: String {
     case notebook
 }
 
-// Adapted from https://medium.com/geekculture/move-to-top-of-tab-on-selecting-same-tab-from-tab-bar-in-swiftui-a2b2cfd33872
-class AppTabState: ObservableObject {
-    @Published var tabSelected: AppTab = .feed {
-        didSet {
-            if oldValue == tabSelected {
-                popStackToNavigationRoot.toggle()
-            }
-        }
-    }
-    // This value will be toggled when a user selects the same tab twice in a row
-    @Published var popStackToNavigationRoot: Bool = false
-}
-
 /// The new tabbed view.
 /// Used when `Config.appTabs` is true.
 struct AppTabView: View {
