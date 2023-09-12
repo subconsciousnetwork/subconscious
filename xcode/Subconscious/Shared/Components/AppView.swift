@@ -82,6 +82,7 @@ struct AppView: View {
 typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, URL>
+typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -93,6 +94,7 @@ enum AppAction: CustomLogStringConvertible {
     case nicknameFormField(NicknameFormField.Action)
     case inviteCodeFormField(InviteCodeFormField.Action)
     case gatewayURLField(GatewayUrlFormField.Action)
+    case recoveryPhraseField(RecoveryPhraseFormField.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -374,6 +376,28 @@ struct GatewayUrlFormFieldCursor: CursorProtocol {
     }
 }
 
+struct RecoveryPhraseFormFieldCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = RecoveryPhraseFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryPhraseField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryPhraseField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .recoveryPhraseField(action)
+        }
+    }
+}
+
 struct NicknameFormFieldCursor: CursorProtocol {
     typealias Model = AppModel
     typealias ViewModel = NicknameFormField
@@ -529,6 +553,11 @@ struct AppModel: ModelProtocol {
     )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
+    var recoveryPhraseField = RecoveryPhraseFormField(
+        value: "",
+        validate: { value in RecoveryPhrase(value) }
+    )
+    
     var gatewayOperationInProgress: Bool {
         lastGatewaySyncStatus == .pending ||
         inviteCodeRedemptionStatus == .pending ||
@@ -592,6 +621,12 @@ struct AppModel: ModelProtocol {
             )
         case .gatewayURLField(let action):
             return GatewayUrlFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
+        case .recoveryPhraseField(let action):
+            return RecoveryPhraseFormFieldCursor.update(
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()

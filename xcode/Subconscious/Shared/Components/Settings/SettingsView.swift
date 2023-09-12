@@ -116,6 +116,9 @@ struct SettingsView: View {
                 
                 Section(
                     content: {
+                        NavigationLink("Recovery Settings") {
+                            RecoverySettingsView(app: app)
+                        }
                         NavigationLink("Developer Settings") {
                             DeveloperSettingsView(app: app)
                         }
