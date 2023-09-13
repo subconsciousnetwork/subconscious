@@ -2388,7 +2388,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.shouldPresentRecovery = presented
-        return Update(state: model)
+        return Update(state: model).animation(.default)
     }
     
     static func checkRecoveryStatus(
@@ -2401,7 +2401,7 @@ struct AppModel: ModelProtocol {
             
             let uhoh = did != nil && identity != did
             
-            return AppAction.presentRecovery(true)
+            return AppAction.presentRecovery(uhoh)
         }
         .recover { error in
             AppAction.presentRecovery(true)

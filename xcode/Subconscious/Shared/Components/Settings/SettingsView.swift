@@ -116,9 +116,14 @@ struct SettingsView: View {
                 
                 Section(
                     content: {
-                        NavigationLink("Recovery Settings") {
-                            RecoverySettingsView(app: app)
-                        }
+                        Button(
+                            action: {
+                                app.send(.presentRecovery(true))
+                            },
+                            label: {
+                                Text("Recovery Mode")
+                            }
+                        )
                         NavigationLink("Developer Settings") {
                             DeveloperSettingsView(app: app)
                         }
