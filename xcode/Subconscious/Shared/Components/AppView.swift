@@ -91,6 +91,7 @@ typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, URL>
 typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
+typealias RecoveryDidFormField = FormField<String, Did>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -103,6 +104,7 @@ enum AppAction: CustomLogStringConvertible {
     case inviteCodeFormField(InviteCodeFormField.Action)
     case gatewayURLField(GatewayUrlFormField.Action)
     case recoveryPhraseField(RecoveryPhraseFormField.Action)
+    case recoveryDidField(RecoveryDidFormField.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -409,6 +411,28 @@ struct RecoveryPhraseFormFieldCursor: CursorProtocol {
     }
 }
 
+struct RecoveryDidFormFieldCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = RecoveryDidFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryDidField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryDidField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .recoveryDidField(action)
+        }
+    }
+}
+
 struct NicknameFormFieldCursor: CursorProtocol {
     typealias Model = AppModel
     typealias ViewModel = NicknameFormField
@@ -571,6 +595,11 @@ struct AppModel: ModelProtocol {
         validate: { value in RecoveryPhrase(value) }
     )
     
+    var recoveryDidField = RecoveryDidFormField(
+        value: "",
+        validate: { value in Did(value) }
+    )
+    
     var gatewayOperationInProgress: Bool {
         lastGatewaySyncStatus == .pending ||
         inviteCodeRedemptionStatus == .pending ||
@@ -640,6 +669,12 @@ struct AppModel: ModelProtocol {
             )
         case .recoveryPhraseField(let action):
             return RecoveryPhraseFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
+        case .recoveryDidField(let action):
+            return RecoveryDidFormFieldCursor.update(
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
@@ -1372,7 +1407,11 @@ struct AppModel: ModelProtocol {
         if let sphereIdentity = sphereIdentity {
             logger.debug("Set sphere ID: \(sphereIdentity)")
         }
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .recoveryDidField(.setValue(input: sphereIdentity ?? "")),
+            environment: environment
+        )
     }
     
     /// Check for latest sphere version and store on the model

@@ -17,7 +17,20 @@ struct RecoveryView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(content: {
+                Section(
+                    content: {
+                    ValidatedFormField(
+                        placeholder: "did:key:abc",
+                        field: app.state.recoveryDidField,
+                        send: Address.forward(
+                            send: app.send,
+                            tag: AppAction.recoveryDidField
+                        ),
+                        caption: "The identity of your sphere"
+                    )
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    
                     ValidatedFormField(
                         placeholder: "http://example.com",
                         field: app.state.gatewayURLField,
