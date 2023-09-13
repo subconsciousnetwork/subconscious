@@ -54,6 +54,14 @@ struct AppView: View {
         }
         .sheet(
             isPresented: Binding(
+                get: { store.state.shouldPresentRecovery },
+                set: { v in store.send(.presentRecovery(v))}
+            )
+        ) {
+            RecoveryView(app: store)
+        }
+        .sheet(
+            isPresented: Binding(
                 get: { store.state.isSettingsSheetPresented },
                 send: store.send,
                 tag: AppAction.presentSettingsSheet
@@ -236,6 +244,9 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
+    
+    case checkRecoveryStatus
+    case presentRecovery(_ isPresented: Bool)
     
     /// Notification that a follow happened, and the sphere was resolved
     case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
@@ -476,6 +487,8 @@ struct AppModel: ModelProtocol {
     var shouldPresentFirstRun: Bool {
         !isFirstRunComplete
     }
+    
+    var shouldPresentRecovery: Bool = false
     
     /// Is database connected and migrated?
     var databaseMigrationStatus = ResourceStatus.initial
@@ -1058,6 +1071,17 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 enabled: enabled
+            )
+        case .checkRecoveryStatus:
+            return checkRecoveryStatus(
+                state: state,
+                environment: environment
+            )
+        case .presentRecovery(let presented):
+            return presentRecovery(
+                state: state,
+                environment: environment,
+                presented: presented
             )
         }
     }
@@ -1683,7 +1707,7 @@ struct AppModel: ModelProtocol {
         // For now, we just sync everything on ready.
         return update(
             state: state,
-            action: .syncAll,
+            actions: [.syncAll, .checkRecoveryStatus],
             environment: environment
         )
     }
@@ -2356,8 +2380,39 @@ struct AppModel: ModelProtocol {
         model.appTabsEnabled = enabled
         return Update(state: model)
     }
+                
+    static func presentRecovery(
+        state: Self,
+        environment: Environment,
+        presented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.shouldPresentRecovery = presented
+        return Update(state: model)
+    }
+    
+    static func checkRecoveryStatus(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            let identity = try await environment.noosphere.identity()
+            let did = try environment.database.readOurSphere()?.identity
+            
+            let uhoh = did != nil && identity != did
+            
+            return AppAction.presentRecovery(true)
+        }
+        .recover { error in
+            AppAction.presentRecovery(true)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
     
 }
+
 
 // MARK: Environment
 /// A place for constants and services
