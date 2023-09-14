@@ -23,11 +23,11 @@ extension BlockEditor {
         private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
         private var quoteContainerMargins = NSDirectionalEdgeInsets(
-             top: 0,
-             leading: AppTheme.unit4,
-             bottom: 0,
-             trailing: 0
-         )
+            top: 0,
+            leading: AppTheme.unit4,
+            bottom: 0,
+            trailing: 0
+        )
         private lazy var quoteContainer = UIView()
         private lazy var quoteBar = createQuoteBar()
         private var transcludeMargins = NSDirectionalEdgeInsets(

@@ -20,15 +20,23 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
-        private var contentViewMargins = NSDirectionalEdgeInsets(
+        private lazy var stackView = UIStackView()
+        private var listContainerMargins = NSDirectionalEdgeInsets(
             top: 0,
             leading: AppTheme.unit4,
             bottom: 0,
             trailing: 0
         )
-
+        private lazy var listContainer = UIView()
         private lazy var textView = SubtextTextView()
         private lazy var bulletView = createBulletView()
+        private var transcludeMargins = NSDirectionalEdgeInsets(
+            top: AppTheme.unit,
+            leading: AppTheme.padding,
+            bottom: AppTheme.padding,
+            trailing: AppTheme.padding
+        )
+        private lazy var transcludeListView = BlockEditor.TranscludeListView()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
             upButtonPressed: { [weak self] in
@@ -76,38 +84,66 @@ extension BlockEditor {
                 for: .vertical
             )
             
-            contentView.directionalLayoutMargins = contentViewMargins
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+            stackView.axis = .vertical
+            stackView.spacing = 0
+            stackView.distribution = .fill
+            stackView.alignment = .fill
+            stackView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            contentView.addSubview(stackView)
+            
+            listContainer.directionalLayoutMargins = listContainerMargins
+            stackView.addArrangedSubview(listContainer)
             
             textView.isScrollEnabled = false
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
             textView.inputAccessoryView = toolbar
-            contentView.addSubview(textView)
+            listContainer.addSubview(textView)
             
-            contentView.addSubview(bulletView)
+            listContainer.addSubview(bulletView)
             
-            let guide = contentView.layoutMarginsGuide
+            transcludeListView.directionalLayoutMargins = transcludeMargins
+            stackView.addArrangedSubview(transcludeListView)
+
+            let listContainerGuide = listContainer.layoutMarginsGuide
             NSLayoutConstraint.activate([
                 bulletView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
+                    equalTo: listContainer.leadingAnchor,
                     constant: AppTheme.unit4
                 ),
                 bulletView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor,
+                    equalTo: listContainer.topAnchor,
                     constant: AppTheme.unit2
                 ),
                 textView.leadingAnchor.constraint(
-                    equalTo: guide.leadingAnchor
+                    equalTo: listContainerGuide.leadingAnchor
                 ),
                 textView.trailingAnchor.constraint(
-                    equalTo: guide.trailingAnchor
+                    equalTo: listContainerGuide.trailingAnchor
                 ),
                 textView.topAnchor.constraint(
-                    equalTo: guide.topAnchor
+                    equalTo: listContainerGuide.topAnchor
                 ),
                 textView.bottomAnchor.constraint(
-                    equalTo: guide.bottomAnchor
+                    equalTo: listContainerGuide.bottomAnchor
+                ),
+                stackView.leadingAnchor.constraint(
+                    equalTo: leadingAnchor
+                ),
+                stackView.trailingAnchor.constraint(
+                    equalTo: trailingAnchor
+                ),
+                stackView.topAnchor.constraint(
+                    equalTo: topAnchor
+                ),
+                stackView.bottomAnchor.constraint(
+                    equalTo: bottomAnchor
                 )
+
             ])
         }
         
@@ -163,6 +199,9 @@ extension BlockEditor {
 
         func render(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
+            transcludeListView.render(state.transcludes)
+            // Hide view if there are no transcludes
+            transcludeListView.isHidden = state.transcludes.count < 1
             if textView.text != state.text {
                 textView.text = state.text
             }
@@ -227,7 +266,21 @@ struct BlockEditorListBlockCell_Previews: PreviewProvider {
             let view = BlockEditor.ListBlockCell()
             view.render(
                 BlockEditor.TextBlockModel(
-                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."
+                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                    transcludes: [
+                        EntryStub(
+                            address: Slashlink("@example/foo")!,
+                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/bar")!,
+                            excerpt: "Modularity is a form of hierarchy",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                    ]
                 )
             )
             return view
