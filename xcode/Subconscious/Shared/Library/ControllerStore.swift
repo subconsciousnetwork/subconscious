@@ -94,7 +94,7 @@ extension ControllerStore {
             state: Controller.Model
         ) {
             if state != state || controller !== controller {
-                logger.debug("Reset controller")
+                logger.debug("Reset controller state")
                 logger.debug("State: \(String(describing: state))")
                 self.state = state
                 connect(controller)
