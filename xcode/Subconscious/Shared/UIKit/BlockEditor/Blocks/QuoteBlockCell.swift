@@ -20,16 +20,23 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
-        private var contentViewMargins = NSDirectionalEdgeInsets(
-            top: 0,
-            leading: AppTheme.unit4,
-            bottom: 0,
-            trailing: 0
-        )
-
+        private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
-        
-        private lazy var quoteIndent = createQuoteIndent()
+        private var quoteContainerMargins = NSDirectionalEdgeInsets(
+             top: 0,
+             leading: AppTheme.unit4,
+             bottom: 0,
+             trailing: 0
+         )
+        private lazy var quoteContainer = UIView()
+        private lazy var quoteBar = createQuoteBar()
+        private var transcludeMargins = NSDirectionalEdgeInsets(
+            top: AppTheme.unit,
+            leading: AppTheme.padding,
+            bottom: AppTheme.padding,
+            trailing: AppTheme.padding
+        )
+        private lazy var transcludeListView = BlockEditor.TranscludeListView()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
             upButtonPressed: { [weak self] in
@@ -73,44 +80,67 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
             
-            contentView.directionalLayoutMargins = contentViewMargins
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+            stackView.axis = .vertical
+            contentView.addSubview(stackView)
             
-            textView.isScrollEnabled = false
-            textView.font = .preferredFont(forTextStyle: .body)
-                .italic()
+            quoteContainer.directionalLayoutMargins = quoteContainerMargins
+            quoteContainer.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            quoteContainer.setContentCompressionResistancePriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            stackView.addArrangedSubview(quoteContainer)
+            
             textView.translatesAutoresizingMaskIntoConstraints = false
+            textView.isScrollEnabled = false
             textView.delegate = self
             textView.inputAccessoryView = toolbar
-            contentView.addSubview(textView)
+            quoteContainer.addSubview(textView)
+            
+            quoteContainer.addSubview(quoteBar)
+            
+            transcludeListView.directionalLayoutMargins = transcludeMargins
+            stackView.addArrangedSubview(transcludeListView)
 
-            quoteIndent.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(quoteIndent)
-
-            let guide = contentView.layoutMarginsGuide
+            let quoteContainerGuide = quoteContainer.layoutMarginsGuide
             NSLayoutConstraint.activate([
-                quoteIndent.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit4
-                ),
-                quoteIndent.topAnchor.constraint(
-                    equalTo: contentView.topAnchor,
-                    constant: AppTheme.unit2
-                ),
-                quoteIndent.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor,
-                    constant: -1 * AppTheme.unit2
-                ),
                 textView.leadingAnchor.constraint(
-                    equalTo: guide.leadingAnchor
+                    equalTo: quoteContainerGuide.leadingAnchor
                 ),
                 textView.trailingAnchor.constraint(
-                    equalTo: guide.trailingAnchor
+                    equalTo: quoteContainerGuide.trailingAnchor
                 ),
                 textView.topAnchor.constraint(
-                    equalTo: guide.topAnchor
+                    equalTo: quoteContainerGuide.topAnchor
                 ),
                 textView.bottomAnchor.constraint(
-                    equalTo: guide.bottomAnchor
+                    equalTo: quoteContainerGuide.bottomAnchor
+                ),
+                quoteBar.leadingAnchor.constraint(
+                    equalTo: quoteContainer.leadingAnchor,
+                    constant: AppTheme.unit4
+                ),
+                quoteBar.topAnchor.constraint(
+                    equalTo: quoteContainerGuide.topAnchor
+                ),
+                quoteBar.bottomAnchor.constraint(
+                    equalTo: quoteContainerGuide.bottomAnchor
+                ),
+                stackView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor
+                ),
+                stackView.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor
+                ),
+                stackView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor
+                ),
+                stackView.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor
                 )
             ])
         }
@@ -119,9 +149,9 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        private func createQuoteIndent() -> UIView {
-            let frameView = UIView()
-            frameView.translatesAutoresizingMaskIntoConstraints = false
+        private func createQuoteBar() -> UIView {
+            let quoteFrameView = UIView()
+            quoteFrameView.translatesAutoresizingMaskIntoConstraints = false
 
             let quoteView = UIView()
             quoteView.translatesAutoresizingMaskIntoConstraints = false
@@ -130,30 +160,35 @@ extension BlockEditor {
                 .fittingSizeLevel,
                 for: .vertical
             )
-            frameView.addSubview(quoteView)
+            quoteFrameView.addSubview(quoteView)
             
             NSLayoutConstraint.activate([
-                frameView.widthAnchor.constraint(
-                    equalToConstant: 8
+                quoteFrameView.widthAnchor.constraint(
+                    equalToConstant: AppTheme.unit2
                 ),
                 quoteView.widthAnchor.constraint(
                     equalToConstant: 2
                 ),
                 quoteView.centerXAnchor.constraint(
-                    equalTo: frameView.centerXAnchor
+                    equalTo: quoteFrameView.centerXAnchor
                 ),
                 quoteView.topAnchor.constraint(
-                    equalTo: frameView.topAnchor
+                    equalTo: quoteFrameView.topAnchor,
+                    constant: AppTheme.unit2
                 ),
                 quoteView.bottomAnchor.constraint(
-                    equalTo: frameView.bottomAnchor
+                    equalTo: quoteFrameView.bottomAnchor,
+                    constant: -1 * AppTheme.unit2
                 )
             ])
-            return frameView
+            return quoteFrameView
         }
 
         func render(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
+            transcludeListView.render(state.transcludes)
+            // Hide view if there are no transcludes
+            transcludeListView.isHidden = state.transcludes.count < 1
             if textView.text != state.text {
                 textView.text = state.text
             }
@@ -218,7 +253,21 @@ struct BlockEditorQuoteBlockCell_Previews: PreviewProvider {
             let view = BlockEditor.QuoteBlockCell()
             view.render(
                 BlockEditor.TextBlockModel(
-                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."
+                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                    transcludes: [
+                        EntryStub(
+                            address: Slashlink("@example/foo")!,
+                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/bar")!,
+                            excerpt: "Modularity is a form of hierarchy",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                    ]
                 )
             )
             return view
