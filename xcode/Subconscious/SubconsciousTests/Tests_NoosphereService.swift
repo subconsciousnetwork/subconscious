@@ -122,4 +122,101 @@ final class Tests_NoosphereService: XCTestCase {
         let versionZ = try await noosphere.version()
         XCTAssertEqual(versionC, versionZ)
     }
+    
+    func testPathologicalDisposalOfNoosphere() async throws {
+        let base = UUID()
+        
+        let globalStorageURL = try Self.createTmpDir("\(base)/noosphere")
+        let sphereStorageURL = try Self.createTmpDir("\(base)/sphere")
+        
+        func innerA() async throws -> SphereReceipt {
+            let noosphere = NoosphereService(
+                globalStorageURL: globalStorageURL,
+                sphereStorageURL: sphereStorageURL
+            )
+            
+            let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
+            await noosphere.resetSphere(receipt.identity)
+            
+            let versionA = try await noosphere.version()
+            
+            return receipt
+        }
+        
+        func innerB(receipt: SphereReceipt) async throws {
+            let noosphere = NoosphereService(
+                globalStorageURL: globalStorageURL,
+                sphereStorageURL: sphereStorageURL
+            )
+            
+            await noosphere.resetSphere(receipt.identity)
+            
+            let taskA = Task {
+                for _ in 0..<1000 {
+                    let body = try "Test content".toData().unwrap()
+                    let slug = Slug.dummyData()
+                    try await noosphere.write(
+                        slug: slug,
+                        contentType: "text/subtext",
+                        additionalHeaders: [],
+                        body: body
+                    )
+                    
+                    let body2 = try "Test content 2".toData().unwrap()
+                    try await noosphere.write(
+                        slug: slug,
+                        contentType: "text/subtext",
+                        additionalHeaders: [],
+                        body: body2
+                    )
+                    
+                    let _ = try await noosphere.save()
+                    
+                    try await noosphere.remove(slug: slug)
+                    
+                    let _ = try await noosphere.save()
+                }
+            }
+            
+            let taskB = Task {
+                for _ in 0..<1000 {
+                    let body = try "Test content".toData().unwrap()
+                    let slug = Slug.dummyData()
+                    try await noosphere.write(
+                        slug: slug,
+                        contentType: "text/subtext",
+                        additionalHeaders: [],
+                        body: body
+                    )
+                    
+                    let _ = try await noosphere.save()
+                    
+                    try await noosphere.remove(slug: slug)
+                    
+                    let _ = try await noosphere.save()
+                    
+                    Task {
+                        let _ = try await noosphere.sync()
+                    }
+                }
+            }
+            
+            taskA.cancel()
+            taskB.cancel()
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+        }
+        
+        let receipt = try await innerA()
+        try await innerB(receipt: receipt)
+        try await innerB(receipt: receipt)
+        
+        let noosphere = NoosphereService(
+            globalStorageURL: globalStorageURL,
+            sphereStorageURL: sphereStorageURL
+        )
+        
+        await noosphere.resetSphere(receipt.identity)
+        let slugs = try await noosphere.list()
+        XCTAssert(slugs.count <= 2)
+    }
 }
