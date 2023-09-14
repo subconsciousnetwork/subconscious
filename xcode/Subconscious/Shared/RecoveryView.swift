@@ -11,6 +11,42 @@ import ObservableStore
 import Combine
 import os
 
+struct AttemptRecoveryLabel: View {
+    var status: ResourceStatus
+    
+    var label: String {
+        switch (status) {
+        case .initial:
+            return "Attempt Recovery"
+        case .pending:
+            return "Recovering..."
+        case .failed:
+            return "Recovery Failed"
+        case .succeeded:
+            return "Recovery Complete"
+        }
+    }
+    
+    var color: Color {
+        switch status {
+        case .failed:
+            return .red
+        default:
+            return .accentColor
+        }
+    }
+
+    var body: some View {
+        Label(title: {
+            Text(label)
+        }, icon: {
+            ResourceSyncBadge(status: status)
+        })
+        .foregroundColor(color)
+    }
+}
+
+
 struct RecoveryView: View {
     @ObservedObject var app: Store<AppModel>
     
@@ -61,12 +97,13 @@ struct RecoveryView: View {
                     )
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                        
                     Button(
                         action: {
-                            
+                            app.send(.requestRecovery)
                         },
                         label: {
-                            Text("Attempt Recovery")
+                            AttemptRecoveryLabel(status: app.state.recoveryStatus)
                         }
                     )
                 }, header: {
