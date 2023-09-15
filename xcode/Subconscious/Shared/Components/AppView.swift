@@ -486,7 +486,7 @@ struct AppModel: ModelProtocol {
     )
     var inviteCodeRedemptionStatus = ResourceStatus.initial
     var gatewayProvisioningStatus = ResourceStatus.initial
-    var appTabs = false
+    var appTabsEnabled = false
     
     /// Default sphere identity
     ///
@@ -1018,11 +1018,12 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         case .requestFeedRoot:
             return Update(state: state)
-        case .setAppTabsEnabled(let tabs):
-            var model = state
-            AppDefaults.standard.appTabs = tabs
-            model.appTabs = tabs
-            return Update(state: model)
+        case .setAppTabsEnabled(let enabled):
+            return setAppTabsEnabled(
+                state: state,
+                environment: environment,
+                enabled: enabled
+            )
         }
     }
     
@@ -1045,7 +1046,7 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
-        model.appTabs = AppDefaults.standard.appTabs
+        model.appTabsEnabled = AppDefaults.standard.appTabs
         
         // Update model from app defaults
         return update(
@@ -2307,6 +2308,17 @@ struct AppModel: ModelProtocol {
         
         var model = state
         model.selectedAppTab = tab
+        return Update(state: model)
+    }
+    
+    static func setAppTabsEnabled(
+        state: Self,
+        environment: Environment,
+        enabled: Bool
+    ) -> Update<Self> {
+        var model = state
+        AppDefaults.standard.appTabs = enabled
+        model.appTabsEnabled = enabled
         return Update(state: model)
     }
     

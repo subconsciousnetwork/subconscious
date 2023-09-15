@@ -25,7 +25,7 @@ struct DeveloperSettingsView: View {
             Toggle(
                 "Show App Tabs",
                 isOn: Binding(
-                    get: { app.state.appTabs },
+                    get: { app.state.appTabsEnabled },
                     send: app.send,
                     tag: AppAction.setAppTabsEnabled
                 )
