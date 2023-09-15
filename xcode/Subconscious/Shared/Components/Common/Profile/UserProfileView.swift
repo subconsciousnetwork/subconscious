@@ -25,49 +25,28 @@ struct ProfileStatisticView: View {
     }
 }
 
-struct LoadingTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onRefresh: () async -> Void
-    
-    var body: some View {
-        ScrollView {
-            FeedPlaceholderView()
-        }
-        .refreshable {
-            await onRefresh()
-        }
-    }
-}
-
 struct RecentTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
     var onNavigateToNote: (Slashlink) -> Void
-    var onRefresh: () async -> Void
     
     var body: some View {
-        ScrollView {
-            if let user = state.user {
-                ForEach(state.recentEntries) { entry in
-                    StoryEntryView(
-                        story: StoryEntry(
-                            author: user,
-                            entry: entry
-                        ),
-                        action: { address, _ in onNavigateToNote(address) }
-                    )
-                }
-            }
-            
-            if state.recentEntries.count == 0 {
-                EmptyStateView()
-            } else {
-                FabSpacerView()
+        if let user = state.user {
+            ForEach(state.recentEntries) { entry in
+                StoryEntryView(
+                    story: StoryEntry(
+                        author: user,
+                        entry: entry
+                    ),
+                    action: { address, _ in onNavigateToNote(address) }
+                )
             }
         }
-        .refreshable {
-            await onRefresh()
+        
+        if state.recentEntries.count == 0 {
+            EmptyStateView()
+        } else {
+            FabSpacerView()
         }
     }
 }
@@ -77,33 +56,27 @@ struct FollowTabView: View {
     var send: (UserProfileDetailAction) -> Void
     var onNavigateToUser: (UserProfile) -> Void
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
-    var onRefresh: () async -> Void
     
     var body: some View {
-        ScrollView {
-            ForEach(state.following) { follow in
-                StoryUserView(
-                    story: follow,
-                    action: { _ in onNavigateToUser(follow.user) },
-                    profileAction: onProfileAction,
-                    onRefreshUser: {
-                        guard let petname = follow.user.address.toPetname() else {
-                            return
-                        }
-                        
-                        send(.requestWaitForFollowedUserResolution(petname))
+        ForEach(state.following) { follow in
+            StoryUserView(
+                story: follow,
+                action: { _ in onNavigateToUser(follow.user) },
+                profileAction: onProfileAction,
+                onRefreshUser: {
+                    guard let petname = follow.user.address.toPetname() else {
+                        return
                     }
-                )
-            }
-            
-            if state.following.count == 0 {
-                EmptyStateView()
-            } else {
-                FabSpacerView()
-            }
+                    
+                    send(.requestWaitForFollowedUserResolution(petname))
+                }
+            )
         }
-        .refreshable {
-            await onRefresh()
+        
+        if state.following.count == 0 {
+            EmptyStateView()
+        } else {
+            FabSpacerView()
         }
     }
 }
@@ -125,14 +98,10 @@ struct UserProfileView: View {
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void
     
-    func columnLoading(label: String) -> TabbedColumnItem<LoadingTabView> {
+    func columnLoading(label: String) -> TabbedColumnItem<FeedPlaceholderView> {
         TabbedColumnItem(
             label: label,
-            view: LoadingTabView(
-                state: state,
-                send: send,
-                onRefresh: onRefresh
-            )
+            view: FeedPlaceholderView()
         )
     }
     
@@ -142,8 +111,7 @@ struct UserProfileView: View {
             view: RecentTabView(
                 state: state,
                 send: send,
-                onNavigateToNote: onNavigateToNote,
-                onRefresh: onRefresh
+                onNavigateToNote: onNavigateToNote
             )
         )
     }
@@ -155,98 +123,105 @@ struct UserProfileView: View {
                 state: state,
                 send: send,
                 onNavigateToUser: onNavigateToUser,
-                onProfileAction: onProfileAction,
-                onRefresh: onRefresh
+                onProfileAction: onProfileAction
             )
         )
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let user = state.user,
-               state.loadingState != .notFound {
-                UserProfileHeaderView(
-                    user: user,
-                    statistics: state.statistics,
-                    action: { action in
-                        onProfileAction(user, action)
-                    },
-                    hideActionButton: state.loadingState != .loaded,
-                    onTapStatistics: {
-                        send(
-                            .tabIndexSelected(
-                                UserProfileDetailModel.followingTabIndex
-                            )
-                        )
-                    }
-                )
-                .padding(
-                    .init([.top, .horizontal]),
-                    AppTheme.padding
-                )
-            }
-            
-            switch state.loadingState {
-            case .loading:
-                TabbedTwoColumnView(
-                    columnA: columnLoading(label: "Notes"),
-                    columnB: columnLoading(label: "Following"),
-                    selectedColumnIndex: state.currentTabIndex,
-                    changeColumn: { index in
-                        send(.tabIndexSelected(index))
-                    }
-                )
-                .edgesIgnoringSafeArea([.bottom])
-            case .loaded:
-                TabbedTwoColumnView(
-                    columnA: columnRecent,
-                    columnB: columnFollowing,
-                    selectedColumnIndex: state.currentTabIndex,
-                    changeColumn: { index in
-                        send(.tabIndexSelected(index))
-                    }
-                )
-                .edgesIgnoringSafeArea([.bottom])
-            case .notFound:
-                NotFoundView()
-                    // extra padding to visually center the group
-                    .padding(.bottom, AppTheme.unit * 24)
-            }
-        }
-        .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(content: {
-            if let address = state.address {
-                DetailToolbarContent(
-                    address: address,
-                    defaultAudience: .public,
-                    onTapOmnibox: {
-                        send(.presentMetaSheet(true))
-                    },
-                    status: state.loadingState
-                )
-                if let user = state.user,
-                   user.category == .ourself {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(
-                            action: {
-                                send(.presentFollowNewUserFormSheet(true))
+        GeometryReader() { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if let user = state.user,
+                       state.loadingState != .notFound {
+                        UserProfileHeaderView(
+                            user: user,
+                            statistics: state.statistics,
+                            action: { action in
+                                onProfileAction(user, action)
                             },
-                            label: {
-                                Image(systemName: "person.badge.plus")
+                            hideActionButton: state.loadingState != .loaded,
+                            onTapStatistics: {
+                                send(
+                                    .tabIndexSelected(
+                                        UserProfileDetailModel.followingTabIndex
+                                    )
+                                )
                             }
                         )
+                        .padding(
+                            .init([.top, .horizontal]),
+                            AppTheme.padding
+                        )
+                    }
+                    
+                    switch state.loadingState {
+                    case .loading:
+                        TabbedTwoColumnView(
+                            columnA: columnLoading(label: "Notes"),
+                            columnB: columnLoading(label: "Following"),
+                            selectedColumnIndex: state.currentTabIndex,
+                            changeColumn: { index in
+                                send(.tabIndexSelected(index))
+                            }
+                        )
+                        .edgesIgnoringSafeArea([.bottom])
+                    case .loaded:
+                        TabbedTwoColumnView(
+                            columnA: columnRecent,
+                            columnB: columnFollowing,
+                            selectedColumnIndex: state.currentTabIndex,
+                            changeColumn: { index in
+                                send(.tabIndexSelected(index))
+                            }
+                        )
+                        .edgesIgnoringSafeArea([.bottom])
+                    case .notFound:
+                        NotFoundView()
+                        // extra padding to visually center the group
+                            .padding(.bottom, AppTheme.unit * 24)
                     }
                 }
-            } else {
-                DetailToolbarContent(
-                    defaultAudience: .public,
-                    onTapOmnibox: {
-                        send(.presentMetaSheet(true))
-                    }
-                )
             }
-        })
+            .frame(minHeight: geo.size.height)
+            .refreshable {
+                await onRefresh()
+            }
+            .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(content: {
+                if let address = state.address {
+                    DetailToolbarContent(
+                        address: address,
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        },
+                        status: state.loadingState
+                    )
+                    if let user = state.user,
+                       user.category == .ourself {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button(
+                                action: {
+                                    send(.presentFollowNewUserFormSheet(true))
+                                },
+                                label: {
+                                    Image(systemName: "person.badge.plus")
+                                }
+                            )
+                        }
+                    }
+                } else {
+                    DetailToolbarContent(
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        }
+                    )
+                }
+            })
+        }
         .metaSheet(state: state, send: send)
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
