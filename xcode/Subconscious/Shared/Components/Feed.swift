@@ -67,15 +67,18 @@ struct FeedNavigationView: View {
             .navigationTitle("Feed")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ProfileToolbarItem(action: {
-                    store.send(.detailStack(.requestOurProfileDetail))
-                })
+                MainToolbar(
+                    app: app,
+                    profileAction: {
+                        store.send(.detailStack(.requestOurProfileDetail))
+                    }
+                )
+                
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
                         Text("Feed").bold()
                     }
                 }
-                SettingsToolbarItem(app: app)
             }
         }
     }

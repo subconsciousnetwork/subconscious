@@ -9,15 +9,26 @@ import Foundation
 import SwiftUI
 import ObservableStore
 
-struct ProfileToolbarItem: ToolbarContent {
-    var action: () -> Void
+struct MainToolbar: ToolbarContent {
+    var app: Store<AppModel>
+    var profileAction: () -> Void
     
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button(
-                action: action
+                action: profileAction
             ) {
                 Image(systemName: "person")
+            }
+        }
+        
+        ToolbarItem(placement: .primaryAction) {
+            Button(
+                action: {
+                    app.send(.presentSettingsSheet(true))
+                }
+            ) {
+                Image(systemName: "gearshape")
             }
         }
     }

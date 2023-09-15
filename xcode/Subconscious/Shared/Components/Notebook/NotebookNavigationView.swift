@@ -63,16 +63,19 @@ struct NotebookNavigationView: View {
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ProfileToolbarItem(action: {
-                    store.send(.detailStack(.requestOurProfileDetail))
-                })
+                MainToolbar(
+                    app: app,
+                    profileAction: {
+                        store.send(.detailStack(.requestOurProfileDetail))
+                    }
+                )
+                
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
                         Text("Notes").bold()
                         CountChip(count: store.state.entryCount)
                     }
                 }
-                SettingsToolbarItem(app: app)
             }
         }
     }
