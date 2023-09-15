@@ -27,7 +27,7 @@ struct DeveloperSettingsView: View {
                 isOn: Binding(
                     get: { app.state.appTabs },
                     send: app.send,
-                    tag: AppAction.setAppTabs
+                    tag: AppAction.setAppTabsEnabled
                 )
             )
             

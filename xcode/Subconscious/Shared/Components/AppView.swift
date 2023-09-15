@@ -264,7 +264,7 @@ enum AppAction: CustomLogStringConvertible {
     case requestNotebookRoot
     case requestFeedRoot
     
-    case setAppTabs(Bool)
+    case setAppTabsEnabled(Bool)
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -1018,7 +1018,7 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         case .requestFeedRoot:
             return Update(state: state)
-        case .setAppTabs(let tabs):
+        case .setAppTabsEnabled(let tabs):
             var model = state
             AppDefaults.standard.appTabs = tabs
             model.appTabs = tabs
