@@ -208,12 +208,12 @@ struct FeedDetailStackCursor: CursorProtocol {
     typealias ViewModel = DetailStackModel
 
     static func get(state: Model) -> ViewModel {
-        state.detail
+        state.detailStack
     }
 
     static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
-        model.detail = inner
+        model.detailStack = inner
         return model
     }
 
@@ -232,7 +232,7 @@ struct FeedModel: ModelProtocol {
         placeholder: "Search or create..."
     )
     /// Entry detail
-    var detail = DetailStackModel()
+    var detailStack = DetailStackModel()
     var entries: [EntryStub]? = nil
 
     static let logger = Logger(
