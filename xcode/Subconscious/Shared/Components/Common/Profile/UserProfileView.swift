@@ -129,74 +129,67 @@ struct UserProfileView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                if let user = state.user,
-                   state.loadingState != .notFound {
-                    UserProfileHeaderView(
-                        user: user,
-                        statistics: state.statistics,
-                        action: { action in
-                            onProfileAction(user, action)
-                        },
-                        hideActionButton: state.loadingState != .loaded,
-                        onTapStatistics: {
-                            send(
-                                .tabIndexSelected(
-                                    UserProfileDetailModel.followingTabIndex
+        GeometryReader() { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if let user = state.user,
+                       state.loadingState != .notFound {
+                        UserProfileHeaderView(
+                            user: user,
+                            statistics: state.statistics,
+                            action: { action in
+                                onProfileAction(user, action)
+                            },
+                            hideActionButton: state.loadingState != .loaded,
+                            onTapStatistics: {
+                                send(
+                                    .tabIndexSelected(
+                                        UserProfileDetailModel.followingTabIndex
+                                    )
                                 )
-                            )
-                        }
-                    )
-                    .padding(
-                        .init([.top, .horizontal]),
-                        AppTheme.padding
-                    )
-                }
-                
-                switch state.loadingState {
-                case .loading:
-                    TabbedTwoColumnView(
-                        columnA: columnLoading(label: "Notes"),
-                        columnB: columnLoading(label: "Following"),
-                        selectedColumnIndex: state.currentTabIndex,
-                        changeColumn: { index in
-                            send(.tabIndexSelected(index))
-                        }
-                    )
-                    .edgesIgnoringSafeArea([.bottom])
-                case .loaded:
-                    TabbedTwoColumnView(
-                        columnA: columnRecent,
-                        columnB: columnFollowing,
-                        selectedColumnIndex: state.currentTabIndex,
-                        changeColumn: { index in
-                            send(.tabIndexSelected(index))
-                        }
-                    )
-                    .edgesIgnoringSafeArea([.bottom])
-                case .notFound:
-                    NotFoundView()
-                    // extra padding to visually center the group
-                        .padding(.bottom, AppTheme.unit * 24)
+                            }
+                        )
+                        .padding(
+                            .init([.top, .horizontal]),
+                            AppTheme.padding
+                        )
+                    }
+                    
+                    switch state.loadingState {
+                    case .loading:
+                        TabbedTwoColumnView(
+                            columnA: columnLoading(label: "Notes"),
+                            columnB: columnLoading(label: "Following"),
+                            selectedColumnIndex: state.currentTabIndex,
+                            changeColumn: { index in
+                                send(.tabIndexSelected(index))
+                            }
+                        )
+                        .edgesIgnoringSafeArea([.bottom])
+                    case .loaded:
+                        TabbedTwoColumnView(
+                            columnA: columnRecent,
+                            columnB: columnFollowing,
+                            selectedColumnIndex: state.currentTabIndex,
+                            changeColumn: { index in
+                                send(.tabIndexSelected(index))
+                            }
+                        )
+                        .edgesIgnoringSafeArea([.bottom])
+                    case .notFound:
+                        NotFoundView()
+                        // extra padding to visually center the group
+                            .padding(.bottom, AppTheme.unit * 24)
+                    }
                 }
             }
-        }
-        .refreshable {
-            await onRefresh()
-        }
-        .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(content: {
-            if let address = state.address {
-                DetailToolbarContent(
-                    address: address,
-                    defaultAudience: .public,
-                    onTapOmnibox: {
-                        send(.presentMetaSheet(true))
-                    },
-                    status: state.loadingState
-                )
+            .frame(minHeight: geo.size.height)
+            .refreshable {
+                await onRefresh()
+            }
+            .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(content: {
                 if let user = state.user,
                    user.category == .ourself {
                     ToolbarItem(placement: .confirmationAction) {
@@ -210,15 +203,26 @@ struct UserProfileView: View {
                         )
                     }
                 }
-            } else {
-                DetailToolbarContent(
-                    defaultAudience: .public,
-                    onTapOmnibox: {
-                        send(.presentMetaSheet(true))
-                    }
-                )
-            }
-        })
+                
+                if let address = state.address {
+                    DetailToolbarContent(
+                        address: address,
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        },
+                        status: state.loadingState
+                    )
+                } else {
+                    DetailToolbarContent(
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        }
+                    )
+                }
+            })
+        }
         .metaSheet(state: state, send: send)
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
