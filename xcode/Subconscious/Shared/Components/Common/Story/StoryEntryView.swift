@@ -22,6 +22,9 @@ struct StoryEntryView: View {
             },
             label: {
                 VStack(alignment: .leading, spacing: 0) {
+                    
+                    Divider()
+                    
                     HStack(alignment: .center, spacing: AppTheme.unit) {
                         BylineSmView(
                             pfp: story.author.pfp,
@@ -50,6 +53,8 @@ struct StoryEntryView: View {
                     
                     ExcerptView(excerpt: story.entry.excerpt)
                         .padding(AppTheme.tightPadding)
+                    
+                    Divider()
                 }
                 .background(Color.background)
                 .contentShape(Rectangle())

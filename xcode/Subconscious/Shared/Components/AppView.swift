@@ -23,7 +23,7 @@ struct AppView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                if Config.default.appTabs {
+                if AppDefaults.standard.appTabs {
                     AppTabView(store: store)
                 } else {
                     NotebookView(app: store)
@@ -259,6 +259,12 @@ enum AppAction: CustomLogStringConvertible {
     case failDeleteMemo(String)
     /// Deletion attempt succeeded
     case succeedDeleteMemo(Slashlink)
+    
+    case setSelectedAppTab(AppTab)
+    case requestNotebookRoot
+    case requestFeedRoot
+    
+    case setAppTabsEnabled(Bool)
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -480,6 +486,7 @@ struct AppModel: ModelProtocol {
     )
     var inviteCodeRedemptionStatus = ResourceStatus.initial
     var gatewayProvisioningStatus = ResourceStatus.initial
+    var appTabsEnabled = false
     
     /// Default sphere identity
     ///
@@ -537,6 +544,8 @@ struct AppModel: ModelProtocol {
     var isReadyForInteraction: Bool {
         self.databaseMigrationStatus == .succeeded
     }
+    
+    var selectedAppTab: AppTab = .feed
     
     // Logger for actions
     static let logger = Logger(
@@ -999,6 +1008,22 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
+        case .setSelectedAppTab(let tab):
+            return setSelectedAppTab(
+                state: state,
+                environment: environment,
+                tab: tab
+            )
+        case .requestNotebookRoot:
+            return Update(state: state)
+        case .requestFeedRoot:
+            return Update(state: state)
+        case .setAppTabsEnabled(let enabled):
+            return setAppTabsEnabled(
+                state: state,
+                environment: environment,
+                enabled: enabled
+            )
         }
     }
     
@@ -1021,6 +1046,7 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
+        model.appTabsEnabled = AppDefaults.standard.appTabs
         
         // Update model from app defaults
         return update(
@@ -2252,6 +2278,50 @@ struct AppModel: ModelProtocol {
         )
         return Update(state: state)
     }
+    
+    static func setSelectedAppTab(
+        state: Self,
+        environment: Environment,
+        tab: AppTab
+    ) -> Update<Self> {
+        
+        // Double tap on the same tab?
+        if tab == state.selectedAppTab {
+            let action = Func.run {
+                switch (tab) {
+                case .feed:
+                    return AppAction.requestFeedRoot
+                case .notebook:
+                    return AppAction.requestNotebookRoot
+                }
+            }
+            
+            let fx: Fx<AppAction> = Future.detached {
+                return action
+            }
+            .eraseToAnyPublisher()
+            
+            // MUST be dispatched as an fx so that it will appear on the `store.actions` stream
+            // Which is consumed and replayed on the FeedStore and NotebookStore etc.
+            return Update(state: state, fx: fx)
+        }
+        
+        var model = state
+        model.selectedAppTab = tab
+        return Update(state: model)
+    }
+    
+    static func setAppTabsEnabled(
+        state: Self,
+        environment: Environment,
+        enabled: Bool
+    ) -> Update<Self> {
+        var model = state
+        AppDefaults.standard.appTabs = enabled
+        model.appTabsEnabled = enabled
+        return Update(state: model)
+    }
+    
 }
 
 // MARK: Environment

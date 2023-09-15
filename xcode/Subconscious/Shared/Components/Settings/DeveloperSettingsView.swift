@@ -21,6 +21,16 @@ struct DeveloperSettingsView: View {
                     Text("Reset First Run Experience")
                 }
             )
+            
+            Toggle(
+                "Show App Tabs",
+                isOn: Binding(
+                    get: { app.state.appTabsEnabled },
+                    send: app.send,
+                    tag: AppAction.setAppTabsEnabled
+                )
+            )
+            
         }
         .navigationTitle("Developer")
     }

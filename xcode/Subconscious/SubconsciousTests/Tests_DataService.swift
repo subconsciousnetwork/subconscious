@@ -360,6 +360,64 @@ final class Tests_DataService: XCTestCase {
         XCTAssertFalse(list.contains(where: { entry in entry.address.slug.isHidden }))
     }
     
+    func testListFeed() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let memoA = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Test content"
+        )
+        
+        let addressA = Slashlink("/a")!
+        try await environment.data.writeMemo(address: addressA, memo: memoA)
+        
+        let memoB = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "More content"
+        )
+        
+        let addressB = Slashlink("/another/slug")!
+        try await environment.data.writeMemo(address: addressB, memo: memoB)
+        
+        let memoC = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Even more content"
+        )
+        
+        let addressC = Slashlink.ourProfile
+        try await environment.data.writeMemo(address: addressC, memo: memoC)
+        
+        let thirdParty = Did.dummyData()
+        try await environment.addressBook.followUser(did: thirdParty, petname: Petname("bob")!)
+        try environment.database.writeMemo(MemoRecord(did: thirdParty, petname: Petname("bob")!, slug: Slug("hello-world")!, memo: Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Hello world!"
+        )))
+
+        let list = try await environment.data.listFeed()
+        
+        XCTAssertEqual(list.count, 3)
+        XCTAssertEqual(list.filter({ entry in entry.author!.address.isOurProfile }).count, 2)
+        XCTAssertFalse(list.contains(where: { entry in entry.address.slug.isHidden }))
+    }
+    
     func testListRecentMemosWhenNoosphereOff() async throws {
         let tmp = try TestUtilities.createTmpDir()
 

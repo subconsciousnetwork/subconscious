@@ -38,6 +38,7 @@ struct NotebookView: View {
                 store: store
             )
             .zIndex(1)
+            
             if store.state.isSearchPresented {
                 SearchView(
                     state: store.state.search,
@@ -149,6 +150,8 @@ enum NotebookAction {
     /// Search suggestion was activated
     case activatedSuggestion(Suggestion)
     
+    case requestNotebookRoot
+    
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
@@ -185,42 +188,6 @@ enum NotebookAction {
         autofocus: Bool
     ) -> Self {
         .detailStack(.pushRandomDetail(autofocus: autofocus))
-    }
-}
-
-extension NotebookAction {
-    /// Generate a detail request from a suggestion
-    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
-        switch suggestion {
-        case let .memo(address, fallback):
-            // Determine whether content is ours or theirs, push
-            // corresponding memo detail type.
-            return .pushDetail(
-                MemoDetailDescription.from(
-                    address: address,
-                    fallback: fallback,
-                    defaultAudience: .local
-                )
-            )
-        case let .createLocalMemo(slug, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: slug?.toLocalSlashlink(),
-                    fallback: fallback,
-                    defaultAudience: .local
-                )
-            )
-        case let .createPublicMemo(slug, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: slug?.toSlashlink(),
-                    fallback: fallback,
-                    defaultAudience: .public
-                )
-            )
-        case .random:
-            return .pushRandomDetail(autofocus: false)
-        }
     }
 }
 
@@ -273,6 +240,8 @@ extension NotebookAction {
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
             return .failDeleteMemo(error)
+        case .requestNotebookRoot:
+            return .requestNotebookRoot
         default:
             return nil
         }
@@ -338,6 +307,8 @@ struct NotebookModel: ModelProtocol {
     
     ///  Recent entries (nil means "hasn't been loaded from DB")
     var recent: [EntryStub]? = nil
+    
+    var feed: [EntryStub]? = nil
     
     //  Note deletion action sheet
     /// Delete confirmation action sheet
@@ -511,9 +482,14 @@ struct NotebookModel: ModelProtocol {
                 query: query
             )
         case let .activatedSuggestion(suggestion):
-            return update(
+            return NotebookDetailStackCursor.update(
                 state: state,
-                action: NotebookAction.fromSuggestion(suggestion),
+                action: DetailStackAction.fromSuggestion(suggestion),
+                environment: environment
+            )
+        case .requestNotebookRoot:
+            return requestNotebookRoot(
+                state: state,
                 environment: environment
             )
         }
@@ -882,5 +858,16 @@ struct NotebookModel: ModelProtocol {
         .eraseToAnyPublisher()
         
         return update.mergeFx(fx)
+    }
+    
+    static func requestNotebookRoot(
+        state: NotebookModel,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel> {
+        return NotebookDetailStackCursor.update(
+            state: state,
+            action: .setDetails([]),
+            environment: environment
+        )
     }
 }
