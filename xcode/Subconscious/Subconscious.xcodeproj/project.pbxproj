@@ -161,6 +161,7 @@
 		B831BDB92825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
 		B831BDBA2825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
 		B831BDBC2825A4E700C4CE92 /* Tests_Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */; };
+		B834C0432AB4D40200705F2F /* BlockEditorBlockSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B834C0422AB4D40200705F2F /* BlockEditorBlockSelectView.swift */; };
 		B839029F28CA246A007A3A3F /* CustomLogStringConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */; };
 		B83B19A32A005C6B007657D9 /* Did+SubconsciousLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A22A005C6B007657D9 /* Did+SubconsciousLocal.swift */; };
 		B83B19A52A015D93007657D9 /* Tests_Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A42A015D93007657D9 /* Tests_Did.swift */; };
@@ -618,6 +619,7 @@
 		B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Tape.swift; sourceTree = "<group>"; };
 		B831BDB82825A28A00C4CE92 /* Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
 		B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Header.swift; sourceTree = "<group>"; };
+		B834C0422AB4D40200705F2F /* BlockEditorBlockSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorBlockSelectView.swift; sourceTree = "<group>"; };
 		B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogStringConvertible.swift; sourceTree = "<group>"; };
 		B83B19A22A005C6B007657D9 /* Did+SubconsciousLocal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Did+SubconsciousLocal.swift"; sourceTree = "<group>"; };
 		B83B19A42A015D93007657D9 /* Tests_Did.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tests_Did.swift; sourceTree = "<group>"; };
@@ -1356,6 +1358,7 @@
 			isa = PBXGroup;
 			children = (
 				B8E0BBA42AAB90AD00FBCB57 /* Appendix */,
+				B834C0422AB4D40200705F2F /* BlockEditorBlockSelectView.swift */,
 				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
 				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
 				B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */,
@@ -2044,6 +2047,7 @@
 				B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */,
 				B8A8F7942AA7B81200B21EEF /* BlockEditorSlashlinkDisplayView.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
+				B834C0432AB4D40200705F2F /* BlockEditorBlockSelectView.swift in Sources */,
 				B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */,
 				B8B3EE7D297B1A1000779B7F /* ViewDebugUtilities.swift in Sources */,
 				B86DD56E2AA0D06500E1DEA5 /* BlockEditorTranscludeView.swift in Sources */,

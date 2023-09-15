@@ -20,6 +20,7 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
+        private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
         private var transcludeMargins = NSDirectionalEdgeInsets(
@@ -97,7 +98,24 @@ extension BlockEditor {
             transcludeListView.directionalLayoutMargins = transcludeMargins
             stackView.addArrangedSubview(transcludeListView)
             
+            selectView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(selectView)
+            
             NSLayoutConstraint.activate([
+                selectView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: AppTheme.unit
+                ),
+                selectView.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor,
+                    constant: -1 * AppTheme.unit
+                ),
+                selectView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor
+                ),
+                selectView.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor
+                ),
                 stackView.leadingAnchor.constraint(
                     equalTo: contentView.leadingAnchor
                 ),
@@ -133,6 +151,10 @@ extension BlockEditor {
                 textView.selectedRange = state.selection
             }
             textView.setFirstResponder(state.isFocused)
+            
+            // Handle select mode
+            selectView.isHidden = !state.isBlockSelected
+            textView.isEditable = state.isBlockSelectMode
         }
         
         func textView(
@@ -191,6 +213,32 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
             view.render(
                 BlockEditor.TextBlockModel(
                     text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                    transcludes: [
+                        EntryStub(
+                            address: Slashlink("@example/foo")!,
+                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                        EntryStub(
+                            address: Slashlink("@example/bar")!,
+                            excerpt: "Modularity is a form of hierarchy",
+                            modified: Date.now,
+                            author: nil
+                        ),
+                    ]
+                )
+            )
+            return view
+        }
+
+        UIViewPreviewRepresentable {
+            let view = BlockEditor.TextBlockCell()
+            view.render(
+                BlockEditor.TextBlockModel(
+                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                    isBlockSelectMode: true,
+                    isBlockSelected: true,
                     transcludes: [
                         EntryStub(
                             address: Slashlink("@example/foo")!,

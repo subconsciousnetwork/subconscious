@@ -11,8 +11,13 @@ extension BlockEditor {
     struct TextBlockModel: Hashable, Identifiable {
         var id = UUID()
         var text = ""
+        /// The selection/text cursor position
         var selection: NSRange = NSMakeRange(0, 0)
+        /// Is the text editor focused?
         var isFocused = false
+        /// Is this block in multi-block select mode?
+        var isBlockSelectMode = false
+        var isBlockSelected = false
         var transcludes: [EntryStub] = []
         
         /// Set text, updating selection
