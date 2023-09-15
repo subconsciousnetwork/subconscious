@@ -122,11 +122,6 @@ struct FeedView: View {
             app.actions.compactMap(FeedAction.from),
             perform: store.send
         )
-        /// Replay select feed actions on app
-        .onReceive(
-            store.actions.compactMap(AppAction.from),
-            perform: app.send
-        )
     }
 }
 
@@ -139,15 +134,6 @@ extension FeedAction {
             return .refreshAll
         case .requestFeedRoot:
             return .requestFeedRoot
-        default:
-            return nil
-        }
-    }
-}
-
-extension AppAction {
-    static func from(_ action: FeedAction) -> Self? {
-        switch action {
         default:
             return nil
         }
