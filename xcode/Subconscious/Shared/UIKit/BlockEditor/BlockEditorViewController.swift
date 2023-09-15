@@ -65,6 +65,15 @@ extension BlockEditor {
         
         override func viewDidLoad() {
             super.viewDidLoad()
+            
+            /// Add gesture recognizer for long press.
+            /// Used to trigger block selection mode.
+            let longPress = UILongPressGestureRecognizer(
+                target: self,
+                action: #selector(onLongPress)
+            )
+            view.addGestureRecognizer(longPress)
+            
             collectionView.register(
                 ErrorCell.self,
                 forCellWithReuseIdentifier: ErrorCell.identifier
@@ -114,6 +123,16 @@ extension BlockEditor {
             self.store.connect(self)
         }
         
+        @objc private func onLongPress(_ gesture: UIGestureRecognizer) {
+            switch gesture.state {
+            case .ended:
+                let point = gesture.location(in: self.collectionView)
+                store.send(.longPress(point))
+            default:
+                break
+            }
+        }
+
         /// Return 2 sections
         /// - 1 blocks
         /// - 2 "footer" containing related notes
@@ -338,7 +357,7 @@ extension BlockEditor.ViewController: HeadingBlockCellDelegate {}
 
 extension BlockEditor {
     //  MARK: Actions
-    enum Action: Hashable {
+    enum Action {
         case textDidChange(id: UUID?, text: String, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
         case splitBlock(id: UUID, selection: NSRange)
@@ -351,6 +370,7 @@ extension BlockEditor {
         case blur(id: UUID)
         /// Force a blur
         case renderBlur(id: UUID)
+        case longPress(CGPoint)
         /// Move the block up one position in the stack.
         /// If block is first block, this does nothing.
         case moveBlockUp(id: UUID)
@@ -423,6 +443,11 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             return renderBlur(
                 state: state,
                 id: id
+            )
+        case let .longPress(point):
+            return longPress(
+                state: state,
+                point: point
             )
         case let .moveBlockUp(id):
             return moveBlockUp(
@@ -709,6 +734,25 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         }
         
         return Update(state: model, render: render)
+    }
+    
+    func longPress(
+        state: Model,
+        point: CGPoint
+    ) -> Update {
+        guard let indexPath = collectionView.indexPathForItem(at: point) else {
+            let x = point.x
+            let y = point.y
+            Self.logger.debug("No index path for point (\(x), \(y)). Doing nothing.")
+            return Update(state: state)
+        }
+        let index = indexPath.row
+        var model = state
+        guard let block = model.blocks.get(index) else {
+            Self.logger.log("No model found at index \(index). Doing nothing.")
+            return Update(state: state)
+        }
+        return Update(state: state)
     }
     
     func moveBlockUp(
