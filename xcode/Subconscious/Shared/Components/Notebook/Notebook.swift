@@ -235,7 +235,15 @@ extension NotebookAction {
         case .succeedSyncLocalFilesWithDatabase:
             return .ready
         case .succeedIndexOurSphere(_):
-            return .ready
+            return .refreshLists
+        case .succeedSaveMemo:
+            return .refreshLists
+        case .succeedUpdateAudience:
+            return .refreshLists
+        case .succeedMoveMemo:
+            return .refreshLists
+        case .succeedMergeMemo:
+            return .refreshLists
         case let .succeedDeleteMemo(address):
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
@@ -253,6 +261,19 @@ extension AppAction {
         switch action {
         case let .requestDeleteMemo(address):
             return .deleteMemo(address)
+        case let .detailStack(action):
+            switch (action) {
+            case .succeedDeleteMemo(let address):
+                return .succeedDeleteMemo(address)
+            case .succeedMoveMemo(let from, let to):
+                return .succeedMoveMemo(from: from, to: to)
+            case .succeedSaveMemo(let address, let modified):
+                return .succeedSaveMemo(address: address, modified: modified)
+            case .succeedUpdateAudience(let receipt):
+                return .succeedUpdateAudience(receipt)
+            case _:
+                return nil
+            }
         default:
             return nil
         }
