@@ -58,6 +58,7 @@ struct FollowTabView: View {
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     
     var body: some View {
+        
         ForEach(state.following) { follow in
             StoryUserView(
                 story: follow,
@@ -75,7 +76,28 @@ struct FollowTabView: View {
         
         if state.following.count == 0 {
             EmptyStateView()
-        } else {
+        }
+        
+        if let user = state.user,
+           user.category == .ourself,
+           AppDefaults.standard.appTabs {
+            Group {
+                Button(
+                    action: {
+                        send(.presentFollowNewUserFormSheet(true))
+                    },
+                    label: {
+                        Label("Follow New User", systemImage: "person.badge.plus")
+                    }
+                )
+                .buttonStyle(
+                    ProfileHeaderButtonStyle(variant: .secondary)
+                )
+            }
+            .padding(AppTheme.padding)
+        }
+        
+        if state.following.count != 0 {
             FabSpacerView()
         }
     }
