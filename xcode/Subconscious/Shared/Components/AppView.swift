@@ -289,6 +289,7 @@ enum AppAction {
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestFeedRoot
+    case requestProfileRoot
     
     case setAppTabsEnabled(Bool)
     
@@ -1059,6 +1060,8 @@ struct AppModel: ModelProtocol {
         case .requestNotebookRoot:
             return Update(state: state)
         case .requestFeedRoot:
+            return Update(state: state)
+        case .requestProfileRoot:
             return Update(state: state)
         case .setAppTabsEnabled(let enabled):
             return setAppTabsEnabled(
@@ -2357,6 +2360,8 @@ struct AppModel: ModelProtocol {
                     return AppAction.requestFeedRoot
                 case .notebook:
                     return AppAction.requestNotebookRoot
+                case .profile:
+                    return AppAction.requestProfileRoot
                 }
             }
             

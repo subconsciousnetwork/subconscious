@@ -14,11 +14,13 @@ struct MainToolbar: ToolbarContent {
     var profileAction: () -> Void
     
     var body: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button(
-                action: profileAction
-            ) {
-                Image(systemName: "person")
+        if !AppDefaults.standard.appTabs {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: profileAction
+                ) {
+                    Image(systemName: "person")
+                }
             }
         }
         

@@ -12,6 +12,7 @@ import Combine
 enum AppTab: String {
     case feed
     case notebook
+    case profile
 }
 
 /// The new tabbed view.
@@ -38,6 +39,12 @@ struct AppTabView: View {
                     Label("Notes", systemImage: "folder")
                 }
                 .tag(AppTab.notebook)
+            
+            HomeProfileView(app: store)
+                .tabItem {
+                    Label("Profile", systemImage: "person.crop.circle")
+                }
+                .tag(AppTab.profile)
         }
     }
 }
