@@ -143,7 +143,6 @@ struct UserProfileView: View {
                             send(.tabIndexSelected(index))
                         }
                     )
-                    .edgesIgnoringSafeArea([.bottom])
                 case .loaded:
                     if let user = state.user {
                         UserProfileHeaderView(
@@ -175,7 +174,6 @@ struct UserProfileView: View {
                             send(.tabIndexSelected(index))
                         }
                     )
-                    .edgesIgnoringSafeArea([.bottom])
                 case .notFound:
                     NotFoundView()
                     // extra padding to visually center the group
