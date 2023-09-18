@@ -153,31 +153,10 @@ struct UserProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                if let user = state.user,
-                   state.loadingState != .notFound {
-                    UserProfileHeaderView(
-                        user: user,
-                        statistics: state.statistics,
-                        action: { action in
-                            onProfileAction(user, action)
-                        },
-                        hideActionButton: state.loadingState != .loaded,
-                        onTapStatistics: {
-                            send(
-                                .tabIndexSelected(
-                                    UserProfileDetailModel.followingTabIndex
-                                )
-                            )
-                        }
-                    )
-                    .padding(
-                        .init([.top, .horizontal]),
-                        AppTheme.padding
-                    )
-                }
-                
                 switch state.loadingState {
                 case .loading:
+                    ProfileHeaderPlaceholderView()
+                    
                     TabbedTwoColumnView(
                         columnA: columnLoading(label: "Notes"),
                         columnB: columnLoading(label: "Following"),
@@ -188,6 +167,28 @@ struct UserProfileView: View {
                     )
                     .edgesIgnoringSafeArea([.bottom])
                 case .loaded:
+                    if let user = state.user {
+                        UserProfileHeaderView(
+                            user: user,
+                            statistics: state.statistics,
+                            action: { action in
+                                onProfileAction(user, action)
+                            },
+                            hideActionButton: state.loadingState != .loaded,
+                            onTapStatistics: {
+                                send(
+                                    .tabIndexSelected(
+                                        UserProfileDetailModel.followingTabIndex
+                                    )
+                                )
+                            }
+                        )
+                        .padding(
+                            .init([.top, .horizontal]),
+                            AppTheme.padding
+                        )
+                    }
+                    
                     TabbedTwoColumnView(
                         columnA: columnRecent,
                         columnB: columnFollowing,
