@@ -35,7 +35,7 @@ struct TabbedTwoColumnView<A: View, B: View>: View {
             focusedTabIndex: selectedColumnIndex
         )
         
-        VStack {
+        VStack(spacing: 0) {
             switch (selectedColumnIndex) {
             case UserProfileDetailModel.recentEntriesTabIndex:
                 columnA.view

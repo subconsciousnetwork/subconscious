@@ -24,7 +24,7 @@ struct FeedNavigationView: View {
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             ScrollView {
-                LazyVStack() {
+                LazyVStack(spacing: 0) {
                     if let feed = store.state.entries {
                         ForEach(feed) { entry in
                             if let author = entry.author {
@@ -48,7 +48,6 @@ struct FeedNavigationView: View {
                         FeedPlaceholderView()
                     }
                 }
-                .background(Color.secondaryBackground)
                 
                 if let count = store.state.entries?.count,
                    count == 0 {
