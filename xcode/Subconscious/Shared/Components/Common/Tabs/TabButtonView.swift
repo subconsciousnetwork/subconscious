@@ -18,7 +18,7 @@ struct TabButtonView: View {
             label: {
                 Text(label)
                     .font(.callout)
-                    .bold(selected)
+                    .fontWeight(.medium)
                     .foregroundColor(selected ? Color.accentColor : Color.secondary )
                     .frame(maxWidth: .infinity)
                     .padding()
