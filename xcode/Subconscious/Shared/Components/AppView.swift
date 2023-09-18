@@ -52,11 +52,11 @@ struct AppView: View {
                     .zIndex(1)
             }
         }
-        .sheet(
+        .fullScreenCover(
             isPresented: Binding(
                 get: { store.state.shouldPresentRecovery },
                 send: store.send,
-                tag: AppAction.presentRecovery
+                tag: AppAction.presentRecoveryMode
             )
         ) {
             RecoveryView(app: store)
@@ -249,7 +249,8 @@ enum AppAction: CustomLogStringConvertible {
     case presentSettingsSheet(_ isPresented: Bool)
     
     case checkRecoveryStatus
-    case presentRecovery(_ isPresented: Bool)
+    case requestRecoveryMode
+    case presentRecoveryMode(_ isPresented: Bool)
     
     /// Notification that a follow happened, and the sphere was resolved
     case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
@@ -1118,8 +1119,13 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .presentRecovery(let presented):
-            return presentRecovery(
+        case .requestRecoveryMode:
+            return requestRecoveryMode(
+                state: state,
+                environment: environment
+            )
+        case .presentRecoveryMode(let presented):
+            return presentRecoveryMode(
                 state: state,
                 environment: environment,
                 presented: presented
@@ -2443,14 +2449,34 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
                 
-    static func presentRecovery(
+    static func requestRecoveryMode(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = Future.detached {
+            try await Task.sleep(nanoseconds: 1000000) // Ugly workaround to prevent janky interaction with sheet
+            return AppAction.presentRecoveryMode(true)
+        }
+        .recover { _ in
+            AppAction.presentRecoveryMode(true)
+        }
+       .eraseToAnyPublisher()
+        
+        return update(
+            state: state,
+            action: .presentSettingsSheet(false),
+            environment: environment
+        ).mergeFx(fx)
+    }
+    
+    static func presentRecoveryMode(
         state: Self,
         environment: Environment,
         presented: Bool
     ) -> Update<Self> {
         var model = state
         model.shouldPresentRecovery = presented
-        return Update(state: model).animation(.default)
+        return Update(state: model)
     }
     
     static func checkRecoveryStatus(
@@ -2463,10 +2489,10 @@ struct AppModel: ModelProtocol {
             
             let uhoh = did != nil && identity != did
             
-            return AppAction.presentRecovery(uhoh)
+            return AppAction.presentRecoveryMode(uhoh)
         }
         .recover { error in
-            AppAction.presentRecovery(true)
+            AppAction.presentRecoveryMode(true)
         }
         .eraseToAnyPublisher()
         

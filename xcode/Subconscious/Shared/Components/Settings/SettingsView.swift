@@ -118,7 +118,7 @@ struct SettingsView: View {
                     content: {
                         Button(
                             action: {
-                                app.send(.presentRecovery(true))
+                                app.send(.requestRecoveryMode)
                             },
                             label: {
                                 Text("Recovery Mode")
