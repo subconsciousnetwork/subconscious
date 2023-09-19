@@ -78,24 +78,7 @@ struct FollowTabView: View {
             EmptyStateView()
         }
         
-        if let user = state.user,
-           user.category == .ourself,
-           AppDefaults.standard.appTabs {
-            Group {
-                Button(
-                    action: {
-                        send(.presentFollowNewUserFormSheet(true))
-                    },
-                    label: {
-                        Label("Follow New User", systemImage: "person.badge.plus")
-                    }
-                )
-                .buttonStyle(
-                    ProfileHeaderButtonStyle(variant: .secondary)
-                )
-            }
-            .padding(AppTheme.padding)
-        }
+        
         
         if state.following.count != 0 {
             FabSpacerView()
@@ -181,6 +164,9 @@ struct UserProfileView: View {
                                         UserProfileDetailModel.followingTabIndex
                                     )
                                 )
+                            },
+                            onFollowNewUser: {
+                                send(.presentFollowNewUserFormSheet(true))
                             }
                         )
                         .padding(

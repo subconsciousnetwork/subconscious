@@ -27,6 +27,7 @@ struct UserProfileHeaderView: View {
     var hideActionButton: Bool = false
     
     var onTapStatistics: () -> Void = { }
+    var onFollowNewUser: () -> Void = { }
     
     var profileAction: UserProfileAction {
         switch (user.category, user.ourFollowStatus) {
@@ -51,7 +52,6 @@ struct UserProfileHeaderView: View {
                         showMaybePrefix: true
                     )
                }
-                
             }
             
             Button(
@@ -76,30 +76,47 @@ struct UserProfileHeaderView: View {
             }
             
             
-            if !hideActionButton {
-                Button(
-                    action: {
-                        action(profileAction)
-                    },
-                    label: {
-                        switch (user.category, user.ourFollowStatus) {
-                        case (.ourself, _):
-                            Label("Edit Profile", systemImage: AppIcon.edit.systemName)
-                        case (_, .following(_)):
-                            Label("Following", systemImage: AppIcon.following.systemName)
-                        case (_, .notFollowing):
-                            Text("Follow")
+            VStack {
+                if !hideActionButton {
+                    Button(
+                        action: {
+                            action(profileAction)
+                        },
+                        label: {
+                            switch (user.category, user.ourFollowStatus) {
+                            case (.ourself, _):
+                                Label("Edit Profile", systemImage: AppIcon.edit.systemName)
+                            case (_, .following(_)):
+                                Label("Following", systemImage: AppIcon.following.systemName)
+                            case (_, .notFollowing):
+                                Text("Follow")
+                            }
                         }
-                    }
-                )
-                .buttonStyle(
-                    // Button has primary style when we can follow
-                    ProfileHeaderButtonStyle(
-                        variant: profileAction == .requestFollow
+                    )
+                    .buttonStyle(
+                        // Button has primary style when we can follow
+                        ProfileHeaderButtonStyle(
+                            variant: profileAction == .requestFollow
                             ? .primary
                             : .secondary
+                        )
                     )
-                )
+                }
+                
+                if user.category == .ourself,
+                   AppDefaults.standard.appTabs {
+                    Button(
+                        action: {
+                            onFollowNewUser()
+                        },
+                        label: {
+                            Label("Follow Someone", systemImage: "person.badge.plus")
+                        }
+                    )
+                    .buttonStyle(
+                        ProfileHeaderButtonStyle(variant: .secondary)
+                    )
+                }
             }
         }
     }
