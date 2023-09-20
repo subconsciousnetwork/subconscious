@@ -443,6 +443,10 @@ actor NoosphereService:
         try await self.sphere().verify(authorization: authorization)
     }
     
+    func recover(identity: Did, mnemonic: RecoveryPhrase) async throws -> Bool {
+        try await self.sphere().recover(identity: identity, mnemonic: mnemonic)
+    }
+    
     /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.
     func sphere(address: Slashlink) async throws -> Sphere {
         let identity = try await self.identity()

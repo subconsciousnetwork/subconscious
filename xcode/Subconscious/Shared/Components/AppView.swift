@@ -2518,7 +2518,15 @@ struct AppModel: ModelProtocol {
         }
         
         let fx: Fx<Action> = Future.detached {
-            try await Task.sleep(nanoseconds: 1_000_000_000)
+            await environment.noosphere.resetGateway(url: gatewayUrl)
+            
+            guard try await environment.noosphere.recover(
+                identity: did,
+                mnemonic: recoveryPhrase
+            ) else {
+                return .failRecovery("Failed to recover identity")
+            }
+            
             return AppAction.succeedRecovery
         }
         .recover { error in
