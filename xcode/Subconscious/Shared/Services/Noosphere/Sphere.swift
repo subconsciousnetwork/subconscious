@@ -70,7 +70,6 @@ public protocol SphereProtocol {
     func revoke(authorization: Authorization) async throws -> Void
     func listAuthorizations() async throws -> [Authorization]
     func verify(authorization: Authorization) async throws -> Bool
-    func recover(identity: Did, mnemonic: RecoveryPhrase) async throws -> Bool
 }
 
 extension SphereProtocol {
@@ -1026,26 +1025,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
     }
     
-    public func recover(identity: Did, mnemonic: RecoveryPhrase) async throws -> Bool {
-        return try await withCheckedThrowingContinuation { continuation in
-            nsSphereRecover(
-                noosphere.noosphere,
-                identity.did,
-                Config.default.noosphere.ownerKeyName,
-                mnemonic.verbatim
-            ) { error in
-                if let error = Noosphere.readErrorMessage(error) {
-                    continuation.resume(
-                        throwing: NoosphereError.foreignError(error)
-                    )
-                    return
-                }
-                
-                continuation.resume(returning: true)
-                return
-            }
-        }
-    }
+    
 }
 
 extension slice_boxed_char_ptr_t {

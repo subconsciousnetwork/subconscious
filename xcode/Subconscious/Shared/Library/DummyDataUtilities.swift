@@ -31,6 +31,12 @@ extension UserProfileBio: DummyData {
     }
 }
 
+extension Slug: DummyData {
+    static func dummyData() -> Slug {
+        Slug(String.dummyDataShort())!
+    }
+}
+
 extension Petname.Name: DummyData {
     static func dummyData() -> Petname.Name {
         let options = [

@@ -47,6 +47,8 @@ protocol NoosphereServiceProtocol {
     
     /// Reset managed instances of Noosphere and Sphere
     func reset() async
+    
+    func recover(identity: Did, gatewayUrl: URL, mnemonic: RecoveryPhrase) async throws -> Bool
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
@@ -443,8 +445,34 @@ actor NoosphereService:
         try await self.sphere().verify(authorization: authorization)
     }
     
-    func recover(identity: Did, mnemonic: RecoveryPhrase) async throws -> Bool {
-        try await self.sphere().recover(identity: identity, mnemonic: mnemonic)
+    func recover(identity: Did, gatewayUrl: URL, mnemonic: RecoveryPhrase) async throws -> Bool {
+        let noosphere = try noosphere()
+        
+        resetGateway(url: gatewayUrl)
+        resetSphere(nil)
+        
+        let result: Bool = try await withCheckedThrowingContinuation { continuation in
+            nsSphereRecover(
+                noosphere.noosphere,
+                identity.did,
+                Config.default.noosphere.ownerKeyName,
+                mnemonic.verbatim
+            ) { error in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                continuation.resume(returning: true)
+                return
+            }
+        }
+        
+        resetSphere(identity.did)
+        
+        return result
     }
     
     /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.
