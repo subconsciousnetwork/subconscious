@@ -1069,27 +1069,11 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
 
 // MARK: UIGestureRecognizerDelegate
 extension BlockEditor.ViewController: UIGestureRecognizerDelegate {
-    /// Ensure that long press fails before we attempt to focus UITextView.
-    func gestureRecognizer(
-        _ gestureRecognizer: UIGestureRecognizer,
-        shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer
-    ) -> Bool {
-        guard otherGestureRecognizer.view is UITextView else {
-            return false
-        }
-        guard gestureRecognizer == longPressGesture else {
-            return false
-        }
-        return true
-    }
-
+    /// Recognize long-press gesture simultaneously with other gestures.
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
     ) -> Bool {
-        guard let textView = otherGestureRecognizer.view as? UITextView else {
-            return false
-        }
-        return !textView.isFirstResponder
+        return true
     }
 }

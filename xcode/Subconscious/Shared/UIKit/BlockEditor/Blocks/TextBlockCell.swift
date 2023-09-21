@@ -88,7 +88,8 @@ extension BlockEditor {
                 for: .vertical
             )
             contentView.addSubview(stackView)
-
+            
+            textView.isEditable = true
             textView.isScrollEnabled = false
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.delegate = self
