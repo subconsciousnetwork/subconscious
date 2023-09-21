@@ -14,9 +14,12 @@ extension BlockEditor {
         /// The selection/text cursor position
         var selection: NSRange = NSMakeRange(0, 0)
         /// Is the text editor focused?
-        var isFocused = false
-        /// Is this block in multi-block select mode?
+        var isEditing = false
+        /// Is select mode enabled in the editor?
+        /// Our collection view is data-driven, so we set this flag for every
+        /// block.
         var isBlockSelectMode = false
+        /// Is this particular block selected?
         var isBlockSelected = false
         var transcludes: [EntryStub] = []
         

@@ -150,11 +150,14 @@ extension BlockEditor {
             if textView.selectedRange != state.selection {
                 textView.selectedRange = state.selection
             }
-            textView.setFirstResponder(state.isFocused)
+            textView.setFirstResponder(state.isEditing)
             
             // Handle select mode
             selectView.isHidden = !state.isBlockSelected
-            textView.isEditable = state.isBlockSelectMode
+            // Set editability of textview
+            if textView.isEditable != !state.isBlockSelectMode {
+                textView.isEditable = !state.isBlockSelectMode
+            }
         }
         
         func textView(

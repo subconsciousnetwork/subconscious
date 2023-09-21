@@ -334,7 +334,6 @@
 		B8AB08C52A9D50AB00998099 /* BlockToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */; };
 		B8AB08C72A9D50E700998099 /* BlockFormatMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */; };
 		B8AB08CA2A9D518800998099 /* UIBarButtonItemUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */; };
-		B8AB08CE2A9D51D200998099 /* IndexPathUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */; };
 		B8AB08D02A9D522D00998099 /* UIViewDivider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */; };
 		B8AB08D22A9D523600998099 /* UIViewIconButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08D12A9D523600998099 /* UIViewIconButton.swift */; };
 		B8AB08D42A9D524300998099 /* UIViewSpacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08D32A9D524300998099 /* UIViewSpacer.swift */; };
@@ -745,7 +744,6 @@
 		B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockToolbar.swift; sourceTree = "<group>"; };
 		B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockFormatMenu.swift; sourceTree = "<group>"; };
 		B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIBarButtonItemUtilities.swift; sourceTree = "<group>"; };
-		B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexPathUtilities.swift; sourceTree = "<group>"; };
 		B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewDivider.swift; sourceTree = "<group>"; };
 		B8AB08D12A9D523600998099 /* UIViewIconButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewIconButton.swift; sourceTree = "<group>"; };
 		B8AB08D32A9D524300998099 /* UIViewSpacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewSpacer.swift; sourceTree = "<group>"; };
@@ -1208,7 +1206,6 @@
 			isa = PBXGroup;
 			children = (
 				B83E0E282A9D13CE009F18AE /* BlockEditor */,
-				B8AB08CD2A9D51D200998099 /* IndexPathUtilities.swift */,
 				B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */,
 				B8CAF2102A9E89A30057D5DE /* UIFontHelpers.swift */,
 				B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */,
@@ -2000,7 +1997,6 @@
 				B5293B892A426645001C4DA7 /* Sentry.swift in Sources */,
 				B8AB08DA2A9D534500998099 /* ArrayFirstIndexWhereID.swift in Sources */,
 				B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
-				B8AB08CE2A9D51D200998099 /* IndexPathUtilities.swift in Sources */,
 				B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */,
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8AB08BF2A9D506300998099 /* BlockEditorRepresentable.swift in Sources */,

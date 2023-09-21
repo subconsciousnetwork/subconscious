@@ -20,6 +20,7 @@ extension BlockEditor {
             )
         }
 
+        var isBlockSelectMode = false
         var blocks: [BlockModel] = []
         var appendix = RelatedModel()
     }

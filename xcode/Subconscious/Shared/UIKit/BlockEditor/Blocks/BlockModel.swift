@@ -71,24 +71,78 @@ extension BlockEditor {
             }
         }
         
-        func setFocus(_ isFocused: Bool) -> Self {
+        func setEditing(_ isEditing: Bool) -> Self {
             switch self {
             case let .text(block):
                 var block = block
-                block.isFocused = isFocused
+                block.isEditing = isEditing
                 return .text(block)
             case let .heading(block):
                 var block = block
-                block.isFocused = isFocused
+                block.isEditing = isEditing
                 return .heading(block)
             case let .quote(block):
                 var block = block
-                block.isFocused = isFocused
+                block.isEditing = isEditing
                 return .quote(block)
             case let .list(block):
                 var block = block
-                block.isFocused = isFocused
+                block.isEditing = isEditing
                 return .list(block)
+            }
+        }
+
+        func setBlockSelectMode(
+            _ isBlockSelectMode: Bool
+        ) -> Self {
+            switch self {
+            case let .text(block):
+                var block = block
+                block.isBlockSelectMode = isBlockSelectMode
+                return .text(block)
+            case let .quote(block):
+                var block = block
+                block.isBlockSelectMode = isBlockSelectMode
+                return .text(block)
+            case let .list(block):
+                var block = block
+                block.isBlockSelectMode = isBlockSelectMode
+                return .list(block)
+            case let .heading(block):
+                var block = block
+                block.isBlockSelectMode = isBlockSelectMode
+                return .heading(block)
+            }
+        }
+        
+        func setBlockSelected(
+            _ isBlockSelected: Bool
+        ) -> Self {
+            switch self {
+            case let .text(block):
+                var block = block
+                block.isBlockSelected = isBlockSelected
+                return .text(
+                    block
+                )
+            case let .quote(block):
+                var block = block
+                block.isBlockSelected = isBlockSelected
+                return .quote(
+                    block
+                )
+            case let .list(block):
+                var block = block
+                block.isBlockSelected = isBlockSelected
+                return .list(
+                    block
+                )
+            case let .heading(block):
+                var block = block
+                block.isBlockSelected = isBlockSelected
+                return .heading(
+                    block
+                )
             }
         }
     }

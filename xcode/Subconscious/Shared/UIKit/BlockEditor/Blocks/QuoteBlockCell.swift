@@ -195,7 +195,7 @@ extension BlockEditor {
             if textView.selectedRange != state.selection {
                 textView.selectedRange = state.selection
             }
-            textView.setFirstResponder(state.isFocused)
+            textView.setFirstResponder(state.isEditing)
         }
         
         func textView(

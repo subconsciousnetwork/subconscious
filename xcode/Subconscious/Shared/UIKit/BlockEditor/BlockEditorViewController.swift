@@ -10,6 +10,12 @@ import Combine
 import os
 
 extension BlockEditor {
+    /// Represents the sections in the collection view.
+    enum Section: Int, CaseIterable {
+        case blocks = 0
+        case appendix = 1
+    }
+
     /// Manages the "DOM" of the editor.
     class ViewController:
         UIViewController,
@@ -48,6 +54,12 @@ extension BlockEditor {
             return collectionView
         }
         
+        /// Gesture used to toggle into block selection mode
+        private lazy var longPressGesture = UILongPressGestureRecognizer(
+            target: self,
+            action: #selector(onLongPress)
+        )
+        
         private lazy var collectionView = Self.createCollectionView(
             frame: .zero
         )
@@ -66,13 +78,8 @@ extension BlockEditor {
         override func viewDidLoad() {
             super.viewDidLoad()
             
-            /// Add gesture recognizer for long press.
-            /// Used to trigger block selection mode.
-            let longPress = UILongPressGestureRecognizer(
-                target: self,
-                action: #selector(onLongPress)
-            )
-            view.addGestureRecognizer(longPress)
+            longPressGesture.delegate = self
+            view.addGestureRecognizer(longPressGesture)
             
             collectionView.register(
                 ErrorCell.self,
@@ -137,7 +144,7 @@ extension BlockEditor {
         /// - 1 blocks
         /// - 2 "footer" containing related notes
         func numberOfSections(in collectionView: UICollectionView) -> Int {
-            2
+            Section.allCases.count
         }
 
         /// Provides a count for data in a particular section
@@ -145,10 +152,10 @@ extension BlockEditor {
             _ collectionView: UICollectionView,
             numberOfItemsInSection section: Int
         ) -> Int {
-            switch section {
-            case 0:
+            switch Section(rawValue: section) {
+            case .blocks:
                 return store.state.blocks.count
-            case 1:
+            case .appendix:
                 return 1
             default:
                 return 0
@@ -162,10 +169,10 @@ extension BlockEditor {
             _ collectionView: UICollectionView,
             cellForItemAt indexPath: IndexPath
         ) -> UICollectionViewCell {
-            switch indexPath.section {
-            case 0:
+            switch Section(rawValue: indexPath.section) {
+            case .blocks:
                 return blockCell(collectionView, forItemAt: indexPath)
-            case 1:
+            case .appendix:
                 return appendixCell(collectionView, forItemAt: indexPath)
             default:
                 return errorCell(collectionView, forItemAt: indexPath)
@@ -292,6 +299,7 @@ extension BlockEditor {
     }
 }
 
+// MARK: TextBlockDelegate
 extension BlockEditor.ViewController: TextBlockDelegate {
     func boldButtonPressed(id: UUID, text: String, selection: NSRange) {
         store.send(.insertBold(id: id, selection: selection))
@@ -370,7 +378,15 @@ extension BlockEditor {
         case blur(id: UUID)
         /// Force a blur
         case renderBlur(id: UUID)
+        /// Issues a long-press event at a point.
+        /// If the point matches a block, this will enter edit mode.
         case longPress(CGPoint)
+        /// Enter edit mode, optionally selecting a block
+        case enterBlockSelectMode(selecting: UUID?)
+        /// Exit edit mode. Also de-selects all blocks
+        case exitBlockSelectMode
+        /// Select a block
+        case selectBlock(id: UUID)
         /// Move the block up one position in the stack.
         /// If block is first block, this does nothing.
         case moveBlockUp(id: UUID)
@@ -448,6 +464,20 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             return longPress(
                 state: state,
                 point: point
+            )
+        case let .enterBlockSelectMode(selecting):
+            return enterBlockSelectMode(
+                state: state,
+                selecting: selecting
+            )
+        case let .exitBlockSelectMode:
+            return exitBlockSelectMode(
+                state: state
+            )
+        case let .selectBlock(id):
+            return selectBlock(
+                state: state,
+                id: id
             )
         case let .moveBlockUp(id):
             return moveBlockUp(
@@ -575,14 +605,22 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             at: indexB
         )
         
-        let indexPathB = IndexPath(row: indexB)
+        let indexPathB = IndexPath(
+            row: indexB,
+            section: BlockEditor.Section.blocks.rawValue
+        )
         
         let render = {
             UIView.performWithoutAnimation {
                 self.collectionView.performBatchUpdates(
                     {
                         self.collectionView.reconfigureItems(
-                            at: [IndexPath(row: indexA)]
+                            at: [
+                                IndexPath(
+                                    row: indexA,
+                                    section: BlockEditor.Section.blocks.rawValue
+                                )
+                            ]
                         )
                         self.collectionView.insertItems(
                             at: [indexPathB]
@@ -643,7 +681,10 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         model.blocks[indexUp] = blockUp
         model.blocks.remove(at: indexDown)
         
-        let indexPathUp = IndexPath(row: indexUp)
+        let indexPathUp = IndexPath(
+            row: indexUp,
+            section: BlockEditor.Section.blocks.rawValue
+        )
         
         let render = {
             UIView.performWithoutAnimation {
@@ -653,7 +694,12 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
                             at: [indexPathUp]
                         )
                         self.collectionView.deleteItems(
-                            at: [IndexPath(row: indexDown)]
+                            at: [
+                                IndexPath(
+                                    row: indexDown,
+                                    section: BlockEditor.Section.blocks.rawValue
+                                )
+                            ]
                         )
                     },
                     completion: { isComplete in
@@ -672,7 +718,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
     ) -> Update {
         var model = state
         model.blocks = state.blocks.map({ block in
-            block.setFocus(block.id == id)
+            block.setEditing(block.id == id)
         })
         return Update(state: model)
     }
@@ -685,10 +731,15 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             Self.logger.log("block#\(id) no block found with ID. Doing nothing.")
             return Update(state: state)
         }
-        let indexPath = IndexPath(row: index)
+        
+        let indexPath = IndexPath(
+            row: index,
+            section: BlockEditor.Section.blocks.rawValue
+        )
+        
         var model = state
         model.blocks = state.blocks.map({ block in
-            block.setFocus(block.id == id)
+            block.setEditing(block.id == id)
         })
 
         let render = {
@@ -705,7 +756,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         var model = state
         model.blocks = state.blocks.map({ block in
             if block.id == id {
-                return block.setFocus(false)
+                return block.setEditing(false)
             }
             return block
         })
@@ -720,11 +771,16 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             Self.logger.log("block#\(id) no block found with ID. Doing nothing.")
             return Update(state: state)
         }
-        let indexPath = IndexPath(row: index)
+        
+        let indexPath = IndexPath(
+            row: index,
+            section: BlockEditor.Section.blocks.rawValue
+        )
+        
         var model = state
         model.blocks = state.blocks.map({ block in
             if block.id == id {
-                return block.setFocus(false)
+                return block.setEditing(false)
             }
             return block
         })
@@ -743,18 +799,100 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         guard let indexPath = collectionView.indexPathForItem(at: point) else {
             let x = point.x
             let y = point.y
-            Self.logger.debug("No index path for point (\(x), \(y)). Doing nothing.")
+            Self.logger.debug("No block at point (\(x), \(y)). No-op.")
             return Update(state: state)
         }
         let index = indexPath.row
-        var model = state
-        guard let block = model.blocks.get(index) else {
-            Self.logger.log("No model found at index \(index). Doing nothing.")
+        guard let block = state.blocks.get(index) else {
+            Self.logger.log("No model found at index \(index). No-op.")
             return Update(state: state)
         }
-        return Update(state: state)
+        let selectModeEffect = {
+            Action.enterBlockSelectMode(selecting: block.id)
+        }
+        return Update(state: state, effects: [selectModeEffect])
     }
     
+    func enterBlockSelectMode(
+        state: Model,
+        selecting id: UUID?
+    ) -> Update {
+        var model = state
+        
+        model.isBlockSelectMode = true
+        model.blocks = state.blocks.map({ block in
+            block
+                .setBlockSelectMode(true)
+                .setBlockSelected(block.id == id)
+        })
+        
+        let render = {
+            self.collectionView.reloadSections(
+                IndexSet(
+                    integer: BlockEditor.Section.blocks.rawValue
+                )
+            )
+        }
+        
+        return Update(state: model, render: render)
+    }
+    
+    func exitBlockSelectMode(
+        state: Model
+    ) -> Update {
+        var model = state
+        
+        model.isBlockSelectMode = false
+        model.blocks = state.blocks.map({ block in
+            block
+                .setBlockSelectMode(false)
+                .setBlockSelected(false)
+        })
+        
+        let render = {
+            self.collectionView.reloadSections(
+                IndexSet(
+                    integer: BlockEditor.Section.blocks.rawValue
+                )
+            )
+        }
+        
+        return Update(state: model, render: render)
+    }
+
+    func selectBlock(
+        state: Model,
+        id: UUID
+    ) -> Update {
+        guard state.isBlockSelectMode else {
+            Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
+            return Update(state: state)
+        }
+        
+        guard let i = state.blocks.firstIndex(whereID: id) else {
+            Self.logger.log("block#\(id) not found. Doing nothing.")
+            return Update(state: state)
+        }
+        
+        var model = state
+        
+        let block = model.blocks[i]
+        model.blocks[i] = block.setBlockSelected(true)
+        
+        let render = {
+            self.collectionView.reconfigureItems(
+                at: [
+                    IndexPath(
+                        row: i,
+                        section: BlockEditor.Section.blocks.rawValue
+                    )
+                ]
+            )
+        }
+        
+        return Update(state: model, render: render)
+    }
+
     func moveBlockUp(
         state: Model,
         id: UUID
@@ -777,8 +915,14 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         model.blocks = blocksArray
         
         collectionView.moveItem(
-            at: IndexPath(row: i),
-            to: IndexPath(row: h)
+            at: IndexPath(
+                row: i,
+                section: BlockEditor.Section.blocks.rawValue
+            ),
+            to: IndexPath(
+                row: h,
+                section: BlockEditor.Section.blocks.rawValue
+            )
         )
         
         return Update(state: model)
@@ -808,8 +952,14 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         model.blocks = blocksArray
         
         collectionView.moveItem(
-            at: IndexPath(row: i),
-            to: IndexPath(row: j)
+            at: IndexPath(
+                row: i,
+                section: BlockEditor.Section.blocks.rawValue
+            ),
+            to: IndexPath(
+                row: j,
+                section: BlockEditor.Section.blocks.rawValue
+            )
         )
         return Update(state: model)
     }
@@ -867,7 +1017,10 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         model.blocks[i] = block
         
         let render = {
-            let indexPath = IndexPath(row: i)
+            let indexPath = IndexPath(
+                row: i,
+                section: BlockEditor.Section.blocks.rawValue
+            )
             self.collectionView.reconfigureItems(at: [indexPath])
         }
 
@@ -911,5 +1064,32 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             selection: selection,
             replace: BlockEditor.SubtextEditorMarkup.wrapCode
         )
+    }
+}
+
+// MARK: UIGestureRecognizerDelegate
+extension BlockEditor.ViewController: UIGestureRecognizerDelegate {
+    /// Ensure that long press fails before we attempt to focus UITextView.
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        guard otherGestureRecognizer.view is UITextView else {
+            return false
+        }
+        guard gestureRecognizer == longPressGesture else {
+            return false
+        }
+        return true
+    }
+
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        guard let textView = otherGestureRecognizer.view as? UITextView else {
+            return false
+        }
+        return !textView.isFirstResponder
     }
 }
