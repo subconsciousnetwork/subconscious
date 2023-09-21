@@ -179,3 +179,101 @@ struct RecoveryView: View {
         .tabViewStyle(.page)
     }
 }
+
+enum RecoveryModeLaunchContext: Hashable {
+    case unreadableDatabase
+    case userInitiated
+}
+
+enum RecoveryModeAction: Hashable {
+    case appear(RecoveryModeLaunchContext)
+    case attemptRecovery(Did, URL, RecoveryPhrase)
+    case succeedRecovery
+    case failRecovery(_ error: String)
+}
+
+struct RecoveryModeModel: Hashable, ModelProtocol {
+    typealias Action = RecoveryModeAction
+    typealias Environment = AppEnvironment
+
+    var launchContext: RecoveryModeLaunchContext = .userInitiated
+    var recoveryStatus: ResourceStatus = .initial
+
+    // Logger for actions
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "DetailStackModel"
+    )
+
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
+        switch action {
+        case let .appear(context):
+            var model = state
+            model.launchContext = context
+            return Update(state: model)
+        case .attemptRecovery(let did, let gatewayUrl, let recoveryPhrase):
+            return requestRecovery(
+                state: state,
+                environment: environment,
+                did: did,
+                gatewayUrl: gatewayUrl,
+                recoveryPhrase: recoveryPhrase
+            )
+        case .succeedRecovery:
+            return succeedRecovery(state: state, environment: environment)
+        case .failRecovery(let error):
+            return failRecovery(state: state, environment: environment, error: error)
+        }
+    }
+
+    static func requestRecovery(
+        state: Self,
+        environment: Environment,
+        did: Did,
+        gatewayUrl: URL,
+        recoveryPhrase: RecoveryPhrase
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            guard try await environment.noosphere.recover(
+                identity: did,
+                gatewayUrl: gatewayUrl,
+                mnemonic: recoveryPhrase
+            ) else {
+                return .failRecovery("Failed to recover identity")
+            }
+            
+            return .succeedRecovery
+        }
+        .recover { error in
+            .failRecovery(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        var model = state
+        model.recoveryStatus = .pending
+        return Update(state: model, fx: fx)
+    }
+    
+    static func succeedRecovery(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        var model = state
+        model.recoveryStatus = .succeeded
+        return Update(state: model)
+    }
+                
+    static func failRecovery(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        var model = state
+        model.recoveryStatus = .failed(error)
+        return Update(state: model)
+    }
+}
