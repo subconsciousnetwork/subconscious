@@ -61,7 +61,8 @@ struct RecoveryView: View {
         TabView(
             selection: Binding(
                 get: { store.state.selectedTab },
-                set: { value in app.send(.recoveryMode(.setCurrentTab(value))) }
+                send: store.send,
+                tag: RecoveryModeAction.setCurrentTab
             )
         ) {
             VStack(spacing: AppTheme.padding) {
@@ -164,10 +165,22 @@ struct RecoveryView: View {
                         
                         Button(
                             action: {
-                                app.send(.requestRecovery)
+                                guard let did = app.state.recoveryDidField.validated else {
+                                    return
+                                }
+                                
+                                guard let gatewayUrl = app.state.gatewayURLField.validated else {
+                                    return
+                                }
+                                
+                                guard let recoveryPhrase = app.state.recoveryPhraseField.validated else {
+                                    return
+                                }
+                                
+                                store.send(.attemptRecovery(did, gatewayUrl, recoveryPhrase))
                             },
                             label: {
-                                AttemptRecoveryLabel(status: app.state.recoveryStatus)
+                                AttemptRecoveryLabel(status: store.state.recoveryStatus)
                             }
                         )
                     },
@@ -192,6 +205,7 @@ enum RecoveryModeLaunchContext: Hashable {
 
 enum RecoveryModeAction: Hashable {
     case appear(RecoveryModeLaunchContext)
+    case presented(Bool)
     case setCurrentTab(RecoveryViewTab)
     case attemptRecovery(Did, URL, RecoveryPhrase)
     case succeedRecovery
@@ -202,6 +216,7 @@ struct RecoveryModeModel: Hashable, ModelProtocol {
     typealias Action = RecoveryModeAction
     typealias Environment = AppEnvironment
 
+    var presented: Bool = false
     var launchContext: RecoveryModeLaunchContext = .userInitiated
     var recoveryStatus: ResourceStatus = .initial
     var selectedTab: RecoveryViewTab = .explain
@@ -221,6 +236,10 @@ struct RecoveryModeModel: Hashable, ModelProtocol {
         case let .appear(context):
             var model = state
             model.launchContext = context
+            return Update(state: model)
+        case .presented(let presented):
+            var model = state
+            model.presented = presented
             return Update(state: model)
         case .setCurrentTab(let tab):
             var model = state

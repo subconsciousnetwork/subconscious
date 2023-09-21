@@ -54,7 +54,7 @@ struct AppView: View {
         }
         .fullScreenCover(
             isPresented: Binding(
-                get: { store.state.shouldPresentRecovery },
+                get: { store.state.recoveryMode.presented },
                 send: store.send,
                 tag: AppAction.presentRecoveryMode
             )
@@ -284,10 +284,6 @@ enum AppAction: CustomLogStringConvertible {
     
     case setAppTabsEnabled(Bool)
 
-    case requestRecovery
-    case succeedRecovery
-    case failRecovery(_ error: String)
-    
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
@@ -540,9 +536,6 @@ struct AppModel: ModelProtocol {
     var shouldPresentFirstRun: Bool {
         !isFirstRunComplete
     }
-    
-    var shouldPresentRecovery: Bool = false
-    var recoveryStatus: ResourceStatus = .initial
     
     var recoveryMode = RecoveryModeModel()
     
@@ -1160,23 +1153,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 presented: presented
-            )
-        case .requestRecovery:
-            return requestRecovery(
-                state: state,
-                environment: environment
-            )
-        case .succeedRecovery:
-            return succeedRecovery(
-                state: state,
-                environment: environment
-            )
-            
-        case .failRecovery(let error):
-            return failRecovery(
-                state: state,
-                environment: environment,
-                error: error
             )
         }
     }
@@ -2505,9 +2481,11 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         presented: Bool
     ) -> Update<Self> {
-        var model = state
-        model.shouldPresentRecovery = presented
-        return Update(state: model)
+        return RecoveryModeCursor.update(
+            state: state,
+            action: .presented(true),
+            environment: environment
+        )
     }
     
     static func checkRecoveryStatus(
@@ -2528,63 +2506,6 @@ struct AppModel: ModelProtocol {
         .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
-    }
-    
-    static func requestRecovery(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        let noOp = Update(state: state)
-        // check if we have all the data we need
-        guard let did = state.recoveryDidField.validated else {
-            return noOp
-        }
-        
-        guard let gatewayUrl = state.gatewayURLField.validated else {
-            return noOp
-        }
-        
-        guard let recoveryPhrase = state.recoveryPhraseField.validated else {
-            return noOp
-        }
-        
-        let fx: Fx<Action> = Future.detached {
-            guard try await environment.noosphere.recover(
-                identity: did,
-                gatewayUrl: gatewayUrl,
-                mnemonic: recoveryPhrase
-            ) else {
-                return .failRecovery("Failed to recover identity")
-            }
-            
-            return AppAction.succeedRecovery
-        }
-        .recover { error in
-            AppAction.failRecovery(error.localizedDescription)
-        }
-        .eraseToAnyPublisher()
-        var model = state
-        model.recoveryStatus = .pending
-        return Update(state: model, fx: fx)
-    }
-    
-    static func succeedRecovery(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        var model = state
-        model.recoveryStatus = .succeeded
-        return Update(state: model)
-    }
-                
-    static func failRecovery(
-        state: Self,
-        environment: Environment,
-        error: String
-    ) -> Update<Self> {
-        var model = state
-        model.recoveryStatus = .failed(error)
-        return Update(state: model)
     }
 }
 
