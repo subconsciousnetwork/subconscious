@@ -53,10 +53,17 @@ enum RecoveryViewTab {
 
 struct RecoveryView: View {
     @ObservedObject var app: Store<AppModel>
-    @State var selectedTab = RecoveryViewTab.explain // TODO: move to a small, local store
+    var store: ViewStore<RecoveryModeModel> {
+        app.viewStore(get: RecoveryModeCursor.get, tag: RecoveryModeCursor.tag)
+    }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(
+            selection: Binding(
+                get: { store.state.selectedTab },
+                set: { value in app.send(.recoveryMode(.setCurrentTab(value))) }
+            )
+        ) {
             VStack(spacing: AppTheme.padding) {
                 Text("Recovery Mode")
                     .bold()
@@ -84,9 +91,7 @@ struct RecoveryView: View {
                 
                 Button(
                     action: {
-                        withAnimation {
-                            selectedTab = .form
-                        }
+                        store.send(.setCurrentTab(.form))
                     },
                     label: {
                         Text("Proceed")
@@ -187,6 +192,7 @@ enum RecoveryModeLaunchContext: Hashable {
 
 enum RecoveryModeAction: Hashable {
     case appear(RecoveryModeLaunchContext)
+    case setCurrentTab(RecoveryViewTab)
     case attemptRecovery(Did, URL, RecoveryPhrase)
     case succeedRecovery
     case failRecovery(_ error: String)
@@ -198,6 +204,7 @@ struct RecoveryModeModel: Hashable, ModelProtocol {
 
     var launchContext: RecoveryModeLaunchContext = .userInitiated
     var recoveryStatus: ResourceStatus = .initial
+    var selectedTab: RecoveryViewTab = .explain
 
     // Logger for actions
     static let logger = Logger(
@@ -215,6 +222,10 @@ struct RecoveryModeModel: Hashable, ModelProtocol {
             var model = state
             model.launchContext = context
             return Update(state: model)
+        case .setCurrentTab(let tab):
+            var model = state
+            model.selectedTab = tab
+            return Update(state: model).animation(.default)
         case .attemptRecovery(let did, let gatewayUrl, let recoveryPhrase):
             return requestRecovery(
                 state: state,

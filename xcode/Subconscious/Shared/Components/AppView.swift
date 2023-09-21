@@ -106,6 +106,7 @@ enum AppAction: CustomLogStringConvertible {
     case gatewayURLField(GatewayUrlFormField.Action)
     case recoveryPhraseField(RecoveryPhraseFormField.Action)
     case recoveryDidField(RecoveryDidFormField.Action)
+    case recoveryMode(RecoveryModeModel.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -485,6 +486,28 @@ struct InviteCodeFormFieldCursor: CursorProtocol {
     }
 }
 
+struct RecoveryModeCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = RecoveryModeModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryMode
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryMode = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .recoveryMode(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -520,6 +543,8 @@ struct AppModel: ModelProtocol {
     
     var shouldPresentRecovery: Bool = false
     var recoveryStatus: ResourceStatus = .initial
+    
+    var recoveryMode = RecoveryModeModel()
     
     /// Is database connected and migrated?
     var databaseMigrationStatus = ResourceStatus.initial
@@ -685,6 +710,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
+            )
+        case .recoveryMode(let action):
+            return RecoveryModeCursor.update(
+                state: state,
+                action: action,
+                environment: environment
             )
         case .authorization(let action):
             return AuthorizationSettingsCursor.update(
