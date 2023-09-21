@@ -1024,8 +1024,6 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             return false
         }
     }
-    
-    
 }
 
 extension slice_boxed_char_ptr_t {
