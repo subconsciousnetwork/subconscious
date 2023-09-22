@@ -2437,7 +2437,6 @@ struct AppModel: ModelProtocol {
     }
 }
 
-
 // MARK: Environment
 /// A place for constants and services
 struct AppEnvironment {

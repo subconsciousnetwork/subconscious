@@ -13,7 +13,12 @@ public struct RecoveryPhrase:
     Equatable,
     Identifiable,
     Codable,
-    LosslessStringConvertible {
+    LosslessStringConvertible,
+    CustomDebugStringConvertible {
+    
+    public var debugDescription: String {
+        "<recovery phrase>"
+    }
     
     private static let recoveryPhraseRegex = /^(?:\w+\s+){23}\w+$/
 
