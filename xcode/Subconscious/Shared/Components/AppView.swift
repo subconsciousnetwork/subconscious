@@ -2418,17 +2418,18 @@ struct AppModel: ModelProtocol {
         let fx: Fx<Action> = Future.detached {
             let identity = try await environment.noosphere.identity()
             let did = try environment.database.readOurSphere()?.identity
-            
-            let uhoh = did != nil && identity != did
-            
-            if uhoh {
-                return AppAction.requestRecoveryMode(.unreadableDatabase)
+            if did != nil && identity != did {
+                return AppAction.requestRecoveryMode(
+                    .unreadableDatabase("Mismatched identity")
+                )
             }
             
             return AppAction.presentRecoveryMode(false)
         }
         .recover { error in
-            AppAction.requestRecoveryMode(.unreadableDatabase)
+            AppAction.requestRecoveryMode(
+                .unreadableDatabase(error.localizedDescription)
+            )
         }
         .eraseToAnyPublisher()
         

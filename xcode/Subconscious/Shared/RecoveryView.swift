@@ -46,6 +46,24 @@ struct AttemptRecoveryLabel: View {
     }
 }
 
+struct ErrorDetailView: View {
+    var error: String
+    
+    var body: some View {
+        ScrollView {
+            Text(error)
+                .font(.caption.monospaced())
+                .multilineTextAlignment(.leading)
+                .textSelection(.enabled)
+        }
+        .frame(maxHeight: 128)
+        .padding(AppTheme.tightPadding)
+        .foregroundColor(.secondary)
+        .background(Color.secondaryBackground)
+        .cornerRadius(AppTheme.cornerRadius)
+    }
+}
+
 enum RecoveryViewTab {
     case explain
     case form
@@ -79,7 +97,7 @@ struct RecoveryView: View {
                 Spacer()
                 
                 switch store.state.launchContext {
-                case .unreadableDatabase:
+                case .unreadableDatabase(let error):
                     if let did = did {
                         ZStack {
                             StackedGlowingImage() {
@@ -101,6 +119,9 @@ struct RecoveryView: View {
                     }
                     Text("Your local data is unreadable.")
                         .multilineTextAlignment(.center)
+                    
+                    ErrorDetailView(error: error)
+                    
                     Text(
                         "Subconscious will attempt to " +
                         "recover your data from your gateway, using your recovery phrase."
@@ -151,7 +172,7 @@ struct RecoveryView: View {
                 )
                 .buttonStyle(PillButtonStyle())
                 
-                if store.state.launchContext != .unreadableDatabase {
+                if store.state.launchContext == .userInitiated {
                     Button(
                         action: {
                             app.send(.presentRecoveryMode(false))
@@ -227,9 +248,7 @@ struct RecoveryView: View {
                         Spacer()
                         
                         if case .failed(let error) = store.state.recoveryStatus {
-                            Text(error)
-                                .foregroundColor(.red)
-                                .multilineTextAlignment(.center)
+                            ErrorDetailView(error: error)
                         }
                         
                         Button(
@@ -277,7 +296,7 @@ struct RecoveryView: View {
 }
 
 enum RecoveryModeLaunchContext: Hashable {
-    case unreadableDatabase
+    case unreadableDatabase(_ error: String)
     case userInitiated
 }
 
@@ -346,7 +365,7 @@ struct RecoveryModeModel: ModelProtocol {
     typealias Environment = AppEnvironment
 
     var presented: Bool = false
-    var launchContext: RecoveryModeLaunchContext = .unreadableDatabase
+    var launchContext: RecoveryModeLaunchContext = .userInitiated
     var recoveryStatus: ResourceStatus = .initial
     var selectedTab: RecoveryViewTab = .explain
     
