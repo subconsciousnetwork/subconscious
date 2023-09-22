@@ -21,9 +21,9 @@ struct AttemptRecoveryLabel: View {
         case .pending:
             return "Recovering..."
         case .failed:
-            return "Recovery Failed"
+            return "Try Again"
         case .succeeded:
-            return "Recovery Complete"
+            return "Complete"
         }
     }
     
@@ -49,12 +49,19 @@ struct AttemptRecoveryLabel: View {
 enum RecoveryViewTab {
     case explain
     case form
+    case done
 }
 
 struct RecoveryView: View {
     @ObservedObject var app: Store<AppModel>
     var store: ViewStore<RecoveryModeModel> {
         app.viewStore(get: RecoveryModeCursor.get, tag: RecoveryModeCursor.tag)
+    }
+    
+    @Environment(\.colorScheme) var colorScheme
+    
+    var did: Did? {
+        Did(app.state.sphereIdentity ?? "")
     }
     
     var body: some View {
@@ -68,23 +75,67 @@ struct RecoveryView: View {
             VStack(spacing: AppTheme.padding) {
                 Text("Recovery Mode")
                     .bold()
-                    .padding(.bottom)
                 
                 Spacer()
                 
-                Image(systemName: "stethoscope")
-                    .resizable()
-                    .frame(width: 96, height: 96)
-                    .foregroundColor(.secondary)
+                switch store.state.launchContext {
+                case .unreadableDatabase:
+                    if let did = did {
+                        ZStack {
+                            StackedGlowingImage() {
+                                GenerativeProfilePic(
+                                    did: did,
+                                    size: 128
+                                )
+                            }
+                            .padding(AppTheme.padding)
+                            
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 48, height: 48)
+                                .offset(x: 48, y: 48)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding([.bottom], AppTheme.padding)
+                    }
+                    Text("Your local data is unreadable.")
+                        .multilineTextAlignment(.center)
+                    Text(
+                        "Subconscious will attempt to " +
+                        "recover your data from your gateway, using your recovery phrase."
+                    )
+                    .multilineTextAlignment(.center)
+                case .userInitiated:
+                    if let did = did {
+                        StackedGlowingImage() {
+                            ZStack {
+                                Image(systemName: "stethoscope")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 128, height: 128)
+                                    .foregroundColor(.secondary)
+                                    .offset(x: -16)
+                                GenerativeProfilePic(
+                                    did: did,
+                                    size: 64
+                                )
+                                .offset(x: 52, y: 52)
+                            }
+                        }
+                        .padding(AppTheme.padding)
+                    }
+                    Spacer()
+                    Text(
+                        "If your local data is damaged or unavailable you can recover your " +
+                        "data from your gateway using your recovery phrase."
+                    )
+                    .multilineTextAlignment(.center)
+                    
+                }
                 
                 Text(
-                    "If you ever lose your device or experience data loss,"
-                     + " you can recover your data using your recovery phrase and your gateway."
-                )
-                .multilineTextAlignment(.center)
-                
-                Text(
-                    "We'll attempt to download and restore from the remote copy of your notes."
+                    "We'll download and restore from the remote copy of your notes."
                 )
                 .multilineTextAlignment(.center)
                 
@@ -100,16 +151,16 @@ struct RecoveryView: View {
                 )
                 .buttonStyle(PillButtonStyle())
                 
-                Button(
-                    action: {
-                        app.send(.presentRecoveryMode(false))
-                    },
-                    label: {
-                        Text("Cancel")
-                    }
-                )
-                
-                Spacer()
+                if store.state.launchContext != .unreadableDatabase {
+                    Button(
+                        action: {
+                            app.send(.presentRecoveryMode(false))
+                        },
+                        label: {
+                            Text("Cancel")
+                        }
+                    )
+                }
             }
             .padding(AppTheme.padding)
             .tabItem {
@@ -117,18 +168,25 @@ struct RecoveryView: View {
             }
             .tag(RecoveryViewTab.explain)
             
-            Form {
+            VStack {
+                Text("Recovery")
+                    .bold()
+                
+                Spacer()
+                
                 Section(
                     content: {
                         ValidatedFormField(
                             placeholder: "did:key:abc",
-                            field: app.state.recoveryDidField,
+                            field: store.state.recoveryDidField,
                             send: Address.forward(
-                                send: app.send,
-                                tag: AppAction.recoveryDidField
+                                send: store.send,
+                                tag: RecoveryModeAction.recoveryDidField
                             ),
-                            caption: "The identity of your sphere"
+                            caption: "The identity of your sphere",
+                            axis: .vertical
                         )
+                        .textFieldStyle(.roundedBorder)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                         
@@ -139,8 +197,10 @@ struct RecoveryView: View {
                                 send: app.send,
                                 tag: AppAction.gatewayURLField
                             ),
-                            caption: String(localized: "The URL of your preferred Noosphere gateway")
+                            caption: String(localized: "The URL of your preferred Noosphere gateway"),
+                            axis: .vertical
                         )
+                        .textFieldStyle(.roundedBorder)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                         .autocapitalization(.none)
@@ -152,20 +212,34 @@ struct RecoveryView: View {
                         
                         ValidatedFormField(
                             placeholder: "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty-one twenty-two tenty-three twenty-four",
-                            field: app.state.recoveryPhraseField,
+                            field: store.state.recoveryPhraseField,
                             send: Address.forward(
-                                send: app.send,
-                                tag: AppAction.recoveryPhraseField
+                                send: store.send,
+                                tag: RecoveryModeAction.recoveryPhraseField
                             ),
                             caption: "Recovery phrase",
                             axis: .vertical
                         )
+                        .textFieldStyle(.roundedBorder)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                         
+                        Spacer()
+                        
+                        if case .failed(let error) = store.state.recoveryStatus {
+                            Text(error)
+                                .foregroundColor(.red)
+                                .multilineTextAlignment(.center)
+                        }
+                        
                         Button(
                             action: {
-                                guard let did = app.state.recoveryDidField.validated else {
+                                if store.state.recoveryStatus == .succeeded {
+                                    app.send(.presentRecoveryMode(false))
+                                    return
+                                }
+                                
+                                guard let did = store.state.recoveryDidField.validated else {
                                     return
                                 }
                                 
@@ -173,7 +247,7 @@ struct RecoveryView: View {
                                     return
                                 }
                                 
-                                guard let recoveryPhrase = app.state.recoveryPhraseField.validated else {
+                                guard let recoveryPhrase = store.state.recoveryPhraseField.validated else {
                                     return
                                 }
                                 
@@ -183,18 +257,22 @@ struct RecoveryView: View {
                                 AttemptRecoveryLabel(status: store.state.recoveryStatus)
                             }
                         )
-                    },
-                    header: {
-                        Text("Recovery")
-                    }
-                )
+                        .buttonStyle(PillButtonStyle())
+                        .disabled(
+                            !store.state.recoveryDidField.isValid ||
+                            !app.state.gatewayURLField.isValid ||
+                            !store.state.recoveryPhraseField.isValid
+                        )
+                    })
             }
+            .disabled(store.state.recoveryStatus == .pending)
+            .padding(AppTheme.padding)
             .tabItem {
                 Text("Form")
             }
             .tag(RecoveryViewTab.form)
         }
-        .tabViewStyle(.page)
+        .tabViewStyle(.page(indexDisplayMode: .never))
     }
 }
 
@@ -204,6 +282,9 @@ enum RecoveryModeLaunchContext: Hashable {
 }
 
 enum RecoveryModeAction: Hashable {
+    case recoveryPhraseField(RecoveryPhraseFormField.Action)
+    case recoveryDidField(RecoveryDidFormField.Action)
+    
     case appear(RecoveryModeLaunchContext)
     case presented(Bool)
     case setCurrentTab(RecoveryViewTab)
@@ -212,14 +293,72 @@ enum RecoveryModeAction: Hashable {
     case failRecovery(_ error: String)
 }
 
-struct RecoveryModeModel: Hashable, ModelProtocol {
+typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
+typealias RecoveryDidFormField = FormField<String, Did>
+
+struct RecoveryPhraseFormFieldCursor: CursorProtocol {
+    typealias Model = RecoveryModeModel
+    typealias ViewModel = RecoveryPhraseFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryPhraseField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryPhraseField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .recoveryPhraseField(action)
+        }
+    }
+}
+
+struct RecoveryDidFormFieldCursor: CursorProtocol {
+    typealias Model = RecoveryModeModel
+    typealias ViewModel = RecoveryDidFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryDidField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryDidField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .recoveryDidField(action)
+        }
+    }
+}
+
+
+struct RecoveryModeModel: ModelProtocol {
     typealias Action = RecoveryModeAction
     typealias Environment = AppEnvironment
 
     var presented: Bool = false
-    var launchContext: RecoveryModeLaunchContext = .userInitiated
+    var launchContext: RecoveryModeLaunchContext = .unreadableDatabase
     var recoveryStatus: ResourceStatus = .initial
     var selectedTab: RecoveryViewTab = .explain
+    
+    var recoveryPhraseField = RecoveryPhraseFormField(
+        value: "",
+        validate: { value in RecoveryPhrase(value) }
+    )
+    
+    var recoveryDidField = RecoveryDidFormField(
+        value: "",
+        validate: { value in Did(value) }
+    )
 
     // Logger for actions
     static let logger = Logger(
@@ -233,10 +372,30 @@ struct RecoveryModeModel: Hashable, ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
+        case .recoveryPhraseField(let action):
+            return RecoveryPhraseFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
+        case .recoveryDidField(let action):
+            return RecoveryDidFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
         case let .appear(context):
             var model = state
+            model.recoveryStatus = .initial
             model.launchContext = context
-            return Update(state: model)
+            return update(
+                state: model,
+                actions: [
+                    .setCurrentTab(.explain),
+                    .recoveryPhraseField(.reset),
+                ],
+                environment: environment
+            )
         case .presented(let presented):
             var model = state
             model.presented = presented
@@ -294,7 +453,11 @@ struct RecoveryModeModel: Hashable, ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.recoveryStatus = .succeeded
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .recoveryPhraseField(.reset),
+            environment: environment
+        )
     }
                 
     static func failRecovery(
@@ -305,5 +468,13 @@ struct RecoveryModeModel: Hashable, ModelProtocol {
         var model = state
         model.recoveryStatus = .failed(error)
         return Update(state: model)
+    }
+}
+
+struct RecoveryView_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            RecoveryView(app: Store(state: AppModel(), environment: AppEnvironment()))
+        }
     }
 }

@@ -52,15 +52,6 @@ struct AppView: View {
                     .zIndex(1)
             }
         }
-        .fullScreenCover(
-            isPresented: Binding(
-                get: { store.state.recoveryMode.presented },
-                send: store.send,
-                tag: AppAction.presentRecoveryMode
-            )
-        ) {
-            RecoveryView(app: store)
-        }
         .sheet(
             isPresented: Binding(
                 get: { store.state.isSettingsSheetPresented },
@@ -70,6 +61,15 @@ struct AppView: View {
         ) {
             SettingsView(app: store)
                 .presentationDetents([.fraction(0.999)]) // https://stackoverflow.com/a/74631815
+                .fullScreenCover(
+                    isPresented: Binding(
+                        get: { store.state.recoveryMode.presented },
+                        send: store.send,
+                        tag: AppAction.presentRecoveryMode
+                    )
+                ) {
+                    RecoveryView(app: store)
+                }
         }
         .onAppear {
             store.send(.appear)
@@ -91,8 +91,6 @@ struct AppView: View {
 typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, URL>
-typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
-typealias RecoveryDidFormField = FormField<String, Did>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -104,8 +102,6 @@ enum AppAction: CustomLogStringConvertible {
     case nicknameFormField(NicknameFormField.Action)
     case inviteCodeFormField(InviteCodeFormField.Action)
     case gatewayURLField(GatewayUrlFormField.Action)
-    case recoveryPhraseField(RecoveryPhraseFormField.Action)
-    case recoveryDidField(RecoveryDidFormField.Action)
     case recoveryMode(RecoveryModeModel.Action)
 
     /// Scene phase events
@@ -250,7 +246,7 @@ enum AppAction: CustomLogStringConvertible {
     case presentSettingsSheet(_ isPresented: Bool)
     
     case checkRecoveryStatus
-    case requestRecoveryMode
+    case requestRecoveryMode(RecoveryModeLaunchContext)
     case presentRecoveryMode(_ isPresented: Bool)
     
     /// Notification that a follow happened, and the sphere was resolved
@@ -392,49 +388,6 @@ struct GatewayUrlFormFieldCursor: CursorProtocol {
     }
 }
 
-struct RecoveryPhraseFormFieldCursor: CursorProtocol {
-    typealias Model = AppModel
-    typealias ViewModel = RecoveryPhraseFormField
-    
-    static func get(state: Model) -> ViewModel {
-        state.recoveryPhraseField
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.recoveryPhraseField = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        switch action {
-        default:
-            return .recoveryPhraseField(action)
-        }
-    }
-}
-
-struct RecoveryDidFormFieldCursor: CursorProtocol {
-    typealias Model = AppModel
-    typealias ViewModel = RecoveryDidFormField
-    
-    static func get(state: Model) -> ViewModel {
-        state.recoveryDidField
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.recoveryDidField = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        switch action {
-        default:
-            return .recoveryDidField(action)
-        }
-    }
-}
 
 struct NicknameFormFieldCursor: CursorProtocol {
     typealias Model = AppModel
@@ -615,16 +568,6 @@ struct AppModel: ModelProtocol {
     )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
-    var recoveryPhraseField = RecoveryPhraseFormField(
-        value: "",
-        validate: { value in RecoveryPhrase(value) }
-    )
-    
-    var recoveryDidField = RecoveryDidFormField(
-        value: "",
-        validate: { value in Did(value) }
-    )
-    
     var gatewayOperationInProgress: Bool {
         lastGatewaySyncStatus == .pending ||
         inviteCodeRedemptionStatus == .pending ||
@@ -688,18 +631,6 @@ struct AppModel: ModelProtocol {
             )
         case .gatewayURLField(let action):
             return GatewayUrlFormFieldCursor.update(
-                state: state,
-                action: action,
-                environment: FormFieldEnvironment()
-            )
-        case .recoveryPhraseField(let action):
-            return RecoveryPhraseFormFieldCursor.update(
-                state: state,
-                action: action,
-                environment: FormFieldEnvironment()
-            )
-        case .recoveryDidField(let action):
-            return RecoveryDidFormFieldCursor.update(
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
@@ -1143,10 +1074,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .requestRecoveryMode:
+        case .requestRecoveryMode(let context):
             return requestRecoveryMode(
                 state: state,
-                environment: environment
+                environment: environment,
+                context: context
             )
         case .presentRecoveryMode(let presented):
             return presentRecoveryMode(
@@ -1445,7 +1377,7 @@ struct AppModel: ModelProtocol {
         }
         return update(
             state: model,
-            action: .recoveryDidField(.setValue(input: sphereIdentity ?? "")),
+            action: .recoveryMode(.recoveryDidField(.setValue(input: sphereIdentity ?? ""))),
             environment: environment
         )
     }
@@ -2458,22 +2390,18 @@ struct AppModel: ModelProtocol {
                 
     static func requestRecoveryMode(
         state: Self,
-        environment: Environment
+        environment: Environment,
+        context: RecoveryModeLaunchContext
     ) -> Update<Self> {
-        let fx: Fx<AppAction> = Future.detached {
-            try await Task.sleep(nanoseconds: 1000000) // Ugly workaround to prevent janky interaction with sheet
-            return AppAction.presentRecoveryMode(true)
-        }
-        .recover { _ in
-            AppAction.presentRecoveryMode(true)
-        }
-       .eraseToAnyPublisher()
-        
         return update(
             state: state,
-            action: .presentSettingsSheet(false),
+            actions: [
+                .presentSettingsSheet(true),
+                .presentRecoveryMode(true),
+                .recoveryMode(.appear(context))
+            ],
             environment: environment
-        ).mergeFx(fx)
+        )
     }
     
     static func presentRecoveryMode(
@@ -2483,7 +2411,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         return RecoveryModeCursor.update(
             state: state,
-            action: .presented(true),
+            action: .presented(presented),
             environment: environment
         )
     }
@@ -2498,10 +2426,14 @@ struct AppModel: ModelProtocol {
             
             let uhoh = did != nil && identity != did
             
-            return AppAction.presentRecoveryMode(uhoh)
+            if uhoh {
+                return AppAction.requestRecoveryMode(.unreadableDatabase)
+            }
+            
+            return AppAction.presentRecoveryMode(false)
         }
         .recover { error in
-            AppAction.presentRecoveryMode(true)
+            AppAction.requestRecoveryMode(.unreadableDatabase)
         }
         .eraseToAnyPublisher()
         
