@@ -56,7 +56,8 @@ struct ErrorDetailView: View {
                 .multilineTextAlignment(.leading)
                 .textSelection(.enabled)
         }
-        .frame(maxHeight: 128)
+        .frame(idealHeight: 24, maxHeight: 128)
+        .expandAlignedLeading()
         .padding(AppTheme.tightPadding)
         .foregroundColor(.secondary)
         .background(Color.secondaryBackground)
@@ -278,9 +279,10 @@ struct RecoveryView: View {
                         )
                         .buttonStyle(PillButtonStyle())
                         .disabled(
-                            !store.state.recoveryDidField.isValid ||
-                            !app.state.gatewayURLField.isValid ||
-                            !store.state.recoveryPhraseField.isValid
+                            store.state.recoveryStatus != .succeeded &&
+                                (!store.state.recoveryDidField.isValid ||
+                                !app.state.gatewayURLField.isValid ||
+                                !store.state.recoveryPhraseField.isValid)
                         )
                     })
             }
@@ -426,7 +428,7 @@ struct RecoveryModeModel: ModelProtocol {
             model.selectedTab = tab
             return Update(state: model).animation(.default)
         case .attemptRecovery(let did, let gatewayUrl, let recoveryPhrase):
-            return requestRecovery(
+            return attemptRecovery(
                 state: state,
                 environment: environment,
                 did: did,
@@ -440,7 +442,7 @@ struct RecoveryModeModel: ModelProtocol {
         }
     }
 
-    static func requestRecovery(
+    static func attemptRecovery(
         state: Self,
         environment: Environment,
         did: Did,
@@ -474,11 +476,7 @@ struct RecoveryModeModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.recoveryStatus = .succeeded
-        return update(
-            state: model,
-            action: .recoveryPhraseField(.reset),
-            environment: environment
-        )
+        return Update(state: model).animation(.easeOutCubic())
     }
                 
     static func failRecovery(
@@ -488,7 +486,7 @@ struct RecoveryModeModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.recoveryStatus = .failed(error)
-        return Update(state: model)
+        return Update(state: model).animation(.easeOutCubic())
     }
 }
 

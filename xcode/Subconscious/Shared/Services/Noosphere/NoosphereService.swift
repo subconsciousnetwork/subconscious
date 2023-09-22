@@ -446,10 +446,10 @@ actor NoosphereService:
     }
     
     func recover(identity: Did, gatewayUrl: URL, mnemonic: RecoveryPhrase) async throws -> Bool {
-        let noosphere = try noosphere()
-        
         resetGateway(url: gatewayUrl)
         resetSphere(nil)
+        
+        let noosphere = try noosphere()
         
         let result: Bool = try await withCheckedThrowingContinuation { continuation in
             nsSphereRecover(
