@@ -35,20 +35,19 @@ struct TabbedTwoColumnView<A: View, B: View>: View {
             focusedTabIndex: selectedColumnIndex
         )
         
-        TabView(selection: Binding(
-            get: { selectedColumnIndex },
-            set: changeColumn
-        )) {
-            columnA.view
-                .tabItem { Text(columnA.label) }
-                .tag(0)
+        VStack(spacing: 0) {
+            switch (selectedColumnIndex) {
+            case UserProfileDetailModel.recentEntriesTabIndex:
+                columnA.view
+            case UserProfileDetailModel.followingTabIndex:
+                columnB.view
+            case _:
+                EmptyView()
+            }
             
-            columnB.view
-                .tabItem { Text(columnB.label) }
-                .tag(1)
+            Spacer()
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .background(Color.secondaryBackground)
+        .frame(maxHeight: .infinity)
     }
 }
 
