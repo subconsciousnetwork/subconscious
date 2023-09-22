@@ -285,7 +285,7 @@ enum RecoveryModeAction: Hashable {
     case recoveryPhraseField(RecoveryPhraseFormField.Action)
     case recoveryDidField(RecoveryDidFormField.Action)
     
-    case appear(RecoveryModeLaunchContext)
+    case appear(Did?, RecoveryModeLaunchContext)
     case presented(Bool)
     case setCurrentTab(RecoveryViewTab)
     case attemptRecovery(Did, URL, RecoveryPhrase)
@@ -384,7 +384,7 @@ struct RecoveryModeModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
-        case let .appear(context):
+        case let .appear(did, context):
             var model = state
             model.recoveryStatus = .initial
             model.launchContext = context
@@ -393,6 +393,8 @@ struct RecoveryModeModel: ModelProtocol {
                 actions: [
                     .setCurrentTab(.explain),
                     .recoveryPhraseField(.reset),
+                    .recoveryDidField(.reset),
+                    .recoveryDidField(.setValue(input: did?.did ?? ""))
                 ],
                 environment: environment
             )

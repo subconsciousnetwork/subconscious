@@ -388,7 +388,6 @@ struct GatewayUrlFormFieldCursor: CursorProtocol {
     }
 }
 
-
 struct NicknameFormFieldCursor: CursorProtocol {
     typealias Model = AppModel
     typealias ViewModel = NicknameFormField
@@ -1375,11 +1374,7 @@ struct AppModel: ModelProtocol {
         if let sphereIdentity = sphereIdentity {
             logger.debug("Set sphere ID: \(sphereIdentity)")
         }
-        return update(
-            state: model,
-            action: .recoveryMode(.recoveryDidField(.setValue(input: sphereIdentity ?? ""))),
-            environment: environment
-        )
+        return Update(state: model)
     }
     
     /// Check for latest sphere version and store on the model
@@ -2398,7 +2393,7 @@ struct AppModel: ModelProtocol {
             actions: [
                 .presentSettingsSheet(true),
                 .presentRecoveryMode(true),
-                .recoveryMode(.appear(context))
+                .recoveryMode(.appear(Did(state.sphereIdentity ?? ""),context))
             ],
             environment: environment
         )
