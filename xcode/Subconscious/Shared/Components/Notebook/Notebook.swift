@@ -253,13 +253,6 @@ extension AppAction {
         switch action {
         case let .requestDeleteMemo(address):
             return .deleteMemo(address)
-        case let .detailStack(action):
-            switch (action) {
-            case .succeedDeleteMemo(let address):
-                return .succeedDeleteMemo(address)
-            case _:
-                return nil
-            }
         default:
             return nil
         }
@@ -566,8 +559,15 @@ struct NotebookModel: ModelProtocol {
         action: DetailStackAction
     ) -> Update<NotebookModel> {
         switch action {
-        case .succeedMergeMemo, .succeedUpdateAudience, .succeedMoveMemo, .succeedSaveMemo:
-            return update(state: state, action: .refreshLists, environment: environment)
+        case .succeedMergeMemo,
+                .succeedUpdateAudience,
+                .succeedMoveMemo,
+                .succeedSaveMemo:
+            return update(
+                state: state,
+                action: .refreshLists,
+                environment: environment
+            )
         case _:
             return NotebookDetailStackCursor.update(
                 state: state,
