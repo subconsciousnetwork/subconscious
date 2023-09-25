@@ -236,14 +236,6 @@ extension NotebookAction {
             return .ready
         case .succeedIndexOurSphere(_):
             return .refreshLists
-        case .succeedSaveMemo:
-            return .refreshLists
-        case .succeedUpdateAudience:
-            return .refreshLists
-        case .succeedMoveMemo:
-            return .refreshLists
-        case .succeedMergeMemo:
-            return .refreshLists
         case let .succeedDeleteMemo(address):
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
@@ -265,12 +257,6 @@ extension AppAction {
             switch (action) {
             case .succeedDeleteMemo(let address):
                 return .succeedDeleteMemo(address)
-            case .succeedMoveMemo(let from, let to):
-                return .succeedMoveMemo(from: from, to: to)
-            case .succeedSaveMemo(let address, let modified):
-                return .succeedSaveMemo(address: address, modified: modified)
-            case .succeedUpdateAudience(let receipt):
-                return .succeedUpdateAudience(receipt)
             case _:
                 return nil
             }
@@ -367,10 +353,10 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         case let .detailStack(action):
-            return NotebookDetailStackCursor.update(
+            return detailStack(
                 state: state,
-                action: action,
-                environment: environment
+                environment: environment,
+                action: action
             )
         case .appear:
             return appear(
@@ -572,6 +558,23 @@ struct NotebookModel: ModelProtocol {
         var model = state
         model.isSearchPresented = isPresented
         return Update(state: model)
+    }
+    
+    static func detailStack(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        action: DetailStackAction
+    ) -> Update<NotebookModel> {
+        switch action {
+        case .succeedMergeMemo, .succeedUpdateAudience, .succeedMoveMemo, .succeedSaveMemo:
+            return update(state: state, action: .refreshLists, environment: environment)
+        case _:
+            return NotebookDetailStackCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        }
     }
 
     /// Refresh all lists in the notebook tab from database.

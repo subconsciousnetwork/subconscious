@@ -259,10 +259,6 @@ enum AppAction: CustomLogStringConvertible {
     case failDeleteMemo(String)
     /// Deletion attempt succeeded
     case succeedDeleteMemo(Slashlink)
-    case succeedMoveMemo(from: Slashlink, to: Slashlink)
-    case succeedMergeMemo(parent: Slashlink, child: Slashlink)
-    case succeedSaveMemo(address: Slashlink, modified: Date)
-    case succeedUpdateAudience(MoveReceipt)
     
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
@@ -1028,14 +1024,6 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 enabled: enabled
             )
-        case .succeedMoveMemo:
-            return Update(state: state)
-        case .succeedUpdateAudience:
-            return Update(state: state)
-        case .succeedSaveMemo:
-            return Update(state: state)
-        case .succeedMergeMemo:
-            return Update(state: state)
         }
     }
     

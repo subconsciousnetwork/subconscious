@@ -244,6 +244,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 error: error
             )
+        // These act as notifications for parent models to react to
         case .succeedMoveMemo:
             return Update(state: state)
         case .succeedMergeMemo:
