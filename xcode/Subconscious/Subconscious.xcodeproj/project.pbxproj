@@ -14,6 +14,9 @@
 		B50961302A4CEFCF008E9EDB /* Tests_FirstRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */; };
 		B50B045B2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
 		B50B045C2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
+		B51359242AC113EE004385A7 /* RecoveryTabExplainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */; };
+		B51359262AC113F9004385A7 /* RecoveryTabFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */; };
+		B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359272AC11570004385A7 /* ErrorDetailView.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
 		B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
 		B528CB3C2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
@@ -475,6 +478,9 @@
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FirstRun.swift; sourceTree = "<group>"; };
 		B50B045A2A04B61000AA584B /* TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeService.swift; sourceTree = "<group>"; };
+		B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryTabExplainView.swift; sourceTree = "<group>"; };
+		B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryTabFormView.swift; sourceTree = "<group>"; };
+		B51359272AC11570004385A7 /* ErrorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDetailView.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FabSpacerView.swift; sourceTree = "<group>"; };
 		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
@@ -800,7 +806,6 @@
 				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
 				B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */,
-				B5E816B72AB037BF00C61500 /* SwiftNoosphere in Frameworks */,
 				B8CA8F1A288F038C005F8802 /* Tracery in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -829,6 +834,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B51359222AC113C1004385A7 /* Recovery */ = {
+			isa = PBXGroup;
+			children = (
+				B5E816BA2AB18E6700C61500 /* RecoveryView.swift */,
+				B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */,
+				B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */,
+			);
+			path = Recovery;
+			sourceTree = "<group>";
+		};
 		B532F8C129B1750F00CE9256 /* Transclude */ = {
 			isa = PBXGroup;
 			children = (
@@ -1243,7 +1258,6 @@
 				B8879E9B26F8F3BD00A0B4FF /* Services */,
 				B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */,
 				B5F68F622A0B1E6900CE4DD7 /* OnboardingTheme.swift */,
-				B5E816BA2AB18E6700C61500 /* RecoveryView.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -1358,6 +1372,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B51359222AC113C1004385A7 /* Recovery */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -1403,6 +1418,7 @@
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
 				B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */,
 				B5C918F52A67BB35004C6CD5 /* EllipsisLabelView.swift */,
+				B51359272AC11570004385A7 /* ErrorDetailView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1852,6 +1868,7 @@
 				B8925B3129C2320D001F9503 /* MemoDetailDescription.swift in Sources */,
 				B8CBAFA9299580E50079107E /* StoreProtocol.swift in Sources */,
 				B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */,
+				B51359242AC113EE004385A7 /* RecoveryTabExplainView.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */,
 				B8B3EE7D297B1A1000779B7F /* ViewDebugUtilities.swift in Sources */,
@@ -1905,6 +1922,7 @@
 				B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B85DF78C29B660C60042D725 /* Prose.swift in Sources */,
 				B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
+				B51359262AC113F9004385A7 /* RecoveryTabFormView.swift in Sources */,
 				B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */,
 				B81D063B29F1821E00593BBA /* SphereFile.swift in Sources */,
 				B5E60C8B2A145F04007065A1 /* UserProfileBio.swift in Sources */,
@@ -1936,6 +1954,7 @@
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
+				B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */,
 				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
