@@ -68,7 +68,6 @@ struct ErrorDetailView: View {
 enum RecoveryViewTab {
     case explain
     case form
-    case done
 }
 
 struct RecoveryView: View {
