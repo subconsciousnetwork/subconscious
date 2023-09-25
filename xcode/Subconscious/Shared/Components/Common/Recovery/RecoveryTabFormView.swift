@@ -13,6 +13,12 @@ struct RecoveryTabFormView: View {
     var app: Store<AppModel>
     var store: ViewStore<RecoveryModeModel>
     
+    var formIsValid: Bool {
+        store.state.recoveryDidField.isValid &&
+        app.state.gatewayURLField.isValid &&
+        store.state.recoveryPhraseField.isValid
+    }
+    
     var body: some View {
         VStack {
             Text("Recovery")
@@ -51,13 +57,9 @@ struct RecoveryTabFormView: View {
                     .disableAutocorrection(true)
                     .autocapitalization(.none)
                     .keyboardType(.URL)
-                    .onDisappear {
-                        app.send(.submitGatewayURLForm)
-                    }
-                    .disabled(app.state.gatewayOperationInProgress)
                     
                     ValidatedFormField(
-                        placeholder: "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty-one twenty-two tenty-three twenty-four",
+                        placeholder: "one two three four five six seven eight...",
                         field: store.state.recoveryPhraseField,
                         send: Address.forward(
                             send: store.send,
@@ -91,7 +93,8 @@ struct RecoveryTabFormView: View {
                                 return
                             }
                             
-                            guard let recoveryPhrase = store.state.recoveryPhraseField.validated else {
+                            let phraseField = store.state.recoveryPhraseField
+                            guard let recoveryPhrase = phraseField.validated else {
                                 return
                             }
                             
@@ -103,10 +106,7 @@ struct RecoveryTabFormView: View {
                     )
                     .buttonStyle(PillButtonStyle())
                     .disabled(
-                        store.state.recoveryStatus != .succeeded &&
-                            (!store.state.recoveryDidField.isValid ||
-                            !app.state.gatewayURLField.isValid ||
-                            !store.state.recoveryPhraseField.isValid)
+                        store.state.recoveryStatus != .succeeded && !formIsValid
                     )
                 })
         }

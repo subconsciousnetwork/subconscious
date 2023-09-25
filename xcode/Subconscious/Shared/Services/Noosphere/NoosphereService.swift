@@ -446,7 +446,10 @@ actor NoosphereService:
     }
     
     func recover(identity: Did, gatewayUrl: URL, mnemonic: RecoveryPhrase) async throws -> Bool {
+        // Update the gateway URL to whatever was in the form
         resetGateway(url: gatewayUrl)
+        // Release the sphere before we attempt to recover it
+        // If we don't do this the database LOCK will prevent us from recovering
         resetSphere(nil)
         
         let noosphere = try noosphere()
@@ -470,6 +473,7 @@ actor NoosphereService:
             }
         }
         
+        // Attempt to load up the sphere
         resetSphere(identity.did)
         
         return result
