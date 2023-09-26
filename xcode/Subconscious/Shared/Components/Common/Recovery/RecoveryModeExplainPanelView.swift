@@ -1,5 +1,5 @@
 //
-//  RecoveryTabExplainView.swift
+//  RecoveryModeExplainPanelView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 25/9/2023.
@@ -11,14 +11,13 @@ import ObservableStore
 
 struct RecoveryModeExplainPanelView: View {
     var store: ViewStore<RecoveryModeModel>
-    var did: Did?
-    var onCancel: () -> Void
+    
+    var did: Did? {
+        store.state.recoveryDidField.validated
+    }
     
     var body: some View {
         VStack(spacing: AppTheme.padding) {
-            Text("Recovery Mode")
-                .bold()
-            
             Spacer()
             
             switch store.state.launchContext {
@@ -87,20 +86,13 @@ struct RecoveryModeExplainPanelView: View {
             
             Spacer()
             
-            Button(
-                action: {
-                    store.send(.setCurrentTab(.form))
-                },
-                label: {
-                    Text("Proceed")
-                }
-            )
-            .buttonStyle(PillButtonStyle())
+            NavigationLink("Proceed", value: RecoveryViewStep.form)
+                .buttonStyle(PillButtonStyle())
             
             if store.state.launchContext == .userInitiated {
                 Button(
                     action: {
-                        onCancel()
+                        store.send(.requestPresent(false))
                     },
                     label: {
                         Text("Cancel")
@@ -109,5 +101,6 @@ struct RecoveryModeExplainPanelView: View {
             }
         }
         .padding(AppTheme.padding)
+        .navigationTitle("Recovery Mode")
     }
 }

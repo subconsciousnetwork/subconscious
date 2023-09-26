@@ -1,5 +1,5 @@
 //
-//  RecoveryTabFormView.swift
+//  RecoveryPanelFormView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 25/9/2023.
@@ -11,7 +11,6 @@ import ObservableStore
 
 struct RecoveryModeFormPanelView: View {
     var store: ViewStore<RecoveryModeModel>
-    var onDismiss: () -> Void
     
     var formIsValid: Bool {
         store.state.recoveryDidField.isValid &&
@@ -21,9 +20,6 @@ struct RecoveryModeFormPanelView: View {
     
     var body: some View {
         VStack(alignment: .center) {
-            Text("Recovery")
-                .bold()
-            
             Spacer()
     
             ValidatedFormField(
@@ -80,7 +76,7 @@ struct RecoveryModeFormPanelView: View {
             Button(
                 action: {
                     if store.state.recoveryStatus == .succeeded {
-                        return onDismiss()
+                        store.send(.requestPresent(false))
                     }
                     
                     guard let did = store.state.recoveryDidField.validated else {
@@ -110,5 +106,7 @@ struct RecoveryModeFormPanelView: View {
         }
         .disabled(store.state.recoveryStatus == .pending)
         .padding(AppTheme.padding)
+        .navigationTitle("Recovery")
+
     }
 }
