@@ -15,8 +15,6 @@ enum AppTab: String {
     case profile
 }
 
-/// The new tabbed view.
-/// Used when `Config.appTabs` is true.
 struct AppTabView: View {
     @ObservedObject var store: Store<AppModel>
 

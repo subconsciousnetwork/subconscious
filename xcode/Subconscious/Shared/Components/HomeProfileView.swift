@@ -35,17 +35,6 @@ struct HomeProfileNavigationView: View {
                     )
                 )
             }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(
-                        action: {
-                            app.send(.presentSettingsSheet(true))
-                        }
-                    ) {
-                        Image(systemName: "gearshape")
-                    }
-                }
-            }
         }
     }
 }
