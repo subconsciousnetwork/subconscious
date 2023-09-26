@@ -43,16 +43,9 @@ enum RecoveryViewTab {
 }
 
 struct RecoveryView: View {
-    @ObservedObject var app: Store<AppModel>
-    var store: ViewStore<RecoveryModeModel> {
-        app.viewStore(get: RecoveryModeCursor.get, tag: RecoveryModeCursor.tag)
-    }
+    var store: ViewStore<RecoveryModeModel>
     
     @Environment(\.colorScheme) var colorScheme
-    
-    var did: Did? {
-        Did(app.state.sphereIdentity ?? "")
-    }
     
     var body: some View {
         TabView(
@@ -63,9 +56,9 @@ struct RecoveryView: View {
         ) {
             RecoveryModeExplainPanelView(
                 store: store,
-                did: did,
+                did: store.state.recoveryDidField.validated,
                 onCancel: {
-                    app.send(.presentRecoveryMode(false))
+                    store.send(.requestPresent(false))
                 }
             )
             .tabItem {
@@ -76,7 +69,7 @@ struct RecoveryView: View {
             RecoveryModeFormPanelView(
                 store: store,
                 onDismiss: {
-                    app.send(.presentRecoveryMode(false))
+                    store.send(.requestPresent(false))
                 }
             )
             .tabItem {
@@ -98,8 +91,8 @@ enum RecoveryModeAction: Hashable {
     case recoveryDidField(RecoveryDidFormField.Action)
     case recoveryGatewayURLField(RecoveryGatewayURLFormField.Action)
     
+    case requestPresent(Bool)
     case populate(Did?, GatewayURL?, RecoveryModeLaunchContext)
-    case presented(Bool)
     case setCurrentTab(RecoveryViewTab)
     case attemptRecovery(Did, GatewayURL, RecoveryPhrase)
     case succeedRecovery
@@ -180,7 +173,6 @@ struct RecoveryModeModel: ModelProtocol {
     typealias Action = RecoveryModeAction
     typealias Environment = AppEnvironment
 
-    var presented: Bool = false
     var launchContext: RecoveryModeLaunchContext = .userInitiated
     var recoveryStatus: ResourceStatus = .initial
     var selectedTab: RecoveryViewTab = .explain
@@ -230,6 +222,9 @@ struct RecoveryModeModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
+        case .requestPresent:
+            // No-op. Should be handled by parent component
+            return Update(state: state)
         case let .populate(did, gatewayURL, context):
             return populate(
                 state: state,
@@ -238,10 +233,6 @@ struct RecoveryModeModel: ModelProtocol {
                 gatewayURL: gatewayURL,
                 context: context
             )
-        case .presented(let presented):
-            var model = state
-            model.presented = presented
-            return Update(state: model)
         case .setCurrentTab(let tab):
             var model = state
             model.selectedTab = tab
@@ -337,7 +328,15 @@ struct RecoveryModeModel: ModelProtocol {
 struct RecoveryView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            RecoveryView(app: Store(state: AppModel(), environment: AppEnvironment()))
+            RecoveryView(
+                store: Store(
+                    state: AppModel(),
+                    environment: AppEnvironment()
+                ).viewStore(
+                    get: RecoveryModeCursor.get,
+                    tag: RecoveryModeCursor.tag
+                )
+            )
         }
     }
 }
