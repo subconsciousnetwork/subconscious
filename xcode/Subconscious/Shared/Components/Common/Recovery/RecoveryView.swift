@@ -98,7 +98,7 @@ enum RecoveryModeAction: Hashable {
     case recoveryDidField(RecoveryDidFormField.Action)
     case recoveryGatewayURLField(RecoveryGatewayURLFormField.Action)
     
-    case appear(Did?, GatewayURL?, RecoveryModeLaunchContext)
+    case populate(Did?, GatewayURL?, RecoveryModeLaunchContext)
     case presented(Bool)
     case setCurrentTab(RecoveryViewTab)
     case attemptRecovery(Did, GatewayURL, RecoveryPhrase)
@@ -230,8 +230,8 @@ struct RecoveryModeModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
-        case let .appear(did, gatewayURL, context):
-            return appear(
+        case let .populate(did, gatewayURL, context):
+            return populate(
                 state: state,
                 environment: environment,
                 did: did,
@@ -261,7 +261,7 @@ struct RecoveryModeModel: ModelProtocol {
         }
     }
     
-    static func appear(
+    static func populate(
         state: Self,
         environment: Environment,
         did: Did?,

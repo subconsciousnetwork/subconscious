@@ -61,15 +61,15 @@ struct AppView: View {
         ) {
             SettingsView(app: store)
                 .presentationDetents([.fraction(0.999)]) // https://stackoverflow.com/a/74631815
-                .fullScreenCover(
-                    isPresented: Binding(
-                        get: { store.state.recoveryMode.presented },
-                        send: store.send,
-                        tag: AppAction.presentRecoveryMode
-                    )
-                ) {
-                    RecoveryView(app: store)
-                }
+        }
+        .fullScreenCover(
+            isPresented: Binding(
+                get: { store.state.recoveryMode.presented },
+                send: store.send,
+                tag: AppAction.presentRecoveryMode
+            )
+        ) {
+            RecoveryView(app: store)
         }
         .onAppear {
             store.send(.appear)
@@ -245,8 +245,11 @@ enum AppAction: CustomLogStringConvertible {
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
     
+    /// Dispatched on bootup, check the integrity of the app database
     case checkRecoveryStatus
+    /// Recovery mode can be launched manually (from settings) or automatically
     case requestRecoveryMode(RecoveryModeLaunchContext)
+    /// Control the visibility of the recovery mode overlay
     case presentRecoveryMode(_ isPresented: Bool)
     
     /// Notification that a follow happened, and the sphere was resolved
@@ -1114,8 +1117,7 @@ struct AppModel: ModelProtocol {
                 ),
                 .gatewayURLField(
                     .setValue(input: AppDefaults.standard.gatewayURL)
-                ),
-                .checkRecoveryStatus
+                )
             ],
             environment: environment
         )
@@ -1703,7 +1705,7 @@ struct AppModel: ModelProtocol {
         // For now, we just sync everything on ready.
         return update(
             state: state,
-            actions: [.syncAll],
+            actions: [.syncAll, .checkRecoveryStatus],
             environment: environment
         )
     }
@@ -2385,10 +2387,9 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .presentSettingsSheet(true),
                 .presentRecoveryMode(true),
                 .recoveryMode(
-                    .appear(
+                    .populate(
                         Did(state.sphereIdentity ?? ""),
                         GatewayURL(state.gatewayURL),
                         context
