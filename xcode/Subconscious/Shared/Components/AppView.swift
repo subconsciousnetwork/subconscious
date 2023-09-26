@@ -63,13 +63,17 @@ struct AppView: View {
                 .presentationDetents([.fraction(0.999)]) // https://stackoverflow.com/a/74631815
         }
         .fullScreenCover(
-            isPresented: Binding(
-                get: { store.state.recoveryMode.presented },
-                send: store.send,
+            isPresented: store.binding(
+                get: \.isRecoveryModePresented,
                 tag: AppAction.presentRecoveryMode
             )
         ) {
-            RecoveryView(app: store)
+            RecoveryView(
+                store: store.viewStore(
+                    get: RecoveryModeCursor.get,
+                    tag: RecoveryModeCursor.tag
+                )
+            )
         }
         .onAppear {
             store.send(.appear)
@@ -453,6 +457,8 @@ struct RecoveryModeCursor: CursorProtocol {
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
+        case let .requestPresent(isPresented):
+            return .presentRecoveryMode(isPresented)
         default:
             return .recoveryMode(action)
         }
@@ -492,6 +498,8 @@ struct AppModel: ModelProtocol {
         !isFirstRunComplete
     }
     
+    /// Should recovery mode be presented?
+    var isRecoveryModePresented = false
     var recoveryMode = RecoveryModeModel()
     
     /// Is database connected and migrated?
@@ -1075,11 +1083,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 context: context
             )
-        case .presentRecoveryMode(let presented):
+        case .presentRecoveryMode(let isPresented):
             return presentRecoveryMode(
                 state: state,
                 environment: environment,
-                presented: presented
+                isPresented: isPresented
             )
         }
     }
@@ -2403,11 +2411,13 @@ struct AppModel: ModelProtocol {
     static func presentRecoveryMode(
         state: Self,
         environment: Environment,
-        presented: Bool
+        isPresented: Bool
     ) -> Update<Self> {
-        return RecoveryModeCursor.update(
-            state: state,
-            action: .presented(presented),
+        var model = state
+        model.isRecoveryModePresented = isPresented
+        return update(
+            state: model,
+            action: .recoveryMode(.requestPresent(isPresented)),
             environment: environment
         )
     }

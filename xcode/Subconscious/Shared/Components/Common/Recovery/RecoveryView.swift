@@ -37,54 +37,28 @@ struct AttemptRecoveryLabel: View {
     }
 }
 
-enum RecoveryViewTab {
-    case explain
+enum RecoveryViewStep: Hashable {
     case form
 }
 
 struct RecoveryView: View {
-    @ObservedObject var app: Store<AppModel>
-    var store: ViewStore<RecoveryModeModel> {
-        app.viewStore(get: RecoveryModeCursor.get, tag: RecoveryModeCursor.tag)
-    }
-    
-    @Environment(\.colorScheme) var colorScheme
-    
-    var did: Did? {
-        Did(app.state.sphereIdentity ?? "")
-    }
+    var store: ViewStore<RecoveryModeModel>
     
     var body: some View {
-        TabView(
-            selection: store.binding(
-                get: { state in state.selectedTab },
-                tag: RecoveryModeAction.setCurrentTab
-            )
-        ) {
+        NavigationStack {
             RecoveryModeExplainPanelView(
-                store: store,
-                did: did,
-                onCancel: {
-                    app.send(.presentRecoveryMode(false))
-                }
+                store: store
             )
-            .tabItem {
-                Text("Recovery")
-            }
-            .tag(RecoveryViewTab.explain)
-            
-            RecoveryModeFormPanelView(
-                store: store,
-                onDismiss: {
-                    app.send(.presentRecoveryMode(false))
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: RecoveryViewStep.self) { step in
+                switch step {
+                case .form:
+                    RecoveryModeFormPanelView(
+                        store: store
+                    )
                 }
-            )
-            .tabItem {
-                Text("Form")
             }
-            .tag(RecoveryViewTab.form)
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
     }
 }
 
@@ -98,9 +72,8 @@ enum RecoveryModeAction: Hashable {
     case recoveryDidField(RecoveryDidFormField.Action)
     case recoveryGatewayURLField(RecoveryGatewayURLFormField.Action)
     
+    case requestPresent(Bool)
     case populate(Did?, GatewayURL?, RecoveryModeLaunchContext)
-    case presented(Bool)
-    case setCurrentTab(RecoveryViewTab)
     case attemptRecovery(Did, GatewayURL, RecoveryPhrase)
     case succeedRecovery
     case failRecovery(_ error: String)
@@ -179,11 +152,9 @@ struct RecoveryGatewayURLFormFieldCursor: CursorProtocol {
 struct RecoveryModeModel: ModelProtocol {
     typealias Action = RecoveryModeAction
     typealias Environment = AppEnvironment
-
-    var presented: Bool = false
+    
     var launchContext: RecoveryModeLaunchContext = .userInitiated
     var recoveryStatus: ResourceStatus = .initial
-    var selectedTab: RecoveryViewTab = .explain
     
     var recoveryPhraseField = RecoveryPhraseFormField(
         value: "",
@@ -230,6 +201,9 @@ struct RecoveryModeModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
+        case .requestPresent:
+            // No-op. Should be handled by parent component
+            return Update(state: state)
         case let .populate(did, gatewayURL, context):
             return populate(
                 state: state,
@@ -238,14 +212,6 @@ struct RecoveryModeModel: ModelProtocol {
                 gatewayURL: gatewayURL,
                 context: context
             )
-        case .presented(let presented):
-            var model = state
-            model.presented = presented
-            return Update(state: model)
-        case .setCurrentTab(let tab):
-            var model = state
-            model.selectedTab = tab
-            return Update(state: model).animation(.default)
         case .attemptRecovery(let did, let gatewayUrl, let recoveryPhrase):
             return attemptRecovery(
                 state: state,
@@ -274,7 +240,6 @@ struct RecoveryModeModel: ModelProtocol {
         return update(
             state: model,
             actions: [
-                .setCurrentTab(.explain),
                 .recoveryPhraseField(.reset),
                 .recoveryDidField(.reset),
                 .recoveryDidField(.setValue(input: did?.did ?? "")),
@@ -337,7 +302,15 @@ struct RecoveryModeModel: ModelProtocol {
 struct RecoveryView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            RecoveryView(app: Store(state: AppModel(), environment: AppEnvironment()))
+            RecoveryView(
+                store: Store(
+                    state: AppModel(),
+                    environment: AppEnvironment()
+                ).viewStore(
+                    get: RecoveryModeCursor.get,
+                    tag: RecoveryModeCursor.tag
+                )
+            )
         }
     }
 }
