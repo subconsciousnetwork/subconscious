@@ -14,8 +14,8 @@
 		B50961302A4CEFCF008E9EDB /* Tests_FirstRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */; };
 		B50B045B2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
 		B50B045C2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
-		B51359242AC113EE004385A7 /* RecoveryTabExplainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */; };
-		B51359262AC113F9004385A7 /* RecoveryTabFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */; };
+		B51359242AC113EE004385A7 /* RecoveryModeExplainPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359232AC113EE004385A7 /* RecoveryModeExplainPanelView.swift */; };
+		B51359262AC113F9004385A7 /* RecoveryModeFormPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */; };
 		B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359272AC11570004385A7 /* ErrorDetailView.swift */; };
 		B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359292AC2723E004385A7 /* GatewayURL.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
@@ -479,8 +479,8 @@
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FirstRun.swift; sourceTree = "<group>"; };
 		B50B045A2A04B61000AA584B /* TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeService.swift; sourceTree = "<group>"; };
-		B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryTabExplainView.swift; sourceTree = "<group>"; };
-		B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryTabFormView.swift; sourceTree = "<group>"; };
+		B51359232AC113EE004385A7 /* RecoveryModeExplainPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryModeExplainPanelView.swift; sourceTree = "<group>"; };
+		B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryModeFormPanelView.swift; sourceTree = "<group>"; };
 		B51359272AC11570004385A7 /* ErrorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDetailView.swift; sourceTree = "<group>"; };
 		B51359292AC2723E004385A7 /* GatewayURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayURL.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
@@ -840,8 +840,8 @@
 			isa = PBXGroup;
 			children = (
 				B5E816BA2AB18E6700C61500 /* RecoveryView.swift */,
-				B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */,
-				B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */,
+				B51359232AC113EE004385A7 /* RecoveryModeExplainPanelView.swift */,
+				B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */,
 			);
 			path = Recovery;
 			sourceTree = "<group>";
@@ -1871,7 +1871,7 @@
 				B8925B3129C2320D001F9503 /* MemoDetailDescription.swift in Sources */,
 				B8CBAFA9299580E50079107E /* StoreProtocol.swift in Sources */,
 				B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */,
-				B51359242AC113EE004385A7 /* RecoveryTabExplainView.swift in Sources */,
+				B51359242AC113EE004385A7 /* RecoveryModeExplainPanelView.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */,
 				B8B3EE7D297B1A1000779B7F /* ViewDebugUtilities.swift in Sources */,
@@ -1926,7 +1926,7 @@
 				B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B85DF78C29B660C60042D725 /* Prose.swift in Sources */,
 				B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
-				B51359262AC113F9004385A7 /* RecoveryTabFormView.swift in Sources */,
+				B51359262AC113F9004385A7 /* RecoveryModeFormPanelView.swift in Sources */,
 				B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */,
 				B81D063B29F1821E00593BBA /* SphereFile.swift in Sources */,
 				B5E60C8B2A145F04007065A1 /* UserProfileBio.swift in Sources */,

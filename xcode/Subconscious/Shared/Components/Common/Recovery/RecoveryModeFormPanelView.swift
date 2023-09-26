@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import ObservableStore
 
-struct RecoveryTabFormView: View {
+struct RecoveryModeFormPanelView: View {
     var store: ViewStore<RecoveryModeModel>
     var onDismiss: () -> Void
     
@@ -73,7 +73,8 @@ struct RecoveryTabFormView: View {
             Spacer()
             
             if case .failed(let error) = store.state.recoveryStatus {
-                ErrorDetailView(error: error)
+                Text(error)
+                    .foregroundColor(.red)
             }
             
             Button(

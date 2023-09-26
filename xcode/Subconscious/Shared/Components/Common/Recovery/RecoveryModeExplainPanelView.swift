@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import ObservableStore
 
-struct RecoveryTabExplainView: View {
+struct RecoveryModeExplainPanelView: View {
     var store: ViewStore<RecoveryModeModel>
     var did: Did?
     var onCancel: () -> Void

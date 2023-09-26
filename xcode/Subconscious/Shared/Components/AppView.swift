@@ -1114,7 +1114,8 @@ struct AppModel: ModelProtocol {
                 ),
                 .gatewayURLField(
                     .setValue(input: AppDefaults.standard.gatewayURL)
-                )
+                ),
+                .checkRecoveryStatus
             ],
             environment: environment
         )
@@ -1702,7 +1703,7 @@ struct AppModel: ModelProtocol {
         // For now, we just sync everything on ready.
         return update(
             state: state,
-            actions: [.syncAll, .checkRecoveryStatus],
+            actions: [.syncAll],
             environment: environment
         )
     }

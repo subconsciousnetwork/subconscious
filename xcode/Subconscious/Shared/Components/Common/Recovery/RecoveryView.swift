@@ -43,7 +43,7 @@ enum RecoveryViewTab {
 }
 
 struct RecoveryView: View {
-    var app: Store<AppModel>
+    @ObservedObject var app: Store<AppModel>
     var store: ViewStore<RecoveryModeModel> {
         app.viewStore(get: RecoveryModeCursor.get, tag: RecoveryModeCursor.tag)
     }
@@ -56,13 +56,12 @@ struct RecoveryView: View {
     
     var body: some View {
         TabView(
-            selection: Binding(
-                get: { store.state.selectedTab },
-                send: store.send,
+            selection: store.binding(
+                get: { state in state.selectedTab },
                 tag: RecoveryModeAction.setCurrentTab
             )
         ) {
-            RecoveryTabExplainView(
+            RecoveryModeExplainPanelView(
                 store: store,
                 did: did,
                 onCancel: {
@@ -74,7 +73,7 @@ struct RecoveryView: View {
             }
             .tag(RecoveryViewTab.explain)
             
-            RecoveryTabFormView(
+            RecoveryModeFormPanelView(
                 store: store,
                 onDismiss: {
                     app.send(.presentRecoveryMode(false))
