@@ -15,7 +15,9 @@ extension BlockEditor {
         case blocks = 0
         case appendix = 1
     }
+}
 
+extension BlockEditor {
     /// Manages the "DOM" of the editor.
     class ViewController:
         UIViewController,
@@ -470,7 +472,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
                 state: state,
                 selecting: selecting
             )
-        case let .exitBlockSelectMode:
+        case .exitBlockSelectMode:
             return exitBlockSelectMode(
                 state: state
             )
@@ -796,6 +798,10 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         state: Model,
         point: CGPoint
     ) -> Update {
+        guard !state.isBlockSelectMode else {
+            Self.logger.debug("Long-pressed while in block select mode. No-op.")
+            return Update(state: state)
+        }
         guard let indexPath = collectionView.indexPathForItem(at: point) else {
             let x = point.x
             let y = point.y
