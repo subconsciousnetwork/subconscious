@@ -22,14 +22,9 @@ struct AppView: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                if AppDefaults.standard.appTabs {
-                    AppTabView(store: store)
-                } else {
-                    NotebookView(app: store)
-                }
-            }
-            .zIndex(0)
+            AppTabView(store: store)
+                .zIndex(0)
+            
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
                     state: store.state.appUpgrade,
@@ -295,7 +290,7 @@ enum AppAction {
     
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
-
+    
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
@@ -530,7 +525,6 @@ struct AppModel: ModelProtocol {
     )
     var inviteCodeRedemptionStatus = ResourceStatus.initial
     var gatewayProvisioningStatus = ResourceStatus.initial
-    var appTabsEnabled = false
     
     /// Default sphere identity
     ///
@@ -1113,7 +1107,6 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
-        model.appTabsEnabled = AppDefaults.standard.appTabs
         
         // Update model from app defaults
         return update(
@@ -2464,7 +2457,6 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-    
 }
 
 // MARK: Environment

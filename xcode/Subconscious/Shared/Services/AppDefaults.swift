@@ -25,7 +25,4 @@ struct AppDefaults {
     
     @UserDefaultsProperty(forKey: "inviteCode")
     var inviteCode: String? = nil
-    
-    @UserDefaultsProperty(forKey: "appTabs")
-    var appTabs: Bool = false
 }

@@ -14,16 +14,6 @@ struct MainToolbar: ToolbarContent {
     var profileAction: () -> Void
     
     var body: some ToolbarContent {
-        if !AppDefaults.standard.appTabs {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: profileAction
-                ) {
-                    Image(systemName: "person")
-                }
-            }
-        }
-        
         ToolbarItem(placement: .primaryAction) {
             Button(
                 action: {
