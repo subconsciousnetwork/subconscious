@@ -62,6 +62,19 @@ struct AppView: View {
             SettingsView(app: store)
                 .presentationDetents([.fraction(0.999)]) // https://stackoverflow.com/a/74631815
         }
+        .fullScreenCover(
+            isPresented: store.binding(
+                get: \.isRecoveryModePresented,
+                tag: AppAction.presentRecoveryMode
+            )
+        ) {
+            RecoveryView(
+                store: store.viewStore(
+                    get: RecoveryModeCursor.get,
+                    tag: RecoveryModeCursor.tag
+                )
+            )
+        }
         .onAppear {
             store.send(.appear)
         }
@@ -81,7 +94,7 @@ struct AppView: View {
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
-typealias GatewayUrlFormField = FormField<String, URL>
+typealias GatewayUrlFormField = FormField<String, GatewayURL>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -93,6 +106,7 @@ enum AppAction: CustomLogStringConvertible {
     case nicknameFormField(NicknameFormField.Action)
     case inviteCodeFormField(InviteCodeFormField.Action)
     case gatewayURLField(GatewayUrlFormField.Action)
+    case recoveryMode(RecoveryModeModel.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -118,9 +132,9 @@ enum AppAction: CustomLogStringConvertible {
     case failFetchNicknameFromProfile(_ message: String)
     
     /// Set gateway URL
-    case submitGatewayURL(_ url: URL)
+    case submitGatewayURL(_ url: GatewayURL)
     case submitGatewayURLForm
-    case succeedResetGatewayURL(_ url: URL)
+    case succeedResetGatewayURL(_ url: GatewayURL)
 
     /// Create a new sphere given an owner key name
     case createSphere
@@ -218,7 +232,7 @@ enum AppAction: CustomLogStringConvertible {
     
     /// Check gateway
     case requestGatewayProvisioningStatus
-    case succeedProvisionGateway(_ gatewayURL: URL)
+    case succeedProvisionGateway(_ gatewayURL: GatewayURL)
     case failProvisionGateway(_ error: String)
     
     case setFirstRunPath([FirstRunStep])
@@ -234,6 +248,13 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
+    
+    /// Dispatched on bootup, check the integrity of the app database
+    case checkRecoveryStatus
+    /// Recovery mode can be launched manually (from settings) or automatically
+    case requestRecoveryMode(RecoveryModeLaunchContext)
+    /// Control the visibility of the recovery mode overlay
+    case presentRecoveryMode(_ isPresented: Bool)
     
     /// Notification that a follow happened, and the sphere was resolved
     case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
@@ -420,6 +441,30 @@ struct InviteCodeFormFieldCursor: CursorProtocol {
     }
 }
 
+struct RecoveryModeCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = RecoveryModeModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryMode
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryMode = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case let .requestPresent(isPresented):
+            return .presentRecoveryMode(isPresented)
+        default:
+            return .recoveryMode(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -452,6 +497,10 @@ struct AppModel: ModelProtocol {
     var shouldPresentFirstRun: Bool {
         !isFirstRunComplete
     }
+    
+    /// Should recovery mode be presented?
+    var isRecoveryModePresented = false
+    var recoveryMode = RecoveryModeModel()
     
     /// Is database connected and migrated?
     var databaseMigrationStatus = ResourceStatus.initial
@@ -518,14 +567,7 @@ struct AppModel: ModelProtocol {
     var gatewayId: String? = nil
     var gatewayURLField = GatewayUrlFormField(
         value: "",
-        validate: { value in
-            guard let url = URL(string: value),
-                  url.isHTTP() else {
-                return nil
-            }
-            
-            return url
-        }
+        validate: { value in GatewayURL(value) }
     )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
@@ -595,6 +637,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
+            )
+        case .recoveryMode(let action):
+            return RecoveryModeCursor.update(
+                state: state,
+                action: action,
+                environment: environment
             )
         case .authorization(let action):
             return AuthorizationSettingsCursor.update(
@@ -1024,6 +1072,23 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 enabled: enabled
             )
+        case .checkRecoveryStatus:
+            return checkRecoveryStatus(
+                state: state,
+                environment: environment
+            )
+        case .requestRecoveryMode(let context):
+            return requestRecoveryMode(
+                state: state,
+                environment: environment,
+                context: context
+            )
+        case .presentRecoveryMode(let isPresented):
+            return presentRecoveryMode(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
         }
     }
     
@@ -1194,7 +1259,7 @@ struct AppModel: ModelProtocol {
     static func submitGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
         // We always ensure the field reflects this value
         // even if nothing changes from a Noosphere perspective
@@ -1256,9 +1321,9 @@ struct AppModel: ModelProtocol {
     static func succeedResetGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
-        logger.log("Reset gateway URL: \(url)")
+        logger.log("Reset gateway URL: \(url.description)")
         return Update(state: state)
     }
     
@@ -1648,7 +1713,7 @@ struct AppModel: ModelProtocol {
         // For now, we just sync everything on ready.
         return update(
             state: state,
-            action: .syncAll,
+            actions: [.syncAll, .checkRecoveryStatus],
             environment: environment
         )
     }
@@ -2142,7 +2207,7 @@ struct AppModel: ModelProtocol {
     static func succeedProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
         var model = state
         model.gatewayProvisioningStatus = .succeeded
@@ -2321,7 +2386,66 @@ struct AppModel: ModelProtocol {
         model.appTabsEnabled = enabled
         return Update(state: model)
     }
+                
+    static func requestRecoveryMode(
+        state: Self,
+        environment: Environment,
+        context: RecoveryModeLaunchContext
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .presentRecoveryMode(true),
+                .recoveryMode(
+                    .populate(
+                        Did(state.sphereIdentity ?? ""),
+                        GatewayURL(state.gatewayURL),
+                        context
+                    )
+                )
+            ],
+            environment: environment
+        )
+    }
     
+    static func presentRecoveryMode(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isRecoveryModePresented = isPresented
+        return update(
+            state: model,
+            action: .recoveryMode(.requestPresent(isPresented)),
+            environment: environment
+        )
+    }
+    
+    static func checkRecoveryStatus(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            let identity = try await environment.noosphere.identity()
+            let did = try environment.database.readOurSphere()?.identity
+            if did != nil && identity != did {
+                return AppAction.requestRecoveryMode(
+                    .unreadableDatabase("Mismatched identity")
+                )
+            }
+            
+            return AppAction.presentRecoveryMode(false)
+        }
+        .recover { error in
+            AppAction.requestRecoveryMode(
+                .unreadableDatabase(error.localizedDescription)
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
 }
 
 // MARK: Environment
@@ -2381,7 +2505,7 @@ struct AppEnvironment {
         let sphereStorageURL = applicationSupportURL.appending(
             path: Config.default.noosphere.sphereStoragePath
         )
-        let defaultGateway = URL(string: AppDefaults.standard.gatewayURL)
+        let defaultGateway = GatewayURL(AppDefaults.standard.gatewayURL)
         let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
 
         let noosphere = NoosphereService(

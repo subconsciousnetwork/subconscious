@@ -34,7 +34,7 @@ enum NoosphereServiceError: Error, LocalizedError {
 protocol NoosphereServiceProtocol {
     var globalStorageURL: URL { get async }
     var sphereStorageURL: URL { get async }
-    var gatewayURL: URL? { get async }
+    var gatewayURL: GatewayURL? { get async }
 
     func createSphere(ownerKeyName: String) async throws -> SphereReceipt
 
@@ -43,10 +43,12 @@ protocol NoosphereServiceProtocol {
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
-    func resetGateway(url: URL?) async
+    func resetGateway(url: GatewayURL?) async
     
     /// Reset managed instances of Noosphere and Sphere
     func reset() async
+    
+    func recover(identity: Did, gatewayUrl: GatewayURL, mnemonic: RecoveryPhrase) async throws -> Bool
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
@@ -64,7 +66,7 @@ actor NoosphereService:
     private var logger: Logger
     var globalStorageURL: URL
     var sphereStorageURL: URL
-    var gatewayURL: URL?
+    var gatewayURL: GatewayURL?
     private var _noosphereLogLevel: Noosphere.NoosphereLogLevel
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
@@ -76,7 +78,7 @@ actor NoosphereService:
     init(
         globalStorageURL: URL,
         sphereStorageURL: URL,
-        gatewayURL: URL? = nil,
+        gatewayURL: GatewayURL? = nil,
         sphereIdentity: String? = nil,
         noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic,
         logger: Logger = logger
@@ -116,7 +118,7 @@ actor NoosphereService:
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
-    func resetGateway(url: URL?) {
+    func resetGateway(url: GatewayURL?) {
         guard self.gatewayURL != url else {
             logger.debug("Reset gateway to identical URL, ignoring")
             return
@@ -441,6 +443,26 @@ actor NoosphereService:
     
     func verify(authorization: Authorization) async throws -> Bool {
         try await self.sphere().verify(authorization: authorization)
+    }
+    
+    func recover(identity: Did, gatewayUrl: GatewayURL, mnemonic: RecoveryPhrase) async throws -> Bool {
+        // Update the gateway URL to whatever was in the form
+        resetGateway(url: gatewayUrl)
+        // Release the sphere before we attempt to recover it
+        // If we don't do this the database LOCK will prevent us from recovering
+        resetSphere(nil)
+        
+        let result = try await noosphere()
+            .recover(
+                identity: identity,
+                localKeyName: Config.default.noosphere.ownerKeyName,
+                mnemonic: mnemonic
+            )
+        
+        // Attempt to load up the sphere
+        resetSphere(identity.did)
+        
+        return result
     }
     
     /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.

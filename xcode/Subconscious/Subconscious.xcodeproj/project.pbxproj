@@ -14,6 +14,10 @@
 		B50961302A4CEFCF008E9EDB /* Tests_FirstRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */; };
 		B50B045B2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
 		B50B045C2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
+		B51359242AC113EE004385A7 /* RecoveryModeExplainPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359232AC113EE004385A7 /* RecoveryModeExplainPanelView.swift */; };
+		B51359262AC113F9004385A7 /* RecoveryModeFormPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */; };
+		B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359272AC11570004385A7 /* ErrorDetailView.swift */; };
+		B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359292AC2723E004385A7 /* GatewayURL.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
 		B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
 		B528CB3C2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
@@ -90,6 +94,8 @@
 		B5D8FEB82AAC426C002CBF00 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */; };
 		B5E60C8B2A145F04007065A1 /* UserProfileBio.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60C8A2A145F04007065A1 /* UserProfileBio.swift */; };
 		B5E60C8D2A146838007065A1 /* Tests_UserProfileBio.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60C8C2A146838007065A1 /* Tests_UserProfileBio.swift */; };
+		B5E816B92AB0458E00C61500 /* RecoveryPhrase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E816B82AB0458E00C61500 /* RecoveryPhrase.swift */; };
+		B5E816BB2AB18E6700C61500 /* RecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E816BA2AB18E6700C61500 /* RecoveryView.swift */; };
 		B5F68F602A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */; };
 		B5F68F612A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */; };
 		B5F68F632A0B1E6900CE4DD7 /* OnboardingTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F68F622A0B1E6900CE4DD7 /* OnboardingTheme.swift */; };
@@ -473,6 +479,10 @@
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FirstRun.swift; sourceTree = "<group>"; };
 		B50B045A2A04B61000AA584B /* TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeService.swift; sourceTree = "<group>"; };
+		B51359232AC113EE004385A7 /* RecoveryModeExplainPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryModeExplainPanelView.swift; sourceTree = "<group>"; };
+		B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryModeFormPanelView.swift; sourceTree = "<group>"; };
+		B51359272AC11570004385A7 /* ErrorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDetailView.swift; sourceTree = "<group>"; };
+		B51359292AC2723E004385A7 /* GatewayURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayURL.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FabSpacerView.swift; sourceTree = "<group>"; };
 		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
@@ -532,6 +542,8 @@
 		B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		B5E60C8A2A145F04007065A1 /* UserProfileBio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileBio.swift; sourceTree = "<group>"; };
 		B5E60C8C2A146838007065A1 /* Tests_UserProfileBio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserProfileBio.swift; sourceTree = "<group>"; };
+		B5E816B82AB0458E00C61500 /* RecoveryPhrase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryPhrase.swift; sourceTree = "<group>"; };
+		B5E816BA2AB18E6700C61500 /* RecoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryView.swift; sourceTree = "<group>"; };
 		B5F68F5F2A09F7E200CE4DD7 /* StackedGlowingImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackedGlowingImage.swift; sourceTree = "<group>"; };
 		B5F68F622A0B1E6900CE4DD7 /* OnboardingTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTheme.swift; sourceTree = "<group>"; };
 		B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookService.swift; sourceTree = "<group>"; };
@@ -824,6 +836,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B51359222AC113C1004385A7 /* Recovery */ = {
+			isa = PBXGroup;
+			children = (
+				B5E816BA2AB18E6700C61500 /* RecoveryView.swift */,
+				B51359232AC113EE004385A7 /* RecoveryModeExplainPanelView.swift */,
+				B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */,
+			);
+			path = Recovery;
+			sourceTree = "<group>";
+		};
 		B532F8C129B1750F00CE9256 /* Transclude */ = {
 			isa = PBXGroup;
 			children = (
@@ -1163,6 +1185,8 @@
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 				B5E60C8A2A145F04007065A1 /* UserProfileBio.swift */,
 				B81A1A6C29DF267200B4CD1C /* LoadingState.swift */,
+				B5E816B82AB0458E00C61500 /* RecoveryPhrase.swift */,
+				B51359292AC2723E004385A7 /* GatewayURL.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1351,6 +1375,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B51359222AC113C1004385A7 /* Recovery */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -1396,6 +1421,7 @@
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
 				B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */,
 				B5C918F52A67BB35004C6CD5 /* EllipsisLabelView.swift */,
+				B51359272AC11570004385A7 /* ErrorDetailView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1741,6 +1767,7 @@
 				B58C73A729DBB3B500B00EA1 /* UserProfileView.swift in Sources */,
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
 				B83B19A32A005C6B007657D9 /* Did+SubconsciousLocal.swift in Sources */,
+				B5E816BB2AB18E6700C61500 /* RecoveryView.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
@@ -1844,6 +1871,7 @@
 				B8925B3129C2320D001F9503 /* MemoDetailDescription.swift in Sources */,
 				B8CBAFA9299580E50079107E /* StoreProtocol.swift in Sources */,
 				B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */,
+				B51359242AC113EE004385A7 /* RecoveryModeExplainPanelView.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */,
 				B8B3EE7D297B1A1000779B7F /* ViewDebugUtilities.swift in Sources */,
@@ -1868,6 +1896,7 @@
 				B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */,
 				B59D556329BBFF56007915E2 /* FormField.swift in Sources */,
 				B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */,
+				B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */,
 				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,
@@ -1891,11 +1920,13 @@
 				B5CA12A029FF732A00860E9E /* GatewayProvisioningService.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
 				B89E30772911B51A00A4721F /* Migration.swift in Sources */,
+				B5E816B92AB0458E00C61500 /* RecoveryPhrase.swift in Sources */,
 				B540F8BA2A0C748C00876256 /* Line.swift in Sources */,
 				B8B4D7EC27EA890B00633B5F /* ShadowStyle.swift in Sources */,
 				B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B85DF78C29B660C60042D725 /* Prose.swift in Sources */,
 				B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
+				B51359262AC113F9004385A7 /* RecoveryModeFormPanelView.swift in Sources */,
 				B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */,
 				B81D063B29F1821E00593BBA /* SphereFile.swift in Sources */,
 				B5E60C8B2A145F04007065A1 /* UserProfileBio.swift in Sources */,
@@ -1927,6 +1958,7 @@
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
+				B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */,
 				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
@@ -2640,7 +2672,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
-				branch = "swift-noosphere-v0.14.2";
+				branch = "swift-noosphere-v0.15.0";
 				kind = branch;
 			};
 		};

@@ -30,16 +30,12 @@ struct ResourceSyncBadge: View {
         switch status {
         case .initial:
             Image(systemName: "arrow.triangle.2.circlepath")
-                .foregroundColor(.secondary)
         case .pending:
             PendingSyncBadge()
-                .foregroundColor(.secondary)
         case .succeeded:
             Image(systemName: "checkmark.circle")
-                .foregroundColor(.secondary)
         case .failed:
             Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
-                .foregroundColor(.red)
         }
     }
 }

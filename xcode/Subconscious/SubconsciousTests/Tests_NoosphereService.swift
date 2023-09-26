@@ -32,7 +32,7 @@ final class Tests_NoosphereService: XCTestCase {
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
-            gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
+            gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite")
         )
         
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
