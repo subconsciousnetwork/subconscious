@@ -40,11 +40,8 @@ struct HomeProfileNavigationView: View {
 }
 
 //  MARK: View
-/// The file view for notes
 struct HomeProfileView: View {
-    /// Global shared store
     @ObservedObject var app: Store<AppModel>
-    /// Local major view store
     @StateObject private var store = Store(
         state: HomeProfileModel(),
         environment: AppEnvironment.default
@@ -60,15 +57,10 @@ struct HomeProfileView: View {
         .onAppear {
             store.send(.appear)
         }
-        /// Replay some app actions on notebook store
+        /// Replay app actions on local store
         .onReceive(
             app.actions.compactMap(HomeProfileAction.from),
             perform: store.send
-        )
-        /// Replay select notebook actions on app
-        .onReceive(
-            store.actions.compactMap(AppAction.from),
-            perform: app.send
         )
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
@@ -80,11 +72,8 @@ struct HomeProfileView: View {
 
 //  MARK: Action
 enum HomeProfileAction {
-    /// Tagged action for detail stack
     case detailStack(DetailStackAction)
-    /// Sent by `task` when the view first appears
     case appear
-    /// App database is ready. We rely on parent to notify us of this event.
     case ready
 
     case requestProfileRoot
@@ -111,8 +100,6 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
 }
 
 extension HomeProfileAction {
-    /// Map select app actions to `NotebookAction`
-    /// Used to replay select app actions on note store.
     static func from(_ action: AppAction) -> Self? {
         switch action {
         case .succeedIndexOurSphere(_):
@@ -125,27 +112,13 @@ extension HomeProfileAction {
     }
 }
 
-extension AppAction {
-    static func from(_ action: HomeProfileAction) -> Self? {
-        switch action {
-        default:
-            return nil
-        }
-    }
-}
-
 //  MARK: Model
-/// Model containing state for the notebook tab.
 struct HomeProfileModel: ModelProtocol {
-    var isFabShowing = true
-
-    /// Contains notebook detail panels
     var detailStack = DetailStackModel()
     var details: [MemoDetailDescription] {
         detailStack.details
     }
 
-    /// Main update function
     static func update(
         state: Self,
         action: HomeProfileAction,

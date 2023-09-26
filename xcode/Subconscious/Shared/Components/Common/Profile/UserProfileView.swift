@@ -76,11 +76,7 @@ struct FollowTabView: View {
         
         if state.following.count == 0 {
             EmptyStateView()
-        }
-        
-        
-        
-        if state.following.count != 0 {
+        } else {
             FabSpacerView()
         }
     }
@@ -164,9 +160,6 @@ struct UserProfileView: View {
                                         UserProfileDetailModel.followingTabIndex
                                     )
                                 )
-                            },
-                            onFollowNewUser: {
-                                send(.presentFollowNewUserFormSheet(true))
                             }
                         )
                         .padding(
