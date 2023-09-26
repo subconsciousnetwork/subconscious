@@ -221,7 +221,18 @@ struct NotebookDetailStackCursor: CursorProtocol {
     }
 
     static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
-        .detailStack(action)
+        switch action {
+        case let .succeedMergeMemo(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveMemo(from: from, to: to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+        case let .succeedSaveMemo(address: address, modified: modified):
+            return .succeedSaveEntry(slug: address, modified: modified)
+        case _:
+            return .detailStack(action)
+        }
     }
 }
 
@@ -235,7 +246,7 @@ extension NotebookAction {
         case .succeedSyncLocalFilesWithDatabase:
             return .ready
         case .succeedIndexOurSphere(_):
-            return .ready
+            return .refreshLists
         case let .succeedDeleteMemo(address):
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
@@ -447,12 +458,15 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .succeedSaveEntry:
+        case let .succeedSaveEntry(address, modified):
             // Just refresh note after save, for now.
             // This reorders list by modified.
             return update(
                 state: state,
-                action: .refreshLists,
+                actions: [
+                    .refreshLists,
+                    .detailStack(.succeedSaveMemo(address: address, modified: modified))
+                ],
                 environment: environment
             )
         case let .succeedMoveEntry(from, to):
@@ -552,7 +566,7 @@ struct NotebookModel: ModelProtocol {
         model.isSearchPresented = isPresented
         return Update(state: model)
     }
-
+    
     /// Refresh all lists in the notebook tab from database.
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
@@ -741,7 +755,8 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 actions: [
                     .setDetails(details),
-                    .refreshLists
+                    .refreshLists,
+                    .detailStack(.succeedMoveMemo(from: from, to: to))
                 ],
                 environment: environment
             )
@@ -775,7 +790,8 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 actions: [
                     .setDetails(details),
-                    .refreshLists
+                    .refreshLists,
+                    .detailStack(.succeedMergeMemo(parent: parent, child: child))
                 ],
                 environment: environment
             )
@@ -811,7 +827,8 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 actions: [
                     .setDetails(details),
-                    .refreshLists
+                    .refreshLists,
+                    .detailStack(.succeedUpdateAudience(receipt))
                 ],
                 environment: environment
             )
