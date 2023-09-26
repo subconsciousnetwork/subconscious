@@ -452,26 +452,12 @@ actor NoosphereService:
         // If we don't do this the database LOCK will prevent us from recovering
         resetSphere(nil)
         
-        let noosphere = try noosphere()
-        
-        let result: Bool = try await withCheckedThrowingContinuation { continuation in
-            nsSphereRecover(
-                noosphere.noosphere,
-                identity.did,
-                Config.default.noosphere.ownerKeyName,
-                mnemonic.verbatim
-            ) { error in
-                if let error = Noosphere.readErrorMessage(error) {
-                    continuation.resume(
-                        throwing: NoosphereError.foreignError(error)
-                    )
-                    return
-                }
-                
-                continuation.resume(returning: true)
-                return
-            }
-        }
+        let result = try await noosphere()
+            .recover(
+                identity: identity,
+                localKeyName: Config.default.noosphere.ownerKeyName,
+                mnemonic: mnemonic
+            )
         
         // Attempt to load up the sphere
         resetSphere(identity.did)
