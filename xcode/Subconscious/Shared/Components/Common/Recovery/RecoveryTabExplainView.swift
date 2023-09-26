@@ -10,12 +10,9 @@ import SwiftUI
 import ObservableStore
 
 struct RecoveryTabExplainView: View {
-    var app: Store<AppModel>
     var store: ViewStore<RecoveryModeModel>
-    
-    var did: Did? {
-        Did(app.state.sphereIdentity ?? "")
-    }
+    var did: Did?
+    var onCancel: () -> Void
     
     var body: some View {
         VStack(spacing: AppTheme.padding) {
@@ -103,7 +100,7 @@ struct RecoveryTabExplainView: View {
             if store.state.launchContext == .userInitiated {
                 Button(
                     action: {
-                        app.send(.presentRecoveryMode(false))
+                        onCancel()
                     },
                     label: {
                         Text("Cancel")

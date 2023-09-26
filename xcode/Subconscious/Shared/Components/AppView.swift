@@ -90,7 +90,7 @@ struct AppView: View {
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
-typealias GatewayUrlFormField = FormField<String, URL>
+typealias GatewayUrlFormField = FormField<String, GatewayURL>
 
 // MARK: Action
 enum AppAction: CustomLogStringConvertible {
@@ -128,9 +128,9 @@ enum AppAction: CustomLogStringConvertible {
     case failFetchNicknameFromProfile(_ message: String)
     
     /// Set gateway URL
-    case submitGatewayURL(_ url: URL)
+    case submitGatewayURL(_ url: GatewayURL)
     case submitGatewayURLForm
-    case succeedResetGatewayURL(_ url: URL)
+    case succeedResetGatewayURL(_ url: GatewayURL)
 
     /// Create a new sphere given an owner key name
     case createSphere
@@ -228,7 +228,7 @@ enum AppAction: CustomLogStringConvertible {
     
     /// Check gateway
     case requestGatewayProvisioningStatus
-    case succeedProvisionGateway(_ gatewayURL: URL)
+    case succeedProvisionGateway(_ gatewayURL: GatewayURL)
     case failProvisionGateway(_ error: String)
     
     case setFirstRunPath([FirstRunStep])
@@ -556,14 +556,7 @@ struct AppModel: ModelProtocol {
     var gatewayId: String? = nil
     var gatewayURLField = GatewayUrlFormField(
         value: "",
-        validate: { value in
-            guard let url = URL(string: value),
-                  url.isHTTP() else {
-                return nil
-            }
-            
-            return url
-        }
+        validate: { value in GatewayURL(value) }
     )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
@@ -1255,7 +1248,7 @@ struct AppModel: ModelProtocol {
     static func submitGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
         // We always ensure the field reflects this value
         // even if nothing changes from a Noosphere perspective
@@ -1317,9 +1310,9 @@ struct AppModel: ModelProtocol {
     static func succeedResetGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
-        logger.log("Reset gateway URL: \(url)")
+        logger.log("Reset gateway URL: \(url.description)")
         return Update(state: state)
     }
     
@@ -2203,7 +2196,7 @@ struct AppModel: ModelProtocol {
     static func succeedProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
         var model = state
         model.gatewayProvisioningStatus = .succeeded
@@ -2393,7 +2386,13 @@ struct AppModel: ModelProtocol {
             actions: [
                 .presentSettingsSheet(true),
                 .presentRecoveryMode(true),
-                .recoveryMode(.appear(Did(state.sphereIdentity ?? ""),context))
+                .recoveryMode(
+                    .appear(
+                        Did(state.sphereIdentity ?? ""),
+                        GatewayURL(state.gatewayURL),
+                        context
+                    )
+                )
             ],
             environment: environment
         )
@@ -2494,7 +2493,7 @@ struct AppEnvironment {
         let sphereStorageURL = applicationSupportURL.appending(
             path: Config.default.noosphere.sphereStoragePath
         )
-        let defaultGateway = URL(string: AppDefaults.standard.gatewayURL)
+        let defaultGateway = GatewayURL(AppDefaults.standard.gatewayURL)
         let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
 
         let noosphere = NoosphereService(

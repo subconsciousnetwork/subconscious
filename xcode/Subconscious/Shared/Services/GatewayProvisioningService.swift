@@ -166,7 +166,7 @@ actor GatewayProvisioningService {
     
     func waitForGatewayProvisioning(
         gatewayId: String
-    ) async throws -> URL? {
+    ) async throws -> GatewayURL? {
         let maxAttempts = 10 // 1+2+4+8+16+32+32+32+32+32 = 191 seconds
         return try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
             Self.logger.log("""
@@ -184,7 +184,7 @@ actor GatewayProvisioningService {
             guard let did = res.did,
                   let _ = Did(did),
                   let url = res.url,
-                  let url = URL(string: url) else {
+                  let url = GatewayURL(url) else {
                 throw GatewayProvisioningServiceError.invalidStatusResponse(res)
             }
             
@@ -194,7 +194,7 @@ actor GatewayProvisioningService {
     
     nonisolated func waitForGatewayProvisioningPublisher(
         gatewayId: String
-    ) -> AnyPublisher<URL?, Error> {
+    ) -> AnyPublisher<GatewayURL?, Error> {
         Future.detached {
             try await self.waitForGatewayProvisioning(
                 gatewayId: gatewayId

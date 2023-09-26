@@ -17,6 +17,7 @@
 		B51359242AC113EE004385A7 /* RecoveryTabExplainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */; };
 		B51359262AC113F9004385A7 /* RecoveryTabFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */; };
 		B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359272AC11570004385A7 /* ErrorDetailView.swift */; };
+		B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359292AC2723E004385A7 /* GatewayURL.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
 		B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
 		B528CB3C2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
@@ -481,6 +482,7 @@
 		B51359232AC113EE004385A7 /* RecoveryTabExplainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryTabExplainView.swift; sourceTree = "<group>"; };
 		B51359252AC113F9004385A7 /* RecoveryTabFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryTabFormView.swift; sourceTree = "<group>"; };
 		B51359272AC11570004385A7 /* ErrorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDetailView.swift; sourceTree = "<group>"; };
+		B51359292AC2723E004385A7 /* GatewayURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayURL.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FabSpacerView.swift; sourceTree = "<group>"; };
 		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
@@ -1184,6 +1186,7 @@
 				B5E60C8A2A145F04007065A1 /* UserProfileBio.swift */,
 				B81A1A6C29DF267200B4CD1C /* LoadingState.swift */,
 				B5E816B82AB0458E00C61500 /* RecoveryPhrase.swift */,
+				B51359292AC2723E004385A7 /* GatewayURL.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1893,6 +1896,7 @@
 				B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */,
 				B59D556329BBFF56007915E2 /* FormField.swift in Sources */,
 				B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */,
+				B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */,
 				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,

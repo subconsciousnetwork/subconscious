@@ -43,7 +43,7 @@ enum RecoveryViewTab {
 }
 
 struct RecoveryView: View {
-    @ObservedObject var app: Store<AppModel>
+    var app: Store<AppModel>
     var store: ViewStore<RecoveryModeModel> {
         app.viewStore(get: RecoveryModeCursor.get, tag: RecoveryModeCursor.tag)
     }
@@ -62,17 +62,28 @@ struct RecoveryView: View {
                 tag: RecoveryModeAction.setCurrentTab
             )
         ) {
-            RecoveryTabExplainView(app: app, store: store)
-                .tabItem {
-                    Text("Recovery")
+            RecoveryTabExplainView(
+                store: store,
+                did: did,
+                onCancel: {
+                    app.send(.presentRecoveryMode(false))
                 }
-                .tag(RecoveryViewTab.explain)
+            )
+            .tabItem {
+                Text("Recovery")
+            }
+            .tag(RecoveryViewTab.explain)
             
-            RecoveryTabFormView(app: app, store: store)
-                .tabItem {
-                    Text("Form")
+            RecoveryTabFormView(
+                store: store,
+                onDismiss: {
+                    app.send(.presentRecoveryMode(false))
                 }
-                .tag(RecoveryViewTab.form)
+            )
+            .tabItem {
+                Text("Form")
+            }
+            .tag(RecoveryViewTab.form)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
     }
@@ -86,17 +97,19 @@ enum RecoveryModeLaunchContext: Hashable {
 enum RecoveryModeAction: Hashable {
     case recoveryPhraseField(RecoveryPhraseFormField.Action)
     case recoveryDidField(RecoveryDidFormField.Action)
+    case recoveryGatewayURLField(RecoveryGatewayURLFormField.Action)
     
-    case appear(Did?, RecoveryModeLaunchContext)
+    case appear(Did?, GatewayURL?, RecoveryModeLaunchContext)
     case presented(Bool)
     case setCurrentTab(RecoveryViewTab)
-    case attemptRecovery(Did, URL, RecoveryPhrase)
+    case attemptRecovery(Did, GatewayURL, RecoveryPhrase)
     case succeedRecovery
     case failRecovery(_ error: String)
 }
 
 typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
 typealias RecoveryDidFormField = FormField<String, Did>
+typealias RecoveryGatewayURLFormField = FormField<String, GatewayURL>
 
 struct RecoveryPhraseFormFieldCursor: CursorProtocol {
     typealias Model = RecoveryModeModel
@@ -142,6 +155,27 @@ struct RecoveryDidFormFieldCursor: CursorProtocol {
     }
 }
 
+struct RecoveryGatewayURLFormFieldCursor: CursorProtocol {
+    typealias Model = RecoveryModeModel
+    typealias ViewModel = RecoveryGatewayURLFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryGatewayURLField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryGatewayURLField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .recoveryGatewayURLField(action)
+        }
+    }
+}
 
 struct RecoveryModeModel: ModelProtocol {
     typealias Action = RecoveryModeAction
@@ -160,6 +194,11 @@ struct RecoveryModeModel: ModelProtocol {
     var recoveryDidField = RecoveryDidFormField(
         value: "",
         validate: { value in Did(value) }
+    )
+    
+    var recoveryGatewayURLField = GatewayUrlFormField(
+        value: "",
+        validate: { value in GatewayURL(value) }
     )
 
     // Logger for actions
@@ -186,11 +225,18 @@ struct RecoveryModeModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
-        case let .appear(did, context):
+        case .recoveryGatewayURLField(let action):
+            return RecoveryGatewayURLFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
+        case let .appear(did, gatewayURL, context):
             return appear(
                 state: state,
                 environment: environment,
                 did: did,
+                gatewayURL: gatewayURL,
                 context: context
             )
         case .presented(let presented):
@@ -220,6 +266,7 @@ struct RecoveryModeModel: ModelProtocol {
         state: Self,
         environment: Environment,
         did: Did?,
+        gatewayURL: GatewayURL?,
         context: RecoveryModeLaunchContext
     ) -> Update<Self> {
         var model = state
@@ -231,7 +278,9 @@ struct RecoveryModeModel: ModelProtocol {
                 .setCurrentTab(.explain),
                 .recoveryPhraseField(.reset),
                 .recoveryDidField(.reset),
-                .recoveryDidField(.setValue(input: did?.did ?? ""))
+                .recoveryDidField(.setValue(input: did?.did ?? "")),
+                .recoveryGatewayURLField(.reset),
+                .recoveryGatewayURLField(.setValue(input: gatewayURL?.absoluteString ?? ""))
             ],
             environment: environment
         )
@@ -242,7 +291,7 @@ struct RecoveryModeModel: ModelProtocol {
         state: Self,
         environment: Environment,
         did: Did,
-        gatewayUrl: URL,
+        gatewayUrl: GatewayURL,
         recoveryPhrase: RecoveryPhrase
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
