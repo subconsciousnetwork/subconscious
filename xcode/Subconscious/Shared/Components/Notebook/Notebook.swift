@@ -221,7 +221,18 @@ struct NotebookDetailStackCursor: CursorProtocol {
     }
 
     static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
-        .detailStack(action)
+        switch action {
+        case let .succeedMergeMemo(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveMemo(from: from, to: to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+        case let .succeedSaveMemo(address: address, modified: modified):
+            return .succeedSaveEntry(slug: address, modified: modified)
+        case _:
+            return .detailStack(action)
+        }
     }
 }
 
@@ -346,10 +357,10 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         case let .detailStack(action):
-            return detailStack(
+            return NotebookDetailStackCursor.update(
                 state: state,
-                environment: environment,
-                action: action
+                action: action,
+                environment: environment
             )
         case .appear:
             return appear(
@@ -447,12 +458,15 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .succeedSaveEntry:
+        case let .succeedSaveEntry(address, modified):
             // Just refresh note after save, for now.
             // This reorders list by modified.
             return update(
                 state: state,
-                action: .refreshLists,
+                actions: [
+                    .refreshLists,
+                    .detailStack(.succeedSaveMemo(address: address, modified: modified))
+                ],
                 environment: environment
             )
         case let .succeedMoveEntry(from, to):
@@ -553,30 +567,6 @@ struct NotebookModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func detailStack(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        action: DetailStackAction
-    ) -> Update<NotebookModel> {
-        switch action {
-        case .succeedMergeMemo,
-                .succeedUpdateAudience,
-                .succeedMoveMemo,
-                .succeedSaveMemo:
-            return update(
-                state: state,
-                action: .refreshLists,
-                environment: environment
-            )
-        case _:
-            return NotebookDetailStackCursor.update(
-                state: state,
-                action: action,
-                environment: environment
-            )
-        }
-    }
-
     /// Refresh all lists in the notebook tab from database.
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
@@ -765,7 +755,8 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 actions: [
                     .setDetails(details),
-                    .refreshLists
+                    .refreshLists,
+                    .detailStack(.succeedMoveMemo(from: from, to: to))
                 ],
                 environment: environment
             )
@@ -799,7 +790,8 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 actions: [
                     .setDetails(details),
-                    .refreshLists
+                    .refreshLists,
+                    .detailStack(.succeedMergeMemo(parent: parent, child: child))
                 ],
                 environment: environment
             )
@@ -835,7 +827,8 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 actions: [
                     .setDetails(details),
-                    .refreshLists
+                    .refreshLists,
+                    .detailStack(.succeedUpdateAudience(receipt))
                 ],
                 environment: environment
             )
