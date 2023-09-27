@@ -77,8 +77,9 @@ struct UserProfileDetailView: View {
             perform: app.send
         )
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            Self.logger.debug("[action] \(message)")
+            UserProfileDetailAction.logger.debug(
+                "\(String(describing: action))"
+            )
         }
     }
 }
@@ -111,7 +112,12 @@ struct UserProfileDetailDescription: Hashable {
     var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
-enum UserProfileDetailAction: CustomLogStringConvertible {
+enum UserProfileDetailAction {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetailAction"
+    )
+
     case appear(Slashlink, Int, UserProfile?)
     case refresh(forceSync: Bool)
     case populate(UserProfileContentResponse)
@@ -160,15 +166,6 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     case succeedEditProfile
     
     case succeedIndexPeer(_ peer: PeerRecord)
-    
-    var logDescription: String {
-        switch self {
-        case .populate(_):
-            return "populate(...)"
-        default:
-            return String(describing: self)
-        }
-    }
 }
 
 /// React to actions from the root app store

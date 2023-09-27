@@ -166,19 +166,6 @@ enum FeedAction {
     case requestFeedRoot
 }
 
-extension FeedAction: CustomLogStringConvertible {
-    var logDescription: String {
-        switch self {
-        case .search(let action):
-            return "search(\(String.loggable(action)))"
-        case .setFeed(let items):
-            return "setFeed(\(items.count) items)"
-        default:
-            return String(describing: self)
-        }
-    }
-}
-
 struct FeedSearchCursor: CursorProtocol {
     typealias Model = FeedModel
     typealias ViewModel = SearchModel

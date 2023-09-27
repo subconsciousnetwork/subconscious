@@ -171,7 +171,6 @@
 		B831BDB92825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
 		B831BDBA2825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
 		B831BDBC2825A4E700C4CE92 /* Tests_Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */; };
-		B839029F28CA246A007A3A3F /* CustomLogStringConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */; };
 		B83B19A32A005C6B007657D9 /* Did+SubconsciousLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A22A005C6B007657D9 /* Did+SubconsciousLocal.swift */; };
 		B83B19A52A015D93007657D9 /* Tests_Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A42A015D93007657D9 /* Tests_Did.swift */; };
 		B83B19A92A0183AA007657D9 /* Tests_Did+SubconsciousLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A82A0183AA007657D9 /* Tests_Did+SubconsciousLocal.swift */; };
@@ -593,7 +592,6 @@
 		B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Tape.swift; sourceTree = "<group>"; };
 		B831BDB82825A28A00C4CE92 /* Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
 		B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Header.swift; sourceTree = "<group>"; };
-		B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogStringConvertible.swift; sourceTree = "<group>"; };
 		B83B19A22A005C6B007657D9 /* Did+SubconsciousLocal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Did+SubconsciousLocal.swift"; sourceTree = "<group>"; };
 		B83B19A42A015D93007657D9 /* Tests_Did.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tests_Did.swift; sourceTree = "<group>"; };
 		B83B19A82A0183AA007657D9 /* Tests_Did+SubconsciousLocal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests_Did+SubconsciousLocal.swift"; sourceTree = "<group>"; };
@@ -1343,7 +1341,6 @@
 				B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */,
 				B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */,
 				B82C3A5526F529EF00833CC8 /* CombineUtilities.swift */,
-				B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */,
 				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
 				B8C0A1B3297C938000D59532 /* Error.swift */,
 				B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */,
@@ -1973,7 +1970,6 @@
 				B58C1FBA2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */,
 				B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
-				B839029F28CA246A007A3A3F /* CustomLogStringConvertible.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */,
 			);

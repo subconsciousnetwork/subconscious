@@ -13,8 +13,8 @@ struct MemoEditorDetailResponse: Hashable {
     var entry: MemoEntry
 }
 
-extension MemoEditorDetailResponse: CustomLogStringConvertible {
-    var logDescription: String {
+extension MemoEditorDetailResponse: CustomStringConvertible {
+    var description: String {
         "MemoEditorDetailResponse(\(entry.address))"
     }
 }

@@ -76,8 +76,7 @@ struct NotebookView: View {
             perform: app.send
         )
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            NotebookModel.logger.debug("[action] \(message)")
+            NotebookAction.logger.debug("\(String(describing: action))")
         }
     }
 }
@@ -88,6 +87,11 @@ struct NotebookView: View {
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "NotebookAction"
+    )
+    
     /// Tagged action for search HUD
     case search(SearchAction)
     /// Tagged action for detail stack
@@ -188,19 +192,6 @@ enum NotebookAction {
         autofocus: Bool
     ) -> Self {
         .detailStack(.pushRandomDetail(autofocus: autofocus))
-    }
-}
-
-extension NotebookAction: CustomLogStringConvertible {
-    var logDescription: String {
-        switch self {
-        case .search(let action):
-            return "search(\(String.loggable(action)))"
-        case .setRecent(let items):
-            return "setRecent(\(items.count) items)"
-        default:
-            return String(describing: self)
-        }
     }
 }
 

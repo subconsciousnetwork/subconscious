@@ -13,7 +13,7 @@ import ObservableStore
 import os
 
 //  MARK: Action
-enum SearchAction: Hashable, CustomLogStringConvertible {
+enum SearchAction: Hashable {
     /// Set search presented state
     case requestPresent(Bool)
     /// Set search presented to false, and clear query
@@ -40,15 +40,6 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
 
     /// Handle notification of entry delete from somewhere
     case entryDeleted(Slug)
-
-    var logDescription: String {
-        switch self {
-        case .setSuggestions(let suggestions):
-            return "setSuggestions(\(suggestions.count) items)"
-        default:
-            return String(describing: self)
-        }
-    }
 }
 
 //  MARK: Model

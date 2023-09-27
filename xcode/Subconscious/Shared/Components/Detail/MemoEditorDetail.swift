@@ -189,8 +189,9 @@ struct MemoEditorDetailView: View {
             return .handled
         })
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            MemoEditorDetailModel.logger.debug("[action] \(message)")
+            MemoEditorDetailAction.logger.debug(
+                "\(String(describing: action))"
+            )
         }
         // Filtermap actions to outer actions, and forward them to parent
         .onReceive(
@@ -284,7 +285,12 @@ extension MemoEditorDetailNotification {
 }
 
 /// Actions handled by detail's private store.
-enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
+enum MemoEditorDetailAction: Hashable {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoEditorDetailAction"
+    )
+
     /// Tagging action for detail meta bottom sheet
     case metaSheet(MemoEditorDetailMetaSheetAction)
 
@@ -448,32 +454,6 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
 
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
         .metaSheet(.setDefaultAudience(audience))
-    }
-
-    // MARK: logDescription
-    var logDescription: String {
-        switch self {
-        case .setLinkSuggestions(let suggestions):
-            return "setLinkSuggestions(\(suggestions.count) items)"
-        case .editor(let action):
-            return "editor(\(String.loggable(action)))"
-        case let .setDetailLastWriteWins(detail):
-            return "setDetailLastWriteWins(\(String.loggable(detail)))"
-        case let .forceSetDetail(detail):
-            return "forceSetDetail(\(String.loggable(detail)))"
-        case .save(let entry):
-            return "save(\(entry?.address.description ?? "nil"))"
-        case .succeedSave(let entry):
-            return "succeedSave(\(entry.address))"
-        case .setDetail(let detail, _):
-            return "setDetail(\(String.loggable(detail)))"
-        case let .setEditor(_, saveState, modified):
-            return "setEditor(text: ..., saveState: \(String(describing: saveState)), modified: \(modified))"
-        case let .setEditorSelection(range, _):
-            return "setEditorSelection(range: \(range), text: ...)"
-        default:
-            return String(describing: self)
-        }
     }
 }
 
