@@ -206,7 +206,7 @@ public actor Noosphere {
                 noosphere,
                 identity.did,
                 localKeyName,
-                mnemonic.verbatim
+                mnemonic.secret
             ) { error in
                 if let error = Noosphere.readErrorMessage(error) {
                     continuation.resume(

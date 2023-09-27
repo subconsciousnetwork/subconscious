@@ -11,26 +11,16 @@ import Foundation
 public struct RecoveryPhrase:
     Hashable,
     Equatable,
-    Identifiable,
-    Codable,
-    LosslessStringConvertible,
-    CustomDebugStringConvertible {
-    
-    public var debugDescription: String {
-        "<recovery phrase>"
-    }
-    
+    Codable
+{
     private static let recoveryPhraseRegex = /^(?:\w+\s+){23}\w+$/
 
-    public let description: String
-    public let verbatim: String
-    public var id: String { description }
+    @Redacted public private(set) var secret: String
 
     public init?(_ description: String) {
         guard description.wholeMatch(of: Self.recoveryPhraseRegex) != nil else {
             return nil
         }
-        self.description = description.lowercased()
-        self.verbatim = description
+        self.secret = description.lowercased()
     }
 }
