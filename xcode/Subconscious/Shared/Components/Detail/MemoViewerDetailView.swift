@@ -93,16 +93,7 @@ struct MemoViewerDetailView: View {
                     guard let owner = store.state.owner else {
                         return
                     }
-                    notify(
-                        .requestDetail(
-                            MemoDetailDescription.profile(
-                                UserProfileDetailDescription(
-                                    address: owner.address,
-                                    user: owner
-                                )
-                            )
-                        )
-                    )
+                    notify(.requestUserProfileDetail(owner))
                 }
             )
         }
@@ -240,6 +231,7 @@ enum MemoViewerDetailNotification: Hashable {
         address: Slashlink,
         link: SubSlashlinkLink
     )
+    case requestUserProfileDetail(_ user: UserProfile)
 }
 
 /// A description of a memo detail that can be used to set up the memo

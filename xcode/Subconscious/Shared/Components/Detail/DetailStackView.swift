@@ -514,6 +514,15 @@ extension DetailStackAction {
                 address: address,
                 link: link
             )
+        case let .requestUserProfileDetail(user):
+            return .pushDetail(
+                MemoDetailDescription.profile(
+                    UserProfileDetailDescription(
+                        address: user.address,
+                        user: user
+                    )
+                )
+            )
         }
     }
 
