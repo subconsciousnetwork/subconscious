@@ -296,7 +296,7 @@ enum AppAction {
     case succeedRecoverOurSphere
 
     /// Set recovery phrase on recovery phrase component
-    static func setRecoveryPhrase(_ phrase: String) -> AppAction {
+    static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
     }
 
@@ -1360,7 +1360,7 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .setSphereIdentity(receipt.identity),
-                .setRecoveryPhrase(receipt.mnemonic),
+                .setRecoveryPhrase(RecoveryPhrase(receipt.mnemonic)),
                 .followDefaultGeist
             ],
             environment: environment

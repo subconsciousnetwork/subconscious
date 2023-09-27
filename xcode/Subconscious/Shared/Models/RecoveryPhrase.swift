@@ -15,12 +15,13 @@ public struct RecoveryPhrase:
 {
     private static let recoveryPhraseRegex = /^(?:\w+\s+){23}\w+$/
 
-    @Redacted public private(set) var secret: String
+    // !!!: Mnemonic is secret and should never be logged or persisted
+    @Redacted public private(set) var mnemonic: String
 
     public init?(_ description: String) {
         guard description.wholeMatch(of: Self.recoveryPhraseRegex) != nil else {
             return nil
         }
-        self.secret = description.lowercased()
+        self.mnemonic = description.lowercased()
     }
 }
