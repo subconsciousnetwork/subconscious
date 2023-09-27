@@ -2417,7 +2417,10 @@ struct AppModel: ModelProtocol {
         model.isRecoveryModePresented = isPresented
         return update(
             state: model,
-            action: .recoveryMode(.requestPresent(isPresented)),
+            actions: [
+                .presentSettingsSheet(false),
+                .recoveryMode(.requestPresent(isPresented))
+            ],
             environment: environment
         )
     }
