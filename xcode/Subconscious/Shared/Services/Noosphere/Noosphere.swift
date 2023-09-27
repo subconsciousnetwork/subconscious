@@ -200,13 +200,13 @@ public actor Noosphere {
         .eraseToAnyPublisher()
     }
     
-    func recover(identity: Did, localKeyName: String, mnemonic: RecoveryPhrase) async throws -> Bool {
+    func recover(identity: Did, localKeyName: String, mnemonic: String) async throws -> Bool {
         return try await withCheckedThrowingContinuation { continuation in
             nsSphereRecover(
                 noosphere,
                 identity.did,
                 localKeyName,
-                mnemonic.mnemonic
+                mnemonic
             ) { error in
                 if let error = Noosphere.readErrorMessage(error) {
                     continuation.resume(

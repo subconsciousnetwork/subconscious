@@ -48,7 +48,7 @@ protocol NoosphereServiceProtocol {
     /// Reset managed instances of Noosphere and Sphere
     func reset() async
     
-    func recover(identity: Did, gatewayUrl: GatewayURL, mnemonic: RecoveryPhrase) async throws -> Bool
+    func recover(identity: Did, gatewayUrl: GatewayURL, mnemonic: String) async throws -> Bool
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
@@ -445,7 +445,7 @@ actor NoosphereService:
         try await self.sphere().verify(authorization: authorization)
     }
     
-    func recover(identity: Did, gatewayUrl: GatewayURL, mnemonic: RecoveryPhrase) async throws -> Bool {
+    func recover(identity: Did, gatewayUrl: GatewayURL, mnemonic: String) async throws -> Bool {
         // Update the gateway URL to whatever was in the form
         resetGateway(url: gatewayUrl)
         // Release the sphere before we attempt to recover it
