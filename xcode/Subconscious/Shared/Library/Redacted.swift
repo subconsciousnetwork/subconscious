@@ -11,21 +11,25 @@ import Foundation
 // Useful for annotating properties of types that contain sensitive information
 // and that may be converted to string.
 @propertyWrapper
-struct Redacted<Value>:
+public struct Redacted<Value>:
     CustomStringConvertible,
     CustomDebugStringConvertible
 {
-    var wrappedValue: Value
+    public var wrappedValue: Value
     
-    init(wrappedValue: Value) {
+    public init(wrappedValue: Value) {
         self.wrappedValue = wrappedValue
     }
     
-    var description: String {
+    public var description: String {
         return "--redacted--"
     }
     
-    var debugDescription: String {
+    public var debugDescription: String {
         return "--redacted--"
     }
 }
+
+extension Redacted: Equatable where Value: Equatable {}
+extension Redacted: Hashable where Value: Hashable {}
+extension Redacted: Codable where Value: Codable {}
