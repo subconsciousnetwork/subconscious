@@ -247,6 +247,8 @@ extension NotebookAction {
             return .ready
         case .succeedIndexOurSphere(_):
             return .refreshLists
+        case .succeedRecoverOurSphere:
+            return .refreshLists
         case let .succeedDeleteMemo(address):
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
