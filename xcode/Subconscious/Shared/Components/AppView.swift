@@ -286,6 +286,9 @@ enum AppAction: CustomLogStringConvertible {
     case requestFeedRoot
     
     case setAppTabsEnabled(Bool)
+    
+    /// Used as a notification that recovery completed
+    case succeedRecoverOurSphere
 
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -459,6 +462,8 @@ struct RecoveryModeCursor: CursorProtocol {
         switch action {
         case let .requestPresent(isPresented):
             return .presentRecoveryMode(isPresented)
+        case .succeedRecovery:
+            return .succeedRecoverOurSphere
         default:
             return .recoveryMode(action)
         }
@@ -1088,6 +1093,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isPresented: isPresented
+            )
+        case .succeedRecoverOurSphere:
+            return succeedRecoverOurSphere(
+                state: state,
+                environment: environment
             )
         }
     }
@@ -2417,7 +2427,10 @@ struct AppModel: ModelProtocol {
         model.isRecoveryModePresented = isPresented
         return update(
             state: model,
-            action: .recoveryMode(.requestPresent(isPresented)),
+            actions: [
+                .presentSettingsSheet(false),
+                .recoveryMode(.requestPresent(isPresented))
+            ],
             environment: environment
         )
     }
@@ -2446,6 +2459,18 @@ struct AppModel: ModelProtocol {
         
         return Update(state: state, fx: fx)
     }
+    
+    static func succeedRecoverOurSphere(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        return RecoveryModeCursor.update(
+            state: state,
+            action: .succeedRecovery,
+            environment: environment
+        )
+    }
+    
 }
 
 // MARK: Environment
