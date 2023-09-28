@@ -262,7 +262,7 @@ struct RecoveryModeModel: ModelProtocol {
             guard try await environment.noosphere.recover(
                 identity: did,
                 gatewayUrl: gatewayUrl,
-                mnemonic: recoveryPhrase
+                mnemonic: recoveryPhrase.mnemonic
             ) else {
                 return .failRecovery("Failed to recover identity")
             }

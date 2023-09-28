@@ -79,8 +79,7 @@ struct AppView: View {
             store.send(.appear)
         }
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            AppModel.logger.debug("[action] \(message)")
+            AppAction.logger.debug("\(String(describing: action))")
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
@@ -97,7 +96,13 @@ typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, GatewayURL>
 
 // MARK: Action
-enum AppAction: CustomLogStringConvertible {
+enum AppAction {
+    // Logger for actions
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "AppAction"
+    )
+    
     /// Sent immediately upon store creation
     case start
 
@@ -291,7 +296,7 @@ enum AppAction: CustomLogStringConvertible {
     case succeedRecoverOurSphere
 
     /// Set recovery phrase on recovery phrase component
-    static func setRecoveryPhrase(_ phrase: String) -> AppAction {
+    static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
     }
 
@@ -302,22 +307,6 @@ enum AppAction: CustomLogStringConvertible {
 
     static func setAppUpgradeComplete(_ isComplete: Bool) -> AppAction {
         .appUpgrade(.setComplete(isComplete))
-    }
-
-    var logDescription: String {
-        switch self {
-        case let .succeedMigrateDatabase(version):
-            return "succeedMigrateDatabase(\(version))"
-        case let .succeedSyncLocalFilesWithDatabase(fingerprints):
-            return "succeedSyncLocalFilesWithDatabase(...) \(fingerprints.count) items"
-        case let .succeedCreateSphere(receipt):
-            // !!!: Do not log mnemonic
-            // The user's sphere mnemonic is carried with this sphere receipt.
-            // It is a secret and should never be logged.
-            return "succeedCreateSphere(\(receipt.identity))"
-        default:
-            return String(describing: self)
-        }
     }
 }
 
@@ -1371,7 +1360,7 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .setSphereIdentity(receipt.identity),
-                .setRecoveryPhrase(receipt.mnemonic),
+                .setRecoveryPhrase(RecoveryPhrase(receipt.mnemonic)),
                 .followDefaultGeist
             ],
             environment: environment

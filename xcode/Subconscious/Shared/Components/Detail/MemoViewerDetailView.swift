@@ -69,8 +69,9 @@ struct MemoViewerDetailView: View {
             store.send(.appear(description))
         }
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            MemoViewerDetailModel.logger.debug("[action] \(message)")
+            MemoViewerDetailAction.logger.debug(
+                "\(String(describing: action))"
+            )
         }
         .onReceive(
             app.actions.compactMap(MemoViewerDetailAction.fromAppAction),
@@ -235,6 +236,11 @@ struct MemoViewerDetailDescription: Hashable {
 
 // MARK: Actions
 enum MemoViewerDetailAction: Hashable {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoViewerDetailAction"
+    )
+
     case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
     case setDetail(_ entry: MemoEntry?)
@@ -259,17 +265,6 @@ enum MemoViewerDetailAction: Hashable {
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
-    }
-}
-
-extension MemoViewerDetailAction: CustomLogStringConvertible {
-    var logDescription: String {
-        switch self {
-        case .setDetail:
-            return "setDetail(...)"
-        default:
-            return String(describing: self)
-        }
     }
 }
 

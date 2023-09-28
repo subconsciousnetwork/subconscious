@@ -9,31 +9,19 @@ import XCTest
 @testable import Subconscious
 
 final class Tests_RecoveryPhrase: XCTestCase {
-    final class MockPasteboard: PasteboardProtocol {
-        var sets: Int = 0
-        var _string: String? = nil
-
-        var string: String? {
-            get { _string }
-            set {
-                self._string = newValue
-                self.sets = self.sets + 1
-            }
-        }
-    }
-
     func testSetPhrase() throws {
         let environment: RecoveryPhraseEnvironment = RecoveryPhraseEnvironment()
 
         let state = RecoveryPhraseModel()
-        XCTAssertEqual(state.phrase, "")
+        XCTAssertEqual(state.phrase, nil)
 
+        let phrase = RecoveryPhrase("foo bar baz bing bong boo biz boz bonk bink boop bop beep bleep bloop blorp blonk blink blip blop boom bim blap blap")
         let update = RecoveryPhraseModel.update(
             state: state,
-            action: .setPhrase("foo bar baz"),
+            action: .setPhrase(phrase),
             environment: environment
         )
-        XCTAssertEqual(update.state.phrase, "foo bar baz", "Set phrase")
+        XCTAssertEqual(update.state.phrase, phrase, "Set phrase")
     }
     
 }

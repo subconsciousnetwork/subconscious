@@ -140,4 +140,16 @@ class Tests_FormField: XCTestCase {
         update = FormField.update(state: update.state, action: .setValidationStatus(valid: false), environment: environment)
         XCTAssertEqual(update.state.isValid, false, "Validation status overridden")
     }
+    
+    func testFormFieldActionRedactsValue() throws {
+        let action = FormFieldAction<String>.setValue(input: "Sensitive data")
+        XCTAssertEqual(
+            String(describing: action),
+            "setValue(--redacted--)"
+        )
+        XCTAssertEqual(
+            String(reflecting: action),
+            "setValue(--redacted--)"
+        )
+    }
 }
