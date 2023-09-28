@@ -43,7 +43,7 @@ struct HomeProfileNavigationView: View {
     }
 }
 
-//  MARK: View
+// MARK: View
 struct HomeProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
@@ -73,7 +73,7 @@ struct HomeProfileView: View {
 }
 
 
-//  MARK: Action
+// MARK: Action
 enum HomeProfileAction {
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -87,7 +87,7 @@ enum HomeProfileAction {
     case requestProfileRoot
 }
 
-//  MARK: Cursors and tagging functions
+// MARK: Cursors and tagging functions
 struct HomeProfileDetailStackCursor: CursorProtocol {
     typealias Model = HomeProfileModel
     typealias ViewModel = DetailStackModel
@@ -120,7 +120,7 @@ extension HomeProfileAction {
     }
 }
 
-//  MARK: Model
+// MARK: Model
 struct HomeProfileModel: ModelProtocol {
     var detailStack = DetailStackModel()
     var details: [MemoDetailDescription] {
