@@ -2453,18 +2453,19 @@ struct AppModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
-            let noosphereIdentity = try await environment.noosphere.identity()
             // Get any existing sphere identity stored in UserDefaults
-            let userDefaultsIdentity = AppDefaults.standard.sphereIdentity?
-                .toDid()
+            // If none, it's the first run, nothing to recover
+            guard let userDefaultsIdentity = AppDefaults.standard.sphereIdentity?
+                .toDid() else {
+                return AppAction.presentRecoveryMode(false)
+            }
+            
+            let noosphereIdentity = try await environment.noosphere.identity()
 
             // If we have an identity in the UserDefaults, but it doesn't
             // match the identity in Noosphere, we need to perform a
             // a recovery.
-            if (
-                userDefaultsIdentity != nil &&
-                noosphereIdentity != userDefaultsIdentity
-            ) {
+            guard noosphereIdentity == userDefaultsIdentity else {
                 return AppAction.requestRecoveryMode(
                     .unreadableDatabase("Mismatched identity")
                 )
