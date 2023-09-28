@@ -19,6 +19,10 @@ struct HomeProfileNavigationView: View {
             tag: HomeProfileDetailStackCursor.tag
         )
     }
+    
+    static func tag(action: UserProfileDetailNotification) -> HomeProfileModel.Action {
+        return HomeProfileDetailStackCursor.tag(DetailStackAction.tag(action))
+    }
 
     var body: some View {
         DetailStackView(
@@ -30,8 +34,8 @@ struct HomeProfileNavigationView: View {
                     app: app,
                     description: UserProfileDetailDescription(address: Slashlink.ourProfile),
                     notify: Address.forward(
-                        send: detailStack.send,
-                        tag: DetailStackAction.tag
+                        send: store.send,
+                        tag: HomeProfileNavigationView.tag
                     )
                 )
             }
