@@ -142,7 +142,7 @@ actor NoosphereService:
         if let noosphere = self._noosphere {
             return noosphere
         }
-        logger.debug("init Noosphere")
+        logger.debug("Initializing Noosphere")
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
@@ -150,6 +150,7 @@ actor NoosphereService:
             noosphereLogLevel: _noosphereLogLevel
         )
         self._noosphere = noosphere
+        logger.debug("Initialized and cached Noosphere")
         return noosphere
     }
     
@@ -163,12 +164,13 @@ actor NoosphereService:
         }
         
         let noosphere = try noosphere()
-        logger.debug("init Sphere with identity: \(identity)")
+        logger.debug("Initializing Sphere with identity: \(identity)")
         let sphere = try Sphere(
             noosphere: noosphere,
             identity: identity
         )
         self._sphere = sphere
+        logger.debug("Initialized and cached Sphere with identity: \(identity)")
         return sphere
     }
     
