@@ -406,29 +406,18 @@ struct NotebookModel: ModelProtocol {
                 "Failed to list recent entries: \(error)"
             )
             return Update(state: state)
-        case let .confirmDelete(slug):
-            guard let slug = slug else {
-                logger.log(
-                    "Delete confirmation flow passed nil slug. Doing nothing."
-                )
-                var model = state
-                // Nil out entryToDelete, if any
-                model.entryToDelete = nil
-                return Update(state: model)
-            }
-            var model = state
-            model.entryToDelete = slug
-            model.isConfirmDeleteShowing = true
-            return Update(state: model)
+        case let .confirmDelete(address):
+            return confirmDelete(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case let .setConfirmDeleteShowing(isShowing):
-            var model = state
-            model.isConfirmDeleteShowing = isShowing
-            // Reset entry to delete if we're dismissing the confirmation
-            // dialog.
-            if isShowing == false {
-                model.entryToDelete = nil
-            }
-            return Update(state: model)
+            return setConfirmDeleteShowing(
+                state: state,
+                environment: environment,
+                isShowing: isShowing
+            )
         case let .stageDeleteEntry(address):
             return stageDeleteEntry(
                 state: state,
@@ -451,15 +440,11 @@ struct NotebookModel: ModelProtocol {
                 address: address
             )
         case let .succeedSaveEntry(address, modified):
-            // Just refresh note after save, for now.
-            // This reorders list by modified.
-            return update(
+            return succeedSaveEntry(
                 state: state,
-                actions: [
-                    .refreshLists,
-                    .detailStack(.succeedSaveMemo(address: address, modified: modified))
-                ],
-                environment: environment
+                environment: environment,
+                address: address,
+                modified: modified
             )
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
@@ -623,6 +608,41 @@ struct NotebookModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
+    static func confirmDelete(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: Slashlink?
+    ) -> Update<NotebookModel> {
+        guard let address = address else {
+            logger.log(
+                "Delete confirmation flow passed nil slug. Doing nothing."
+            )
+            var model = state
+            // Nil out entryToDelete, if any
+            model.entryToDelete = nil
+            return Update(state: model)
+        }
+        var model = state
+        model.entryToDelete = address
+        model.isConfirmDeleteShowing = true
+        return Update(state: model)
+    }
+    
+    static func setConfirmDeleteShowing(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        isShowing: Bool
+    ) -> Update<NotebookModel> {
+        var model = state
+        model.isConfirmDeleteShowing = isShowing
+        // Reset entry to delete if we're dismissing the confirmation
+        // dialog.
+        if isShowing == false {
+            model.entryToDelete = nil
+        }
+        return Update(state: model)
+    }
+    
     /// Delete entry with `slug`
     static func stageDeleteEntry(
         state: NotebookModel,
@@ -714,6 +734,24 @@ struct NotebookModel: ModelProtocol {
             return update(
                 state: state,
                 action: .detailStack(.failDeleteMemo(error)),
+                environment: environment
+            )
+        }
+    
+        static func succeedSaveEntry(
+            state: NotebookModel,
+            environment: AppEnvironment,
+            address: Slashlink,
+            modified: Date
+        ) -> Update<NotebookModel> {
+            // Just refresh note after save, for now.
+            // This reorders list by modified.
+            return update(
+                state: state,
+                actions: [
+                    .refreshLists,
+                    .detailStack(.succeedSaveMemo(address: address, modified: modified))
+                ],
                 environment: environment
             )
         }
