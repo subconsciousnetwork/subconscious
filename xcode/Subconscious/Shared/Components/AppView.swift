@@ -649,14 +649,17 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case let .setFirstRunPath(path):
-            var model = state
-            model.firstRunPath = path
-            return Update(state: model)
+            return setFirstRunPath(
+                state: state,
+                environment: environment,
+                path: path
+            )
         case let .pushFirstRunStep(step):
-            var model = state
-            model.firstRunPath.append(step)
-            
-            return Update(state: model)
+            return pushFirstRunStep(
+                state: state,
+                environment: environment,
+                step: step
+            )
         case .submitFirstRunWelcomeStep:
             return submitFirstRunWelcomeStep(
                 state: state,
@@ -757,10 +760,10 @@ struct AppModel: ModelProtocol {
         case .fetchNicknameFromProfile:
             return fetchNicknameFromProfileMemo(state: state, environment: environment)
         case let .succeedFetchNicknameFromProfile(nickname):
-            return update(
+            return succeedFetchNicknameFromProfile(
                 state: state,
-                action: .setNickname(nickname.verbatim),
-                environment: environment
+                environment: environment,
+                nickname: nickname
             )
         case let .failFetchNicknameFromProfile(message):
             logger.log("Failed to read nickname from profile: \(message)")
@@ -960,20 +963,9 @@ struct AppModel: ModelProtocol {
         case .failFollowDefaultGeist(let error):
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
-            
         case .submitInviteCodeForm:
-            guard let inviteCode = state.inviteCodeFormField.validated else {
-                logger.log("Invalid invite code submitted")
-                return Update(state: state)
-            }
-            
-            var model = state
-            model.inviteCode = inviteCode
-            AppDefaults.standard.inviteCode = inviteCode.description
-            
-            return update(
-                state: model,
-                action: .requestRedeemInviteCode(inviteCode),
+            return submitInviteCodeForm(
+                state: state,
                 environment: environment
             )
         case .requestRedeemInviteCode(let inviteCode):
@@ -1160,6 +1152,26 @@ struct AppModel: ModelProtocol {
         )
     }
     
+    static func setFirstRunPath(
+        state: AppModel,
+        environment: AppEnvironment,
+        path: [FirstRunStep]
+    ) -> Update<AppModel> {
+        var model = state
+        model.firstRunPath = path
+        return Update(state: model)
+    }
+    
+    static func pushFirstRunStep(
+        state: AppModel,
+        environment: AppEnvironment,
+        step: FirstRunStep
+    ) -> Update<AppModel> {
+        var model = state
+        model.firstRunPath.append(step)
+        return Update(state: model)
+    }
+    
     static func setAppUpgraded(
         state: AppModel,
         environment: AppEnvironment,
@@ -1221,6 +1233,18 @@ struct AppModel: ModelProtocol {
         .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
+    }
+    
+    static func succeedFetchNicknameFromProfile(
+        state: AppModel,
+        environment: AppEnvironment,
+        nickname: Petname.Name
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            action: .setNickname(nickname.verbatim),
+            environment: environment
+        )
     }
     
     static func fetchNicknameFromProfileMemo(
@@ -2100,6 +2124,26 @@ struct AppModel: ModelProtocol {
             .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
+    }
+    
+    static func submitInviteCodeForm(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard let inviteCode = state.inviteCodeFormField.validated else {
+            logger.log("Invalid invite code submitted")
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.inviteCode = inviteCode
+        AppDefaults.standard.inviteCode = inviteCode.description
+        
+        return update(
+            state: model,
+            action: .requestRedeemInviteCode(inviteCode),
+            environment: environment
+        )
     }
     
     static func requestRedeemInviteCode(
