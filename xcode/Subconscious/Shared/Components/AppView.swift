@@ -286,8 +286,6 @@ enum AppAction {
     case requestFeedRoot
     case requestProfileRoot
     
-    case setAppTabsEnabled(Bool)
-    
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
     
@@ -1057,12 +1055,6 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         case .requestProfileRoot:
             return Update(state: state)
-        case .setAppTabsEnabled(let enabled):
-            return setAppTabsEnabled(
-                state: state,
-                environment: environment,
-                enabled: enabled
-            )
         case .checkRecoveryStatus:
             return checkRecoveryStatus(
                 state: state,
@@ -2373,17 +2365,6 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func setAppTabsEnabled(
-        state: Self,
-        environment: Environment,
-        enabled: Bool
-    ) -> Update<Self> {
-        var model = state
-        AppDefaults.standard.appTabs = enabled
-        model.appTabsEnabled = enabled
-        return Update(state: model)
-    }
-                
     static func requestRecoveryMode(
         state: Self,
         environment: Environment,
