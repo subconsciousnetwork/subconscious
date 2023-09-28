@@ -58,7 +58,6 @@ struct FollowTabView: View {
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     
     var body: some View {
-        
         ForEach(state.following) { follow in
             StoryUserView(
                 story: follow,
