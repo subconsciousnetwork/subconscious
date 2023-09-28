@@ -67,8 +67,7 @@ struct HomeProfileView: View {
             perform: store.send
         )
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            HomeProfileModel.logger.debug("[action] \(message)")
+            HomeProfileAction.logger.debug("\(String(describing: action))")
         }
     }
 }
@@ -76,6 +75,11 @@ struct HomeProfileView: View {
 
 //  MARK: Action
 enum HomeProfileAction {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "HomeProfileAction"
+    )
+    
     case detailStack(DetailStackAction)
     case appear
     case ready
