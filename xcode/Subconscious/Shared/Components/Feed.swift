@@ -130,9 +130,11 @@ struct FeedView: View {
 extension FeedAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
-        case .succeedIndexOurSphere(_):
+        case .succeedIndexOurSphere:
             return .refreshAll
-        case .succeedIndexPeer(_):
+        case .succeedIndexPeer:
+            return .refreshAll
+        case .succeedRecoverOurSphere:
             return .refreshAll
         case .requestFeedRoot:
             return .requestFeedRoot
