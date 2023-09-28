@@ -249,7 +249,7 @@ enum AppAction {
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
     
-    /// Dispatched on bootup, check the integrity of the app database
+    /// Dispatched on bootup, check the integrity of the Noosphere database
     case checkRecoveryStatus
     /// Recovery mode can be launched manually (from settings) or automatically
     case requestRecoveryMode(RecoveryModeLaunchContext)
@@ -1099,6 +1099,7 @@ struct AppModel: ModelProtocol {
                 .setSphereIdentity(
                     AppDefaults.standard.sphereIdentity
                 ),
+                .checkRecoveryStatus,
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
                 ),
@@ -1724,7 +1725,7 @@ struct AppModel: ModelProtocol {
         // For now, we just sync everything on ready.
         return update(
             state: state,
-            actions: [.syncAll, .checkRecoveryStatus],
+            action: .syncAll,
             environment: environment
         )
     }
@@ -2452,9 +2453,18 @@ struct AppModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
-            let identity = try await environment.noosphere.identity()
-            let did = try environment.database.readOurSphere()?.identity
-            if did != nil && identity != did {
+            let noosphereIdentity = try await environment.noosphere.identity()
+            // Get any existing sphere identity stored in UserDefaults
+            let userDefaultsIdentity = AppDefaults.standard.sphereIdentity?
+                .toDid()
+
+            // If we have an identity in the UserDefaults, but it doesn't
+            // match the identity in Noosphere, we need to perform a
+            // a recovery.
+            if (
+                userDefaultsIdentity != nil &&
+                noosphereIdentity != userDefaultsIdentity
+            ) {
                 return AppAction.requestRecoveryMode(
                     .unreadableDatabase("Mismatched identity")
                 )
