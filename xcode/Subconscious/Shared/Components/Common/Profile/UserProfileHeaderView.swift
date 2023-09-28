@@ -51,7 +51,6 @@ struct UserProfileHeaderView: View {
                         showMaybePrefix: true
                     )
                }
-                
             }
             
             Button(
@@ -96,8 +95,8 @@ struct UserProfileHeaderView: View {
                     // Button has primary style when we can follow
                     ProfileHeaderButtonStyle(
                         variant: profileAction == .requestFollow
-                            ? .primary
-                            : .secondary
+                        ? .primary
+                        : .secondary
                     )
                 )
             }

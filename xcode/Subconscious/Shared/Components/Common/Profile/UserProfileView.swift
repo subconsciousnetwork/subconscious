@@ -131,31 +131,10 @@ struct UserProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                if let user = state.user,
-                   state.loadingState != .notFound {
-                    UserProfileHeaderView(
-                        user: user,
-                        statistics: state.statistics,
-                        action: { action in
-                            onProfileAction(user, action)
-                        },
-                        hideActionButton: state.loadingState != .loaded,
-                        onTapStatistics: {
-                            send(
-                                .tabIndexSelected(
-                                    UserProfileDetailModel.followingTabIndex
-                                )
-                            )
-                        }
-                    )
-                    .padding(
-                        .init([.top, .horizontal]),
-                        AppTheme.padding
-                    )
-                }
-                
                 switch state.loadingState {
                 case .loading:
+                    ProfileHeaderPlaceholderView()
+                    
                     TabbedTwoColumnView(
                         columnA: columnLoading(label: "Notes"),
                         columnB: columnLoading(label: "Following"),
@@ -164,8 +143,29 @@ struct UserProfileView: View {
                             send(.tabIndexSelected(index))
                         }
                     )
-                    .edgesIgnoringSafeArea([.bottom])
                 case .loaded:
+                    if let user = state.user {
+                        UserProfileHeaderView(
+                            user: user,
+                            statistics: state.statistics,
+                            action: { action in
+                                onProfileAction(user, action)
+                            },
+                            hideActionButton: state.loadingState != .loaded,
+                            onTapStatistics: {
+                                send(
+                                    .tabIndexSelected(
+                                        UserProfileDetailModel.followingTabIndex
+                                    )
+                                )
+                            }
+                        )
+                        .padding(
+                            .init([.top, .horizontal]),
+                            AppTheme.padding
+                        )
+                    }
+                    
                     TabbedTwoColumnView(
                         columnA: columnRecent,
                         columnB: columnFollowing,
@@ -174,7 +174,6 @@ struct UserProfileView: View {
                             send(.tabIndexSelected(index))
                         }
                     )
-                    .edgesIgnoringSafeArea([.bottom])
                 case .notFound:
                     NotFoundView()
                     // extra padding to visually center the group
@@ -188,6 +187,20 @@ struct UserProfileView: View {
         .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
+            if let user = state.user,
+               user.category == .ourself {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(
+                        action: {
+                            send(.presentFollowNewUserFormSheet(true))
+                        },
+                        label: {
+                            Image(systemName: "person.badge.plus")
+                        }
+                    )
+                }
+            }
+            
             if let address = state.address {
                 DetailToolbarContent(
                     address: address,
@@ -197,19 +210,6 @@ struct UserProfileView: View {
                     },
                     status: state.loadingState
                 )
-                if let user = state.user,
-                   user.category == .ourself {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(
-                            action: {
-                                send(.presentFollowNewUserFormSheet(true))
-                            },
-                            label: {
-                                Image(systemName: "person.badge.plus")
-                            }
-                        )
-                    }
-                }
             } else {
                 DetailToolbarContent(
                     defaultAudience: .public,

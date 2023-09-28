@@ -22,14 +22,9 @@ struct AppView: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                if AppDefaults.standard.appTabs {
-                    AppTabView(store: store)
-                } else {
-                    NotebookView(app: store)
-                }
-            }
-            .zIndex(0)
+            AppTabView(store: store)
+                .zIndex(0)
+            
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
                     state: store.state.appUpgrade,
@@ -289,12 +284,11 @@ enum AppAction {
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestFeedRoot
-    
-    case setAppTabsEnabled(Bool)
+    case requestProfileRoot
     
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
-
+    
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
@@ -529,7 +523,6 @@ struct AppModel: ModelProtocol {
     )
     var inviteCodeRedemptionStatus = ResourceStatus.initial
     var gatewayProvisioningStatus = ResourceStatus.initial
-    var appTabsEnabled = false
     
     /// Default sphere identity
     ///
@@ -1060,12 +1053,8 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         case .requestFeedRoot:
             return Update(state: state)
-        case .setAppTabsEnabled(let enabled):
-            return setAppTabsEnabled(
-                state: state,
-                environment: environment,
-                enabled: enabled
-            )
+        case .requestProfileRoot:
+            return Update(state: state)
         case .checkRecoveryStatus:
             return checkRecoveryStatus(
                 state: state,
@@ -1110,7 +1099,6 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
-        model.appTabsEnabled = AppDefaults.standard.appTabs
         
         // Update model from app defaults
         return update(
@@ -2357,6 +2345,8 @@ struct AppModel: ModelProtocol {
                     return AppAction.requestFeedRoot
                 case .notebook:
                     return AppAction.requestNotebookRoot
+                case .profile:
+                    return AppAction.requestProfileRoot
                 }
             }
             
@@ -2375,17 +2365,6 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func setAppTabsEnabled(
-        state: Self,
-        environment: Environment,
-        enabled: Bool
-    ) -> Update<Self> {
-        var model = state
-        AppDefaults.standard.appTabs = enabled
-        model.appTabsEnabled = enabled
-        return Update(state: model)
-    }
-                
     static func requestRecoveryMode(
         state: Self,
         environment: Environment,
@@ -2459,7 +2438,6 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-    
 }
 
 // MARK: Environment

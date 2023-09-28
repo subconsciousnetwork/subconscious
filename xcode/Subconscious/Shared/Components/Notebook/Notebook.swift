@@ -12,7 +12,7 @@ import os
 import ObservableStore
 import Combine
 
-//  MARK: View
+// MARK: View
 /// The file view for notes
 struct NotebookView: View {
     /// Global shared store
@@ -82,7 +82,7 @@ struct NotebookView: View {
 }
 
 
-//  MARK: Action
+// MARK: Action
 /// Actions for modifying state
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
@@ -195,8 +195,7 @@ enum NotebookAction {
     }
 }
 
-//  MARK: Cursors and tagging functions
-
+// MARK: Cursors and tagging functions
 struct NotebookDetailStackCursor: CursorProtocol {
     typealias Model = NotebookModel
     typealias ViewModel = DetailStackModel
@@ -236,7 +235,7 @@ extension NotebookAction {
             return .ready
         case .succeedSyncLocalFilesWithDatabase:
             return .ready
-        case .succeedIndexOurSphere(_):
+        case .succeedIndexOurSphere:
             return .refreshLists
         case .succeedRecoverOurSphere:
             return .refreshLists
@@ -288,7 +287,7 @@ struct NotebookSearchCursor: CursorProtocol {
     }
 }
 
-//  MARK: Model
+// MARK: Model
 /// Model containing state for the notebook tab.
 struct NotebookModel: ModelProtocol {
     var isDatabaseReady = false
@@ -320,19 +319,19 @@ struct NotebookModel: ModelProtocol {
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
     
-    //  MARK: Update
-    //  !!!: Combine publishers can cause segfaults in Swift compiler
-    //  Combine publishers have complex types and must be marked up carefully
-    //  to avoid frequent segfaults in Swift compiler due to type inference
-    //  (as of 2022-01-14).
+    // MARK: Update
+    // !!!: Combine publishers can cause segfaults in Swift compiler
+    // Combine publishers have complex types and must be marked up carefully
+    // to avoid frequent segfaults in Swift compiler due to type inference
+    // (as of 2022-01-14).
     //
-    //  We found the following mitigation/solution:
-    //  - Mark publisher variables with explicit type annotations.
-    //  - Beware Publishers.Merge and variants. Use publisher.merge instead.
-    //    Publishers.Merge produces a more complex type signature, and this seems
-    //    to be what was crashing the Swift compiler.
+    // We found the following mitigation/solution:
+    // - Mark publisher variables with explicit type annotations.
+    // - Beware Publishers.Merge and variants. Use publisher.merge instead.
+    //   Publishers.Merge produces a more complex type signature, and this seems
+    //   to be what was crashing the Swift compiler.
     //
-    //  2022-01-14 Gordon Brander
+    // 2022-01-14 Gordon Brander
     /// AppUpdate is a namespace where we keep the main app update function,
     /// as well as the sub-update functions it calls out to.
     
