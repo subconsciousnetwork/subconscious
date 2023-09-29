@@ -77,6 +77,7 @@ enum RecoveryModeAction: Hashable {
     case attemptRecovery(Did, GatewayURL, RecoveryPhrase)
     case succeedRecovery
     case failRecovery(_ error: String)
+    case pressRecoveryButton
 }
 
 typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
@@ -224,6 +225,11 @@ struct RecoveryModeModel: ModelProtocol {
             return succeedRecovery(state: state, environment: environment)
         case .failRecovery(let error):
             return failRecovery(state: state, environment: environment, error: error)
+        case .pressRecoveryButton:
+            return pressRecoveryButton(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -287,7 +293,7 @@ struct RecoveryModeModel: ModelProtocol {
         model.recoveryStatus = .succeeded
         return Update(state: model).animation(.easeOutCubic())
     }
-                
+    
     static func failRecovery(
         state: Self,
         environment: Environment,
@@ -296,6 +302,40 @@ struct RecoveryModeModel: ModelProtocol {
         var model = state
         model.recoveryStatus = .failed(error)
         return Update(state: model).animation(.easeOutCubic())
+    }
+    
+    static func pressRecoveryButton(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        // Dismiss recovery if already succeeded
+        if state.recoveryStatus == .succeeded {
+            return update(
+                state: state,
+                action: .requestPresent(false),
+                environment: environment
+            )
+        }
+        
+        guard let did = state.recoveryDidField.validated else {
+            return Update(state: state)
+        }
+        
+        let gatewayField = state.recoveryGatewayURLField
+        guard let gatewayUrl = gatewayField.validated else {
+            return Update(state: state)
+        }
+        
+        let phraseField = state.recoveryPhraseField
+        guard let recoveryPhrase = phraseField.validated else {
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            action: .attemptRecovery(did, gatewayUrl, recoveryPhrase),
+            environment: environment
+        )
     }
 }
 
