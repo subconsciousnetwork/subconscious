@@ -56,11 +56,6 @@ struct Config: Equatable, Codable {
     
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
-    
-    /// Toggle on/off simple Tracery-based Geists
-    var traceryZettelkasten = "zettelkasten"
-    var traceryCombo = "combo"
-    var traceryProject = "project"
 }
 
 extension Config {
