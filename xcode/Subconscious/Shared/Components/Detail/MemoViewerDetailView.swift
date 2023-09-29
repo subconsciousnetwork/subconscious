@@ -80,6 +80,10 @@ struct MemoViewerDetailView: View {
             MemoViewerDetailModel.logger.debug("[action] \(message)")
         }
         .onReceive(
+            store.actions.compactMap(MemoViewerDetailNotification.from),
+            perform: notify
+        )
+        .onReceive(
             app.actions.compactMap(MemoViewerDetailAction.fromAppAction),
             perform: store.send
         )
@@ -90,15 +94,7 @@ struct MemoViewerDetailView: View {
                 tag: MemoViewerDetailAction.presentMetaSheet
             )
         ) {
-            MemoViewerDetailMetaSheetView(
-                store: metaSheet,
-                onViewAuthorProfile: {
-                    guard let owner = store.state.owner else {
-                        return
-                    }
-                    notify(.requestUserProfileDetail(owner))
-                }
-            )
+            MemoViewerDetailMetaSheetView(store: metaSheet)
         }
     }
 }
@@ -237,6 +233,17 @@ enum MemoViewerDetailNotification: Hashable {
     case requestUserProfileDetail(_ user: UserProfile)
 }
 
+extension MemoViewerDetailNotification {
+    static func from(_ action: MemoViewerDetailAction) -> Self? {
+        switch action {
+        case let .requestAuthorDetail(user):
+            return .requestUserProfileDetail(user)
+        default:
+            return nil
+        }
+    }
+}
+
 /// A description of a memo detail that can be used to set up the memo
 /// detal's internal state.
 struct MemoViewerDetailDescription: Hashable {
@@ -265,10 +272,14 @@ enum MemoViewerDetailAction: Hashable {
     case failFetchOwnerProfile(_ error: String)
     
     case succeedIndexBackgroundSphere
+    case requestAuthorDetail(_ author: UserProfile)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
+    }
+    static func setMetaSheetAuthor(_ author: UserProfile) -> Self {
+        .metaSheet(.setAuthor(author))
     }
 }
 
@@ -400,7 +411,10 @@ struct MemoViewerDetailModel: ModelProtocol {
             model.owner = profile
             return update(
                 state: model,
-                action: .fetchTranscludePreviews,
+                actions: [
+                    .fetchTranscludePreviews,
+                    .setMetaSheetAuthor(profile)
+                ],
                 environment: environment
             ).animation(.easeOutCubic())
         case .failFetchOwnerProfile(let error):
@@ -409,6 +423,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .succeedIndexBackgroundSphere:
             return succeedIndexBackgroundSphere(
                 state: state,
+                environment: environment
+            )
+        case .requestAuthorDetail:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
                 environment: environment
             )
         }
@@ -607,6 +627,8 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
         switch action {
         case .requestDismiss:
             return .presentMetaSheet(false)
+        case let .requestAuthorDetail(user):
+            return .requestAuthorDetail(user)
         default:
             return .metaSheet(action)
         }

@@ -13,7 +13,6 @@ import ObservableStore
 struct MemoViewerDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
     var store: ViewStore<MemoViewerDetailMetaSheetModel>
-    var onViewAuthorProfile: () -> Void
     
     var body: some View {
         VStack(spacing: 0) {
@@ -46,19 +45,22 @@ struct MemoViewerDetailMetaSheetView: View {
                         )
                         .disabled(store.state.shareableLink == nil)
                         
-                        Button(
-                            action: {
-                                onViewAuthorProfile()
-                                store.send(.requestDismiss)
-                            },
-                            label: {
-                                Label(
-                                    "View Author Profile",
-                                    systemImage: "person"
-                                )
-                            }
-                        )
-                        .buttonStyle(RowButtonStyle())
+                        Divider()
+                        
+                        if let author = store.state.author {
+                            Button(
+                                action: {
+                                    store.send(.requestAuthorDetail(author))
+                                },
+                                label: {
+                                    Label(
+                                        "View Author Profile",
+                                        systemImage: "person"
+                                    )
+                                }
+                            )
+                            .buttonStyle(RowButtonStyle())
+                        }
                     }
                 }
                 .padding()
@@ -70,8 +72,10 @@ struct MemoViewerDetailMetaSheetView: View {
 }
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
-    case setAddress(_ address: Slashlink?)
+    case setAddress(_ address: Slashlink)
+    case setAuthor(_ author: UserProfile)
     case requestDismiss
+    case requestAuthorDetail(_ author: UserProfile)
 }
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
@@ -83,6 +87,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         category: "MemoViewerDetailMetaSheet"
     )
     
+    var author: UserProfile?
     var address: Slashlink?
     var memoVersion: String?
     var noteVersion: String?
@@ -101,19 +106,49 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
-        case .setAddress(let address):
-            var model = state
-            model.address = address
-            return Update(state: model)
+        case let .setAddress(address):
+            return setAddress(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .setAuthor(author):
+            return setAuthor(
+                state: state,
+                environment: environment,
+                author: author
+            )
         case .requestDismiss:
             return Update(state: state)
+        case .requestAuthorDetail:
+            return Update(state: state)
         }
+    }
+    
+    static func setAddress(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        var model = state
+        model.address = address
+        return Update(state: model)
+    }
+    
+    static func setAuthor(
+        state: Self,
+        environment: Environment,
+        author: UserProfile
+    ) -> Update<Self> {
+        var model = state
+        model.author = author
+        return Update(state: model)
     }
 }
 
 struct MemoViewerDetailMetaSheetView_Previews: PreviewProvider {
-static var previews: some View {
-    VStack {
+    static var previews: some View {
+        VStack {
             Text("Hello")
         }
         .sheet(isPresented: .constant(true)) {
@@ -126,8 +161,7 @@ static var previews: some View {
                     .viewStore(
                         get: MemoViewerDetailMetaSheetCursor.get,
                         tag: MemoViewerDetailMetaSheetCursor.tag
-                    ),
-                onViewAuthorProfile: {}
+                    )
             )
         }
     }
