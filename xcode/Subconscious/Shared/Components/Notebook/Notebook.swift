@@ -212,13 +212,13 @@ struct NotebookDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
         switch action {
-        case let .succeedMergeMemo(parent: parent, child: child):
+        case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedMoveMemo(from: from, to: to):
+        case let .succeedMoveEntry(from: from, to: to):
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
-        case let .succeedSaveMemo(address: address, modified: modified):
+        case let .succeedSaveEntry(address: address, modified: modified):
             return .succeedSaveEntry(slug: address, modified: modified)
         case _:
             return .detailStack(action)
@@ -683,190 +683,131 @@ struct NotebookModel: ModelProtocol {
     }
     
     /// Entry delete succeeded
-        static func requestDeleteMemo(
-            state: Self,
-            environment: Environment,
-            address: Slashlink?
-        ) -> Update<NotebookModel> {
-            logger.log(
-                "Request delete memo",
-                metadata: [
-                    "address": address?.description ?? ""
-                ]
-            )
-            return update(
-                state: state,
-                action: .detailStack(.requestDeleteMemo(address)),
-                environment: environment
-            )
-        }
-        
-        /// Entry delete succeeded
-        static func succeedDeleteMemo(
-            state: Self,
-            environment: Environment,
-            address: Slashlink
-        ) -> Update<NotebookModel> {
-            logger.log(
-                "Memo was deleted",
-                metadata: [
-                    "address": address.description
-                ]
-            )
-            return update(
-                state: state,
-                actions: [
-                    .detailStack(.succeedDeleteMemo(address)),
-                    .refreshLists
-                ],
-                environment: environment
-            )
-        }
-
-        /// Entry delete succeeded
-        static func failDeleteMemo(
-            state: Self,
-            environment: Environment,
-            error: String
-        ) -> Update<NotebookModel> {
-            logger.log(
-                "Failed to delete memo",
-                metadata: [
-                    "error": error
-                ]
-            )
-            return update(
-                state: state,
-                action: .detailStack(.failDeleteMemo(error)),
-                environment: environment
-            )
-        }
+    static func requestDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink?
+    ) -> Update<NotebookModel> {
+        logger.log(
+            "Request delete memo",
+            metadata: [
+                "address": address?.description ?? ""
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.requestDeleteMemo(address)),
+            environment: environment
+        )
+    }
     
-        static func succeedSaveEntry(
-            state: NotebookModel,
-            environment: AppEnvironment,
-            address: Slashlink,
-            modified: Date
-        ) -> Update<NotebookModel> {
-            // Just refresh note after save, for now.
-            // This reorders list by modified.
-            return update(
-                state: state,
-                actions: [
-                    .refreshLists,
-                    .detailStack(.succeedSaveMemo(address: address, modified: modified))
-                ],
-                environment: environment
-            )
-        }
+    /// Entry delete succeeded
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<NotebookModel> {
+        logger.log(
+            "Memo was deleted",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedDeleteMemo(address)),
+                .refreshLists
+            ],
+            environment: environment
+        )
+    }
 
-        /// Move success lifecycle handler.
-        /// Updates UI in response.
-        static func succeedMoveEntry(
-            state: NotebookModel,
-            environment: AppEnvironment,
-            from: Slashlink,
-            to: Slashlink
-        ) -> Update<NotebookModel> {
-            /// Find all instances of this model in the stack and update them
-            let details = state.details.map({ (detail: MemoDetailDescription) in
-                guard detail.address == from else {
-                    return detail
-                }
-                switch detail {
-                case .editor(var description):
-                    description.address = to
-                    return .editor(description)
-                case .viewer(var description):
-                    description.address = to
-                    return .viewer(description)
-                case .profile(let description):
-                    return .profile(description)
-                }
-            })
+    /// Entry delete succeeded
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<NotebookModel> {
+        logger.log(
+            "Failed to delete memo",
+            metadata: [
+                "error": error
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.failDeleteMemo(error)),
+            environment: environment
+        )
+    }
 
-            return update(
-                state: state,
-                actions: [
-                    .setDetails(details),
-                    .refreshLists,
-                    .detailStack(.succeedMoveMemo(from: from, to: to))
-                ],
-                environment: environment
-            )
-        }
-        /// Merge success lifecycle handler.
-        /// Updates UI in response.
-        static func succeedMergeEntry(
-            state: NotebookModel,
-            environment: AppEnvironment,
-            parent: Slashlink,
-            child: Slashlink
-        ) -> Update<NotebookModel> {
-            /// Find all instances of child and update them to become parent
-            let details = state.details.map({ (detail: MemoDetailDescription) in
-                guard detail.address == child else {
-                    return detail
-                }
-                switch detail {
-                case .editor(var description):
-                    description.address = parent
-                    return .editor(description)
-                case .viewer(var description):
-                    description.address = parent
-                    return .viewer(description)
-                case .profile(let description):
-                    return .profile(description)
-                }
-            })
+    static func succeedSaveEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        modified: Date
+    ) -> Update<NotebookModel> {
+        // Just refresh note after save, for now.
+        // This reorders list by modified.
+        return update(
+            state: state,
+            actions: [
+                .refreshLists,
+                .detailStack(.succeedSaveEntry(address: address, modified: modified))
+            ],
+            environment: environment
+        )
+    }
 
-            return update(
-                state: state,
-                actions: [
-                    .setDetails(details),
-                    .refreshLists,
-                    .detailStack(.succeedMergeMemo(parent: parent, child: child))
-                ],
-                environment: environment
-            )
-        }
-        /// Retitle success lifecycle handler.
-        /// Updates UI in response.
-        static func succeedUpdateAudience(
-            state: NotebookModel,
-            environment: AppEnvironment,
-            receipt: MoveReceipt
-        ) -> Update<NotebookModel> {
-            /// Find all instances of this model in the stack and update them
-            let details = state.details.map({ (detail: MemoDetailDescription) in
-                guard let address = detail.address else {
-                    return detail
-                }
-                guard address.slug == receipt.to.slug else {
-                    return detail
-                }
-                switch detail {
-                case .editor(var description):
-                    description.address = receipt.to
-                    return .editor(description)
-                case .viewer(var description):
-                    description.address = receipt.to
-                    return .viewer(description)
-                case .profile(let description):
-                    return .profile(description)
-                }
-            })
+    static func succeedMoveEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        from: Slashlink,
+        to: Slashlink
+    ) -> Update<NotebookModel> {
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedMoveEntry(from: from, to: to)),
+                .refreshLists
+            ],
+            environment: environment
+        )
+    }
 
-            return update(
-                state: state,
-                actions: [
-                    .setDetails(details),
-                    .refreshLists,
-                    .detailStack(.succeedUpdateAudience(receipt))
-                ],
-                environment: environment
-            )
-        }
+    static func succeedMergeEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        parent: Slashlink,
+        child: Slashlink
+    ) -> Update<NotebookModel> {
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedMergeEntry(parent: parent, child: child)),
+                .refreshLists
+            ],
+            environment: environment
+        )
+    }
+
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedUpdateAudience(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        receipt: MoveReceipt
+    ) -> Update<NotebookModel> {
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedUpdateAudience(receipt)),
+                .refreshLists
+            ],
+            environment: environment
+        )
+    }
 
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
