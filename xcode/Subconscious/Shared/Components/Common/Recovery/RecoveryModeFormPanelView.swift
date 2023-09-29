@@ -75,8 +75,10 @@ struct RecoveryModeFormPanelView: View {
             
             Button(
                 action: {
+                    // Dismiss recovery if already succeeded
                     if store.state.recoveryStatus == .succeeded {
                         store.send(.requestPresent(false))
+                        return
                     }
                     
                     guard let did = store.state.recoveryDidField.validated else {
