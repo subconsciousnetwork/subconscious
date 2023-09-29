@@ -310,11 +310,11 @@ struct RecoveryModeModel: ModelProtocol {
     ) -> Update<Self> {
         // Dismiss recovery if already succeeded
         if state.recoveryStatus == .succeeded {
-            return update(
-                state: state,
-                action: .requestPresent(false),
-                environment: environment
-            )
+            // Send up action through fx so it can be intercepted by parent
+            let unpresentFx: Fx<RecoveryModeAction> = Just(
+                RecoveryModeAction.requestPresent(false)
+            ).eraseToAnyPublisher()
+            return Update(state: state, fx: unpresentFx)
         }
         
         guard let did = state.recoveryDidField.validated else {
