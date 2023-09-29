@@ -9,7 +9,7 @@ import XCTest
 import Combine
 @testable import Subconscious
 
-final class Tests_RecoveryMode: XCTestCase {
+final class Tests_RecoveryModeView: XCTestCase {
     var cancellable: AnyCancellable?
     
     func testPressRecoverButtonAlreadySucceeded() throws {
