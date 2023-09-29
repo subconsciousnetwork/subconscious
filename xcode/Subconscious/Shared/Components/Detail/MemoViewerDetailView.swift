@@ -19,6 +19,13 @@ struct MemoViewerDetailView: View {
         state: MemoViewerDetailModel(),
         environment: AppEnvironment.default
     )
+    
+    var metaSheet: ViewStore<MemoViewerDetailMetaSheetModel> {
+        store.viewStore(
+            get: MemoViewerDetailMetaSheetCursor.get,
+            tag: MemoViewerDetailMetaSheetCursor.tag
+        )
+    }
 
     var description: MemoViewerDetailDescription
     var notify: (MemoViewerDetailNotification) -> Void
@@ -84,11 +91,7 @@ struct MemoViewerDetailView: View {
             )
         ) {
             MemoViewerDetailMetaSheetView(
-                state: store.state.metaSheet,
-                send: Address.forward(
-                    send: store.send,
-                    tag: MemoViewerDetailMetaSheetCursor.tag
-                ),
+                store: metaSheet,
                 onViewAuthorProfile: {
                     guard let owner = store.state.owner else {
                         return

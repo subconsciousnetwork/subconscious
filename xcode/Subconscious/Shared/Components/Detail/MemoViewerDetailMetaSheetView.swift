@@ -12,8 +12,7 @@ import ObservableStore
 
 struct MemoViewerDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    var state: MemoViewerDetailMetaSheetModel
-    var send: (MemoViewerDetailMetaSheetAction) -> Void
+    var store: ViewStore<MemoViewerDetailMetaSheetModel>
     var onViewAuthorProfile: () -> Void
     
     var body: some View {
@@ -21,7 +20,7 @@ struct MemoViewerDetailMetaSheetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slashlink = state.address {
+                        if let slashlink = store.state.address {
                             SlashlinkDisplayView(slashlink: slashlink).theme(
                                 base: Color.primary,
                                 slug: Color.secondary
@@ -43,14 +42,14 @@ struct MemoViewerDetailMetaSheetView: View {
                     MetaTableView {
                         MetaTableItemShareLinkView(
                             label: "Share link",
-                            item: state.shareableLink ?? ""
+                            item: store.state.shareableLink ?? ""
                         )
-                        .disabled(state.shareableLink == nil)
+                        .disabled(store.state.shareableLink == nil)
                         
                         Button(
                             action: {
                                 onViewAuthorProfile()
-                                send(.requestDismiss)
+                                store.send(.requestDismiss)
                             },
                             label: {
                                 Label(
@@ -113,16 +112,21 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
 }
 
 struct MemoViewerDetailMetaSheetView_Previews: PreviewProvider {
-    static var previews: some View {
-        VStack {
+static var previews: some View {
+    VStack {
             Text("Hello")
         }
         .sheet(isPresented: .constant(true)) {
             MemoViewerDetailMetaSheetView(
-                state: MemoViewerDetailMetaSheetModel(
-                    address: Slashlink("@bob/foo")!
-                ),
-                send: { action in },
+                store:
+                    Store(
+                        state: MemoViewerDetailModel(),
+                        environment: AppEnvironment()
+                    )
+                    .viewStore(
+                        get: MemoViewerDetailMetaSheetCursor.get,
+                        tag: MemoViewerDetailMetaSheetCursor.tag
+                    ),
                 onViewAuthorProfile: {}
             )
         }
