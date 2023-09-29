@@ -513,8 +513,12 @@ actor DataService {
         var memo = memo
         memo.modified = Date.now
         
+        let identity = try await noosphere.identity()
+        
         switch address.peer {
         case .none:
+            return try await writeSphereMemo(slug: address.slug, memo: memo)
+        case let .did(did) where did == identity:
             return try await writeSphereMemo(slug: address.slug, memo: memo)
         case let .did(did) where did == Did.local:
             return try await writeLocalMemo(slug: address.slug, memo: memo)
