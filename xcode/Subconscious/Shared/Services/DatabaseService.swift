@@ -489,15 +489,21 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         
+        // Exclude any local-only notes from the feed
+        let ignoredDids = [Did.local.description]
+        
         let results = try database.execute(
             sql: """
             SELECT slashlink, modified, excerpt
             FROM memo
-            WHERE substr(slug, 1, 1) != '_'
+            WHERE did NOT IN (SELECT value FROM json_each(?))
+                AND substr(slug, 1, 1) != '_'
             ORDER BY modified DESC
             LIMIT 1000
             """,
-            parameters: []
+            parameters: [
+                .json(ignoredDids, or: "[]")
+            ]
         )
         return results.compactMap({ row in
             guard
