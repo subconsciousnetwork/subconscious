@@ -497,7 +497,11 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        return Update(state: state)
+        return update(
+            state: state,
+            action: .refreshLists,
+            environment: environment
+        )
     }
     
     /// View is ready
