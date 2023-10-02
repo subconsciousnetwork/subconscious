@@ -383,9 +383,6 @@
 		B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */; };
 		B8CC434A27A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */; };
-		B8D328B529A640F200850A37 /* Tests_RecoveryPhrase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D328B429A640F200850A37 /* Tests_RecoveryPhrase.swift */; };
-		B8CE40E728D2707D00819064 /* QueryPromptGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */; };
-		B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */; };
 		B8D328B529A640F200850A37 /* Tests_RecoveryPhraseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D328B429A640F200850A37 /* Tests_RecoveryPhraseView.swift */; };
 		B8D328B729A671DA00850A37 /* TranscludeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D328B629A671DA00850A37 /* TranscludeView.swift */; };
 		B8D328B829A671DA00850A37 /* TranscludeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D328B629A671DA00850A37 /* TranscludeView.swift */; };
@@ -740,8 +737,6 @@
 		B8CBAFA8299580E50079107E /* StoreProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreProtocol.swift; sourceTree = "<group>"; };
 		B8CC433C27A07CE10079D2F9 /* ScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrimView.swift; sourceTree = "<group>"; };
 		B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationUtilities.swift; sourceTree = "<group>"; };
-		B8D328B429A640F200850A37 /* Tests_RecoveryPhrase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_RecoveryPhrase.swift; sourceTree = "<group>"; };
-		B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryPromptGeist.swift; sourceTree = "<group>"; };
 		B8D328B429A640F200850A37 /* Tests_RecoveryPhraseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_RecoveryPhraseView.swift; sourceTree = "<group>"; };
 		B8D328B629A671DA00850A37 /* TranscludeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeView.swift; sourceTree = "<group>"; };
 		B8D328B929A69D2D00850A37 /* Tests_URLUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_URLUtilities.swift; sourceTree = "<group>"; };
@@ -942,6 +937,7 @@
 				B8E2B02529AD0539004A78B3 /* Tests_Petname.swift */,
 				B85DF78E29B7B5440042D725 /* Tests_Prose.swift */,
 				B8AC58732AC74F1600F1647D /* Tests_RecoveryModeView.swift */,
+				B8AC58752AC7568A00F1647D /* Tests_RecoveryPhrase.swift */,
 				B8D328B429A640F200850A37 /* Tests_RecoveryPhraseView.swift */,
 				B8EC20932AC4A9A000D435F6 /* Tests_Redacted.swift */,
 				B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */,
@@ -961,7 +957,6 @@
 				B5E60C8C2A146838007065A1 /* Tests_UserProfileBio.swift */,
 				B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */,
 				B5908BEA29DAB05B00225B1A /* TestUtilities.swift */,
-				B8AC58752AC7568A00F1647D /* Tests_RecoveryPhrase.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -2334,7 +2329,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.10;
+				MARKETING_VERSION = 0.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
@@ -2376,7 +2371,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.10;
+				MARKETING_VERSION = 0.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
