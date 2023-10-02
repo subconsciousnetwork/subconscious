@@ -840,7 +840,10 @@ final class DatabaseService {
                 ]
             )
             .compactMap({ row in
-                row.col(0)?.toString()?.toSlashlink()
+                row.col(0)?
+                    .toString()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner)
             })
         
         return Self.collateRenameSuggestions(
