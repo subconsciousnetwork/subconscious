@@ -29,7 +29,7 @@ final class Tests_FirstRun: XCTestCase {
         let model = AppModel()
         let up1 = AppModel.update(
             state: model,
-            action: .submitFirstRunWelcomeStep,
+            action: .submitFirstRunInviteStep,
             environment: AppEnvironment()
         )
         
@@ -37,7 +37,7 @@ final class Tests_FirstRun: XCTestCase {
         XCTAssertNil(up1.state.gatewayId)
         XCTAssertEqual(
             up1.state.firstRunPath,
-            [.profile],
+            [.done],
             "proceed in offline mode by default"
         )
         
@@ -53,7 +53,7 @@ final class Tests_FirstRun: XCTestCase {
         XCTAssertNil(up2.state.gatewayId)
         XCTAssertEqual(
             up2.state.firstRunPath,
-            [.profile],
+            [.done],
             "proceed if the user requests offline mode"
         )
         
@@ -71,7 +71,7 @@ final class Tests_FirstRun: XCTestCase {
         XCTAssertNil(up3.state.gatewayId)
         XCTAssertEqual(
             up3.state.firstRunPath,
-            [.profile],
+            [.done],
             "proceed if the user requests offline mode after using form"
         )
         
@@ -80,7 +80,7 @@ final class Tests_FirstRun: XCTestCase {
             actions: [
                 .inviteCodeFormField(.setValue(input: "one two three four")),
                 .submitInviteCodeForm,
-                .submitFirstRunWelcomeStep
+                .submitFirstRunInviteStep
             ],
             environment: AppEnvironment()
         )
@@ -99,14 +99,14 @@ final class Tests_FirstRun: XCTestCase {
                 .inviteCodeFormField(.setValue(input: "one two three four")),
                 .submitInviteCodeForm,
                 .succeedRedeemInviteCode("my-gateway"),
-                .submitFirstRunWelcomeStep
+                .submitFirstRunInviteStep
             ],
             environment: AppEnvironment()
         )
         
         XCTAssertEqual(
             up5.state.firstRunPath,
-            [.profile],
+            [.done],
             "proceed with invite code + gateway ID"
         )
         XCTAssertEqual(up5.state.inviteCode, InviteCode("one two three four")!)
@@ -126,13 +126,13 @@ final class Tests_FirstRun: XCTestCase {
         
         XCTAssertEqual(
             up6.state.firstRunPath,
-            [.profile],
+            [.done],
             "clear invite code + gateway ID when requesting offline"
         )
         XCTAssertNil(up6.state.inviteCode)
         XCTAssertNil(up6.state.gatewayId)
         
-        // We should CANCEL the provisioniong process when offline mode is requested
+        // We should cancel the provisioniong process when offline mode is requested
         // ...but we can't do that until we add support for store-driven cancellation
         // XCTAssertTrue(up6.state.gatewayProvisioningStatus == .initial)
     }
@@ -156,7 +156,7 @@ final class Tests_FirstRun: XCTestCase {
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up2.state.firstRunPath, [.profile, .sphere], "proceed with valid nickname")
+        XCTAssertEqual(up2.state.firstRunPath, [.profile, .invite], "proceed with valid nickname")
         
         let up3 = AppModel.update(
             state: model,
@@ -171,29 +171,44 @@ final class Tests_FirstRun: XCTestCase {
     }
     
     func testFirstRunSphereStep() throws {
-        let model = AppModel(firstRunPath: [.profile, .sphere])
+        let model = AppModel(firstRunPath: [.sphere,])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunSphereStep,
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up1.state.firstRunPath, [.profile, .sphere, .recovery], "proceed to recovery")
+        XCTAssertEqual(up1.state.firstRunPath, [.sphere, .recovery], "proceed to recovery")
     }
     
     func testFirstRunRecoveryStep() throws {
-        let model = AppModel(firstRunPath: [.profile, .sphere, .recovery])
+        let model = AppModel(firstRunPath: [.recovery])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunRecoveryStep,
             environment: AppEnvironment()
         )
         
-        XCTAssertEqual(up1.state.firstRunPath, [.profile, .sphere, .recovery, .done], "proceed to connect")
+        XCTAssertEqual(up1.state.firstRunPath, [.recovery, .profile], "proceed to profile")
+    }
+    
+    func testFirstRunInviteStep() throws {
+        let model = AppModel(firstRunPath: [.invite])
+        let up1 = AppModel.update(
+            state: model,
+            action: .submitFirstRunInviteStep,
+            environment: AppEnvironment()
+        )
+        
+        // Assert fields are reset
+        XCTAssertFalse(up1.state.nicknameFormField.touched)
+        XCTAssertFalse(up1.state.inviteCodeFormField.touched)
+        
+        XCTAssertEqual(up1.state.firstRunPath, [.invite, .done], "proceed to profile")
     }
     
     func testFirstRunConnectStep() throws {
-        let model = AppModel(firstRunPath: [.profile, .sphere, .recovery, .done])
+        let model = AppModel(firstRunPath: [.done])
         let up1 = AppModel.update(
             state: model,
             action: .submitFirstRunDoneStep,

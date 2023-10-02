@@ -1488,13 +1488,6 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard state.inviteCode == nil || // Offline mode: no code
-              state.gatewayId != nil // Otherwise we need an ID to proceed
-        else {
-            logger.error("Missing gateway ID but user is trying to use invite code")
-            return Update(state: state)
-        }
-        
         return update(
             state: state,
             actions: [
@@ -1554,6 +1547,13 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        guard state.inviteCode == nil || // Offline mode: no code
+              state.gatewayId != nil // Otherwise we need an ID to proceed
+        else {
+            logger.error("Missing gateway ID but user is trying to use invite code")
+            return Update(state: state)
+        }
+
         return update(
             state: state,
             actions: [
