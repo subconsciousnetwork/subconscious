@@ -130,9 +130,11 @@ struct FeedView: View {
 extension FeedAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
-        case .succeedIndexOurSphere(_):
+        case .succeedIndexOurSphere:
             return .refreshAll
-        case .succeedIndexPeer(_):
+        case .succeedIndexPeer:
+            return .refreshAll
+        case .succeedRecoverOurSphere:
             return .refreshAll
         case .requestFeedRoot:
             return .requestFeedRoot
@@ -149,11 +151,15 @@ enum FeedAction {
 
     /// Set search view presented
     case setSearchPresented(Bool)
-
     case ready
-
     case refreshAll
-
+    
+    /// DetailStack notification actions
+    case succeedSaveEntry(slug: Slashlink, modified: Date)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedUpdateAudience(MoveReceipt)
+    
     // Feed
     /// Fetch stories for feed
     case fetchFeed
@@ -207,7 +213,18 @@ struct FeedDetailStackCursor: CursorProtocol {
     }
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .detailStack(action)
+        switch action {
+        case let .succeedMergeEntry(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from: from, to: to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+        case let .succeedSaveEntry(address: address, modified: modified):
+            return .succeedSaveEntry(slug: address, modified: modified)
+        case _:
+            return .detailStack(action)
+        }
     }
 }
 
@@ -288,9 +305,45 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case let .succeedUpdateAudience(receipt):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedUpdateAudience(receipt)),
+                    .refreshAll
+                ],
+                environment: environment
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMoveEntry(from: from, to: to)),
+                    .refreshAll
+                ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMergeEntry(parent: parent, child: child)),
+                    .refreshAll
+                ],
+                environment: environment
+            )
+        case let .succeedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedSaveEntry(address: address, modified: modified)),
+                    .refreshAll
+                ],
+                environment: environment
+            )
         }
     }
-
+    
     /// Log error at log level
     static func log(
         state: FeedModel,

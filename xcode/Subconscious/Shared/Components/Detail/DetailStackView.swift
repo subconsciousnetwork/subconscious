@@ -133,9 +133,9 @@ enum DetailStackAction: Hashable {
     /// Deletion attempt succeeded. Forwarded down from parent.
     case succeedDeleteMemo(Slashlink)
 
-    case succeedMoveMemo(from: Slashlink, to: Slashlink)
-    case succeedMergeMemo(parent: Slashlink, child: Slashlink)
-    case succeedSaveMemo(address: Slashlink, modified: Date)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedSaveEntry(address: Slashlink, modified: Date)
     case succeedUpdateAudience(MoveReceipt)
 
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
@@ -245,14 +245,28 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 error: error
             )
         // These act as notifications for parent models to react to
-        case .succeedMoveMemo:
+        case let .succeedMoveEntry(from, to):
+            return succeedMoveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .succeedMergeEntry(parent, child):
+            return succeedMergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case .succeedSaveEntry:
             return Update(state: state)
-        case .succeedMergeMemo:
-            return Update(state: state)
-        case .succeedSaveMemo:
-            return Update(state: state)
-        case .succeedUpdateAudience:
-            return Update(state: state)
+        case let.succeedUpdateAudience(receipt):
+            return succeedUpdateAudience(
+                state: state,
+                environment: environment,
+                receipt: receipt
+            )
         }
     }
 
@@ -480,6 +494,105 @@ struct DetailStackModel: Hashable, ModelProtocol {
     ) -> Update<Self> {
         return Update(state: state)
     }
+    
+    /// Move success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMoveEntry(
+        state: Self,
+        environment: Environment,
+        from: Slashlink,
+        to: Slashlink
+    ) -> Update<Self> {
+        /// Find all instances of this model in the stack and update them
+        let details = state.details.map({ (detail: MemoDetailDescription) in
+            guard detail.address == from else {
+                return detail
+            }
+            switch detail {
+            case .editor(var description):
+                description.address = to
+                return .editor(description)
+            case .viewer(var description):
+                description.address = to
+                return .viewer(description)
+            case .profile(let description):
+                return .profile(description)
+            }
+        })
+
+        return update(
+            state: state,
+            action: .setDetails(details),
+            environment: environment
+        )
+    }
+    
+    /// Merge success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMergeEntry(
+        state: Self,
+        environment: Environment,
+        parent: Slashlink,
+        child: Slashlink
+    ) -> Update<Self> {
+        /// Find all instances of child and update them to become parent
+        let details = state.details.map({ (detail: MemoDetailDescription) in
+            guard detail.address == child else {
+                return detail
+            }
+            switch detail {
+            case .editor(var description):
+                description.address = parent
+                return .editor(description)
+            case .viewer(var description):
+                description.address = parent
+                return .viewer(description)
+            case .profile(let description):
+                return .profile(description)
+            }
+        })
+
+        return update(
+            state: state,
+            action: .setDetails(details),
+            environment: environment
+        )
+    }
+    
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedUpdateAudience(
+        state: Self,
+        environment: Environment,
+        receipt: MoveReceipt
+    ) -> Update<Self> {
+        /// Find all instances of this model in the stack and update them
+        let details = state.details.map({ (detail: MemoDetailDescription) in
+            guard let address = detail.address else {
+                return detail
+            }
+            guard address.slug == receipt.to.slug else {
+                return detail
+            }
+            switch detail {
+            case .editor(var description):
+                description.address = receipt.to
+                return .editor(description)
+            case .viewer(var description):
+                description.address = receipt.to
+                return .viewer(description)
+            case .profile(let description):
+                return .profile(description)
+            }
+        })
+
+        return update(
+            state: state,
+            action: .setDetails(details),
+            environment: environment
+        )
+    }
+
 }
 
 extension DetailStackAction {
@@ -495,11 +608,11 @@ extension DetailStackAction {
                 link: link
             )
         case let .succeedMoveEntry(from, to):
-            return .succeedMoveMemo(from: from, to: to)
+            return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
-            return .succeedMergeMemo(parent: parent, child: child)
+            return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedSaveEntry(address, modified):
-            return .succeedSaveMemo(address: address, modified: modified)
+            return .succeedSaveEntry(address: address, modified: modified)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
         }

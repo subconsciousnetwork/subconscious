@@ -76,6 +76,10 @@ struct UserProfileDetailView: View {
             store.actions.compactMap(UserProfileDetailAction.toAppAction),
             perform: app.send
         )
+        .onReceive(
+            app.actions.compactMap(UserProfileDetailAction.from),
+            perform: store.send
+        )
         .onReceive(store.actions) { action in
             UserProfileDetailAction.logger.debug(
                 "\(String(describing: action))"
@@ -98,6 +102,21 @@ extension UserProfileDetailAction {
             return .notifySucceedResolveFollowedUser(petname: petname, cid: cid)
         case let .succeedUnfollow(identity, petname):
             return .notifySucceedUnfollow(identity: identity, petname: petname)
+        default:
+            return nil
+        }
+    }
+}
+
+extension UserProfileDetailAction {
+    static func from(_ action: AppAction) -> Self? {
+        switch action {
+        case .succeedIndexOurSphere:
+            return .refresh(forceSync: false)
+        case .succeedIndexPeer:
+            return .refresh(forceSync: false)
+        case .succeedRecoverOurSphere:
+            return .refresh(forceSync: false)
         default:
             return nil
         }
