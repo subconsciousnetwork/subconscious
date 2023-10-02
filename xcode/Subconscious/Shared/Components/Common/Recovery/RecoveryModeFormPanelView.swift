@@ -75,25 +75,7 @@ struct RecoveryModeFormPanelView: View {
             
             Button(
                 action: {
-                    if store.state.recoveryStatus == .succeeded {
-                        store.send(.requestPresent(false))
-                    }
-                    
-                    guard let did = store.state.recoveryDidField.validated else {
-                        return
-                    }
-                    
-                    let gatewayField = store.state.recoveryGatewayURLField
-                    guard let gatewayUrl = gatewayField.validated else {
-                        return
-                    }
-                    
-                    let phraseField = store.state.recoveryPhraseField
-                    guard let recoveryPhrase = phraseField.validated else {
-                        return
-                    }
-                    
-                    store.send(.attemptRecovery(did, gatewayUrl, recoveryPhrase))
+                    store.send(.pressRecoveryButton)
                 },
                 label: {
                     AttemptRecoveryLabel(status: store.state.recoveryStatus)
