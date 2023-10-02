@@ -306,45 +306,42 @@ struct FeedModel: ModelProtocol {
                 environment: environment
             )
         case let .succeedUpdateAudience(receipt):
-            return detailStackNotification(
+            return update(
                 state: state,
-                environment: environment,
-                action: .succeedUpdateAudience(receipt)
+                actions: [
+                    .detailStack(.succeedUpdateAudience(receipt)),
+                    .refreshAll
+                ],
+                environment: environment
             )
         case let .succeedMoveEntry(from, to):
-            return detailStackNotification(
+            return update(
                 state: state,
-                environment: environment,
-                action: .succeedMoveEntry(from: from, to: to)
+                actions: [
+                    .detailStack(.succeedMoveEntry(from: from, to: to)),
+                    .refreshAll
+                ],
+                environment: environment
             )
         case let .succeedMergeEntry(parent, child):
-            return detailStackNotification(
+            return update(
                 state: state,
-                environment: environment,
-                action: .succeedMergeEntry(parent: parent, child: child)
+                actions: [
+                    .detailStack(.succeedMergeEntry(parent: parent, child: child)),
+                    .refreshAll
+                ],
+                environment: environment
             )
         case let .succeedSaveEntry(address, modified):
-            return detailStackNotification(
+            return update(
                 state: state,
-                environment: environment,
-                action: .succeedSaveEntry(address: address, modified: modified)
+                actions: [
+                    .detailStack(.succeedSaveEntry(address: address, modified: modified)),
+                    .refreshAll
+                ],
+                environment: environment
             )
         }
-    }
-    
-    static func detailStackNotification(
-        state: FeedModel,
-        environment: AppEnvironment,
-        action: DetailStackAction
-    ) -> Update<FeedModel> {
-        return update(
-            state: state,
-            actions: [
-                .detailStack(action),
-                .refreshAll
-            ],
-            environment: environment
-        )
     }
     
     /// Log error at log level
