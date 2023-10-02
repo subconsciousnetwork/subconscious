@@ -497,6 +497,11 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
+        // Skip refreshing the view if we're still starting up
+        guard state.isDatabaseReady else {
+            return Update(state: state)
+        }
+        
         return update(
             state: state,
             action: .refreshLists,
