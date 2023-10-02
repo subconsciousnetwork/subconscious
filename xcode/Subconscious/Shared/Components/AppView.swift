@@ -1478,7 +1478,7 @@ struct AppModel: ModelProtocol {
             state: model,
             actions: [
                 .inviteCodeFormField(.reset),
-                .submitFirstRunWelcomeStep
+                .submitFirstRunInviteStep
             ],
             environment: environment
         )

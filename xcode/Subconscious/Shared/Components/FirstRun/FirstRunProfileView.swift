@@ -12,11 +12,27 @@ struct FirstRunProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
+    var did: Did? {
+        Did(app.state.sphereIdentity ?? "")
+    }
+    
     var body: some View {
         VStack(spacing: AppTheme.padding) {
             Spacer()
-            Text("What should we call you?")
+            
+            if let did = did {
+                StackedGlowingImage() {
+                    GenerativeProfilePic(
+                        did: did,
+                        size: 100
+                    )
+                }
+                .padding(AppTheme.padding)
+            }
+            
+            Text("Choose a nickname for your sphere:")
                 .foregroundColor(.secondary)
+            
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
                 ValidatedFormField(
                     alignment: .center,

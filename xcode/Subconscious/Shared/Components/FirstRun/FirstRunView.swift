@@ -32,6 +32,7 @@ struct FirstRunView: View {
                     minHeight: 32,
                     maxHeight: AppTheme.onboarding.heroIconSize
                 )
+                .padding(AppTheme.padding)
                 
                 Text("Subconscious is a place to garden thoughts and share them with others.")
                     .foregroundColor(.secondary)

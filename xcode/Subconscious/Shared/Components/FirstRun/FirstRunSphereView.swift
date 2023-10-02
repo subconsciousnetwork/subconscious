@@ -19,31 +19,13 @@ struct FirstRunSphereView: View {
         VStack {
             Spacer()
             VStack(spacing: AppTheme.padding) {
-                if let nickname = app.state.nicknameFormField.validated  {
-                    HStack(spacing: 0) {
-                        Text("Hi, ")
-                            .foregroundColor(.secondary)
-                        Text(nickname.toPetname().markup)
-                            .lineLimit(1)
-                        Text(".")
-                            .foregroundColor(.secondary)
-                    }
-                }
+                // Should have orbiting spheres
+                FirstRunOrbitEffectView()
                 
-                if let did = did {
-                    StackedGlowingImage() {
-                        GenerativeProfilePic(
-                            did: did,
-                            size: 80
-                        )
-                    }
-                    .padding(AppTheme.padding)
-                }
-                
-                Text("This is your sphere. It stores your data.")
+                Text("Subconscious stores your notes in your personal sphere.")
                     .foregroundColor(.secondary)
                 
-                Text("Your sphere connects to Noosphere allowing you to explore and follow other spheres.")
+                Text("Your sphere connects to other spheres, allowing you to follow other users.")
                     .foregroundColor(.secondary)
             }
             .multilineTextAlignment(.center)
@@ -53,7 +35,7 @@ struct FirstRunSphereView: View {
             Button(action: {
                 app.send(.submitFirstRunSphereStep)
             }, label: {
-                Text("Got it")
+                Text("Create Sphere")
             })
             .buttonStyle(PillButtonStyle())
         }
@@ -62,7 +44,7 @@ struct FirstRunSphereView: View {
             AppTheme.onboarding
                 .appBackgroundGradient(colorScheme)
         )
-        .navigationTitle("Your Sphere")
+        .navigationTitle("Create Sphere")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

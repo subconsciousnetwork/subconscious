@@ -37,14 +37,14 @@ struct FirstRunDoneView: View {
     var statusLabel: String {
         switch (status) {
         case .pending:
-            return "Creating your sphere..."
+            return "Creating your gateway..."
         case .succeeded:
             return "Connected!"
         case .initial:
             // Shown if the user skips the invite code step
             return "You are offline."
         case .failed:
-            return "Failed to create sphere."
+            return "Failed to create gateway."
         }
     }
     
