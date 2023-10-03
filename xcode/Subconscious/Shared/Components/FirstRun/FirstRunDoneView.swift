@@ -83,6 +83,13 @@ struct FirstRunDoneView: View {
                     }
                     dottedLine
                     ResourceSyncBadge(status: status)
+                        .foregroundColor(Func.run {
+                            if case .failed = status {
+                                return .red
+                            }
+                            
+                            return .secondary
+                        })
                     dottedLine
                     Image("ns_logo")
                         .resizable()

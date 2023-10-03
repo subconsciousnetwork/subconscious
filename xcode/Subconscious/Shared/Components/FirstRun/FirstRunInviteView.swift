@@ -47,26 +47,33 @@ struct FirstRunInviteView: View {
         }
     }
     
+    var keyboardVisible: Bool {
+        app.state.inviteCodeFormField.hasFocus
+    }
+    
     var body: some View {
         VStack(spacing: AppTheme.padding) {
             Spacer()
             
-            if !app.state.inviteCodeFormField.hasFocus {
+            if !keyboardVisible {
                 StackedGlowingImage() {
                     Image("ns_logo").resizable()
                 }
                 .aspectRatio(contentMode: .fit)
                 .frame(
-                    minWidth: 32,
-                    maxWidth: AppTheme.onboarding.heroIconSize,
-                    minHeight: 32,
-                    maxHeight: AppTheme.onboarding.heroIconSize
+                    width: AppTheme.onboarding.heroIconSize,
+                    height: AppTheme.onboarding.heroIconSize
                 )
-            
+                // hide the noosphere logo when the form is focused to maximise space
+                // animate the transition so it's not so jarring
+                .offset(y: keyboardVisible ? -AppTheme.onboarding.heroIconSize / 4 : 0)
+                .opacity(keyboardVisible ? 0 : 1)
+                .frame(height: keyboardVisible ? 0 : AppTheme.onboarding.heroIconSize)
+        
                 Spacer()
             }
             
-            Group {
+            VStack(spacing: AppTheme.padding) {
                 Text("Subconscious is powered by Noosphere, a decentralized protocol, so your data is accessible anywhere and belongs to you.")
                 
                 Text("Enter your invite code to create your Noosphere gateway:")
@@ -102,7 +109,7 @@ struct FirstRunInviteView: View {
                 .disabled(app.state.gatewayOperationInProgress)
             }
             
-            if !app.state.inviteCodeFormField.hasFocus {
+            if !keyboardVisible {
                 Spacer()
                 
                 Button(action: {
