@@ -9,22 +9,16 @@ import SwiftUI
 
 struct ExcerptView: View {
     var excerpt: String
-    var spacing: CGFloat = AppTheme.unit
-    var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
-        Array(excerpt.split(separator: "\n").enumerated())
+    var subtext: Subtext {
+        Subtext(markup: excerpt)
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: spacing) {
-            ForEach(excerptLines, id: \.offset) { idx, line in
-                Text("\(String(line))")
-                    .fontWeight(
-                        idx == 0 && excerptLines.count > 1
-                            ? .medium
-                            : .regular
-                    )
-            }
-        }
+        SubtextView(
+            subtext: subtext,
+            transcludePreviews: [:],
+            onViewTransclude: { _ in }
+        )
     }
 }
 
