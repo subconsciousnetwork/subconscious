@@ -134,7 +134,7 @@ final class Tests_DataService: XCTestCase {
                 globalStorageURL: globalStorageURL,
                 sphereStorageURL: sphereStorageURL,
                 gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
-                errorLoggingService: SentryIntegration()
+                errorLoggingService: MockErrorLoggingService()
             )
             
             let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
@@ -174,7 +174,7 @@ final class Tests_DataService: XCTestCase {
                 sphereStorageURL: sphereStorageURL,
                 gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
                 sphereIdentity: sphereIdentity,
-                errorLoggingService: SentryIntegration()
+                errorLoggingService: MockErrorLoggingService()
             )
             let addressBook = AddressBookService(
                 noosphere: noosphere,
@@ -222,7 +222,7 @@ final class Tests_DataService: XCTestCase {
             sphereStorageURL: sphereStorageURL,
             gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
             sphereIdentity: sphereIdentity,
-            errorLoggingService: SentryIntegration()
+            errorLoggingService: MockErrorLoggingService()
         )
         let addressBook = AddressBookService(
             noosphere: noosphere,
@@ -431,7 +431,7 @@ final class Tests_DataService: XCTestCase {
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
-            errorLoggingService: SentryIntegration()
+            errorLoggingService: MockErrorLoggingService()
         )
         
         let databaseURL = tmp.appending(

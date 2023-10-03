@@ -46,7 +46,7 @@ struct TestUtilities {
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
-            errorLoggingService: SentryIntegration()
+            errorLoggingService: MockErrorLoggingService()
         )
         
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
