@@ -2554,12 +2554,15 @@ struct AppEnvironment {
         )
         let defaultGateway = GatewayURL(AppDefaults.standard.gatewayURL)
         let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
+        
+        let sentry = SentryIntegration()
 
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: defaultGateway,
-            sphereIdentity: defaultSphereIdentity
+            sphereIdentity: defaultSphereIdentity,
+            errorLoggingService: sentry
         )
         self.noosphere = noosphere
 
