@@ -658,7 +658,7 @@ extension Subtext {
         // Filter out empty blocks
         let validBlocks = blocks
             .filter { block in !block.isEmpty }
-            .map { block in String(block.body()) }
+            .map { block in String(block.span) }
             .prefix(2) // Take first two blocks
         
         let output = validBlocks.joined(separator: "\n")
