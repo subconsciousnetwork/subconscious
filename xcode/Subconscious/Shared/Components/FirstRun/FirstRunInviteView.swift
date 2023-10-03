@@ -62,19 +62,18 @@ struct FirstRunInviteView: View {
                     minHeight: 32,
                     maxHeight: AppTheme.onboarding.heroIconSize
                 )
+            
+                Spacer()
             }
             
-            Spacer()
-            
-            Text("Subconscious is powered by Noosphere, a decentralized protocol, so your data is accessible anywhere and belongs to you.")
-                .foregroundColor(.secondary)
-                .font(.callout)
-                .multilineTextAlignment(.center)
-            
-            Text("Enter your invite code to create your Noosphere gateway:")
-                .foregroundColor(.secondary)
-                .font(.callout)
-                .multilineTextAlignment(.center)
+            Group {
+                Text("Subconscious is powered by Noosphere, a decentralized protocol, so your data is accessible anywhere and belongs to you.")
+                
+                Text("Enter your invite code to create your Noosphere gateway:")
+            }
+            .foregroundColor(.secondary)
+            .font(.callout)
+            .multilineTextAlignment(.center)
             
             if let gatewayId = app.state.gatewayId {
                 InviteCodeRedeemedView(

@@ -24,7 +24,7 @@ struct RotatingRingView<Content: View>: View {
                     // this keeps the orbs oriented correctly
                     .rotationEffect(Angle(degrees: isAnimating ? 0 : 360))
                     .offset(y: -radius)
-                    // undistribute
+                    // unrotate, preserving translation from .offset
                     .rotationEffect(Angle(degrees: -Double(index) / Double(content.count) * 360))
             }
         }
@@ -52,6 +52,24 @@ struct FirstRunOrbitEffectView: View {
         Color.brandDropShadow(colorScheme).opacity(0.25)
     }
     
+    var innerRing: [GenerativeProfilePic] {
+        [Int](
+            repeating: 0,
+            count: 8
+        ).map { _ in
+            GenerativeProfilePic(did: Did.dummyData(), size: 32)
+        }
+    }
+    
+    var outerRing: [GenerativeProfilePic] {
+        [Int](
+            repeating: 0,
+            count: 15
+        ).map { _ in
+            GenerativeProfilePic(did: Did.dummyData(), size: 20)
+        }
+    }
+    
     var body: some View {
         ZStack(alignment: .center) {
             StackedGlowingImage() {
@@ -66,12 +84,7 @@ struct FirstRunOrbitEffectView: View {
             RotatingRingView(
                 radius: 64,
                 speed: 0.3,
-                content: [Int](
-                    repeating: 0,
-                    count: 8
-                ).map { _ in
-                    GenerativeProfilePic(did: Did.dummyData(), size: 32)
-                }
+                content: innerRing
             )
             .opacity(0.75)
             .shadow(color: shadow, radius: 4, x:0, y: 5)
@@ -79,12 +92,7 @@ struct FirstRunOrbitEffectView: View {
             RotatingRingView(
                 radius: 100,
                 speed: 0.15,
-                content: [Int](
-                    repeating: 0,
-                    count: 15
-                ).map { _ in
-                    GenerativeProfilePic(did: Did.dummyData(), size: 20)
-                }
+                content: outerRing
             )
             .opacity(0.4)
             .shadow(color: shadow, radius: 4, x:0, y: 5)
