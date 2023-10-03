@@ -174,7 +174,10 @@ actor UserProfileService {
                 throw UserProfileServiceError.attemptToReadProfileFromInvalidAddress
             }
             
-            let data = try await noosphere.read(slashlink: address)
+            let data = try? await noosphere.read(slashlink: address)
+            guard let data = data else {
+                return nil
+            }
             
             guard data.contentType == Self.profileContentType else {
                 throw UserProfileServiceError.unexpectedProfileContentType(data.contentType)
