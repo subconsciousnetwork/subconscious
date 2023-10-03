@@ -21,42 +21,70 @@ struct StoryEntryView: View {
                 )
             },
             label: {
-                VStack(alignment: .leading, spacing: 0) {
-                    
+                VStack(spacing: 0) {
                     Divider()
-                    
-                    HStack(alignment: .center, spacing: AppTheme.unit) {
-                        BylineSmView(
-                            pfp: .generated(story.entry.did),
-                            slashlink: story.entry.address
-                        )
-                        
-                        Spacer()
-                        
-                        Text(
-                            NiceDateFormatter.shared.string(
-                                from: story.entry.modified,
-                                relativeTo: Date.now
+                    VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
+                        HStack(alignment: .center, spacing: AppTheme.unit2) {
+                            ProfilePic(pfp: .generated(story.entry.did), size: .large)
+                            if let name = author.toNameVariant() {
+                                PetnameView(name: name, aliases: story.author.aliases)
+                            }
+                            
+                            Spacer()
+                            
+                            Menu(
+                                content: {
+                                    Button(
+                                        action: { },
+                                        label: {
+                                            Label(
+                                                title: { Text("Unfollow") },
+                                                icon: { Image(systemName: "person.fill.xmark") }
+                                            )
+                                        }
+                                    )
+                                },
+                                label: {
+                                    EllipsisLabelView()
+                                }
                             )
-                        )
+                        }
+                        
+                        ExcerptView(excerpt: story.entry.excerpt)
+                        
+                        HStack(alignment: .center, spacing: AppTheme.unit) {
+                            Image(audience: .public)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 12, height: 12)
+                            
+                            SlashlinkDisplayView(slashlink: Slashlink(
+                                peer: story.author.address.peer,
+                                slug: story.entry.address.slug
+                            ))
+                            .theme(base: .secondary, slug: .secondary)
+                            
+                            Spacer()
+                            
+                            Text(
+                                NiceDateFormatter.shared.string(
+                                    from: story.entry.modified,
+                                    relativeTo: Date.now
+                                )
+                            )
+                        }
                         .foregroundColor(.secondary)
                         .font(.caption)
-                        
                     }
                     .padding(AppTheme.tightPadding)
-                    .frame(height: AppTheme.unit * 12)
-                    
-                    Divider()
-                    
-                    ExcerptView(excerpt: story.entry.excerpt)
-                        .padding(AppTheme.tightPadding)
+                    .background(Color.background)
+                    .contentShape(Rectangle())
                     
                     Divider()
                 }
-                .background(Color.background)
-                .contentShape(Rectangle())
             }
         )
+        .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .buttonStyle(.plain)
     }
 }
