@@ -18,7 +18,7 @@
 		B51359262AC113F9004385A7 /* RecoveryModeFormPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */; };
 		B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359272AC11570004385A7 /* ErrorDetailView.swift */; };
 		B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359292AC2723E004385A7 /* GatewayURL.swift */; };
-		B515E9D72ACA8DD20067A329 /* FIrstRunInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9D62ACA8DD20067A329 /* FIrstRunInviteView.swift */; };
+		B515E9D72ACA8DD20067A329 /* FirstRunInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9D62ACA8DD20067A329 /* FirstRunInviteView.swift */; };
 		B515E9D92ACA93D00067A329 /* FirstRunOrbitEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9D82ACA93D00067A329 /* FirstRunOrbitEffectView.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
 		B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
@@ -483,7 +483,7 @@
 		B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryModeFormPanelView.swift; sourceTree = "<group>"; };
 		B51359272AC11570004385A7 /* ErrorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDetailView.swift; sourceTree = "<group>"; };
 		B51359292AC2723E004385A7 /* GatewayURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayURL.swift; sourceTree = "<group>"; };
-		B515E9D62ACA8DD20067A329 /* FIrstRunInviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FIrstRunInviteView.swift; sourceTree = "<group>"; };
+		B515E9D62ACA8DD20067A329 /* FirstRunInviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunInviteView.swift; sourceTree = "<group>"; };
 		B515E9D82ACA93D00067A329 /* FirstRunOrbitEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunOrbitEffectView.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FabSpacerView.swift; sourceTree = "<group>"; };
@@ -1137,7 +1137,7 @@
 				B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */,
 				B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */,
 				B8B3EE76297AEE8B00779B7F /* FirstRunDoneView.swift */,
-				B515E9D62ACA8DD20067A329 /* FIrstRunInviteView.swift */,
+				B515E9D62ACA8DD20067A329 /* FirstRunInviteView.swift */,
 				B515E9D82ACA93D00067A329 /* FirstRunOrbitEffectView.swift */,
 			);
 			path = FirstRun;
@@ -1962,7 +1962,7 @@
 				B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */,
 				B83E91D727692EC600045C6A /* FAB.swift in Sources */,
 				B848FDAA2991837900245115 /* DeveloperSettingsView.swift in Sources */,
-				B515E9D72ACA8DD20067A329 /* FIrstRunInviteView.swift in Sources */,
+				B515E9D72ACA8DD20067A329 /* FirstRunInviteView.swift in Sources */,
 				B8545F0D2970577600BC4EA1 /* BacklinkReacts.swift in Sources */,
 				B8E2B02929AD0E23004A78B3 /* Petname.swift in Sources */,
 				B550E04029AF219100050F19 /* Did.swift in Sources */,

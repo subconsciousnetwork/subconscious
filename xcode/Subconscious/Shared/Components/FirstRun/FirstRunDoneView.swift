@@ -62,10 +62,14 @@ struct FirstRunDoneView: View {
     }
 
     var body: some View {
-        VStack(spacing: AppTheme.padding * 4) {
+        VStack(spacing: AppTheme.padding) {
             Spacer()
+            
             Text(statusLabel)
                 .foregroundColor(.secondary)
+            
+            Spacer()
+            
             StackedGlowingImage() {
                 HStack(
                     alignment: .center,
@@ -87,9 +91,13 @@ struct FirstRunDoneView: View {
                 }
                 .frame(height: 64)
             }
+            Spacer()
+            
             Text(guidanceLabel)
                 .foregroundColor(.secondary)
+            
             Spacer()
+            
             Button(
                 action: {
                     app.send(.submitFirstRunDoneStep)

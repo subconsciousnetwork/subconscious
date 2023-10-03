@@ -1,5 +1,5 @@
 //
-//  FIrstRunInviteView.swift
+//  FirstRunInviteView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 2/10/2023.
@@ -63,6 +63,8 @@ struct FirstRunInviteView: View {
                     maxHeight: AppTheme.onboarding.heroIconSize
                 )
             }
+            
+            Spacer()
             
             Text("Subconscious is powered by Noosphere, a decentralized protocol, so your data is accessible anywhere and belongs to you.")
                 .foregroundColor(.secondary)

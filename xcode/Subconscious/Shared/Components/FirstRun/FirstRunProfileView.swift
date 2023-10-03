@@ -28,7 +28,20 @@ struct FirstRunProfileView: View {
                     )
                 }
                 .padding(AppTheme.padding)
+                
+                if let nickname = app.state.nicknameFormField.validated  {
+                    HStack(spacing: 0) {
+                        Text("Hi, ")
+                            .foregroundColor(.secondary)
+                        Text(nickname.toPetname().markup)
+                            .lineLimit(1)
+                        Text(".")
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
+            
+            Spacer()
             
             Text("Choose a nickname for your sphere:")
                 .foregroundColor(.secondary)

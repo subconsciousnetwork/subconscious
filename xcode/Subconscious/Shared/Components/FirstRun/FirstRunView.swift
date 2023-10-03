@@ -34,6 +34,8 @@ struct FirstRunView: View {
                 )
                 .padding(AppTheme.padding)
                 
+                Spacer()
+                
                 Text("Subconscious is a place to garden thoughts and share them with others.")
                     .foregroundColor(.secondary)
                     .font(.callout)

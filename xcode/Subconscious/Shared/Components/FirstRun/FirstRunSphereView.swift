@@ -16,11 +16,14 @@ struct FirstRunSphereView: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: AppTheme.padding) {
             Spacer()
-            VStack(spacing: AppTheme.padding) {
-                // Should have orbiting spheres
-                FirstRunOrbitEffectView()
+            
+            FirstRunOrbitEffectView()
+            
+            Spacer()
+            
+            Group {
                 
                 Text("Subconscious stores your notes in your personal sphere.")
                     .foregroundColor(.secondary)
