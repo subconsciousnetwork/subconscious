@@ -1091,6 +1091,7 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
+        model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
         
         // Update model from app defaults
         return update(
@@ -2407,6 +2408,8 @@ struct AppModel: ModelProtocol {
         
         var model = state
         model.selectedAppTab = tab
+        AppDefaults.standard.selectedAppTab = tab.rawValue
+        
         return Update(state: model)
     }
     

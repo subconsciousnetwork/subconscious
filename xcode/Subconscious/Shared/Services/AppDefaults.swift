@@ -25,4 +25,10 @@ struct AppDefaults {
     
     @UserDefaultsProperty(forKey: "inviteCode")
     var inviteCode: String? = nil
+    
+    @UserDefaultsProperty(forKey: "selectedAppTab")
+    // default to the notebook on first run because there will be nothing in the feed
+    // enums must be serialized when stored as AppDefaults:
+    // https://cocoacasts.com/ud-6-how-to-store-an-enum-in-user-defaults-in-swift
+    var selectedAppTab: String = AppTab.notebook.rawValue
 }
