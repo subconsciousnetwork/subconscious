@@ -574,7 +574,7 @@ struct AppModel: ModelProtocol {
         self.databaseMigrationStatus == .succeeded
     }
     
-    var selectedAppTab: AppTab = .feed
+    var selectedAppTab: AppTab = .notebook
     
     // Logger for actions
     static let logger = Logger(
