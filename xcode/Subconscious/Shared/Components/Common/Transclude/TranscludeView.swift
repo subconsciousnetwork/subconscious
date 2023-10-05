@@ -12,12 +12,13 @@ struct ExcerptView: View {
     var subtext: Subtext {
         Subtext(markup: excerpt)
     }
+    var onViewSlashlink: (Slashlink) -> Void
     
     var body: some View {
         SubtextView(
             subtext: subtext,
             transcludePreviews: [:],
-            onViewTransclude: { _ in }
+            onViewSlashlink: onViewSlashlink
         )
     }
 }
@@ -39,7 +40,8 @@ struct TranscludeView: View {
                         pfp: .generated(entry.did),
                         slashlink: entry.address
                     )
-                    ExcerptView(excerpt: entry.excerpt)
+                    // TODO: should links in transcludes be tappable?
+                    ExcerptView(excerpt: entry.excerpt, onViewSlashlink: { _ in })
                 }
             }
         )

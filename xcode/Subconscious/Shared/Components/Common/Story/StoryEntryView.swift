@@ -50,7 +50,12 @@ struct StoryEntryView: View {
                         )
                     }
                     
-                    ExcerptView(excerpt: story.entry.excerpt)
+                    ExcerptView(
+                        excerpt: story.entry.excerpt,
+                        onViewSlashlink: { slashlink in
+                            action(slashlink, story.entry.excerpt)
+                        }
+                    )
                     
                     HStack(alignment: .center, spacing: AppTheme.unit) {
                         Image(audience: .public)

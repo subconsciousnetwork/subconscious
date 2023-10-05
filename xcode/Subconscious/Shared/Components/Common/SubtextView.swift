@@ -16,7 +16,7 @@ struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
     var transcludePreviews: [Slashlink: EntryStub]
-    var onViewTransclude: (Slashlink) -> Void
+    var onViewSlashlink: (Slashlink) -> Void
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks
@@ -67,13 +67,22 @@ struct SubtextView: View {
                 if renderable.entries.isEmpty ||
                     !shouldReplaceBlockWithTransclude(block: renderable.block) {
                     Text(Self.renderer.render(renderable.block.description))
+                        // Handle tapped slashlinks in the preview
+                        .environment(\.openURL, OpenURLAction { url in
+                            guard let subslashlink = url.toSubSlashlinkURL() else {
+                                return .systemAction
+                            }
+                            
+                            onViewSlashlink(subslashlink.slashlink)
+                            return .handled
+                        })
                 }
                 
                 ForEach(renderable.entries, id: \.self) { entry in
                     TranscludeView(
                         entry: entry,
                         action: {
-                            onViewTransclude(entry.address)
+                            onViewSlashlink(entry.address)
                         }
                     )
                 }
@@ -140,7 +149,7 @@ struct SubtextView_Previews: PreviewProvider {
                         modified: Date.now
                     )
                 ],
-                onViewTransclude: {
+                onViewSlashlink: {
                     _ in 
                 }
             )

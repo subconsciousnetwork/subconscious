@@ -15,9 +15,13 @@ struct EntryRow: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
-            ExcerptView(excerpt: entry.excerpt)
-                .font(.callout)
-                .multilineTextAlignment(.leading)
+            ExcerptView(
+                excerpt: entry.excerpt,
+                // TODO: Should we be able to tap links from previews in the notebook?
+                onViewSlashlink: { _ in }
+            )
+            .font(.callout)
+            .multilineTextAlignment(.leading)
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
