@@ -156,6 +156,7 @@ extension FeedAction {
 //  MARK: Action
 enum FeedAction {
     case search(SearchAction)
+    case activatedSuggestion(Suggestion)
     case detailStack(DetailStackAction)
 
     /// Set search view presented
@@ -176,8 +177,7 @@ enum FeedAction {
     case succeedFetchFeed([EntryStub])
     /// Fetch feed failed
     case failFetchFeed(Error)
-    case activatedSuggestion(Suggestion)
-
+    
     case requestFeedRoot
 }
 
