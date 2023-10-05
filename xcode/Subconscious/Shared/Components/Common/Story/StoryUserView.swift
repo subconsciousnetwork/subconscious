@@ -57,7 +57,7 @@ struct StoryUserView: View {
                     
                     Spacer()
                     
-                    switch story.user.resolutionStatus {
+                    switch story.addressBookEntry.status {
                     case .unresolved:
                         Image(systemName: "person.fill.questionmark")
                             .foregroundColor(.secondary)
@@ -77,7 +77,7 @@ struct StoryUserView: View {
                         }
                     }
                 }
-                .disabled(!story.user.resolutionStatus.isReady)
+                .disabled(!story.addressBookEntry.status.isReady)
                 
                 Menu(
                     content: {
@@ -134,7 +134,7 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            switch (story.user.ourFollowStatus, story.user.resolutionStatus) {
+            switch (story.user.ourFollowStatus, story.addressBookEntry.status) {
             case (.following(_), .unresolved):
                 onRefreshUser()
             case (.following(let name), _):
@@ -160,9 +160,14 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .unresolved,
                         ourFollowStatus: .notFollowing,
                         aliases: []
+                    ),
+                    addressBookEntry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
                     )
                 ),
                 action: { _ in }
@@ -176,9 +181,14 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .pending,
                         ourFollowStatus: .following(Petname.Name("lol")!),
                         aliases: []
+                    ),
+                    addressBookEntry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
                     )
                 ),
                 action: { _ in }
@@ -192,9 +202,14 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .ourself,
-                        resolutionStatus: .resolved(Cid("ok")),
                         ourFollowStatus: .notFollowing,
                         aliases: []
+                    ),
+                    addressBookEntry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
                     )
                 ),
                 action: { _ in }
@@ -208,9 +223,14 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
                         category: .ourself,
-                        resolutionStatus: .pending,
                         ourFollowStatus: .notFollowing,
                         aliases: []
+                    ),
+                    addressBookEntry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
                     )
                 ),
                 action: { _ in }

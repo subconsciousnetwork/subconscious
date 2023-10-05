@@ -17,6 +17,7 @@ struct StoryUser:
     
     var id = UUID()
     var user: UserProfile
+    var addressBookEntry: AddressBookEntry
     var statistics: UserProfileStatistics?
 
     var description: String {

@@ -220,7 +220,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let pfp: ProfilePicVariant
     let bio: UserProfileBio?
     let category: UserCategory
-    let resolutionStatus: ResolutionStatus
+//    let resolutionStatus: ResolutionStatus
     let ourFollowStatus: UserProfileFollowStatus
     let aliases: [Petname]
     
@@ -252,7 +252,7 @@ struct UserProfile: Equatable, Codable, Hashable {
             pfp: pfp,
             bio: bio,
             category: category,
-            resolutionStatus: resolutionStatus,
+//            resolutionStatus: resolutionStatus,
             ourFollowStatus: ourFollowStatus,
             aliases: aliases
         )

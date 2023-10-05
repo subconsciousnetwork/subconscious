@@ -84,24 +84,23 @@ extension Petname: DummyData {
     }
 }
 
+extension AddressBookEntry: DummyData {
+    static func dummyData() -> AddressBookEntry {
+        AddressBookEntry(
+            petname: Petname.dummyData(),
+            did: Did.dummyData(),
+            status: .pending,
+            version: Cid.dummyDataMedium()
+        )
+    }
+}
+
 extension StoryUser: DummyData {
     static func dummyData() -> StoryUser {
         let nickname = Petname.Name.dummyData()
         return StoryUser(
-            user: UserProfile(
-                did: Did.dummyData(),
-                nickname: nickname,
-                address: Slashlink(petname: nickname.toPetname()),
-                pfp: .image(String.dummyProfilePicture()),
-                bio: UserProfileBio.dummyData(),
-                category: [UserCategory.human, UserCategory.geist].randomElement()!,
-                resolutionStatus: .unresolved,
-                ourFollowStatus: [
-                    .following(Petname.Name.dummyData()),
-                    .notFollowing
-                ].randomElement()!,
-                aliases: []
-            )
+            user: UserProfile.dummyData(),
+            addressBookEntry: AddressBookEntry.dummyData()
         )
     }
     
@@ -114,13 +113,13 @@ extension StoryUser: DummyData {
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
-                resolutionStatus: .unresolved,
                 ourFollowStatus: [
                     .following(Petname.Name.dummyData()),
                     .notFollowing
                 ].randomElement()!,
                 aliases: []
-            )
+            ),
+            addressBookEntry: AddressBookEntry.dummyData()
         )
     }
 }
@@ -184,7 +183,6 @@ extension UserProfile: DummyData {
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
             category: .human,
-            resolutionStatus: .unresolved,
             ourFollowStatus: .notFollowing,
             aliases: []
         )
@@ -201,7 +199,6 @@ extension UserProfile: DummyData {
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
             category: category,
-            resolutionStatus: .unresolved,
             ourFollowStatus: .notFollowing,
             aliases: []
         )

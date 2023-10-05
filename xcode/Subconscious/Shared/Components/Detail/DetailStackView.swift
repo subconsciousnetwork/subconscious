@@ -660,10 +660,6 @@ extension DetailStackAction {
                 }
             }
 
-
-            guard user.resolutionStatus.isReady else {
-                return .failPushDetail("Attempted to navigate to unresolved user")
-            }
             return .pushDetail(.profile(
                 UserProfileDetailDescription(
                     address: user.address,

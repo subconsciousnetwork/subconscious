@@ -189,8 +189,7 @@ actor UserProfileService {
     /// Load the underlying `_profile_` for a user and construct a `UserProfile` from it.
     private func loadProfileFromMemo(
         did: Did,
-        address: Slashlink,
-        resolutionStatus: ResolutionStatus
+        address: Slashlink
     ) async throws -> UserProfile {
         let noosphereIdentity = try await noosphere.identity()
         let isOurs = noosphereIdentity == did
@@ -213,7 +212,6 @@ actor UserProfileService {
             pfp: .generated(did),
             bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: isOurs ? UserCategory.ourself : UserCategory.human,
-            resolutionStatus: resolutionStatus,
             ourFollowStatus: followingStatus,
             aliases: aliases
         )
@@ -298,7 +296,7 @@ actor UserProfileService {
             let user = try await self.buildUserProfile(address: slashlink, did: entry.did)
            
             following.append(
-                StoryUser(user: user)
+                StoryUser(user: user, addressBookEntry: entry)
             )
         }
         
@@ -388,21 +386,9 @@ actor UserProfileService {
             throw UserProfileServiceError.unreachablePeer(address)
         }
 
-        let resolutionStatus: ResolutionStatus = try await Func.run {
-            guard let petname = address.petname else {
-                let sphere = try? await self.noosphere.sphere(address: address)
-                let cid = try? await sphere?.version()
-                return cid.map(ResolutionStatus.resolved) ?? .unresolved
-            }
-            
-            // Allows us to indicate .pending status
-            return try await self.addressBook.resolutionStatus(petname: petname)
-        }
-        
         let profile = try await self.loadProfileFromMemo(
             did: identity,
-            address: address,
-            resolutionStatus: resolutionStatus
+            address: address
         )
         
         self.cache.updateValue(
