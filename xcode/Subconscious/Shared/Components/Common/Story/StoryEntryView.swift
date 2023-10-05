@@ -12,8 +12,6 @@ struct StoryEntryView: View {
     var story: StoryEntry
     var author: UserProfile
     var action: (Slashlink, String) -> Void
-    var onRequestAuthorProfile: (() -> Void)? = nil
-    
     var sharedNote: String {
         """
         \(story.entry.excerpt)
