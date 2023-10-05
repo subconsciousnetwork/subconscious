@@ -25,7 +25,10 @@ struct FeedNavigationView: View {
         DetailStackView(app: app, store: detailStack) {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    if let feed = store.state.entries {
+                    switch (store.state.status, store.state.entries) {
+                    case (.loading, _):
+                        FeedPlaceholderView()
+                    case let (.loaded, .some(feed)):
                         ForEach(feed) { entry in
                             if let author = entry.author {
                                 StoryEntryView(
@@ -44,17 +47,20 @@ struct FeedNavigationView: View {
                                 )
                             }
                         }
-                    } else {
-                        FeedPlaceholderView()
+                        
+                        if feed.isEmpty {
+                            EmptyStateView()
+                        } else {
+                            FabSpacerView()
+                        }
+                    case (.notFound, _):
+                        NotFoundView()
+                    default:
+                        EmptyView()
                     }
                 }
                 
-                if let count = store.state.entries?.count,
-                   count == 0 {
-                    EmptyStateView()
-                } else {
-                    FabSpacerView()
-                }
+             
             }
             .background(Color.background)
             .refreshable {
@@ -164,7 +170,7 @@ enum FeedAction {
     /// Fetch stories for feed
     case fetchFeed
     /// Set stories
-    case setFeed([EntryStub])
+    case succeedFetchFeed([EntryStub])
     /// Fetch feed failed
     case failFetchFeed(Error)
     case activatedSuggestion(Suggestion)
@@ -231,6 +237,7 @@ struct FeedDetailStackCursor: CursorProtocol {
 //  MARK: Model
 /// A feed of stories
 struct FeedModel: ModelProtocol {
+    var status: LoadingState = .loading
     /// Search HUD
     var isSearchPresented = false
     /// Search HUD
@@ -286,14 +293,14 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .setFeed(let entries):
-            return setFeed(
+        case .succeedFetchFeed(let entries):
+            return succeedFetchFeed(
                 state: state,
                 environment: environment,
                 entries: entries
             )
         case .failFetchFeed(let error):
-            return log(state: state, environment: environment, error: error)
+            return failFetchFeed(state: state, environment: environment, error: error)
         case let .activatedSuggestion(suggestion):
             return FeedDetailStackCursor.update(
                 state: state,
@@ -404,23 +411,44 @@ struct FeedModel: ModelProtocol {
     ) -> Update<FeedModel> {
         let fx: Fx<FeedAction> = environment.data.listFeedPublisher()
             .map({ stories in
-                FeedAction.setFeed(stories)
+                FeedAction.succeedFetchFeed(stories)
             })
             .catch({ error in
                 Just(FeedAction.failFetchFeed(error))
             })
             .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                    
+        var model = state
+        // only display loading state if we have no posts to show
+        // if we have stale posts, show them until we load the new ones
+        if state.entries?.isEmpty ?? false {
+            model.status = .loading
+        }
+        
+        return Update(state: model, fx: fx)
     }
 
     /// Set feed response
-    static func setFeed(
+    static func succeedFetchFeed(
         state: FeedModel,
         environment: AppEnvironment,
         entries: [EntryStub]
     ) -> Update<FeedModel> {
         var model = state
         model.entries = entries
+        model.status = .loaded
+        return Update(state: model)
+    }
+    
+    static func failFetchFeed(
+        state: FeedModel,
+        environment: AppEnvironment,
+        error: Error
+    ) -> Update<FeedModel> {
+        logger.error("Failed to fetch feed \(error.localizedDescription)")
+        var model = state
+        model.status = .notFound
+        
         return Update(state: model)
     }
 
