@@ -12,7 +12,16 @@ struct StoryEntryView: View {
     var story: StoryEntry
     var author: UserProfile
     var action: (Slashlink, String) -> Void
-
+    var onRequestAuthorProfile: (() -> Void)? = nil
+    
+    var sharedNote: String {
+        """
+        \(story.entry.excerpt)
+        
+        \(story.entry.address)
+        """
+    }
+    
     var body: some View {
         Button(
             action: {
@@ -33,15 +42,7 @@ struct StoryEntryView: View {
                         
                         Menu(
                             content: {
-                                Button(
-                                    action: { },
-                                    label: {
-                                        Label(
-                                            title: { Text("Unfollow") },
-                                            icon: { Image(systemName: "person.fill.xmark") }
-                                        )
-                                    }
-                                )
+                                ShareLink(item: sharedNote)
                             },
                             label: {
                                 EllipsisLabelView()
