@@ -62,7 +62,8 @@ actor TranscludeService {
             }
             
             if let author = try? await userProfile.buildUserProfile(
-                address: transclusion.address
+                address: transclusion.address,
+                did: transclusion.authorDid
             ) {
                 entry = entry.withAuthor(author)
             }

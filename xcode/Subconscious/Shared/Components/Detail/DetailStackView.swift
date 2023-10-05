@@ -427,8 +427,10 @@ struct DetailStackModel: Hashable, ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
+                let did = try await environment.noosphere.identity()
                 let user = try await environment.userProfile.buildUserProfile(
-                    address: Slashlink.ourProfile
+                    address: Slashlink.ourProfile,
+                    did: did
                 )
                 return Action.pushOurProfileDetail(user)
             }

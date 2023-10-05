@@ -33,6 +33,7 @@ enum UserProfileServiceError: Error {
     case other(String)
     case profileAlreadyExists
     case couldNotLoadSphereForProfile
+    case unreachablePeer(Slashlink)
 }
 
 extension UserProfileServiceError: LocalizedError {
@@ -79,6 +80,11 @@ extension UserProfileServiceError: LocalizedError {
         case .couldNotLoadSphereForProfile:
             return String(
                 localized: "Failed to find or construct a sphere",
+                comment: "UserProfileService error description"
+            )
+        case .unreachablePeer(let address):
+            return String(
+                localized: "Cannot reach peer at \(address.markup)",
                 comment: "UserProfileService error description"
             )
         }
@@ -278,18 +284,18 @@ actor UserProfileService {
                 return Slashlink(petname: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
             }
             
-            let resolutionStatus = try await Func.run {
-                switch (entry.status, slashlink.peer) {
-                case (.resolved(_), _):
-                    return entry.status
-                case (_, .petname(let petname)):
-                    return try await self.addressBook.resolutionStatus(petname: petname)
-                case _:
-                    return entry.status
-                }
-            }
+//            let resolutionStatus = try await Func.run {
+//                switch (entry.status, slashlink.peer) {
+//                case (.resolved(_), _):
+//                    return entry.status
+//                case (_, .petname(let petname)):
+//                    return try await self.addressBook.resolutionStatus(petname: petname)
+//                case _:
+//                    return entry.status
+//                }
+//            }
             
-            let user = try await self.buildUserProfile(address: slashlink)
+            let user = try await self.buildUserProfile(address: slashlink, did: entry.did)
            
             following.append(
                 StoryUser(user: user)
@@ -360,8 +366,11 @@ actor UserProfileService {
 //        .eraseToAnyPublisher()
 //    }
     
+    /// Produces a `UserProfile` for the passed address.
+    /// If a `did` is provided we can skip resolution and return faster.
     func buildUserProfile(
-        address: Slashlink
+        address: Slashlink,
+        did: Did?
     ) async throws -> UserProfile {
         let version = try await self.noosphere.version()
         let cacheKey = address.isOurs ? Slashlink.ourProfile : address
@@ -371,20 +380,27 @@ actor UserProfileService {
             return cacheHit.profile
         }
         
-        let did = try await self.noosphere.resolve(peer: address.peer)
-        
+        var identity = did
+        if identity == nil {
+            identity = try await self.noosphere.identity()
+        }
+        guard let identity = identity else {
+            throw UserProfileServiceError.unreachablePeer(address)
+        }
+
         let resolutionStatus: ResolutionStatus = try await Func.run {
             guard let petname = address.petname else {
-                let sphere = try await self.noosphere.sphere(address: address)
-                let cid = try await sphere.version()
-                return .resolved(cid)
+                let sphere = try? await self.noosphere.sphere(address: address)
+                let cid = try? await sphere?.version()
+                return cid.map(ResolutionStatus.resolved) ?? .unresolved
             }
             
+            // Allows us to indicate .pending status
             return try await self.addressBook.resolutionStatus(petname: petname)
         }
         
         let profile = try await self.loadProfileFromMemo(
-            did: did,
+            did: identity,
             address: address,
             resolutionStatus: resolutionStatus
         )
@@ -438,7 +454,8 @@ actor UserProfileService {
         let recentEntries = sortEntriesByModified(entries: entries)
         
         let profile = try await self.buildUserProfile(
-            address: address
+            address: address,
+            did: did
         )
         
         return UserProfileContentResponse(
@@ -471,8 +488,7 @@ actor UserProfileService {
     func requestUserProfile(
         petname: Petname
     ) async throws -> UserProfileContentResponse {
-        let address = Slashlink(petname: petname)
-        return try await loadFullProfileData(address: address)
+        try await loadFullProfileData(address: Slashlink(petname: petname))
     }
     
     nonisolated func requestUserProfilePublisher(
