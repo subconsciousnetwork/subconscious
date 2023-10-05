@@ -663,13 +663,7 @@ actor DataService {
         let identity = try await noosphere.identity()
         var feed: [EntryStub] = []
         for entry in try self.database.listFeed(owner: identity) {
-            let author = try await Func.run {
-                if entry.address.isOurs {
-                    return try await self.userProfile.loadOurProfileFromMemo()
-                } else {
-                    return try await self.userProfile.buildUserProfile(address: entry.address)
-                }
-            }
+            let author = try await self.userProfile.buildUserProfile(address: entry.address)
             feed.append(entry.withAuthor(author))
         }
         return feed

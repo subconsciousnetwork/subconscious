@@ -426,10 +426,11 @@ struct DetailStackModel: Hashable, ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
-        let fx: Fx<Action> = environment.userProfile
-            .loadOurProfileFromMemoPublisher()
-            .map { user in
-                Action.pushOurProfileDetail(user)
+        let fx: Fx<Action> = Future.detached {
+                let user = try await environment.userProfile.buildUserProfile(
+                    address: Slashlink.ourProfile
+                )
+                return Action.pushOurProfileDetail(user)
             }
             .recover { error in
                 Action.failPushDetail(error.localizedDescription)

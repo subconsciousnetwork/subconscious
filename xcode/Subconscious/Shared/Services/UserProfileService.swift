@@ -126,7 +126,7 @@ actor UserProfileService {
     
     private static let profileContentType = "application/vnd.subconscious.profile+json"
     
-    private var cache: [Petname:UserProfileCacheEntry] = [:]
+    private var cache: [Slashlink:UserProfileCacheEntry] = [:]
     
     init(
         noosphere: NoosphereService,
@@ -289,12 +289,8 @@ actor UserProfileService {
                 }
             }
             
-            let user = try await self.loadProfileFromMemo(
-                did: entry.did,
-                address: slashlink,
-                resolutionStatus: resolutionStatus
-            )
-            
+            let user = try await self.buildUserProfile(address: slashlink)
+           
             following.append(
                 StoryUser(user: user)
             )
@@ -345,32 +341,32 @@ actor UserProfileService {
         }
     }
     
-    func loadOurProfileFromMemo() async throws -> UserProfile {
-        let did = try await noosphere.identity()
-        let cid = try await noosphere.version()
-        
-        return try await self.loadProfileFromMemo(
-            did: did,
-            address: Slashlink.ourProfile,
-            resolutionStatus: .resolved(cid)
-        )
-    }
+//    func loadOurProfileFromMemo() async throws -> UserProfile {
+//        let did = try await noosphere.identity()
+//        let cid = try await noosphere.version()
+//
+//        return try await self.loadProfileFromMemo(
+//            did: did,
+//            address: Slashlink.ourProfile,
+//            resolutionStatus: .resolved(cid)
+//        )
+//    }
     
-    nonisolated func loadOurProfileFromMemoPublisher(
-    ) -> AnyPublisher<UserProfile, Error> {
-        Future.detached {
-            try await self.loadOurProfileFromMemo()
-        }
-        .eraseToAnyPublisher()
-    }
+//    nonisolated func loadOurProfileFromMemoPublisher(
+//    ) -> AnyPublisher<UserProfile, Error> {
+//        Future.detached {
+//            try await self.loadOurProfileFromMemo()
+//        }
+//        .eraseToAnyPublisher()
+//    }
     
     func buildUserProfile(
         address: Slashlink
     ) async throws -> UserProfile {
         let version = try await self.noosphere.version()
+        let cacheKey = address.isOurs ? Slashlink.ourProfile : address
         
-        if let petname = address.petname,
-           let cacheHit = self.cache[petname],
+        if let cacheHit = self.cache[cacheKey],
            cacheHit.version == version {
             return cacheHit.profile
         }
@@ -393,12 +389,10 @@ actor UserProfileService {
             resolutionStatus: resolutionStatus
         )
         
-        if let petname = address.petname {
-            self.cache.updateValue(
-                UserProfileCacheEntry(profile: profile, version: version),
-                forKey: petname
-            )
-        }
+        self.cache.updateValue(
+            UserProfileCacheEntry(profile: profile, version: version),
+            forKey: cacheKey
+        )
         
         return profile
     }
@@ -462,8 +456,7 @@ actor UserProfileService {
     
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
     func requestOurProfile() async throws -> UserProfileContentResponse {
-        let address = Slashlink.ourProfile
-        return try await loadFullProfileData(address: address)
+        try await loadFullProfileData(address: Slashlink.ourProfile)
     }
     
     nonisolated func requestOurProfilePublisher(
