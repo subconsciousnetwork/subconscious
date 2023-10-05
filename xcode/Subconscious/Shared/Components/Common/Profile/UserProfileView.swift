@@ -31,13 +31,18 @@ struct RecentTabView: View {
     var onNavigateToNote: (Slashlink) -> Void
     
     var body: some View {
-        ForEach(state.recentEntries) { entry in
-            StoryEntryView(
-                story: StoryEntry(
-                    entry: entry
-                ),
-                action: { address, _ in onNavigateToNote(address) }
-            )
+        if let user = state.user {
+            ForEach(state.recentEntries) { entry in
+                StoryEntryView(
+                    story: StoryEntry(
+                        entry: entry
+                    ),
+                    author: user,
+                    action: { address, _ in onNavigateToNote(address) }
+                )
+                
+                Divider()
+            }
         }
         
         if state.recentEntries.count == 0 {
@@ -66,6 +71,8 @@ struct FollowTabView: View {
                     send(.requestWaitForFollowedUserResolution(follow.entry.petname))
                 }
             )
+            
+            Divider()
         }
         
         if state.following.count == 0 {

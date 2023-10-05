@@ -10,6 +10,7 @@ import SwiftUI
 /// Show an excerpt of an entry in a feed
 struct StoryEntryView: View {
     var story: StoryEntry
+    var author: UserProfile
     var action: (Slashlink, String) -> Void
 
     var body: some View {
@@ -21,67 +22,62 @@ struct StoryEntryView: View {
                 )
             },
             label: {
-                VStack(spacing: 0) {
-                    Divider()
-                    VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
-                        HStack(alignment: .center, spacing: AppTheme.unit2) {
-                            ProfilePic(pfp: .generated(story.entry.did), size: .large)
-                            if let name = author.toNameVariant() {
-                                PetnameView(name: name, aliases: story.author.aliases)
-                            }
-                            
-                            Spacer()
-                            
-                            Menu(
-                                content: {
-                                    Button(
-                                        action: { },
-                                        label: {
-                                            Label(
-                                                title: { Text("Unfollow") },
-                                                icon: { Image(systemName: "person.fill.xmark") }
-                                            )
-                                        }
-                                    )
-                                },
-                                label: {
-                                    EllipsisLabelView()
-                                }
-                            )
+                VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
+                    HStack(alignment: .center, spacing: AppTheme.unit2) {
+                        ProfilePic(pfp: author.pfp, size: .large)
+                        if let name = author.toNameVariant() {
+                            PetnameView(name: name, aliases: author.aliases)
                         }
                         
-                        ExcerptView(excerpt: story.entry.excerpt)
+                        Spacer()
                         
-                        HStack(alignment: .center, spacing: AppTheme.unit) {
-                            Image(audience: .public)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 12, height: 12)
-                            
-                            SlashlinkDisplayView(slashlink: Slashlink(
-                                peer: story.author.address.peer,
-                                slug: story.entry.address.slug
-                            ))
-                            .theme(base: .secondary, slug: .secondary)
-                            
-                            Spacer()
-                            
-                            Text(
-                                NiceDateFormatter.shared.string(
-                                    from: story.entry.modified,
-                                    relativeTo: Date.now
+                        Menu(
+                            content: {
+                                Button(
+                                    action: { },
+                                    label: {
+                                        Label(
+                                            title: { Text("Unfollow") },
+                                            icon: { Image(systemName: "person.fill.xmark") }
+                                        )
+                                    }
                                 )
-                            )
-                        }
-                        .foregroundColor(.secondary)
-                        .font(.caption)
+                            },
+                            label: {
+                                EllipsisLabelView()
+                            }
+                        )
                     }
-                    .padding(AppTheme.tightPadding)
-                    .background(Color.background)
-                    .contentShape(Rectangle())
                     
-                    Divider()
+                    ExcerptView(excerpt: story.entry.excerpt)
+                    
+                    HStack(alignment: .center, spacing: AppTheme.unit) {
+                        Image(audience: .public)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 12, height: 12)
+                        
+                        SlashlinkDisplayView(slashlink: Slashlink(
+                            peer: story.author.address.peer,
+                            slug: story.entry.address.slug
+                        ))
+                        .theme(base: .secondary, slug: .secondary)
+                        
+                        Spacer()
+                        
+                        Text(
+                            NiceDateFormatter.shared.string(
+                                from: story.entry.modified,
+                                relativeTo: Date.now
+                            )
+                        )
+                    }
+                    .foregroundColor(.secondary)
+                    .font(.caption)
                 }
+                .padding(AppTheme.tightPadding)
+                .background(Color.background)
+                .contentShape(Rectangle())
             }
         )
         .contentShape(.interaction, RectangleCroppedTopRightCorner())

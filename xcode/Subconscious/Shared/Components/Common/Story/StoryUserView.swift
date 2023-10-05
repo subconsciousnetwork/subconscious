@@ -25,37 +25,34 @@ struct StoryUserView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            Divider()
-            VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    Group {
-                        ProfilePic(pfp: user.pfp, size: .large)
-                        
-                        if let name = user.toNameVariant() {
-                            PetnameView(name: name, aliases: user.aliases)
-                        }
-                        
-                        Spacer()
-                        
-                        switch entry.status {
-                        case .unresolved:
-                            Image(systemName: "person.fill.questionmark")
+        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+            HStack(alignment: .center, spacing: AppTheme.unit2) {
+                Group {
+                    ProfilePic(pfp: story.user.pfp, size: .large)
+                    
+                    if let name = story.user.toNameVariant() {
+                        PetnameView(name: name, aliases: story.user.aliases)
+                    }
+                    
+                    Spacer()
+                    
+                    switch story.entry.status {
+                    case .unresolved:
+                        Image(systemName: "person.fill.questionmark")
+                            .foregroundColor(.secondary)
+                    case .pending:
+                        PendingSyncBadge()
+                            .foregroundColor(.secondary)
+                    case .resolved:
+                        switch (story.user.ourFollowStatus, story.user.category) {
+                        case (.following(_), _):
+                            Image.from(appIcon: .following)
                                 .foregroundColor(.secondary)
-                        case .pending:
-                            PendingSyncBadge()
+                        case (_, .ourself):
+                            Image.from(appIcon: .you(colorScheme))
                                 .foregroundColor(.secondary)
-                        case .resolved:
-                            switch (story.user.ourFollowStatus, story.user.category) {
-                            case (.following(_), _):
-                                Image.from(appIcon: .following)
-                                    .foregroundColor(.secondary)
-                            case (_, .ourself):
-                                Image.from(appIcon: .you(colorScheme))
-                                    .foregroundColor(.secondary)
-                            case (_, _):
-                                EmptyView()
-                            }
+                        case (_, _):
+                            EmptyView()
                         }
                     }
                     .disabled(!story.entry.status.isReady)

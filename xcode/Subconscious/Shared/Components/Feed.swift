@@ -25,24 +25,31 @@ struct FeedNavigationView: View {
         DetailStackView(app: app, store: detailStack) {
             ScrollView {
                 LazyVStack(spacing: 0) {
+                    Divider()
+                    
                     switch (store.state.status, store.state.entries) {
                     case (.loading, _):
                         FeedPlaceholderView()
                     case let (.loaded, .some(feed)):
                         ForEach(feed) { entry in
-                            StoryEntryView(
-                                story: StoryEntry(
-                                    entry: entry
-                                ),
-                                action: { address, _ in
-                                    store.send(.detailStack(.pushDetail(
-                                        MemoDetailDescription.from(
-                                            address: address,
-                                            fallback: ""
-                                        )
-                                    )))
-                                }
-                            )
+                            if let author = entry.author {
+                                StoryEntryView(
+                                    story: StoryEntry(
+                                        author: author,
+                                        entry: entry
+                                    ),
+                                    action: { address, _ in
+                                        store.send(.detailStack(.pushDetail(
+                                            MemoDetailDescription.from(
+                                                address: address,
+                                                fallback: ""
+                                            )
+                                        )))
+                                    }
+                                )
+                                
+                                Divider()
+                            }
                         }
                         
                         if feed.isEmpty {
@@ -96,8 +103,8 @@ struct FeedView: View {
     
     var body: some View {
         ZStack {
-           FeedNavigationView(app: app, store: store)
-            .zIndex(1)
+            FeedNavigationView(app: app, store: store)
+               .zIndex(1)
             
             if store.state.isSearchPresented {
                 SearchView(
