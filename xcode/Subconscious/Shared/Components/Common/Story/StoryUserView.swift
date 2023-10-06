@@ -52,7 +52,11 @@ struct StoryUserView: View {
                             }
                         }
                     }
-                    .frame(width: AppTheme.minTouchSize, height: AppTheme.minTouchSize, alignment: .trailing)
+                    .frame(
+                        width: AppTheme.minTouchSize,
+                        height: AppTheme.minTouchSize,
+                        alignment: .trailing // Creates correct spacing when next to "..."
+                    )
                 }
                 .disabled(!story.user.resolutionStatus.isReady)
                 
@@ -100,6 +104,7 @@ struct StoryUserView: View {
                     }
                 ).disabled(story.user.category == .ourself)
             }
+            // Omit trailing padding to allow ... hit target to move to top right corner
             .padding([.leading], AppTheme.padding)
             
             if let bio = story.user.bio,

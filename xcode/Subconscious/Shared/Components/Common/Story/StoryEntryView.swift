@@ -7,6 +7,19 @@
 
 import SwiftUI
 
+private struct StoryEntryUserDetailsView: View {
+    var user: UserProfile
+    
+    var body: some View {
+        HStack(alignment: .center, spacing: AppTheme.unit2) {
+            ProfilePic(pfp: user.pfp, size: .large)
+            if let name = user.toNameVariant() {
+                PetnameView(name: name, aliases: user.aliases)
+            }
+        }
+    }
+}
+
 /// Show an excerpt of an entry in a feed
 struct StoryEntryView: View {
     var story: StoryEntry
@@ -30,14 +43,13 @@ struct StoryEntryView: View {
             },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
-                    HStack(alignment: .top, spacing: AppTheme.unit2) {
-                        HStack(alignment: .center, spacing: AppTheme.unit2) {
-                            ProfilePic(pfp: author.pfp, size: .large)
-                            if let name = author.toNameVariant() {
-                                PetnameView(name: name, aliases: author.aliases)
-                            }
-                        }
-                        .padding([.top], AppTheme.padding)
+                    // MARK: header
+                    HStack(alignment: .top) {
+                        // Pad the top of the text to create the expected whitespace
+                        // BUT keep the EllipsisLabelView() below aligned to the top of the container
+                        // This is important for hitmasking and consistency between story views
+                        StoryEntryUserDetailsView(user: author)
+                            .padding([.top], AppTheme.padding)
                         
                         Spacer()
                         
@@ -50,40 +62,42 @@ struct StoryEntryView: View {
                             }
                         )
                     }
+                    // Omit trailing padding to allow ... hit target to move to top right corner
                     .padding([.leading], AppTheme.padding)
                     
-                    VStack(spacing: AppTheme.unit2) {
-                        ExcerptView(
-                            excerpt: story.entry.excerpt,
-                            onViewSlashlink: { slashlink in
-                                action(slashlink, story.entry.excerpt)
-                            }
-                        )
-                        
-                        HStack(alignment: .center, spacing: AppTheme.unit) {
-                            Image(audience: .public)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: AppTheme.unit3, height: AppTheme.unit3)
-                            
-                            SlashlinkDisplayView(slashlink: Slashlink(
-                                peer: story.author.address.peer,
-                                slug: story.entry.address.slug
-                            ))
-                            .theme(base: .secondary, slug: .secondary)
-                            
-                            Spacer()
-                            
-                            Text(
-                                NiceDateFormatter.shared.string(
-                                    from: story.entry.modified,
-                                    relativeTo: Date.now
-                                )
-                            )
+                    // MARK: excerpt
+                    ExcerptView(
+                        excerpt: story.entry.excerpt,
+                        onViewSlashlink: { slashlink in
+                            action(slashlink, story.entry.excerpt)
                         }
-                        .foregroundColor(.secondary)
-                        .font(.caption)
+                    )
+                    .padding([.leading, .trailing], AppTheme.padding)
+                    
+                    // MARK: footer
+                    HStack(alignment: .center, spacing: AppTheme.unit) {
+                        Image(audience: .public)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: AppTheme.unit3, height: AppTheme.unit3)
+                        
+                        SlashlinkDisplayView(slashlink: Slashlink(
+                            peer: story.author.address.peer,
+                            slug: story.entry.address.slug
+                        ))
+                        .theme(base: .secondary, slug: .secondary)
+                        
+                        Spacer()
+                        
+                        Text(
+                            NiceDateFormatter.shared.string(
+                                from: story.entry.modified,
+                                relativeTo: Date.now
+                            )
+                        )
                     }
+                    .foregroundColor(.secondary)
+                    .font(.caption)
                     .padding([.leading, .trailing, .bottom], AppTheme.padding)
                 }
                 .background(Color.background)
@@ -91,7 +105,6 @@ struct StoryEntryView: View {
             }
         )
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
-//        .overlay(RectangleCroppedTopRightCorner().fill(.blue.opacity(0.5)))
         .buttonStyle(.plain)
     }
 }
