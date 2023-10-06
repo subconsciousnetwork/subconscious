@@ -484,6 +484,31 @@ final class DatabaseService {
         .first
     }
     
+    func loadUserProfile(address: Slashlink) throws -> Data? {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        
+        let results = try database.execute(
+            sql: """
+            SELECT body
+            FROM memo
+            WHERE slashlink = ? AND slug = "_profile_"
+            LIMIT 1
+            """,
+            parameters: [
+                .text(address.description)
+            ]
+        )
+        
+        guard let entry = results.first,
+              let excerpt = entry.col(0)?.toString() else {
+            return nil
+        }
+        
+        return excerpt.data(using: .utf8)
+    }
+    
     func listFeed(owner: Did) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady

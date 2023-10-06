@@ -162,27 +162,44 @@ actor UserProfileService {
                 throw UserProfileServiceError.unexpectedProfileContentType(data.contentType)
             }
             
-            do {
-                let profile = try jsonDecoder.decode(UserProfileEntry.self, from: data.body)
-                
-                guard profile.version == UserProfileEntry.currentVersion else {
-                    throw UserProfileServiceError.unexpectedProfileSchemaVersion(profile.version)
-                }
-                
-                return profile
-            } catch {
-                // catch errors so we can give more context if there was a formatting error
-                guard let string = String(data: data.body, encoding: .utf8) else {
-                    throw UserProfileServiceError.failedToDeserializeProfile(error, nil)
-                }
-
-                throw UserProfileServiceError.failedToDeserializeProfile(error, string)
-            }
+            return try await parseProfile(body: data.body)
         } catch {
             logger.warning(
                 "Failed to read profile at \(address): \(error.localizedDescription)"
             )
             return nil
+        }
+    }
+    
+    private func readProfileFromDb(
+        address: Slashlink
+    ) async throws -> UserProfileEntry? {
+        guard let data = try database.loadUserProfile(address: address) else {
+            return nil
+        }
+        
+        return try await parseProfile(body: data)
+    }
+    
+    
+    public func parseProfile(
+        body: Data
+    ) async throws -> UserProfileEntry {
+        do {
+            let profile = try jsonDecoder.decode(UserProfileEntry.self, from: body)
+            
+            guard profile.version == UserProfileEntry.currentVersion else {
+                throw UserProfileServiceError.unexpectedProfileSchemaVersion(profile.version)
+            }
+            
+            return profile
+        } catch {
+            // catch errors so we can give more context if there was a formatting error
+            guard let string = String(data: body, encoding: .utf8) else {
+                throw UserProfileServiceError.failedToDeserializeProfile(error, nil)
+            }
+
+            throw UserProfileServiceError.failedToDeserializeProfile(error, string)
         }
     }
     
@@ -194,9 +211,14 @@ actor UserProfileService {
         let noosphereIdentity = try await noosphere.identity()
         let isOurs = noosphereIdentity == did
         
-        let userProfileData = await self.readProfileMemo(
-            address: isOurs ? Slashlink.ourProfile : address
-        )
+        // TODO: two methods, explicitly load profile or try from cache
+        var userProfileData = try await self.readProfileFromDb(address: address)
+        
+        if userProfileData == nil {
+            userProfileData = await self.readProfileMemo(
+                address: isOurs ? Slashlink.ourProfile : address
+            )
+        }
         
         let followingStatus = await self.addressBook.followingStatus(
             did: did,
@@ -293,11 +315,19 @@ actor UserProfileService {
 //                }
 //            }
             
-            let user = try await self.buildUserProfile(address: slashlink, did: entry.did)
-           
-            following.append(
-                StoryUser(user: user, addressBookEntry: entry)
-            )
+            let followingStatus = await self.addressBook.followingStatus(did: entry.did, expectedName: nil)
+            switch (followingStatus, entry.status) {
+            case (.following, .resolved):
+                let user = try await self.buildUserProfile(address: slashlink, did: entry.did)
+                following.append(
+                    StoryUser(user: .known(user, entry))
+                )
+            default:
+                following.append(
+                    StoryUser(user: .unknown(entry))
+                )
+                break
+            }
         }
         
         return following
@@ -388,7 +418,7 @@ actor UserProfileService {
 
         let profile = try await self.loadProfileFromMemo(
             did: identity,
-            address: address
+            address: Slashlink(peer: address.peer, slug: Slug.profile)
         )
         
         self.cache.updateValue(

@@ -8,6 +8,22 @@
 import Foundation
 import SwiftUI
 
+enum StoryUserVariant: Codable, Equatable, Hashable {
+    case unknown(AddressBookEntry)
+    case known(UserProfile, AddressBookEntry)
+}
+
+extension StoryUserVariant {
+    var entry: AddressBookEntry {
+        switch self {
+        case .unknown(let entry):
+            return entry
+        case .known(_, let entry):
+            return entry
+        }
+    }
+}
+
 /// Story prompt model
 struct StoryUser:
     Hashable,
@@ -16,16 +32,23 @@ struct StoryUser:
     Codable {
     
     var id = UUID()
-    var user: UserProfile
-    var addressBookEntry: AddressBookEntry
+    var user: StoryUserVariant
     var statistics: UserProfileStatistics?
+    
+    var entry: AddressBookEntry {
+        switch user {
+        case .unknown(let entry):
+            return entry
+        case .known(_, let entry):
+            return entry
+        }
+    }
 
     var description: String {
         """
-        \(String(describing: user.nickname))
-        Following? \(user.isFollowedByUs)
-        
-        \(user.bio?.text ?? "")
+        \(String(describing: entry.did))
+        \(String(describing: entry.petname))
+        \(String(describing: entry.status))
         """
     }
 }

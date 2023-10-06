@@ -99,27 +99,28 @@ extension StoryUser: DummyData {
     static func dummyData() -> StoryUser {
         let nickname = Petname.Name.dummyData()
         return StoryUser(
-            user: UserProfile.dummyData(),
-            addressBookEntry: AddressBookEntry.dummyData()
+            user: .known(UserProfile.dummyData(), AddressBookEntry.dummyData())
         )
     }
     
     static func dummyData(petname: Petname) -> StoryUser {
         StoryUser(
-            user: UserProfile(
-                did: Did.dummyData(),
-                nickname: petname.leaf,
-                address: Slashlink(petname: petname),
-                pfp: .image(String.dummyProfilePicture()),
-                bio: UserProfileBio.dummyData(),
-                category: [UserCategory.human, UserCategory.geist].randomElement()!,
-                ourFollowStatus: [
-                    .following(Petname.Name.dummyData()),
-                    .notFollowing
-                ].randomElement()!,
-                aliases: []
-            ),
-            addressBookEntry: AddressBookEntry.dummyData()
+            user: .known(
+                UserProfile(
+                    did: Did.dummyData(),
+                    nickname: petname.leaf,
+                    address: Slashlink(petname: petname),
+                    pfp: .image(String.dummyProfilePicture()),
+                    bio: UserProfileBio.dummyData(),
+                    category: [UserCategory.human, UserCategory.geist].randomElement()!,
+                    ourFollowStatus: [
+                        .following(Petname.Name.dummyData()),
+                        .notFollowing
+                    ].randomElement()!,
+                    aliases: []
+                ),
+                AddressBookEntry.dummyData()
+            )
         )
     }
 }

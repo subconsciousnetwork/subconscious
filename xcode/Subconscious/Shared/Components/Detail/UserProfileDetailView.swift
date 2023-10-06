@@ -31,8 +31,8 @@ struct UserProfileDetailView: View {
         notify(.requestDetail(.from(address: address, fallback: "")))
     }
     
-    func onNavigateToUser(user: UserProfile) {
-        notify(.requestNavigateToProfile(user))
+    func onNavigateToUser(address: Slashlink) {
+        notify(.requestNavigateToProfile(address))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -91,7 +91,7 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
-    case requestNavigateToProfile(_ user: UserProfile)
+    case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
 }
 

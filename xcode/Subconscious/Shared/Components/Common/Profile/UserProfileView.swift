@@ -54,21 +54,18 @@ struct RecentTabView: View {
 struct FollowTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
-    var onNavigateToUser: (UserProfile) -> Void
+    var onNavigateToUser: (Slashlink) -> Void
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     
     var body: some View {
         ForEach(state.following) { follow in
             StoryUserView(
                 story: follow,
-                action: { _ in onNavigateToUser(follow.user) },
+                action: { _ in
+                    onNavigateToUser(Slashlink(petname: follow.entry.petname)) },
                 profileAction: onProfileAction,
                 onRefreshUser: {
-                    guard let petname = follow.user.address.toPetname() else {
-                        return
-                    }
-                    
-                    send(.requestWaitForFollowedUserResolution(petname))
+                    send(.requestWaitForFollowedUserResolution(follow.entry.petname))
                 }
             )
         }
@@ -93,7 +90,7 @@ struct UserProfileView: View {
     }
     
     var onNavigateToNote: (Slashlink) -> Void
-    var onNavigateToUser: (UserProfile) -> Void
+    var onNavigateToUser: (Slashlink) -> Void
     
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void

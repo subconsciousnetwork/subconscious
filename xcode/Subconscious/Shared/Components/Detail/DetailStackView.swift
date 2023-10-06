@@ -646,24 +646,10 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestNavigateToProfile(user):
-            let user = Func.run {
-                switch (user.category, user.ourFollowStatus) {
-                case (.ourself, _):
-                    // Loop back to our profile
-                    return user.overrideAddress(Slashlink.ourProfile)
-                case (_, .following(let name)):
-                    // Rewrite address using our name
-                    return user.overrideAddress(Slashlink(petname: name.toPetname()))
-                case _:
-                    return user
-                }
-            }
-
+        case let .requestNavigateToProfile(address):
             return .pushDetail(.profile(
                 UserProfileDetailDescription(
-                    address: user.address,
-                    user: user
+                    address: address
                 )
             ))
         }
