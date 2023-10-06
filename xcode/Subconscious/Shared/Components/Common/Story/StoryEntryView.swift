@@ -30,11 +30,14 @@ struct StoryEntryView: View {
             },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
-                    HStack(alignment: .center, spacing: AppTheme.unit2) {
-                        ProfilePic(pfp: author.pfp, size: .large)
-                        if let name = author.toNameVariant() {
-                            PetnameView(name: name, aliases: author.aliases)
+                    HStack(alignment: .top, spacing: AppTheme.unit2) {
+                        HStack(alignment: .center, spacing: AppTheme.unit2) {
+                            ProfilePic(pfp: author.pfp, size: .large)
+                            if let name = author.toNameVariant() {
+                                PetnameView(name: name, aliases: author.aliases)
+                            }
                         }
+                        .padding([.top], AppTheme.padding)
                         
                         Spacer()
                         
@@ -47,44 +50,48 @@ struct StoryEntryView: View {
                             }
                         )
                     }
+                    .padding([.leading], AppTheme.padding)
                     
-                    ExcerptView(
-                        excerpt: story.entry.excerpt,
-                        onViewSlashlink: { slashlink in
-                            action(slashlink, story.entry.excerpt)
-                        }
-                    )
-                    
-                    HStack(alignment: .center, spacing: AppTheme.unit) {
-                        Image(audience: .public)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 12, height: 12)
-                        
-                        SlashlinkDisplayView(slashlink: Slashlink(
-                            peer: story.author.address.peer,
-                            slug: story.entry.address.slug
-                        ))
-                        .theme(base: .secondary, slug: .secondary)
-                        
-                        Spacer()
-                        
-                        Text(
-                            NiceDateFormatter.shared.string(
-                                from: story.entry.modified,
-                                relativeTo: Date.now
-                            )
+                    VStack(spacing: AppTheme.unit2) {
+                        ExcerptView(
+                            excerpt: story.entry.excerpt,
+                            onViewSlashlink: { slashlink in
+                                action(slashlink, story.entry.excerpt)
+                            }
                         )
+                        
+                        HStack(alignment: .center, spacing: AppTheme.unit) {
+                            Image(audience: .public)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: AppTheme.unit3, height: AppTheme.unit3)
+                            
+                            SlashlinkDisplayView(slashlink: Slashlink(
+                                peer: story.author.address.peer,
+                                slug: story.entry.address.slug
+                            ))
+                            .theme(base: .secondary, slug: .secondary)
+                            
+                            Spacer()
+                            
+                            Text(
+                                NiceDateFormatter.shared.string(
+                                    from: story.entry.modified,
+                                    relativeTo: Date.now
+                                )
+                            )
+                        }
+                        .foregroundColor(.secondary)
+                        .font(.caption)
                     }
-                    .foregroundColor(.secondary)
-                    .font(.caption)
+                    .padding([.leading, .trailing, .bottom], AppTheme.padding)
                 }
-                .padding(AppTheme.tightPadding)
                 .background(Color.background)
                 .contentShape(Rectangle())
             }
         )
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
+//        .overlay(RectangleCroppedTopRightCorner().fill(.blue.opacity(0.5)))
         .buttonStyle(.plain)
     }
 }

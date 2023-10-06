@@ -12,8 +12,8 @@ import SwiftUI
 /// without having to deal with firing both tap targets at once.
 struct RectangleCroppedTopRightCorner: Shape {
     static let margin: CGSize = CGSize(
-        width: AppTheme.minTouchSize + AppTheme.tightPadding,
-        height: AppTheme.minTouchSize + AppTheme.tightPadding
+        width: AppTheme.minTouchSize + AppTheme.padding,
+        height: AppTheme.minTouchSize + AppTheme.unit2
     )
     
     func path(in rect: CGRect) -> Path {
