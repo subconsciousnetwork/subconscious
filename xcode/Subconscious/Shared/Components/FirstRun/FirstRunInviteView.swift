@@ -74,9 +74,9 @@ struct FirstRunInviteView: View {
             }
             
             VStack(spacing: AppTheme.padding) {
-                Text("Subconscious is powered by Noosphere, a decentralized protocol, so your data is accessible anywhere and belongs to you.")
+                Text("Get connected to Noosphere.")
                 
-                Text("Enter your invite code to create your Noosphere gateway:")
+                Text("Enter your invite code to create your gateway:")
             }
             .foregroundColor(.secondary)
             .font(.callout)

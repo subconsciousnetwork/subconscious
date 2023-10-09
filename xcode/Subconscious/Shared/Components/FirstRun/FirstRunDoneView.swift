@@ -51,13 +51,13 @@ struct FirstRunDoneView: View {
     var guidanceLabel: String {
         switch (status) {
         case .pending:
-            return "You can start exploring the app offline."
+            return "You can start exploring offline."
         case .succeeded:
             return "Welcome to Subconscious."
             
         // Shown if the user skips the invite code step OR we fail to provision
         case .initial, .failed:
-            return "Don't worry, you can still explore the app."
+            return "Don't worry, you can still start exploring."
         }
     }
 

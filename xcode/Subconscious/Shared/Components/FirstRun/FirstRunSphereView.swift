@@ -28,7 +28,7 @@ struct FirstRunSphereView: View {
                 Text("Subconscious stores your notes in your personal sphere.")
                     .foregroundColor(.secondary)
                 
-                Text("Your sphere connects to other spheres, allowing you to follow other users.")
+                Text("Your sphere is stored on your device, and connects to other spheres over a decentralized network.")
                     .foregroundColor(.secondary)
             }
             .multilineTextAlignment(.center)

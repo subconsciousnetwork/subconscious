@@ -41,7 +41,7 @@ struct FirstRunView: View {
                     .font(.callout)
                     .multilineTextAlignment(.center)
                     
-                Text("It's a personal notebook designed to help you discover connections and think new thoughts.")
+                Text("It’s powered by Noosphere, a decentralized protocol, so your data belongs to you.")
                     .foregroundColor(.secondary)
                     .font(.callout)
                     .multilineTextAlignment(.center)

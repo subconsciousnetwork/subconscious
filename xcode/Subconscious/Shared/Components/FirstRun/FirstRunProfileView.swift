@@ -43,7 +43,7 @@ struct FirstRunProfileView: View {
             
             Spacer()
             
-            Text("Choose a nickname for your sphere:")
+            Text("Give your sphere a nickname:")
                 .foregroundColor(.secondary)
             
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
