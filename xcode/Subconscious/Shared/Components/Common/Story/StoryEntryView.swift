@@ -73,7 +73,7 @@ struct StoryEntryView: View {
                     SubtextView(
                         subtext: excerptSubtext,
                         transcludePreviews: [:],
-                        onViewSlashlink: { slashlink in
+                        onViewTransclude: { slashlink in
                             action(slashlink, story.entry.excerpt)
                         }
                     )

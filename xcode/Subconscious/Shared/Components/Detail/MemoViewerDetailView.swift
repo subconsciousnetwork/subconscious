@@ -197,7 +197,7 @@ struct MemoViewerDetailLoadedView: View {
                         SubtextView(
                             subtext: dom,
                             transcludePreviews: transcludePreviews,
-                            onViewSlashlink: self.onViewTransclude
+                            onViewTransclude: self.onViewTransclude
                         ).textSelection(
                             .enabled
                         ).environment(\.openURL, OpenURLAction { url in

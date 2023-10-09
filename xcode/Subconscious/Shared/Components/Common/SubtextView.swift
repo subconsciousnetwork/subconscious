@@ -16,7 +16,7 @@ struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
     var transcludePreviews: [Slashlink: EntryStub]
-    var onViewSlashlink: (Slashlink) -> Void
+    var onViewTransclude: (Slashlink) -> Void
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks
@@ -73,7 +73,7 @@ struct SubtextView: View {
                     TranscludeView(
                         entry: entry,
                         action: {
-                            onViewSlashlink(entry.address)
+                            onViewTransclude(entry.address)
                         }
                     )
                 }
@@ -140,7 +140,7 @@ struct SubtextView_Previews: PreviewProvider {
                         modified: Date.now
                     )
                 ],
-                onViewSlashlink: {
+                onViewTransclude: {
                     _ in 
                 }
             )
