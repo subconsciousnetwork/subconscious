@@ -286,23 +286,28 @@ struct DetailStackModel: Hashable, ModelProtocol {
         return Update(state: model)
     }
     
+    static func rebaseLinkOnAddress(
+        address: Slashlink,
+        link: SubSlashlinkLink
+    ) -> Slashlink {
+        // Stitch the base address on to the tapped link, making any
+        // bare slashlinks relative to the sphere they belong to.
+        //
+        // This is needed in the viewer but address will always based
+        // on our sphere in the editor case.
+        guard case let .petname(basePetname) = address.peer else {
+            return link.slashlink
+        }
+        return link.slashlink.rebaseIfNeeded(petname: basePetname)
+    }
+    
     static func findAndPushLinkDetail(
         state: Self,
         environment: Environment,
         address: Slashlink,
         link: SubSlashlinkLink
     ) -> Update<Self> {
-        // Stitch the base address on to the tapped link, making any
-        // bare slashlinks relative to the sphere they belong to.
-        //
-        // This is needed in the viewer but address will always based
-        // on our sphere in the editor case.
-        let slashlink: Slashlink = Func.run {
-            guard case let .petname(basePetname) = address.peer else {
-                return link.slashlink
-            }
-            return link.slashlink.rebaseIfNeeded(petname: basePetname)
-        }
+        let slashlink = rebaseLinkOnAddress(address: address, link: link)
         
         let fx: Fx<DetailStackAction> = Future.detached {
             let identity = try await environment.noosphere.identity()
