@@ -32,6 +32,9 @@ struct StoryEntryView: View {
         \(story.entry.address)
         """
     }
+    var excerptSubtext: Subtext {
+        Subtext(markup: story.entry.excerpt)
+    }
     
     var body: some View {
         Button(
@@ -66,8 +69,9 @@ struct StoryEntryView: View {
                     .padding([.leading], AppTheme.padding)
                     
                     // MARK: excerpt
-                    ExcerptView(
-                        excerpt: story.entry.excerpt,
+                    SubtextView(
+                        subtext: excerptSubtext,
+                        transcludePreviews: [:],
                         onViewSlashlink: { slashlink in
                             action(slashlink, story.entry.excerpt)
                         }

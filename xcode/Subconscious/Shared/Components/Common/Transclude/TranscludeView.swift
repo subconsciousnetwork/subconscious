@@ -9,19 +9,25 @@ import SwiftUI
 
 struct ExcerptView: View {
     var excerpt: String
-    var subtext: Subtext {
-        Subtext(markup: excerpt)
+    var spacing: CGFloat = AppTheme.unit
+    var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
+        Array(excerpt.split(separator: "\n").enumerated())
     }
-    var onViewSlashlink: (Slashlink) -> Void
-    
+
     var body: some View {
-        SubtextView(
-            subtext: subtext,
-            transcludePreviews: [:],
-            onViewSlashlink: onViewSlashlink
-        )
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach(excerptLines, id: \.offset) { idx, line in
+                Text("\(String(line))")
+                    .fontWeight(
+                        idx == 0 && excerptLines.count > 1
+                            ? .medium
+                            : .regular
+                    )
+            }
+        }
     }
 }
+
 
 struct TranscludeView: View {
     var entry: EntryStub
@@ -40,8 +46,8 @@ struct TranscludeView: View {
                         pfp: .generated(entry.did),
                         slashlink: entry.address
                     )
-                    // TODO: should links in transcludes be tappable?
-                    ExcerptView(excerpt: entry.excerpt, onViewSlashlink: { _ in })
+                    
+                    ExcerptView(excerpt: entry.excerpt)
                 }
             }
         )
