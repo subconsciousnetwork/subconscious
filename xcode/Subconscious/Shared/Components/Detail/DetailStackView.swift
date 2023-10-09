@@ -333,7 +333,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
             }
         }
         .recover { error in
-            DetailStackAction.failPushDetail("Could not resolve link: \(error)")
+            logger.error("Failed to resolve peer: \(error)")
+            return .findAndPushDetail(address: slashlink)
         }
         .eraseToAnyPublisher()
         
