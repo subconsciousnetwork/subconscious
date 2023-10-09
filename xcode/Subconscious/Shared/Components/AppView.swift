@@ -242,6 +242,7 @@ enum AppAction {
     case submitFirstRunProfileStep
     case submitFirstRunSphereStep
     case submitFirstRunRecoveryStep
+    case submitFirstRunInviteStep
     case submitFirstRunDoneStep
     
     case requestOfflineMode
@@ -461,9 +462,10 @@ enum AppDatabaseState {
 }
 
 enum FirstRunStep {
-    case profile
     case sphere
     case recovery
+    case profile
+    case invite
     case done
 }
 
@@ -677,6 +679,11 @@ struct AppModel: ModelProtocol {
             )
         case .submitFirstRunRecoveryStep:
             return submitFirstRunRecoveryStep(
+                state: state,
+                environment: environment
+            )
+        case .submitFirstRunInviteStep:
+            return submitFirstRunInviteStep(
                 state: state,
                 environment: environment
             )
@@ -1472,7 +1479,7 @@ struct AppModel: ModelProtocol {
             state: model,
             actions: [
                 .inviteCodeFormField(.reset),
-                .submitFirstRunWelcomeStep
+                .submitFirstRunInviteStep
             ],
             environment: environment
         )
@@ -1482,17 +1489,10 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard state.inviteCode == nil || // Offline mode: no code
-              state.gatewayId != nil // Otherwise we need an ID to proceed
-        else {
-            logger.error("Missing gateway ID but user is trying to use invite code")
-            return Update(state: state)
-        }
-        
         return update(
             state: state,
             actions: [
-                .pushFirstRunStep(.profile)
+                .pushFirstRunStep(.sphere)
             ],
             environment: environment
         )
@@ -1511,7 +1511,7 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .submitNickname(nickname),
-                .pushFirstRunStep(.sphere)
+                .pushFirstRunStep(.invite)
             ],
             environment: environment
         )
@@ -1524,6 +1524,7 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
+                .createSphere,
                 .pushFirstRunStep(.recovery)
             ],
             environment: environment
@@ -1534,6 +1535,26 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .pushFirstRunStep(.profile)
+            ],
+            environment: environment
+        )
+    }
+    
+    static func submitFirstRunInviteStep(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard state.inviteCode == nil || // Offline mode: no code
+              state.gatewayId != nil // Otherwise we need an ID to proceed
+        else {
+            logger.error("Missing gateway ID but user is trying to use invite code")
+            return Update(state: state)
+        }
+
         return update(
             state: state,
             actions: [
