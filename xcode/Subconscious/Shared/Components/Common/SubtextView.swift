@@ -67,15 +67,6 @@ struct SubtextView: View {
                 if renderable.entries.isEmpty ||
                     !shouldReplaceBlockWithTransclude(block: renderable.block) {
                     Text(Self.renderer.render(renderable.block.description))
-                        // Handle tapped slashlinks in the preview
-                        .environment(\.openURL, OpenURLAction { url in
-                            guard let subslashlink = url.toSubSlashlinkURL() else {
-                                return .systemAction
-                            }
-                            
-                            onViewSlashlink(subslashlink.slashlink)
-                            return .handled
-                        })
                 }
                 
                 ForEach(renderable.entries, id: \.self) { entry in

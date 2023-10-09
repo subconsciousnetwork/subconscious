@@ -35,6 +35,10 @@ struct UserProfileDetailView: View {
         notify(.requestNavigateToProfile(address))
     }
     
+    func onNavigateToLink(address: Slashlink, link: SubSlashlinkLink) {
+        notify(.requestFindLinkDetail(address: address, link: link))
+    }
+    
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
         switch (action) {
         case .requestFollow:
@@ -54,6 +58,7 @@ struct UserProfileDetailView: View {
             store: store,
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser,
+            onNavigateToLink: self.onNavigateToLink,
             onProfileAction: self.onProfileAction,
             onRefresh: {
                 app.send(.syncAll)
@@ -92,6 +97,10 @@ struct UserProfileDetailView: View {
 enum UserProfileDetailNotification: Hashable {
     case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
+    case requestFindLinkDetail(
+        address: Slashlink,
+        link: SubSlashlinkLink
+    )
 }
 
 extension UserProfileDetailAction {

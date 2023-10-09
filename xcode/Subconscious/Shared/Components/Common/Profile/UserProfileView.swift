@@ -28,7 +28,8 @@ struct ProfileStatisticView: View {
 struct RecentTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
-    var onNavigateToNote: (Slashlink) -> Void
+    var action: (Slashlink) -> Void
+    var onLink: (Slashlink, SubSlashlinkLink) -> Void
     
     var body: some View {
         if let user = state.user {
@@ -38,7 +39,8 @@ struct RecentTabView: View {
                         entry: entry
                     ),
                     author: user,
-                    action: { address, _ in onNavigateToNote(address) }
+                    action: { address, _ in action(address) },
+                    onLink: { link in onLink(entry.address, link) }
                 )
                 
                 Divider()
@@ -96,6 +98,7 @@ struct UserProfileView: View {
     
     var onNavigateToNote: (Slashlink) -> Void
     var onNavigateToUser: (Slashlink) -> Void
+    var onNavigateToLink: (Slashlink, SubSlashlinkLink) -> Void
     
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void
@@ -113,7 +116,8 @@ struct UserProfileView: View {
             view: RecentTabView(
                 state: state,
                 send: send,
-                onNavigateToNote: onNavigateToNote
+                action: onNavigateToNote,
+                onLink: onNavigateToLink
             )
         )
     }
@@ -285,6 +289,7 @@ struct UserProfileView_Previews: PreviewProvider {
             ),
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") },
+            onNavigateToLink: { _, _ in print("navigate to link") },
             onProfileAction: { user, action in print("profile action") },
             onRefresh: { }
         )

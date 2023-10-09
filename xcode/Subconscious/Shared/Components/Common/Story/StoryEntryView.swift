@@ -25,6 +25,7 @@ struct StoryEntryView: View {
     var story: StoryEntry
     var author: UserProfile
     var action: (Slashlink, String) -> Void
+    var onLink: (SubSlashlinkLink) -> Void
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -77,6 +78,16 @@ struct StoryEntryView: View {
                         }
                     )
                     .padding([.leading, .trailing], AppTheme.padding)
+                    // Handle tapped slashlinks in the preview
+                    .environment(\.openURL, OpenURLAction { url in
+                        
+                        guard let subslashlink = url.toSubSlashlinkURL() else {
+                            return .systemAction
+                        }
+                        
+                        onLink(subslashlink)
+                        return .handled
+                    })
                     
                     // MARK: footer
                     HStack(alignment: .center, spacing: AppTheme.unit) {
@@ -136,7 +147,8 @@ struct StoryPlainView_Previews: PreviewProvider {
                     did: Did.dummyData()
                 )
             ),
-            action: { _, _ in }
+            action: { _, _ in },
+            onLink: { _ in }
         )
     }
 }
