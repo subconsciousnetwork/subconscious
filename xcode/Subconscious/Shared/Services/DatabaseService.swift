@@ -485,7 +485,7 @@ final class DatabaseService {
         .first
     }
     
-    func loadUserProfile(address: Slashlink) throws -> Data? {
+    func loadUserProfile(did: Did) throws -> Data? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -494,11 +494,11 @@ final class DatabaseService {
             sql: """
             SELECT body
             FROM memo
-            WHERE slashlink = ? AND slug = "_profile_"
+            WHERE did = ? AND slug = "_profile_"
             LIMIT 1
             """,
             parameters: [
-                .text(address.description)
+                .text(did.description)
             ]
         )
         

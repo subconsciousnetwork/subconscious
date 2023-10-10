@@ -118,6 +118,11 @@ struct UserProfileCacheEntry {
     let version: Cid
 }
 
+struct UserProfileCacheKey: Hashable {
+    let did: Did
+    let petname: Petname?
+}
+
 actor UserProfileService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
@@ -132,7 +137,7 @@ actor UserProfileService {
     
     private static let profileContentType = "application/vnd.subconscious.profile+json"
     
-    private var cache: [Did:UserProfileCacheEntry] = [:]
+    private var cache: [UserProfileCacheKey:UserProfileCacheEntry] = [:]
     
     init(
         noosphere: NoosphereService,
@@ -172,9 +177,9 @@ actor UserProfileService {
     }
     
     private func readProfileFromDb(
-        address: Slashlink
+        did: Did
     ) async throws -> UserProfileEntry? {
-        guard let data = try database.loadUserProfile(address: address) else {
+        guard let data = try database.loadUserProfile(did: did) else {
             return nil
         }
         
@@ -220,7 +225,14 @@ actor UserProfileService {
             expectedName: address.petname?.leaf
         )
         
-        let aliases = try await self.addressBook.listAliases(did: did)
+        var aliases = try await self.addressBook.listAliases(did: did)
+        if let nickname = Petname.Name(userProfileData?.nickname ?? "") {
+            aliases.append(nickname.toPetname())
+        }
+        
+        if let petname = address.petname {
+            aliases.append(petname)
+        }
         
         let profile = UserProfile(
             did: did,
@@ -425,7 +437,8 @@ actor UserProfileService {
     ) async throws -> UserProfile {
         let version = try await self.noosphere.version()
         
-        if let cacheHit = self.cache[did],
+        let cacheKey = UserProfileCacheKey(did: did, petname: petname)
+        if let cacheHit = self.cache[cacheKey],
            cacheHit.version == version {
             return cacheHit.profile
         }
@@ -435,12 +448,16 @@ actor UserProfileService {
             let profile = try await ourProfile()
             self.cache.updateValue(
                 UserProfileCacheEntry(profile: profile, version: version),
-                forKey: did
+                forKey: cacheKey
             )
             return profile
         }
         
-        let following = await self.addressBook.followingStatus(did: did, expectedName: petname?.leaf)
+        let following = await self.addressBook.followingStatus(
+            did: did,
+            expectedName: petname?.leaf
+        )
+        
         let address = Func.run {
             switch (petname, context) {
             case let (.some(petname), .some(peer)):
@@ -462,16 +479,26 @@ actor UserProfileService {
             bio: nil,
             category: .human,
             ourFollowStatus: following,
-            aliases: []
+            aliases: [petname].compactMap { $0 }
         )
         
         let profile = try await Func.run {
             switch following {
-            case .following(let name):
+            case .following:
                 guard let dbProfile = try await self.readProfileFromDb(
-                    address: Slashlink(petname: name.toPetname())
+                    did: did
                 ) else {
                     return sparseProfile
+                }
+                
+                // Collect all the possible names for this user
+                var aliases = try await self.addressBook.listAliases(did: did)
+                if let petname = petname {
+                    aliases.append(petname)
+                }
+                
+                if let nickname = Petname.Name(dbProfile.nickname ?? "")?.toPetname() {
+                    aliases.append(nickname)
                 }
                 
                 return UserProfile(
@@ -482,7 +509,7 @@ actor UserProfileService {
                     bio: UserProfileBio(dbProfile.bio ?? ""),
                     category: .human,
                     ourFollowStatus: following,
-                    aliases: [petname, name.toPetname()].compactMap { $0 } // TODO: a bit too clever
+                    aliases: aliases
                 )
             case .notFollowing:
                 return sparseProfile
@@ -491,7 +518,7 @@ actor UserProfileService {
 
         self.cache.updateValue(
             UserProfileCacheEntry(profile: profile, version: version),
-            forKey: did
+            forKey: cacheKey
         )
         
         return profile
@@ -511,16 +538,16 @@ actor UserProfileService {
 //        return profile
 //    }
     
-    private func cachedProfile(did: Did) async throws -> UserProfile? {
-        let version = try await self.noosphere.version()
-        
-        if let cacheHit = self.cache[did],
-           cacheHit.version == version {
-            return cacheHit.profile
-        }
-        
-        return nil
-    }
+//    private func cachedProfile(did: Did, petname: Petname?) async throws -> UserProfile? {
+//        let version = try await self.noosphere.version()
+//
+//        if let cacheHit = self.cache[UserProfileCacheKey(did: did, petname: petname)],
+//           cacheHit.version == version {
+//            return cacheHit.profile
+//        }
+//
+//        return nil
+//    }
     
     /// Read all data needed to render a user's profile.
     /// Recent entries are read from the DB if we follow this user, otherwise we traverse to and list the sphere.

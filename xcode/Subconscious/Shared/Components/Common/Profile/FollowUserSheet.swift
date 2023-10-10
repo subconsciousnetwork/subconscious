@@ -207,7 +207,7 @@ struct FollowUserSheet: View {
                    let name = state.followUserForm.petname.validated {
                     HStack(spacing: AppTheme.padding) {
                         ProfilePic(pfp: user.pfp, size: .large)
-                        PetnameView(name: .proposedName(user.address, name))
+                        PetnameView(name: .unknown(user.address, name))
                     }
                     
                     Spacer()
