@@ -479,6 +479,11 @@ actor UserProfileService {
             }
         }
         
+        var aliases = try await self.addressBook.listAliases(did: did)
+        if let petname = petname {
+            aliases.append(petname)
+        }
+        
         let sparseProfile = UserProfile(
             did: did,
             nickname: nil,
@@ -487,7 +492,7 @@ actor UserProfileService {
             bio: nil,
             category: .human,
             ourFollowStatus: following,
-            aliases: [petname].compactMap { $0 }
+            aliases: aliases
         )
         
         let profile = try await Func.run {
@@ -500,11 +505,6 @@ actor UserProfileService {
                 }
                 
                 // Collect all the possible names for this user
-                var aliases = try await self.addressBook.listAliases(did: did)
-                if let petname = petname {
-                    aliases.append(petname)
-                }
-                
                 if let nickname = Petname.Name(dbProfile.nickname ?? "")?.toPetname() {
                     aliases.append(nickname)
                 }
