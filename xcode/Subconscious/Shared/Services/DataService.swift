@@ -663,7 +663,11 @@ actor DataService {
         let identity = try await noosphere.identity()
         var feed: [EntryStub] = []
         for entry in try self.database.listFeed(owner: identity) {
-            let author = try await self.userProfile.identifyUser(did: entry.did, address: entry.address, context: nil)
+            let author = try await self.userProfile.identifyUser(
+                did: entry.did,
+                address: entry.address,
+                context: nil
+            )
             feed.append(entry.withAuthor(author))
         }
         return feed
@@ -848,7 +852,11 @@ actor DataService {
         
         var backlinks: [EntryStub] = []
         for entry in entries {
-            guard let author = try? await userProfile.identifyUser(did: entry.did, address: entry.address, context: address.peer) else {
+            guard let author = try? await userProfile.identifyUser(
+                did: entry.did,
+                address: entry.address,
+                context: address.peer
+            ) else {
                 logger.error("Failed to load author for \(entry.address)")
                 backlinks.append(entry)
                 continue
