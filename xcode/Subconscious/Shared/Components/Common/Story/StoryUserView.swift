@@ -45,35 +45,76 @@ struct StoryUserView: View {
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
     var onRefreshUser: () -> Void = {}
     
+    var entry: AddressBookEntry {
+        story.entry
+    }
+    var user: UserProfile {
+        story.user
+    }
+    
     var body: some View {
-        switch (story.user) {
-        case let .unknown(address, entry):
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    Group {
-                        ProfilePic(pfp: .generated(entry.did), size: .medium)
-                        PetnameView(name: .petname(Slashlink(petname: entry.petname), entry.name), aliases: [])
-                        
-                        Spacer()
-                        
-                        switch entry.status {
-                        case .unresolved:
-                            Image(systemName: "person.fill.questionmark")
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center, spacing: AppTheme.unit2) {
+                Group {
+                    ProfilePic(pfp: .generated(user.did), size: .medium)
+                    
+                    if let name = user.toNameVariant() {
+                        PetnameView(name: name, aliases: user.aliases)
+                    }
+                    
+                    Spacer()
+                    
+                    switch entry.status {
+                    case .unresolved:
+                        Image(systemName: "person.fill.questionmark")
+                            .foregroundColor(.secondary)
+                    case .pending:
+                        PendingSyncBadge()
+                            .foregroundColor(.secondary)
+                    case .resolved:
+                        switch (user.ourFollowStatus, user.category) {
+                        case (.following(_), _):
+                            Image.from(appIcon: .following)
                                 .foregroundColor(.secondary)
-                        case .pending:
-                            PendingSyncBadge()
+                        case (_, .ourself):
+                            Image.from(appIcon: .you(colorScheme))
                                 .foregroundColor(.secondary)
-                        case .resolved:
+                        case (_, _):
                             EmptyView()
                         }
                     }
-                    .disabled(!entry.status.isReady)
-                    
-                    Menu(
-                        content: {
+                }
+                .disabled(!entry.status.isReady)
+                
+                Menu(
+                    content: {
+                        if user.isFollowedByUs {
                             Button(
                                 action: {
-//                                    profileAction(user, .requestFollow)
+                                    profileAction(user, .requestUnfollow)
+                                },
+                                label: {
+                                    Label(
+                                        title: { Text("Unfollow") },
+                                        icon: { Image(systemName: "person.fill.xmark") }
+                                    )
+                                }
+                            )
+                            Button(
+                                action: {
+                                    profileAction(user, .requestRename)
+                                },
+                                label: {
+                                    Label(
+                                        title: { Text("Rename") },
+                                        icon: { Image(systemName: "pencil") }
+                                    )
+                                }
+                            )
+                        } else {
+                            Button(
+                                action: {
+                                    profileAction(user, .requestFollow)
                                 },
                                 label: {
                                     Label(
@@ -82,123 +123,32 @@ struct StoryUserView: View {
                                     )
                                 }
                             )
-                        },
-                        label: {
-                            EllipsisLabelView()
                         }
-                    )
-                }
-                .padding(AppTheme.tightPadding)
-                .frame(height: AppTheme.unit * 13)
-            }
-            .contentShape(.interaction, RectangleCroppedTopRightCorner())
-            .onTapGesture {
-                switch (entry.status) {
-                case (.unresolved):
-                    onRefreshUser()
-                case _:
-                    onNavigate()
-                }
-            }
-            .background(.background)
-        case let .known(user, entry):
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    Group {
-                        ProfilePic(pfp: .generated(entry.did), size: .medium)
-                        
-                        if let name = user.toNameVariant() {
-                            PetnameView(name: name, aliases: user.aliases)
-                        }
-                        
-                        Spacer()
-                        
-                        switch entry.status {
-                        case .unresolved:
-                            Image(systemName: "person.fill.questionmark")
-                                .foregroundColor(.secondary)
-                        case .pending:
-                            PendingSyncBadge()
-                                .foregroundColor(.secondary)
-                        case .resolved:
-                            switch (user.ourFollowStatus, user.category) {
-                            case (.following(_), _):
-                                Image.from(appIcon: .following)
-                                    .foregroundColor(.secondary)
-                            case (_, .ourself):
-                                Image.from(appIcon: .you(colorScheme))
-                                    .foregroundColor(.secondary)
-                            case (_, _):
-                                EmptyView()
-                            }
-                        }
+                    },
+                    label: {
+                        EllipsisLabelView()
                     }
-                    .disabled(!entry.status.isReady)
-                    
-                    Menu(
-                        content: {
-                            if user.isFollowedByUs {
-                                Button(
-                                    action: {
-                                        profileAction(user, .requestUnfollow)
-                                    },
-                                    label: {
-                                        Label(
-                                            title: { Text("Unfollow") },
-                                            icon: { Image(systemName: "person.fill.xmark") }
-                                        )
-                                    }
-                                )
-                                Button(
-                                    action: {
-                                        profileAction(user, .requestRename)
-                                    },
-                                    label: {
-                                        Label(
-                                            title: { Text("Rename") },
-                                            icon: { Image(systemName: "pencil") }
-                                        )
-                                    }
-                                )
-                            } else {
-                                Button(
-                                    action: {
-                                        profileAction(user, .requestFollow)
-                                    },
-                                    label: {
-                                        Label(
-                                            title: { Text("Follow") },
-                                            icon: { Image(systemName: "person.badge.plus") }
-                                        )
-                                    }
-                                )
-                            }
-                        },
-                        label: {
-                            EllipsisLabelView()
-                        }
-                    ).disabled(user.category == .ourself)
-                }
-                .padding(AppTheme.tightPadding)
-                .frame(height: AppTheme.unit * 13)
-                
-                if let bio = user.bio,
-                   bio.hasVisibleContent {
-                    Text(verbatim: bio.text)
-                        .padding(AppTheme.tightPadding)
-                }
+                ).disabled(user.category == .ourself)
             }
-            .contentShape(.interaction, RectangleCroppedTopRightCorner())
-            .onTapGesture {
-                switch (user.ourFollowStatus, entry.status) {
-                case (.following(_), .unresolved):
-                    onRefreshUser()
-                default:
-                    onNavigate()
-                }
+            .padding(AppTheme.tightPadding)
+            .frame(height: AppTheme.unit * 13)
+            
+            if let bio = user.bio,
+               bio.hasVisibleContent {
+                Text(verbatim: bio.text)
+                    .padding(AppTheme.tightPadding)
             }
-            .background(.background)
         }
+        .contentShape(.interaction, RectangleCroppedTopRightCorner())
+        .onTapGesture {
+            switch (user.ourFollowStatus, entry.status) {
+            case (.following(_), .unresolved):
+                onRefreshUser()
+            default:
+                onNavigate()
+            }
+        }
+        .background(.background)
     }
 }
 
@@ -208,92 +158,84 @@ struct StoryUserView_Previews: PreviewProvider {
             Spacer()
             StoryUserView(
                 story: StoryUser(
-                    user: .known(
-                        UserProfile(
-                            did: Did("did:key:123")!,
-                            nickname: Petname.Name("ben")!,
-                            address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
-                            pfp: .image("pfp-dog"),
-                            bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                            category: .human,
-                            ourFollowStatus: .notFollowing,
-                            aliases: []
-                        ),
-                        AddressBookEntry(
-                            petname: Petname("ben")!,
-                            did: Did("did:key:123")!,
-                            status: .resolved("ok"),
-                            version: "ok"
-                        )
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        nickname: Petname.Name("ben")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        pfp: .image("pfp-dog"),
+                        bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
+                        category: .human,
+                        ourFollowStatus: .notFollowing,
+                        aliases: []
                     )
                 ),
                 onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
-                    user: .known(
-                        UserProfile(
-                            did: Did("did:key:123")!,
-                            nickname: Petname.Name("ben")!,
-                            address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
-                            pfp: .image("pfp-dog"),
-                            bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                            category: .human,
-                            ourFollowStatus: .following(Petname.Name("lol")!),
-                            aliases: []
-                        ),
-                        AddressBookEntry(
-                            petname: Petname("ben")!,
-                            did: Did("did:key:123")!,
-                            status: .resolved("ok"),
-                            version: "ok"
-                        )
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        nickname: Petname.Name("ben")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        pfp: .image("pfp-dog"),
+                        bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
+                        category: .human,
+                        ourFollowStatus: .following(Petname.Name("lol")!),
+                        aliases: []
                     )
                 ),
                 onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
-                    user: .known(
-                        UserProfile(
-                            did: Did("did:key:123")!,
-                            nickname: Petname.Name("ben")!,
-                            address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
-                            pfp: .image("pfp-dog"),
-                            bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
-                            category: .ourself,
-                            ourFollowStatus: .notFollowing,
-                            aliases: []
-                        ),
-                        AddressBookEntry(
-                            petname: Petname("ben")!,
-                            did: Did("did:key:123")!,
-                            status: .resolved("ok"),
-                            version: "ok"
-                        )
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        nickname: Petname.Name("ben")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        pfp: .image("pfp-dog"),
+                        bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
+                        category: .ourself,
+                        ourFollowStatus: .notFollowing,
+                        aliases: []
                     )
                 ),
                 onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
-                    user: .known(
-                        UserProfile(
-                            did: Did("did:key:123")!,
-                            nickname: Petname.Name("ben")!,
-                            address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
-                            pfp: .image("pfp-dog"),
-                            bio: UserProfileBio.empty,
-                            category: .ourself,
-                            ourFollowStatus: .notFollowing,
-                            aliases: []
-                        ),
-                        AddressBookEntry(
-                            petname: Petname("ben")!,
-                            did: Did("did:key:123")!,
-                            status: .resolved("ok"),
-                            version: "ok"
-                        )
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        nickname: Petname.Name("ben")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
+                        pfp: .image("pfp-dog"),
+                        bio: UserProfileBio.empty,
+                        category: .ourself,
+                        ourFollowStatus: .notFollowing,
+                        aliases: []
                     )
                 ),
                 onNavigate: { }

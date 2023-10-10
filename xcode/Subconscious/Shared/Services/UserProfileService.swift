@@ -285,11 +285,11 @@ actor UserProfileService {
 
     /// List all the users followed by the passed sphere.
     /// Each user will be decorated with whether the current app user is following them.
-    func getFollowingList(
-        address: Slashlink
+    private func getFollowingList(
+        address: Slashlink,
+        sphere: Sphere
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
-        let sphere = try await self.noosphere.sphere(address: address)
         let localAddressBook = AddressBook(sphere: sphere)
         let entries = try await localAddressBook.listEntries()
         
@@ -313,17 +313,9 @@ actor UserProfileService {
 //            }
             
             let user = try await self.identifyUser(entry: entry, context: address.peer)
-            
-            switch (user.ourFollowStatus, entry.status) {
-            case (.following, .resolved):
-                following.append(
-                    StoryUser(user: .known(user, entry))
-                )
-            default:
-                following.append(
-                    StoryUser(user: .unknown(user.address, entry))
-                )
-            }
+            following.append(
+                StoryUser(entry: entry, user: user)
+            )
         }
         
         return following
@@ -540,7 +532,8 @@ actor UserProfileService {
         let did = try await sphere.identity()
         
         let following = try await self.getFollowingList(
-            address: address
+            address: address,
+            sphere: sphere
         )
         let followingStatus = await self.addressBook.followingStatus(
             did: did,
@@ -551,6 +544,12 @@ actor UserProfileService {
             switch (followingStatus) {
             // Read from DB if we follow this user
             case .following(let name):
+                // Ensure the index is ready, we might have JUST followed this user
+                let lastIndex = try? database.readPeer(identity: did)
+                guard lastIndex != nil else {
+                    break
+                }
+                
                 return try
                     self.database.listRecentMemos(owner: did, includeDrafts: false)
                     .map { memo in
@@ -563,12 +562,14 @@ actor UserProfileService {
                     }
             // Otherwise, traverse the noosphere
             case .notFollowing:
-                let notes = try await sphere.list()
-                return try await self.loadEntries(
-                    address: address,
-                    slugs: notes
-                )
+                break
             }
+            
+            let notes = try await sphere.list()
+            return try await self.loadEntries(
+                address: address,
+                slugs: notes
+            )
         }
         
         let recentEntries = sortEntriesByModified(entries: entries)

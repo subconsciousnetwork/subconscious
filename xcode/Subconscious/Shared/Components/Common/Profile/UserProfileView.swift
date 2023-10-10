@@ -66,7 +66,7 @@ struct FollowTabView: View {
                 },
                 profileAction: onProfileAction,
                 onRefreshUser: {
-                    send(.requestWaitForFollowedUserResolution(follow.user.entry.petname))
+                    send(.requestWaitForFollowedUserResolution(follow.entry.petname))
                 }
             )
         }
