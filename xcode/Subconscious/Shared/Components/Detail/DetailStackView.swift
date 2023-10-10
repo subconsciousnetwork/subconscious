@@ -119,7 +119,6 @@ enum DetailStackAction: Hashable {
     case pushDetail(MemoDetailDescription)
 
     case requestOurProfileDetail
-    case pushOurProfileDetail
     case failPushDetail(_ message: String)
 
     case pushRandomDetail(autofocus: Bool)
@@ -217,11 +216,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
             )
         case .requestOurProfileDetail:
             return requestOurProfileDetail(
-                state: state,
-                environment: environment
-            )
-        case .pushOurProfileDetail:
-            return pushOurProfileDetail(
                 state: state,
                 environment: environment
             )
@@ -422,22 +416,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
     }
 
     static func requestOurProfileDetail(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        // TODO: does nothing now
-        let fx: Fx<Action> = Future.detached {
-                return Action.pushOurProfileDetail
-            }
-            .recover { error in
-                Action.failPushDetail(error.localizedDescription)
-            }
-            .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
-    }
-
-    static func pushOurProfileDetail(
         state: Self,
         environment: Environment
     ) -> Update<Self> {
