@@ -494,11 +494,12 @@ final class DatabaseService {
             sql: """
             SELECT body
             FROM memo
-            WHERE did = ? AND slug = "_profile_"
+            WHERE did = ? AND slug = ?
             LIMIT 1
             """,
             parameters: [
-                .text(did.description)
+                .text(did.description),
+                .text(Slug.profile.description)
             ]
         )
         
