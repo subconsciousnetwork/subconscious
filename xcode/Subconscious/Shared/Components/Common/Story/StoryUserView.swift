@@ -56,7 +56,7 @@ struct StoryUserView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 Group {
-                    ProfilePic(pfp: .generated(user.did), size: .medium)
+                    ProfilePic(pfp: user.pfp, size: .medium)
                     
                     if let name = user.toNameVariant() {
                         PetnameView(name: name, aliases: user.aliases)
