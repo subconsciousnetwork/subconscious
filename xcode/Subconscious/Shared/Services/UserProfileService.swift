@@ -211,7 +211,8 @@ actor UserProfileService {
     /// Load the underlying `_profile_` for a user and construct a `UserProfile` from it.
     private func loadProfileFromMemo(
         did: Did,
-        address: Slashlink
+        address: Slashlink,
+        alias: Petname?
     ) async throws -> UserProfile {
         let noosphereIdentity = try await noosphere.identity()
         let isOurs = noosphereIdentity == did
@@ -232,6 +233,10 @@ actor UserProfileService {
         
         if let petname = address.petname {
             aliases.append(petname)
+        }
+        
+        if let alias = alias {
+            aliases.append(alias)
         }
         
         let profile = UserProfile(
@@ -394,12 +399,13 @@ actor UserProfileService {
 //        .eraseToAnyPublisher()
 //    }
     
-    private func ourProfile() async throws -> UserProfile {
+    private func ourProfile(alias: Petname?) async throws -> UserProfile {
         let identity = try await self.noosphere.identity()
         
         return try await self.loadProfileFromMemo(
             did: identity,
-            address: Slashlink.ourProfile
+            address: Slashlink.ourProfile,
+            alias: alias
         )
     }
     
@@ -443,9 +449,10 @@ actor UserProfileService {
             return cacheHit.profile
         }
         
+        // Special case: our profile
         let identity = try await self.noosphere.identity()
         guard did != identity else {
-            let profile = try await ourProfile()
+            let profile = try await ourProfile(alias: petname)
             self.cache.updateValue(
                 UserProfileCacheEntry(profile: profile, version: version),
                 forKey: cacheKey
@@ -458,6 +465,7 @@ actor UserProfileService {
             expectedName: petname?.leaf
         )
         
+        // Determine the preferred navigation address for a user
         let address = Func.run {
             switch (petname, context) {
             case let (.some(petname), .some(peer)):
@@ -602,7 +610,8 @@ actor UserProfileService {
         let recentEntries = sortEntriesByModified(entries: entries)
         let profile = try await self.loadProfileFromMemo(
             did: did,
-            address: address
+            address: address,
+            alias: address.petname
         )
         
         return UserProfileContentResponse(
