@@ -119,6 +119,7 @@ struct SubtextView_Previews: PreviewProvider {
                 ),
                 transcludePreviews: [
                     Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink(
                             "/wanderer-your-footsteps-are-the-road"
                         )!,
@@ -127,6 +128,7 @@ struct SubtextView_Previews: PreviewProvider {
                         author: UserProfile.dummyData()
                     ),
                     Slashlink("/voice")!: EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink(
                             "/voice"
                         )!,
@@ -135,6 +137,7 @@ struct SubtextView_Previews: PreviewProvider {
                         author: UserProfile.dummyData()
                     ),
                     Slashlink("/memory")!: EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink(
                             "/memory"
                         )!,

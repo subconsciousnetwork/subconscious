@@ -40,14 +40,14 @@ struct StoryUserView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var story: StoryUser
-    var action: (Slashlink) -> Void
+    var onNavigate: () -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
     var onRefreshUser: () -> Void = {}
     
     var body: some View {
         switch (story.user) {
-        case let .unknown(entry):
+        case let .unknown(address, entry):
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .center, spacing: AppTheme.unit2) {
                     Group {
@@ -97,7 +97,7 @@ struct StoryUserView: View {
                 case (.unresolved):
                     onRefreshUser()
                 case _:
-                    action(Slashlink(petname: entry.petname))
+                    onNavigate()
                 }
             }
             .background(.background)
@@ -193,10 +193,8 @@ struct StoryUserView: View {
                 switch (user.ourFollowStatus, entry.status) {
                 case (.following(_), .unresolved):
                     onRefreshUser()
-                case (.following(let name), _):
-                    action(Slashlink(petname: name.toPetname()))
-                case _:
-                    action(user.address)
+                default:
+                    onNavigate()
                 }
             }
             .background(.background)
@@ -229,7 +227,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         )
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
@@ -252,7 +250,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         )
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
@@ -275,7 +273,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         )
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
@@ -298,7 +296,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         )
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             Spacer()
         }

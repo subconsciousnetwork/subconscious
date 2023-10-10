@@ -16,6 +16,7 @@ struct EntryStub:
     CustomDebugStringConvertible,
     Codable
 {
+    let did: Did
     let address: Slashlink
     let excerpt: String
     let modified: Date
@@ -28,6 +29,7 @@ struct EntryStub:
     
     func withAuthor(_ author: UserProfile) -> Self {
         return Self(
+            did: did,
             address: address,
             excerpt: excerpt,
             modified: modified,
@@ -37,6 +39,7 @@ struct EntryStub:
     
     func withAddress(_ address: Slashlink) -> Self {
         return Self(
+            did: did,
             address: address,
             excerpt: excerpt,
             modified: modified,

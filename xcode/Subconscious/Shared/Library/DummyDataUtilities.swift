@@ -161,7 +161,7 @@ extension EntryStub: DummyData {
         let excerpt = String.dummyDataMedium()
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
-        return EntryStub(address: address, excerpt: excerpt, modified: modified, author: UserProfile.dummyData())
+        return EntryStub(did: Did.dummyData(), address: address, excerpt: excerpt, modified: modified, author: UserProfile.dummyData())
     }
     
     static func dummyData(petname: Petname, slug: Slug) -> EntryStub {
@@ -170,7 +170,7 @@ extension EntryStub: DummyData {
         let excerpt = String.dummyDataMedium()
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
-        return EntryStub(address: address, excerpt: excerpt, modified: modified, author: UserProfile.dummyData())
+        return EntryStub(did: Did.dummyData(), address: address, excerpt: excerpt, modified: modified, author: UserProfile.dummyData())
     }
 }
 

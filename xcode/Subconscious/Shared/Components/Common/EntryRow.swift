@@ -49,6 +49,7 @@ struct EntryRow_Previews: PreviewProvider {
         VStack {
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         peer: Peer.did(Did.local),
                         slug: Slug(formatting: "Anything that can be derived should be derived")!
@@ -63,6 +64,7 @@ struct EntryRow_Previews: PreviewProvider {
             )
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "@here/anything-that-can-be-derived-should-be-derived"
                     )!,
@@ -73,6 +75,7 @@ struct EntryRow_Previews: PreviewProvider {
             )
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "did:key:abc123/anything-that-can-be-derived-should-be-derived"
                     )!,
@@ -83,6 +86,7 @@ struct EntryRow_Previews: PreviewProvider {
             )
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
                     )!,

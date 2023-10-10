@@ -132,7 +132,7 @@ actor UserProfileService {
     
     private static let profileContentType = "application/vnd.subconscious.profile+json"
     
-    private var cache: [Slashlink:UserProfileCacheEntry] = [:]
+    private var cache: [Did:UserProfileCacheEntry] = [:]
     
     init(
         noosphere: NoosphereService,
@@ -211,14 +211,9 @@ actor UserProfileService {
         let noosphereIdentity = try await noosphere.identity()
         let isOurs = noosphereIdentity == did
         
-        // TODO: two methods, explicitly load profile or try from cache
-        var userProfileData = try await self.readProfileFromDb(address: address)
-        
-        if userProfileData == nil {
-            userProfileData = await self.readProfileMemo(
-                address: isOurs ? Slashlink.ourProfile : address
-            )
-        }
+        let userProfileData = await self.readProfileMemo(
+            address: isOurs ? Slashlink.ourProfile : address
+        )
         
         let followingStatus = await self.addressBook.followingStatus(
             did: did,
@@ -247,6 +242,7 @@ actor UserProfileService {
         slugs: [Slug]
     ) async throws -> [EntryStub] {
         let sphere = try await self.noosphere.sphere(address: address)
+        let identity = try await sphere.identity()
         var entries: [EntryStub] = []
         for slug in slugs {
             guard !slug.isHidden else {
@@ -262,6 +258,7 @@ actor UserProfileService {
 
             entries.append(
                 EntryStub(
+                    did: identity,
                     address: Slashlink(
                         petname: address.petname,
                         slug: slug
@@ -297,12 +294,12 @@ actor UserProfileService {
         let entries = try await localAddressBook.listEntries()
         
         for entry in entries {
-            let slashlink = Func.run {
-                guard case let .petname(basePetname) = address.peer else {
-                    return Slashlink(petname: entry.name.toPetname())
-                }
-                return Slashlink(petname: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
-            }
+//            let slashlink = Func.run {
+//                guard case let .petname(basePetname) = address.peer else {
+//                    return Slashlink(petname: entry.name.toPetname())
+//                }
+//                return Slashlink(petname: entry.name.toPetname()).rebaseIfNeeded(petname: basePetname)
+//            }
             
 //            let resolutionStatus = try await Func.run {
 //                switch (entry.status, slashlink.peer) {
@@ -315,18 +312,17 @@ actor UserProfileService {
 //                }
 //            }
             
-            let followingStatus = await self.addressBook.followingStatus(did: entry.did, expectedName: nil)
-            switch (followingStatus, entry.status) {
+            let user = try await self.identifyUser(entry: entry, context: address.peer)
+            
+            switch (user.ourFollowStatus, entry.status) {
             case (.following, .resolved):
-                let user = try await self.buildUserProfile(address: slashlink, did: entry.did)
                 following.append(
                     StoryUser(user: .known(user, entry))
                 )
             default:
                 following.append(
-                    StoryUser(user: .unknown(entry))
+                    StoryUser(user: .unknown(user.address, entry))
                 )
-                break
             }
         }
         
@@ -394,41 +390,149 @@ actor UserProfileService {
 //        .eraseToAnyPublisher()
 //    }
     
-    /// Produces a `UserProfile` for the passed address.
-    /// If a `did` is provided we can skip resolution and return faster.
-    func buildUserProfile(
+    private func ourProfile() async throws -> UserProfile {
+        let identity = try await self.noosphere.identity()
+        
+        return try await self.loadProfileFromMemo(
+            did: identity,
+            address: Slashlink.ourProfile
+        )
+    }
+    
+    func identifyUser(
+        entry: AddressBookEntry,
+        context: Peer?
+    ) async throws -> UserProfile {
+        return try await self.identifyUser(
+            did: entry.did,
+            petname: entry.petname,
+            context: context
+        )
+    }
+    
+    func identifyUser(
+        did: Did,
         address: Slashlink,
-        did: Did?
+        context: Peer?
+    ) async throws -> UserProfile {
+        switch address.peer {
+        case .petname(let petname):
+            return try await self.identifyUser(did: did, petname: petname, context: context)
+        case .did, .none:
+            return try await self.identifyUser(did: did, petname: nil, context: context)
+        }
+    }
+    
+    /// Build a UserProfile suitable for list views, transcludes etc.
+    /// This will attempt to read from the database and also maintain an in-memory cache of profiles
+    /// we have encountered.
+    func identifyUser(
+        did: Did,
+        petname: Petname?,
+        context: Peer?
     ) async throws -> UserProfile {
         let version = try await self.noosphere.version()
-        let cacheKey = address.isOurs ? Slashlink.ourProfile : address
         
-        if let cacheHit = self.cache[cacheKey],
+        if let cacheHit = self.cache[did],
            cacheHit.version == version {
             return cacheHit.profile
         }
         
-        var identity = did
-        if identity == nil {
-            identity = try await self.noosphere.identity()
+        let identity = try await self.noosphere.identity()
+        guard did != identity else {
+            let profile = try await ourProfile()
+            self.cache.updateValue(
+                UserProfileCacheEntry(profile: profile, version: version),
+                forKey: did
+            )
+            return profile
         }
-        guard let identity = identity else {
-            throw UserProfileServiceError.unreachablePeer(address)
+        
+        let following = await self.addressBook.followingStatus(did: did, expectedName: petname?.leaf)
+        let address = Func.run {
+            switch (petname, context) {
+            case let (.some(petname), .some(peer)):
+                return Slashlink(petname: petname).rebaseIfNeeded(peer: peer)
+            case let (.some(petname), .none):
+                return Slashlink(petname: petname)
+            case (.none, .some(let peer)):
+                return Slashlink.ourProfile.rebaseIfNeeded(peer: peer)
+            case (.none, .none):
+                return Slashlink.ourProfile
+            }
         }
-
-        let profile = try await self.loadProfileFromMemo(
-            did: identity,
-            address: Slashlink(peer: address.peer, slug: Slug.profile)
+        
+        let sparseProfile = UserProfile(
+            did: did,
+            nickname: nil,
+            address: address,
+            pfp: .generated(did),
+            bio: nil,
+            category: .human,
+            ourFollowStatus: following,
+            aliases: []
         )
         
+        let profile = try await Func.run {
+            switch following {
+            case .following(let name):
+                guard let dbProfile = try await self.readProfileFromDb(
+                    address: Slashlink(petname: name.toPetname())
+                ) else {
+                    return sparseProfile
+                }
+                
+                return UserProfile(
+                    did: did,
+                    nickname: Petname.Name(dbProfile.nickname ?? ""),
+                    address: address,
+                    pfp: .generated(did),
+                    bio: UserProfileBio(dbProfile.bio ?? ""),
+                    category: .human,
+                    ourFollowStatus: following,
+                    aliases: [petname, name.toPetname()].compactMap { $0 } // TODO: a bit too clever
+                )
+            case .notFollowing:
+                return sparseProfile
+            }
+        }
+
         self.cache.updateValue(
             UserProfileCacheEntry(profile: profile, version: version),
-            forKey: cacheKey
+            forKey: did
         )
         
         return profile
     }
     
+//    /// Produces a `UserProfile` for the passed address.
+//    /// If a `did` is provided we can skip resolution and return faster.
+//    func buildUserProfile(
+//        address: Slashlink,
+//        did: Did
+//    ) async throws -> UserProfile {
+//        let profile = try await self.loadProfileFromMemo(
+//            did: did,
+//            address: Slashlink(peer: address.peer, slug: Slug.profile)
+//        )
+//
+//        return profile
+//    }
+    
+    private func cachedProfile(did: Did) async throws -> UserProfile? {
+        let version = try await self.noosphere.version()
+        
+        if let cacheHit = self.cache[did],
+           cacheHit.version == version {
+            return cacheHit.profile
+        }
+        
+        return nil
+    }
+    
+    /// Read all data needed to render a user's profile.
+    /// Recent entries are read from the DB if we follow this user, otherwise we traverse to and list the sphere.
+    /// The user profile (nickname, bio, following list) are read directly from the sphere and never cached.
     func loadFullProfileData(
         address: Slashlink
     ) async throws -> UserProfileContentResponse {
@@ -468,10 +572,9 @@ actor UserProfileService {
         }
         
         let recentEntries = sortEntriesByModified(entries: entries)
-        
-        let profile = try await self.buildUserProfile(
-            address: address,
-            did: did
+        let profile = try await self.loadProfileFromMemo(
+            did: did,
+            address: address
         )
         
         return UserProfileContentResponse(

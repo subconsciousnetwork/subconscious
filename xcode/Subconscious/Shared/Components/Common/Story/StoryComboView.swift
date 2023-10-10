@@ -97,7 +97,8 @@ struct StoryComboView_Previews: PreviewProvider {
                             But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
                             """
                         )
-                    )
+                    ),
+                    did: Did.dummyData()
                 ),
                 entryB: EntryStub(
                     MemoEntry(
@@ -117,7 +118,8 @@ struct StoryComboView_Previews: PreviewProvider {
                             But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
                             """
                         )
-                    )
+                    ),
+                    did: Did.dummyData()
                 )
             ),
             action: { link, fallback in }

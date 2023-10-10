@@ -61,11 +61,12 @@ struct FollowTabView: View {
         ForEach(state.following) { follow in
             StoryUserView(
                 story: follow,
-                action: { _ in
-                    onNavigateToUser(Slashlink(petname: follow.entry.petname)) },
+                onNavigate: {
+                    onNavigateToUser(follow.user.address)
+                },
                 profileAction: onProfileAction,
                 onRefreshUser: {
-                    send(.requestWaitForFollowedUserResolution(follow.entry.petname))
+                    send(.requestWaitForFollowedUserResolution(follow.user.entry.petname))
                 }
             )
         }

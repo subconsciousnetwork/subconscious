@@ -52,18 +52,21 @@ struct BacklinksView_Previews: PreviewProvider {
             BacklinksView(
                 backlinks: [
                     EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
                         excerpt: "Short",
                         modified: Date.now,
                         author: UserProfile.dummyData()
                     ),
                     EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink("/loomings")!,
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                         modified: Date.now,
                         author: UserProfile.dummyData()
                     ),
                     EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                         modified: Date.now,

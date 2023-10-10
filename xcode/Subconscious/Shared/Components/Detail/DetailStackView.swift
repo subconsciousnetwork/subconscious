@@ -119,7 +119,7 @@ enum DetailStackAction: Hashable {
     case pushDetail(MemoDetailDescription)
 
     case requestOurProfileDetail
-    case pushOurProfileDetail(UserProfile)
+    case pushOurProfileDetail
     case failPushDetail(_ message: String)
 
     case pushRandomDetail(autofocus: Bool)
@@ -220,11 +220,10 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .pushOurProfileDetail(let user):
+        case .pushOurProfileDetail:
             return pushOurProfileDetail(
                 state: state,
-                environment: environment,
-                user: user
+                environment: environment
             )
         case let .requestDeleteMemo(address):
             return requestDeleteMemo(
@@ -426,13 +425,9 @@ struct DetailStackModel: Hashable, ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
+        // TODO: does nothing now
         let fx: Fx<Action> = Future.detached {
-                let did = try await environment.noosphere.identity()
-                let user = try await environment.userProfile.buildUserProfile(
-                    address: Slashlink.ourProfile,
-                    did: did
-                )
-                return Action.pushOurProfileDetail(user)
+                return Action.pushOurProfileDetail
             }
             .recover { error in
                 Action.failPushDetail(error.localizedDescription)
@@ -444,15 +439,10 @@ struct DetailStackModel: Hashable, ModelProtocol {
 
     static func pushOurProfileDetail(
         state: Self,
-        environment: Environment,
-        user: UserProfile
+        environment: Environment
     ) -> Update<Self> {
         let detail = UserProfileDetailDescription(
             address: Slashlink.ourProfile,
-            user: user,
-            // Focus following list by default
-            // We can already see our recent notes in our notebook so no
-            // point showing it again
             initialTabIndex: UserProfileDetailModel.followingTabIndex
         )
         return update(
@@ -630,12 +620,11 @@ extension DetailStackAction {
                 address: address,
                 link: link
             )
-        case let .requestUserProfileDetail(user):
+        case let .requestUserProfileDetail(address):
             return .pushDetail(
                 MemoDetailDescription.profile(
                     UserProfileDetailDescription(
-                        address: user.address,
-                        user: user
+                        address: address
                     )
                 )
             )

@@ -61,9 +61,10 @@ actor TranscludeService {
                 continue
             }
             
-            if let author = try? await userProfile.buildUserProfile(
+            if let author = try? await userProfile.identifyUser(
+                did: transclusion.authorDid,
                 address: transclusion.address,
-                did: transclusion.authorDid
+                context: owner.address.peer
             ) {
                 entry = entry.withAuthor(author)
             }

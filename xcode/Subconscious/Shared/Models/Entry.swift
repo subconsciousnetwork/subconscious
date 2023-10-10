@@ -29,11 +29,12 @@ extension EntryLink {
 }
 
 extension EntryStub {
-    init(_ entry: MemoEntry) {
+    init(_ entry: MemoEntry, did: Did) {
         self.address = entry.address
         self.excerpt = entry.contents.excerpt()
         self.modified = entry.contents.modified
         self.author = nil
+        self.did = did
     }
     
     init(_ entry: MemoEntry, author: UserProfile) {
@@ -41,5 +42,6 @@ extension EntryStub {
         self.excerpt = entry.contents.excerpt()
         self.modified = entry.contents.modified
         self.author = author
+        self.did = author.did
     }
 }

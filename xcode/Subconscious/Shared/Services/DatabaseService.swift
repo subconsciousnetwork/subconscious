@@ -475,6 +475,7 @@ final class DatabaseService {
                 return nil
             }
             return EntryStub(
+                did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
@@ -519,7 +520,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT slashlink, modified, excerpt
+            SELECT did, slashlink, modified, excerpt
             FROM memo
             WHERE did NOT IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -532,16 +533,18 @@ final class DatabaseService {
         )
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?
+                let did = row.col(0)?.toString()?.toDid(),
+                let address = row.col(1)?
                     .toString()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let modified = row.col(2)?.toDate(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
             return EntryStub(
+                did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
@@ -566,7 +569,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT id, modified, excerpt
+            SELECT did, id, modified, excerpt
             FROM memo
             WHERE did IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -579,17 +582,18 @@ final class DatabaseService {
         )
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?
+                let did = row.col(0)?.toString()?.toDid(),
+                let address = row.col(1)?
                     .toString()?
-                    .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let modified = row.col(2)?.toDate(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
             return EntryStub(
+                did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
@@ -1028,15 +1032,19 @@ final class DatabaseService {
                 .queryFTS5(link.slug.description),
                 .text(link.id)
             ]
-        ).compactMap({ row in
-            let did = row.col(0)?.toString()?.toDid()
+        ).compactMap({ row -> EntryStub? in
+            guard let did = row.col(0)?.toString()?.toDid() else {
+                return nil
+            }
+            
             let petname = row.col(1)?.toString()?.toPetname()
             let slug = row.col(2)?.toString()?.toSlug()
             let modified = row.col(3)?.toDate()
             let excerpt = row.col(4)?.toString() ?? ""
-            switch (did, petname, slug, modified) {
-            case let (_, .some(petname), .some(slug), .some(modified)):
+            switch (petname, slug, modified) {
+            case let (.some(petname), .some(slug), .some(modified)):
                 return EntryStub(
+                    did: did,
                     address: Slashlink(
                         peer: Peer.petname(petname),
                         slug: slug
@@ -1045,12 +1053,13 @@ final class DatabaseService {
                     modified: modified,
                     author: nil
                 )
-            case let (.some(did), .none, .some(slug), .some(modified)):
+            case let (.none, .some(slug), .some(modified)):
                 let address = Slashlink(
                     peer: Peer.did(did),
                     slug: slug
                 ).relativizeIfNeeded(did: owner)
                 return EntryStub(
+                    did: did,
                     address: address,
                     excerpt: excerpt,
                     modified: modified,
@@ -1073,7 +1082,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT id, modified, excerpt
+            SELECT did, id, modified, excerpt
             FROM modified
             WHERE modified.modified BETWEEN ? AND ?
                 AND substr(memo_search.slug, 1, 1) != '_'
@@ -1087,17 +1096,18 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?
+                let did = row.col(0)?.toString()?.toDid(),
+                let address = row.col(1)?
                     .toString()?
-                    .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let modified = row.col(2)?.toDate(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
             return EntryStub(
+                did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
@@ -1115,7 +1125,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT id, modified, excerpt
+            SELECT did, id, modified, excerpt
             FROM memo
             ORDER BY RANDOM()
                 AND substr(memo.slug, 1, 1) != '_'
@@ -1124,6 +1134,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
+                let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(0)?
                     .toString()?
                     .toLink()?
@@ -1135,6 +1146,7 @@ final class DatabaseService {
                 return nil
             }
             return EntryStub(
+                did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
@@ -1155,7 +1167,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT id, modified, excerpt
+            SELECT did, id, modified, excerpt
             FROM memo_search
             WHERE memo_search.description MATCH ?
                 AND substr(memo.slug, 1, 1) != '_'
@@ -1168,17 +1180,18 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?
+                let did = row.col(0)?.toString()?.toDid(),
+                let address = row.col(1)?
                     .toString()?
-                    .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let modified = row.col(2)?.toDate(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
             return EntryStub(
+                did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
