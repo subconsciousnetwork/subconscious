@@ -36,6 +36,30 @@ final class Tests_UserProfileService: XCTestCase {
         XCTAssertTrue(profile.following[1].user.aliases.contains(where: { name in name == Petname("sphere-b")! }))
     }
     
+    func testReadUserProfile() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let receipt = try await environment.noosphere.createSphere(ownerKeyName: "test")
+        let did = Did(receipt.identity)!
+        
+        await environment.noosphere.resetSphere(receipt.identity)
+        
+        try await environment.userProfile.writeOurProfile(
+            profile: UserProfileEntry(
+                nickname: "Finn",
+                bio: "Mathematical!"
+            )
+        )
+        
+        let _ = try await environment.data.indexOurSphere()
+        
+        let profileA = try await environment.userProfile.readProfileFromDb(did: did)
+        let profileB = await environment.userProfile.readProfileMemo(address: Slashlink.ourProfile)
+        
+        XCTAssertEqual(profileA, profileB)
+    }
+    
     func testCanRequestOwnProfile() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)

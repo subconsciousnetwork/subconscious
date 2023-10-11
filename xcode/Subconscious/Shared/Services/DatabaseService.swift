@@ -484,7 +484,7 @@ final class DatabaseService {
         .first
     }
     
-    func loadUserProfile(did: Did) throws -> Data? {
+    func readUserProfile(did: Did) throws -> Data? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }

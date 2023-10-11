@@ -160,7 +160,7 @@ actor UserProfileService {
     /// Attempt to read & deserialize a user `_profile_.json` at the given address.
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
-    private func readProfileMemo(
+    func readProfileMemo(
         address: Slashlink
     ) async -> UserProfileEntry? {
         do {
@@ -181,10 +181,10 @@ actor UserProfileService {
     
     /// Attempt to read & deserialize a user `_profile_.json` from the indexed copy.
     /// This can only work for user's we follow & have indexed, otherwise it returns nil
-    private func readProfileFromDb(
+    func readProfileFromDb(
         did: Did
     ) async throws -> UserProfileEntry? {
-        guard let data = try database.loadUserProfile(did: did) else {
+        guard let data = try database.readUserProfile(did: did) else {
             return nil
         }
         
