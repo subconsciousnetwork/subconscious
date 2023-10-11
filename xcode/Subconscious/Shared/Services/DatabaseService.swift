@@ -534,7 +534,7 @@ final class DatabaseService {
         return results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
-                let address = row.col(1)?
+                let slashlink = row.col(1)?
                     .toString()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
@@ -545,7 +545,7 @@ final class DatabaseService {
             }
             return EntryStub(
                 did: did,
-                address: address,
+                address: slashlink,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -584,6 +584,7 @@ final class DatabaseService {
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
+                    .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
@@ -869,6 +870,7 @@ final class DatabaseService {
             .compactMap({ row in
                 row.col(0)?
                     .toString()?
+                    .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner)
             })
@@ -1163,8 +1165,8 @@ final class DatabaseService {
             sql: """
             SELECT did, id, modified, excerpt
             FROM memo_search
-            WHERE memo_search.description MATCH ?
-                AND substr(memo.slug, 1, 1) != '_'
+            WHERE description MATCH ?
+                AND substr(slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -1177,6 +1179,7 @@ final class DatabaseService {
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
+                    .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
