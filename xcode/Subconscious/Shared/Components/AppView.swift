@@ -100,7 +100,6 @@ enum AppAction {
     
     /// Sent immediately upon store creation
     case start
-    case writeTestData
 
     case recoveryPhrase(RecoveryPhraseAction)
     case appUpgrade(AppUpgradeAction)
@@ -591,8 +590,6 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
-        case .writeTestData:
-            return writeTestData(state: state, environment: environment)
         case .start:
             return start(
                 state: state,
@@ -1083,39 +1080,6 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         logger.log("\(message)")
         return Update(state: state)
-    }
-    
-    static func writeTestData(
-        state: AppModel,
-        environment: AppEnvironment
-    ) -> Update<Self> {
-        let now = Date.now
-        
-        let fx: Fx<AppAction> = Future.detached {
-            // do this 100 times
-            for _ in 0..<100 {
-                // generate a random string
-                let randomString = UUID().uuidString
-                // create a memo
-                let memo = Memo(
-                    contentType: "text/subtext",
-                    created: now,
-                    modified: now,
-                    fileExtension: "subtext",
-                    additionalHeaders: [],
-                    body: String.dummyDataMedium()
-                )
-                try await environment.data.writeMemo(address: Slashlink(slug: Slug.dummyData()), memo: memo)
-            }
-            
-            return AppAction.ready
-        }
-        .recover { error in
-            return AppAction.ready
-        }
-        .eraseToAnyPublisher()
-        
-        return Update(state: state, fx: fx)
     }
     
     static func start(
