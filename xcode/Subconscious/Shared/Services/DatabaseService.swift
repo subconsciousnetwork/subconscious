@@ -478,8 +478,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
-                author: nil
+                modified: modified
             )
         })
         .first
@@ -548,8 +547,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
-                author: nil
+                modified: modified
             )
         })
     }
@@ -597,8 +595,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
-                author: nil
+                modified: modified
             )
         })
     }
@@ -1051,8 +1048,7 @@ final class DatabaseService {
                         slug: slug
                     ),
                     excerpt: excerpt,
-                    modified: modified,
-                    author: nil
+                    modified: modified
                 )
             case let (.none, .some(slug), .some(modified)):
                 let address = Slashlink(
@@ -1063,8 +1059,7 @@ final class DatabaseService {
                     did: did,
                     address: address,
                     excerpt: excerpt,
-                    modified: modified,
-                    author: nil
+                    modified: modified
                 )
             default:
                 return nil
@@ -1111,8 +1106,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
-                author: nil
+                modified: modified
             )
         })
         .first
@@ -1150,8 +1144,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
-                author: nil
+                modified: modified
             )
         })
         .first
@@ -1195,8 +1188,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
-                author: nil
+                modified: modified
             )
         })
         .first

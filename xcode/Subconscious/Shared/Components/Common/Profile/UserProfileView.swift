@@ -31,16 +31,13 @@ struct RecentTabView: View {
     var onNavigateToNote: (Slashlink) -> Void
     
     var body: some View {
-        if let user = state.user {
-            ForEach(state.recentEntries) { entry in
-                StoryEntryView(
-                    story: StoryEntry(
-                        author: user,
-                        entry: entry
-                    ),
-                    action: { address, _ in onNavigateToNote(address) }
-                )
-            }
+        ForEach(state.recentEntries) { entry in
+            StoryEntryView(
+                story: StoryEntry(
+                    entry: entry
+                ),
+                action: { address, _ in onNavigateToNote(address) }
+            )
         }
         
         if state.recentEntries.count == 0 {

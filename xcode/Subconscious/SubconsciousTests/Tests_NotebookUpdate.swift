@@ -37,22 +37,19 @@ class Tests_NotebookUpdate: XCTestCase {
                     did: Did.dummyData(),
                     address: a,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 ),
                 EntryStub(
                     did: Did.dummyData(),
                     address: b,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 ),
                 EntryStub(
                     did: Did.dummyData(),
                     address: c,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             ]
         )

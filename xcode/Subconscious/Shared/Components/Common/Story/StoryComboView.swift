@@ -30,9 +30,7 @@ struct StoryComboView: View {
                 Text(story.prompt)
                 
                 TranscludeView(
-                    author: UserProfile.dummyData(),
-                    address: story.entryA.address,
-                    excerpt: story.entryA.excerpt,
+                    entry: story.entryA,
                     action: {
                         action(
                             story.entryA.address,
@@ -42,9 +40,7 @@ struct StoryComboView: View {
                 )
                 
                 TranscludeView(
-                    author: UserProfile.dummyData(),
-                    address: story.entryB.address,
-                    excerpt: story.entryB.excerpt,
+                    entry: story.entryB,
                     action: {
                         action(
                             story.entryB.address,

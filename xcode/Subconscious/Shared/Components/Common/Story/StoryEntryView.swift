@@ -27,11 +27,8 @@ struct StoryEntryView: View {
                     
                     HStack(alignment: .center, spacing: AppTheme.unit) {
                         BylineSmView(
-                            pfp: story.author.pfp,
-                            slashlink: Slashlink(
-                                peer: story.author.address.peer,
-                                slug: story.entry.address.slug
-                            )
+                            pfp: .generated(story.entry.did),
+                            slashlink: story.entry.address
                         )
                         
                         Spacer()
@@ -68,7 +65,6 @@ struct StoryPlainView_Previews: PreviewProvider {
     static var previews: some View {
         StoryEntryView(
             story: StoryEntry(
-                author: UserProfile.dummyData(),
                 entry: EntryStub(
                     MemoEntry(
                         address: Slashlink("@here/meme")!,

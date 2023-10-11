@@ -276,8 +276,7 @@ actor UserProfileService {
                         slug: slug
                     ),
                     excerpt: memo.excerpt(),
-                    modified: memo.modified,
-                    author: nil
+                    modified: memo.modified
                 )
             )
         }
@@ -370,6 +369,8 @@ actor UserProfileService {
     /// Build a UserProfile suitable for list views, transcludes etc.
     /// This will attempt to read from the database and also maintain an in-memory cache of profiles
     /// we have encountered.
+    ///
+    /// `context` will be used to determine the preferred navigation address for a user.
     func identifyUser(
         entry: AddressBookEntry,
         context: Peer?
@@ -384,6 +385,8 @@ actor UserProfileService {
     /// Build a UserProfile suitable for list views, transcludes etc.
     /// This will attempt to read from the database and also maintain an in-memory cache of profiles
     /// we have encountered.
+    ///
+    /// `context` will be used to determine the preferred navigation address for a user.
     func identifyUser(
         did: Did,
         address: Slashlink,

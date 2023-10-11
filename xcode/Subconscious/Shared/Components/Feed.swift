@@ -30,22 +30,19 @@ struct FeedNavigationView: View {
                         FeedPlaceholderView()
                     case let (.loaded, .some(feed)):
                         ForEach(feed) { entry in
-                            if let author = entry.author {
-                                StoryEntryView(
-                                    story: StoryEntry(
-                                        author: author,
-                                        entry: entry
-                                    ),
-                                    action: { address, _ in
-                                        store.send(.detailStack(.pushDetail(
-                                            MemoDetailDescription.from(
-                                                address: address,
-                                                fallback: ""
-                                            )
-                                        )))
-                                    }
-                                )
-                            }
+                            StoryEntryView(
+                                story: StoryEntry(
+                                    entry: entry
+                                ),
+                                action: { address, _ in
+                                    store.send(.detailStack(.pushDetail(
+                                        MemoDetailDescription.from(
+                                            address: address,
+                                            fallback: ""
+                                        )
+                                    )))
+                                }
+                            )
                         }
                         
                         if feed.isEmpty {

@@ -58,8 +58,7 @@ struct EntryRow_Previews: PreviewProvider {
                              Anything that can be derived should be derived.
                              Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.
                              """,
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
             EntryRow(
@@ -69,8 +68,7 @@ struct EntryRow_Previews: PreviewProvider {
                         "@here/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
             EntryRow(
@@ -80,8 +78,7 @@ struct EntryRow_Previews: PreviewProvider {
                         "did:key:abc123/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
             EntryRow(
@@ -91,8 +88,7 @@ struct EntryRow_Previews: PreviewProvider {
                         "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
         }
