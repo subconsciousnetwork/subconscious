@@ -15,7 +15,6 @@ struct StoryEntry:
     Codable
 {
     var id = UUID()
-//    var author: UserProfile
     var entry: EntryStub
 
     var description: String {
