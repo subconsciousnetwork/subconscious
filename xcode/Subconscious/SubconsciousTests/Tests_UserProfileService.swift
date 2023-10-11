@@ -36,6 +36,127 @@ final class Tests_UserProfileService: XCTestCase {
         XCTAssertTrue(profile.following[1].user.aliases.contains(where: { name in name == Petname("sphere-b")! }))
     }
     
+    func testIdentifyUserContext() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let firstPass = {
+            let receipt = try await environment.noosphere.createSphere(ownerKeyName: "test")
+            let did = Did(receipt.identity)!
+            
+            await environment.noosphere.resetSphere(receipt.identity)
+            
+            try await environment.userProfile.writeOurProfile(
+                profile: UserProfileEntry(
+                    nickname: "Finn",
+                    bio: "Mathematical!"
+                )
+            )
+            
+            return did
+        }
+        // In a closure to avoid polluting lexical scope
+        let did = try await firstPass()
+        
+        let receipt = try await environment.noosphere.createSphere(ownerKeyName: "test")
+        let ourDid = Did(receipt.identity)!
+        
+        await environment.noosphere.resetSphere(receipt.identity)
+        
+        try await environment.userProfile.writeOurProfile(
+            profile: UserProfileEntry(
+                nickname: "Jake",
+                bio: "Bacon pancakes!"
+            )
+        )
+        
+        let _ = try await environment.data.indexOurSphere()
+        
+        let ourProfile = try await environment.userProfile.identifyUser(
+            did: ourDid,
+            address: Slashlink(petname: Petname("more.path")!),
+            context: .petname(Petname("some.long.path")!)
+        )
+        
+        // Our profile should not be rebased using context
+        XCTAssertEqual(ourProfile.did, ourDid)
+        XCTAssertEqual(ourProfile.address, Slashlink.ourProfile)
+        
+        // Someone we know SHOULD be rebased
+        let profile = try await environment.userProfile.identifyUser(
+            did: did,
+            address: Slashlink(petname: Petname("more.path")!),
+            context: .petname(Petname("some.long.path")!)
+        )
+        
+        XCTAssertEqual(profile.did, did)
+        XCTAssertEqual(profile.address, Slashlink(petname: Petname("more.path.some.long.path")!))
+        
+        // Do not rebase on a DID path
+        let profileB = try await environment.userProfile.identifyUser(
+            did: did,
+            address: Slashlink(petname: Petname("more.path")!),
+            context: .did(ourDid)
+        )
+        
+        XCTAssertEqual(profileB.did, did)
+        XCTAssertEqual(profileB.address, Slashlink(petname: Petname("more.path")!))
+    }
+    
+    func testIdentifyUserSignatures() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let receipt = try await environment.noosphere.createSphere(ownerKeyName: "test")
+        let did = Did(receipt.identity)!
+        
+        await environment.noosphere.resetSphere(receipt.identity)
+        
+        try await environment.userProfile.writeOurProfile(
+            profile: UserProfileEntry(
+                nickname: "Finn",
+                bio: "Mathematical!"
+            )
+        )
+        
+        let _ = try await environment.data.indexOurSphere()
+        
+        let profileA = try await environment.userProfile.identifyUser(
+            did: did,
+            address: Slashlink.ourProfile,
+            context: .none
+        )
+        
+        let profileB = try await environment.userProfile.identifyUser(
+            did: did,
+            petname: nil,
+            context: .none
+        )
+        
+        let profileC = try await environment.userProfile.identifyUser(
+            entry: AddressBookEntry(
+                petname: Petname("ourselves")!,
+                did: did,
+                status: .resolved(Cid("ok")),
+                version: Cid("ok")
+            ),
+            context: .none
+        )
+        
+        XCTAssertEqual(profileB.did, did)
+        XCTAssertEqual(profileC.did, did)
+        
+        let profiles = [profileA, profileB, profileC]
+        for profile in profiles {
+            XCTAssertEqual(profile.did, did)
+            XCTAssertTrue(profile.address.isOurProfile)
+            XCTAssertEqual(profile.ourFollowStatus, .notFollowing)
+            XCTAssertEqual(profile.category, .ourself)
+            XCTAssertEqual(profile.bio?.text.description, "Mathematical!")
+            XCTAssertEqual(profile.nickname?.description, "finn")
+        }
+    }
+    
     func testReadUserProfile() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
