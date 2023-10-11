@@ -107,16 +107,6 @@ struct UserProfileEntry: Codable, Equatable {
     let bio: String?
 }
 
-struct UserProfileCacheEntry {
-    let profile: UserProfile
-    let version: Cid
-}
-
-struct UserProfileCacheKey: Hashable {
-    let did: Did
-    let petname: Petname?
-}
-
 actor UserProfileService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
@@ -130,8 +120,6 @@ actor UserProfileService {
     )
     
     private static let profileContentType = "application/vnd.subconscious.profile+json"
-    
-    private var cache: [UserProfileCacheKey:UserProfileCacheEntry] = [:]
     
     init(
         noosphere: NoosphereService,
@@ -410,24 +398,10 @@ actor UserProfileService {
         petname: Petname?,
         context: Peer?
     ) async throws -> UserProfile {
-        let version = try await self.noosphere.version()
-        
-        // Check cache
-        let cacheKey = UserProfileCacheKey(did: did, petname: petname)
-        if let cacheHit = self.cache[cacheKey],
-           cacheHit.version == version {
-            return cacheHit.profile
-        }
-        
         // Special case: our profile
         let identity = try await self.noosphere.identity()
         guard did != identity else {
-            let profile = try await readOurProfile(alias: petname)
-            self.cache.updateValue(
-                UserProfileCacheEntry(profile: profile, version: version),
-                forKey: cacheKey
-            )
-            return profile
+            return try await readOurProfile(alias: petname)
         }
         
         let following = await self.addressBook.followingStatus(
@@ -495,11 +469,6 @@ actor UserProfileService {
                 return sparseProfile
             }
         }
-
-        self.cache.updateValue(
-            UserProfileCacheEntry(profile: profile, version: version),
-            forKey: cacheKey
-        )
         
         return profile
     }
