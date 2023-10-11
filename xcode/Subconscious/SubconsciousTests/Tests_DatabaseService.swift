@@ -209,18 +209,23 @@ class Tests_DatabaseService: XCTestCase {
             additionalHeaders: [],
             body: "Baz"
         )
+        let did = Did("did:key:abc123")!
         try service.writeMemo(
             MemoRecord(
-                did: Did("did:key:abc123")!,
+                did: did,
                 petname: Petname("abc")!,
                 slug: Slug("baz")!,
                 memo: baz
             )
         )
         
-        let recent = try service.listRecentMemos(owner: Did("did:key:abc123")!, includeDrafts: true)
+        let recent = try service.listRecentMemos(owner: did, includeDrafts: true)
         
         XCTAssertEqual(recent.count, 3)
+        
+        XCTAssertEqual(recent[0].did, Did.local)
+        XCTAssertEqual(recent[1].did, Did.local)
+        XCTAssertEqual(recent[2].did, did)
         
         let slashlinks = Set(
             recent.compactMap({ stub in
@@ -313,9 +318,13 @@ class Tests_DatabaseService: XCTestCase {
             )
         )
         
+        
         let recent = try service.listRecentMemos(owner: nil, includeDrafts: true)
         
         XCTAssertEqual(recent.count, 2)
+        
+        XCTAssertEqual(recent[0].did, Did.local)
+        XCTAssertEqual(recent[1].did, Did.local)
         
         let slashlinks = Set(
             recent.compactMap({ stub in
