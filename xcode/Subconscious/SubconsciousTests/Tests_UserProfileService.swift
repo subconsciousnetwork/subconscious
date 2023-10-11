@@ -40,7 +40,7 @@ final class Tests_UserProfileService: XCTestCase {
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
-        let firstPass = {
+        let createPeerSphere = {
             let receipt = try await environment.noosphere.createSphere(ownerKeyName: "test")
             let did = Did(receipt.identity)!
             
@@ -56,7 +56,7 @@ final class Tests_UserProfileService: XCTestCase {
             return did
         }
         // In a closure to avoid polluting lexical scope
-        let did = try await firstPass()
+        let peerDid = try await createPeerSphere()
         
         let receipt = try await environment.noosphere.createSphere(ownerKeyName: "test")
         let ourDid = Did(receipt.identity)!
@@ -70,37 +70,33 @@ final class Tests_UserProfileService: XCTestCase {
             )
         )
         
+        try await environment.addressBook.followUser(did: peerDid, petname: Petname("finn-the-human")!)
+        
         let _ = try await environment.data.indexOurSphere()
         
         let ourProfile = try await environment.userProfile.identifyUser(
             did: ourDid,
             address: Slashlink(petname: Petname("more.path")!),
-            context: .petname(Petname("some.long.path")!)
+            context: Petname("some.long.path")!
         )
         
-        // Our profile should not be rebased using context
+        // Our profile should use the shortest path
         XCTAssertEqual(ourProfile.did, ourDid)
         XCTAssertEqual(ourProfile.address, Slashlink.ourProfile)
         
-        // Someone we know SHOULD be rebased
+        // Deliberately give this user a different address to our known name for them
         let profile = try await environment.userProfile.identifyUser(
-            did: did,
+            did: peerDid,
             address: Slashlink(petname: Petname("more.path")!),
-            context: .petname(Petname("some.long.path")!)
+            context: Petname("some.long.path")!
         )
         
-        XCTAssertEqual(profile.did, did)
+        // Someone we know SHOULD be rebased
+        XCTAssertEqual(profile.did, peerDid)
         XCTAssertEqual(profile.address, Slashlink(petname: Petname("more.path.some.long.path")!))
-        
-        // Do not rebase on a DID path
-        let profileB = try await environment.userProfile.identifyUser(
-            did: did,
-            address: Slashlink(petname: Petname("more.path")!),
-            context: .did(ourDid)
-        )
-        
-        XCTAssertEqual(profileB.did, did)
-        XCTAssertEqual(profileB.address, Slashlink(petname: Petname("more.path")!))
+        XCTAssertEqual(profile.aliases.count, 2)
+        XCTAssertTrue(profile.aliases.contains(where: { petname in petname == Petname("finn-the-human")! }))
+        XCTAssertTrue(profile.aliases.contains(where: { petname in petname == Petname("more.path") }))
     }
     
     func testIdentifyUserSignatures() async throws {

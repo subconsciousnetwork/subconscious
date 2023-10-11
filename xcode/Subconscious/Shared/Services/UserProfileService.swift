@@ -293,7 +293,7 @@ actor UserProfileService {
         let entries = try await localAddressBook.listEntries()
         
         for entry in entries {
-            let user = try await self.identifyUser(entry: entry, context: address.peer)
+            let user = try await self.identifyUser(entry: entry, context: address.petname)
             following.append(
                 StoryUser(entry: entry, user: user)
             )
@@ -361,7 +361,7 @@ actor UserProfileService {
     /// `context` will be used to determine the preferred navigation address for a user.
     func identifyUser(
         entry: AddressBookEntry,
-        context: Peer?
+        context: Petname?
     ) async throws -> UserProfile {
         return try await self.identifyUser(
             did: entry.did,
@@ -378,7 +378,7 @@ actor UserProfileService {
     func identifyUser(
         did: Did,
         address: Slashlink,
-        context: Peer?
+        context: Petname?
     ) async throws -> UserProfile {
         switch address.peer {
         case .petname(let petname):
@@ -396,7 +396,7 @@ actor UserProfileService {
     func identifyUser(
         did: Did,
         petname: Petname?,
-        context: Peer?
+        context: Petname?
     ) async throws -> UserProfile {
         // Special case: our profile
         let identity = try await self.noosphere.identity()
@@ -414,12 +414,12 @@ actor UserProfileService {
         // If this is us, chop off the petname altogether
         let address = Func.run {
             switch (petname, context) {
-            case let (.some(petname), .some(peer)):
-                return Slashlink(petname: petname).rebaseIfNeeded(peer: peer)
+            case let (.some(petname), .some(context)):
+                return Slashlink(petname: petname).rebaseIfNeeded(peer: .petname(context))
             case let (.some(petname), .none):
                 return Slashlink(petname: petname)
-            case (.none, .some(let peer)):
-                return Slashlink.ourProfile.rebaseIfNeeded(peer: peer)
+            case (.none, .some(let context)):
+                return Slashlink.ourProfile.rebaseIfNeeded(peer: .petname(context))
             case (.none, .none):
                 return Slashlink.ourProfile
             }
