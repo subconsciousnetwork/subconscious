@@ -36,7 +36,7 @@ final class Tests_UserProfileService: XCTestCase {
         XCTAssertTrue(profile.following[1].user.aliases.contains(where: { name in name == Petname("sphere-b")! }))
     }
     
-    func testIdentifyUserContext() async throws {
+    func testIdentifyUserRebaseOnContext() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
@@ -99,7 +99,7 @@ final class Tests_UserProfileService: XCTestCase {
         XCTAssertTrue(profile.aliases.contains(where: { petname in petname == Petname("more.path") }))
     }
     
-    func testIdentifyUserSignatures() async throws {
+    func testIdentifyUserCallSignatures() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
