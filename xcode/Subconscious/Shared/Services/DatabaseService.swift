@@ -1079,8 +1079,8 @@ final class DatabaseService {
         return try? database.execute(
             sql: """
             SELECT did, id, modified, excerpt
-            FROM modified
-            WHERE modified.modified BETWEEN ? AND ?
+            FROM memo_search
+            WHERE memo_search.modified BETWEEN ? AND ?
                 AND substr(memo_search.slug, 1, 1) != '_'
             ORDER BY RANDOM()
             LIMIT 1

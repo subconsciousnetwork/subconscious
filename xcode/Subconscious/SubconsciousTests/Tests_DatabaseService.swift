@@ -258,6 +258,80 @@ class Tests_DatabaseService: XCTestCase {
         )
     }
     
+    func testReadRandomEntryInDateRange() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: Date.distantPast,
+            modified: Date.distantPast,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: Date.distantFuture,
+            modified: Date.distantFuture,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        let did = Did("did:key:abc123")!
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
+        )
+        
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date.now)!
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date.now)!
+        
+        guard let recent = service.readRandomEntryInDateRange(startDate: yesterday, endDate: tomorrow, owner: did) else {
+            XCTFail("No entry found")
+            return
+        }
+        
+        XCTAssertEqual(recent.did, did)
+        XCTAssertEqual(recent.address.slug, Slug("baz")!)
+        XCTAssertEqual(recent.address, Slashlink(slug: Slug("baz")!))
+    }
+    
     func testListRecentMemosWithoutOwner() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
