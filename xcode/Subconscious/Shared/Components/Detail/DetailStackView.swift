@@ -119,7 +119,6 @@ enum DetailStackAction: Hashable {
     case pushDetail(MemoDetailDescription)
 
     case requestOurProfileDetail
-    case pushOurProfileDetail(UserProfile)
     case failPushDetail(_ message: String)
 
     case pushRandomDetail(autofocus: Bool)
@@ -219,12 +218,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
             return requestOurProfileDetail(
                 state: state,
                 environment: environment
-            )
-        case .pushOurProfileDetail(let user):
-            return pushOurProfileDetail(
-                state: state,
-                environment: environment,
-                user: user
             )
         case let .requestDeleteMemo(address):
             return requestDeleteMemo(
@@ -426,27 +419,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
-        let fx: Fx<Action> = environment.userProfile
-            .loadOurProfileFromMemoPublisher()
-            .map { user in
-                Action.pushOurProfileDetail(user)
-            }
-            .recover { error in
-                Action.failPushDetail(error.localizedDescription)
-            }
-            .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
-    }
-
-    static func pushOurProfileDetail(
-        state: Self,
-        environment: Environment,
-        user: UserProfile
-    ) -> Update<Self> {
         let detail = UserProfileDetailDescription(
             address: Slashlink.ourProfile,
-            user: user,
             // Focus following list by default
             // We can already see our recent notes in our notebook so no
             // point showing it again
@@ -627,12 +601,11 @@ extension DetailStackAction {
                 address: address,
                 link: link
             )
-        case let .requestUserProfileDetail(user):
+        case let .requestUserProfileDetail(address):
             return .pushDetail(
                 MemoDetailDescription.profile(
                     UserProfileDetailDescription(
-                        address: user.address,
-                        user: user
+                        address: address
                     )
                 )
             )
@@ -643,28 +616,10 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestNavigateToProfile(user):
-            let user = Func.run {
-                switch (user.category, user.ourFollowStatus) {
-                case (.ourself, _):
-                    // Loop back to our profile
-                    return user.overrideAddress(Slashlink.ourProfile)
-                case (_, .following(let name)):
-                    // Rewrite address using our name
-                    return user.overrideAddress(Slashlink(petname: name.toPetname()))
-                case _:
-                    return user
-                }
-            }
-
-
-            guard user.resolutionStatus.isReady else {
-                return .failPushDetail("Attempted to navigate to unresolved user")
-            }
+        case let .requestNavigateToProfile(address):
             return .pushDetail(.profile(
                 UserProfileDetailDescription(
-                    address: user.address,
-                    user: user
+                    address: address
                 )
             ))
         }

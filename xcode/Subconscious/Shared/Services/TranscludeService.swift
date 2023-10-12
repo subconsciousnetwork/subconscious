@@ -57,14 +57,8 @@ actor TranscludeService {
             )
             
             let address = Slashlink(peer: .did(transclusion.authorDid), slug: link.slug)
-            guard var entry = try database.readEntry(for: address) else {
+            guard let entry = try database.readEntry(for: address) else {
                 continue
-            }
-            
-            if let author = try? await userProfile.buildUserProfile(
-                address: transclusion.address
-            ) {
-                entry = entry.withAuthor(author)
             }
             
             if entry.address.isLocal {

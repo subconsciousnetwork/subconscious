@@ -31,16 +31,13 @@ struct RecentTabView: View {
     var onNavigateToNote: (Slashlink) -> Void
     
     var body: some View {
-        if let user = state.user {
-            ForEach(state.recentEntries) { entry in
-                StoryEntryView(
-                    story: StoryEntry(
-                        author: user,
-                        entry: entry
-                    ),
-                    action: { address, _ in onNavigateToNote(address) }
-                )
-            }
+        ForEach(state.recentEntries) { entry in
+            StoryEntryView(
+                story: StoryEntry(
+                    entry: entry
+                ),
+                action: { address, _ in onNavigateToNote(address) }
+            )
         }
         
         if state.recentEntries.count == 0 {
@@ -54,21 +51,19 @@ struct RecentTabView: View {
 struct FollowTabView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
-    var onNavigateToUser: (UserProfile) -> Void
+    var onNavigateToUser: (Slashlink) -> Void
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     
     var body: some View {
         ForEach(state.following) { follow in
             StoryUserView(
                 story: follow,
-                action: { _ in onNavigateToUser(follow.user) },
+                onNavigate: {
+                    onNavigateToUser(follow.user.address)
+                },
                 profileAction: onProfileAction,
                 onRefreshUser: {
-                    guard let petname = follow.user.address.toPetname() else {
-                        return
-                    }
-                    
-                    send(.requestWaitForFollowedUserResolution(petname))
+                    send(.requestWaitForFollowedUserResolution(follow.entry.petname))
                 }
             )
         }
@@ -93,7 +88,7 @@ struct UserProfileView: View {
     }
     
     var onNavigateToNote: (Slashlink) -> Void
-    var onNavigateToUser: (UserProfile) -> Void
+    var onNavigateToUser: (Slashlink) -> Void
     
     var onProfileAction: (UserProfile, UserProfileAction) -> Void
     var onRefresh: () async -> Void

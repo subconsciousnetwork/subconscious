@@ -115,7 +115,6 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human,
-                    resolutionStatus: .resolved("abc"),
                     ourFollowStatus: .notFollowing,
                     aliases: [Petname("alt")!]
                 )
@@ -128,7 +127,6 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist,
-                    resolutionStatus: .resolved(Cid("ok")),
                     ourFollowStatus: .following(Petname.Name("ben")!),
                     aliases: []
                 ),
@@ -142,7 +140,6 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .ourself,
-                    resolutionStatus: .resolved(Cid("ok")),
                     ourFollowStatus: .notFollowing,
                     aliases: []
                 )

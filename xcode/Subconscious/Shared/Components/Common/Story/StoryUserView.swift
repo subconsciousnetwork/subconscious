@@ -40,24 +40,31 @@ struct StoryUserView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var story: StoryUser
-    var action: (Slashlink) -> Void
+    var onNavigate: () -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
     var onRefreshUser: () -> Void = {}
+    
+    var entry: AddressBookEntry {
+        story.entry
+    }
+    var user: UserProfile {
+        story.user
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 Group {
-                    ProfilePic(pfp: story.user.pfp, size: .medium)
+                    ProfilePic(pfp: user.pfp, size: .medium)
                     
-                    if let name = story.user.toNameVariant() {
-                        PetnameView(name: name, aliases: story.user.aliases)
+                    if let name = user.toNameVariant() {
+                        PetnameView(name: name, aliases: user.aliases)
                     }
                     
                     Spacer()
                     
-                    switch story.user.resolutionStatus {
+                    switch entry.status {
                     case .unresolved:
                         Image(systemName: "person.fill.questionmark")
                             .foregroundColor(.secondary)
@@ -65,7 +72,7 @@ struct StoryUserView: View {
                         PendingSyncBadge()
                             .foregroundColor(.secondary)
                     case .resolved:
-                        switch (story.user.ourFollowStatus, story.user.category) {
+                        switch (user.ourFollowStatus, user.category) {
                         case (.following(_), _):
                             Image.from(appIcon: .following)
                                 .foregroundColor(.secondary)
@@ -77,14 +84,14 @@ struct StoryUserView: View {
                         }
                     }
                 }
-                .disabled(!story.user.resolutionStatus.isReady)
+                .disabled(!entry.status.isReady)
                 
                 Menu(
                     content: {
-                        if story.user.isFollowedByUs {
+                        if user.isFollowedByUs {
                             Button(
                                 action: {
-                                    profileAction(story.user, .requestUnfollow)
+                                    profileAction(user, .requestUnfollow)
                                 },
                                 label: {
                                     Label(
@@ -95,7 +102,7 @@ struct StoryUserView: View {
                             )
                             Button(
                                 action: {
-                                    profileAction(story.user, .requestRename)
+                                    profileAction(user, .requestRename)
                                 },
                                 label: {
                                     Label(
@@ -107,7 +114,7 @@ struct StoryUserView: View {
                         } else {
                             Button(
                                 action: {
-                                    profileAction(story.user, .requestFollow)
+                                    profileAction(user, .requestFollow)
                                 },
                                 label: {
                                     Label(
@@ -121,12 +128,12 @@ struct StoryUserView: View {
                     label: {
                         EllipsisLabelView()
                     }
-                ).disabled(story.user.category == .ourself)
+                ).disabled(user.category == .ourself)
             }
             .padding(AppTheme.tightPadding)
             .frame(height: AppTheme.unit * 13)
             
-            if let bio = story.user.bio,
+            if let bio = user.bio,
                bio.hasVisibleContent {
                 Text(verbatim: bio.text)
                     .padding(AppTheme.tightPadding)
@@ -134,13 +141,11 @@ struct StoryUserView: View {
         }
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
-            switch (story.user.ourFollowStatus, story.user.resolutionStatus) {
+            switch (user.ourFollowStatus, entry.status) {
             case (.following(_), .unresolved):
                 onRefreshUser()
-            case (.following(let name), _):
-                action(Slashlink(petname: name.toPetname()))
-            case _:
-                action(story.user.address)
+            default:
+                onNavigate()
             }
         }
         .background(.background)
@@ -153,6 +158,12 @@ struct StoryUserView_Previews: PreviewProvider {
             Spacer()
             StoryUserView(
                 story: StoryUser(
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
@@ -160,15 +171,20 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .unresolved,
                         ourFollowStatus: .notFollowing,
                         aliases: []
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
@@ -176,15 +192,20 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .human,
-                        resolutionStatus: .pending,
                         ourFollowStatus: .following(Petname.Name("lol")!),
                         aliases: []
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
@@ -192,15 +213,20 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber."),
                         category: .ourself,
-                        resolutionStatus: .resolved(Cid("ok")),
                         ourFollowStatus: .notFollowing,
                         aliases: []
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             StoryUserView(
                 story: StoryUser(
+                    entry: AddressBookEntry(
+                        petname: Petname("ben")!,
+                        did: Did("did:key:123")!,
+                        status: .resolved("ok"),
+                        version: "ok"
+                    ),
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname.Name("ben")!,
@@ -208,12 +234,11 @@ struct StoryUserView_Previews: PreviewProvider {
                         pfp: .image("pfp-dog"),
                         bio: UserProfileBio.empty,
                         category: .ourself,
-                        resolutionStatus: .pending,
                         ourFollowStatus: .notFollowing,
                         aliases: []
                     )
                 ),
-                action: { _ in }
+                onNavigate: { }
             )
             Spacer()
         }

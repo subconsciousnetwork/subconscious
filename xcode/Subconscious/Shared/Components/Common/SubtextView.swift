@@ -71,9 +71,7 @@ struct SubtextView: View {
                 
                 ForEach(renderable.entries, id: \.self) { entry in
                     TranscludeView(
-                        author: entry.author,
-                        address: entry.address,
-                        excerpt: entry.excerpt,
+                        entry: entry,
                         action: {
                             onViewTransclude(entry.address)
                         }
@@ -119,28 +117,28 @@ struct SubtextView_Previews: PreviewProvider {
                 ),
                 transcludePreviews: [
                     Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink(
                             "/wanderer-your-footsteps-are-the-road"
                         )!,
                         excerpt: "hello mother",
-                        modified: Date.now,
-                        author: UserProfile.dummyData()
+                        modified: Date.now
                     ),
                     Slashlink("/voice")!: EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink(
                             "/voice"
                         )!,
                         excerpt: "hello father",
-                        modified: Date.now,
-                        author: UserProfile.dummyData()
+                        modified: Date.now
                     ),
                     Slashlink("/memory")!: EntryStub(
+                        did: Did.dummyData(),
                         address: Slashlink(
                             "/memory"
                         )!,
                         excerpt: "hello world",
-                        modified: Date.now,
-                        author: UserProfile.dummyData()
+                        modified: Date.now
                     )
                 ],
                 onViewTransclude: {

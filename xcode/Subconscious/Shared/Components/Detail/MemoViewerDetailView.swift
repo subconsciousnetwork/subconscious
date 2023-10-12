@@ -231,14 +231,14 @@ enum MemoViewerDetailNotification: Hashable {
         address: Slashlink,
         link: SubSlashlinkLink
     )
-    case requestUserProfileDetail(_ user: UserProfile)
+    case requestUserProfileDetail(_ address: Slashlink)
 }
 
 extension MemoViewerDetailNotification {
     static func from(_ action: MemoViewerDetailAction) -> Self? {
         switch action {
         case let .requestAuthorDetail(user):
-            return .requestUserProfileDetail(user)
+            return .requestUserProfileDetail(user.address)
         default:
             return nil
         }
@@ -561,10 +561,11 @@ struct MemoViewerDetailModel: ModelProtocol {
                         .profile
                 }
                 
+                let did = try await environment.noosphere.resolve(peer: state.address?.peer)
+                
                 return try await environment
                     .userProfile
-                    .requestUserProfile(petname: petname)
-                    .profile
+                    .identifyUser(did: did, petname: petname, context: nil)
             }
             .map { profile in
                 .succeedFetchOwnerProfile(profile)
@@ -651,12 +652,12 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
             ),
             transcludePreviews: [
                 Slashlink("/infinity-paths")!: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "/infinity-paths"
                     )!,
                     excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
-                    modified: Date.now,
-                    author: UserProfile.dummyData()
+                    modified: Date.now
                 )
             ],
             address: Slashlink(slug: Slug("truth-the-prophet")!),
@@ -670,16 +671,16 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
         MemoViewerDetailNotFoundView(
             backlinks: [
                 EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink("@bob/bar")!,
                     excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
-                    modified: Date.now,
-                    author: UserProfile.dummyData()
+                    modified: Date.now
                 ),
                 EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink("@bob/baz")!,
                     excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
-                    modified: Date.now,
-                    author: UserProfile.dummyData()
+                    modified: Date.now
                 )
             ],
             notify: {

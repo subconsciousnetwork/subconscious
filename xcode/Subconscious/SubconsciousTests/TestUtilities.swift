@@ -56,6 +56,7 @@ struct TestUtilities {
             path: "database.sqlite",
             directoryHint: .notDirectory
         )
+        print("Test SQLite Path: \(databaseURL.path(percentEncoded: false))")
         let db = SQLite3Database(
             path: databaseURL.path(percentEncoded: false),
             mode: .readwrite

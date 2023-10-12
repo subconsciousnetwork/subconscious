@@ -16,15 +16,16 @@ struct StoryUser:
     Codable {
     
     var id = UUID()
+    var entry: AddressBookEntry
     var user: UserProfile
     var statistics: UserProfileStatistics?
 
     var description: String {
         """
+        \(String(describing: user.did))
+        \(String(describing: user.address))
         \(String(describing: user.nickname))
-        Following? \(user.isFollowedByUs)
-        
-        \(user.bio?.text ?? "")
+        \(String(describing: user.ourFollowStatus))
         """
     }
 }

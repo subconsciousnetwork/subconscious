@@ -31,8 +31,8 @@ struct UserProfileDetailView: View {
         notify(.requestDetail(.from(address: address, fallback: "")))
     }
     
-    func onNavigateToUser(user: UserProfile) {
-        notify(.requestNavigateToProfile(user))
+    func onNavigateToUser(address: Slashlink) {
+        notify(.requestNavigateToProfile(address))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -67,8 +67,7 @@ struct UserProfileDetailView: View {
             store.send(
                 UserProfileDetailAction.appear(
                     description.address,
-                    description.initialTabIndex,
-                    description.user
+                    description.initialTabIndex
                 )
             )
         }
@@ -91,7 +90,7 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
-    case requestNavigateToProfile(_ user: UserProfile)
+    case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
 }
 
@@ -127,7 +126,6 @@ extension UserProfileDetailAction {
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
     var address: Slashlink
-    var user: UserProfile?
     var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
@@ -137,7 +135,7 @@ enum UserProfileDetailAction {
         category: "UserProfileDetailAction"
     )
 
-    case appear(Slashlink, Int, UserProfile?)
+    case appear(Slashlink, Int)
     case refresh(forceSync: Bool)
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
@@ -220,7 +218,6 @@ struct UserProfile: Equatable, Codable, Hashable {
     let pfp: ProfilePicVariant
     let bio: UserProfileBio?
     let category: UserCategory
-    let resolutionStatus: ResolutionStatus
     let ourFollowStatus: UserProfileFollowStatus
     let aliases: [Petname]
     
@@ -252,7 +249,6 @@ struct UserProfile: Equatable, Codable, Hashable {
             pfp: pfp,
             bio: bio,
             category: category,
-            resolutionStatus: resolutionStatus,
             ourFollowStatus: ourFollowStatus,
             aliases: aliases
         )
@@ -409,13 +405,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .appear(let address, let initialTabIndex, let user):
+        case .appear(let address, let initialTabIndex):
             return appear(
                 state: state,
                 environment: environment,
                 address: address,
-                initialTabIndex: initialTabIndex,
-                user: user
+                initialTabIndex: initialTabIndex
             )
         case .populate(let content):
             return populate(
@@ -627,7 +622,7 @@ struct UserProfileDetailModel: ModelProtocol {
         
         return update(
             state: state,
-            action: .appear(user.address, state.initialTabIndex, state.user),
+            action: .appear(user.address, state.initialTabIndex),
             environment: environment
         )
     }
@@ -636,15 +631,13 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment,
         address: Slashlink,
-        initialTabIndex: Int,
-        user: UserProfile?
+        initialTabIndex: Int
     ) -> Update<Self> {
         var model = state
         model.initialTabIndex = initialTabIndex
         // We might be passed some basic profile data
         // we can use this in the loading state for a preview
         model.address = address
-        model.user = user
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
             try await Self.refresh(address: address, environment: environment)

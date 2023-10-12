@@ -417,7 +417,7 @@ final class Tests_DataService: XCTestCase {
         let list = try await environment.data.listFeed()
         
         XCTAssertEqual(list.count, 3)
-        XCTAssertEqual(list.filter({ entry in entry.author!.address.isOurProfile }).count, 2)
+        XCTAssertEqual(list.filter({ entry in entry.address.isOurs }).count, 2)
         XCTAssertFalse(list.contains(where: { entry in entry.address.slug.isHidden }))
     }
     

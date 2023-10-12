@@ -661,18 +661,7 @@ actor DataService {
     
     func listFeed() async throws -> [EntryStub] {
         let identity = try await noosphere.identity()
-        var feed: [EntryStub] = []
-        for entry in try self.database.listFeed(owner: identity) {
-            let author = try await Func.run {
-                if entry.address.isOurs {
-                    return try await self.userProfile.loadOurProfileFromMemo()
-                } else {
-                    return try await self.userProfile.buildUserProfile(address: entry.address)
-                }
-            }
-            feed.append(entry.withAuthor(author))
-        }
-        return feed
+        return try self.database.listFeed(owner: identity)
     }
     
     nonisolated func listFeedPublisher() -> AnyPublisher<[EntryStub], Error> {
@@ -846,26 +835,11 @@ actor DataService {
         let identity = try? await noosphere.identity()
         let did = try await noosphere.resolve(peer: address.peer)
         
-        let entries = try database.readEntryBacklinks(
+        return try database.readEntryBacklinks(
             owner: identity,
             did: did,
             slug: address.slug
         )
-        
-        var backlinks: [EntryStub] = []
-        for entry in entries {
-            guard let author = try? await userProfile.buildUserProfile(
-                address: entry.address
-            ) else {
-                logger.error("Failed to load author for \(entry.address)")
-                backlinks.append(entry)
-                continue
-            }
-            
-            backlinks.append(entry.withAuthor(author))
-        }
-        
-        return backlinks
     }
 
     /// Read editor detail for address.

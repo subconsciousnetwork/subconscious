@@ -211,7 +211,11 @@ extension Slashlink {
     /// Given an address, re-base relative to the passed peer.
     /// If `@alice.bob/test` appears in a note owned by `@donna.charlie`
     /// then we want `@alice.bob.donna.charlie/test`
-    func rebaseIfNeeded(peer: Peer) -> Slashlink {
+    func rebaseIfNeeded(peer: Peer?) -> Slashlink {
+        guard let peer = peer else {
+            return self
+        }
+        
         switch (peer) {
         case .petname(let petname):
             return self.rebaseIfNeeded(petname: petname)

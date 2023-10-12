@@ -27,11 +27,8 @@ struct StoryEntryView: View {
                     
                     HStack(alignment: .center, spacing: AppTheme.unit) {
                         BylineSmView(
-                            pfp: story.author.pfp,
-                            slashlink: Slashlink(
-                                peer: story.author.address.peer,
-                                slug: story.entry.address.slug
-                            )
+                            pfp: .generated(story.entry.did),
+                            slashlink: story.entry.address
                         )
                         
                         Spacer()
@@ -68,7 +65,6 @@ struct StoryPlainView_Previews: PreviewProvider {
     static var previews: some View {
         StoryEntryView(
             story: StoryEntry(
-                author: UserProfile.dummyData(),
                 entry: EntryStub(
                     MemoEntry(
                         address: Slashlink("@here/meme")!,
@@ -84,7 +80,8 @@ struct StoryPlainView_Previews: PreviewProvider {
                             But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
                             """
                         )
-                    )
+                    ),
+                    did: Did.dummyData()
                 )
             ),
             action: { _, _ in }

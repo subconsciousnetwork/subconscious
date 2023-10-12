@@ -8,9 +8,8 @@
 import SwiftUI
 
 public enum NameVariant {
-    case petname(Slashlink, Petname.Name)
-    case proposedName(Slashlink, Petname.Name)
-    case selfNickname(Slashlink, Petname.Name)
+    case known(Slashlink, Petname.Name)
+    case unknown(Slashlink, Petname.Name)
 }
 
 extension UserProfile {
@@ -22,13 +21,13 @@ extension UserProfile {
             self.address.petname?.leaf
         ) {
         case (.ourself, _, .some(let selfNickname), _):
-            return NameVariant.petname(Slashlink.ourProfile, selfNickname)
+            return NameVariant.known(Slashlink.ourProfile, selfNickname)
         case (_, .following(let petname), _, _):
-            return NameVariant.petname(self.address, petname)
+            return NameVariant.known(self.address, petname)
         case (_, .notFollowing, .some(let selfNickname), _):
-            return NameVariant.selfNickname(self.address, selfNickname)
+            return NameVariant.unknown(self.address, selfNickname)
         case (_, .notFollowing, _, .some(let proposedName)):
-            return NameVariant.proposedName(self.address, proposedName)
+            return NameVariant.unknown(self.address, proposedName)
         case _:
             return nil
         }
@@ -68,7 +67,7 @@ struct PetnameView: View {
     
     var uniqueAliases: [Petname] {
         switch name {
-        case .petname(_, let name):
+        case .known(_, let name):
             return aliases.filter { alias in
                 name != alias.leaf
             }
@@ -80,7 +79,7 @@ struct PetnameView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             switch name {
-            case .petname(_, let name):
+            case .known(_, let name):
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
@@ -88,8 +87,7 @@ struct PetnameView: View {
                 if !uniqueAliases.isEmpty {
                     AliasView(aliases: uniqueAliases)
                 }
-            case .selfNickname(let address, let name),
-                 .proposedName(let address, let name):
+            case .unknown(let address, let name):
                 Text(showMaybePrefix
                      ? "Maybe: \(name.description)"
                      : name.description
@@ -104,32 +102,24 @@ struct PetnameView: View {
         }
     }
     
-    
-    
     struct PetnameView_Previews: PreviewProvider {
         static var previews: some View {
             VStack {
                 PetnameView(
-                    name: .selfNickname(
-                        Slashlink(petname: Petname("melville.bobby.tables")!),
-                        Petname.Name("melville")!
-                    )
-                )
-                PetnameView(
-                    name: .proposedName(
+                    name: .unknown(
                         Slashlink(petname: Petname("melville.bobby.tables")!),
                         Petname.Name("melville")!
                     ),
                     showMaybePrefix: true
                 )
                 PetnameView(
-                    name: .petname(
+                    name: .known(
                         Slashlink(petname: Petname("robert")!),
                         Petname.Name("robert")!
                     )
                 )
                 PetnameView(
-                    name: .petname(
+                    name: .known(
                         Slashlink(petname: Petname("robert")!),
                         Petname.Name("robert")!
                     ),
