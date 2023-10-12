@@ -213,7 +213,7 @@ enum AppAction {
     /// Index the contents of a sphere in the database
     case indexPeer(_ petname: Petname)
     case succeedIndexPeer(_ peer: PeerRecord)
-    case failIndexPeer(petname: Petname, error: Error)
+    case failIndexPeer(petname: Petname, identity: Did?, error: Error)
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ did: Did)
@@ -922,10 +922,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 peer: peer
             )
-        case let .failIndexPeer(petname, error):
+        case let .failIndexPeer(petname, identity, error):
             return failIndexPeer(
                 state: state,
                 environment: environment,
+                identity: identity,
                 petname: petname,
                 error: error
             )
@@ -2003,8 +2004,12 @@ struct AppModel: ModelProtocol {
                 )
                 return Action.succeedIndexPeer(peer)
             } catch {
+                // We may be unable to resolve a peer, but attempt to grab the DID
+                let sphere = try? await environment.noosphere.traverse(petname: petname)
+                let identity = try? await sphere?.identity()
                 return Action.failIndexPeer(
                     petname: petname,
+                    identity: identity,
                     error: error
                 )
             }
@@ -2032,6 +2037,7 @@ struct AppModel: ModelProtocol {
     static func failIndexPeer(
         state: Self,
         environment: Environment,
+        identity: Did?,
         petname: Petname,
         error: Error
     ) -> Update<Self> {
@@ -2039,6 +2045,7 @@ struct AppModel: ModelProtocol {
             "Failed to index peer",
             metadata: [
                 "petname": petname.description,
+                "identity": identity?.description,
                 "error": error.localizedDescription
             ]
         )
