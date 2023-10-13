@@ -26,29 +26,43 @@ struct ProfileStatisticView: View {
 }
 
 struct RecentTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var action: (Slashlink) -> Void
-    var onLink: (Slashlink, SubSlashlinkLink) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        if let user = state.user {
-            ForEach(state.recentEntries) { entry in
+        if let user = store.state.user {
+            ForEach(store.state.recentEntries) { entry in
                 StoryEntryView(
                     story: StoryEntry(
                         entry: entry,
                         author: user
                     ),
-                    action: { address, _ in action(address) },
-                    onLink: { link in onLink(entry.address, link) }
+                    action: { address, _ in
+                        notify(
+                            .requestDetail(
+                                .from(
+                                    address: address,
+                                    fallback: ""
+                                )
+                            )
+                        )
+                    },
+                    onLink: { link in
+                        notify(
+                            .requestFindLinkDetail(
+                                address: entry.address,
+                                link: link
+                            )
+                        )
+                    }
                 )
                 
                 Divider()
             }
         }
         
-        if state.recentEntries.count == 0 {
-            let name = state.user?.address.peer?.markup ?? "This user"
+        if store.state.recentEntries.count == 0 {
+            let name = store.state.user?.address.peer?.markup ?? "This user"
             EmptyStateView(
                 message: "\(name) has not posted any notes yet."
             )
@@ -59,29 +73,35 @@ struct RecentTabView: View {
 }
 
 struct FollowTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onNavigateToUser: (Slashlink) -> Void
-    var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        ForEach(state.following) { follow in
+        ForEach(store.state.following) { follow in
             StoryUserView(
                 story: follow,
                 action: { _ in
-                    onNavigateToUser(follow.user.address)
+                    notify(
+                        .requestNavigateToProfile(follow.user.address)
+                    )
                 },
-                profileAction: onProfileAction,
+                profileAction: { user, action in
+                    store.send(
+                        UserProfileDetailAction.from(user, action)
+                    )
+                },
                 onRefreshUser: {
-                    send(.requestWaitForFollowedUserResolution(follow.entry.petname))
+                    store.send(
+                        .requestWaitForFollowedUserResolution(follow.entry.petname)
+                    )
                 }
             )
             
             Divider()
         }
         
-        if state.following.count == 0 {
-            let name = state.user?.address.peer?.markup ?? "This user"
+        if store.state.following.count == 0 {
+            let name = store.state.user?.address.peer?.markup ?? "This user"
             EmptyStateView(
                 message: "\(name) does not follow anyone."
             )
@@ -102,12 +122,12 @@ struct UserProfileView: View {
         store.send
     }
     
-    var onNavigateToNote: (Slashlink) -> Void
-    var onNavigateToUser: (Slashlink) -> Void
-    var onNavigateToLink: (Slashlink, SubSlashlinkLink) -> Void
+    var notify: (UserProfileDetailNotification) -> Void
     
-    var onProfileAction: (UserProfile, UserProfileAction) -> Void
-    var onRefresh: () async -> Void
+    func onRefresh() async {
+        app.send(.syncAll)
+        await store.refresh()
+    }
     
     func columnLoading(label: String) -> TabbedColumnItem<FeedPlaceholderView> {
         TabbedColumnItem(
@@ -120,10 +140,8 @@ struct UserProfileView: View {
         TabbedColumnItem(
             label: "Notes",
             view: RecentTabView(
-                state: state,
-                send: send,
-                action: onNavigateToNote,
-                onLink: onNavigateToLink
+                store: store,
+                notify: notify
             )
         )
     }
@@ -132,10 +150,8 @@ struct UserProfileView: View {
         TabbedColumnItem(
             label: "Following",
             view: FollowTabView(
-                state: state,
-                send: send,
-                onNavigateToUser: onNavigateToUser,
-                onProfileAction: onProfileAction
+                store: store,
+                notify: notify
             )
         )
     }
@@ -161,7 +177,7 @@ struct UserProfileView: View {
                             user: user,
                             statistics: state.statistics,
                             action: { action in
-                                onProfileAction(user, action)
+                                store.send(UserProfileDetailAction.from(user, action))
                             },
                             hideActionButton: state.loadingState != .loaded,
                             onTapStatistics: {
@@ -293,11 +309,7 @@ struct UserProfileView_Previews: PreviewProvider {
                 state: UserProfileDetailModel(),
                 environment: UserProfileDetailModel.Environment()
             ),
-            onNavigateToNote: { _ in print("navigate to note") },
-            onNavigateToUser: { _ in print("navigate to user") },
-            onNavigateToLink: { _, _ in print("navigate to link") },
-            onProfileAction: { user, action in print("profile action") },
-            onRefresh: { }
+            notify: { _ in }
         )
     }
 }

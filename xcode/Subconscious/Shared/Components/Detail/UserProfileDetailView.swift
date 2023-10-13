@@ -27,43 +27,11 @@ struct UserProfileDetailView: View {
     var description: UserProfileDetailDescription
     var notify: (UserProfileDetailNotification) -> Void
     
-    func onNavigateToNote(address: Slashlink) {
-        notify(.requestDetail(.from(address: address, fallback: "")))
-    }
-    
-    func onNavigateToUser(address: Slashlink) {
-        notify(.requestNavigateToProfile(address))
-    }
-    
-    func onNavigateToLink(address: Slashlink, link: SubSlashlinkLink) {
-        notify(.requestFindLinkDetail(address: address, link: link))
-    }
-    
-    func onProfileAction(user: UserProfile, action: UserProfileAction) {
-        switch (action) {
-        case .requestFollow:
-            store.send(.requestFollow(user))
-        case .requestUnfollow:
-            store.send(.requestUnfollow(user))
-        case .requestRename:
-            store.send(.requestRename(user))
-        case .editOwnProfile:
-            store.send(.presentEditProfile(true))
-        }
-    }
-
     var body: some View {
         UserProfileView(
             app: app,
             store: store,
-            onNavigateToNote: self.onNavigateToNote,
-            onNavigateToUser: self.onNavigateToUser,
-            onNavigateToLink: self.onNavigateToLink,
-            onProfileAction: self.onProfileAction,
-            onRefresh: {
-                app.send(.syncAll)
-                await store.refresh()
-            }
+            notify: notify
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -136,6 +104,21 @@ extension UserProfileDetailAction {
 struct UserProfileDetailDescription: Hashable {
     var address: Slashlink
     var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
+}
+
+extension UserProfileDetailAction {
+    static func from(_ user: UserProfile, _ action: UserProfileAction) -> UserProfileDetailAction {
+        switch (action) {
+        case .requestFollow:
+            return .requestFollow(user)
+        case .requestUnfollow:
+            return .requestUnfollow(user)
+        case .requestRename:
+            return .requestRename(user)
+        case .editOwnProfile:
+            return .presentEditProfile(true)
+        }
+    }
 }
 
 enum UserProfileDetailAction {
