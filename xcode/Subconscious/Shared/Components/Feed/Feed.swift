@@ -23,57 +23,22 @@ struct FeedNavigationView: View {
     
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    Divider()
-                    
-                    switch (store.state.status, store.state.entries) {
-                    case (.loading, _):
-                        FeedPlaceholderView()
-                    case let (.loaded, .some(feed)):
-                        ForEach(feed) { story in
-                            StoryEntryView(
-                                story: story,
-                                action: { address, _ in
-                                    store.send(
-                                        .detailStack(
-                                            .pushDetail(
-                                                MemoDetailDescription.from(
-                                                    address: address,
-                                                    fallback: ""
-                                                )
-                                            )
-                                        )
-                                    )
-                                },
-                                onLink: { link in
-                                    store.send(
-                                        .detailStack(
-                                            .findAndPushLinkDetail(
-                                                address: story.entry.address,
-                                                link: link
-                                            )
-                                        )
-                                    )
-                                }
-                            )
-                            
-                            Divider()
-                        }
-                        
-                        if feed.isEmpty {
-                            EmptyStateView()
-                        } else {
-                            FabSpacerView()
-                        }
-                    case (.notFound, _):
-                        NotFoundView()
+            VStack {
+                switch (store.state.status, store.state.entries) {
+                case (.loading, _):
+                    FeedPlaceholderView()
+                case let (.loaded, .some(feed)):
+                    switch feed.count {
+                    case 0:
+                        FeedEmptyView(onRefresh: { app.send(.syncAll) })
                     default:
-                        EmptyView()
+                        FeedListView(feed: feed, store: store)
                     }
+                case (.notFound, _):
+                    NotFoundView()
+                default:
+                    EmptyView()
                 }
-                
-             
             }
             .background(Color.background)
             .refreshable {
