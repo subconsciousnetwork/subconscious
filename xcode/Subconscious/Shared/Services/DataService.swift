@@ -120,20 +120,21 @@ actor DataService {
         petname: Petname
     ) async throws -> PeerRecord {
         let sphere = try await noosphere.traverse(petname: petname)
-        logger.debug(
+        let identity = try await sphere.identity()
+        logger.log(
             "Traversed to peer",
             metadata: [
-                "petname": petname.description
+                "petname": petname.description,
+                "identity": identity.description,
             ]
         )
-        let identity = try await sphere.identity()
         let version = try await sphere.version()
         // Get peer info from last sync
         let peer = try? database.readPeer(identity: identity)
         // Get changes since the last time we indexed this peer,
         // or get all changes if this is the first time we've tried to index.
         let changes = try await sphere.changes(since: peer?.since)
-        logger.debug(
+        logger.log(
             "Indexing peer",
             metadata: [
                 "petname": petname.description,
@@ -162,14 +163,14 @@ actor DataService {
                             memo: memo
                         )
                     )
-                    logger.debug(
+                    logger.log(
                         "Indexed memo \(slashlink)",
                         metadata: [
                             "slashlink": slashlink.description
                         ]
                     )
                 } else {
-                    logger.debug(
+                    logger.log(
                         "Removed indexed memo \(slashlink)",
                         metadata: [
                             "slashlink": slashlink.description
