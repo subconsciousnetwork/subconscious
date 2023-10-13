@@ -13,11 +13,19 @@ struct ExcerptView: View {
     var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
         Array(excerpt.split(separator: "\n").enumerated())
     }
+    var blocks: [EnumeratedSequence<[Subtext.Block]>.Element] {
+        Array(
+            Subtext(markup: excerpt)
+                .truncate(2)
+                .blocks
+                .enumerated()
+        )
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) {
-            ForEach(excerptLines, id: \.offset) { idx, line in
-                Text("\(String(line))")
+            ForEach(blocks, id: \.offset) { idx, block in
+                Text("\(String(block.body()))")
                     .fontWeight(
                         idx == 0 && excerptLines.count > 1
                             ? .medium
