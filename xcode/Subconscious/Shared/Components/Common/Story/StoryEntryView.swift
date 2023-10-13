@@ -23,7 +23,7 @@ private struct StoryEntryUserDetailsView: View {
 /// Show an excerpt of an entry in a feed
 struct StoryEntryView: View {
     var story: StoryEntry
-    var action: (Slashlink, String) -> Void
+    var onRequestDetail: (Slashlink, String) -> Void
     var onLink: (SubSlashlinkLink) -> Void
     var sharedNote: String {
         """
@@ -43,7 +43,7 @@ struct StoryEntryView: View {
     var body: some View {
         Button(
             action: {
-                action(
+                onRequestDetail(
                     story.entry.address,
                     story.entry.excerpt
                 )
@@ -77,7 +77,7 @@ struct StoryEntryView: View {
                         subtext: excerptSubtext,
                         transcludePreviews: [:],
                         onViewTransclude: { slashlink in
-                            action(slashlink, story.entry.excerpt)
+                            onRequestDetail(slashlink, story.entry.excerpt)
                         }
                     )
                     .padding([.leading, .trailing], AppTheme.padding)
@@ -151,7 +151,7 @@ struct StoryPlainView_Previews: PreviewProvider {
                 ),
                 author: UserProfile.dummyData()
             ),
-            action: { _, _ in },
+            onRequestDetail: { _, _ in },
             onLink: { _ in }
         )
     }

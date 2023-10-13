@@ -21,7 +21,7 @@ struct FeedListView: View {
                 ForEach(feed) { story in
                     StoryEntryView(
                         story: story,
-                        action: { address, _ in
+                        onRequestDetail: { address, _ in
                             store.send(
                                 .detailStack(
                                     .pushDetail(

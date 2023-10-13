@@ -37,7 +37,7 @@ struct RecentTabView: View {
                         entry: entry,
                         author: user
                     ),
-                    action: { address, _ in
+                    onRequestDetail: { address, _ in
                         notify(
                             .requestDetail(
                                 .from(
