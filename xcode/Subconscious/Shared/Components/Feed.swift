@@ -35,13 +35,16 @@ struct FeedNavigationView: View {
                             StoryEntryView(
                                 story: story,
                                 action: { address, _ in
-                                    store.send(.detailStack(
-                                        .pushDetail(
-                                        MemoDetailDescription.from(
-                                            address: address,
-                                            fallback: ""
+                                    store.send(
+                                        .detailStack(
+                                            .pushDetail(
+                                                MemoDetailDescription.from(
+                                                    address: address,
+                                                    fallback: ""
+                                                )
+                                            )
                                         )
-                                    )))
+                                    )
                                 },
                                 onLink: { link in
                                     store.send(
