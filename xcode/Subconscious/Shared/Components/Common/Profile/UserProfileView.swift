@@ -36,9 +36,9 @@ struct RecentTabView: View {
             ForEach(state.recentEntries) { entry in
                 StoryEntryView(
                     story: StoryEntry(
-                        entry: entry
+                        entry: entry,
+                        author: user
                     ),
-                    author: user,
                     action: { address, _ in action(address) },
                     onLink: { link in onLink(entry.address, link) }
                 )
@@ -65,7 +65,7 @@ struct FollowTabView: View {
         ForEach(state.following) { follow in
             StoryUserView(
                 story: follow,
-                onNavigate: {
+                action: { _ in
                     onNavigateToUser(follow.user.address)
                 },
                 profileAction: onProfileAction,

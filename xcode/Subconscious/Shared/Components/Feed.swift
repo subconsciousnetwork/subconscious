@@ -31,36 +31,31 @@ struct FeedNavigationView: View {
                     case (.loading, _):
                         FeedPlaceholderView()
                     case let (.loaded, .some(feed)):
-                        ForEach(feed) { entry in
-                            if let author = entry.author {
-                                StoryEntryView(
-                                    story: StoryEntry(
-                                        author: author,
-                                        entry: entry
-                                    ),
-                                    action: { address, _ in
-                                        store.send(.detailStack(
-                                            .pushDetail(
-                                            MemoDetailDescription.from(
-                                                address: address,
-                                                fallback: ""
-                                            )
-                                        )))
-                                    },
-                                    onLink: { link in
-                                        store.send(
-                                            .detailStack(
-                                                .findAndPushLinkDetail(
-                                                    address: entry.address,
-                                                    link: link
-                                                )
+                        ForEach(feed) { story in
+                            StoryEntryView(
+                                story: story,
+                                action: { address, _ in
+                                    store.send(.detailStack(
+                                        .pushDetail(
+                                        MemoDetailDescription.from(
+                                            address: address,
+                                            fallback: ""
+                                        )
+                                    )))
+                                },
+                                onLink: { link in
+                                    store.send(
+                                        .detailStack(
+                                            .findAndPushLinkDetail(
+                                                address: story.entry.address,
+                                                link: link
                                             )
                                         )
-                                    }
-                                )
-                                
-                                Divider()
-                            }
+                                    )
+                                }
+                            )
+                            
+                            Divider()
                         }
                         
                         if feed.isEmpty {
@@ -185,7 +180,7 @@ enum FeedAction {
     /// Fetch stories for feed
     case fetchFeed
     /// Set stories
-    case succeedFetchFeed([EntryStub])
+    case succeedFetchFeed([StoryEntry])
     /// Fetch feed failed
     case failFetchFeed(Error)
     
@@ -260,7 +255,7 @@ struct FeedModel: ModelProtocol {
     )
     /// Entry detail
     var detailStack = DetailStackModel()
-    var entries: [EntryStub]? = nil
+    var entries: [StoryEntry]? = nil
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -446,7 +441,7 @@ struct FeedModel: ModelProtocol {
     static func succeedFetchFeed(
         state: FeedModel,
         environment: AppEnvironment,
-        entries: [EntryStub]
+        entries: [StoryEntry]
     ) -> Update<FeedModel> {
         var model = state
         model.entries = entries

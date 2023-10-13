@@ -23,7 +23,6 @@ private struct StoryEntryUserDetailsView: View {
 /// Show an excerpt of an entry in a feed
 struct StoryEntryView: View {
     var story: StoryEntry
-    var author: UserProfile
     var action: (Slashlink, String) -> Void
     var onLink: (SubSlashlinkLink) -> Void
     var sharedNote: String {
@@ -35,6 +34,10 @@ struct StoryEntryView: View {
     }
     var excerptSubtext: Subtext {
         Subtext(markup: story.entry.excerpt)
+    }
+    
+    var author: UserProfile {
+        story.author
     }
     
     var body: some View {
@@ -97,7 +100,7 @@ struct StoryEntryView: View {
                             .frame(width: AppTheme.unit3, height: AppTheme.unit3)
                         
                         SlashlinkDisplayView(slashlink: Slashlink(
-                            peer: story.author.address.peer,
+                            peer: author.address.peer,
                             slug: story.entry.address.slug
                         ))
                         .theme(base: .secondary, slug: .secondary)
@@ -145,7 +148,8 @@ struct StoryPlainView_Previews: PreviewProvider {
                         )
                     ),
                     did: Did.dummyData()
-                )
+                ),
+                author: UserProfile.dummyData()
             ),
             action: { _, _ in },
             onLink: { _ in }
