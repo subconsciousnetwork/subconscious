@@ -48,7 +48,10 @@ struct RecentTabView: View {
         }
         
         if state.recentEntries.count == 0 {
-            EmptyStateView()
+            let name = state.user?.address.peer?.markup ?? "This user"
+            EmptyStateView(
+                message: "\(name) has not posted any notes yet."
+            )
         } else {
             FabSpacerView()
         }
@@ -78,7 +81,10 @@ struct FollowTabView: View {
         }
         
         if state.following.count == 0 {
-            EmptyStateView()
+            let name = state.user?.address.peer?.markup ?? "This user"
+            EmptyStateView(
+                message: "\(name) does not follow anyone."
+            )
         } else {
             FabSpacerView()
         }

@@ -30,9 +30,14 @@ struct FeedNavigationView: View {
                 case let (.loaded, .some(feed)):
                     switch feed.count {
                     case 0:
-                        FeedEmptyView(onRefresh: { app.send(.syncAll) })
+                        FeedEmptyView(
+                            onRefresh: { app.send(.syncAll) }
+                        )
                     default:
-                        FeedListView(feed: feed, store: store)
+                        FeedListView(
+                            feed: feed,
+                            store: store
+                        )
                     }
                 case (.notFound, _):
                     NotFoundView()

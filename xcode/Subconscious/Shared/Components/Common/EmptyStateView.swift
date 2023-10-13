@@ -9,12 +9,13 @@ import Foundation
 import SwiftUI
 
 struct EmptyStateView: View {
+    var message: String
     var body: some View {
         VStack(spacing: AppTheme.unit * 6) {
             Spacer()
             Image(systemName: "sparkles")
                 .font(.system(size: 64))
-            Text("Nothing to see here... yet!")
+            Text(message)
             Spacer()
         }
         .padding(AppTheme.padding)
