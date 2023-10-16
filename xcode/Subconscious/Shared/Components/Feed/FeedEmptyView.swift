@@ -21,8 +21,8 @@ struct FeedEmptyView: View {
                             Image(systemName: "sparkles")
                                 .font(.system(size: 64))
                             VStack(spacing: AppTheme.unit) {
-                                Text("Your feed is empty")
-                                Text("When you follow others their notes will appear here")
+                                Text("Your feed is empty.")
+                                Text("When you follow others their notes will appear here.")
                             }
                             
                             VStack(spacing: AppTheme.unit) {
