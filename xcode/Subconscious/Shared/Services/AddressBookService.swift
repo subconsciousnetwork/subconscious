@@ -341,13 +341,7 @@ actor AddressBookService {
         }
         
         try await noosphere.setPetname(did: did, petname: petname)
-        let version = try await noosphere.save()
-        try database.writeOurSphere(
-            OurSphereRecord(
-                identity: ourIdentity,
-                since: version
-            )
-        )
+        let _ = try await noosphere.save()
     }
     
     func resolutionStatus(petname: Petname) async throws -> ResolutionStatus {
@@ -423,16 +417,9 @@ actor AddressBookService {
     /// Disassociates the passed Petname from any DID within the sphere,
     /// saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws -> Did {
-        let ourIdentity = try await noosphere.identity()
         let did = try await self.noosphere.getPetname(petname: petname)
         try await self.addressBook.unsetPetname(petname: petname)
-        let version = try await self.noosphere.save()
-        try database.writeOurSphere(
-            OurSphereRecord(
-                identity: ourIdentity,
-                since: version
-            )
-        )
+        let _ = try await self.noosphere.save()
         return did
     }
     
