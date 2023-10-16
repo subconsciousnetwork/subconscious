@@ -2519,7 +2519,6 @@ struct AppEnvironment {
     var noosphere: NoosphereService
     var database: DatabaseService
     var data: DataService
-    var feed: FeedService
     var transclude: TranscludeService
     
     var recoveryPhrase: RecoveryPhraseEnvironment = RecoveryPhraseEnvironment()
@@ -2610,7 +2609,6 @@ struct AppEnvironment {
             userProfile: userProfile
         )
         
-        self.feed = FeedService()
         self.gatewayProvisioningService = GatewayProvisioningService()
         self.transclude = TranscludeService(
             database: database,

@@ -13,12 +13,11 @@ struct EntryStub:
     Hashable,
     Equatable,
     Identifiable,
-    CustomDebugStringConvertible,
-    Codable
+    CustomDebugStringConvertible
 {
     let did: Did
     let address: Slashlink
-    let excerpt: String
+    let excerpt: Subtext
     let modified: Date
 
     var id: Slashlink { address }
@@ -38,6 +37,7 @@ struct EntryStub:
 
 extension EntryLink {
     init(_ stub: EntryStub) {
-        self.init(address: stub.address, title: stub.excerpt.title())
+        // TODO: find a nicer signature
+        self.init(address: stub.address, title: stub.excerpt.blocks.first?.body().toString().title() ?? "")
     }
 }

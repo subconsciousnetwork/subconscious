@@ -469,11 +469,13 @@ final class DatabaseService {
                 let address = row.col(0)?
                     .toString()?
                     .toSlashlink(),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let modified = row.col(1)?.toDate()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
@@ -538,11 +540,13 @@ final class DatabaseService {
                     .toString()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let modified = row.col(2)?.toDate()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: slashlink,
@@ -587,11 +591,13 @@ final class DatabaseService {
                     .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let modified = row.col(2)?.toDate()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
@@ -1040,7 +1046,7 @@ final class DatabaseService {
             let petname = row.col(1)?.toString()?.toPetname()
             let slug = row.col(2)?.toString()?.toSlug()
             let modified = row.col(3)?.toDate()
-            let excerpt = row.col(4)?.toString() ?? ""
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
             switch (petname, slug, modified) {
             case let (.some(petname), .some(slug), .some(modified)):
                 return EntryStub(
@@ -1099,11 +1105,13 @@ final class DatabaseService {
                     .toString()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let modified = row.col(2)?.toDate()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
@@ -1137,11 +1145,13 @@ final class DatabaseService {
                     .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let modified = row.col(1)?.toDate()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
@@ -1182,11 +1192,13 @@ final class DatabaseService {
                     .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let modified = row.col(2)?.toDate()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,

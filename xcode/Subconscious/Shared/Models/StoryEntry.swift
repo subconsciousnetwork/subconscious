@@ -11,8 +11,7 @@ import Foundation
 struct StoryEntry:
     Hashable,
     Identifiable,
-    CustomStringConvertible,
-    Codable
+    CustomStringConvertible
 {
     var id = UUID()
     var entry: EntryStub

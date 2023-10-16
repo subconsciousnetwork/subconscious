@@ -29,7 +29,7 @@ struct SubtextView: View {
             }
             .filter { entry in
                 // Avoid empty transclude blocks
-                entry.excerpt.count > 0
+                entry.excerpt.blocks.count > 0
             }
     }
     
@@ -120,7 +120,7 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/wanderer-your-footsteps-are-the-road"
                         )!,
-                        excerpt: "hello mother",
+                        excerpt: Subtext.truncate(text: "hello mother", maxBlocks: 2),
                         modified: Date.now
                     ),
                     Slashlink("/voice")!: EntryStub(
@@ -128,7 +128,7 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/voice"
                         )!,
-                        excerpt: "hello father",
+                        excerpt: Subtext.truncate(text: "hello father", maxBlocks: 2),
                         modified: Date.now
                     ),
                     Slashlink("/memory")!: EntryStub(
@@ -136,7 +136,7 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/memory"
                         )!,
-                        excerpt: "hello world",
+                        excerpt: Subtext.truncate(text: "hello world", maxBlocks: 2),
                         modified: Date.now
                     )
                 ],

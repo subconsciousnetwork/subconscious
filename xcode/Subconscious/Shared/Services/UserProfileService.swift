@@ -277,7 +277,7 @@ actor UserProfileService {
                         petname: address.petname,
                         slug: slug
                     ),
-                    excerpt: memo.excerpt(),
+                    excerpt: Subtext.truncate(text: memo.body, maxBlocks: 2),
                     modified: memo.modified
                 )
             )

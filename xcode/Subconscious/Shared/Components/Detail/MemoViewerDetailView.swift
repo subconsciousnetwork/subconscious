@@ -655,7 +655,10 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                     address: Slashlink(
                         "/infinity-paths"
                     )!,
-                    excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
+                    excerpt: Subtext.truncate(
+                        text: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
+                        maxBlocks: 2
+                    ),
                     modified: Date.now
                 )
             ],
@@ -672,13 +675,19 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("@bob/bar")!,
-                    excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
+                    excerpt: Subtext.truncate(
+                        text: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
+                        maxBlocks: 2
+                    ),
                     modified: Date.now
                 ),
                 EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("@bob/baz")!,
-                    excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
+                    excerpt: Subtext.truncate(
+                        text: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
+                        maxBlocks: 2
+                    ),
                     modified: Date.now
                 )
             ],

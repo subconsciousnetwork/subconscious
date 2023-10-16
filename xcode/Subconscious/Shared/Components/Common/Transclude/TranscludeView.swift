@@ -8,22 +8,15 @@
 import SwiftUI
 
 struct ExcerptView: View {
-    var excerpt: String
+    var subtext: Subtext
     var spacing: CGFloat = AppTheme.unit
-    var blocks: [Subtext.Block] {
-        Array(
-            Subtext(markup: excerpt)
-                .truncate(2)
-                .blocks
-        )
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) {
-            ForEach(blocks, id: \.self) { block in
+            ForEach(subtext.blocks, id: \.self) { block in
                 Text("\(String(block.body()))")
                     .fontWeight(
-                        block == blocks.first && blocks.count > 1
+                        block == subtext.blocks.first && subtext.blocks.count > 1
                             ? .medium
                             : .regular
                     )
@@ -37,10 +30,6 @@ struct TranscludeView: View {
     var entry: EntryStub
     var action: () -> Void
     
-    var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
-        Array(entry.excerpt.split(separator: "\n").enumerated())
-    }
-
     var body: some View {
         Button(
             action: action,
@@ -51,7 +40,7 @@ struct TranscludeView: View {
                         slashlink: entry.address
                     )
                     
-                    ExcerptView(excerpt: entry.excerpt)
+                    ExcerptView(subtext: entry.excerpt)
                 }
             }
         )
@@ -66,7 +55,7 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("/short")!,
-                    excerpt: "Short.",
+                    excerpt: Subtext.truncate(text: "Short.", maxBlocks: 2),
                     modified: Date.now
                 ),
                 action: { }
@@ -75,7 +64,10 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("@gordon/loomings")!,
-                    excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
+                    excerpt: Subtext.truncate(
+                        text: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
+                        maxBlocks: 2
+                    ),
                     modified: Date.now
                 ),
                 action: { }
@@ -84,7 +76,10 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("/loomings")!,
-                    excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
+                    excerpt: Subtext.truncate(
+                        text: "Call me Ishmael. Some years ago- never mind how long precisely",
+                        maxBlocks: 2
+                    ),
                     modified: Date.now
                 ),
                 action: { }
@@ -93,10 +88,13 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("did:subconscious:local/loomings")!,
-                    excerpt: """
-                            Call me Ishmael.
-                            Some years ago- never mind how long precisely
-                            """,
+                    excerpt: Subtext.truncate(
+                        text: """
+                              Call me Ishmael.
+                              Some years ago- never mind how long precisely
+                              """,
+                        maxBlocks: 2
+                    ),
                     modified: Date.now
                 ),
                 action: { }
@@ -105,7 +103,10 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("did:key:abc123/loomings")!,
-                    excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
+                    excerpt: Subtext.truncate(
+                        text: "Call me Ishmael. Some years ago- never mind how long precisely",
+                        maxBlocks: 2
+                    ),
                     modified: Date.now
                 ),
                 action: { }

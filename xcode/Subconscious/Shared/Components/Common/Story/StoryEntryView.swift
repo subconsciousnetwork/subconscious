@@ -32,9 +32,6 @@ struct StoryEntryView: View {
         \(story.entry.address)
         """
     }
-    var excerptSubtext: Subtext {
-        Subtext(markup: story.entry.excerpt)
-    }
     
     var author: UserProfile {
         story.author
@@ -45,7 +42,7 @@ struct StoryEntryView: View {
             action: {
                 onRequestDetail(
                     story.entry.address,
-                    story.entry.excerpt
+                    story.entry.excerpt.plainText
                 )
             },
             label: {
@@ -74,10 +71,10 @@ struct StoryEntryView: View {
                     
                     // MARK: excerpt
                     SubtextView(
-                        subtext: excerptSubtext,
+                        subtext: story.entry.excerpt,
                         transcludePreviews: [:],
                         onViewTransclude: { slashlink in
-                            onRequestDetail(slashlink, story.entry.excerpt)
+                            onRequestDetail(slashlink, story.entry.excerpt.plainText)
                         }
                     )
                     .padding([.leading, .trailing], AppTheme.padding)

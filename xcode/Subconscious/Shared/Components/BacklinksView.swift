@@ -52,19 +52,25 @@ struct BacklinksView_Previews: PreviewProvider {
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
-                        excerpt: "Short",
+                        excerpt: Subtext.truncate(text: "Short", maxBlocks: 2),
                         modified: Date.now
                     ),
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink("/loomings")!,
-                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        excerpt: Subtext.truncate(
+                            text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                            maxBlocks: 2
+                        ),
                         modified: Date.now
                     ),
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
-                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        excerpt: Subtext.truncate(
+                            text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                            maxBlocks: 2
+                        ),
                         modified: Date.now
                     )
                 ],

@@ -11,6 +11,12 @@ import SwiftUI
 struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     let base: Substring
     let blocks: [Block]
+    
+    var plainText: String {
+        blocks
+            .map { b in b.body().toString() }
+            .joined(separator: "\n")
+    }
 
     static func parse(markup: String) -> Self {
         return Self.init(markup: markup)
@@ -653,6 +659,21 @@ extension Subtext {
     private static let maxExcerptSize = 280
     private static let maxGeneratedSlugSize = 128
     
+    static func truncate(text: String, maxBlocks: Int, fallback: String = "") -> Subtext {
+        let prefix = text.prefix(maxBlocks * 560)
+        let dom = Subtext(markup: String(prefix))
+        // Filter out empty blocks
+        var validBlocks = dom.blocks
+            .filter { block in !block.isEmpty }
+            .prefix(maxBlocks + 1)
+        
+        if validBlocks.count > 1 {
+            _ = validBlocks.popLast()
+        }
+        
+        return Subtext(base: dom.base, blocks: Array(validBlocks))
+    }
+    
     /// Derive an excerpt
     func excerpt(fallback: String = "") -> String {
         // Filter out empty blocks
@@ -664,15 +685,6 @@ extension Subtext {
         let output = validBlocks.joined(separator: "\n")
         
         return output.isEmpty ? fallback : output
-    }
-    
-    func truncate(_ maxBlocks: Int = 2, fallback: String = "") -> Subtext {
-        // Filter out empty blocks
-        let validBlocks = blocks
-            .filter { block in !block.isEmpty }
-            .prefix(maxBlocks)
-        
-        return Subtext(base: self.base, blocks: Array(validBlocks))
     }
     
     static func excerpt(markup: String, fallback: String = "") -> String {
