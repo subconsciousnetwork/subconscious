@@ -61,9 +61,8 @@ struct HomeProfileView: View {
             
             if store.state.isSearchPresented {
                 SearchView(
-                    state: store.state.search,
-                    send: Address.forward(
-                        send: store.send,
+                    store: store.viewStore(
+                        get: \.search,
                         tag: HomeProfileSearchCursor.tag
                     )
                 )
