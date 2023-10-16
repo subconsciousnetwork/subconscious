@@ -79,7 +79,6 @@ struct SubtextView: View {
                 }
             }
         }
-        .transition(.slide)
         .expandAlignedLeading()
     }
 }
