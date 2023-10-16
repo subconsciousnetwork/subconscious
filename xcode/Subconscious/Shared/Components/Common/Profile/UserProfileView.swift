@@ -37,12 +37,12 @@ struct RecentTabView: View {
                         entry: entry,
                         author: user
                     ),
-                    onRequestDetail: { address, _ in
+                    onRequestDetail: { address, excerpt in
                         notify(
                             .requestDetail(
                                 .from(
                                     address: address,
-                                    fallback: ""
+                                    fallback: excerpt
                                 )
                             )
                         )
