@@ -47,7 +47,6 @@ struct TabHeaderView: View {
                     .frame(width: increment - inset, height: 3)
                     .cornerRadius(2, corners: [.topLeft, .topRight])
                     .offset(x: inset / 2 + increment * CGFloat(focusedTabIndex), y: 0)
-                    .opacity(0.5)
                     .animation(.easeInOut(duration: Duration.fast), value: focusedTabIndex)
             }
             .frame(height: 3)

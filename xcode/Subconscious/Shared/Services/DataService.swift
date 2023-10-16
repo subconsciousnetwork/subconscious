@@ -665,9 +665,30 @@ actor DataService {
         return try self.database.listFeed(owner: identity)
     }
     
-    nonisolated func listFeedPublisher() -> AnyPublisher<[EntryStub], Error> {
+    nonisolated func listFeedPublisher() -> AnyPublisher<[StoryEntry], Error> {
         Future.detached {
-            try await self.listFeed()
+            let entries = try await self.listFeed()
+            var authors: [Did:UserProfile] = [:]
+            var stories: [StoryEntry] = []
+            
+            for entry in entries {
+                // Have we already found the author for this post?
+                if let author = authors[entry.did] {
+                    stories.append(StoryEntry(entry: entry, author: author))
+                    continue
+                }
+                
+                let user = try await self.userProfile.identifyUser(
+                    did: entry.did,
+                    address: entry.address,
+                    context: nil
+                )
+                
+                authors.updateValue(user, forKey: entry.did)
+                stories.append(StoryEntry(entry: entry, author: user))
+            }
+            
+            return stories
         }
         .eraseToAnyPublisher()
     }

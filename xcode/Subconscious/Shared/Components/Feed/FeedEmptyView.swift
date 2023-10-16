@@ -1,13 +1,13 @@
 //
-//  EntryListEmptyView.swift
+//  FeedEmptyView.swift
 //  Subconscious (iOS)
 //
-//  Created by Gordon Brander on 6/28/23.
+//  Created by Ben Follington on 13/10/2023.
 //
 
 import SwiftUI
 
-struct EntryListEmptyView: View {
+struct FeedEmptyView: View {
     var onRefresh: () -> Void
 
     var body: some View {
@@ -20,14 +20,22 @@ struct EntryListEmptyView: View {
                         VStack(spacing: AppTheme.unit * 6) {
                             Image(systemName: "sparkles")
                                 .font(.system(size: 64))
-                            Text("Your Subconscious is empty")
+                            VStack(spacing: AppTheme.unit) {
+                                Text("Your feed is empty.")
+                                Text("When you follow others their notes will appear here.")
+                            }
+                            
                             VStack(spacing: AppTheme.unit) {
                                 Text(
-                                    "If your mind is empty, it is always ready for anything, it is open to everything. In the beginner's mind there are many possibilities, but in the expert's mind there are few."
+                                    """
+                                    Become totally empty
+                                    Quiet the restlessness of the mind
+                                    Only then will you witness everything unfolding from emptiness.
+                                    """
                                 )
                                 .italic()
                                 Text(
-                                    "Shunryū Suzuki"
+                                    "Lao Tzu"
                                 )
                             }
                             .frame(width: 240)
@@ -50,9 +58,9 @@ struct EntryListEmptyView: View {
     }
 }
 
-struct FeedEmptyView_Previews: PreviewProvider {
+struct EntryListEmptyView_Previews: PreviewProvider {
     static var previews: some View {
-        FeedEmptyView(
+        EntryListEmptyView(
             onRefresh: {}
         )
     }

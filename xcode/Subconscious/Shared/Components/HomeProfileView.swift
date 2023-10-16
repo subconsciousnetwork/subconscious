@@ -57,6 +57,28 @@ struct HomeProfileView: View {
                 app: app,
                 store: store
             )
+            .zIndex(1)
+            
+            if store.state.isSearchPresented {
+                SearchView(
+                    store: store.viewStore(
+                        get: \.search,
+                        tag: HomeProfileSearchCursor.tag
+                    )
+                )
+                .zIndex(3)
+                .transition(SearchView.presentTransition)
+            }
+            PinTrailingBottom(
+                content: FABView(
+                    action: {
+                        store.send(.setSearchPresented(true))
+                    }
+                )
+                .padding()
+            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .zIndex(2)
         }
         .onAppear {
             store.send(.appear)
@@ -80,10 +102,13 @@ enum HomeProfileAction {
         category: "HomeProfileAction"
     )
     
+    case search(SearchAction)
+    case activatedSuggestion(Suggestion)
     case detailStack(DetailStackAction)
     case appear
     case ready
-
+    
+    case setSearchPresented(Bool)
     case requestProfileRoot
 }
 
@@ -120,8 +145,41 @@ extension HomeProfileAction {
     }
 }
 
+struct HomeProfileSearchCursor: CursorProtocol {
+    typealias Model = HomeProfileModel
+    typealias ViewModel = SearchModel
+
+    static func get(state: Model) -> ViewModel {
+        state.search
+    }
+
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.search = inner
+        return model
+    }
+
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case .activatedSuggestion(let suggestion):
+            return .activatedSuggestion(suggestion)
+        case .requestPresent(let isPresented):
+            return .setSearchPresented(isPresented)
+        default:
+            return .search(action)
+        }
+    }
+}
+
 // MARK: Model
 struct HomeProfileModel: ModelProtocol {
+    /// Search HUD
+    var isSearchPresented = false
+    /// Search HUD
+    var search = SearchModel(
+        placeholder: "Search or create..."
+    )
+    
     var detailStack = DetailStackModel()
     var details: [MemoDetailDescription] {
         detailStack.details
@@ -133,6 +191,18 @@ struct HomeProfileModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<Self> {
         switch action {
+        case .search(let action):
+            return HomeProfileSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .setSearchPresented(let isPresented):
+            return setSearchPresented(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
         case let .detailStack(action):
             return HomeProfileDetailStackCursor.update(
                 state: state,
@@ -152,6 +222,12 @@ struct HomeProfileModel: ModelProtocol {
         case .requestProfileRoot:
             return requestProfileRoot(
                 state: state,
+                environment: environment
+            )
+        case let .activatedSuggestion(suggestion):
+            return HomeProfileDetailStackCursor.update(
+                state: state,
+                action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
         }
@@ -188,5 +264,16 @@ struct HomeProfileModel: ModelProtocol {
             action: .setDetails([]),
             environment: environment
         )
+    }
+    
+    /// Set search presented flag
+    static func setSearchPresented(
+        state: Self,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isSearchPresented = isPresented
+        return Update(state: model)
     }
 }

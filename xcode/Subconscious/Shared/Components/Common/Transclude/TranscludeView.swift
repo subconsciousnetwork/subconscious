@@ -10,16 +10,20 @@ import SwiftUI
 struct ExcerptView: View {
     var excerpt: String
     var spacing: CGFloat = AppTheme.unit
-    var excerptLines: [EnumeratedSequence<[String.SubSequence]>.Element] {
-        Array(excerpt.split(separator: "\n").enumerated())
+    var blocks: [Subtext.Block] {
+        Array(
+            Subtext(markup: excerpt)
+                .truncate(2)
+                .blocks
+        )
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) {
-            ForEach(excerptLines, id: \.offset) { idx, line in
-                Text("\(String(line))")
+            ForEach(blocks, id: \.self) { block in
+                Text("\(String(block.body()))")
                     .fontWeight(
-                        idx == 0 && excerptLines.count > 1
+                        block == blocks.first && blocks.count > 1
                             ? .medium
                             : .regular
                     )
@@ -27,6 +31,7 @@ struct ExcerptView: View {
         }
     }
 }
+
 
 struct TranscludeView: View {
     var entry: EntryStub
@@ -45,6 +50,7 @@ struct TranscludeView: View {
                         pfp: .generated(entry.did),
                         slashlink: entry.address
                     )
+                    
                     ExcerptView(excerpt: entry.excerpt)
                 }
             }

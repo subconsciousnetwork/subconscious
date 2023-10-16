@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-struct FeedPlaceholderView: View {
-    var body: some View {
-        StoryPlaceholderView(bioWidthFactor: 1.2)
-        StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
-        StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
-    }
-}
 
 struct ProfileHeaderPlaceholderView: View {
     @State var opacity = 1.0
@@ -115,7 +108,7 @@ struct StoryPlaceholderView: View {
                 .delay(delay),
             value: opacity
         )
-        .onAppear {
+        .task {
             opacity = 0.33
         }
     }

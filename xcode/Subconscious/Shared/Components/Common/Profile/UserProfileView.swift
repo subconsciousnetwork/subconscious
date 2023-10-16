@@ -26,22 +26,46 @@ struct ProfileStatisticView: View {
 }
 
 struct RecentTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onNavigateToNote: (Slashlink) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        ForEach(state.recentEntries) { entry in
-            StoryEntryView(
-                story: StoryEntry(
-                    entry: entry
-                ),
-                action: { address, _ in onNavigateToNote(address) }
-            )
+        if let user = store.state.user {
+            ForEach(store.state.recentEntries) { entry in
+                StoryEntryView(
+                    story: StoryEntry(
+                        entry: entry,
+                        author: user
+                    ),
+                    onRequestDetail: { address, excerpt in
+                        notify(
+                            .requestDetail(
+                                .from(
+                                    address: address,
+                                    fallback: excerpt
+                                )
+                            )
+                        )
+                    },
+                    onLink: { link in
+                        notify(
+                            .requestFindLinkDetail(
+                                address: entry.address,
+                                link: link
+                            )
+                        )
+                    }
+                )
+                
+                Divider()
+            }
         }
         
-        if state.recentEntries.count == 0 {
-            EmptyStateView()
+        if store.state.recentEntries.count == 0 {
+            let name = store.state.user?.address.peer?.markup ?? "This user"
+            EmptyStateView(
+                message: "\(name) has not posted any notes yet."
+            )
         } else {
             FabSpacerView()
         }
@@ -49,27 +73,38 @@ struct RecentTabView: View {
 }
 
 struct FollowTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onNavigateToUser: (Slashlink) -> Void
-    var onProfileAction: (UserProfile, UserProfileAction) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        ForEach(state.following) { follow in
+        ForEach(store.state.following) { follow in
             StoryUserView(
                 story: follow,
-                onNavigate: {
-                    onNavigateToUser(follow.user.address)
+                action: { _ in
+                    notify(
+                        .requestNavigateToProfile(follow.user.address)
+                    )
                 },
-                profileAction: onProfileAction,
+                profileAction: { user, action in
+                    store.send(
+                        UserProfileDetailAction.from(user, action)
+                    )
+                },
                 onRefreshUser: {
-                    send(.requestWaitForFollowedUserResolution(follow.entry.petname))
+                    store.send(
+                        .requestWaitForFollowedUserResolution(follow.entry.petname)
+                    )
                 }
             )
+            
+            Divider()
         }
         
-        if state.following.count == 0 {
-            EmptyStateView()
+        if store.state.following.count == 0 {
+            let name = store.state.user?.address.peer?.markup ?? "This user"
+            EmptyStateView(
+                message: "\(name) does not follow anyone."
+            )
         } else {
             FabSpacerView()
         }
@@ -87,11 +122,12 @@ struct UserProfileView: View {
         store.send
     }
     
-    var onNavigateToNote: (Slashlink) -> Void
-    var onNavigateToUser: (Slashlink) -> Void
+    var notify: (UserProfileDetailNotification) -> Void
     
-    var onProfileAction: (UserProfile, UserProfileAction) -> Void
-    var onRefresh: () async -> Void
+    func onRefresh() async {
+        app.send(.syncAll)
+        await store.refresh()
+    }
     
     func columnLoading(label: String) -> TabbedColumnItem<FeedPlaceholderView> {
         TabbedColumnItem(
@@ -104,9 +140,8 @@ struct UserProfileView: View {
         TabbedColumnItem(
             label: "Notes",
             view: RecentTabView(
-                state: state,
-                send: send,
-                onNavigateToNote: onNavigateToNote
+                store: store,
+                notify: notify
             )
         )
     }
@@ -115,10 +150,8 @@ struct UserProfileView: View {
         TabbedColumnItem(
             label: "Following",
             view: FollowTabView(
-                state: state,
-                send: send,
-                onNavigateToUser: onNavigateToUser,
-                onProfileAction: onProfileAction
+                store: store,
+                notify: notify
             )
         )
     }
@@ -144,7 +177,7 @@ struct UserProfileView: View {
                             user: user,
                             statistics: state.statistics,
                             action: { action in
-                                onProfileAction(user, action)
+                                store.send(UserProfileDetailAction.from(user, action))
                             },
                             hideActionButton: state.loadingState != .loaded,
                             onTapStatistics: {
@@ -276,10 +309,7 @@ struct UserProfileView_Previews: PreviewProvider {
                 state: UserProfileDetailModel(),
                 environment: UserProfileDetailModel.Environment()
             ),
-            onNavigateToNote: { _ in print("navigate to note") },
-            onNavigateToUser: { _ in print("navigate to user") },
-            onProfileAction: { user, action in print("profile action") },
-            onRefresh: { }
+            notify: { _ in }
         )
     }
 }

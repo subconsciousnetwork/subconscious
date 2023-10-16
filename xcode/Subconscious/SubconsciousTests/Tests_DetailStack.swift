@@ -11,32 +11,48 @@ import ObservableStore
 
 class Tests_DetailStack: XCTestCase {
     let environment = AppEnvironment()
+    
+    func testSubSlashlinkRebase() throws {
+        let model = DetailStackModel()
+        
+        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
+        let baseAddress = Slashlink(petname: Petname("origin")!)
+        let link = SubSlashlinkLink(slashlink: slashlink)
+        
+        let rebasedAddress = DetailStackModel.rebaseLinkOnAddress(
+            address: baseAddress,
+            link: link
+        )
+        
+        if let petname = rebasedAddress.petname {
+            XCTAssertEqual(petname, Petname("bob.alice.origin")!)
+            XCTAssertEqual(rebasedAddress.slug, Slug("hello")!)
+        } else {
+            XCTFail("Missing petname")
+            return
+        }
+    }
+
 
     func testViewerSlashlinkConstruction() throws {
         let model = DetailStackModel()
         
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
+        let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            address: Slashlink(petname: Petname("origin")!),
+            address: address,
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
-        let update = DetailStackModel.update(
-            state: model,
-            action: newAction,
-            environment: environment
-        )
-        
-        if let detail = update.state.details.first?.address,
-           let petname = detail.petname {
-            XCTAssertEqual(petname, Petname("bob.alice.origin")!)
-            XCTAssertEqual(detail.slug, Slug("hello")!)
-        } else {
-            XCTFail("No detail")
-            return
+        switch newAction {
+        case let .findAndPushLinkDetail(newAddress, newLink):
+            XCTAssertEqual(address, newAddress)
+            XCTAssertEqual(link, newLink)
+        default:
+            XCTFail("Incorrect action")
         }
     }
 
@@ -51,19 +67,13 @@ class Tests_DetailStack: XCTestCase {
         )
         
         let newAction = DetailStackAction.tag(action)
-        let update = DetailStackModel.update(
-            state: model,
-            action: newAction,
-            environment: environment
-        )
         
-        if let detail = update.state.details.first?.address,
-           let petname = detail.petname {
-            XCTAssertEqual(petname, Petname("bob.alice")!)
-            XCTAssertEqual(detail.slug, Slug("hello")!)
-        } else {
-            XCTFail("No detail")
-            return
+        switch newAction {
+        case let .findAndPushLinkDetail(newAddress, newLink):
+            XCTAssertEqual(newAddress, Slashlink.ourProfile)
+            XCTAssertEqual(newLink, link)
+        default:
+            XCTFail("Incorrect action")
         }
     }
     

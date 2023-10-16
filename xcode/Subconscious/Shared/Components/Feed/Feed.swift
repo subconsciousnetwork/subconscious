@@ -23,41 +23,27 @@ struct FeedNavigationView: View {
     
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    switch (store.state.status, store.state.entries) {
-                    case (.loading, _):
-                        FeedPlaceholderView()
-                    case let (.loaded, .some(feed)):
-                        ForEach(feed) { entry in
-                            StoryEntryView(
-                                story: StoryEntry(
-                                    entry: entry
-                                ),
-                                action: { address, _ in
-                                    store.send(.detailStack(.pushDetail(
-                                        MemoDetailDescription.from(
-                                            address: address,
-                                            fallback: ""
-                                        )
-                                    )))
-                                }
-                            )
-                        }
-                        
-                        if feed.isEmpty {
-                            EmptyStateView()
-                        } else {
-                            FabSpacerView()
-                        }
-                    case (.notFound, _):
-                        NotFoundView()
+            VStack {
+                switch (store.state.status, store.state.entries) {
+                case (.loading, _):
+                    FeedPlaceholderView()
+                case let (.loaded, .some(feed)):
+                    switch feed.count {
+                    case 0:
+                        FeedEmptyView(
+                            onRefresh: { app.send(.syncAll) }
+                        )
                     default:
-                        EmptyView()
+                        FeedListView(
+                            feed: feed,
+                            store: store
+                        )
                     }
+                case (.notFound, _):
+                    NotFoundView()
+                default:
+                    EmptyView()
                 }
-                
-             
             }
             .background(Color.background)
             .refreshable {
@@ -96,8 +82,8 @@ struct FeedView: View {
     
     var body: some View {
         ZStack {
-           FeedNavigationView(app: app, store: store)
-            .zIndex(1)
+            FeedNavigationView(app: app, store: store)
+                .zIndex(1)
             
             if store.state.isSearchPresented {
                 SearchView(
@@ -149,6 +135,7 @@ extension FeedAction {
 //  MARK: Action
 enum FeedAction {
     case search(SearchAction)
+    case activatedSuggestion(Suggestion)
     case detailStack(DetailStackAction)
 
     /// Set search view presented
@@ -166,11 +153,10 @@ enum FeedAction {
     /// Fetch stories for feed
     case fetchFeed
     /// Set stories
-    case succeedFetchFeed([EntryStub])
+    case succeedFetchFeed([StoryEntry])
     /// Fetch feed failed
     case failFetchFeed(Error)
-    case activatedSuggestion(Suggestion)
-
+    
     case requestFeedRoot
 }
 
@@ -242,7 +228,7 @@ struct FeedModel: ModelProtocol {
     )
     /// Entry detail
     var detailStack = DetailStackModel()
-    var entries: [EntryStub]? = nil
+    var entries: [StoryEntry]? = nil
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -428,7 +414,7 @@ struct FeedModel: ModelProtocol {
     static func succeedFetchFeed(
         state: FeedModel,
         environment: AppEnvironment,
-        entries: [EntryStub]
+        entries: [StoryEntry]
     ) -> Update<FeedModel> {
         var model = state
         model.entries = entries

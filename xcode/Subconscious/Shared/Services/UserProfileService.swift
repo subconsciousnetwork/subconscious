@@ -33,6 +33,7 @@ enum UserProfileServiceError: Error {
     case other(String)
     case profileAlreadyExists
     case couldNotLoadSphereForProfile
+    case attemptToReadProfileFromInvalidAddress
 }
 
 extension UserProfileServiceError: LocalizedError {
@@ -69,6 +70,11 @@ extension UserProfileServiceError: LocalizedError {
         case .profileAlreadyExists:
             return String(
                 localized: "Request to create initial profile but user already has a profile memo",
+                comment: "UserProfileService error description"
+            )
+        case .attemptToReadProfileFromInvalidAddress:
+            return String(
+                localized: "Tried to read a profile memo from a slashlink that does not use the profile slug.",
                 comment: "UserProfileService error description"
             )
         case .other(let msg):
@@ -164,7 +170,14 @@ actor UserProfileService {
         address: Slashlink
     ) async -> UserProfileEntry? {
         do {
-            let data = try await noosphere.read(slashlink: address)
+            guard address.isProfile else {
+                throw UserProfileServiceError.attemptToReadProfileFromInvalidAddress
+            }
+            
+            let data = try? await noosphere.read(slashlink: address)
+            guard let data = data else {
+                return nil
+            }
             
             guard data.contentType == Self.profileContentType else {
                 throw UserProfileServiceError.unexpectedProfileContentType(data.contentType)

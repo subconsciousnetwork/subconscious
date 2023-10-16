@@ -16,9 +16,11 @@ struct StoryEntry:
 {
     var id = UUID()
     var entry: EntryStub
+    var author: UserProfile
 
     var description: String {
         """
+        \(String(describing: author.address))
         \(String(describing: entry))
         """
     }

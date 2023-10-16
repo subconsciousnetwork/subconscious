@@ -11,7 +11,7 @@ import SwiftUI
 struct EllipsisLabelView: View {
     var body: some View {
         Image(systemName: "ellipsis")
-            .frame(width: AppTheme.minTouchSize, height: AppTheme.minTouchSize)
+            .frame(width: AppTheme.minTouchSize + AppTheme.padding, height: AppTheme.minTouchSize + AppTheme.unit2)
             .foregroundColor(.secondary)
     }
 }
