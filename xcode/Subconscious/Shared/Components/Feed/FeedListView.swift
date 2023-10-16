@@ -21,13 +21,13 @@ struct FeedListView: View {
                 ForEach(feed) { story in
                     StoryEntryView(
                         story: story,
-                        onRequestDetail: { address, _ in
+                        onRequestDetail: { address, excerpt in
                             store.send(
                                 .detailStack(
                                     .pushDetail(
                                         MemoDetailDescription.from(
                                             address: address,
-                                            fallback: ""
+                                            fallback: excerpt
                                         )
                                     )
                                 )
