@@ -12,12 +12,6 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     let base: Substring
     let blocks: [Block]
     
-    var plainText: String {
-        blocks
-            .map { b in b.span.toString() }
-            .joined(separator: "\n")
-    }
-
     static func parse(markup: String) -> Self {
         return Self.init(markup: markup)
     }
@@ -50,6 +44,13 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
 
     var description: String {
         String(base)
+    }
+    
+    /// Return a snapshotted String of the contents of `blocks`, joined by newlines.
+    func toString() -> String {
+        blocks
+            .map { b in b.span.toString() }
+            .joined(separator: "\n")
     }
 
     /// Implement custom equatable for Subtext.
@@ -660,18 +661,24 @@ extension Subtext {
     private static let maxGeneratedSlugSize = 128
     
     static func truncate(text: String, maxBlocks: Int, fallback: String = "") -> Subtext {
-        let prefix = text.truncate(maxLength: min(560 * maxBlocks, 4000), ellipsis: "…")
-        let dom = Subtext(markup: String(prefix))
-        // Filter out empty blocks
-        var validBlocks = dom.blocks
-            .filter { block in !block.isEmpty }
-            .prefix(maxBlocks + 1)
+        var length = min(560 * maxBlocks, 4000)
+        let dom = Subtext(markup: text)
+        var blocks: [Subtext.Block] = []
         
-        if validBlocks.count > 2 {
-            _ = validBlocks.popLast()
+        for block in dom.blocks {
+            if block.isEmpty {
+                continue
+            }
+            
+            if length > block.span.count {
+                length -= block.span.count
+                blocks.append(block)
+            } else {
+                break
+            }
         }
         
-        return Subtext(base: dom.base, blocks: Array(validBlocks))
+        return Subtext(base: dom.base, blocks: Array(blocks))
     }
     
     /// Derive an excerpt

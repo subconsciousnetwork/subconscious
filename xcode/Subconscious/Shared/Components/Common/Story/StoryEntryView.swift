@@ -42,7 +42,7 @@ struct StoryEntryView: View {
             action: {
                 onRequestDetail(
                     story.entry.address,
-                    story.entry.excerpt.plainText
+                    story.entry.excerpt.toString()
                 )
             },
             label: {
@@ -74,7 +74,7 @@ struct StoryEntryView: View {
                         subtext: story.entry.excerpt,
                         transcludePreviews: [:],
                         onViewTransclude: { slashlink in
-                            onRequestDetail(slashlink, story.entry.excerpt.plainText)
+                            onRequestDetail(slashlink, story.entry.excerpt.toString())
                         }
                     )
                     .lineLimit(8)
