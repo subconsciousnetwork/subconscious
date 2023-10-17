@@ -660,7 +660,7 @@ extension Subtext {
     private static let maxGeneratedSlugSize = 128
     
     static func truncate(text: String, maxBlocks: Int, fallback: String = "") -> Subtext {
-        let prefix = text.truncate(maxLength: 560 * maxBlocks, ellipsis: "…")
+        let prefix = text.truncate(maxLength: min(560 * maxBlocks, 4000), ellipsis: "…")
         let dom = Subtext(markup: String(prefix))
         // Filter out empty blocks
         var validBlocks = dom.blocks
