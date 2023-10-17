@@ -13,14 +13,7 @@ struct ExcerptView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) {
-            ForEach(subtext.blocks, id: \.self) { block in
-                Text("\(String(block.body()))")
-                    .fontWeight(
-                        block == subtext.blocks.first && subtext.blocks.count > 1
-                            ? .medium
-                            : .regular
-                    )
-            }
+            Text("\(subtext.excerpt())")
         }
     }
 }

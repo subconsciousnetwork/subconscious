@@ -14,7 +14,7 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     
     var plainText: String {
         blocks
-            .map { b in b.body().toString() }
+            .map { b in b.span.toString() }
             .joined(separator: "\n")
     }
 
@@ -660,14 +660,14 @@ extension Subtext {
     private static let maxGeneratedSlugSize = 128
     
     static func truncate(text: String, maxBlocks: Int, fallback: String = "") -> Subtext {
-        let prefix = text.prefix(maxBlocks * 560)
+        let prefix = text.truncate(maxLength: 560 * maxBlocks, ellipsis: "…")
         let dom = Subtext(markup: String(prefix))
         // Filter out empty blocks
         var validBlocks = dom.blocks
             .filter { block in !block.isEmpty }
             .prefix(maxBlocks + 1)
         
-        if validBlocks.count > 1 {
+        if validBlocks.count > 2 {
             _ = validBlocks.popLast()
         }
         
@@ -683,6 +683,7 @@ extension Subtext {
             .prefix(2) // Take first two blocks
         
         let output = validBlocks.joined(separator: "\n")
+            .truncate(maxLength: Self.maxExcerptSize)
         
         return output.isEmpty ? fallback : output
     }

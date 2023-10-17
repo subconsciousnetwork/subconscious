@@ -77,6 +77,8 @@ struct StoryEntryView: View {
                             onRequestDetail(slashlink, story.entry.excerpt.plainText)
                         }
                     )
+                    .lineLimit(8)
+                    .truncationMode(.tail)
                     .padding([.leading, .trailing], AppTheme.padding)
                     // Handle tapped slashlinks in the preview
                     .environment(\.openURL, OpenURLAction { url in
