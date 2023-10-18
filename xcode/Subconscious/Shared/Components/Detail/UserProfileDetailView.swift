@@ -89,7 +89,7 @@ extension UserProfileDetailAction {
         switch action {
         case .succeedIndexOurSphere:
             return .refresh(forceSync: false)
-        case .succeedIndexPeer:
+        case .completeIndexPeers:
             return .refresh(forceSync: false)
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
@@ -183,8 +183,9 @@ extension UserProfileDetailAction {
         action: AppAction
     ) -> UserProfileDetailAction? {
         switch (action) {
-        case let .succeedIndexPeer(peer):
-            return .succeedIndexPeer(peer)
+            // TODO: put this back
+//        case let .succeedIndexPeer(peer):
+//            return .succeedIndexPeer(peer)
         case _:
             return nil
         }

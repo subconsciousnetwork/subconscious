@@ -295,8 +295,7 @@ extension MemoViewerDetailAction {
         _ action: AppAction
     ) -> MemoViewerDetailAction? {
         switch (action) {
-        case .succeedIndexOurSphere(_),
-             .succeedIndexPeer(_):
+        case .succeedIndexOurSphere, .completeIndexPeers:
             return .succeedIndexBackgroundSphere
         case _:
             return nil

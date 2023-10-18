@@ -21,6 +21,15 @@ struct DeveloperSettingsView: View {
                     Text("Reset First Run Experience")
                 }
             )
+            
+            Button(
+                action: {
+                    app.send(.writeTestData)
+                },
+                label: {
+                    Text("Write Test Data")
+                }
+            )
         }
         .navigationTitle("Developer")
     }

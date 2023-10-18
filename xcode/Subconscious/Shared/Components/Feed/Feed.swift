@@ -120,7 +120,7 @@ extension FeedAction {
         switch action {
         case .succeedIndexOurSphere:
             return .refreshAll
-        case .succeedIndexPeer:
+        case .completeIndexPeers:
             return .refreshAll
         case .succeedRecoverOurSphere:
             return .refreshAll
