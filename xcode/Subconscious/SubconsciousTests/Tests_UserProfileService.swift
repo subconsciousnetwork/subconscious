@@ -172,7 +172,7 @@ final class Tests_UserProfileService: XCTestCase {
         let _ = try await environment.data.indexOurSphere()
         
         let profileA = try await environment.userProfile.readProfileFromDb(did: did)
-        let profileB = await environment.userProfile.readProfileMemo(address: Slashlink.ourProfile)
+        let profileB = await environment.userProfile.readProfileMemo(sphere: environment.noosphere)
         
         XCTAssertEqual(profileA, profileB)
     }
