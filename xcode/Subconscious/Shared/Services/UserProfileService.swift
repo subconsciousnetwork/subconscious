@@ -167,14 +167,11 @@ actor UserProfileService {
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
     func readProfileMemo(
-        address: Slashlink
+        sphere: SphereProtocol
     ) async -> UserProfileEntry? {
+        let identity = try? await sphere.identity()
         do {
-            guard address.isProfile else {
-                throw UserProfileServiceError.attemptToReadProfileFromInvalidAddress
-            }
-            
-            let data = try? await noosphere.read(slashlink: address)
+            let data = try? await sphere.read(slashlink: Slashlink.ourProfile)
             guard let data = data else {
                 return nil
             }
@@ -182,11 +179,14 @@ actor UserProfileService {
             guard data.contentType == Self.profileContentType else {
                 throw UserProfileServiceError.unexpectedProfileContentType(data.contentType)
             }
+            logger.log(
+                "Read user profile at \(String(describing: identity))"
+            )
             
             return try await parseProfile(body: data.body)
         } catch {
             logger.warning(
-                "Failed to read profile at \(address): \(error.localizedDescription)"
+                "Failed to read profile at \(String(describing: identity)): \(error.localizedDescription)"
             )
             return nil
         }
@@ -206,23 +206,22 @@ actor UserProfileService {
     
     /// Load the underlying `_profile_` memo for a user and construct a `UserProfile` from it.
     private func loadProfileFromMemo(
-        did: Did,
+        sphere: SphereProtocol,
         address: Slashlink,
         alias: Petname?
     ) async throws -> UserProfile {
         let noosphereIdentity = try await noosphere.identity()
-        let isOurs = noosphereIdentity == did
+        let identity = try await sphere.identity()
+        let isOurs = noosphereIdentity == identity
         
-        let userProfileData = await self.readProfileMemo(
-            address: isOurs ? Slashlink.ourProfile : address
-        )
+        let userProfileData = await self.readProfileMemo(sphere: sphere)
         
         let followingStatus = await self.addressBook.followingStatus(
-            did: did,
+            did: identity,
             expectedName: address.petname?.leaf
         )
         
-        var aliases = try await self.addressBook.listAliases(did: did)
+        var aliases = try await self.addressBook.listAliases(did: identity)
         if let nickname = Petname.Name(userProfileData?.nickname ?? "") {
             aliases.append(nickname.toPetname())
         }
@@ -236,10 +235,10 @@ actor UserProfileService {
         }
         
         let profile = UserProfile(
-            did: did,
+            did: identity,
             nickname: Petname.Name(userProfileData?.nickname ?? ""),
             address: address,
-            pfp: .generated(did),
+            pfp: .generated(identity),
             bio: UserProfileBio(userProfileData?.bio ?? ""),
             category: isOurs ? UserCategory.ourself : UserCategory.human,
             ourFollowStatus: followingStatus,
@@ -251,10 +250,10 @@ actor UserProfileService {
     
     /// Takes a list of slugs and prepares an `EntryStub` for each, excluding hidden slugs.
     private func loadEntries(
+        sphere: SphereProtocol,
         address: Slashlink,
         slugs: [Slug]
     ) async throws -> [EntryStub] {
-        let sphere = try await self.noosphere.sphere(address: address)
         let identity = try await sphere.identity()
         var entries: [EntryStub] = []
         for slug in slugs {
@@ -318,7 +317,7 @@ actor UserProfileService {
     /// Sets our nickname, preserving existing profile data.
     /// This is intended to be idempotent for use in the onboarding flow.
     func updateOurNickname(nickname: Petname.Name) async throws {
-        guard let profile = await readProfileMemo(address: Slashlink.ourProfile) else {
+        guard let profile = await readProfileMemo(sphere: self.noosphere) else {
             let profile = UserProfileEntry(
                 nickname: nickname.verbatim,
                 bio: nil
@@ -358,10 +357,9 @@ actor UserProfileService {
     }
 
     private func readOurProfile(alias: Petname?) async throws -> UserProfile {
-        let identity = try await self.noosphere.identity()
         
         return try await self.loadProfileFromMemo(
-            did: identity,
+            sphere: self.noosphere,
             address: Slashlink.ourProfile,
             alias: alias
         )
@@ -531,6 +529,7 @@ actor UserProfileService {
             
             let notes = try await sphere.list()
             return try await self.loadEntries(
+                sphere: sphere,
                 address: address,
                 slugs: notes
             )
@@ -538,7 +537,7 @@ actor UserProfileService {
         
         let recentEntries = sortEntriesByModified(entries: entries)
         let profile = try await self.loadProfileFromMemo(
-            did: did,
+            sphere: sphere,
             address: address,
             alias: address.petname
         )
