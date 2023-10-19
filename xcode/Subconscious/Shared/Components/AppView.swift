@@ -2051,6 +2051,7 @@ struct AppModel: ModelProtocol {
                         petname: petname
                     )
                     success.append(peer)
+                    await Task.yield()
                 } catch {
                     fail.append(petname)
                 }
