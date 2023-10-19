@@ -1277,12 +1277,12 @@ struct AppModel: ModelProtocol {
     }
     
     static func fetchNicknameFromProfileMemo(
-        state: AppModel,
+        state: AppModel, 
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
-            let response = try await environment.userProfile.requestOurProfile()
-            if let nickname = response.profile.nickname {
+            let response = try await environment.userProfile.readOurProfile(alias: nil)
+            if let nickname = response.nickname {
                 return AppAction.succeedFetchNicknameFromProfile(nickname)
             }
             

@@ -87,9 +87,9 @@ extension UserProfileDetailAction {
 extension UserProfileDetailAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
+        case .completeIndexPeers(let succeeded, _):
+            return .succeedIndexPeers(succeeded)
         case .succeedIndexOurSphere:
-            return .refresh(forceSync: false)
-        case .completeIndexPeers:
             return .refresh(forceSync: false)
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
@@ -174,22 +174,7 @@ enum UserProfileDetailAction {
     case dismissEditProfileError
     case succeedEditProfile
     
-    case succeedIndexPeer(_ peer: PeerRecord)
-}
-
-/// React to actions from the root app store
-extension UserProfileDetailAction {
-    static func fromAppAction(
-        action: AppAction
-    ) -> UserProfileDetailAction? {
-        switch (action) {
-            // TODO: put this back
-//        case let .succeedIndexPeer(peer):
-//            return .succeedIndexPeer(peer)
-        case _:
-            return nil
-        }
-    }
+    case succeedIndexPeers(_ peers: [PeerRecord])
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -597,10 +582,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedIndexPeer(_):
-            return succeedIndexPeer(
+        case .succeedIndexPeers(let peers):
+            return succeedIndexPeers(
                 state: state,
-                environment: environment
+                environment: environment,
+                peers: peers
             )
         }
     }
@@ -609,6 +595,11 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
+        guard state.loadingState != .loading else {
+            logger.log("Attempted to refresh while already loading, doing nothing.")
+            return Update(state: state)
+        }
+        
         guard let user = state.user else {
             return Update(state: state)
         }
@@ -633,7 +624,8 @@ struct UserProfileDetailModel: ModelProtocol {
         model.address = address
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
-            try await Self.refresh(address: address, environment: environment)
+            logger.log("Begin loading profile \(address)")
+            return try await Self.refresh(address: address, environment: environment)
         }
             .map { content in
                 UserProfileDetailAction.populate(content)
@@ -952,7 +944,7 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         update(
             state: state,
-            action: .refresh(forceSync: true),
+            action: .refresh(forceSync: false),
             environment: environment
         )
     }
@@ -965,7 +957,7 @@ struct UserProfileDetailModel: ModelProtocol {
         logger.log("Failed to resolve followed user: \(error)")
         return update(
             state: state,
-            action: .refresh(forceSync: true),
+            action: .refresh(forceSync: false),
             environment: environment
         )
     }
@@ -1142,10 +1134,15 @@ struct UserProfileDetailModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func succeedIndexPeer(
+    static func succeedIndexPeers(
         state: Self,
-        environment: Environment
+        environment: Environment,
+        peers: [PeerRecord]
     ) -> Update<Self> {
+        guard peers.contains(where: { peer in peer.petname == state.address?.petname }) else {
+            return Update(state: state)
+        }
+        
         return update(
             state: state,
             action: .refresh(forceSync: false),

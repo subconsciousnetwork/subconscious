@@ -214,6 +214,7 @@ actor UserProfileService {
         let identity = try await sphere.identity()
         let isOurs = noosphereIdentity == identity
         
+        logger.log("Read profile memo")
         let userProfileData = await self.readProfileMemo(sphere: sphere)
         
         let followingStatus = await self.addressBook.followingStatus(
@@ -221,6 +222,7 @@ actor UserProfileService {
             expectedName: address.petname?.leaf
         )
         
+        logger.log("List aliases")
         var aliases = try await self.addressBook.listAliases(did: identity)
         if let nickname = Petname.Name(userProfileData?.nickname ?? "") {
             aliases.append(nickname.toPetname())
@@ -356,7 +358,7 @@ actor UserProfileService {
         }
     }
 
-    private func readOurProfile(alias: Petname?) async throws -> UserProfile {
+    func readOurProfile(alias: Petname?) async throws -> UserProfile {
         
         return try await self.loadProfileFromMemo(
             sphere: self.noosphere,
@@ -490,28 +492,42 @@ actor UserProfileService {
     func loadFullProfileData(
         address: Slashlink
     ) async throws -> UserProfileContentResponse {
+        logger.log("Open sphere")
         let sphere = try await self.noosphere.sphere(address: address)
         let did = try await sphere.identity()
+        logger.log("Opened sphere \(did)")
         
+        logger.log("Load profile memo")
+        let profile = try await self.loadProfileFromMemo(
+            sphere: sphere,
+            address: address,
+            alias: address.petname
+        )
+        
+        logger.log("Produce following list")
         let following = try await self.getFollowingList(
             address: address,
             sphere: sphere
         )
+        logger.log("Get following status")
         let followingStatus = await self.addressBook.followingStatus(
             did: did,
             expectedName: address.petname?.leaf
         )
         
+        logger.log("Read entries")
         let entries = try await Func.run {
             switch (followingStatus) {
             // Read from DB if we follow this user
             case .following(let name):
+                logger.log("Check for local index")
                 // Ensure the index is ready, we might have JUST followed this user
                 let lastIndex = try? database.readPeer(identity: did)
                 guard lastIndex != nil else {
                     break
                 }
                 
+                logger.log("Read from local index")
                 return try
                     self.database.listRecentMemos(owner: did, includeDrafts: false)
                     .map { memo in
@@ -527,6 +543,7 @@ actor UserProfileService {
                 break
             }
             
+            logger.log("Read from sphere itself")
             let notes = try await sphere.list()
             return try await self.loadEntries(
                 sphere: sphere,
@@ -535,13 +552,10 @@ actor UserProfileService {
             )
         }
         
+        logger.log("Sort entries")
         let recentEntries = sortEntriesByModified(entries: entries)
-        let profile = try await self.loadProfileFromMemo(
-            sphere: sphere,
-            address: address,
-            alias: address.petname
-        )
         
+        logger.log("Assemble response")
         return UserProfileContentResponse(
             profile: profile,
             statistics: UserProfileStatistics(
