@@ -211,6 +211,8 @@ struct NotebookDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
         switch action {
+        case let .requestDeleteMemo(slashlink):
+            return .requestDeleteMemo(slashlink)
         case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedMoveEntry(from: from, to: to):
