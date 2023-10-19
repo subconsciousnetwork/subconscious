@@ -196,15 +196,19 @@ struct EditProfileSheetModifier: ViewModifier {
                 store.actions.compactMap(AppAction.from),
                 perform: app.send
             )
-//            .onReceive(app.actions, perform: { action in
-//                switch (action) {
-//                case .succeedIndexPeer(let peer) where peer.identity == store.state.user?.did:
-//                    store.send(.refresh(forceSync: false))
-//                    break
-//                case _:
-//                    break
-//                }
-//            })
+            .onReceive(app.actions, perform: { action in
+                switch (action) {
+                case .completeIndexPeers(let succeeded, _)
+                    where succeeded.contains(where: {
+                        peer in peer.identity == store.state.user?.did
+                    }):
+                    
+                    store.send(.refresh(forceSync: false))
+                    break
+                case _:
+                    break
+                }
+            })
     }
 }
 
