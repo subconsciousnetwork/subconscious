@@ -12,7 +12,7 @@ import Combine
 import os
 
 /// Enum representing the current readiness state of the database service
-enum DatabaseServiceState: String {
+enum DatabaseServiceState: String, Hashable {
     case initial = "initial"
     case broken = "broken"
     case ready = "ready"

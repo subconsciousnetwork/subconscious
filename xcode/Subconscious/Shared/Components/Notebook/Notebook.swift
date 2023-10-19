@@ -85,7 +85,7 @@ struct NotebookView: View {
 /// Actions for modifying state
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
-enum NotebookAction {
+enum NotebookAction: Hashable {
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "NotebookAction"
@@ -115,7 +115,7 @@ enum NotebookAction {
     /// Set the count of existing entries
     case setEntryCount(Int)
     /// Fail to get count of existing entries
-    case failEntryCount(Error)
+    case failEntryCount(String)
     
     // List entries
     case listRecent
@@ -577,15 +577,16 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.countMemosPublisher()
+        let fx: Fx<NotebookAction> = environment.data
+            .countMemosPublisher()
             .map({ count in
                 NotebookAction.setEntryCount(count)
             })
-            .catch({ error in
-                Just(NotebookAction.failEntryCount(error))
+            .recover({ error in
+                NotebookAction.failEntryCount(error.localizedDescription)
             })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     /// Set entry count

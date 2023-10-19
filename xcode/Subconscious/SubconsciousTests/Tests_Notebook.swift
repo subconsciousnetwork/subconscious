@@ -12,7 +12,7 @@ import ObservableStore
 /// Tests for Notebook.update
 class Tests_NotebookUpdate: XCTestCase {
     let environment = AppEnvironment()
-
+    
     func testEntryCount() throws {
         let state = NotebookModel()
         let update = NotebookModel.update(
@@ -26,7 +26,7 @@ class Tests_NotebookUpdate: XCTestCase {
             "Entry count correctly set"
         )
     }
-
+    
     func testDeleteEntry() throws {
         let a = Slug(formatting: "A")!.toSlashlink()
         let b = Slug(formatting: "B")!.toLocalSlashlink()
@@ -75,5 +75,82 @@ class Tests_NotebookUpdate: XCTestCase {
         )
     }
     
+    func testNotebookDetailStackCursorTagRequestDeleteMemo() throws {
+        let action = NotebookDetailStackCursor.tag(
+            .requestDeleteMemo(Slashlink("@bob/foo")!)
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.requestDeleteMemo(Slashlink("@bob/foo")!)
+        )
+    }
     
+    func testNotebookDetailStackCursorTagSucceedMergeEntry() throws {
+        let action = NotebookDetailStackCursor.tag(
+            .succeedMergeEntry(
+                parent: Slashlink("/foo")!,
+                child: Slashlink("/bar")!
+            )
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.succeedMergeEntry(
+                parent: Slashlink("/foo")!,
+                child: Slashlink("/bar")!
+            )
+        )
+    }
+    
+    func testNotebookDetailStackCursorTagSucceedMoveEntry() throws {
+        let action = NotebookDetailStackCursor.tag(
+            .succeedMoveEntry(
+                from: Slashlink("/foo")!,
+                to: Slashlink("/bar")!
+            )
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.succeedMoveEntry(
+                from: Slashlink("/foo")!,
+                to: Slashlink("/bar")!
+            )
+        )
+    }
+    
+    func testNotebookDetailStackCursorTagSucceedUpdateAudience() throws {
+        let action = NotebookDetailStackCursor.tag(
+            .succeedUpdateAudience(
+                MoveReceipt(
+                    from: Slashlink("/foo")!,
+                    to: Slashlink("/bar")!
+                )
+            )
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.succeedUpdateAudience(
+                MoveReceipt(
+                    from: Slashlink("/foo")!,
+                    to: Slashlink("/bar")!
+                )
+            )
+        )
+    }
+    
+    func testNotebookDetailStackCursorTagSucceedSaveEntry() throws {
+        let date = Date.now
+        let action = NotebookDetailStackCursor.tag(
+            .succeedSaveEntry(
+                address: Slashlink("/bar")!,
+                modified: date
+            )
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.succeedSaveEntry(
+                slug: Slashlink("/bar")!,
+                modified: date
+            )
+        )
+    }
 }
