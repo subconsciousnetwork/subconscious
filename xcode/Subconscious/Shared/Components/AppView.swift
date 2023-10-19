@@ -97,7 +97,6 @@ enum AppAction {
         subsystem: Config.default.rdns,
         category: "AppAction"
     )
-
     /// Sent immediately upon store creation
     case start
 
@@ -213,8 +212,6 @@ enum AppAction {
     /// Index the contents of a sphere in the database
     case indexPeers(_ petnames: [Petname])
     case completeIndexPeers(succeeded: [PeerRecord], failed: [Petname])
-//    case succeedIndexPeer(_ peer: PeerRecord)
-//    case failIndexPeer(petname: Petname, error: Error)
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ did: Did)
