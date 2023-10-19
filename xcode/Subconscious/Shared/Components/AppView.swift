@@ -98,8 +98,6 @@ enum AppAction {
         category: "AppAction"
     )
 
-    case writeTestData
-    
     /// Sent immediately upon store creation
     case start
 
@@ -595,11 +593,6 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
-        case .writeTestData:
-            return writeTestData(
-                state: state,
-                environment: environment
-            )
         case .start:
             return start(
                 state: state,
@@ -1089,24 +1082,6 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         logger.log("\(message)")
         return Update(state: state)
-    }
-    
-    static func writeTestData(
-        state: AppModel,
-        environment: AppEnvironment
-    ) -> Update<Self> {
-        
-        let fx: Fx<AppAction> = Future.detached {
-            for _ in 0..<100 {
-                try? await environment.noosphere.write(slug: Slug.dummyData(), contentType: "text/subtext", additionalHeaders: [], body: String.dummyDataMedium().data(using: .utf8)!)
-            }
-            
-            try? await environment.noosphere.save()
-            return AppAction.start
-        }
-        .eraseToAnyPublisher()
-        
-        return Update(state: state, fx: fx)
     }
     
     static func start(
