@@ -90,6 +90,13 @@ typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, GatewayURL>
 
+struct PeerIndexError: Error {
+    let error: Error
+    let petname: Petname
+}
+
+typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
+
 // MARK: Action
 enum AppAction {
     // Logger for actions
@@ -211,7 +218,7 @@ enum AppAction {
 
     /// Index the contents of a sphere in the database
     case indexPeers(_ petnames: [Petname])
-    case completeIndexPeers(succeeded: [PeerRecord], failed: [Petname])
+    case completeIndexPeers(results: [PeerIndexResult])
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ did: Did)
@@ -921,12 +928,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 petnames: petnames
             )
-        case let .completeIndexPeers(succeeded, failed):
+        case let .completeIndexPeers(results):
             return completeIndexPeers(
                 state: state,
                 environment: environment,
-                succeeded: succeeded,
-                failed: failed
+                results: results
             )
         case .purgePeer(let identity):
             return purgePeer(
@@ -2008,8 +2014,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         
         let fx: Fx<Action> = Future.detached(priority: .background) {
-            var success: [PeerRecord] = []
-            var fail: [Petname] = []
+            var results: [PeerIndexResult] = []
             
             for petname in petnames {
                 logger.log(
@@ -2023,14 +2028,22 @@ struct AppModel: ModelProtocol {
                     let peer = try await environment.data.indexPeer(
                         petname: petname
                     )
-                    success.append(peer)
+                    
+                    results.append(.success(peer))
                     await Task.yield()
                 } catch {
-                    fail.append(petname)
+                    results.append(
+                        PeerIndexResult.failure(
+                            PeerIndexError(
+                                error: error,
+                                petname: petname
+                            )
+                        )
+                    )
                 }
             }
             
-            return AppAction.completeIndexPeers(succeeded: success, failed: fail)
+            return AppAction.completeIndexPeers(results: results)
         }.eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
@@ -2038,28 +2051,30 @@ struct AppModel: ModelProtocol {
     static func completeIndexPeers(
         state: Self,
         environment: Environment,
-        succeeded: [PeerRecord],
-        failed: [Petname]
+        results: [PeerIndexResult]
     ) -> Update<Self> {
-        for peer in succeeded {
-             logger.log(
-                "Indexed peer",
-                metadata: [
-                    "petname": peer.petname.description,
-                    "identity": peer.identity.description,
-                    "since": peer.since ?? "nil"
-                ]
-            )
-        }
-        
-        for fail in failed {
-            logger.log(
-                "Failed to index peer",
-                metadata: [
-                    "petname": fail.description,
-                    "error": "TEST" // TODO: fix
-                ]
-            )
+        for result in results {
+            switch (result) {
+            case .success(let peer):
+                logger.log(
+                    "Indexed peer",
+                    metadata: [
+                        "petname": peer.petname.description,
+                        "identity": peer.identity.description,
+                        "since": peer.since ?? "nil"
+                    ]
+                )
+                break
+            case .failure(let error):
+                logger.log(
+                    "Failed to index peer",
+                    metadata: [
+                        "petname": error.petname.description,
+                        "error": error.localizedDescription
+                    ]
+                )
+                break
+            }
         }
         
         return Update(state: state)

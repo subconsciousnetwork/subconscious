@@ -87,8 +87,8 @@ extension UserProfileDetailAction {
 extension UserProfileDetailAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
-        case .completeIndexPeers(let succeeded, _):
-            return .succeedIndexPeers(succeeded)
+        case .completeIndexPeers(let results):
+            return .completeIndexPeers(results)
         case .succeedIndexOurSphere:
             return .refresh(forceSync: false)
         case .succeedRecoverOurSphere:
@@ -174,7 +174,7 @@ enum UserProfileDetailAction {
     case dismissEditProfileError
     case succeedEditProfile
     
-    case succeedIndexPeers(_ peers: [PeerRecord])
+    case completeIndexPeers(_ results: [PeerIndexResult])
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -586,11 +586,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedIndexPeers(let peers):
-            return succeedIndexPeers(
+        case .completeIndexPeers(let results):
+            return completeIndexPeers(
                 state: state,
                 environment: environment,
-                peers: peers
+                results: results
             )
         }
     }
@@ -1146,13 +1146,22 @@ struct UserProfileDetailModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func succeedIndexPeers(
+    static func completeIndexPeers(
         state: Self,
         environment: Environment,
-        peers: [PeerRecord]
+        results: [PeerIndexResult]
     ) -> Update<Self> {
-        // Skip refreshing if we are not in the list of peers
-        guard peers.contains(where: { peer in peer.petname == state.address?.petname }) else {
+        // Check if we're in the list of successfully indexed peers
+        let shouldRefresh = results.contains(where: { result in
+            switch (result) {
+            case .success(let peer) where peer.identity == state.user?.did:
+                return true
+            default:
+                return false
+            }
+        })
+        
+        guard shouldRefresh else {
             logger.log("Skipping refresh, we are not in the list of peers")
             return Update(state: state)
         }
