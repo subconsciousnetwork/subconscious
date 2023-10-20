@@ -661,24 +661,24 @@ extension Subtext {
     private static let maxGeneratedSlugSize = 128
     
     static func truncate(text: String, maxBlocks: Int, fallback: String = "") -> Subtext {
-        var length = min(560 * maxBlocks, 4000)
-        let dom = Subtext(markup: text)
-        var blocks: [Subtext.Block] = []
+        let length = min(280 * maxBlocks, 4000)
         
-        for block in dom.blocks {
-            if block.isEmpty {
-                continue
-            }
-            
-            if length > block.span.count {
-                length -= block.span.count
-                blocks.append(block)
+        let text = Func.run {
+            if text.count <= length {
+                return text
             } else {
-                break
+                // Slice the string to the nearest word boundary to avoid breaking markup
+                // This case will only ever be visible to a user when a note has a very
+                // large first or second block.
+                let slice = text.prefix(length)
+                let lastSpace = slice.lastIndex(of: " ") ?? slice.endIndex
+                let truncated = slice[..<lastSpace]
+                return String(truncated + "…")
             }
         }
         
-        return Subtext(base: dom.base, blocks: Array(blocks))
+        let dom = Subtext(markup: text)
+        return Subtext(base: dom.base, blocks: Array(dom.blocks.prefix(maxBlocks)))
     }
     
     /// Derive an excerpt
