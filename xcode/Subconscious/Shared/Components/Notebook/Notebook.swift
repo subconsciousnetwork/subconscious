@@ -432,8 +432,11 @@ struct NotebookModel: ModelProtocol {
                 address: address
             )
         case .failDeleteMemo(let error):
-            logger.log("failDeleteMemo: \(error)")
-            return Update(state: state)
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .succeedDeleteMemo(let address):
             return succeedDeleteMemo(
                 state: state,
@@ -730,7 +733,7 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
-    /// Entry delete succeeded
+    /// Entry delete failed
     static func failDeleteMemo(
         state: Self,
         environment: Environment,
