@@ -7,18 +7,6 @@
 
 import SwiftUI
 
-struct ExcerptView: View {
-    var subtext: Subtext
-    var spacing: CGFloat = AppTheme.unit
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: spacing) {
-            Text("\(subtext.excerpt())")
-        }
-    }
-}
-
-
 struct TranscludeView: View {
     var entry: EntryStub
     var onRequestDetail: () -> Void
