@@ -203,9 +203,9 @@ enum AppAction {
     case succeedIndexOurSphere(OurSphereRecord)
     case failIndexOurSphere(String)
     /// Developer utility function, for now
-    case clearIndex
-    case succeedClearIndex
-    case failClearIndex(String)
+    case resetIndex
+    case succeedresetIndex
+    case failresetIndex(String)
     
     /// Sync database with file system.
     /// File system always wins.
@@ -892,18 +892,18 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .clearIndex:
-            return clearIndex(
+        case .resetIndex:
+            return resetIndex(
                 state: state,
                 environment: environment
             )
-        case .succeedClearIndex:
-            return succeedClearIndex(
+        case .succeedresetIndex:
+            return succeedresetIndex(
                 state: state,
                 environment: environment
             )
-        case .failClearIndex(let error):
-            return failClearIndex(
+        case .failresetIndex(let error):
+            return failresetIndex(
                 state: state,
                 environment: environment,
                 error: error
@@ -1916,23 +1916,23 @@ struct AppModel: ModelProtocol {
         )
     }
     
-    static func clearIndex(
+    static func resetIndex(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached(priority: .utility) {
             do {
-                try await environment.data.clearIndex()
-                return AppAction.succeedClearIndex
+                try await environment.data.resetIndex()
+                return AppAction.succeedresetIndex
             } catch {
-                return AppAction.failClearIndex(error.localizedDescription)
+                return AppAction.failresetIndex(error.localizedDescription)
             }
         }.eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
     
-    static func succeedClearIndex(
+    static func succeedresetIndex(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
@@ -1940,7 +1940,7 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
     
-    static func failClearIndex(
+    static func failresetIndex(
         state: AppModel,
         environment: AppEnvironment,
         error: String

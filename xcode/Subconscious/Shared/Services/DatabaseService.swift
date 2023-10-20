@@ -174,7 +174,7 @@ final class DatabaseService {
     }
     
     /// Drop the record of our sphere to force re-indexing
-    func clearOurSphere(identity: Did) throws {
+    func resetOurSphere(identity: Did) throws {
         try database.execute(
             sql: """
             DELETE FROM our_sphere
@@ -337,7 +337,7 @@ final class DatabaseService {
         }
     }
     
-    func clearPeers() throws {
+    func resetPeers() throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }

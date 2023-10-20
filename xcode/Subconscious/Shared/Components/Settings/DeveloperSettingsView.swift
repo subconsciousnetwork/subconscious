@@ -24,10 +24,10 @@ struct DeveloperSettingsView: View {
             
             Button(
                 action: {
-                    app.send(.clearIndex)
+                    app.send(.resetIndex)
                 },
                 label: {
-                    Text("Clear SQLite index")
+                    Text("Reset Local SQLite Index")
                 }
             )
             
@@ -36,7 +36,7 @@ struct DeveloperSettingsView: View {
                     app.send(.indexOurSphere)
                 },
                 label: {
-                    Text("Trigger indexing")
+                    Text("Build Local SQLite Index")
                 }
             )
         }
