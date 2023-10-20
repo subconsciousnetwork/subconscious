@@ -449,14 +449,14 @@ struct FeedModel: ModelProtocol {
             .catch({ error in
                 Just(FeedAction.failFetchFeed(error))
             })
-                .eraseToAnyPublisher()
-                    
-                    var model = state
-                    // only display loading state if we have no posts to show
-                    // if we have stale posts, show them until we load the new ones
-                    if state.entries?.isEmpty ?? false {
-                model.status = .loading
-            }
+            .eraseToAnyPublisher()
+        
+        var model = state
+        // only display loading state if we have no posts to show
+        // if we have stale posts, show them until we load the new ones
+        if state.entries?.isEmpty ?? false {
+            model.status = .loading
+        }
         
         return Update(state: model, fx: fx)
     }
