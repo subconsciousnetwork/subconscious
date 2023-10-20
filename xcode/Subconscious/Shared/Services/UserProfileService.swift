@@ -171,7 +171,7 @@ actor UserProfileService {
     ) async -> UserProfileEntry? {
         let identity = try? await sphere.identity()
         do {
-            let data = try? await sphere.read(slashlink: Slashlink.ourProfile)
+            let data = try? await sphere.read(slashlink: Slashlink(slug: Slug.profile))
             guard let data = data else {
                 return nil
             }
