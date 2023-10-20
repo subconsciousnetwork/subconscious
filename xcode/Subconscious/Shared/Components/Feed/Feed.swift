@@ -112,28 +112,24 @@ struct FeedView: View {
             app.actions.compactMap(FeedAction.from),
             perform: store.send
         )
-    }
-}
-
-extension FeedAction {
-    static func from(_ action: AppAction) -> Self? {
-        switch action {
-        case .succeedIndexOurSphere:
-            return .refreshAll
-        case .succeedIndexPeer:
-            return .refreshAll
-        case .succeedRecoverOurSphere:
-            return .refreshAll
-        case .requestFeedRoot:
-            return .requestFeedRoot
-        default:
-            return nil
+        /// Replay some feed actions on app store
+        .onReceive(
+            store.actions.compactMap(AppAction.from),
+            perform: app.send
+        )
+        .onReceive(store.actions) { action in
+            FeedAction.logger.debug("\(String(describing: action))")
         }
     }
 }
 
 //  MARK: Action
 enum FeedAction {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "FeedAction"
+    )
+
     case search(SearchAction)
     case activatedSuggestion(Suggestion)
     case detailStack(DetailStackAction)
@@ -143,7 +139,10 @@ enum FeedAction {
     case ready
     case refreshAll
     
-    /// DetailStack notification actions
+    /// DetailStack-related actions
+    case requestDeleteMemo(Slashlink?)
+    case succeedDeleteMemo(Slashlink)
+    case failDeleteMemo(String)
     case succeedSaveEntry(slug: Slashlink, modified: Date)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
@@ -158,6 +157,38 @@ enum FeedAction {
     case failFetchFeed(Error)
     
     case requestFeedRoot
+}
+
+extension AppAction {
+    static func from(_ action: FeedAction) -> Self? {
+        switch action {
+        case let .requestDeleteMemo(slashlink):
+            return .deleteMemo(slashlink)
+        default:
+            return nil
+        }
+    }
+}
+
+extension FeedAction {
+    static func from(_ action: AppAction) -> Self? {
+        switch action {
+        case .succeedIndexOurSphere:
+            return .refreshAll
+        case .succeedIndexPeer:
+            return .refreshAll
+        case .succeedRecoverOurSphere:
+            return .refreshAll
+        case .requestFeedRoot:
+            return .requestFeedRoot
+        case let .succeedDeleteMemo(address):
+            return .succeedDeleteMemo(address)
+        case let .failDeleteMemo(error):
+            return .failDeleteMemo(error)
+        default:
+            return nil
+        }
+    }
 }
 
 struct FeedSearchCursor: CursorProtocol {
@@ -202,6 +233,8 @@ struct FeedDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
+        case let .requestDeleteMemo(slashlink):
+            return .requestDeleteMemo(slashlink)
         case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedMoveEntry(from: from, to: to):
@@ -229,12 +262,12 @@ struct FeedModel: ModelProtocol {
     /// Entry detail
     var detailStack = DetailStackModel()
     var entries: [StoryEntry]? = nil
-
+    
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "Feed"
     )
-
+    
     //  MARK: Update
     static func update(
         state: FeedModel,
@@ -294,6 +327,24 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestDeleteMemo(let address):
+            return requestDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case .failDeleteMemo(let error):
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .succeedDeleteMemo(let address):
+            return succeedDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case let .succeedUpdateAudience(receipt):
             return update(
                 state: state,
@@ -342,7 +393,7 @@ struct FeedModel: ModelProtocol {
         logger.log("\(error.localizedDescription)")
         return Update(state: state)
     }
-
+    
     /// Log error at warning level
     static func warn(
         state: FeedModel,
@@ -352,7 +403,7 @@ struct FeedModel: ModelProtocol {
         logger.warning("\(error.localizedDescription)")
         return Update(state: state)
     }
-
+    
     /// Set search presented flag
     static func setSearchPresented(
         state: FeedModel,
@@ -363,14 +414,14 @@ struct FeedModel: ModelProtocol {
         model.isSearchPresented = isPresented
         return Update(state: model)
     }
-
+    
     static func ready(
         state: FeedModel,
         environment: AppEnvironment
     ) -> Update<FeedModel> {
         return fetchFeed(state: state, environment: environment)
     }
-
+    
     /// Refresh all list views from database
     static func refreshAll(
         state: FeedModel,
@@ -385,7 +436,7 @@ struct FeedModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Fetch latest from feed
     static func fetchFeed(
         state: FeedModel,
@@ -398,18 +449,18 @@ struct FeedModel: ModelProtocol {
             .catch({ error in
                 Just(FeedAction.failFetchFeed(error))
             })
-            .eraseToAnyPublisher()
+                .eraseToAnyPublisher()
                     
-        var model = state
-        // only display loading state if we have no posts to show
-        // if we have stale posts, show them until we load the new ones
-        if state.entries?.isEmpty ?? false {
-            model.status = .loading
-        }
+                    var model = state
+                    // only display loading state if we have no posts to show
+                    // if we have stale posts, show them until we load the new ones
+                    if state.entries?.isEmpty ?? false {
+                model.status = .loading
+            }
         
         return Update(state: model, fx: fx)
     }
-
+    
     /// Set feed response
     static func succeedFetchFeed(
         state: FeedModel,
@@ -433,16 +484,6 @@ struct FeedModel: ModelProtocol {
         
         return Update(state: model)
     }
-
-    /// Handle entry deleted
-    static func entryDeleted(
-        state: FeedModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<FeedModel> {
-        logger.warning("Not implemented")
-        return Update(state: state)
-    }
     
     static func requestFeedRoot(
         state: FeedModel,
@@ -451,6 +492,66 @@ struct FeedModel: ModelProtocol {
         return FeedDetailStackCursor.update(
             state: state,
             action: .setDetails([]),
+            environment: environment
+        )
+    }
+    
+    /// Entry delete succeeded
+    static func requestDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink?
+    ) -> Update<Self> {
+        logger.log(
+            "Request delete memo",
+            metadata: [
+                "address": address?.description ?? ""
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.requestDeleteMemo(address)),
+            environment: environment
+        )
+    }
+    
+    /// Entry delete succeeded
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        logger.log(
+            "Memo was deleted",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedDeleteMemo(address)),
+                .refreshAll
+            ],
+            environment: environment
+        )
+    }
+
+    /// Entry delete failed
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to delete memo",
+            metadata: [
+                "error": error
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.failDeleteMemo(error)),
             environment: environment
         )
     }
