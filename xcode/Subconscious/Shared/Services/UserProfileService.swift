@@ -278,6 +278,7 @@ actor UserProfileService {
                         slug: slug
                     ),
                     excerpt: Subtext.truncate(text: memo.body, maxBlocks: 2),
+                    contentLength: memo.body.count,
                     modified: memo.modified
                 )
             )

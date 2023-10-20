@@ -91,30 +91,38 @@ struct StoryEntryView: View {
                         return .handled
                     })
                     
-                    // MARK: footer
-                    HStack(alignment: .center, spacing: AppTheme.unit) {
-                        Image(audience: .public)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: AppTheme.unit3, height: AppTheme.unit3)
+                    VStack(alignment: .leading) {
+                        if story.entry.excerpt.toString().count < story.entry.contentLength {
+                            Text("Show more...")
+                                .foregroundColor(.accentColor)
+                                .font(.callout)
+                        }
                         
-                        SlashlinkDisplayView(slashlink: Slashlink(
-                            peer: author.address.peer,
-                            slug: story.entry.address.slug
-                        ))
-                        .theme(base: .secondary, slug: .secondary)
-                        
-                        Spacer()
-                        
-                        Text(
-                            NiceDateFormatter.shared.string(
-                                from: story.entry.modified,
-                                relativeTo: Date.now
+                        // MARK: footer
+                        HStack(alignment: .center, spacing: AppTheme.unit) {
+                            Image(audience: .public)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: AppTheme.unit3, height: AppTheme.unit3)
+                            
+                            SlashlinkDisplayView(slashlink: Slashlink(
+                                peer: author.address.peer,
+                                slug: story.entry.address.slug
+                            ))
+                            .theme(base: .secondary, slug: .secondary)
+                            
+                            Spacer()
+                            
+                            Text(
+                                NiceDateFormatter.shared.string(
+                                    from: story.entry.modified,
+                                    relativeTo: Date.now
+                                )
                             )
-                        )
+                        }
+                        .foregroundColor(.secondary)
+                        .font(.caption)
                     }
-                    .foregroundColor(.secondary)
-                    .font(.caption)
                     .padding([.leading, .trailing, .bottom], AppTheme.padding)
                 }
                 .background(Color.background)

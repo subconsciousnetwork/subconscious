@@ -18,6 +18,7 @@ struct EntryStub:
     let did: Did
     let address: Slashlink
     let excerpt: Subtext
+    let contentLength: Int
     let modified: Date
 
     var id: Slashlink { address }
@@ -30,6 +31,7 @@ struct EntryStub:
             did: did,
             address: address,
             excerpt: excerpt,
+            contentLength: contentLength,
             modified: modified
         )
     }
@@ -37,7 +39,6 @@ struct EntryStub:
 
 extension EntryLink {
     init(_ stub: EntryStub) {
-        // TODO: find a nicer signature
-        self.init(address: stub.address, title: stub.excerpt.blocks.first?.body().toString().title() ?? "")
+        self.init(address: stub.address, title: stub.excerpt.toString().title())
     }
 }

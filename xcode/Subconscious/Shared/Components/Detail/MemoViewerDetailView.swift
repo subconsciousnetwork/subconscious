@@ -659,6 +659,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                         text: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
                         maxBlocks: 2
                     ),
+                    contentLength: -1,
                     modified: Date.now
                 )
             ],
@@ -679,6 +680,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                         text: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
                         maxBlocks: 2
                     ),
+                    contentLength: -1,
                     modified: Date.now
                 ),
                 EntryStub(
@@ -688,6 +690,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                         text: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
                         maxBlocks: 2
                     ),
+                    contentLength: -1,
                     modified: Date.now
                 )
             ],

@@ -34,5 +34,6 @@ extension EntryStub {
         self.excerpt = Subtext(markup: entry.contents.body)
         self.modified = entry.contents.modified
         self.did = did
+        self.contentLength = entry.contents.body.count
     }
 }
