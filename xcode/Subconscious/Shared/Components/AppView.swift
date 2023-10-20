@@ -202,6 +202,10 @@ enum AppAction {
     case indexOurSphere
     case succeedIndexOurSphere(OurSphereRecord)
     case failIndexOurSphere(String)
+    /// Developer utility function, for now
+    case clearIndex
+    case succeedClearIndex
+    case failClearIndex(String)
     
     /// Sync database with file system.
     /// File system always wins.
@@ -884,6 +888,22 @@ struct AppModel: ModelProtocol {
             )
         case let .failIndexOurSphere(error):
             return failIndexOurSphere(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .clearIndex:
+            return clearIndex(
+                state: state,
+                environment: environment
+            )
+        case .succeedClearIndex:
+            return succeedClearIndex(
+                state: state,
+                environment: environment
+            )
+        case .failClearIndex(let error):
+            return failClearIndex(
                 state: state,
                 environment: environment,
                 error: error
@@ -1894,6 +1914,44 @@ struct AppModel: ModelProtocol {
             action: .setAppUpgradeComplete(model.isSyncAllResolved),
             environment: environment
         )
+    }
+    
+    static func clearIndex(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = Future.detached(priority: .utility) {
+            do {
+                try await environment.data.clearIndex()
+                return AppAction.succeedClearIndex
+            } catch {
+                return AppAction.failClearIndex(error.localizedDescription)
+            }
+        }.eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedClearIndex(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        logger.log("Cleared index")
+        return Update(state: state)
+    }
+    
+    static func failClearIndex(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log(
+            "Failed to clear index",
+            metadata: [
+                "error": error
+            ]
+        )
+        return Update(state: state)
     }
     
     /// Start file sync

@@ -173,6 +173,17 @@ final class DatabaseService {
         )
     }
     
+    /// Drop the record of our sphere to force re-indexing
+    func clearOurSphere(identity: Did) throws {
+        try database.execute(
+            sql: """
+            DELETE FROM our_sphere
+            WHERE did = ?
+            """,
+            parameters: [.text(identity.description)]
+        )
+    }
+    
     /// Given a sphere did, read the sync info from the database (if any).
     func readPeer(identity: Did) throws -> PeerRecord? {
         guard self.state == .ready else {
@@ -324,6 +335,19 @@ final class DatabaseService {
             )
             throw error
         }
+    }
+    
+    func clearPeers() throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        
+        // set the "since" column to NULL for this peer if it exists
+        try database.execute(
+            sql: """
+            UPDATE peer SET since = NULL
+            """
+        )
     }
 
     /// Write entry synchronously

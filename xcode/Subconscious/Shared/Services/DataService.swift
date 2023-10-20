@@ -253,6 +253,12 @@ actor DataService {
         
         return results
     }
+    
+    func clearIndex() async throws {
+        let did = try await self.noosphere.identity()
+        try self.database.clearOurSphere(identity: did)
+        try self.database.clearPeers()
+    }
 
     /// Index our sphere's content in our database.
     ///
