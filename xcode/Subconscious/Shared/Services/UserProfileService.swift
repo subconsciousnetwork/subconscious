@@ -492,7 +492,7 @@ actor UserProfileService {
     func loadFullProfileData(
         address: Slashlink
     ) async throws -> UserProfileContentResponse {
-        logger.log("Open sphere")
+        logger.log("Opening sphere...")
         let sphere = try await self.noosphere.sphere(address: address)
         let did = try await sphere.identity()
         logger.log("Opened sphere \(did)")
@@ -527,7 +527,7 @@ actor UserProfileService {
                     break
                 }
                 
-                logger.log("Read from local index")
+                logger.log("List from local index")
                 return try
                     self.database.listRecentMemos(owner: did, includeDrafts: false)
                     .map { memo in
@@ -543,7 +543,7 @@ actor UserProfileService {
                 break
             }
             
-            logger.log("Read from sphere itself")
+            logger.log("List from sphere itself")
             let notes = try await sphere.list()
             return try await self.loadEntries(
                 sphere: sphere,
@@ -552,7 +552,6 @@ actor UserProfileService {
             )
         }
         
-        logger.log("Sort entries")
         let recentEntries = sortEntriesByModified(entries: entries)
         
         logger.log("Assemble response")

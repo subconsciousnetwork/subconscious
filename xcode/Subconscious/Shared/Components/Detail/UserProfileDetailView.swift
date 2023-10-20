@@ -600,6 +600,8 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         guard state.loadingState != .loading else {
+            // While initially loading we might be prompted by a notification to refresh _again_
+            // This could happen when indexing completes in the BG or after a sync
             logger.log("Attempted to refresh while already loading, doing nothing.")
             return Update(state: state)
         }
@@ -946,6 +948,9 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
+        
+        // We should not sync after resolution because resolution happens via syncing
+        // in the first place.
         update(
             state: state,
             action: .refresh(forceSync: false),
@@ -958,6 +963,9 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment,
         error: String
     ) -> Update<Self> {
+        // Skip sync here, any retry/refresh logic is triggered by tapping on this
+        // user in the following list.
+        
         logger.log("Failed to resolve followed user: \(error)")
         return update(
             state: state,
@@ -1143,7 +1151,9 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment,
         peers: [PeerRecord]
     ) -> Update<Self> {
+        // Skip refreshing if we are not in the list of peers
         guard peers.contains(where: { peer in peer.petname == state.address?.petname }) else {
+            logger.log("Skipping refresh, we are not in the list of peers")
             return Update(state: state)
         }
         
