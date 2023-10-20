@@ -11,7 +11,7 @@ import SwiftUI
 struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     let base: Substring
     let blocks: [Block]
-    
+
     static func parse(markup: String) -> Self {
         return Self.init(markup: markup)
     }
@@ -667,21 +667,20 @@ extension Subtext {
             if text.count <= length {
                 return text
             } else {
-                // Slice the string to the nearest word boundary to avoid breaking markup
-                // This case will only ever be visible to a user when a note has a very
-                // large first or second block.
-                // Remove any trailing punctuation before we add the ellipsis
-                // Avoids things like "Hello world.…"
                 
+                // Trim the string
                 let index = text.index(text.startIndex, offsetBy: length)
                 var truncated = String(text[..<index])
                 
-                // Remove the last word
+                // Slice the string to the nearest word boundary to avoid breaking markup
+                // This case will only ever be visible to a user when a note has a very
+                // large first or second block.
                 if let lastSpace = truncated.lastIndex(of: " ") {
                     truncated = String(truncated[..<lastSpace])
                 }
                 
-                // Remove trailing punctuation and whitespace from the end only
+                // Remove any trailing punctuation before we add the ellipsis
+                // Avoids things like "Hello world.…"
                 if let range = truncated.range(of: "[\\p{P}\\s]+$", options: .regularExpression) {
                     truncated.removeSubrange(range)
                 }
