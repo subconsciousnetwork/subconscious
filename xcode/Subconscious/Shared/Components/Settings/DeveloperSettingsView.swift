@@ -21,6 +21,24 @@ struct DeveloperSettingsView: View {
                     Text("Reset First Run Experience")
                 }
             )
+            
+            Button(
+                action: {
+                    app.send(.clearIndex)
+                },
+                label: {
+                    Text("Clear SQLite index")
+                }
+            )
+            
+            Button(
+                action: {
+                    app.send(.indexOurSphere)
+                },
+                label: {
+                    Text("Trigger indexing")
+                }
+            )
         }
         .navigationTitle("Developer")
     }
