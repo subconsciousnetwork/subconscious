@@ -475,7 +475,7 @@ extension MemoEditorDetailAction {
     ) -> MemoEditorDetailAction? {
         switch (action) {
         case .succeedIndexOurSphere(_),
-             .succeedIndexPeer(_):
+             .completeIndexPeers:
             return .refreshBacklinks
         case _:
             return nil
