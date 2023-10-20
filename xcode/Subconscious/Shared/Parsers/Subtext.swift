@@ -670,15 +670,31 @@ extension Subtext {
                 // Slice the string to the nearest word boundary to avoid breaking markup
                 // This case will only ever be visible to a user when a note has a very
                 // large first or second block.
-                let slice = text.prefix(length)
-                let lastSpace = slice.lastIndex(of: " ") ?? slice.endIndex
-                let truncated = slice[..<lastSpace]
+                // Remove any trailing punctuation before we add the ellipsis
+                // Avoids things like "Hello world.…"
+                
+                let index = text.index(text.startIndex, offsetBy: length)
+                var truncated = String(text[..<index])
+                
+                // Remove the last word
+                if let lastSpace = truncated.lastIndex(of: " ") {
+                    truncated = String(truncated[..<lastSpace])
+                }
+                
+                // Remove trailing punctuation and whitespace from the end only
+                if let range = truncated.range(of: "[\\p{P}\\s]+$", options: .regularExpression) {
+                    truncated.removeSubrange(range)
+                }
+                
                 return String(truncated + "…")
             }
         }
         
         let dom = Subtext(markup: text)
-        return Subtext(base: dom.base, blocks: Array(dom.blocks.prefix(maxBlocks)))
+        let blocks = dom.blocks
+            .filter({ block in !block.isEmpty })
+            .prefix(maxBlocks)
+        return Subtext(base: dom.base, blocks: Array(blocks))
     }
     
     /// Derive an excerpt
