@@ -337,6 +337,7 @@ final class DatabaseService {
         }
     }
     
+    /// Reset the "since" column for all peers to NULL to force re-indexing
     func resetPeers() throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
