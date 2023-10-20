@@ -570,32 +570,15 @@ actor UserProfileService {
     }
     
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
-    func requestOurProfile() async throws -> UserProfileContentResponse {
+    func loadOurFullProfileData() async throws -> UserProfileContentResponse {
         try await loadFullProfileData(address: Slashlink.ourProfile)
     }
     
-    nonisolated func requestOurProfilePublisher(
+    nonisolated func loadOurFullProfileDataPublisher(
     ) -> AnyPublisher<UserProfileContentResponse, Error> {
         Future.detached {
-            try await self.requestOurProfile()
+            try await self.loadOurFullProfileData()
         }
         .eraseToAnyPublisher()
     }
-    
-    /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
-    func requestUserProfile(
-        petname: Petname
-    ) async throws -> UserProfileContentResponse {
-        try await loadFullProfileData(address: Slashlink(petname: petname))
-    }
-    
-    nonisolated func requestUserProfilePublisher(
-        petname: Petname
-    ) -> AnyPublisher<UserProfileContentResponse, Error> {
-        Future.detached {
-            try await self.requestUserProfile(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-   
 }

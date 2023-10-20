@@ -285,9 +285,13 @@ extension UserProfileDetailModel {
     ) async throws -> UserProfileContentResponse {
         return try await Func.run {
             if let petname = address.toPetname() {
-                return try await environment.userProfile.requestUserProfile(petname: petname)
+                return try await environment
+                    .userProfile
+                    .loadFullProfileData(address: Slashlink(petname: petname))
             } else {
-                return try await environment.userProfile.requestOurProfile()
+                return try await environment
+                    .userProfile
+                    .loadOurFullProfileData()
             }
         }
     }

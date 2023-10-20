@@ -556,7 +556,7 @@ struct MemoViewerDetailModel: ModelProtocol {
                 guard let petname = state.address?.toPetname() else {
                      return try await environment
                         .userProfile
-                        .requestOurProfile()
+                        .loadOurFullProfileData()
                         .profile
                 }
                 
