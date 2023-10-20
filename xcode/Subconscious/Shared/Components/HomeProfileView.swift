@@ -112,7 +112,6 @@ enum HomeProfileAction {
     case detailStack(DetailStackAction)
     case appear
     case ready
-    case refreshAll
     
     case setSearchPresented(Bool)
     case requestProfileRoot
@@ -250,11 +249,6 @@ struct HomeProfileModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .refreshAll:
-            return refreshAll(
-                state: state,
-                environment: environment
-            )
         case .requestProfileRoot:
             return requestProfileRoot(
                 state: state,
@@ -309,14 +303,6 @@ struct HomeProfileModel: ModelProtocol {
         return Update(state: state)
     }
     
-    static func refreshAll(
-        state: Self,
-        environment: AppEnvironment
-    ) -> Update<Self> {
-        logger.debug("TODO: implement refreshAll")
-        return Update(state: state)
-    }
-
     static func requestProfileRoot(
         state: Self,
         environment: AppEnvironment
@@ -372,10 +358,7 @@ struct HomeProfileModel: ModelProtocol {
         )
         return update(
             state: state,
-            actions: [
-                .detailStack(.succeedDeleteMemo(address)),
-                .refreshAll
-            ],
+            action: .detailStack(.succeedDeleteMemo(address)),
             environment: environment
         )
     }
