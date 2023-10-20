@@ -94,7 +94,7 @@ struct StoryEntryView: View {
                     
                     VStack(alignment: .leading) {
                         if story.entry.excerpt.toString().count < story.entry.contentLength {
-                            Text("Show more...")
+                            Text("Show more…")
                                 .foregroundColor(.accentColor)
                                 .font(.callout)
                         }
