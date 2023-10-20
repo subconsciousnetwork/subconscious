@@ -2014,37 +2014,11 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         
         let fx: Fx<Action> = Future.detached(priority: .background) {
-            var results: [PeerIndexResult] = []
-            
-            for petname in petnames {
-                logger.log(
-                    "Indexing peer",
-                    metadata: [
-                        "petname": petname.description
-                    ]
-                )
-                
-                do {
-                    let peer = try await environment.data.indexPeer(
-                        petname: petname
-                    )
-                    
-                    results.append(.success(peer))
-                    await Task.yield()
-                } catch {
-                    results.append(
-                        PeerIndexResult.failure(
-                            PeerIndexError(
-                                error: error,
-                                petname: petname
-                            )
-                        )
-                    )
-                }
-            }
-            
+            let results = await environment.data.indexPeers(petnames: petnames)
             return AppAction.completeIndexPeers(results: results)
-        }.eraseToAnyPublisher()
+        }
+        .eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
     
