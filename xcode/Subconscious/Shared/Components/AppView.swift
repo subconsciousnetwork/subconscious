@@ -1975,10 +1975,11 @@ struct AppModel: ModelProtocol {
         peers: [PeerRecord]
     ) -> Update<Self> {
         // Transform list of peers into fx publisher of actions.
-        let fx: Fx<Action> = Future.detached {
-            AppAction.indexPeers(peers
-                .map({ peer in peer.petname }))
-        }
+        let fx: Fx<Action> = Just(
+            AppAction.indexPeers(
+                peers.map({ peer in peer.petname })
+            )
+        )
         .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
