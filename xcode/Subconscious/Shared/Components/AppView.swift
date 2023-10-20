@@ -91,7 +91,7 @@ typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, GatewayURL>
 
 // MARK: Action
-enum AppAction {
+enum AppAction: Hashable {
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -213,7 +213,7 @@ enum AppAction {
     /// Index the contents of a sphere in the database
     case indexPeer(_ petname: Petname)
     case succeedIndexPeer(_ peer: PeerRecord)
-    case failIndexPeer(petname: Petname, error: Error)
+    case failIndexPeer(petname: Petname, error: String)
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ did: Did)
@@ -461,7 +461,7 @@ enum AppDatabaseState {
     case ready
 }
 
-enum FirstRunStep {
+enum FirstRunStep: Hashable {
     case sphere
     case recovery
     case profile
@@ -2026,7 +2026,7 @@ struct AppModel: ModelProtocol {
             } catch {
                 return Action.failIndexPeer(
                     petname: petname,
-                    error: error
+                    error: error.localizedDescription
                 )
             }
             
@@ -2054,13 +2054,13 @@ struct AppModel: ModelProtocol {
         state: Self,
         environment: Environment,
         petname: Petname,
-        error: Error
+        error: String
     ) -> Update<Self> {
         logger.log(
             "Failed to index peer",
             metadata: [
                 "petname": petname.description,
-                "error": error.localizedDescription
+                "error": error
             ]
         )
         return Update(state: state)
