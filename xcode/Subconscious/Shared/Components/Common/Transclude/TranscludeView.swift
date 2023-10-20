@@ -21,11 +21,12 @@ struct ExcerptView: View {
 
 struct TranscludeView: View {
     var entry: EntryStub
-    var action: () -> Void
+    var onRequestDetail: () -> Void
+    var onLink: (SubSlashlinkLink) -> Void
     
     var body: some View {
         Button(
-            action: action,
+            action: onRequestDetail,
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     BylineSmView(
@@ -33,7 +34,25 @@ struct TranscludeView: View {
                         slashlink: entry.address
                     )
                     
-                    ExcerptView(subtext: entry.excerpt)
+                    SubtextView(
+                        subtext: entry.excerpt,
+                        transcludePreviews: [:],
+                        onViewTransclude: { _ in
+                            // Nested transcludes are not supported
+                        },
+                        onTranscludeLink: { _, _ in
+                            // Nested transcludes are not supported
+                        }
+                    )
+                    .environment(\.openURL, OpenURLAction { url in
+
+                        guard let subslashlink = url.toSubSlashlinkURL() else {
+                            return .systemAction
+                        }
+
+                        onLink(subslashlink)
+                        return .handled
+                    })
                 }
             }
         )
@@ -52,7 +71,8 @@ struct TranscludeView_Previews: PreviewProvider {
                     contentLength: -1,
                     modified: Date.now
                 ),
-                action: { }
+                onRequestDetail: { },
+                onLink: { _ in }
             )
             TranscludeView(
                 entry: EntryStub(
@@ -65,7 +85,8 @@ struct TranscludeView_Previews: PreviewProvider {
                     contentLength: -1,
                     modified: Date.now
                 ),
-                action: { }
+                onRequestDetail: { },
+                onLink: { _ in }
             )
             TranscludeView(
                 entry: EntryStub(
@@ -78,7 +99,8 @@ struct TranscludeView_Previews: PreviewProvider {
                     contentLength: -1,
                     modified: Date.now
                 ),
-                action: { }
+                onRequestDetail: { },
+                onLink: { _ in }
             )
             TranscludeView(
                 entry: EntryStub(
@@ -94,7 +116,8 @@ struct TranscludeView_Previews: PreviewProvider {
                     contentLength: -1,
                     modified: Date.now
                 ),
-                action: { }
+                onRequestDetail: { },
+                onLink: { _ in }
             )
             TranscludeView(
                 entry: EntryStub(
@@ -107,7 +130,8 @@ struct TranscludeView_Previews: PreviewProvider {
                     contentLength: -1,
                     modified: Date.now
                 ),
-                action: { }
+                onRequestDetail: { },
+                onLink: { _ in }
             )
 
         }

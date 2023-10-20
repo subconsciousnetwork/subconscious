@@ -17,6 +17,7 @@ struct SubtextView: View {
     var subtext: Subtext
     var transcludePreviews: [Slashlink: EntryStub]
     var onViewTransclude: (Slashlink) -> Void
+    var onTranscludeLink: (_ context: Slashlink, SubSlashlinkLink) -> Void
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks
@@ -72,8 +73,11 @@ struct SubtextView: View {
                 ForEach(renderable.entries, id: \.self) { entry in
                     TranscludeView(
                         entry: entry,
-                        action: {
+                        onRequestDetail: {
                             onViewTransclude(entry.address)
+                        },
+                        onLink: { link in
+                            onTranscludeLink(entry.address, link)
                         }
                     )
                 }
@@ -145,7 +149,8 @@ struct SubtextView_Previews: PreviewProvider {
                 ],
                 onViewTransclude: {
                     _ in 
-                }
+                },
+                onTranscludeLink: { address, link in }
             )
         }
     }

@@ -124,7 +124,10 @@ struct MemoViewerDetailNotFoundView: View {
                 .padding(.bottom, AppTheme.unit4)
             BacklinksView(
                 backlinks: backlinks,
-                onSelect: onBacklinkSelect
+                onRequestDetail: onBacklinkSelect,
+                onLink: { address, link in
+                    notify(.requestFindLinkDetail(address: address, link: link))
+                }
             )
         }
     }
@@ -175,6 +178,23 @@ struct MemoViewerDetailLoadedView: View {
         return .handled
     }
     
+    private func onLink(
+        context: Slashlink,
+        url: URL
+    ) -> OpenURLAction.Result {
+        guard let link = url.toSubSlashlinkURL() else {
+            return .systemAction
+        }
+        
+        notify(
+            .requestFindLinkDetail(
+                address: context,
+                link: link
+            )
+        )
+        return .handled
+    }
+    
     private func onViewTransclude(
         address: Slashlink
     ) {
@@ -197,11 +217,19 @@ struct MemoViewerDetailLoadedView: View {
                         SubtextView(
                             subtext: dom,
                             transcludePreviews: transcludePreviews,
-                            onViewTransclude: self.onViewTransclude
+                            onViewTransclude: self.onViewTransclude,
+                            onTranscludeLink: { address, link in
+                                notify(
+                                    .requestFindLinkDetail(
+                                        address: address,
+                                        link: link
+                                    )
+                                )
+                            }
                         ).textSelection(
                             .enabled
                         ).environment(\.openURL, OpenURLAction { url in
-                            self.onLink(url: url)
+                            self.onLink(context: address, url: url)
                         })
                         Spacer()
                     }
@@ -213,7 +241,10 @@ struct MemoViewerDetailLoadedView: View {
                         .padding(.bottom, AppTheme.unit4)
                     BacklinksView(
                         backlinks: backlinks,
-                        onSelect: onBacklinkSelect
+                        onRequestDetail: onBacklinkSelect,
+                        onLink: { address, link in
+                            notify(.requestFindLinkDetail(address: address, link: link))
+                        }
                     )
                 }
             }

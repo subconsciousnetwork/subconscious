@@ -24,7 +24,7 @@ private struct StoryEntryUserDetailsView: View {
 struct StoryEntryView: View {
     var story: StoryEntry
     var onRequestDetail: (Slashlink, String) -> Void
-    var onLink: (SubSlashlinkLink) -> Void
+    var onLink: (_ context: Slashlink, SubSlashlinkLink) -> Void
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -75,10 +75,11 @@ struct StoryEntryView: View {
                         transcludePreviews: [:],
                         onViewTransclude: { slashlink in
                             onRequestDetail(slashlink, story.entry.excerpt.toString())
+                        },
+                        onTranscludeLink: { address, link in
+                            onLink(address, link)
                         }
                     )
-                    .lineLimit(8)
-                    .truncationMode(.tail)
                     .padding([.leading, .trailing], AppTheme.padding)
                     // Handle tapped slashlinks in the preview
                     .environment(\.openURL, OpenURLAction { url in
@@ -87,7 +88,7 @@ struct StoryEntryView: View {
                             return .systemAction
                         }
                         
-                        onLink(subslashlink)
+                        onLink(story.entry.address, subslashlink)
                         return .handled
                     })
                     
@@ -159,7 +160,7 @@ struct StoryPlainView_Previews: PreviewProvider {
                 author: UserProfile.dummyData()
             ),
             onRequestDetail: { _, _ in },
-            onLink: { _ in }
+            onLink: { _, _ in }
         )
     }
 }
