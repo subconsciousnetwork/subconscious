@@ -87,7 +87,7 @@ struct OmniboxView: View {
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
         .task {
-            phase += Double.pi * 2
+            phase = Double.pi / 8 + Double.pi * 2
         }
     }
 }
