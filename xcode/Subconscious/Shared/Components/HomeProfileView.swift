@@ -101,7 +101,7 @@ struct HomeProfileView: View {
 
 
 // MARK: Action
-enum HomeProfileAction {
+enum HomeProfileAction: Hashable {
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "HomeProfileAction"
