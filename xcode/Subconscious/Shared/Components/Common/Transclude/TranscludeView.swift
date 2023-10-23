@@ -22,25 +22,15 @@ struct TranscludeView: View {
                         slashlink: entry.address
                     )
                     
-                    SubtextView(
-                        subtext: entry.excerpt,
-                        transcludePreviews: [:],
-                        onViewTransclude: { _ in
-                            // Nested transcludes are not supported
-                        },
-                        onTranscludeLink: { _, _ in
-                            // Nested transcludes are not supported
-                        }
-                    )
-                    .environment(\.openURL, OpenURLAction { url in
+                    SubtextView(subtext: entry.excerpt)
+                        .environment(\.openURL, OpenURLAction { url in
+                            guard let subslashlink = url.toSubSlashlinkURL() else {
+                                return .systemAction
+                            }
 
-                        guard let subslashlink = url.toSubSlashlinkURL() else {
-                            return .systemAction
-                        }
-
-                        onLink(subslashlink)
-                        return .handled
-                    })
+                            onLink(subslashlink)
+                            return .handled
+                        })
                 }
             }
         )

@@ -15,9 +15,9 @@ struct RenderableBlock: Hashable {
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
-    var transcludePreviews: [Slashlink: EntryStub]
-    var onViewTransclude: (Slashlink) -> Void
-    var onTranscludeLink: (_ context: Slashlink, SubSlashlinkLink) -> Void
+    var transcludePreviews: [Slashlink: EntryStub] = [:]
+    var onViewTransclude: (Slashlink) -> Void  = { _ in }
+    var onTranscludeLink: (_ context: Slashlink, SubSlashlinkLink) -> Void = { _, _ in }
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks
