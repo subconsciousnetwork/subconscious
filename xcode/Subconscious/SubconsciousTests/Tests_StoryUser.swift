@@ -30,12 +30,4 @@ final class Tests_StoryUser: XCTestCase {
         )
         XCTAssertEqual(story.description, "StoryUser(did:key:abc123, @bob/foo, Optional(bob), following(bob))")
     }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
-
 }
