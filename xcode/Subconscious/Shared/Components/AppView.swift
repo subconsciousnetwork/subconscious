@@ -204,8 +204,8 @@ enum AppAction {
     case failIndexOurSphere(String)
     /// Developer utility function, for now
     case resetIndex
-    case succeedresetIndex
-    case failresetIndex(String)
+    case succeedResetIndex
+    case failResetIndex(String)
     
     /// Sync database with file system.
     /// File system always wins.
@@ -897,13 +897,13 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedresetIndex:
-            return succeedresetIndex(
+        case .succeedResetIndex:
+            return succeedResetIndex(
                 state: state,
                 environment: environment
             )
-        case .failresetIndex(let error):
-            return failresetIndex(
+        case .failResetIndex(let error):
+            return failResetIndex(
                 state: state,
                 environment: environment,
                 error: error
@@ -1923,16 +1923,16 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = Future.detached(priority: .utility) {
             do {
                 try await environment.data.resetIndex()
-                return AppAction.succeedresetIndex
+                return AppAction.succeedResetIndex
             } catch {
-                return AppAction.failresetIndex(error.localizedDescription)
+                return AppAction.failResetIndex(error.localizedDescription)
             }
         }.eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
     
-    static func succeedresetIndex(
+    static func succeedResetIndex(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
@@ -1940,7 +1940,7 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
     
-    static func failresetIndex(
+    static func failResetIndex(
         state: AppModel,
         environment: AppEnvironment,
         error: String
