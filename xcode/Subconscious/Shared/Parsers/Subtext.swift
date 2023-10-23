@@ -658,61 +658,66 @@ extension Subtext {
 
 extension Subtext {
     private static let maxExcerptSize = 280
+    private static let maxExcerptBlocks = 2
     private static let maxGeneratedSlugSize = 128
     
-    static func truncate(text: String, maxBlocks: Int, fallback: String = "") -> Subtext {
+    /// Take the first `maxBlocks` blocks or `Subtext.maxExcerptSize * maxBlocks` characters worth of blocks.
+    /// If a block cannot fit in the limit, it will be dropped.
+    static func truncate(markup: String, maxBlocks: Int, fallback: String = "") -> Subtext {
+        let body = String.truncateAtWordBoundary(
+            markup: markup,
+            maxChars: maxBlocks * Self.maxExcerptSize
+        )
+        return Subtext(markup: body).truncate(maxBlocks: maxBlocks, fallback: fallback)
+    }
+    
+    /// Take the first `maxBlocks` blocks or `Subtext.maxExcerptSize * maxBlocks` characters worth of blocks.
+    /// If a block cannot fit in the limit, it will be dropped.
+    func truncate(maxBlocks: Int, fallback: String = "") -> Subtext {
         let length = Self.maxExcerptSize * maxBlocks
-        
-        let text = Func.run {
-            if text.count <= length {
-                return text
-            } else {
-                
-                // Trim the string
-                let index = text.index(text.startIndex, offsetBy: length)
-                var truncated = String(text[..<index])
-                
-                // Slice the string to the nearest word boundary to avoid breaking markup
-                // This case will only ever be visible to a user when a note has a very
-                // large first or second block.
-                if let lastSpace = truncated.lastIndex(of: " ") {
-                    truncated = String(truncated[..<lastSpace])
-                }
-                
-                // Remove any trailing punctuation before we add the ellipsis
-                // Avoids things like "Hello world.…"
-                if let range = truncated.range(of: "[\\p{P}\\s]+$", options: .regularExpression) {
-                    truncated.removeSubrange(range)
-                }
-                
-                return String(truncated + "…")
-            }
-        }
-        
-        let dom = Subtext(markup: text)
-        let blocks = dom.blocks
+        let blocks = self.blocks
             .filter({ block in !block.isEmpty })
             .prefix(maxBlocks)
-        return Subtext(base: dom.base, blocks: Array(blocks))
+        
+        // If the content fits, no work to do!
+        if self.toString().count < length {
+            return Subtext(base: base, blocks: Array(blocks))
+        }
+        
+        // Otherwise we need to truncate the string first
+        let text = String.truncateAtWordBoundary(markup: self.toString(), maxChars: length)
+        let dom = Subtext(markup: text)
+        
+        var count = 0
+        var output: [Subtext.Block] = []
+        
+        for block in dom.blocks {
+            if count >= length {
+                break
+            }
+            
+            count += block.span.count
+            output.append(block)
+        }
+       
+        return Subtext(base: dom.base, blocks: Array(output))
     }
     
     /// Derive an excerpt
-    func excerpt(fallback: String = "") -> String {
-        // Filter out empty blocks
-        let validBlocks = blocks
-            .filter { block in !block.isEmpty }
-            .map { block in String(block.span) }
-            .prefix(2) // Take first two blocks
-        
-        let output = validBlocks.joined(separator: "\n")
-            .truncate(maxLength: Self.maxExcerptSize)
-        
-        return output.isEmpty ? fallback : output
+    func excerpt(fallback: String = "") -> Subtext {
+        return self.truncate(maxBlocks: Self.maxExcerptBlocks, fallback: fallback)
     }
     
-    static func excerpt(markup: String, fallback: String = "") -> String {
-        let prefix = markup.truncate(maxLength: maxExcerptSize)
-        return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
+    static func excerpt(markup: any StringProtocol, fallback: String = "") -> Subtext {
+        let output = String.truncateAtWordBoundary(
+            markup: markup,
+            maxChars: Self.maxExcerptSize * Self.maxExcerptBlocks
+        )
+        return Subtext(markup: output).truncate(maxBlocks: Self.maxExcerptBlocks, fallback: fallback)
+    }
+    
+    func title() -> String {
+        self.truncate(maxBlocks: 1).toString().title()
     }
     
     static func generateSlug(markup: String) -> Slug? {

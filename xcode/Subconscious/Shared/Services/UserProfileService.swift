@@ -270,7 +270,7 @@ actor UserProfileService {
                 continue
             }
             
-            let excerpt = Subtext.truncate(text: memo.body, maxBlocks: 2)
+            let excerpt = Subtext.excerpt(markup: memo.body)
 
             entries.append(
                 EntryStub(

@@ -2032,7 +2032,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         return entry
     }
     
-    func excerpt(fallback: String = "") -> String {
+    func excerpt(fallback: String = "") -> Subtext {
         Subtext.excerpt(markup: self.editor.text, fallback: fallback)
     }
 }

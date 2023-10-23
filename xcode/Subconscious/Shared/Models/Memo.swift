@@ -62,7 +62,7 @@ struct Memo: Hashable, CustomStringConvertible {
     func excerpt() -> String {
         switch ContentType(rawValue: contentType) {
         case .subtext:
-            return Subtext.truncate(text: body, maxBlocks: 2).toString()
+            return Subtext.excerpt(markup: body).toString()
         case .text:
             return body.truncate(maxLength: 240)
         default:

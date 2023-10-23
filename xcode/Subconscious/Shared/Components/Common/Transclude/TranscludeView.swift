@@ -55,7 +55,7 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("/short")!,
-                    excerpt: Subtext.truncate(text: "Short.", maxBlocks: 2),
+                    excerpt: Subtext(markup: "Short."),
                     isTruncated: false,
                     modified: Date.now
                 ),
@@ -66,9 +66,8 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("@gordon/loomings")!,
-                    excerpt: Subtext.truncate(
-                        text: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
-                        maxBlocks: 2
+                    excerpt: Subtext(
+                        markup: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
                     ),
                     isTruncated: false,
                     modified: Date.now
@@ -80,9 +79,8 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("/loomings")!,
-                    excerpt: Subtext.truncate(
-                        text: "Call me Ishmael. Some years ago- never mind how long precisely",
-                        maxBlocks: 2
+                    excerpt: Subtext(
+                        markup: "Call me Ishmael. Some years ago- never mind how long precisely"
                     ),
                     isTruncated: false,
                     modified: Date.now
@@ -94,12 +92,11 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("did:subconscious:local/loomings")!,
-                    excerpt: Subtext.truncate(
-                        text: """
+                    excerpt: Subtext(
+                        markup: """
                               Call me Ishmael.
                               Some years ago- never mind how long precisely
-                              """,
-                        maxBlocks: 2
+                              """
                     ),
                     isTruncated: false,
                     modified: Date.now
@@ -111,9 +108,8 @@ struct TranscludeView_Previews: PreviewProvider {
                 entry: EntryStub(
                     did: Did.dummyData(),
                     address: Slashlink("did:key:abc123/loomings")!,
-                    excerpt: Subtext.truncate(
-                        text: "Call me Ishmael. Some years ago- never mind how long precisely",
-                        maxBlocks: 2
+                    excerpt: Subtext(
+                        markup: "Call me Ishmael. Some years ago- never mind how long precisely"
                     ),
                     isTruncated: false,
                     modified: Date.now

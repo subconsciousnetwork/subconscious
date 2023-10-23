@@ -56,16 +56,15 @@ struct BacklinksView_Previews: PreviewProvider {
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
-                        excerpt: Subtext.truncate(text: "Short", maxBlocks: 2),
+                        excerpt: Subtext(markup: "Short"),
                         isTruncated: false,
                         modified: Date.now
                     ),
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink("/loomings")!,
-                        excerpt: Subtext.truncate(
-                            text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                            maxBlocks: 2
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
                         isTruncated: false,
                         modified: Date.now
@@ -73,9 +72,8 @@ struct BacklinksView_Previews: PreviewProvider {
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
-                        excerpt: Subtext.truncate(
-                            text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                            maxBlocks: 2
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
                         isTruncated: false,
                         modified: Date.now

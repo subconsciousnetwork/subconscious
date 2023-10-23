@@ -44,6 +44,37 @@ extension String {
         )
         return !truncated.isEmpty ? "\(truncated)\(ellipsis)" : ""
     }
+    
+    /// Take the first `maxBlocks` blocks or `Subtext.maxExcerptSize * maxBlocks` characters worth, terminating with an
+    /// ellipsis. If the string is truncated, it will be sliced to the nearest word boundary to avoid breaking markup.
+    /// This is used to implement `Subtext.excerpt`.
+    static func truncateAtWordBoundary(markup: any StringProtocol, maxChars: Int, fallback: String = "") -> String {
+        let length = maxChars
+    
+        if markup.count <= length {
+            return "\(markup)"
+        } else {
+            
+            // Trim the string
+            let index = markup.index(markup.startIndex, offsetBy: length)
+            var truncated = "\(markup[..<index])"
+            
+            // Slice the string to the nearest word boundary to avoid breaking markup
+            // This case will only ever be visible to a user when a note has a very
+            // large first or second block.
+            if let lastSpace = truncated.lastIndex(of: " ") {
+                truncated = String(truncated[..<lastSpace])
+            }
+            
+            // Remove any trailing punctuation before we add the ellipsis
+            // Avoids things like "Hello world.…"
+            if let range = truncated.range(of: "[\\p{P}\\s]+$", options: .regularExpression) {
+                truncated.removeSubrange(range)
+            }
+            
+            return truncated + "…"
+        }
+    }
 
     /// Get first sentence of substring
     var firstSentence: Substring {
