@@ -269,6 +269,8 @@ actor UserProfileService {
             guard let memo = memo.toMemo() else {
                 continue
             }
+            
+            let excerpt = Subtext.truncate(text: memo.body, maxBlocks: 2)
 
             entries.append(
                 EntryStub(
@@ -277,8 +279,8 @@ actor UserProfileService {
                         petname: address.petname,
                         slug: slug
                     ),
-                    excerpt: Subtext.truncate(text: memo.body, maxBlocks: 2),
-                    contentLength: memo.body.count,
+                    excerpt: excerpt,
+                    isTruncated: excerpt.toString().count < memo.body.count,
                     modified: memo.modified
                 )
             )

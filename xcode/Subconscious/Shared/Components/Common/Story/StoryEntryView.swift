@@ -93,7 +93,7 @@ struct StoryEntryView: View {
                     })
                     
                     VStack(alignment: .leading) {
-                        if story.entry.excerpt.toString().count < story.entry.contentLength {
+                        if story.entry.isTruncated {
                             Text("Show more…")
                                 .foregroundColor(.accentColor)
                                 .font(.callout)

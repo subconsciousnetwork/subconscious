@@ -163,7 +163,7 @@ extension EntryStub: DummyData {
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            contentLength: String.dummyDataMedium().count,
+            isTruncated: false,
             modified: modified
         )
     }
@@ -178,7 +178,7 @@ extension EntryStub: DummyData {
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            contentLength: String.dummyDataMedium().count,
+            isTruncated: false,
             modified: modified
         )
     }

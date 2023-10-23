@@ -476,7 +476,7 @@ final class DatabaseService {
 
         let results = try database.execute(
             sql: """
-            SELECT slashlink, modified, length(body) AS length, excerpt
+            SELECT slashlink, modified, length(body) > length(excerpt), excerpt
             FROM memo
             WHERE did = ?
                 AND slug = ?
@@ -495,7 +495,7 @@ final class DatabaseService {
                     .toString()?
                     .toSlashlink(),
                 let modified = row.col(1)?.toDate(),
-                let contentLength = row.col(2)?.toInt()
+                let isTruncated = row.col(2)?.toBool()
             else {
                 return nil
             }
@@ -506,7 +506,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                contentLength: contentLength,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -549,7 +549,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, slashlink, modified, length(body) AS length, excerpt
+            SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
             FROM memo
             WHERE did NOT IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -568,7 +568,7 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let contentLength = row.col(3)?.toInt()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
@@ -579,7 +579,7 @@ final class DatabaseService {
                 did: did,
                 address: slashlink,
                 excerpt: excerpt,
-                contentLength: contentLength,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -601,7 +601,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, id, modified, length(body) AS length, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo
             WHERE did IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -621,7 +621,7 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let contentLength = row.col(3)?.toInt()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
@@ -632,7 +632,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                contentLength: contentLength,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -1056,7 +1056,7 @@ final class DatabaseService {
                 peer.petname,
                 memo_search.slug,
                 memo_search.modified,
-                length(memo_search.body) AS length,
+                length(memo_search.body) > length(memo_search.excerpt),
                 memo_search.excerpt
             FROM memo_search
             LEFT JOIN peer ON memo_search.did = peer.did
@@ -1078,7 +1078,7 @@ final class DatabaseService {
             let petname = row.col(1)?.toString()?.toPetname()
             let slug = row.col(2)?.toString()?.toSlug()
             let modified = row.col(3)?.toDate()
-            let contentLength = row.col(4)?.toInt() ?? 0
+            let isTruncated = row.col(4)?.toBool() ?? false
             let excerpt = Subtext(markup: row.col(5)?.toString() ?? "")
             switch (petname, slug, modified) {
             case let (.some(petname), .some(slug), .some(modified)):
@@ -1089,7 +1089,7 @@ final class DatabaseService {
                         slug: slug
                     ),
                     excerpt: excerpt,
-                    contentLength: contentLength,
+                    isTruncated: isTruncated,
                     modified: modified
                 )
             case let (.none, .some(slug), .some(modified)):
@@ -1101,7 +1101,7 @@ final class DatabaseService {
                     did: did,
                     address: address,
                     excerpt: excerpt,
-                    contentLength: contentLength,
+                    isTruncated: isTruncated,
                     modified: modified
                 )
             default:
@@ -1121,7 +1121,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, length(body) AS length, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo_search
             WHERE memo_search.modified BETWEEN ? AND ?
                 AND substr(memo_search.slug, 1, 1) != '_'
@@ -1141,7 +1141,7 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let contentLength = row.col(3)?.toInt()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
@@ -1152,7 +1152,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                contentLength: contentLength,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -1167,7 +1167,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, length(body) AS length, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo
             ORDER BY RANDOM()
                 AND substr(memo.slug, 1, 1) != '_'
@@ -1183,7 +1183,7 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let contentLength = row.col(3)?.toInt()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
@@ -1194,7 +1194,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                contentLength: contentLength,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -1212,7 +1212,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, length(body) AS length, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo_search
             WHERE description MATCH ?
                 AND substr(slug, 1, 1) != '_'
@@ -1232,7 +1232,7 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let contentLength = row.col(3)?.toInt()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
@@ -1243,7 +1243,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                contentLength: contentLength,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })

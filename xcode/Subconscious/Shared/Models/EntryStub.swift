@@ -18,7 +18,8 @@ struct EntryStub:
     let did: Did
     let address: Slashlink
     let excerpt: Subtext
-    let contentLength: Int
+    // Is the excerpt shorter than the full body of the entry?
+    let isTruncated: Bool
     let modified: Date
 
     var id: Slashlink { address }
@@ -31,7 +32,7 @@ struct EntryStub:
             did: did,
             address: address,
             excerpt: excerpt,
-            contentLength: contentLength,
+            isTruncated: isTruncated,
             modified: modified
         )
     }

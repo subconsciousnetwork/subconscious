@@ -57,7 +57,7 @@ struct BacklinksView_Previews: PreviewProvider {
                         did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
                         excerpt: Subtext.truncate(text: "Short", maxBlocks: 2),
-                        contentLength: -1,
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     EntryStub(
@@ -67,7 +67,7 @@ struct BacklinksView_Previews: PreviewProvider {
                             text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                             maxBlocks: 2
                         ),
-                        contentLength: -1,
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     EntryStub(
@@ -77,7 +77,7 @@ struct BacklinksView_Previews: PreviewProvider {
                             text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                             maxBlocks: 2
                         ),
-                        contentLength: -1,
+                        isTruncated: false,
                         modified: Date.now
                     )
                 ],

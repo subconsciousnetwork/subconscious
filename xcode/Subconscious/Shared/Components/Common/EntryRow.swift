@@ -61,7 +61,7 @@ struct EntryRow_Previews: PreviewProvider {
                               """,
                         maxBlocks: 2
                     ),
-                    contentLength: -1,
+                    isTruncated: false,
                     modified: Date.now
                 )
             )
@@ -75,7 +75,7 @@ struct EntryRow_Previews: PreviewProvider {
                         text: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                         maxBlocks: 2
                     ),
-                    contentLength: -1,
+                    isTruncated: false,
                     modified: Date.now
                 )
             )
@@ -89,7 +89,7 @@ struct EntryRow_Previews: PreviewProvider {
                         text: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                         maxBlocks: 2
                     ),
-                    contentLength: -1,
+                    isTruncated: false,
                     modified: Date.now
                 )
             )
@@ -103,7 +103,7 @@ struct EntryRow_Previews: PreviewProvider {
                         text: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                         maxBlocks: 2
                     ),
-                    contentLength: -1,
+                    isTruncated: false,
                     modified: Date.now
                 )
             )

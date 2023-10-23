@@ -125,7 +125,7 @@ struct SubtextView_Previews: PreviewProvider {
                             "/wanderer-your-footsteps-are-the-road"
                         )!,
                         excerpt: Subtext.truncate(text: "hello mother", maxBlocks: 2),
-                        contentLength: -1,
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     Slashlink("/voice")!: EntryStub(
@@ -134,7 +134,7 @@ struct SubtextView_Previews: PreviewProvider {
                             "/voice"
                         )!,
                         excerpt: Subtext.truncate(text: "hello father", maxBlocks: 2),
-                        contentLength: -1,
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     Slashlink("/memory")!: EntryStub(
@@ -143,7 +143,7 @@ struct SubtextView_Previews: PreviewProvider {
                             "/memory"
                         )!,
                         excerpt: Subtext.truncate(text: "hello world", maxBlocks: 2),
-                        contentLength: -1,
+                        isTruncated: false,
                         modified: Date.now
                     )
                 ],
