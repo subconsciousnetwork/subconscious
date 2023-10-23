@@ -124,7 +124,7 @@ struct FeedView: View {
 }
 
 //  MARK: Action
-enum FeedAction {
+enum FeedAction: Hashable {
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "FeedAction"
@@ -154,7 +154,7 @@ enum FeedAction {
     /// Set stories
     case succeedFetchFeed([StoryEntry])
     /// Fetch feed failed
-    case failFetchFeed(Error)
+    case failFetchFeed(String)
     
     case requestFeedRoot
 }
@@ -315,7 +315,11 @@ struct FeedModel: ModelProtocol {
                 entries: entries
             )
         case .failFetchFeed(let error):
-            return failFetchFeed(state: state, environment: environment, error: error)
+            return failFetchFeed(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case let .activatedSuggestion(suggestion):
             return FeedDetailStackCursor.update(
                 state: state,
@@ -447,7 +451,7 @@ struct FeedModel: ModelProtocol {
                 FeedAction.succeedFetchFeed(stories)
             })
             .catch({ error in
-                Just(FeedAction.failFetchFeed(error))
+                Just(FeedAction.failFetchFeed(error.localizedDescription))
             })
             .eraseToAnyPublisher()
         
@@ -476,9 +480,9 @@ struct FeedModel: ModelProtocol {
     static func failFetchFeed(
         state: FeedModel,
         environment: AppEnvironment,
-        error: Error
+        error: String
     ) -> Update<FeedModel> {
-        logger.error("Failed to fetch feed \(error.localizedDescription)")
+        logger.error("Failed to fetch feed \(error)")
         var model = state
         model.status = .notFound
         
