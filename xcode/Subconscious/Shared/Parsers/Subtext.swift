@@ -661,7 +661,7 @@ extension Subtext {
     private static let maxGeneratedSlugSize = 128
     
     static func truncate(text: String, maxBlocks: Int, fallback: String = "") -> Subtext {
-        let length = min(280 * maxBlocks, 4000)
+        let length = Self.maxExcerptSize * maxBlocks
         
         let text = Func.run {
             if text.count <= length {
