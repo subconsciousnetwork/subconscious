@@ -37,35 +37,39 @@ struct FirstRunDoneView: View {
     var statusLabel: String {
         switch (status) {
         case .pending:
-            return "Creating your sphere..."
+            return "Creating your gateway..."
         case .succeeded:
             return "Connected!"
         case .initial:
             // Shown if the user skips the invite code step
             return "You are offline."
         case .failed:
-            return "Failed to create sphere."
+            return "Failed to create gateway."
         }
     }
     
     var guidanceLabel: String {
         switch (status) {
         case .pending:
-            return "You can start exploring the app offline."
+            return "You can start exploring offline."
         case .succeeded:
             return "Welcome to Subconscious."
             
         // Shown if the user skips the invite code step OR we fail to provision
         case .initial, .failed:
-            return "Don't worry, you can still explore the app."
+            return "Don't worry, you can still start exploring."
         }
     }
 
     var body: some View {
-        VStack(spacing: AppTheme.padding * 4) {
+        VStack(spacing: AppTheme.padding) {
             Spacer()
+            
             Text(statusLabel)
                 .foregroundColor(.secondary)
+            
+            Spacer()
+            
             StackedGlowingImage() {
                 HStack(
                     alignment: .center,
@@ -79,6 +83,13 @@ struct FirstRunDoneView: View {
                     }
                     dottedLine
                     ResourceSyncBadge(status: status)
+                        .foregroundColor(Func.run {
+                            if case .failed = status {
+                                return .red
+                            }
+                            
+                            return .secondary
+                        })
                     dottedLine
                     Image("ns_logo")
                         .resizable()
@@ -87,9 +98,13 @@ struct FirstRunDoneView: View {
                 }
                 .frame(height: 64)
             }
+            Spacer()
+            
             Text(guidanceLabel)
                 .foregroundColor(.secondary)
+            
             Spacer()
+            
             Button(
                 action: {
                     app.send(.submitFirstRunDoneStep)

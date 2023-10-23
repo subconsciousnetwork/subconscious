@@ -31,6 +31,12 @@ extension UserProfileBio: DummyData {
     }
 }
 
+extension Slug: DummyData {
+    static func dummyData() -> Slug {
+        Slug(String.dummyDataShort())!
+    }
+}
+
 extension Petname.Name: DummyData {
     static func dummyData() -> Petname.Name {
         let options = [
@@ -78,28 +84,28 @@ extension Petname: DummyData {
     }
 }
 
+extension AddressBookEntry: DummyData {
+    static func dummyData() -> AddressBookEntry {
+        AddressBookEntry(
+            petname: Petname.dummyData(),
+            did: Did.dummyData(),
+            status: .pending,
+            version: Cid.dummyDataMedium()
+        )
+    }
+}
+
 extension StoryUser: DummyData {
     static func dummyData() -> StoryUser {
-        let nickname = Petname.Name.dummyData()
         return StoryUser(
-            user: UserProfile(
-                did: Did.dummyData(),
-                nickname: nickname,
-                address: Slashlink(petname: nickname.toPetname()),
-                pfp: .image(String.dummyProfilePicture()),
-                bio: UserProfileBio.dummyData(),
-                category: [UserCategory.human, UserCategory.geist].randomElement()!,
-                resolutionStatus: .unresolved,
-                ourFollowStatus: [
-                    .following(Petname.Name.dummyData()),
-                    .notFollowing
-                ].randomElement()!
-            )
+            entry: AddressBookEntry.dummyData(),
+            user: UserProfile.dummyData()
         )
     }
     
     static func dummyData(petname: Petname) -> StoryUser {
         StoryUser(
+            entry: AddressBookEntry.dummyData(),
             user: UserProfile(
                 did: Did.dummyData(),
                 nickname: petname.leaf,
@@ -107,11 +113,11 @@ extension StoryUser: DummyData {
                 pfp: .image(String.dummyProfilePicture()),
                 bio: UserProfileBio.dummyData(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!,
-                resolutionStatus: .unresolved,
                 ourFollowStatus: [
                     .following(Petname.Name.dummyData()),
                     .notFollowing
-                ].randomElement()!
+                ].randomElement()!,
+                aliases: []
             )
         )
     }
@@ -153,7 +159,12 @@ extension EntryStub: DummyData {
         let excerpt = String.dummyDataMedium()
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
-        return EntryStub(address: address, excerpt: excerpt, modified: modified, author: UserProfile.dummyData())
+        return EntryStub(
+            did: Did.dummyData(),
+            address: address,
+            excerpt: excerpt,
+            modified: modified
+        )
     }
     
     static func dummyData(petname: Petname, slug: Slug) -> EntryStub {
@@ -162,7 +173,12 @@ extension EntryStub: DummyData {
         let excerpt = String.dummyDataMedium()
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
-        return EntryStub(address: address, excerpt: excerpt, modified: modified, author: UserProfile.dummyData())
+        return EntryStub(
+            did: Did.dummyData(),
+            address: address,
+            excerpt: excerpt,
+            modified: modified
+        )
     }
 }
 
@@ -176,8 +192,8 @@ extension UserProfile: DummyData {
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
             category: .human,
-            resolutionStatus: .unresolved,
-            ourFollowStatus: .notFollowing
+            ourFollowStatus: .notFollowing,
+            aliases: []
         )
     }
     
@@ -192,8 +208,8 @@ extension UserProfile: DummyData {
             pfp: .image(String.dummyProfilePicture()),
             bio: UserProfileBio.dummyData(),
             category: category,
-            resolutionStatus: .unresolved,
-            ourFollowStatus: .notFollowing
+            ourFollowStatus: .notFollowing,
+            aliases: []
         )
     }
 }

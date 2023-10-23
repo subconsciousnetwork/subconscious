@@ -35,7 +35,7 @@ import Combine
 import ObservableStore
 
 //  MARK: Action
-enum SubtextTextAction: Hashable, CustomLogStringConvertible {
+enum SubtextTextAction: Hashable {
     case requestFocus(Bool)
     case scheduleFocusChange
     case focusChange(Bool)
@@ -44,15 +44,6 @@ enum SubtextTextAction: Hashable, CustomLogStringConvertible {
     /// Set selection at the end of the text
     case setSelectionAtEnd
     case setEditable(Bool)
-
-    var logDescription: String {
-        switch self {
-        case .setText(_):
-            return "setText(...)"
-        default:
-            return String(describing: self)
-        }
-    }
 }
 
 //  MARK: Model

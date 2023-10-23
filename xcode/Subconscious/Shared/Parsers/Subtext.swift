@@ -658,12 +658,21 @@ extension Subtext {
         // Filter out empty blocks
         let validBlocks = blocks
             .filter { block in !block.isEmpty }
-            .map { block in String(block.body()) }
+            .map { block in String(block.span) }
             .prefix(2) // Take first two blocks
         
         let output = validBlocks.joined(separator: "\n")
         
         return output.isEmpty ? fallback : output
+    }
+    
+    func truncate(_ maxBlocks: Int = 2, fallback: String = "") -> Subtext {
+        // Filter out empty blocks
+        let validBlocks = blocks
+            .filter { block in !block.isEmpty }
+            .prefix(maxBlocks)
+        
+        return Subtext(base: self.base, blocks: Array(validBlocks))
     }
     
     static func excerpt(markup: String, fallback: String = "") -> String {

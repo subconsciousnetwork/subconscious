@@ -22,14 +22,9 @@ struct AppView: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                if Config.default.appTabs {
-                    AppTabView(store: store)
-                } else {
-                    NotebookView(app: store)
-                }
-            }
-            .zIndex(0)
+            AppTabView(store: store)
+                .zIndex(0)
+            
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
                     state: store.state.appUpgrade,
@@ -62,12 +57,24 @@ struct AppView: View {
             SettingsView(app: store)
                 .presentationDetents([.fraction(0.999)]) // https://stackoverflow.com/a/74631815
         }
+        .fullScreenCover(
+            isPresented: store.binding(
+                get: \.isRecoveryModePresented,
+                tag: AppAction.presentRecoveryMode
+            )
+        ) {
+            RecoveryView(
+                store: store.viewStore(
+                    get: RecoveryModeCursor.get,
+                    tag: RecoveryModeCursor.tag
+                )
+            )
+        }
         .onAppear {
             store.send(.appear)
         }
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            AppModel.logger.debug("[action] \(message)")
+            AppAction.logger.debug("\(String(describing: action))")
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
@@ -81,10 +88,22 @@ struct AppView: View {
 
 typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
-typealias GatewayUrlFormField = FormField<String, URL>
+typealias GatewayUrlFormField = FormField<String, GatewayURL>
+
+struct PeerIndexError: Error {
+    let error: Error
+    let petname: Petname
+}
+
+typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
 
 // MARK: Action
-enum AppAction: CustomLogStringConvertible {
+enum AppAction {
+    // Logger for actions
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "AppAction"
+    )
     /// Sent immediately upon store creation
     case start
 
@@ -93,6 +112,7 @@ enum AppAction: CustomLogStringConvertible {
     case nicknameFormField(NicknameFormField.Action)
     case inviteCodeFormField(InviteCodeFormField.Action)
     case gatewayURLField(GatewayUrlFormField.Action)
+    case recoveryMode(RecoveryModeModel.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -118,9 +138,9 @@ enum AppAction: CustomLogStringConvertible {
     case failFetchNicknameFromProfile(_ message: String)
     
     /// Set gateway URL
-    case submitGatewayURL(_ url: URL)
+    case submitGatewayURL(_ url: GatewayURL)
     case submitGatewayURLForm
-    case succeedResetGatewayURL(_ url: URL)
+    case succeedResetGatewayURL(_ url: GatewayURL)
 
     /// Create a new sphere given an owner key name
     case createSphere
@@ -197,9 +217,8 @@ enum AppAction: CustomLogStringConvertible {
     case failCollectPeersToIndex(_ error: String)
 
     /// Index the contents of a sphere in the database
-    case indexPeer(_ petname: Petname)
-    case succeedIndexPeer(_ peer: PeerRecord)
-    case failIndexPeer(petname: Petname, error: Error)
+    case indexPeers(_ petnames: [Petname])
+    case completeIndexPeers(results: [PeerIndexResult])
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ did: Did)
@@ -218,7 +237,7 @@ enum AppAction: CustomLogStringConvertible {
     
     /// Check gateway
     case requestGatewayProvisioningStatus
-    case succeedProvisionGateway(_ gatewayURL: URL)
+    case succeedProvisionGateway(_ gatewayURL: GatewayURL)
     case failProvisionGateway(_ error: String)
     
     case setFirstRunPath([FirstRunStep])
@@ -228,6 +247,7 @@ enum AppAction: CustomLogStringConvertible {
     case submitFirstRunProfileStep
     case submitFirstRunSphereStep
     case submitFirstRunRecoveryStep
+    case submitFirstRunInviteStep
     case submitFirstRunDoneStep
     
     case requestOfflineMode
@@ -235,15 +255,48 @@ enum AppAction: CustomLogStringConvertible {
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
     
+    /// Dispatched on bootup, check the integrity of the Noosphere database
+    case checkRecoveryStatus
+    /// Recovery mode can be launched manually (from settings) or automatically
+    case requestRecoveryMode(RecoveryModeLaunchContext)
+    /// Control the visibility of the recovery mode overlay
+    case presentRecoveryMode(_ isPresented: Bool)
+    
     /// Notification that a follow happened, and the sphere was resolved
     case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
     /// Notification that an unfollow happened somewhere else
     case notifySucceedUnfollow(identity: Did, petname: Petname)
     
     case authorization(_ action: AuthorizationSettingsAction)
-
+    
+    //  Note management actions.
+    //  These actions manage note actions which have an effect on the global
+    //  list of notes (deletion, creation, etc).
+    //
+    //  Other components may subscribe to the app store actions publisher to
+    //  be notified when these global things change.
+    //
+    //  The general pattern is to send a "request" action in the component's
+    //  own store, and then replay these as equivalent actions on the app
+    //  store. The component subscribes to the app store's actions publisher
+    //  and responds to "succeed" actions.
+    /// Attempt to delete a memo
+    case deleteMemo(Slashlink?)
+    /// Deletion attempt failed
+    case failDeleteMemo(String)
+    /// Deletion attempt succeeded
+    case succeedDeleteMemo(Slashlink)
+    
+    case setSelectedAppTab(AppTab)
+    case requestNotebookRoot
+    case requestFeedRoot
+    case requestProfileRoot
+    
+    /// Used as a notification that recovery completed
+    case succeedRecoverOurSphere
+    
     /// Set recovery phrase on recovery phrase component
-    static func setRecoveryPhrase(_ phrase: String) -> AppAction {
+    static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
     }
 
@@ -254,22 +307,6 @@ enum AppAction: CustomLogStringConvertible {
 
     static func setAppUpgradeComplete(_ isComplete: Bool) -> AppAction {
         .appUpgrade(.setComplete(isComplete))
-    }
-
-    var logDescription: String {
-        switch self {
-        case let .succeedMigrateDatabase(version):
-            return "succeedMigrateDatabase(\(version))"
-        case let .succeedSyncLocalFilesWithDatabase(fingerprints):
-            return "succeedSyncLocalFilesWithDatabase(...) \(fingerprints.count) items"
-        case let .succeedCreateSphere(receipt):
-            // !!!: Do not log mnemonic
-            // The user's sphere mnemonic is carried with this sphere receipt.
-            // It is a secret and should never be logged.
-            return "succeedCreateSphere(\(receipt.identity))"
-        default:
-            return String(describing: self)
-        }
     }
 }
 
@@ -396,6 +433,32 @@ struct InviteCodeFormFieldCursor: CursorProtocol {
     }
 }
 
+struct RecoveryModeCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = RecoveryModeModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.recoveryMode
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.recoveryMode = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case let .requestPresent(isPresented):
+            return .presentRecoveryMode(isPresented)
+        case .succeedRecovery:
+            return .succeedRecoverOurSphere
+        default:
+            return .recoveryMode(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -404,9 +467,10 @@ enum AppDatabaseState {
 }
 
 enum FirstRunStep {
-    case profile
     case sphere
     case recovery
+    case profile
+    case invite
     case done
 }
 
@@ -428,6 +492,10 @@ struct AppModel: ModelProtocol {
     var shouldPresentFirstRun: Bool {
         !isFirstRunComplete
     }
+    
+    /// Should recovery mode be presented?
+    var isRecoveryModePresented = false
+    var recoveryMode = RecoveryModeModel()
     
     /// Is database connected and migrated?
     var databaseMigrationStatus = ResourceStatus.initial
@@ -493,14 +561,7 @@ struct AppModel: ModelProtocol {
     var gatewayId: String? = nil
     var gatewayURLField = GatewayUrlFormField(
         value: "",
-        validate: { value in
-            guard let url = URL(string: value),
-                  url.isHTTP() else {
-                return nil
-            }
-            
-            return url
-        }
+        validate: { value in GatewayURL(value) }
     )
     var lastGatewaySyncStatus = ResourceStatus.initial
     
@@ -519,6 +580,8 @@ struct AppModel: ModelProtocol {
     var isReadyForInteraction: Bool {
         self.databaseMigrationStatus == .succeeded
     }
+    
+    var selectedAppTab: AppTab = .notebook
     
     // Logger for actions
     static let logger = Logger(
@@ -569,6 +632,12 @@ struct AppModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
+        case .recoveryMode(let action):
+            return RecoveryModeCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .authorization(let action):
             return AuthorizationSettingsCursor.update(
                 state: state,
@@ -587,14 +656,17 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case let .setFirstRunPath(path):
-            var model = state
-            model.firstRunPath = path
-            return Update(state: model)
+            return setFirstRunPath(
+                state: state,
+                environment: environment,
+                path: path
+            )
         case let .pushFirstRunStep(step):
-            var model = state
-            model.firstRunPath.append(step)
-            
-            return Update(state: model)
+            return pushFirstRunStep(
+                state: state,
+                environment: environment,
+                step: step
+            )
         case .submitFirstRunWelcomeStep:
             return submitFirstRunWelcomeStep(
                 state: state,
@@ -612,6 +684,11 @@ struct AppModel: ModelProtocol {
             )
         case .submitFirstRunRecoveryStep:
             return submitFirstRunRecoveryStep(
+                state: state,
+                environment: environment
+            )
+        case .submitFirstRunInviteStep:
+            return submitFirstRunInviteStep(
                 state: state,
                 environment: environment
             )
@@ -695,10 +772,10 @@ struct AppModel: ModelProtocol {
         case .fetchNicknameFromProfile:
             return fetchNicknameFromProfileMemo(state: state, environment: environment)
         case let .succeedFetchNicknameFromProfile(nickname):
-            return update(
+            return succeedFetchNicknameFromProfile(
                 state: state,
-                action: .setNickname(nickname.verbatim),
-                environment: environment
+                environment: environment,
+                nickname: nickname
             )
         case let .failFetchNicknameFromProfile(message):
             logger.log("Failed to read nickname from profile: \(message)")
@@ -845,24 +922,17 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .indexPeer(let petname):
-            return indexPeer(
+        case .indexPeers(let petnames):
+            return indexPeers(
                 state: state,
                 environment: environment,
-                petname: petname
+                petnames: petnames
             )
-        case .succeedIndexPeer(let peer):
-            return succeedIndexPeer(
+        case let .completeIndexPeers(results):
+            return completeIndexPeers(
                 state: state,
                 environment: environment,
-                peer: peer
-            )
-        case let .failIndexPeer(petname, error):
-            return failIndexPeer(
-                state: state,
-                environment: environment,
-                petname: petname,
-                error: error
+                results: results
             )
         case .purgePeer(let identity):
             return purgePeer(
@@ -898,20 +968,9 @@ struct AppModel: ModelProtocol {
         case .failFollowDefaultGeist(let error):
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
-            
         case .submitInviteCodeForm:
-            guard let inviteCode = state.inviteCodeFormField.validated else {
-                logger.log("Invalid invite code submitted")
-                return Update(state: state)
-            }
-            
-            var model = state
-            model.inviteCode = inviteCode
-            AppDefaults.standard.inviteCode = inviteCode.description
-            
-            return update(
-                state: model,
-                action: .requestRedeemInviteCode(inviteCode),
+            return submitInviteCodeForm(
+                state: state,
                 environment: environment
             )
         case .requestRedeemInviteCode(let inviteCode):
@@ -963,6 +1022,58 @@ struct AppModel: ModelProtocol {
                 identity: did,
                 petname: petname
             )
+        case let .deleteMemo(address):
+            return deleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .failDeleteMemo(error):
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedDeleteMemo(address):
+            return succeedDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case .setSelectedAppTab(let tab):
+            return setSelectedAppTab(
+                state: state,
+                environment: environment,
+                tab: tab
+            )
+        case .requestNotebookRoot:
+            return Update(state: state)
+        case .requestFeedRoot:
+            return Update(state: state)
+        case .requestProfileRoot:
+            return Update(state: state)
+        case .checkRecoveryStatus:
+            return checkRecoveryStatus(
+                state: state,
+                environment: environment
+            )
+        case .requestRecoveryMode(let context):
+            return requestRecoveryMode(
+                state: state,
+                environment: environment,
+                context: context
+            )
+        case .presentRecoveryMode(let isPresented):
+            return presentRecoveryMode(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .succeedRecoverOurSphere:
+            return succeedRecoverOurSphere(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -985,6 +1096,7 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
+        model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
         
         // Update model from app defaults
         return update(
@@ -993,6 +1105,7 @@ struct AppModel: ModelProtocol {
                 .setSphereIdentity(
                     AppDefaults.standard.sphereIdentity
                 ),
+                .checkRecoveryStatus,
                 .notifyFirstRunComplete(
                     AppDefaults.standard.firstRunComplete
                 ),
@@ -1044,6 +1157,26 @@ struct AppModel: ModelProtocol {
             ],
             environment: environment
         )
+    }
+    
+    static func setFirstRunPath(
+        state: AppModel,
+        environment: AppEnvironment,
+        path: [FirstRunStep]
+    ) -> Update<AppModel> {
+        var model = state
+        model.firstRunPath = path
+        return Update(state: model)
+    }
+    
+    static func pushFirstRunStep(
+        state: AppModel,
+        environment: AppEnvironment,
+        step: FirstRunStep
+    ) -> Update<AppModel> {
+        var model = state
+        model.firstRunPath.append(step)
+        return Update(state: model)
     }
     
     static func setAppUpgraded(
@@ -1109,13 +1242,25 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    static func fetchNicknameFromProfileMemo(
+    static func succeedFetchNicknameFromProfile(
         state: AppModel,
+        environment: AppEnvironment,
+        nickname: Petname.Name
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            action: .setNickname(nickname.verbatim),
+            environment: environment
+        )
+    }
+    
+    static func fetchNicknameFromProfileMemo(
+        state: AppModel, 
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
-            let response = try await environment.userProfile.requestOurProfile()
-            if let nickname = response.profile.nickname {
+            let response = try await environment.userProfile.readOurProfile(alias: nil)
+            if let nickname = response.nickname {
                 return AppAction.succeedFetchNicknameFromProfile(nickname)
             }
             
@@ -1132,7 +1277,7 @@ struct AppModel: ModelProtocol {
     static func submitGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
         // We always ensure the field reflects this value
         // even if nothing changes from a Noosphere perspective
@@ -1194,9 +1339,9 @@ struct AppModel: ModelProtocol {
     static func succeedResetGatewayURL(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
-        logger.log("Reset gateway URL: \(url)")
+        logger.log("Reset gateway URL: \(url.description)")
         return Update(state: state)
     }
     
@@ -1234,7 +1379,7 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .setSphereIdentity(receipt.identity),
-                .setRecoveryPhrase(receipt.mnemonic),
+                .setRecoveryPhrase(RecoveryPhrase(receipt.mnemonic)),
                 .followDefaultGeist
             ],
             environment: environment
@@ -1332,7 +1477,7 @@ struct AppModel: ModelProtocol {
             state: model,
             actions: [
                 .inviteCodeFormField(.reset),
-                .submitFirstRunWelcomeStep
+                .submitFirstRunInviteStep
             ],
             environment: environment
         )
@@ -1342,17 +1487,10 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard state.inviteCode == nil || // Offline mode: no code
-              state.gatewayId != nil // Otherwise we need an ID to proceed
-        else {
-            logger.error("Missing gateway ID but user is trying to use invite code")
-            return Update(state: state)
-        }
-        
         return update(
             state: state,
             actions: [
-                .pushFirstRunStep(.profile)
+                .pushFirstRunStep(.sphere)
             ],
             environment: environment
         )
@@ -1371,7 +1509,7 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .submitNickname(nickname),
-                .pushFirstRunStep(.sphere)
+                .pushFirstRunStep(.invite)
             ],
             environment: environment
         )
@@ -1384,6 +1522,7 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
+                .createSphere,
                 .pushFirstRunStep(.recovery)
             ],
             environment: environment
@@ -1394,6 +1533,26 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .pushFirstRunStep(.profile)
+            ],
+            environment: environment
+        )
+    }
+    
+    static func submitFirstRunInviteStep(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard state.inviteCode == nil || // Offline mode: no code
+              state.gatewayId != nil // Otherwise we need an ID to proceed
+        else {
+            logger.error("Missing gateway ID but user is trying to use invite code")
+            return Update(state: state)
+        }
+
         return update(
             state: state,
             actions: [
@@ -1822,10 +1981,13 @@ struct AppModel: ModelProtocol {
         peers: [PeerRecord]
     ) -> Update<Self> {
         // Transform list of peers into fx publisher of actions.
-        let fx: Fx<Action> = peers
-            .map({ peer in Action.indexPeer(peer.petname) })
-            .publisher
-            .eraseToAnyPublisher()
+        let fx: Fx<Action> = Just(
+            AppAction.indexPeers(
+                peers.map({ peer in peer.petname })
+            )
+        )
+        .eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
     
@@ -1845,63 +2007,50 @@ struct AppModel: ModelProtocol {
     }
     
     /// Index a sphere to the database
-    static func indexPeer(
+    static func indexPeers(
         state: Self,
         environment: Environment,
-        petname: Petname
+        petnames: [Petname]
     ) -> Update<Self> {
-        logger.log(
-            "Indexing peer",
-            metadata: [
-                "petname": petname.description
-            ]
-        )
+        
         let fx: Fx<Action> = Future.detached(priority: .background) {
-            do {
-                let peer = try await environment.data.indexPeer(
-                    petname: petname
-                )
-                return Action.succeedIndexPeer(peer)
-            } catch {
-                return Action.failIndexPeer(
-                    petname: petname,
-                    error: error
-                )
-            }
-            
-        }.eraseToAnyPublisher()
+            let results = await environment.data.indexPeers(petnames: petnames)
+            return AppAction.completeIndexPeers(results: results)
+        }
+        .eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
     
-    static func succeedIndexPeer(
+    static func completeIndexPeers(
         state: Self,
         environment: Environment,
-        peer: PeerRecord
+        results: [PeerIndexResult]
     ) -> Update<Self> {
-        logger.log(
-            "Indexed peer",
-            metadata: [
-                "petname": peer.petname.description,
-                "identity": peer.identity.description,
-                "since": peer.since ?? "nil"
-            ]
-        )
-        return Update(state: state)
-    }
-    
-    static func failIndexPeer(
-        state: Self,
-        environment: Environment,
-        petname: Petname,
-        error: Error
-    ) -> Update<Self> {
-        logger.log(
-            "Failed to index peer",
-            metadata: [
-                "petname": petname.description,
-                "error": error.localizedDescription
-            ]
-        )
+        for result in results {
+            switch (result) {
+            case .success(let peer):
+                logger.log(
+                    "Indexed peer",
+                    metadata: [
+                        "petname": peer.petname.description,
+                        "identity": peer.identity.description,
+                        "since": peer.since ?? "nil"
+                    ]
+                )
+                break
+            case .failure(let error):
+                logger.log(
+                    "Failed to index peer",
+                    metadata: [
+                        "petname": error.petname.description,
+                        "error": error.localizedDescription
+                    ]
+                )
+                break
+            }
+        }
+        
         return Update(state: state)
     }
     
@@ -1986,6 +2135,26 @@ struct AppModel: ModelProtocol {
             .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
+    }
+    
+    static func submitInviteCodeForm(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard let inviteCode = state.inviteCodeFormField.validated else {
+            logger.log("Invalid invite code submitted")
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.inviteCode = inviteCode
+        AppDefaults.standard.inviteCode = inviteCode.description
+        
+        return update(
+            state: model,
+            action: .requestRedeemInviteCode(inviteCode),
+            environment: environment
+        )
     }
     
     static func requestRedeemInviteCode(
@@ -2080,7 +2249,7 @@ struct AppModel: ModelProtocol {
     static func succeedProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
-        url: URL
+        url: GatewayURL
     ) -> Update<AppModel> {
         var model = state
         model.gatewayProvisioningStatus = .succeeded
@@ -2138,7 +2307,7 @@ struct AppModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .indexPeer(petname),
+            action: .indexPeers([petname]),
             environment: environment
         )
     }
@@ -2159,6 +2328,180 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             action: .purgePeer(identity),
+            environment: environment
+        )
+    }
+    
+    /// Entry delete succeeded
+    static func deleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink?
+    ) -> Update<Self> {
+        guard let address = address else {
+            logger.log(
+                "Delete requested for nil address. Doing nothing."
+            )
+            return Update(state: state)
+        }
+        let fx: Fx<Action> = environment.data
+            .deleteMemoPublisher(address)
+            .map({ _ in
+                Action.succeedDeleteMemo(address)
+            })
+            .recover({ error in
+                Action.failDeleteMemo(error.localizedDescription)
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Entry delete succeeded
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to delete entry",
+            metadata: [
+                "error": error
+            ]
+        )
+        return Update(state: state)
+    }
+
+    /// Entry delete succeeded
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        logger.log(
+            "Deleted entry",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        return Update(state: state)
+    }
+    
+    static func setSelectedAppTab(
+        state: Self,
+        environment: Environment,
+        tab: AppTab
+    ) -> Update<Self> {
+        
+        // Double tap on the same tab?
+        if tab == state.selectedAppTab {
+            let action = Func.run {
+                switch (tab) {
+                case .feed:
+                    return AppAction.requestFeedRoot
+                case .notebook:
+                    return AppAction.requestNotebookRoot
+                case .profile:
+                    return AppAction.requestProfileRoot
+                }
+            }
+            
+            let fx: Fx<AppAction> = Future.detached {
+                return action
+            }
+            .eraseToAnyPublisher()
+            
+            // MUST be dispatched as an fx so that it will appear on the `store.actions` stream
+            // Which is consumed and replayed on the FeedStore and NotebookStore etc.
+            return Update(state: state, fx: fx)
+        }
+        
+        var model = state
+        model.selectedAppTab = tab
+        AppDefaults.standard.selectedAppTab = tab.rawValue
+        
+        return Update(state: model)
+    }
+    
+    static func requestRecoveryMode(
+        state: Self,
+        environment: Environment,
+        context: RecoveryModeLaunchContext
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .presentRecoveryMode(true),
+                .recoveryMode(
+                    .populate(
+                        Did(state.sphereIdentity ?? ""),
+                        GatewayURL(state.gatewayURL),
+                        context
+                    )
+                )
+            ],
+            environment: environment
+        )
+    }
+    
+    static func presentRecoveryMode(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isRecoveryModePresented = isPresented
+        return update(
+            state: model,
+            actions: [
+                .presentSettingsSheet(false),
+                .recoveryMode(.requestPresent(isPresented))
+            ],
+            environment: environment
+        )
+    }
+    
+    static func checkRecoveryStatus(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            // Get any existing sphere identity stored in UserDefaults
+            // If none, it's the first run, nothing to recover
+            guard let userDefaultsIdentity = AppDefaults.standard.sphereIdentity?
+                .toDid() else {
+                return AppAction.presentRecoveryMode(false)
+            }
+            
+            let noosphereIdentity = try await environment.noosphere.identity()
+
+            // If we have an identity in the UserDefaults, but it doesn't
+            // match the identity in Noosphere, we need to perform a
+            // a recovery.
+            guard noosphereIdentity == userDefaultsIdentity else {
+                return AppAction.requestRecoveryMode(
+                    .unreadableDatabase("Mismatched identity")
+                )
+            }
+            
+            return AppAction.presentRecoveryMode(false)
+        }
+        .recover { error in
+            AppAction.requestRecoveryMode(
+                .unreadableDatabase(error.localizedDescription)
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRecoverOurSphere(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        return RecoveryModeCursor.update(
+            state: state,
+            action: .succeedRecovery,
             environment: environment
         )
     }
@@ -2221,14 +2564,25 @@ struct AppEnvironment {
         let sphereStorageURL = applicationSupportURL.appending(
             path: Config.default.noosphere.sphereStoragePath
         )
-        let defaultGateway = URL(string: AppDefaults.standard.gatewayURL)
+        let defaultGateway = GatewayURL(AppDefaults.standard.gatewayURL)
         let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
+        
+        let sentry = SentryIntegration()
+
+        // If we're in debug, we want detailed logs from Noosphere.
+        let noosphereLogLevel: Noosphere.NoosphereLogLevel = (
+            Config.default.debug ?
+                .academic :
+                .basic
+        )
 
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: defaultGateway,
-            sphereIdentity: defaultSphereIdentity
+            sphereIdentity: defaultSphereIdentity,
+            noosphereLogLevel: noosphereLogLevel,
+            errorLoggingService: sentry
         )
         self.noosphere = noosphere
 

@@ -12,7 +12,7 @@ import os
 import ObservableStore
 import Combine
 
-//  MARK: View
+// MARK: View
 /// The file view for notes
 struct NotebookView: View {
     /// Global shared store
@@ -38,11 +38,11 @@ struct NotebookView: View {
                 store: store
             )
             .zIndex(1)
+            
             if store.state.isSearchPresented {
                 SearchView(
-                    state: store.state.search,
-                    send: Address.forward(
-                        send: store.send,
+                    store: store.viewStore(
+                        get: \.search,
                         tag: NotebookSearchCursor.tag
                     )
                 )
@@ -69,21 +69,32 @@ struct NotebookView: View {
             app.actions.compactMap(NotebookAction.from),
             perform: store.send
         )
+        /// Replay select notebook actions on app
+        .onReceive(
+            store.actions.compactMap(AppAction.from),
+            perform: app.send
+        )
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            NotebookModel.logger.debug("[action] \(message)")
+            NotebookAction.logger.debug("\(String(describing: action))")
         }
     }
 }
 
 
-//  MARK: Action
+// MARK: Action
 /// Actions for modifying state
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "NotebookAction"
+    )
+    
     /// Tagged action for search HUD
     case search(SearchAction)
+    /// Tagged action for detail stack
+    case detailStack(DetailStackAction)
     
     /// Sent by `task` when the view first appears
     case appear
@@ -119,9 +130,9 @@ enum NotebookAction {
     /// from the list before requesting delete for the animation to work.
     case stageDeleteEntry(Slashlink)
     /// Delete entry identified by slug.
-    case deleteEntry(Slashlink?)
-    case failDeleteEntry(String)
-    case succeedDeleteEntry(Slashlink)
+    case requestDeleteMemo(Slashlink?)
+    case succeedDeleteMemo(Slashlink)
+    case failDeleteMemo(String)
     
     /// Entry was saved
     case succeedSaveEntry(slug: Slashlink, modified: Date)
@@ -142,169 +153,74 @@ enum NotebookAction {
     /// Search suggestion was activated
     case activatedSuggestion(Suggestion)
     
-    /// Set entire navigation stack
-    case setDetails([MemoDetailDescription])
-    
-    /// Find a detail a given slashlink.
-    /// If slashlink has a peer part, this will request
-    /// a detail for 3p content.
-    /// If slashlink does not have a peer part, this will
-    /// request an editor detail.
-    case findAndPushDetail(
-        address: Slashlink,
-        link: SubSlashlinkLink
-    )
-    
-    /// Find a detail for content that belongs to us.
-    /// Detail could exist in either local or sphere content.
-    case findAndPushMemoEditorDetail(
-        slug: Slug,
-        fallback: String
-    )
-    
-    /// Push detail onto navigation stack
-    case pushDetail(MemoDetailDescription)
-    case requestOurProfileDetail
-    case pushOurProfileDetail(UserProfile)
-    case failPushDetail(_ message: String)
-    
-    case pushRandomDetail(autofocus: Bool)
-    case failPushRandomDetail(String)
+    case requestNotebookRoot
     
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
     }
     
+    /// Set entire navigation stack
+    static func setDetails(_ details: [MemoDetailDescription]) -> Self {
+        .detailStack(.setDetails(details))
+    }
+
+    /// Synonym for tagged `DetailStackAction.pushDetail`
+    static func pushDetail(
+        _ detail: MemoDetailDescription
+    ) -> Self {
+        .detailStack(.pushDetail(detail))
+    }
+
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
         _ detail: MemoEditorDetailDescription
     ) -> Self {
-        .pushDetail(.editor(detail))
+        .detailStack(.pushDetail(.editor(detail)))
     }
-    
+
     /// Synonym for `.pushDetail` that wraps viewer detail in `.viewer()`
     static func pushDetail(
         _ detail: MemoViewerDetailDescription
     ) -> Self {
-        .pushDetail(.viewer(detail))
+        .detailStack(.pushDetail(.viewer(detail)))
+    }
+
+    /// Synonym for tagged `DetailStackAction.pushRandomDetail`
+    static func pushRandomDetail(
+        autofocus: Bool
+    ) -> Self {
+        .detailStack(.pushRandomDetail(autofocus: autofocus))
     }
 }
 
-extension NotebookAction {
-    /// Generate a detail request from a suggestion
-    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
-        switch suggestion {
-        case let .memo(address, fallback):
-            // Determine whether content is ours or theirs, push
-            // corresponding memo detail type.
-            return .pushDetail(
-                MemoDetailDescription.from(
-                    address: address,
-                    fallback: fallback,
-                    defaultAudience: .local
-                )
-            )
-        case let .createLocalMemo(slug, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: slug?.toLocalSlashlink(),
-                    fallback: fallback,
-                    defaultAudience: .local
-                )
-            )
-        case let .createPublicMemo(slug, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: slug?.toSlashlink(),
-                    fallback: fallback,
-                    defaultAudience: .public
-                )
-            )
-        case .random:
-            return .pushRandomDetail(autofocus: false)
-        }
+// MARK: Cursors and tagging functions
+struct NotebookDetailStackCursor: CursorProtocol {
+    typealias Model = NotebookModel
+    typealias ViewModel = DetailStackModel
+
+    static func get(state: Model) -> ViewModel {
+        state.detailStack
     }
-}
 
-extension NotebookAction: CustomLogStringConvertible {
-    var logDescription: String {
-        switch self {
-        case .search(let action):
-            return "search(\(String.loggable(action)))"
-        case .setRecent(let items):
-            return "setRecent(\(items.count) items)"
-        default:
-            return String(describing: self)
-        }
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.detailStack = inner
+        return model
     }
-}
 
-//  MARK: Cursors and tagging functions
-
-extension NotebookAction {
-    static func tag(_ action: MemoEditorDetailNotification) -> Self {
+    static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
         switch action {
-        case .requestDelete(let address):
-            return .deleteEntry(address)
-        case let .requestDetail(detail):
-            return .pushDetail(detail)
-        case let .requestFindLinkDetail(link):
-            return .findAndPushDetail(
-                address: Slashlink.ourProfile,
-                link: link
-            )
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
+        case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedSaveEntry(slug, modified):
-            return .succeedSaveEntry(slug: slug, modified: modified)
+        case let .succeedMoveEntry(from: from, to: to):
+            return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
-        }
-    }
-    
-    static func tag(_ action: MemoViewerDetailNotification) -> Self {
-        switch action {
-        case let .requestDetail(detail):
-            return .pushDetail(detail)
-        case let .requestFindLinkDetail(address, link):
-            return .findAndPushDetail(
-                address: address,
-                link: link
-            )
-        }
-    }
-    
-    static func tag(_ action: UserProfileDetailNotification) -> Self {
-        switch action {
-        case let .requestDetail(detail):
-            return .pushDetail(detail)
-        case let .requestNavigateToProfile(user):
-            let user = Func.run {
-                switch (user.category, user.ourFollowStatus) {
-                case (.ourself, _):
-                    // Loop back to our profile
-                    return user.overrideAddress(Slashlink.ourProfile)
-                case (_, .following(let name)):
-                    // Rewrite address using our name
-                    return user.overrideAddress(Slashlink(petname: name.toPetname()))
-                case _:
-                    return user
-                }
-            }
-            
-            
-            guard user.resolutionStatus.isReady else {
-                return .failPushDetail("Attempted to navigate to unresolved user")
-            }
-            return .pushDetail(.profile(
-                UserProfileDetailDescription(
-                    address: user.address,
-                    user: user
-                )
-            ))
+        case let .succeedSaveEntry(address: address, modified: modified):
+            return .succeedSaveEntry(slug: address, modified: modified)
+        case _:
+            return .detailStack(action)
         }
     }
 }
@@ -318,8 +234,27 @@ extension NotebookAction {
             return .ready
         case .succeedSyncLocalFilesWithDatabase:
             return .ready
-        case .succeedIndexOurSphere(_):
-            return .ready
+        case .succeedIndexOurSphere:
+            return .refreshLists
+        case .succeedRecoverOurSphere:
+            return .refreshLists
+        case let .succeedDeleteMemo(address):
+            return .succeedDeleteMemo(address)
+        case let .failDeleteMemo(error):
+            return .failDeleteMemo(error)
+        case .requestNotebookRoot:
+            return .requestNotebookRoot
+        default:
+            return nil
+        }
+    }
+}
+
+extension AppAction {
+    static func from(_ action: NotebookAction) -> Self? {
+        switch action {
+        case let .requestDeleteMemo(address):
+            return .deleteMemo(address)
         default:
             return nil
         }
@@ -351,7 +286,7 @@ struct NotebookSearchCursor: CursorProtocol {
     }
 }
 
-//  MARK: Model
+// MARK: Model
 /// Model containing state for the notebook tab.
 struct NotebookModel: ModelProtocol {
     var isDatabaseReady = false
@@ -364,7 +299,10 @@ struct NotebookModel: ModelProtocol {
     )
     
     /// Contains notebook detail panels
-    var details: [MemoDetailDescription] = []
+    var detailStack = DetailStackModel()
+    var details: [MemoDetailDescription] {
+        detailStack.details
+    }
     
     /// Count of entries
     var entryCount: Int? = nil
@@ -372,25 +310,27 @@ struct NotebookModel: ModelProtocol {
     ///  Recent entries (nil means "hasn't been loaded from DB")
     var recent: [EntryStub]? = nil
     
+    var feed: [EntryStub]? = nil
+    
     //  Note deletion action sheet
     /// Delete confirmation action sheet
     var entryToDelete: Slashlink? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
     
-    //  MARK: Update
-    //  !!!: Combine publishers can cause segfaults in Swift compiler
-    //  Combine publishers have complex types and must be marked up carefully
-    //  to avoid frequent segfaults in Swift compiler due to type inference
-    //  (as of 2022-01-14).
+    // MARK: Update
+    // !!!: Combine publishers can cause segfaults in Swift compiler
+    // Combine publishers have complex types and must be marked up carefully
+    // to avoid frequent segfaults in Swift compiler due to type inference
+    // (as of 2022-01-14).
     //
-    //  We found the following mitigation/solution:
-    //  - Mark publisher variables with explicit type annotations.
-    //  - Beware Publishers.Merge and variants. Use publisher.merge instead.
-    //    Publishers.Merge produces a more complex type signature, and this seems
-    //    to be what was crashing the Swift compiler.
+    // We found the following mitigation/solution:
+    // - Mark publisher variables with explicit type annotations.
+    // - Beware Publishers.Merge and variants. Use publisher.merge instead.
+    //   Publishers.Merge produces a more complex type signature, and this seems
+    //   to be what was crashing the Swift compiler.
     //
-    //  2022-01-14 Gordon Brander
+    // 2022-01-14 Gordon Brander
     /// AppUpdate is a namespace where we keep the main app update function,
     /// as well as the sub-update functions it calls out to.
     
@@ -403,6 +343,12 @@ struct NotebookModel: ModelProtocol {
         switch action {
         case .search(let action):
             return NotebookSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case let .detailStack(action):
+            return NotebookDetailStackCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -459,57 +405,45 @@ struct NotebookModel: ModelProtocol {
                 "Failed to list recent entries: \(error)"
             )
             return Update(state: state)
-        case let .confirmDelete(slug):
-            guard let slug = slug else {
-                logger.log(
-                    "Delete confirmation flow passed nil slug. Doing nothing."
-                )
-                var model = state
-                // Nil out entryToDelete, if any
-                model.entryToDelete = nil
-                return Update(state: model)
-            }
-            var model = state
-            model.entryToDelete = slug
-            model.isConfirmDeleteShowing = true
-            return Update(state: model)
+        case let .confirmDelete(address):
+            return confirmDelete(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case let .setConfirmDeleteShowing(isShowing):
-            var model = state
-            model.isConfirmDeleteShowing = isShowing
-            // Reset entry to delete if we're dismissing the confirmation
-            // dialog.
-            if isShowing == false {
-                model.entryToDelete = nil
-            }
-            return Update(state: model)
+            return setConfirmDeleteShowing(
+                state: state,
+                environment: environment,
+                isShowing: isShowing
+            )
         case let .stageDeleteEntry(address):
             return stageDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
             )
-        case .deleteEntry(let address):
-            return deleteEntry(
+        case .requestDeleteMemo(let address):
+            return requestDeleteMemo(
                 state: state,
                 environment: environment,
                 address: address
             )
-        case .failDeleteEntry(let error):
-            logger.log("failDeleteEntry: \(error)")
+        case .failDeleteMemo(let error):
+            logger.log("failDeleteMemo: \(error)")
             return Update(state: state)
-        case .succeedDeleteEntry(let address):
-            return succeedDeleteEntry(
+        case .succeedDeleteMemo(let address):
+            return succeedDeleteMemo(
                 state: state,
                 environment: environment,
                 address: address
             )
-        case .succeedSaveEntry:
-            // Just refresh note after save, for now.
-            // This reorders list by modified.
-            return update(
+        case let .succeedSaveEntry(address, modified):
+            return succeedSaveEntry(
                 state: state,
-                action: .refreshLists,
-                environment: environment
+                environment: environment,
+                address: address,
+                modified: modified
             )
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
@@ -538,79 +472,16 @@ struct NotebookModel: ModelProtocol {
                 query: query
             )
         case let .activatedSuggestion(suggestion):
-            return update(
+            return NotebookDetailStackCursor.update(
                 state: state,
-                action: NotebookAction.fromSuggestion(suggestion),
+                action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
-        case .setDetails(let details):
-            var model = state
-            model.details = details
-            return Update(state: model)
-        case let .findAndPushDetail(address, link):
-            // Stitch the base address on to the tapped link, making any
-            // bare slashlinks relative to the sphere they belong to.
-            //
-            // This is needed in the viewer but address will always based
-            // on our sphere in the editor case.
-            let slashlink: Slashlink = Func.run {
-                guard case let .petname(basePetname) = address.peer else {
-                    return link.slashlink
-                }
-                return link.slashlink.rebaseIfNeeded(petname: basePetname)
-            }
-            
-            return findAndPushDetail(
+        case .requestNotebookRoot:
+            return requestNotebookRoot(
                 state: state,
-                environment: environment,
-                slashlink: slashlink,
-                fallback: link.fallback
+                environment: environment
             )
-        case let .findAndPushMemoEditorDetail(slug, fallback):
-            return findAndPushMemoEditorDetail(
-                state: state,
-                environment: environment,
-                slug: slug,
-                fallback: fallback
-            )
-        case let .pushDetail(detail):
-            var model = state
-            model.details.append(detail)
-            return Update(state: model)
-        case let .failPushDetail(error):
-            logger.log("Attempt to push invalid detail: \(error)")
-            return Update(state: state)
-        case .pushRandomDetail(let autofocus):
-            return pushRandomDetail(
-                state: state,
-                environment: environment,
-                autofocus: autofocus
-            )
-        case .requestOurProfileDetail:
-            let fx: Fx<NotebookAction> = environment.userProfile
-                .loadOurProfileFromMemoPublisher()
-                .map { user in
-                    NotebookAction.pushOurProfileDetail(user)
-                }
-                .recover { error in
-                    NotebookAction.failPushDetail(error.localizedDescription)
-                }
-                .eraseToAnyPublisher()
-            
-            return Update(state: state, fx: fx)
-        case .pushOurProfileDetail(let user):
-            let detail = UserProfileDetailDescription(
-                address: Slashlink.ourProfile,
-                user: user,
-                // Focus following list by default
-                // We can already see our recent notes in our notebook so no
-                // point showing it again
-                initialTabIndex: UserProfileDetailModel.followingTabIndex
-            )
-            return update(state: state, action: .pushDetail(.profile(detail)), environment: environment)
-        case .failPushRandomDetail(let error):
-            logger.log("Failed to get random note: \(error)")
-            return Update(state: state)
         }
     }
     
@@ -625,7 +496,16 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        return Update(state: state)
+        // Skip refreshing the view if we're still starting up
+        guard state.isDatabaseReady else {
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            action: .refreshLists,
+            environment: environment
+        )
     }
     
     /// View is ready
@@ -671,7 +551,7 @@ struct NotebookModel: ModelProtocol {
         model.isSearchPresented = isPresented
         return Update(state: model)
     }
-
+    
     /// Refresh all lists in the notebook tab from database.
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
@@ -736,6 +616,41 @@ struct NotebookModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
+    static func confirmDelete(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: Slashlink?
+    ) -> Update<NotebookModel> {
+        guard let address = address else {
+            logger.log(
+                "Delete confirmation flow passed nil slug. Doing nothing."
+            )
+            var model = state
+            // Nil out entryToDelete, if any
+            model.entryToDelete = nil
+            return Update(state: model)
+        }
+        var model = state
+        model.entryToDelete = address
+        model.isConfirmDeleteShowing = true
+        return Update(state: model)
+    }
+    
+    static func setConfirmDeleteShowing(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        isShowing: Bool
+    ) -> Update<NotebookModel> {
+        var model = state
+        model.isConfirmDeleteShowing = isShowing
+        // Reset entry to delete if we're dismissing the confirmation
+        // dialog.
+        if isShowing == false {
+            model.entryToDelete = nil
+        }
+        return Update(state: model)
+    }
+    
     /// Delete entry with `slug`
     static func stageDeleteEntry(
         state: NotebookModel,
@@ -764,7 +679,7 @@ struct NotebookModel: ModelProtocol {
             model.recent = recent
         }
         
-        let fx: Fx<NotebookAction> = Just(NotebookAction.deleteEntry(address))
+        let fx: Fx<NotebookAction> = Just(NotebookAction.requestDeleteMemo(address))
             .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
@@ -772,113 +687,111 @@ struct NotebookModel: ModelProtocol {
     }
     
     /// Entry delete succeeded
-    static func deleteEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
+    static func requestDeleteMemo(
+        state: Self,
+        environment: Environment,
         address: Slashlink?
     ) -> Update<NotebookModel> {
-        guard let address = address else {
-            logger.log(
-                "Delete requested for nil address. Doing nothing."
-            )
-            return Update(state: state)
-        }
-        let fx: Fx<NotebookAction> = environment.data
-            .deleteMemoPublisher(address)
-            .map({ _ in
-                NotebookAction.succeedDeleteEntry(address)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failDeleteEntry(error.localizedDescription)
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        logger.log(
+            "Request delete memo",
+            metadata: [
+                "address": address?.description ?? ""
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.requestDeleteMemo(address)),
+            environment: environment
+        )
     }
-
+    
     /// Entry delete succeeded
-    static func succeedDeleteEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
         address: Slashlink
     ) -> Update<NotebookModel> {
-        logger.log("Deleted entry: \(address)")
-        var model = state
-        model.details = state.details.filter({ detail in
-            detail.address != address
-        })
+        logger.log(
+            "Memo was deleted",
+            metadata: [
+                "address": address.description
+            ]
+        )
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .detailStack(.succeedDeleteMemo(address)),
+                .refreshLists
+            ],
             environment: environment
         )
     }
 
-    /// Move success lifecycle handler.
-    /// Updates UI in response.
+    /// Entry delete succeeded
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<NotebookModel> {
+        logger.log(
+            "Failed to delete memo",
+            metadata: [
+                "error": error
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.failDeleteMemo(error)),
+            environment: environment
+        )
+    }
+
+    static func succeedSaveEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        modified: Date
+    ) -> Update<NotebookModel> {
+        // Just refresh note after save, for now.
+        // This reorders list by modified.
+        return update(
+            state: state,
+            actions: [
+                .refreshLists,
+                .detailStack(.succeedSaveEntry(address: address, modified: modified))
+            ],
+            environment: environment
+        )
+    }
+
     static func succeedMoveEntry(
         state: NotebookModel,
         environment: AppEnvironment,
         from: Slashlink,
         to: Slashlink
     ) -> Update<NotebookModel> {
-        var model = state
-
-        /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: MemoDetailDescription) in
-            guard detail.address == from else {
-                return detail
-            }
-            switch detail {
-            case .editor(var description):
-                description.address = to
-                return .editor(description)
-            case .viewer(var description):
-                description.address = to
-                return .viewer(description)
-            case .profile(let description):
-                return .profile(description)
-            }
-        })
-        
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .detailStack(.succeedMoveEntry(from: from, to: to)),
+                .refreshLists
+            ],
             environment: environment
         )
     }
 
-    /// Merge success lifecycle handler.
-    /// Updates UI in response.
     static func succeedMergeEntry(
         state: NotebookModel,
         environment: AppEnvironment,
         parent: Slashlink,
         child: Slashlink
     ) -> Update<NotebookModel> {
-        var model = state
-
-        /// Find all instances of child and update them to become parent
-        model.details = state.details.map({ (detail: MemoDetailDescription) in
-            guard detail.address == child else {
-                return detail
-            }
-            switch detail {
-            case .editor(var description):
-                description.address = parent
-                return .editor(description)
-            case .viewer(var description):
-                description.address = parent
-                return .viewer(description)
-            case .profile(let description):
-                return .profile(description)
-            }
-        })
-        
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .detailStack(.succeedMergeEntry(parent: parent, child: child)),
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -890,31 +803,12 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment,
         receipt: MoveReceipt
     ) -> Update<NotebookModel> {
-        var model = state
-
-        /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: MemoDetailDescription) in
-            guard let address = detail.address else {
-                return detail
-            }
-            guard address.slug == receipt.to.slug else {
-                return detail
-            }
-            switch detail {
-            case .editor(var description):
-                description.address = receipt.to
-                return .editor(description)
-            case .viewer(var description):
-                description.address = receipt.to
-                return .viewer(description)
-            case .profile(let description):
-                return .profile(description)
-            }
-        })
-        
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [
+                .detailStack(.succeedUpdateAudience(receipt)),
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -962,102 +856,14 @@ struct NotebookModel: ModelProtocol {
         return update.mergeFx(fx)
     }
     
-    /// Find and push a specific detail for slug
-    static func findAndPushDetail(
+    static func requestNotebookRoot(
         state: NotebookModel,
-        environment: AppEnvironment,
-        slashlink: Slashlink,
-        fallback: String
+        environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        // Intercept profile visits and use the correct view
-        guard !slashlink.slug.isProfile else {
-            return update(
-                state: state,
-                action: .pushDetail(
-                    .profile(
-                        UserProfileDetailDescription(
-                            address: slashlink
-                        )
-                    )
-                ),
-                environment: environment
-            )
-        }
-        
-        // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
-        // to find in local or sphere content and then push editor detail.
-        guard slashlink.peer != nil else {
-            return update(
-                state: state,
-                action: .findAndPushMemoEditorDetail(
-                    slug: slashlink.toSlug(),
-                    fallback: fallback
-                ),
-                environment: environment
-            )
-        }
-        
-        // If slashlink pointing to other sphere, dispatch action
-        // for viewer.
-        return update(
+        return NotebookDetailStackCursor.update(
             state: state,
-            action: .pushDetail(
-                .viewer(
-                    MemoViewerDetailDescription(
-                        address: slashlink
-                    )
-                )
-            ),
+            action: .setDetails([]),
             environment: environment
         )
-    }
-    
-    /// Find and push a specific detail for slug
-    static func findAndPushMemoEditorDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug,
-        fallback: String
-    ) -> Update<NotebookModel> {
-        let fallbackAddress = slug.toLocalSlashlink()
-        let fx: Fx<NotebookAction> = environment.data
-            .findAddressInOursPublisher(slug: slug)
-            .map({ address in
-                NotebookAction.pushDetail(
-                    MemoEditorDetailDescription(
-                        address: address ?? fallbackAddress,
-                        fallback: fallback
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
-
-    /// Request detail for a random entry
-    static func pushRandomDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        autofocus: Bool
-    ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data
-            .readRandomEntryLinkPublisher()
-            .map({ link in
-                NotebookAction.pushDetail(
-                    MemoEditorDetailDescription(
-                        address: link.address,
-                        fallback: link.title
-                    )
-                )
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failPushRandomDetail(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 }

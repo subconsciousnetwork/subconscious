@@ -256,16 +256,16 @@ struct BlockEditorQuoteBlockCell_Previews: PreviewProvider {
                     text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
                     transcludes: [
                         EntryStub(
+                            did: Did("did:key:abc123")!,
                             address: Slashlink("@example/foo")!,
                             excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
-                            modified: Date.now,
-                            author: nil
+                            modified: Date.now
                         ),
                         EntryStub(
+                            did: Did("did:key:abc123")!,
                             address: Slashlink("@example/bar")!,
                             excerpt: "Modularity is a form of hierarchy",
-                            modified: Date.now,
-                            author: nil
+                            modified: Date.now
                         ),
                     ]
                 )

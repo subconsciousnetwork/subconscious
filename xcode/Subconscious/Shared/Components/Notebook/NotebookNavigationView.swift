@@ -12,11 +12,11 @@ struct NotebookNavigationView: View {
     @ObservedObject var store: Store<NotebookModel>
 
     var body: some View {
-        NavigationStack(
-            path: Binding(
-                get: { store.state.details },
-                send: store.send,
-                tag: NotebookAction.setDetails
+        DetailStackView(
+            app: app,
+            store: store.viewStore(
+                get: NotebookDetailStackCursor.get,
+                tag: NotebookDetailStackCursor.tag
             )
         ) {
             VStack(spacing: 0) {
@@ -60,62 +60,20 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(
-                for: MemoDetailDescription.self
-            ) { detail in
-                switch detail {
-                case .editor(let description):
-                    MemoEditorDetailView(
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: NotebookAction.tag
-                        )
-                    )
-                case .viewer(let description):
-                    MemoViewerDetailView(
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: NotebookAction.tag
-                        )
-                    )
-                case .profile(let description):
-                    UserProfileDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: NotebookAction.tag
-                        )
-                    )
-                }
-            }
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                MainToolbar(
+                    app: app,
+                    profileAction: {
+                        store.send(.detailStack(.requestOurProfileDetail))
+                    }
+                )
+                
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
                         Text("Notes").bold()
                         CountChip(count: store.state.entryCount)
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button(
-                        action: {
-                            app.send(.presentSettingsSheet(true))
-                        }
-                    ) {
-                        Image(systemName: "gearshape")
-                    }
-                }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(
-                        action: {
-                            store.send(.requestOurProfileDetail)
-                        }
-                    ) {
-                        Image(systemName: "person")
                     }
                 }
             }

@@ -20,7 +20,7 @@ struct FirstRunRecoveryView: View {
         VStack(spacing: AppTheme.padding) {
             Spacer()
         
-            Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
+            Text("This is your sphere's secret recovery phrase. You can use it to recover your data if you lose access.")
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
@@ -37,7 +37,7 @@ struct FirstRunRecoveryView: View {
                 radius: AppTheme.onboarding.shadowSize
             )
             
-            Text("It's for your eyes only. We don't store it.\n Write it down or add it to your password manager. Keep it secret, keep it safe.")
+            Text("It's for your eyes only. We don't store it. Write it down or add it to your password manager.")
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()

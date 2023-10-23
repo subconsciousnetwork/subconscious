@@ -29,17 +29,10 @@ extension EntryLink {
 }
 
 extension EntryStub {
-    init(_ entry: MemoEntry) {
+    init(_ entry: MemoEntry, did: Did) {
         self.address = entry.address
         self.excerpt = entry.contents.excerpt()
         self.modified = entry.contents.modified
-        self.author = nil
-    }
-    
-    init(_ entry: MemoEntry, author: UserProfile) {
-        self.address = entry.address
-        self.excerpt = entry.contents.excerpt()
-        self.modified = entry.contents.modified
-        self.author = author
+        self.did = did
     }
 }

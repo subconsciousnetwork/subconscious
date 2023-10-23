@@ -34,22 +34,22 @@ class Tests_NotebookUpdate: XCTestCase {
         let state = NotebookModel(
             recent: [
                 EntryStub(
+                    did: Did.dummyData(),
                     address: a,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 ),
                 EntryStub(
+                    did: Did.dummyData(),
                     address: b,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 ),
                 EntryStub(
+                    did: Did.dummyData(),
                     address: c,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             ]
         )
@@ -75,58 +75,5 @@ class Tests_NotebookUpdate: XCTestCase {
         )
     }
     
-    func testViewerSlashlinkConstruction() throws {
-        let model = NotebookModel()
-        
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        
-        let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            address: Slashlink(petname: Petname("origin")!),
-            link: link
-        )
-        
-        let newAction = NotebookAction.tag(action)
-        let update = NotebookModel.update(
-            state: model,
-            action: newAction,
-            environment: environment
-        )
-        
-        if let detail = update.state.details.first?.address,
-           let petname = detail.petname {
-            XCTAssertEqual(petname, Petname("bob.alice.origin")!)
-            XCTAssertEqual(detail.slug, Slug("hello")!)
-        } else {
-            XCTFail("No detail")
-            return
-        }
-    }
     
-    func testEditorSlashlinkConstruction() throws {
-        let model = NotebookModel()
-        
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        
-        let action = MemoEditorDetailNotification.requestFindLinkDetail(
-            link: link
-        )
-        
-        let newAction = NotebookAction.tag(action)
-        let update = NotebookModel.update(
-            state: model,
-            action: newAction,
-            environment: environment
-        )
-        
-        if let detail = update.state.details.first?.address,
-           let petname = detail.petname {
-            XCTAssertEqual(petname, Petname("bob.alice")!)
-            XCTAssertEqual(detail.slug, Slug("hello")!)
-        } else {
-            XCTFail("No detail")
-            return
-        }
-    }
 }

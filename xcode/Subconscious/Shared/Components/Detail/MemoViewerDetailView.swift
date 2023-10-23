@@ -13,10 +13,19 @@ import ObservableStore
 /// Display a read-only memo detail view.
 /// Used for content from other spheres that we don't have write access to.
 struct MemoViewerDetailView: View {
+    @ObservedObject var app: Store<AppModel>
+    
     @StateObject private var store = Store(
         state: MemoViewerDetailModel(),
         environment: AppEnvironment.default
     )
+    
+    var metaSheet: ViewStore<MemoViewerDetailMetaSheetModel> {
+        store.viewStore(
+            get: MemoViewerDetailMetaSheetCursor.get,
+            tag: MemoViewerDetailMetaSheetCursor.tag
+        )
+    }
 
     var description: MemoViewerDetailDescription
     var notify: (MemoViewerDetailNotification) -> Void
@@ -67,9 +76,18 @@ struct MemoViewerDetailView: View {
             store.send(.appear(description))
         }
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            MemoViewerDetailModel.logger.debug("[action] \(message)")
+            MemoViewerDetailAction.logger.debug(
+                "\(String(describing: action))"
+            )
         }
+        .onReceive(
+            store.actions.compactMap(MemoViewerDetailNotification.from),
+            perform: notify
+        )
+        .onReceive(
+            app.actions.compactMap(MemoViewerDetailAction.fromAppAction),
+            perform: store.send
+        )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
@@ -77,13 +95,7 @@ struct MemoViewerDetailView: View {
                 tag: MemoViewerDetailAction.presentMetaSheet
             )
         ) {
-            MemoViewerDetailMetaSheetView(
-                state: store.state.metaSheet,
-                send: Address.forward(
-                    send: store.send,
-                    tag: MemoViewerDetailMetaSheetCursor.tag
-                )
-            )
+            MemoViewerDetailMetaSheetView(store: metaSheet)
         }
     }
 }
@@ -219,6 +231,18 @@ enum MemoViewerDetailNotification: Hashable {
         address: Slashlink,
         link: SubSlashlinkLink
     )
+    case requestUserProfileDetail(_ address: Slashlink)
+}
+
+extension MemoViewerDetailNotification {
+    static func from(_ action: MemoViewerDetailAction) -> Self? {
+        switch action {
+        case let .requestAuthorDetail(user):
+            return .requestUserProfileDetail(user.address)
+        default:
+            return nil
+        }
+    }
 }
 
 /// A description of a memo detail that can be used to set up the memo
@@ -229,12 +253,21 @@ struct MemoViewerDetailDescription: Hashable {
 
 // MARK: Actions
 enum MemoViewerDetailAction: Hashable {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoViewerDetailAction"
+    )
+
     case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
-    case setDetail(_ detail: MemoDetailResponse?)
+    case setDetail(_ entry: MemoEntry?)
     case setDom(Subtext)
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
+    
+    case refreshBacklinks
+    case succeedRefreshBacklinks(_ backlinks: [EntryStub])
+    case failRefreshBacklinks(_ error: String)
     
     case fetchTranscludePreviews
     case succeedFetchTranscludePreviews([Slashlink: EntryStub])
@@ -244,19 +277,28 @@ enum MemoViewerDetailAction: Hashable {
     case succeedFetchOwnerProfile(UserProfile)
     case failFetchOwnerProfile(_ error: String)
     
+    case succeedIndexBackgroundSphere
+    case requestAuthorDetail(_ author: UserProfile)
+    
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
     }
+    static func setMetaSheetAuthor(_ author: UserProfile) -> Self {
+        .metaSheet(.setAuthor(author))
+    }
 }
 
-extension MemoViewerDetailAction: CustomLogStringConvertible {
-    var logDescription: String {
-        switch self {
-        case .setDetail:
-            return "setDetail(...)"
-        default:
-            return String(describing: self)
+/// React to actions from the root app store
+extension MemoViewerDetailAction {
+    static func fromAppAction(
+        _ action: AppAction
+    ) -> MemoViewerDetailAction? {
+        switch (action) {
+        case .succeedIndexOurSphere, .completeIndexPeers:
+            return .succeedIndexBackgroundSphere
+        case _:
+            return nil
         }
     }
 }
@@ -304,11 +346,11 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 description: description
             )
-        case .setDetail(let response):
+        case .setDetail(let entry):
             return setDetail(
                 state: state,
                 environment: environment,
-                response: response
+                entry: entry
             )
         case .setDom(let dom):
             return setDom(
@@ -319,6 +361,20 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .failLoadDetail(let message):
             logger.log("\(message)")
             return Update(state: state)
+            
+        case .refreshBacklinks:
+            return refreshBacklinks(
+                state: state,
+                environment: environment
+            )
+        case .succeedRefreshBacklinks(let backlinks):
+            var model = state
+            model.backlinks = backlinks
+            return Update(state: model)
+        case .failRefreshBacklinks(let error):
+            logger.error("Failed to refresh backlinks: \(error)")
+            return Update(state: state)
+           
         case .presentMetaSheet(let isPresented):
             return presentMetaSheet(
                 state: state,
@@ -349,12 +405,26 @@ struct MemoViewerDetailModel: ModelProtocol {
             model.owner = profile
             return update(
                 state: model,
-                action: .fetchTranscludePreviews,
+                actions: [
+                    .fetchTranscludePreviews,
+                    .setMetaSheetAuthor(profile)
+                ],
                 environment: environment
             ).animation(.easeOutCubic())
         case .failFetchOwnerProfile(let error):
             logger.error("Failed to fetch owner: \(error)")
             return Update(state: state)
+        case .succeedIndexBackgroundSphere:
+            return succeedIndexBackgroundSphere(
+                state: state,
+                environment: environment
+            )
+        case .requestAuthorDetail:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
         }
     }
     
@@ -377,7 +447,8 @@ struct MemoViewerDetailModel: ModelProtocol {
             // Set meta sheet address as well
             actions: [
                 .setMetaSheetAddress(description.address),
-                .fetchOwnerProfile
+                .fetchOwnerProfile,
+                .refreshBacklinks
             ],
             environment: environment
         ).mergeFx(fx)
@@ -386,21 +457,20 @@ struct MemoViewerDetailModel: ModelProtocol {
     static func setDetail(
         state: Self,
         environment: Environment,
-        response: MemoDetailResponse?
+        entry: MemoEntry?
     ) -> Update<Self> {
         var model = state
         
         // If no response, then mark not found
-        guard let response = response else {
+        guard let entry = entry else {
             model.loadingState = .notFound
             return Update(state: model)
         }
         
         model.loadingState = .loaded
-        let memo = response.entry.contents
-        model.address = response.entry.address
+        let memo = entry.contents
+        model.address = entry.address
         model.title = memo.title()
-        model.backlinks = response.backlinks
         
         let dom = memo.dom()
         
@@ -409,6 +479,28 @@ struct MemoViewerDetailModel: ModelProtocol {
             action: .setDom(dom),
             environment: environment
         ).animation(.easeOut)
+    }
+    
+    static func refreshBacklinks(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<MemoViewerDetailAction> = Future.detached {
+            try await environment.data.readMemoBacklinks(address: address)
+        }
+        .map { backlinks in
+            .succeedRefreshBacklinks(backlinks)
+        }
+        .recover { error in
+            .failRefreshBacklinks(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func setDom(
@@ -464,14 +556,15 @@ struct MemoViewerDetailModel: ModelProtocol {
                 guard let petname = state.address?.toPetname() else {
                      return try await environment
                         .userProfile
-                        .requestOurProfile()
+                        .loadOurFullProfileData()
                         .profile
                 }
                 
+                let did = try await environment.noosphere.resolve(peer: state.address?.peer)
+                
                 return try await environment
                     .userProfile
-                    .requestUserProfile(petname: petname)
-                    .profile
+                    .identifyUser(did: did, petname: petname, context: nil)
             }
             .map { profile in
                 .succeedFetchOwnerProfile(profile)
@@ -493,6 +586,21 @@ struct MemoViewerDetailModel: ModelProtocol {
         model.isMetaSheetPresented = isPresented
         return Update(state: model)
     }
+    
+    static func succeedIndexBackgroundSphere(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .refreshBacklinks,
+                .fetchTranscludePreviews
+            ],
+            environment: environment
+        )
+    }
+    
 }
 
 /// Meta sheet cursor
@@ -514,6 +622,8 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
         switch action {
         case .requestDismiss:
             return .presentMetaSheet(false)
+        case let .requestAuthorDetail(user):
+            return .requestAuthorDetail(user)
         default:
             return .metaSheet(action)
         }
@@ -541,12 +651,12 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
             ),
             transcludePreviews: [
                 Slashlink("/infinity-paths")!: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "/infinity-paths"
                     )!,
                     excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
-                    modified: Date.now,
-                    author: UserProfile.dummyData()
+                    modified: Date.now
                 )
             ],
             address: Slashlink(slug: Slug("truth-the-prophet")!),
@@ -560,16 +670,16 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
         MemoViewerDetailNotFoundView(
             backlinks: [
                 EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink("@bob/bar")!,
                     excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
-                    modified: Date.now,
-                    author: UserProfile.dummyData()
+                    modified: Date.now
                 ),
                 EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink("@bob/baz")!,
                     excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
-                    modified: Date.now,
-                    author: UserProfile.dummyData()
+                    modified: Date.now
                 )
             ],
             notify: {

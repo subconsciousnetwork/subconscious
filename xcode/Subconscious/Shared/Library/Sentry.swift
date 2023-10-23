@@ -10,7 +10,32 @@ import os
 import OSLog
 import Sentry
 
+// Create a generic protocol for an error-capturing service.
+// We can use this instead of referencing the Sentry SDK directly.
+protocol ErrorLoggingServiceProtocol {
+    func capture(error: Error)
+}
+
+extension ErrorLoggingServiceProtocol {
+    /// Run an async throwing closure, logging any errors as a side-effect
+    /// before re-throwing.
+    func capturing<T>(_ perform: () async throws -> T) async throws -> T {
+        do {
+            return try await perform()
+        } catch {
+            capture(error: error)
+            throw error
+        }
+    }
+}
+
 struct SentryIntegration {}
+
+extension SentryIntegration: ErrorLoggingServiceProtocol {
+    func capture(error: Error) {
+        SentrySDK.capture(error: error)
+    }
+}
 
 extension SentryIntegration {
     public static func start() {
@@ -22,6 +47,7 @@ extension SentryIntegration {
         SentrySDK.start { options in
             // per https://docs.sentry.io/product/sentry-basics/dsn-explainer/#dsn-utilization this is fine to be public, unless it's abused (e.g. someone sending us /extra/ errors.
             options.dsn = "https://72ea1a54aeb04f60880d75fcffe705ed@o4505393671569408.ingest.sentry.io/4505393756438528"
+            options.environment = Config.default.debug ? "development" : "production"
             options.beforeSend = { event in
                 let ev = event
                 if ev.breadcrumbs == nil {

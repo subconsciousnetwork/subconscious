@@ -13,7 +13,7 @@ import ObservableStore
 import os
 
 //  MARK: Action
-enum SearchAction: Hashable, CustomLogStringConvertible {
+enum SearchAction: Hashable {
     /// Set search presented state
     case requestPresent(Bool)
     /// Set search presented to false, and clear query
@@ -40,13 +40,39 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
 
     /// Handle notification of entry delete from somewhere
     case entryDeleted(Slug)
+}
 
-    var logDescription: String {
+extension SearchAction: CustomStringConvertible {
+    var description: String {
         switch self {
-        case .setSuggestions(let suggestions):
-            return "setSuggestions(\(suggestions.count) items)"
-        default:
-            return String(describing: self)
+        case .requestPresent(let bool):
+            return "requestPresent(\(bool))"
+        case .hideAndClearQuery:
+            return "hideAndClearQuery"
+        case .cancel:
+            return "cancel"
+        case .setQuery(let string):
+            return "setQuery(\(string)"
+        case .submitQuery(let string):
+            return "submitQuery(\(string))"
+        case .setSuggestions(let array):
+            return "setSuggestions(...\(array.count))"
+        case .failSuggestions(let string):
+            return "failSuggestions(\(string))"
+        case .refreshSuggestions:
+            return "refreshSuggestions"
+        case .activateSuggestion(let suggestion):
+            return "activateSuggestion(\(suggestion)"
+        case .activatedSuggestion(let suggestion):
+            return "activatedSuggestion(\(suggestion))"
+        case .createSearchHistoryItem(let string):
+            return "createSearchHistoryItem(\(string ?? ""))"
+        case .succeedCreateSearchHistoryItem(let string):
+            return "succeedCreateSearchHistoryItem(\(string))"
+        case .failCreateSearchHistoryItem(let string):
+            return "failCreateSearchHistoryItem(\(string))"
+        case .entryDeleted(let slug):
+            return "entryDeleted(\(slug))"
         }
     }
 }
@@ -280,29 +306,28 @@ struct SearchModel: ModelProtocol {
 
 //  MARK: View
 struct SearchView: View {
-    var state: SearchModel
-    var send: (SearchAction) -> Void
+    var store: ViewStore<SearchModel>
     var suggestionHeight: CGFloat = 56
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 SearchTextField(
-                    placeholder: state.placeholder,
+                    placeholder: store.state.placeholder,
                     text: Binding(
-                        get: { state.query },
-                        send: send,
+                        get: { store.state.query },
+                        send: store.send,
                         tag: SearchAction.setQuery
                     ),
                     autofocus: true
                 )
                 .submitLabel(.go)
                 .onSubmit {
-                    send(.submitQuery(state.query))
+                    store.send(.submitQuery(store.state.query))
                 }
                 Button(
                     action: {
-                        send(.cancel)
+                        store.send(.cancel)
                     },
                     label: {
                         Text("Cancel")
@@ -311,10 +336,10 @@ struct SearchView: View {
             }
             .frame(height: AppTheme.unit * 10)
             .padding(AppTheme.tightPadding)
-            List(state.suggestions) { item in
+            List(store.state.suggestions) { item in
                 Button(
                     action: {
-                        send(.activateSuggestion(item.value))
+                        store.send(.activateSuggestion(item.value))
                     },
                     label: {
                         SuggestionLabelView(suggestion: item.value)
@@ -350,12 +375,24 @@ struct SearchView: View {
 }
 
 struct SearchView_Previews: PreviewProvider {
-    static var previews: some View {
-        SearchView(
+    struct TestView: View {
+        @StateObject var store = Store(
             state: SearchModel(
                 placeholder: "Search or create..."
             ),
-            send: { action in }
+            environment: AppEnvironment()
         )
+        var body: some View {
+            SearchView(
+                store: store.viewStore(
+                    get: { state in state },
+                    tag: { action in action }
+                )
+            )
+        }
+    }
+
+    static var previews: some View {
+        TestView()
     }
 }

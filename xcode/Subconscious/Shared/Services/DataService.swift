@@ -120,20 +120,21 @@ actor DataService {
         petname: Petname
     ) async throws -> PeerRecord {
         let sphere = try await noosphere.traverse(petname: petname)
-        logger.debug(
+        let identity = try await sphere.identity()
+        logger.log(
             "Traversed to peer",
             metadata: [
-                "petname": petname.description
+                "petname": petname.description,
+                "identity": identity.description,
             ]
         )
-        let identity = try await sphere.identity()
         let version = try await sphere.version()
         // Get peer info from last sync
         let peer = try? database.readPeer(identity: identity)
         // Get changes since the last time we indexed this peer,
         // or get all changes if this is the first time we've tried to index.
         let changes = try await sphere.changes(since: peer?.since)
-        logger.debug(
+        logger.log(
             "Indexing peer",
             metadata: [
                 "petname": petname.description,
@@ -162,14 +163,14 @@ actor DataService {
                             memo: memo
                         )
                     )
-                    logger.debug(
+                    logger.log(
                         "Indexed memo \(slashlink)",
                         metadata: [
                             "slashlink": slashlink.description
                         ]
                     )
                 } else {
-                    logger.debug(
+                    logger.log(
                         "Removed indexed memo \(slashlink)",
                         metadata: [
                             "slashlink": slashlink.description
@@ -217,6 +218,41 @@ actor DataService {
             since: version
         )
     }
+    
+    func indexPeers(petnames: [Petname]) async -> [PeerIndexResult] {
+        var results: [PeerIndexResult] = []
+        
+        for petname in petnames {
+            logger.log(
+                "Indexing peer",
+                metadata: [
+                    "petname": petname.description
+                ]
+            )
+            
+            do {
+                let peer = try await self.indexPeer(
+                    petname: petname
+                )
+                
+                results.append(.success(peer))
+                // Give other tasks a chance to use noosphere, indexing many peers
+                // can take a long time and potentially block user actions
+                await Task.yield()
+            } catch {
+                results.append(
+                    PeerIndexResult.failure(
+                        PeerIndexError(
+                            error: error,
+                            petname: petname
+                        )
+                    )
+                )
+            }
+        }
+        
+        return results
+    }
 
     /// Index our sphere's content in our database.
     ///
@@ -252,7 +288,7 @@ actor DataService {
                     //
                     // If this peer is not been indexed before, write it to DB
                     // with nil version, since we have never yet indexed it.
-                    if var existingPeer = try database.readPeer(
+                    if let existingPeer = try database.readPeer(
                         petname: peer.petname
                     ) {
                         let updatedPeer = existingPeer.update(
@@ -310,7 +346,6 @@ actor DataService {
             // Then index memo changes from our sphere.
             let memoChanges = try await sphere.changes(since: since)
             for change in memoChanges {
-                let link = Link(did: identity, slug: change)
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
                 // If memo does not exist, that means change was a remove.
@@ -660,6 +695,39 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
+    func listFeed() async throws -> [EntryStub] {
+        let identity = try await noosphere.identity()
+        return try self.database.listFeed(owner: identity)
+    }
+    
+    nonisolated func listFeedPublisher() -> AnyPublisher<[StoryEntry], Error> {
+        Future.detached {
+            let entries = try await self.listFeed()
+            var authors: [Did:UserProfile] = [:]
+            var stories: [StoryEntry] = []
+            
+            for entry in entries {
+                // Have we already found the author for this post?
+                if let author = authors[entry.did] {
+                    stories.append(StoryEntry(entry: entry, author: author))
+                    continue
+                }
+                
+                let user = try await self.userProfile.identifyUser(
+                    did: entry.did,
+                    address: entry.address,
+                    context: nil
+                )
+                
+                authors.updateValue(user, forKey: entry.did)
+                stories.append(StoryEntry(entry: entry, author: user))
+            }
+            
+            return stories
+        }
+        .eraseToAnyPublisher()
+    }
+    
     func countMemos() async throws -> Int {
         let identity = try? await noosphere.identity()
         return try database.countMemos(owner: identity).unwrap()
@@ -817,6 +885,19 @@ actor DataService {
     ) async -> Memo? {
         local.read(slug)
     }
+    
+    func readMemoBacklinks(
+        address: Slashlink
+    ) async throws -> [EntryStub] {
+        let identity = try? await noosphere.identity()
+        let did = try await noosphere.resolve(peer: address.peer)
+        
+        return try database.readEntryBacklinks(
+            owner: identity,
+            did: did,
+            slug: address.slug
+        )
+    }
 
     /// Read editor detail for address.
     /// Addresses with petnames will throw an exception, since we don't
@@ -840,25 +921,6 @@ actor DataService {
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
         
-        let entries = try database.readEntryBacklinks(
-            owner: identity,
-            did: did,
-            slug: address.slug
-        )
-        
-        var backlinks: [EntryStub] = []
-        for entry in entries {
-            guard let author = try? await userProfile.buildUserProfile(
-                address: entry.address
-            ) else {
-                logger.error("Failed to load author for \(entry.address)")
-                backlinks.append(entry)
-                continue
-            }
-            
-            backlinks.append(entry.withAuthor(author))
-        }
-        
         guard let memo = memo else {
             logger.log(
                 "Memo does not exist at \(address). Returning new draft."
@@ -868,8 +930,7 @@ actor DataService {
                 entry: Entry(
                     address: address,
                     contents: Memo.draft(body: fallback)
-                ),
-                backlinks: backlinks
+                )
             )
         }
         
@@ -878,8 +939,7 @@ actor DataService {
             entry: Entry(
                 address: address,
                 contents: memo
-            ),
-            backlinks: backlinks
+            )
         )
     }
 
@@ -904,17 +964,7 @@ actor DataService {
     /// - Returns `MemoDetailResponse`
     func readMemoDetail(
         address: Slashlink
-    ) async -> MemoDetailResponse? {
-        guard let identity = try? await noosphere.identity() else {
-            return nil
-        }
-        
-        guard let did = try? await noosphere.resolve(
-            peer: address.peer
-        ) else {
-            return nil
-        }
-        
+    ) async -> MemoEntry? {
         // Read memo from local or sphere.
         guard let memo = try? await readMemo(
             address: address
@@ -922,33 +972,9 @@ actor DataService {
             return nil
         }
         
-        guard let entries = try? database.readEntryBacklinks(
-            owner: identity,
-            did: did,
-            slug: address.slug
-        ) else {
-            return nil
-        }
-        
-        var backlinks: [EntryStub] = []
-        for entry in entries {
-            guard let author = try? await userProfile.buildUserProfile(
-                address: entry.address
-            ) else {
-                logger.error("Failed to load author for \(entry.address)")
-                backlinks.append(entry)
-                continue
-            }
-            
-            backlinks.append(entry.withAuthor(author))
-        }
-
-        return MemoDetailResponse(
-            entry: MemoEntry(
-                address: address,
-                contents: memo
-            ),
-            backlinks: backlinks
+        return MemoEntry(
+            address: address,
+            contents: memo
         )
     }
 
@@ -956,7 +982,7 @@ actor DataService {
     /// - Returns publisher for `MemoDetailResponse` or error
     nonisolated func readMemoDetailPublisher(
         address: Slashlink
-    ) -> AnyPublisher<MemoDetailResponse?, Never> {
+    ) -> AnyPublisher<MemoEntry?, Never> {
         Future.detached {
             await self.readMemoDetail(address: address)
         }

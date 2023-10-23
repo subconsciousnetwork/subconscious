@@ -96,6 +96,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         
         var entries: [AddressBookEntry] = []
         
+        logger.log("Listing adress book")
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
             let did = try await sphere.getPetname(petname: petname)
@@ -122,6 +123,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             a.name < b.name
         }
         
+        logger.log("Finished listing address book")
         self.cache = entries
         self.cacheVersion = version
         return entries
@@ -248,11 +250,23 @@ actor AddressBook<Sphere: SphereProtocol> {
         .eraseToAnyPublisher()
     }
     
-    func followingStatus(did: Did) async -> UserProfileFollowStatus {
+    func listAliases(did: Did) async throws -> [Petname] {
+        let entries = try await self.listEntries()
+        
+        return entries
+            .filter { entry in
+                entry.did == did
+            }
+            .map { entry in
+                entry.name.toPetname()
+            }
+    }
+    
+    func followingStatus(did: Did, expectedName: Petname.Name?) async -> UserProfileFollowStatus {
         do {
             let found = try await listEntries()
-                .filter{ f in
-                    f.did == did
+                .filter { entry in
+                    entry.did == did && (expectedName == nil || entry.name == expectedName)
                 }
                 .first
             
@@ -329,13 +343,7 @@ actor AddressBookService {
         }
         
         try await noosphere.setPetname(did: did, petname: petname)
-        let version = try await noosphere.save()
-        try database.writeOurSphere(
-            OurSphereRecord(
-                identity: ourIdentity,
-                since: version
-            )
-        )
+        let _ = try await noosphere.save()
     }
     
     func resolutionStatus(petname: Petname) async throws -> ResolutionStatus {
@@ -411,16 +419,9 @@ actor AddressBookService {
     /// Disassociates the passed Petname from any DID within the sphere,
     /// saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws -> Did {
-        let ourIdentity = try await noosphere.identity()
         let did = try await self.noosphere.getPetname(petname: petname)
         try await self.addressBook.unsetPetname(petname: petname)
-        let version = try await self.noosphere.save()
-        try database.writeOurSphere(
-            OurSphereRecord(
-                identity: ourIdentity,
-                since: version
-            )
-        )
+        let _ = try await self.noosphere.save()
         return did
     }
     
@@ -474,14 +475,21 @@ actor AddressBookService {
     }
     
     /// Is this user in the AddressBook?
-    func followingStatus(did: Did) async -> UserProfileFollowStatus {
-        await self.addressBook.followingStatus(did: did)
+    func followingStatus(did: Did, expectedName: Petname.Name?) async -> UserProfileFollowStatus {
+        await self.addressBook.followingStatus(did: did, expectedName: expectedName)
+    }
+    
+    func listAliases(did: Did) async throws -> [Petname] {
+        try await self.addressBook.listAliases(did: did)
     }
     
     /// Is this user in the AddressBook?
-    nonisolated func followingStatusPublisher(did: Did) -> AnyPublisher<UserProfileFollowStatus, Error> {
+    nonisolated func followingStatusPublisher(
+        did: Did,
+        expectedName: Petname.Name?
+    ) -> AnyPublisher<UserProfileFollowStatus, Error> {
         Future.detached {
-            await self.addressBook.followingStatus(did: did)
+            await self.addressBook.followingStatus(did: did, expectedName: expectedName)
         }
         .eraseToAnyPublisher()
     }

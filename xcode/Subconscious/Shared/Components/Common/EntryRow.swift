@@ -14,7 +14,7 @@ struct EntryRow: View, Equatable {
     var emptyExcerpt = "Empty"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
+        VStack(alignment: .leading, spacing: AppTheme.unit) {
             ExcerptView(excerpt: entry.excerpt, spacing: AppTheme.unitHalf)
                 .font(.callout)
                 .multilineTextAlignment(.leading)
@@ -49,6 +49,7 @@ struct EntryRow_Previews: PreviewProvider {
         VStack {
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         peer: Peer.did(Did.local),
                         slug: Slug(formatting: "Anything that can be derived should be derived")!
@@ -57,38 +58,37 @@ struct EntryRow_Previews: PreviewProvider {
                              Anything that can be derived should be derived.
                              Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.
                              """,
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "@here/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "did:key:abc123/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
             EntryRow(
                 entry: EntryStub(
+                    did: Did.dummyData(),
                     address: Slashlink(
                         "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
         }

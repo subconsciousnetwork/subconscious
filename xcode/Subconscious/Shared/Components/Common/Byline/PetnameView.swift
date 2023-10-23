@@ -8,9 +8,8 @@
 import SwiftUI
 
 public enum NameVariant {
-    case petname(Slashlink, Petname.Name)
-    case proposedName(Slashlink, Petname.Name)
-    case selfNickname(Slashlink, Petname.Name)
+    case known(Slashlink, Petname.Name)
+    case unknown(Slashlink, Petname.Name)
 }
 
 extension UserProfile {
@@ -22,21 +21,21 @@ extension UserProfile {
             self.address.petname?.leaf
         ) {
         case (.ourself, _, .some(let selfNickname), _):
-            return NameVariant.petname(Slashlink.ourProfile, selfNickname)
+            return NameVariant.known(Slashlink.ourProfile, selfNickname)
         case (_, .following(let petname), _, _):
-            return NameVariant.petname(self.address, petname)
+            return NameVariant.known(self.address, petname)
         case (_, .notFollowing, .some(let selfNickname), _):
-            return NameVariant.selfNickname(self.address, selfNickname)
+            return NameVariant.unknown(self.address, selfNickname)
         case (_, .notFollowing, _, .some(let proposedName)):
-            return NameVariant.proposedName(self.address, proposedName)
+            return NameVariant.unknown(self.address, proposedName)
         case _:
             return nil
         }
     }
 }
 
-struct PeerView: View {
-    var peer: Peer
+struct AliasView: View {
+    var aliases: [Petname]
 
     var body: some View {
         HStack(spacing: AppTheme.unit) {
@@ -49,7 +48,7 @@ struct PeerView: View {
             }
             .frame(width: 28, height: 15)
 
-            Text(peer.markup)
+            Text(aliases.map(\.markup).joined(separator: ", "))
                 .foregroundColor(.secondary)
                 .fontWeight(.regular)
                 .font(.caption)
@@ -62,30 +61,33 @@ struct PeerView: View {
 /// Byline style for displaying a petname
 struct PetnameView: View {
     var name: NameVariant
+    var aliases: [Petname] = []
+    
     var showMaybePrefix = false
+    
+    var uniqueAliases: [Petname] {
+        switch name {
+        case .known(_, let name):
+            return aliases.filter { alias in
+                name != alias.leaf
+            }
+        case _:
+            return []
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             switch name {
-            case .petname(let address, let name):
+            case .known(_, let name):
                 Text(name.toPetname().markup)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
                 
-                /// Prevent showing _exactly_ the same name above and below e.g.
-                /// @bob
-                /// AKA @bob
-                ///
-                /// We still permit:
-                /// @bob
-                /// AKA @bob.alice
-                if let peer = address.peer,
-                   let petname = address.petname,
-                   petname != name.toPetname() {
-                    PeerView(peer: peer)
+                if !uniqueAliases.isEmpty {
+                    AliasView(aliases: uniqueAliases)
                 }
-            case .selfNickname(let address, let name),
-                 .proposedName(let address, let name):
+            case .unknown(let address, let name):
                 Text(showMaybePrefix
                      ? "Maybe: \(name.description)"
                      : name.description
@@ -93,36 +95,35 @@ struct PetnameView: View {
                 .italic()
                 .fontWeight(.medium)
                 
-                if let peer = address.peer {
-                    PeerView(peer: peer)
+                if case let .petname(name) = address.peer {
+                    AliasView(aliases: [name])
                 }
             }
         }
     }
     
-    
-    
     struct PetnameView_Previews: PreviewProvider {
         static var previews: some View {
             VStack {
                 PetnameView(
-                    name: .selfNickname(
-                        Slashlink(petname: Petname("melville.bobby.tables")!),
-                        Petname.Name("melville")!
-                    )
-                )
-                PetnameView(
-                    name: .proposedName(
+                    name: .unknown(
                         Slashlink(petname: Petname("melville.bobby.tables")!),
                         Petname.Name("melville")!
                     ),
                     showMaybePrefix: true
                 )
                 PetnameView(
-                    name: .petname(
+                    name: .known(
                         Slashlink(petname: Petname("robert")!),
                         Petname.Name("robert")!
                     )
+                )
+                PetnameView(
+                    name: .known(
+                        Slashlink(petname: Petname("robert")!),
+                        Petname.Name("robert")!
+                    ),
+                    aliases: [Petname("bob")!, Petname("bobby")!]
                 )
             }
         }

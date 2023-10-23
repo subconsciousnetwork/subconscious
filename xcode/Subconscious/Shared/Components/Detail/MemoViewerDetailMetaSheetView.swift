@@ -12,15 +12,14 @@ import ObservableStore
 
 struct MemoViewerDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    var state: MemoViewerDetailMetaSheetModel
-    var send: (MemoViewerDetailMetaSheetAction) -> Void
-
+    var store: ViewStore<MemoViewerDetailMetaSheetModel>
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slashlink = state.address {
+                        if let slashlink = store.state.address {
                             SlashlinkDisplayView(slashlink: slashlink).theme(
                                 base: Color.primary,
                                 slug: Color.secondary
@@ -42,9 +41,26 @@ struct MemoViewerDetailMetaSheetView: View {
                     MetaTableView {
                         MetaTableItemShareLinkView(
                             label: "Share link",
-                            item: state.shareableLink ?? ""
+                            item: store.state.shareableLink ?? ""
                         )
-                        .disabled(state.shareableLink == nil)
+                        .disabled(store.state.shareableLink == nil)
+                        
+                        Divider()
+                        
+                        if let author = store.state.author {
+                            Button(
+                                action: {
+                                    store.send(.requestAuthorDetail(author))
+                                },
+                                label: {
+                                    Label(
+                                        "View Author Profile",
+                                        systemImage: "person"
+                                    )
+                                }
+                            )
+                            .buttonStyle(RowButtonStyle())
+                        }
                     }
                 }
                 .padding()
@@ -56,8 +72,10 @@ struct MemoViewerDetailMetaSheetView: View {
 }
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
-    case setAddress(_ address: Slashlink?)
+    case setAddress(_ address: Slashlink)
+    case setAuthor(_ author: UserProfile)
     case requestDismiss
+    case requestAuthorDetail(_ author: UserProfile)
 }
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
@@ -69,6 +87,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         category: "MemoViewerDetailMetaSheet"
     )
     
+    var author: UserProfile?
     var address: Slashlink?
     var memoVersion: String?
     var noteVersion: String?
@@ -87,13 +106,43 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
-        case .setAddress(let address):
-            var model = state
-            model.address = address
-            return Update(state: model)
+        case let .setAddress(address):
+            return setAddress(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .setAuthor(author):
+            return setAuthor(
+                state: state,
+                environment: environment,
+                author: author
+            )
         case .requestDismiss:
             return Update(state: state)
+        case .requestAuthorDetail:
+            return Update(state: state)
         }
+    }
+    
+    static func setAddress(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        var model = state
+        model.address = address
+        return Update(state: model)
+    }
+    
+    static func setAuthor(
+        state: Self,
+        environment: Environment,
+        author: UserProfile
+    ) -> Update<Self> {
+        var model = state
+        model.author = author
+        return Update(state: model)
     }
 }
 
@@ -104,10 +153,15 @@ struct MemoViewerDetailMetaSheetView_Previews: PreviewProvider {
         }
         .sheet(isPresented: .constant(true)) {
             MemoViewerDetailMetaSheetView(
-                state: MemoViewerDetailMetaSheetModel(
-                    address: Slashlink("@bob/foo")!
-                ),
-                send: { action in }
+                store:
+                    Store(
+                        state: MemoViewerDetailModel(),
+                        environment: AppEnvironment()
+                    )
+                    .viewStore(
+                        get: MemoViewerDetailMetaSheetCursor.get,
+                        tag: MemoViewerDetailMetaSheetCursor.tag
+                    )
             )
         }
     }

@@ -49,13 +49,13 @@ struct AppUpgradeView: View {
                         )
                     )
                 }
-                Spacer()
             }
             .foregroundColor(.primary)
             .multilineTextAlignment(.center)
-            .font(.title3)
+            .font(.body)
             .bold()
-            .frame(height: AppTheme.unit * 32)
+            
+            Spacer()
 
             VStack(alignment: .center) {
                 ProgressTorusView(
@@ -104,7 +104,12 @@ struct AppUpgradeView: View {
             .buttonStyle(PillButtonStyle())
             .disabled(!state.isComplete)
         }
-        .padding()
+        .padding(EdgeInsets(
+            top: AppTheme.unit2,
+            leading: AppTheme.padding,
+            bottom: AppTheme.padding,
+            trailing: AppTheme.padding
+        ))
         .frame(maxWidth: .infinity)
         .background(
             AppTheme.onboarding

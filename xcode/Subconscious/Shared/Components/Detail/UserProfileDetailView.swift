@@ -27,38 +27,11 @@ struct UserProfileDetailView: View {
     var description: UserProfileDetailDescription
     var notify: (UserProfileDetailNotification) -> Void
     
-    func onNavigateToNote(address: Slashlink) {
-        notify(.requestDetail(.from(address: address, fallback: "")))
-    }
-    
-    func onNavigateToUser(user: UserProfile) {
-        notify(.requestNavigateToProfile(user))
-    }
-    
-    func onProfileAction(user: UserProfile, action: UserProfileAction) {
-        switch (action) {
-        case .requestFollow:
-            store.send(.requestFollow(user))
-        case .requestUnfollow:
-            store.send(.requestUnfollow(user))
-        case .requestRename:
-            store.send(.requestRename(user))
-        case .editOwnProfile:
-            store.send(.presentEditProfile(true))
-        }
-    }
-
     var body: some View {
         UserProfileView(
             app: app,
             store: store,
-            onNavigateToNote: self.onNavigateToNote,
-            onNavigateToUser: self.onNavigateToUser,
-            onProfileAction: self.onProfileAction,
-            onRefresh: {
-                app.send(.syncAll)
-                await store.refresh()
-            }
+            notify: notify
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -67,8 +40,7 @@ struct UserProfileDetailView: View {
             store.send(
                 UserProfileDetailAction.appear(
                     description.address,
-                    description.initialTabIndex,
-                    description.user
+                    description.initialTabIndex
                 )
             )
         }
@@ -76,9 +48,14 @@ struct UserProfileDetailView: View {
             store.actions.compactMap(UserProfileDetailAction.toAppAction),
             perform: app.send
         )
+        .onReceive(
+            app.actions.compactMap(UserProfileDetailAction.from),
+            perform: store.send
+        )
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            Self.logger.debug("[action] \(message)")
+            UserProfileDetailAction.logger.debug(
+                "\(String(describing: action))"
+            )
         }
     }
 }
@@ -86,8 +63,12 @@ struct UserProfileDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum UserProfileDetailNotification: Hashable {
-    case requestNavigateToProfile(_ user: UserProfile)
+    case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
+    case requestFindLinkDetail(
+        address: Slashlink,
+        link: SubSlashlinkLink
+    )
 }
 
 extension UserProfileDetailAction {
@@ -103,16 +84,50 @@ extension UserProfileDetailAction {
     }
 }
 
+extension UserProfileDetailAction {
+    static func from(_ action: AppAction) -> Self? {
+        switch action {
+        case .completeIndexPeers(let results):
+            return .completeIndexPeers(results)
+        case .succeedIndexOurSphere:
+            return .refresh(forceSync: false)
+        case .succeedRecoverOurSphere:
+            return .refresh(forceSync: false)
+        default:
+            return nil
+        }
+    }
+}
+
 /// A description of a user profile that can be used to set up the user
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
     var address: Slashlink
-    var user: UserProfile?
     var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
-enum UserProfileDetailAction: CustomLogStringConvertible {
-    case appear(Slashlink, Int, UserProfile?)
+extension UserProfileDetailAction {
+    static func from(_ user: UserProfile, _ action: UserProfileAction) -> UserProfileDetailAction {
+        switch (action) {
+        case .requestFollow:
+            return .requestFollow(user)
+        case .requestUnfollow:
+            return .requestUnfollow(user)
+        case .requestRename:
+            return .requestRename(user)
+        case .editOwnProfile:
+            return .presentEditProfile(true)
+        }
+    }
+}
+
+enum UserProfileDetailAction {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetailAction"
+    )
+
+    case appear(Slashlink, Int)
     case refresh(forceSync: Bool)
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
@@ -159,14 +174,7 @@ enum UserProfileDetailAction: CustomLogStringConvertible {
     case dismissEditProfileError
     case succeedEditProfile
     
-    var logDescription: String {
-        switch self {
-        case .populate(_):
-            return "populate(...)"
-        default:
-            return String(describing: self)
-        }
-    }
+    case completeIndexPeers(_ results: [PeerIndexResult])
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -188,8 +196,8 @@ struct UserProfile: Equatable, Codable, Hashable {
     let pfp: ProfilePicVariant
     let bio: UserProfileBio?
     let category: UserCategory
-    let resolutionStatus: ResolutionStatus
     let ourFollowStatus: UserProfileFollowStatus
+    let aliases: [Petname]
     
     var isFollowedByUs: Bool {
         ourFollowStatus.isFollowing
@@ -219,8 +227,8 @@ struct UserProfile: Equatable, Codable, Hashable {
             pfp: pfp,
             bio: bio,
             category: category,
-            resolutionStatus: resolutionStatus,
-            ourFollowStatus: ourFollowStatus
+            ourFollowStatus: ourFollowStatus,
+            aliases: aliases
         )
     }
 }
@@ -277,9 +285,13 @@ extension UserProfileDetailModel {
     ) async throws -> UserProfileContentResponse {
         return try await Func.run {
             if let petname = address.toPetname() {
-                return try await environment.userProfile.requestUserProfile(petname: petname)
+                return try await environment
+                    .userProfile
+                    .loadFullProfileData(address: Slashlink(petname: petname))
             } else {
-                return try await environment.userProfile.requestOurProfile()
+                return try await environment
+                    .userProfile
+                    .loadOurFullProfileData()
             }
         }
     }
@@ -375,13 +387,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .appear(let address, let initialTabIndex, let user):
+        case .appear(let address, let initialTabIndex):
             return appear(
                 state: state,
                 environment: environment,
                 address: address,
-                initialTabIndex: initialTabIndex,
-                user: user
+                initialTabIndex: initialTabIndex
             )
         case .populate(let content):
             return populate(
@@ -575,7 +586,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        
+        case .completeIndexPeers(let results):
+            return completeIndexPeers(
+                state: state,
+                environment: environment,
+                results: results
+            )
         }
     }
     
@@ -583,13 +599,20 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
+        guard state.loadingState != .loading else {
+            // While initially loading we might be prompted by a notification to refresh _again_
+            // This could happen when indexing completes in the BG or after a sync
+            logger.log("Attempted to refresh while already loading, doing nothing.")
+            return Update(state: state)
+        }
+        
         guard let user = state.user else {
             return Update(state: state)
         }
         
         return update(
             state: state,
-            action: .appear(user.address, state.initialTabIndex, state.user),
+            action: .appear(user.address, state.initialTabIndex),
             environment: environment
         )
     }
@@ -598,18 +621,17 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment,
         address: Slashlink,
-        initialTabIndex: Int,
-        user: UserProfile?
+        initialTabIndex: Int
     ) -> Update<Self> {
         var model = state
         model.initialTabIndex = initialTabIndex
         // We might be passed some basic profile data
         // we can use this in the loading state for a preview
         model.address = address
-        model.user = user
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
-            try await Self.refresh(address: address, environment: environment)
+            logger.log("Begin loading profile \(address)")
+            return try await Self.refresh(address: address, environment: environment)
         }
             .map { content in
                 UserProfileDetailAction.populate(content)
@@ -634,7 +656,7 @@ struct UserProfileDetailModel: ModelProtocol {
         model.following = content.following
         model.loadingState = .loaded
         
-        return Update(state: model).animation(.easeOut)
+        return Update(state: model)
     }
     
     static func failedToPopulate(
@@ -926,9 +948,12 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
+        
+        // We should not sync after resolution because resolution happens via syncing
+        // in the first place.
         update(
             state: state,
-            action: .refresh(forceSync: true),
+            action: .refresh(forceSync: false),
             environment: environment
         )
     }
@@ -938,10 +963,13 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment,
         error: String
     ) -> Update<Self> {
+        // Skip sync here, any retry/refresh logic is triggered by tapping on this
+        // user in the following list.
+        
         logger.log("Failed to resolve followed user: \(error)")
         return update(
             state: state,
-            action: .refresh(forceSync: true),
+            action: .refresh(forceSync: false),
             environment: environment
         )
     }
@@ -1116,5 +1144,32 @@ struct UserProfileDetailModel: ModelProtocol {
         var model = state
         model.failEditProfileMessage = nil
         return Update(state: model)
+    }
+    
+    static func completeIndexPeers(
+        state: Self,
+        environment: Environment,
+        results: [PeerIndexResult]
+    ) -> Update<Self> {
+        // Check if we're in the list of successfully indexed peers
+        let shouldRefresh = results.contains(where: { result in
+            switch (result) {
+            case .success(let peer) where peer.identity == state.user?.did:
+                return true
+            default:
+                return false
+            }
+        })
+        
+        guard shouldRefresh else {
+            logger.log("Skipping refresh, we are not in the list of peers")
+            return Update(state: state)
+        }
+        
+        return update(
+            state: state,
+            action: .refresh(forceSync: false),
+            environment: environment
+        )
     }
 }

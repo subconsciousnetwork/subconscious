@@ -115,7 +115,7 @@ extension BlockEditor {
         ) {
             bylineView.render(
                 BlockEditor.BylineModel(
-                    pfp: stub.author?.pfp,
+                    pfp: ProfilePicVariant.generated(stub.did),
                     slashlink: stub.address
                 )
             )
@@ -130,10 +130,10 @@ struct BlockEditorTranscludeView_Previews: PreviewProvider {
             let view = BlockEditor.TranscludeView()
             view.render(
                 EntryStub(
+                    did: Did("did:key:abc123")!,
                     address: Slashlink("@example/foo")!,
                     excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             )
             return view

@@ -15,13 +15,31 @@ typealias FormFieldValidator<Input, Output> = (Input) -> Output?
 
 typealias FormFieldInput = Equatable & Hashable
 
-enum FormFieldAction<Input: FormFieldInput>: FormFieldInput {
+enum FormFieldAction<Input: FormFieldInput>:
+    FormFieldInput,
+    CustomStringConvertible
+{
     case reset
     /// Intended for triggering validation errors when a user submits a form containing this field
     case markAsTouched
     case focusChange(focused: Bool)
     case setValue(input: Input)
     case setValidationStatus(valid: Bool)
+
+    var description: String {
+        switch self {
+        case .reset:
+            return "reset"
+        case .markAsTouched:
+            return "markAsTouched"
+        case .focusChange(let focused):
+            return "focusChange(\(focused)"
+        case .setValue:
+            return "setValue(--redacted--)"
+        case .setValidationStatus(let valid):
+            return "setValidationStatus(\(valid)"
+        }
+    }
 }
 
 typealias FormFieldEnvironment = Void
@@ -38,7 +56,7 @@ struct FormField<Input: FormFieldInput, Output>: ModelProtocol {
         )
     }
     
-    var value: Input
+    @Redacted var value: Input
     var defaultValue: Input
     /// Should be a pure, static function
     var validate: FormFieldValidator<Input, Output>

@@ -133,7 +133,8 @@ final class Tests_DataService: XCTestCase {
             let noosphere = NoosphereService(
                 globalStorageURL: globalStorageURL,
                 sphereStorageURL: sphereStorageURL,
-                gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
+                gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
+                errorLoggingService: MockErrorLoggingService()
             )
             
             let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
@@ -171,8 +172,9 @@ final class Tests_DataService: XCTestCase {
             let noosphere = NoosphereService(
                 globalStorageURL: globalStorageURL,
                 sphereStorageURL: sphereStorageURL,
-                gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
-                sphereIdentity: sphereIdentity
+                gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
+                sphereIdentity: sphereIdentity,
+                errorLoggingService: MockErrorLoggingService()
             )
             let addressBook = AddressBookService(
                 noosphere: noosphere,
@@ -218,8 +220,9 @@ final class Tests_DataService: XCTestCase {
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
-            gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
-            sphereIdentity: sphereIdentity
+            gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
+            sphereIdentity: sphereIdentity,
+            errorLoggingService: MockErrorLoggingService()
         )
         let addressBook = AddressBookService(
             noosphere: noosphere,
@@ -298,8 +301,8 @@ final class Tests_DataService: XCTestCase {
         
         let detail = await environment.data.readMemoDetail(address: addressA)
         
-        XCTAssertEqual(detail?.entry.address, addressA)
-        XCTAssertEqual(detail?.entry.contents.body, memo.body)
+        XCTAssertEqual(detail?.address, addressA)
+        XCTAssertEqual(detail?.contents.body, memo.body)
     }
     
     func testReadMemoDetailDoesNotExist() async throws {
@@ -360,6 +363,130 @@ final class Tests_DataService: XCTestCase {
         XCTAssertFalse(list.contains(where: { entry in entry.address.slug.isHidden }))
     }
     
+    func testIndexMissingPeer() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let results = await environment.data.indexPeers(petnames: [Petname("ben")!])
+        
+        XCTAssertEqual(results.count, 1)
+        let first = results.first!
+        
+        switch (first) {
+        case .failure(let error):
+            XCTAssertEqual(error.petname, Petname("ben")!)
+            break
+        default:
+            XCTFail("Expected error but operation succeeded")
+            break
+        }
+    }
+    
+    func testConcurrentIndexing() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        try await environment.addressBook.followUser(
+            did: Did.dummyData(),
+            petname: Petname("buddy")!
+        )
+        
+        typealias Output = [PeerIndexResult]
+     
+        // Race indexing against a competing process to check that it yields
+        let results = try await withThrowingTaskGroup(of: Output.self) { group -> Output in
+            group.addTask(priority: .medium) {
+                var peers: [Petname] = [Petname("buddy")!]
+                for _ in 0..<512 {
+                    peers.append(Petname.dummyData())
+                }
+
+                let results = await environment.data.indexPeers(petnames: peers)
+                XCTAssertEqual(results.count, peers.count)
+                return results
+            }
+            
+            group.addTask(priority: .high) {
+                // Attempt to grab access to noosphere to interfere with indexing
+                for _ in 0..<50 {
+                    _ = try? await environment.noosphere.traverse(petname: Petname("buddy")!)
+                    _ = try? await environment.noosphere.list()
+                    _ = try? await environment.noosphere.listPetnames()
+                    try? await Task.sleep(nanoseconds: 100_000)
+                }
+                return []
+            }
+
+            defer { group.cancelAll() }
+            
+            if let firstToResolve = try await group.next() {
+                return firstToResolve
+            } else {
+                fatalError("At least 1 task should be scheduled.")
+            }
+        }
+        
+        // We expect indexing will yield to the higher priority task
+        XCTAssertEqual(results.count, 0)
+    }
+    
+    func testListFeed() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let memoA = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Test content"
+        )
+        
+        let addressA = Slashlink("/a")!
+        try await environment.data.writeMemo(address: addressA, memo: memoA)
+        
+        let memoB = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "More content"
+        )
+        
+        let addressB = Slashlink("/another/slug")!
+        try await environment.data.writeMemo(address: addressB, memo: memoB)
+        
+        let memoC = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Even more content"
+        )
+        
+        let addressC = Slashlink.ourProfile
+        try await environment.data.writeMemo(address: addressC, memo: memoC)
+        
+        let thirdParty = Did.dummyData()
+        try await environment.addressBook.followUser(did: thirdParty, petname: Petname("bob")!)
+        try environment.database.writeMemo(MemoRecord(did: thirdParty, petname: Petname("bob")!, slug: Slug("hello-world")!, memo: Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Hello world!"
+        )))
+
+        let list = try await environment.data.listFeed()
+        
+        XCTAssertEqual(list.count, 3)
+        XCTAssertEqual(list.filter({ entry in entry.address.isOurs }).count, 2)
+        XCTAssertFalse(list.contains(where: { entry in entry.address.slug.isHidden }))
+    }
+    
     func testListRecentMemosWhenNoosphereOff() async throws {
         let tmp = try TestUtilities.createTmpDir()
 
@@ -369,7 +496,8 @@ final class Tests_DataService: XCTestCase {
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
-            gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
+            gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
+            errorLoggingService: MockErrorLoggingService()
         )
         
         let databaseURL = tmp.appending(

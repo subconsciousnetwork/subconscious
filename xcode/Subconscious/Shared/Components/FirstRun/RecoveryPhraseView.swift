@@ -16,7 +16,7 @@ struct RecoveryPhraseView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(state.phrase)
+                Text(verbatim: state.phrase?.mnemonic ?? "")
                     .monospaced()
                     .textSelection(.enabled)
                 Spacer()
@@ -24,7 +24,7 @@ struct RecoveryPhraseView: View {
             .padding()
             .background(.background)
             
-            ShareLink(item: state.phrase) {
+            ShareLink(item: state.phrase?.mnemonic ?? "") {
                 Label(
                     "Share",
                     systemImage: "square.and.arrow.up"
@@ -43,11 +43,11 @@ struct RecoveryPhraseView: View {
 }
 
 enum RecoveryPhraseAction: Hashable {
-    case setPhrase(_ phrase: String)
+    case setPhrase(_ phrase: RecoveryPhrase?)
 }
 
 struct RecoveryPhraseModel: ModelProtocol {
-    var phrase: String = ""
+    var phrase: RecoveryPhrase?
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -74,7 +74,7 @@ struct RecoveryPhraseView_Previews: PreviewProvider {
     struct TestView: View {
         @StateObject private var store = Store(
             state: RecoveryPhraseModel(
-                phrase: "foo bar baz bing bong boo biz boz bonk bink boop bop beep bleep bloop blorp blonk blink blip blop boom"
+                phrase: RecoveryPhrase("foo bar baz bing bong boo biz boz bonk bink boop bop beep bleep bloop blorp blonk blink blip blop boom bim blap blap")
             ),
             environment: RecoveryPhraseEnvironment()
         )

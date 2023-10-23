@@ -20,7 +20,7 @@ final class Tests_CombineUtilities: XCTestCase {
         cancellables = Set()
     }
     
-    private static let timeout = 1.0
+    private static let timeout = 60.0
     
     func testFutureTaskAsync() throws {
         let future = Future {

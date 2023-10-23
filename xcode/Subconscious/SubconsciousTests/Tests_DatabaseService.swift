@@ -209,18 +209,23 @@ class Tests_DatabaseService: XCTestCase {
             additionalHeaders: [],
             body: "Baz"
         )
+        let did = Did("did:key:abc123")!
         try service.writeMemo(
             MemoRecord(
-                did: Did("did:key:abc123")!,
+                did: did,
                 petname: Petname("abc")!,
                 slug: Slug("baz")!,
                 memo: baz
             )
         )
         
-        let recent = try service.listRecentMemos(owner: Did("did:key:abc123")!, includeDrafts: true)
+        let recent = try service.listRecentMemos(owner: did, includeDrafts: true)
         
         XCTAssertEqual(recent.count, 3)
+        
+        XCTAssertEqual(recent[0].did, Did.local)
+        XCTAssertEqual(recent[1].did, Did.local)
+        XCTAssertEqual(recent[2].did, did)
         
         let slashlinks = Set(
             recent.compactMap({ stub in
@@ -251,6 +256,154 @@ class Tests_DatabaseService: XCTestCase {
                 )
             )
         )
+    }
+    
+    func testReadRandomEntryInDateRange() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: Date.distantPast,
+            modified: Date.distantPast,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: Date.distantFuture,
+            modified: Date.distantFuture,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        let did = Did("did:key:abc123")!
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
+        )
+        
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date.now)!
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date.now)!
+        
+        guard let random = service.readRandomEntryInDateRange(startDate: yesterday, endDate: tomorrow, owner: did) else {
+            XCTFail("No entry found")
+            return
+        }
+        
+        XCTAssertEqual(random.did, did)
+        XCTAssertEqual(random.address.slug, Slug("baz")!)
+        XCTAssertEqual(random.address, Slashlink(slug: Slug("baz")!))
+    }
+    
+    func testReadRandomEntryMatching() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: Date.distantPast,
+            modified: Date.distantPast,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: Date.distantFuture,
+            modified: Date.distantFuture,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        let did = Did("did:key:abc123")!
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
+        )
+        
+        guard let random = service.readRandomEntryMatching(query: "Foo", owner: did) else {
+            XCTFail("No entry found")
+            return
+        }
+        
+        XCTAssertEqual(random.did, Did.local)
+        XCTAssertEqual(random.address.slug, Slug("foo")!)
+        XCTAssertEqual(random.address, Slashlink(peer: .did(Did.local), slug: Slug("foo")!))
+        
+        let nonExistent = service.readRandomEntryMatching(query: "Baboons", owner: did)
+        XCTAssertNil(nonExistent)
     }
     
     func testListRecentMemosWithoutOwner() throws {
@@ -313,9 +466,13 @@ class Tests_DatabaseService: XCTestCase {
             )
         )
         
+        
         let recent = try service.listRecentMemos(owner: nil, includeDrafts: true)
         
         XCTAssertEqual(recent.count, 2)
+        
+        XCTAssertEqual(recent[0].did, Did.local)
+        XCTAssertEqual(recent[1].did, Did.local)
         
         let slashlinks = Set(
             recent.compactMap({ stub in
@@ -901,5 +1058,138 @@ class Tests_DatabaseService: XCTestCase {
                 slug: Slug("bar")!
             )
         )
+    }
+    
+    func testSearchRenameSuggestions() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        // This is a peer we are following
+        let alice = Petname("alice")!
+        let source = PeerRecord(
+            petname: alice,
+            identity: Did("did:key:alice")!,
+            since: "bafyfakefakefake"
+        )
+        
+        try service.writePeer(source)
+        
+        // Create a note, we will attempt to merge this into another note
+        let current = Slashlink("/foo")!
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo, published note, starting point."
+        )
+        
+        let did = Did("did:key:abc123")!
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: nil,
+                slug: current.slug,
+                memo: foo
+            )
+        )
+        
+        // Contains link to /foo, should show up in merge results, local memo
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar /foo should appear in results, local draft."
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
+        )
+        
+        // Contains link to /foo, should show up in merge results, published memo
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar /foo should appear in results, local draft."
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: Petname("abc")!,
+                slug: Slug("bar2")!,
+                memo: baz,
+                size: baz.toHeaderSubtext().size()!
+            )
+        )
+        
+        // Someone else's content, never possible to merge, should be filtered out.
+        let qux = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "This /foo should not appear in results, 3P."
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: source.identity,
+                petname: alice,
+                slug: Slug("food")!,
+                memo: qux
+            )
+        )
+        
+        let search = try service.searchRenameSuggestions(owner: did, query: "fo", current: current)
+        XCTAssert(search.count == 3)
+        
+        let first = search[0]
+        switch first {
+        case let .move(from, to):
+            XCTAssert(from == current)
+            XCTAssert(to.isOurs)
+            XCTAssert(to.slug == Slug("fo"))
+            break
+        default:
+            XCTFail("expected move result first")
+        }
+        
+        let second = search[1]
+        switch second {
+        case let .merge(parent, child):
+            XCTAssert(child == current)
+            XCTAssert(parent.isOurs)
+            XCTAssert(parent.isLocal)
+            XCTAssert(parent.slug == Slug("bar"))
+            break
+        default:
+            XCTFail("expected local merge result second")
+        }
+        
+        let third = search[2]
+        switch third {
+        case let .merge(parent, child):
+            XCTAssert(child == current)
+            XCTAssert(parent.isOurs)
+            XCTAssertFalse(parent.isLocal)
+            XCTAssert(parent.slug == Slug("bar2"))
+            break
+        default:
+            XCTFail("expected public merge result third")
+        }
     }
 }

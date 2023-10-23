@@ -34,7 +34,7 @@ enum NoosphereServiceError: Error, LocalizedError {
 protocol NoosphereServiceProtocol {
     var globalStorageURL: URL { get async }
     var sphereStorageURL: URL { get async }
-    var gatewayURL: URL? { get async }
+    var gatewayURL: GatewayURL? { get async }
 
     func createSphere(ownerKeyName: String) async throws -> SphereReceipt
 
@@ -43,10 +43,12 @@ protocol NoosphereServiceProtocol {
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
-    func resetGateway(url: URL?) async
+    func resetGateway(url: GatewayURL?) async
     
     /// Reset managed instances of Noosphere and Sphere
     func reset() async
+    
+    func recover(identity: Did, gatewayUrl: GatewayURL, mnemonic: String) async throws -> Bool
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
@@ -55,16 +57,13 @@ actor NoosphereService:
     SpherePublisherProtocol,
     NoosphereServiceProtocol
 {
-    /// Default logger for NoosphereService instances.
-    private static let logger = Logger(
+    private var logger = Logger(
         subsystem: Config.default.rdns,
         category: "NoosphereService"
     )
-
-    private var logger: Logger
     var globalStorageURL: URL
     var sphereStorageURL: URL
-    var gatewayURL: URL?
+    var gatewayURL: GatewayURL?
     private var _noosphereLogLevel: Noosphere.NoosphereLogLevel
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
@@ -72,14 +71,15 @@ actor NoosphereService:
     private var _sphereIdentity: String?
     /// Memoized Sphere instance
     private var _sphere: Sphere?
+    private var errorLoggingService: any ErrorLoggingServiceProtocol
     
     init(
         globalStorageURL: URL,
         sphereStorageURL: URL,
-        gatewayURL: URL? = nil,
+        gatewayURL: GatewayURL? = nil,
         sphereIdentity: String? = nil,
         noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic,
-        logger: Logger = logger
+        errorLoggingService: any ErrorLoggingServiceProtocol
     ) {
         logger.debug(
             "init NoosphereService",
@@ -94,35 +94,37 @@ actor NoosphereService:
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
-        self.logger = logger
         self._noosphereLogLevel = noosphereLogLevel
+        self.errorLoggingService = errorLoggingService
     }
     
     /// Create a default sphere for user and persist sphere details
     /// This creates, but does not save the sphere as default.
     /// - Returns: SphereReceipt
     func createSphere(ownerKeyName: String) async throws -> SphereReceipt {
-        try await self.noosphere().createSphere(
-            ownerKeyName: ownerKeyName
-        )
+        try await errorLoggingService.capturing {
+            try await noosphere().createSphere(
+                ownerKeyName: ownerKeyName
+            )
+        }
     }
     
     /// Set a new default sphere
     func resetSphere(_ identity: String?) {
-        logger.debug("Reset sphere identity: \(identity ?? "none")")
+        logger.log("Reset sphere identity: \(identity ?? "none")")
         self._sphereIdentity = identity
         self._sphere = nil
     }
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
-    func resetGateway(url: URL?) {
+    func resetGateway(url: GatewayURL?) {
         guard self.gatewayURL != url else {
             logger.debug("Reset gateway to identical URL, ignoring")
             return
         }
        
-        logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
+        logger.log("Reset gateway: \(url?.absoluteString ?? "none")")
         self.gatewayURL = url
         self._noosphere = nil
         self._sphere = nil
@@ -130,7 +132,7 @@ actor NoosphereService:
     
     /// Reset managed instances of Noosphere and Sphere
     func reset() {
-        logger.debug("Reset memoized instances of Noosphere and Sphere")
+        logger.log("Reset cached instances of Noosphere and Sphere")
         self._noosphere = nil
         self._sphere = nil
     }
@@ -140,7 +142,7 @@ actor NoosphereService:
         if let noosphere = self._noosphere {
             return noosphere
         }
-        logger.debug("init Noosphere")
+        logger.log("Initializing Noosphere")
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
@@ -148,6 +150,7 @@ actor NoosphereService:
             noosphereLogLevel: _noosphereLogLevel
         )
         self._noosphere = noosphere
+        logger.log("Initialized and cached Noosphere")
         return noosphere
     }
     
@@ -161,56 +164,54 @@ actor NoosphereService:
         }
         
         let noosphere = try noosphere()
-        logger.debug("init Sphere with identity: \(identity)")
+        logger.log("Initializing Sphere with identity: \(identity)")
         let sphere = try Sphere(
             noosphere: noosphere,
             identity: identity
         )
         self._sphere = sphere
+        logger.log("Initialized and cached Sphere with identity: \(identity)")
         return sphere
     }
     
-    nonisolated private func spherePublisher() -> AnyPublisher<Sphere, Error> {
+    func identity() async throws -> Did {
+        try await errorLoggingService.capturing {
+            try await sphere().identity()
+        }
+    }
+
+    nonisolated func identityPublisher() -> AnyPublisher<Did, Error> {
         Future {
-            try await self.sphere()
+            try await self.identity()
         }
         .eraseToAnyPublisher()
     }
 
-    func identity() async throws -> Did {
-        try await self.sphere().identity()
-    }
-
-    nonisolated func identityPublisher() -> AnyPublisher<Did, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.identityPublisher()
-        })
-        .eraseToAnyPublisher()
-    }
-
     func version() async throws -> Cid {
-        try await self.sphere().version()
+        try await errorLoggingService.capturing {
+            try await sphere().version()
+        }
     }
     
     nonisolated func versionPublisher() -> AnyPublisher<Cid, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.versionPublisher()
-        })
+        Future {
+            try await self.version()
+        }
         .eraseToAnyPublisher()
     }
     
     func getFileVersion(slashlink: Slashlink) async -> Cid? {
-        try? await self.sphere().getFileVersion(slashlink: slashlink)
+        try? await errorLoggingService.capturing {
+            try await sphere().getFileVersion(slashlink: slashlink)
+        }
     }
     
     nonisolated func getFileVersionPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<Cid?, Never> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.getFileVersionPublisher(slashlink: slashlink)
-        }).catch({ error in
-            Just(nil)
-        })
+        Future {
+            await self.getFileVersion(slashlink: slashlink)
+        }
         .eraseToAnyPublisher()
     }
     
@@ -218,55 +219,55 @@ actor NoosphereService:
         slashlink: Slashlink,
         name: String
     ) async -> String? {
-        try? await self.sphere().readHeaderValueFirst(
-            slashlink: slashlink,
-            name: name
-        )
+        try? await errorLoggingService.capturing {
+            try await sphere().readHeaderValueFirst(
+                slashlink: slashlink,
+                name: name
+            )
+        }
     }
     
     nonisolated func readHeaderValueFirstPublisher(
         slashlink: Slashlink,
         name: String
     ) -> AnyPublisher<String?, Never> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.readHeaderValueFirstPublisher(
-                slashlink: slashlink,
-                name: name
-            )
-        }).catch({ error in
-            Just(nil)
-        }).eraseToAnyPublisher()
+        Future {
+            await self.readHeaderValueFirst(slashlink: slashlink, name: name)
+        }
+        .eraseToAnyPublisher()
     }
     
     func readHeaderNames(slashlink: Slashlink) async -> [String] {
-        guard let names = try? await self.sphere().readHeaderNames(
-            slashlink: slashlink
-        ) else {
-            return []
+        let names = try? await errorLoggingService.capturing {
+            try await sphere().readHeaderNames(
+                slashlink: slashlink
+            )
         }
-        return names
+        return names.unwrap(or: [])
     }
     
     nonisolated func readHeaderNamesPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<[String], Never> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.readHeaderNamesPublisher(slashlink: slashlink)
-        }).catch({ error in
-            Just([])
-        }).eraseToAnyPublisher()
+        Future {
+            await self.readHeaderNames(slashlink: slashlink)
+        }
+        .eraseToAnyPublisher()
     }
     
     func read(slashlink: Slashlink) async throws -> MemoData {
-        try await self.sphere().read(slashlink: slashlink)
+        try await errorLoggingService.capturing {
+            try await sphere().read(slashlink: slashlink)
+        }
     }
     
     nonisolated func readPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<MemoData, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.readPublisher(slashlink: slashlink)
-        }).eraseToAnyPublisher()
+        Future {
+            try await self.read(slashlink: slashlink)
+        }
+        .eraseToAnyPublisher()
     }
     
     func write(
@@ -275,12 +276,14 @@ actor NoosphereService:
         additionalHeaders: [Header],
         body: Data
     ) async throws {
-        try await self.sphere().write(
-            slug: slug,
-            contentType: contentType,
-            additionalHeaders: additionalHeaders,
-            body: body
-        )
+        try await errorLoggingService.capturing {
+            try await sphere().write(
+                slug: slug,
+                contentType: contentType,
+                additionalHeaders: additionalHeaders,
+                body: body
+            )
+        }
     }
     
     nonisolated func writePublisher(
@@ -289,158 +292,216 @@ actor NoosphereService:
         additionalHeaders: [Header],
         body: Data
     ) -> AnyPublisher<Void, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.writePublisher(
+        Future {
+            try await self.write(
                 slug: slug,
                 contentType: contentType,
                 additionalHeaders: additionalHeaders,
                 body: body
             )
-        }).eraseToAnyPublisher()
+        }
+        .eraseToAnyPublisher()
     }
 
     func remove(slug: Slug) async throws {
-        try await self.sphere().remove(slug: slug)
+        try await errorLoggingService.capturing {
+            try await sphere().remove(slug: slug)
+        }
     }
     
     nonisolated func removePublisher(slug: Slug) -> AnyPublisher<Void, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.removePublisher(slug: slug)
-        }).eraseToAnyPublisher()
+        Future {
+            try await self.remove(slug: slug)
+        }
+        .eraseToAnyPublisher()
     }
     
     @discardableResult func save() async throws -> Cid {
-        try await self.sphere().save()
+        try await errorLoggingService.capturing {
+            try await sphere().save()
+        }
     }
     
     nonisolated func savePublisher() -> AnyPublisher<Cid, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.savePublisher()
-        })
+        Future {
+            try await self.save()
+        }
         .eraseToAnyPublisher()
     }
     
     func list() async throws -> [Slug] {
-        try await self.sphere().list()
+        try await errorLoggingService.capturing {
+            try await sphere().list()
+        }
     }
     
     nonisolated func listPublisher() -> AnyPublisher<[Slug], Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.listPublisher()
-        })
+        Future {
+            try await self.list()
+        }
         .eraseToAnyPublisher()
     }
     
     func sync() async throws -> Cid {
-        try await self.sphere().sync()
+        try await errorLoggingService.capturing {
+            try await sphere().sync()
+        }
     }
     
     nonisolated func syncPublisher() -> AnyPublisher<Cid, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.syncPublisher()
-        })
+        Future {
+            try await self.sync()
+        }
         .eraseToAnyPublisher()
     }
     
     func changes(since cid: String?) async throws -> [Slug] {
-        try await self.sphere().changes(since: cid)
+        try await errorLoggingService.capturing {
+            try await sphere().changes(since: cid)
+        }
     }
     
     nonisolated func changesPublisher(
         since cid: String?
     ) -> AnyPublisher<[Slug], Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.changesPublisher(since: cid)
-        })
+        Future {
+            try await self.changes(since: cid)
+        }
         .eraseToAnyPublisher()
     }
     
     func getPetname(petname: Petname) async throws -> Did {
-        try await self.sphere().getPetname(petname: petname)
+        try await errorLoggingService.capturing {
+            try await sphere().getPetname(petname: petname)
+        }
     }
     
     nonisolated func getPetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<Did, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.getPetnamePublisher(petname: petname)
-        })
+        Future {
+            try await self.getPetname(petname: petname)
+        }
         .eraseToAnyPublisher()
     }
     
     func setPetname(did: Did?, petname: Petname) async throws {
-        try await self.sphere().setPetname(did: did, petname: petname)
+        try await errorLoggingService.capturing {
+            try await sphere().setPetname(did: did, petname: petname)
+        }
     }
     
     nonisolated func setPetnamePublisher(
         did: Did?,
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.setPetnamePublisher(did: did, petname: petname)
-        })
+        Future {
+            try await self.setPetname(did: did, petname: petname)
+        }
         .eraseToAnyPublisher()
     }
     
     func resolvePetname(petname: Petname) async throws -> Cid {
-        try await self.sphere().resolvePetname(petname: petname)
+        try await errorLoggingService.capturing {
+            try await sphere().resolvePetname(petname: petname)
+        }
     }
     
     nonisolated func resolvePetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<Cid, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.resolvePetnamePublisher(petname: petname)
-        })
+        Future {
+            try await self.resolvePetname(petname: petname)
+        }
         .eraseToAnyPublisher()
     }
     
     func listPetnames() async throws -> [Petname] {
-        try await self.sphere().listPetnames()
+        try await errorLoggingService.capturing {
+            try await sphere().listPetnames()
+        }
     }
     
     nonisolated func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.listPetnamesPublisher()
-        })
+        Future {
+            try await self.listPetnames()
+        }
         .eraseToAnyPublisher()
     }
     
     func getPetnameChanges(since cid: Cid) async throws -> [Petname] {
-        try await self.sphere().getPetnameChanges(since: cid)
+        try await errorLoggingService.capturing {
+            try await sphere().getPetnameChanges(since: cid)
+        }
     }
     
     nonisolated func getPetnameChangesPublisher(
         since cid: String
     ) -> AnyPublisher<[Petname], Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.getPetnameChangesPublisher(since: cid)
-        })
+        Future {
+            try await self.getPetnameChanges(since: cid)
+        }
         .eraseToAnyPublisher()
     }
 
     func traverse(petname: Petname) async throws -> Sphere {
-        try await self.sphere().traverse(petname: petname)
+        try await errorLoggingService.capturing {
+            try await sphere().traverse(petname: petname)
+        }
     }
     
     func authorize(name: String, did: Did) async throws -> Authorization {
-        try await self.sphere().authorize(name: name, did: did)
+        try await errorLoggingService.capturing {
+            try await sphere().authorize(name: name, did: did)
+        }
     }
     
     func revoke(authorization: Authorization) async throws -> Void {
-        try await self.sphere().revoke(authorization: authorization)
+        try await errorLoggingService.capturing {
+            try await sphere().revoke(authorization: authorization)
+        }
     }
     
     func escalateAuthority(mnemonic: String) async throws -> Sphere {
-        try await self.sphere().escalateAuthority(mnemonic: mnemonic)
+        try await errorLoggingService.capturing {
+            try await sphere().escalateAuthority(mnemonic: mnemonic)
+        }
     }
     
     func listAuthorizations() async throws -> [Authorization] {
-        try await self.sphere().listAuthorizations()
+        try await errorLoggingService.capturing {
+            try await sphere().listAuthorizations()
+        }
     }
     
     func verify(authorization: Authorization) async throws -> Bool {
-        try await self.sphere().verify(authorization: authorization)
+        try await errorLoggingService.capturing {
+            try await sphere().verify(authorization: authorization)
+        }
+    }
+    
+    func recover(
+        identity: Did,
+        gatewayUrl: GatewayURL,
+        mnemonic: String
+    ) async throws -> Bool {
+        // Update the gateway URL to whatever was in the form
+        resetGateway(url: gatewayUrl)
+        // Release the sphere before we attempt to recover it
+        // If we don't do this the database LOCK will prevent us from recovering
+        resetSphere(nil)
+        
+        return try await errorLoggingService.capturing {
+            let result = try await noosphere().recover(
+                identity: identity,
+                localKeyName: Config.default.noosphere.ownerKeyName,
+                mnemonic: mnemonic
+            )
+            
+            resetSphere(identity.did)
+            
+            return result
+        }
     }
     
     /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.
@@ -449,9 +510,13 @@ actor NoosphereService:
         
         switch address.peer {
         case .none:
-            return try self.sphere()
+            return try await errorLoggingService.capturing {
+                try self.sphere()
+            }
         case .did(let did) where did == identity:
-            return try self.sphere()
+            return try await errorLoggingService.capturing {
+                try self.sphere()
+            }
         case .petname(let petname):
             return try await self.traverse(petname: petname)
         default:
@@ -462,9 +527,9 @@ actor NoosphereService:
     nonisolated func traversePublisher(
         petname: Petname
     ) -> AnyPublisher<Sphere, Error> {
-        self.spherePublisher().flatMap({ sphere in
-            sphere.traversePublisher(petname: petname)
-        })
+        Future {
+            try await self.sphere().traverse(petname: petname)
+        }
         .eraseToAnyPublisher()
     }
 }

@@ -15,12 +15,12 @@ struct StoryEntry:
     Codable
 {
     var id = UUID()
-    var author: UserProfile
     var entry: EntryStub
+    var author: UserProfile
 
     var description: String {
         """
-        \(author.displayName)
+        \(String(describing: author.address))
         \(String(describing: entry))
         """
     }

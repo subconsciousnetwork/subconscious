@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/subconsciousnetwork/noosphere",
       "state" : {
-        "branch" : "swift-noosphere-v0.14.2",
-        "revision" : "248cf9c6cac1de7377f54216b9159b59e0a79150"
+        "branch" : "swift-noosphere-v0.15.3",
+        "revision" : "9e5c83b0d1f8c2ec46e61c604811b7e243b6d385"
       }
     },
     {
@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gordonbrander/ObservableStore",
       "state" : {
-        "revision" : "332458eb7e361e150baba221c20a42bf8bd01a40",
-        "version" : "0.3.0"
+        "revision" : "85b73227e7bbee0d4e75f4087953f510287f6a6f",
+        "version" : "0.4.0"
       }
     },
     {
@@ -43,24 +43,6 @@
       "state" : {
         "revision" : "937e904258d22af6e447a0b72c0bc67583ef64a2",
         "version" : "1.0.4"
-      }
-    },
-    {
-      "identity" : "swiftsubsurface",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/cdata/SwiftSubsurface",
-      "state" : {
-        "branch" : "main",
-        "revision" : "ee189b02b3a00515c3dacd9354c0f6c277415cc8"
-      }
-    },
-    {
-      "identity" : "tracery",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BenziAhamed/Tracery",
-      "state" : {
-        "revision" : "2714eabbbd287fe7969314d5a915c61c2d549ef9",
-        "version" : "0.0.2"
       }
     }
   ],

@@ -16,8 +16,6 @@ struct Config: Equatable, Codable {
     
     var noosphere = NoosphereConfig()
     
-    var appTabs = false
-    
     #if targetEnvironment(simulator)
     /// Are we currently running in the iOS simlator (aka dev mode)
     private static let isSimulator = true
@@ -58,11 +56,6 @@ struct Config: Equatable, Codable {
     
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
-    
-    /// Toggle on/off simple Tracery-based Geists
-    var traceryZettelkasten = "zettelkasten"
-    var traceryCombo = "combo"
-    var traceryProject = "project"
 }
 
 extension Config {

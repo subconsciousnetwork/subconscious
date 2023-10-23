@@ -13,6 +13,8 @@ import Combine
 //  MARK: View
 struct MemoEditorDetailView: View {
     typealias Action = MemoEditorDetailAction
+    @ObservedObject var app: Store<AppModel>
+    
     /// Detail keeps a separate internal store for editor state that does not
     /// need to be surfaced in higher level views.
     ///
@@ -121,8 +123,9 @@ struct MemoEditorDetailView: View {
             return .handled
         })
         .onReceive(store.actions) { action in
-            let message = String.loggable(action)
-            MemoEditorDetailModel.logger.debug("[action] \(message)")
+            MemoEditorDetailAction.logger.debug(
+                "\(String(describing: action))"
+            )
         }
         // Filtermap actions to outer actions, and forward them to parent
         .onReceive(
@@ -130,6 +133,10 @@ struct MemoEditorDetailView: View {
         ) { action in
             notify(action)
         }
+        .onReceive(
+            app.actions.compactMap(MemoEditorDetailAction.fromAppAction),
+            perform: store.send
+        )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
@@ -299,7 +306,12 @@ extension MemoEditorDetailNotification {
 }
 
 /// Actions handled by detail's private store.
-enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
+enum MemoEditorDetailAction: Hashable {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoEditorDetailAction"
+    )
+
     /// Tagging action for detail meta bottom sheet
     case metaSheet(MemoEditorDetailMetaSheetAction)
 
@@ -330,6 +342,11 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Reload detail from source of truth
     case refreshDetail
     case refreshDetailIfStale
+    
+    case refreshBacklinks
+    case succeedRefreshBacklinks(_ backlinks: [EntryStub])
+    case failRefreshBacklinks(_ error: String)
+    
     /// Unable to load detail
     case failLoadDetail(String)
     /// Set entry detail.
@@ -463,32 +480,6 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
         .metaSheet(.setDefaultAudience(audience))
     }
-
-    // MARK: logDescription
-    var logDescription: String {
-        switch self {
-        case .setLinkSuggestions(let suggestions):
-            return "setLinkSuggestions(\(suggestions.count) items)"
-        case .editor(let action):
-            return "editor(\(String.loggable(action)))"
-        case let .setDetailLastWriteWins(detail):
-            return "setDetailLastWriteWins(\(String.loggable(detail)))"
-        case let .forceSetDetail(detail):
-            return "forceSetDetail(\(String.loggable(detail)))"
-        case .save(let entry):
-            return "save(\(entry?.address.description ?? "nil"))"
-        case .succeedSave(let entry):
-            return "succeedSave(\(entry.address))"
-        case .setDetail(let detail, _):
-            return "setDetail(\(String.loggable(detail)))"
-        case let .setEditor(_, saveState, modified):
-            return "setEditor(text: ..., saveState: \(String(describing: saveState)), modified: \(modified))"
-        case let .setEditorSelection(range, _):
-            return "setEditorSelection(range: \(range), text: ...)"
-        default:
-            return String(describing: self)
-        }
-    }
 }
 
 extension MemoEditorDetailAction {
@@ -498,6 +489,21 @@ extension MemoEditorDetailAction {
             return .moveEntry(from: from, to: to)
         case let .merge(parent, child):
             return .mergeEntry(parent: parent, child: child)
+        }
+    }
+}
+
+/// React to actions from the root app store
+extension MemoEditorDetailAction {
+    static func fromAppAction(
+        action: AppAction
+    ) -> MemoEditorDetailAction? {
+        switch (action) {
+        case .succeedIndexOurSphere(_),
+             .completeIndexPeers:
+            return .refreshBacklinks
+        case _:
+            return nil
         }
     }
 }
@@ -623,16 +629,16 @@ struct MemoEditorDetailModel: ModelProtocol {
                     text: "The property of a living system (such as a bacterial cell or a multicellular organism) that allows it to maintain and renew itself by regulating its composition and conserving its boundaries.",
                     transcludes: [
                         EntryStub(
+                            did: Did("did:key:abc123")!,
                             address: Slashlink("@example/foo")!,
                             excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
-                            modified: Date.now,
-                            author: nil
+                            modified: Date.now
                         ),
                         EntryStub(
+                            did: Did("did:key:abc123")!,
                             address: Slashlink("@example/bar")!,
                             excerpt: "Modularity is a form of hierarchy",
-                            modified: Date.now,
-                            author: nil
+                            modified: Date.now
                         ),
                     ]
                 )
@@ -656,22 +662,22 @@ struct MemoEditorDetailModel: ModelProtocol {
         appendix: BlockEditor.RelatedModel(
             related: [
                 EntryStub(
+                    did: Did("did:key:abc123")!,
                     address: Slashlink("@example/foo")!,
                     excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 ),
                 EntryStub(
+                    did: Did("did:key:abc123")!,
                     address: Slashlink("@example/bar")!,
                     excerpt: "Modularity is a form of hierarchy",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 ),
                 EntryStub(
+                    did: Did("did:key:abc123")!,
                     address: Slashlink("@example/baz")!,
                     excerpt: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
-                    modified: Date.now,
-                    author: nil
+                    modified: Date.now
                 )
             ]
         )
@@ -703,7 +709,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
-        category: "detail"
+        category: "MemoEditorDetail"
     )
     
     //  MARK: Update
@@ -831,6 +837,20 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+            
+        case .refreshBacklinks:
+            return refreshBacklinks(
+                state: state,
+                environment: environment
+            )
+        case .succeedRefreshBacklinks(let backlinks):
+            var model = state
+            model.backlinks = backlinks
+            return Update(state: model)
+        case .failRefreshBacklinks(let error):
+            logger.error("Failed to refresh backlinks: \(error)")
+            return Update(state: state)
+            
         case .requestDelete(let address):
             return requestDelete(
                 state: state,
@@ -1271,8 +1291,14 @@ struct MemoEditorDetailModel: ModelProtocol {
             Just(MemoEditorDetailAction.failLoadDetail(error.localizedDescription))
         }).eraseToAnyPublisher()
         
-        let model = prepareLoadDetail(state)
-        return Update(state: model, fx: fx)
+        var model = prepareLoadDetail(state)
+        model.address = address
+        
+        return update(
+            state: model,
+            action: .refreshBacklinks,
+            environment: environment
+        ).mergeFx(fx)
     }
     
     /// Reload detail
@@ -1350,7 +1376,6 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
         model.additionalHeaders = detail.entry.contents.additionalHeaders
-        model.backlinks = detail.backlinks
         model.saveState = detail.saveState
         
         let subtext = detail.entry.contents.body
@@ -1511,6 +1536,28 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.isLoading = true
         model.saveState = .saved
         return Update(state: model)
+    }
+    
+    static func refreshBacklinks(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<MemoEditorDetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            try await environment.data.readMemoBacklinks(address: address)
+        }
+        .map { backlinks in
+            .succeedRefreshBacklinks(backlinks)
+        }
+        .recover { error in
+            .failRefreshBacklinks(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func updateAudience(
@@ -2139,6 +2186,7 @@ extension MemoEntry {
 struct Detail_Previews: PreviewProvider {
     static var previews: some View {
         MemoEditorDetailView(
+            app: Store(state: AppModel(), environment: AppEnvironment()),
             description: MemoEditorDetailDescription(
                 address: Slashlink("/nothing-is-lost-in-the-universe")!,
                 fallback: "Nothing is lost in the universe"

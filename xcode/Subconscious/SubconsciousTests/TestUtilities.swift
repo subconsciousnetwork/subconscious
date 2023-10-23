@@ -27,6 +27,7 @@ struct TestUtilities {
     
     struct DataServiceEnvironment {
         var data: DataService
+        var database: DatabaseService
         var noosphere: NoosphereService
         var local: HeaderSubtextMemoStore
         var addressBook: AddressBookService
@@ -44,7 +45,8 @@ struct TestUtilities {
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
-            gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
+            gatewayURL: GatewayURL("http://unavailable-gateway.fakewebsite"),
+            errorLoggingService: MockErrorLoggingService()
         )
         
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
@@ -54,6 +56,7 @@ struct TestUtilities {
             path: "database.sqlite",
             directoryHint: .notDirectory
         )
+        print("Test SQLite Path: \(databaseURL.path(percentEncoded: false))")
         let db = SQLite3Database(
             path: databaseURL.path(percentEncoded: false),
             mode: .readwrite
@@ -97,6 +100,7 @@ struct TestUtilities {
 
         return DataServiceEnvironment(
             data: data,
+            database: database,
             noosphere: noosphere,
             local: local,
             addressBook: addressBook,

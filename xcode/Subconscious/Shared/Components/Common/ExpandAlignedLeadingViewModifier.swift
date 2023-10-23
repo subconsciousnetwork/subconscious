@@ -13,7 +13,7 @@ struct ExpandAlignLeadingViewModifier: ViewModifier {
     func body(content: Content) -> some View {
         HStack(spacing: 0) {
             content
-            Spacer()
+            Spacer(minLength: 0)
         }
     }
 }

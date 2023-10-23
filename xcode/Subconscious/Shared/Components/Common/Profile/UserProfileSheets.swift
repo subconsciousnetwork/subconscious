@@ -198,7 +198,17 @@ struct EditProfileSheetModifier: ViewModifier {
             )
             .onReceive(app.actions, perform: { action in
                 switch (action) {
-                case .succeedIndexPeer(let peer) where peer.identity == store.state.user?.did:
+                case .completeIndexPeers(let results)
+                    // Only refresh the view if the presented user was indexed
+                    where results.contains(where: { result in
+                        switch (result) {
+                        case .success(let peer) where peer.identity == state.user?.did:
+                            return true
+                        default:
+                            return false
+                        }
+                    }):
+                    
                     store.send(.refresh(forceSync: false))
                     break
                 case _:

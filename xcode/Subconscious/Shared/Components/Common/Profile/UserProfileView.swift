@@ -25,87 +25,88 @@ struct ProfileStatisticView: View {
     }
 }
 
-struct LoadingTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onRefresh: () async -> Void
-    
-    var body: some View {
-        ScrollView {
-            StoryPlaceholderView(bioWidthFactor: 1.2)
-            StoryPlaceholderView(delay: 0.25, nameWidthFactor: 0.7, bioWidthFactor: 0.9)
-            StoryPlaceholderView(delay: 0.5, nameWidthFactor: 0.7, bioWidthFactor: 0.5)
-        }
-        .refreshable {
-            await onRefresh()
-        }
-    }
-}
-
 struct RecentTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onNavigateToNote: (Slashlink) -> Void
-    var onRefresh: () async -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        ScrollView {
-            if let user = state.user {
-                ForEach(state.recentEntries) { entry in
-                    StoryEntryView(
-                        story: StoryEntry(
-                            author: user,
-                            entry: entry
-                        ),
-                        action: { address, _ in onNavigateToNote(address) }
-                    )
-                }
-            }
-            
-            if state.recentEntries.count == 0 {
-                EmptyStateView()
-            } else {
-                FabSpacerView()
+        if let user = store.state.user {
+            ForEach(store.state.recentEntries) { entry in
+                StoryEntryView(
+                    story: StoryEntry(
+                        entry: entry,
+                        author: user
+                    ),
+                    onRequestDetail: { address, excerpt in
+                        notify(
+                            .requestDetail(
+                                .from(
+                                    address: address,
+                                    fallback: excerpt
+                                )
+                            )
+                        )
+                    },
+                    onLink: { link in
+                        notify(
+                            .requestFindLinkDetail(
+                                address: entry.address,
+                                link: link
+                            )
+                        )
+                    }
+                )
+                
+                Divider()
             }
         }
-        .refreshable {
-            await onRefresh()
+        
+        if store.state.recentEntries.count == 0 {
+            let name = store.state.user?.address.peer?.markup ?? "This user"
+            EmptyStateView(
+                message: "\(name) has not posted any notes yet."
+            )
+        } else {
+            FabSpacerView()
         }
     }
 }
 
 struct FollowTabView: View {
-    var state: UserProfileDetailModel
-    var send: (UserProfileDetailAction) -> Void
-    var onNavigateToUser: (UserProfile) -> Void
-    var onProfileAction: (UserProfile, UserProfileAction) -> Void
-    var onRefresh: () async -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        ScrollView {
-            ForEach(state.following) { follow in
-                StoryUserView(
-                    story: follow,
-                    action: { _ in onNavigateToUser(follow.user) },
-                    profileAction: onProfileAction,
-                    onRefreshUser: {
-                        guard let petname = follow.user.address.toPetname() else {
-                            return
-                        }
-                        
-                        send(.requestWaitForFollowedUserResolution(petname))
-                    }
-                )
-            }
+        ForEach(store.state.following) { follow in
+            StoryUserView(
+                story: follow,
+                action: { address in
+                    notify(
+                        .requestNavigateToProfile(address)
+                    )
+                },
+                profileAction: { user, action in
+                    store.send(
+                        UserProfileDetailAction.from(user, action)
+                    )
+                },
+                onRefreshUser: {
+                    store.send(
+                        .requestWaitForFollowedUserResolution(follow.entry.petname)
+                    )
+                }
+            )
             
-            if state.following.count == 0 {
-                EmptyStateView()
-            } else {
-                FabSpacerView()
-            }
+            Divider()
         }
-        .refreshable {
-            await onRefresh()
+        
+        if store.state.following.count == 0 {
+            let name = store.state.user?.address.peer?.markup ?? "This user"
+            EmptyStateView(
+                message: "\(name) does not follow anyone."
+            )
+        } else {
+            FabSpacerView()
         }
     }
 }
@@ -121,20 +122,17 @@ struct UserProfileView: View {
         store.send
     }
     
-    var onNavigateToNote: (Slashlink) -> Void
-    var onNavigateToUser: (UserProfile) -> Void
+    var notify: (UserProfileDetailNotification) -> Void
     
-    var onProfileAction: (UserProfile, UserProfileAction) -> Void
-    var onRefresh: () async -> Void
+    func onRefresh() async {
+        app.send(.syncAll)
+        await store.refresh()
+    }
     
-    func columnLoading(label: String) -> TabbedColumnItem<LoadingTabView> {
+    func columnLoading(label: String) -> TabbedColumnItem<FeedPlaceholderView> {
         TabbedColumnItem(
             label: label,
-            view: LoadingTabView(
-                state: state,
-                send: send,
-                onRefresh: onRefresh
-            )
+            view: FeedPlaceholderView()
         )
     }
     
@@ -142,10 +140,8 @@ struct UserProfileView: View {
         TabbedColumnItem(
             label: "Notes",
             view: RecentTabView(
-                state: state,
-                send: send,
-                onNavigateToNote: onNavigateToNote,
-                onRefresh: onRefresh
+                store: store,
+                notify: notify
             )
         )
     }
@@ -154,70 +150,85 @@ struct UserProfileView: View {
         TabbedColumnItem(
             label: "Following",
             view: FollowTabView(
-                state: state,
-                send: send,
-                onNavigateToUser: onNavigateToUser,
-                onProfileAction: onProfileAction,
-                onRefresh: onRefresh
+                store: store,
+                notify: notify
             )
         )
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let user = state.user,
-               state.loadingState != .notFound {
-                UserProfileHeaderView(
-                    user: user,
-                    statistics: state.statistics,
-                    action: { action in
-                        onProfileAction(user, action)
-                    },
-                    hideActionButton: state.loadingState != .loaded,
-                    onTapStatistics: {
-                        send(
-                            .tabIndexSelected(
-                                UserProfileDetailModel.followingTabIndex
-                            )
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                switch state.loadingState {
+                case .loading:
+                    ProfileHeaderPlaceholderView()
+                    
+                    TabbedTwoColumnView(
+                        columnA: columnLoading(label: "Notes"),
+                        columnB: columnLoading(label: "Following"),
+                        selectedColumnIndex: state.currentTabIndex,
+                        changeColumn: { index in
+                            send(.tabIndexSelected(index))
+                        }
+                    )
+                case .loaded:
+                    if let user = state.user {
+                        UserProfileHeaderView(
+                            user: user,
+                            statistics: state.statistics,
+                            action: { action in
+                                store.send(UserProfileDetailAction.from(user, action))
+                            },
+                            hideActionButton: state.loadingState != .loaded,
+                            onTapStatistics: {
+                                send(
+                                    .tabIndexSelected(
+                                        UserProfileDetailModel.followingTabIndex
+                                    )
+                                )
+                            }
+                        )
+                        .padding(
+                            .init([.top, .horizontal]),
+                            AppTheme.padding
                         )
                     }
-                )
-                .padding(
-                    .init([.top, .horizontal]),
-                    AppTheme.padding
-                )
-            }
-            
-            switch state.loadingState {
-            case .loading:
-                TabbedTwoColumnView(
-                    columnA: columnLoading(label: "Notes"),
-                    columnB: columnLoading(label: "Following"),
-                    selectedColumnIndex: state.currentTabIndex,
-                    changeColumn: { index in
-                        send(.tabIndexSelected(index))
-                    }
-                )
-                .edgesIgnoringSafeArea([.bottom])
-            case .loaded:
-                TabbedTwoColumnView(
-                    columnA: columnRecent,
-                    columnB: columnFollowing,
-                    selectedColumnIndex: state.currentTabIndex,
-                    changeColumn: { index in
-                        send(.tabIndexSelected(index))
-                    }
-                )
-                .edgesIgnoringSafeArea([.bottom])
-            case .notFound:
-                NotFoundView()
+                    
+                    TabbedTwoColumnView(
+                        columnA: columnRecent,
+                        columnB: columnFollowing,
+                        selectedColumnIndex: state.currentTabIndex,
+                        changeColumn: { index in
+                            send(.tabIndexSelected(index))
+                        }
+                    )
+                case .notFound:
+                    NotFoundView()
                     // extra padding to visually center the group
-                    .padding(.bottom, AppTheme.unit * 24)
+                        .padding(.bottom, AppTheme.unit * 24)
+                }
             }
+        }
+        .refreshable {
+            await onRefresh()
         }
         .navigationTitle(state.user?.address.peer?.markup ?? "Profile")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
+            if let user = state.user,
+               user.category == .ourself {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(
+                        action: {
+                            send(.presentFollowNewUserFormSheet(true))
+                        },
+                        label: {
+                            Image(systemName: "person.badge.plus")
+                        }
+                    )
+                }
+            }
+            
             if let address = state.address {
                 DetailToolbarContent(
                     address: address,
@@ -227,19 +238,6 @@ struct UserProfileView: View {
                     },
                     status: state.loadingState
                 )
-                if let user = state.user,
-                   user.category == .ourself {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(
-                            action: {
-                                send(.presentFollowNewUserFormSheet(true))
-                            },
-                            label: {
-                                Image(systemName: "person.badge.plus")
-                            }
-                        )
-                    }
-                }
             } else {
                 DetailToolbarContent(
                     defaultAudience: .public,
@@ -311,10 +309,7 @@ struct UserProfileView_Previews: PreviewProvider {
                 state: UserProfileDetailModel(),
                 environment: UserProfileDetailModel.Environment()
             ),
-            onNavigateToNote: { _ in print("navigate to note") },
-            onNavigateToUser: { _ in print("navigate to user") },
-            onProfileAction: { user, action in print("profile action") },
-            onRefresh: { }
+            notify: { _ in }
         )
     }
 }

@@ -47,10 +47,10 @@ struct UserProfileHeaderView: View {
                 if let name = user.toNameVariant() {
                     PetnameView(
                         name: name,
+                        aliases: user.aliases,
                         showMaybePrefix: true
                     )
                }
-                
             }
             
             Button(
@@ -95,8 +95,8 @@ struct UserProfileHeaderView: View {
                     // Button has primary style when we can follow
                     ProfileHeaderButtonStyle(
                         variant: profileAction == .requestFollow
-                            ? .primary
-                            : .secondary
+                        ? .primary
+                        : .secondary
                     )
                 )
             }
@@ -115,8 +115,8 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .human,
-                    resolutionStatus: .resolved("abc"),
-                    ourFollowStatus: .notFollowing
+                    ourFollowStatus: .notFollowing,
+                    aliases: [Petname("alt")!]
                 )
             )
             UserProfileHeaderView(
@@ -127,8 +127,8 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .geist,
-                    resolutionStatus: .resolved(Cid("ok")),
-                    ourFollowStatus: .following(Petname.Name("ben")!)
+                    ourFollowStatus: .following(Petname.Name("ben")!),
+                    aliases: []
                 ),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19)
             )
@@ -140,8 +140,8 @@ struct BylineLgView_Previews: PreviewProvider {
                     pfp: .image("pfp-dog"),
                     bio: UserProfileBio("Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                     category: .ourself,
-                    resolutionStatus: .resolved(Cid("ok")),
-                    ourFollowStatus: .notFollowing
+                    ourFollowStatus: .notFollowing,
+                    aliases: []
                 )
             )
         }
