@@ -8,10 +8,13 @@
 import SwiftUI
 
 struct OmniboxView: View {
+    private static let initialAngle = Double.pi / 8
+    private static let fullRotation = Double.pi * 2
+    
     @Environment(\.colorScheme) var colorScheme
     // Used to animate the border during loading
     // Value is updated in .onAppear {}
-    @State private var phase = Double.pi / 8
+    @State private var phase = Self.initialAngle
     
     var address: Slashlink?
     var defaultAudience: Audience
@@ -87,7 +90,9 @@ struct OmniboxView: View {
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
         .task {
-            phase = Double.pi / 8 + Double.pi * 2
+            if status == .loading {
+                phase = Self.initialAngle + Self.fullRotation
+            }
         }
     }
 }
