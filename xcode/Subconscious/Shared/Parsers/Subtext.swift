@@ -668,28 +668,25 @@ extension Subtext {
             .filter({ block in !block.isEmpty })
             .prefix(Self.maxExcerptBlocks)
         
-        // If the content fits, no work to do!
+        // Fast path: if the content fits we just take the first `maxExcerptBlocks`
         if self.toString().count < length {
             return Subtext(base: base, blocks: Array(blocks))
         }
         
-        // Otherwise we need to truncate the string first
+        // Otherwise we need to truncate the string
         let text = String.truncateAtWordBoundary(markup: self.toString(), maxChars: length)
+        // Re-parse it
         let dom = Subtext(markup: text)
         
-        var count = 0
-        var output: [Subtext.Block] = []
-        
-        for block in dom.blocks {
-            if count >= length {
-                break
-            }
-            
-            count += block.span.count
-            output.append(block)
-        }
+        // Then we can take the the first `maxExcerptBlocks` blocks
+        let excerptBlocks = dom.blocks
+            .filter({ block in !block.isEmpty })
+            .prefix(Self.maxExcerptBlocks)
        
-        return Subtext(base: dom.base, blocks: Array(output))
+        return Subtext(
+            base: dom.base,
+            blocks: Array(excerptBlocks)
+        )
     }
     
     static func excerpt(markup: any StringProtocol, fallback: String = "") -> Subtext {
