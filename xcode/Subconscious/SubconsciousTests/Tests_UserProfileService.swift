@@ -23,7 +23,7 @@ final class Tests_UserProfileService: XCTestCase {
         try await data.addressBook.followUser(did: didB, petname: Petname("sphere-b")!)
         try await data.addressBook.followUser(did: didB, petname: Petname("sphere-b-again")!)
         
-        let profile = try await data.userProfile.requestOurProfile()
+        let profile = try await data.userProfile.loadOurFullProfileData()
         
         XCTAssertEqual(profile.following.count, 2)
         for entry in profile.following {
@@ -172,7 +172,7 @@ final class Tests_UserProfileService: XCTestCase {
         let _ = try await environment.data.indexOurSphere()
         
         let profileA = try await environment.userProfile.readProfileFromDb(did: did)
-        let profileB = await environment.userProfile.readProfileMemo(address: Slashlink.ourProfile)
+        let profileB = await environment.userProfile.readProfileMemo(sphere: environment.noosphere)
         
         XCTAssertEqual(profileA, profileB)
     }
@@ -217,7 +217,7 @@ final class Tests_UserProfileService: XCTestCase {
             petname: Petname("ronald")!
         )
         
-        let profile = try await data.userProfile.requestOurProfile()
+        let profile = try await data.userProfile.loadOurFullProfileData()
         
         XCTAssertEqual(profile.profile.nickname, Petname.Name("alice")!)
         XCTAssertEqual(profile.profile.bio, UserProfileBio("my bio"))

@@ -21,11 +21,7 @@ struct StoryUser:
     var statistics: UserProfileStatistics?
 
     var description: String {
-        """
-        \(String(describing: user.did))
-        \(String(describing: user.address))
-        \(String(describing: user.nickname))
-        \(String(describing: user.ourFollowStatus))
-        """
+        let nickname = String(describing: user.nickname)
+        return "StoryUser(\(user.did), \(user.address), \(nickname), \(user.ourFollowStatus))"
     }
 }

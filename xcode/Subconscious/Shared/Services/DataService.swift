@@ -218,6 +218,41 @@ actor DataService {
             since: version
         )
     }
+    
+    func indexPeers(petnames: [Petname]) async -> [PeerIndexResult] {
+        var results: [PeerIndexResult] = []
+        
+        for petname in petnames {
+            logger.log(
+                "Indexing peer",
+                metadata: [
+                    "petname": petname.description
+                ]
+            )
+            
+            do {
+                let peer = try await self.indexPeer(
+                    petname: petname
+                )
+                
+                results.append(.success(peer))
+                // Give other tasks a chance to use noosphere, indexing many peers
+                // can take a long time and potentially block user actions
+                await Task.yield()
+            } catch {
+                results.append(
+                    PeerIndexResult.failure(
+                        PeerIndexError(
+                            error: error.localizedDescription,
+                            petname: petname
+                        )
+                    )
+                )
+            }
+        }
+        
+        return results
+    }
 
     /// Index our sphere's content in our database.
     ///

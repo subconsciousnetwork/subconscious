@@ -96,6 +96,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         
         var entries: [AddressBookEntry] = []
         
+        logger.log("Listing adress book")
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
             let did = try await sphere.getPetname(petname: petname)
@@ -122,6 +123,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             a.name < b.name
         }
         
+        logger.log("Finished listing address book")
         self.cache = entries
         self.cacheVersion = version
         return entries

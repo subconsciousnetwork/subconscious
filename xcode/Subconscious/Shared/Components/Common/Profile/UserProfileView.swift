@@ -80,9 +80,9 @@ struct FollowTabView: View {
         ForEach(store.state.following) { follow in
             StoryUserView(
                 story: follow,
-                action: { _ in
+                action: { address in
                     notify(
-                        .requestNavigateToProfile(follow.user.address)
+                        .requestNavigateToProfile(address)
                     )
                 },
                 profileAction: { user, action in

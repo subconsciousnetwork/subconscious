@@ -90,6 +90,13 @@ typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, GatewayURL>
 
+struct PeerIndexError: Error, Hashable {
+    let error: String
+    let petname: Petname
+}
+
+typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
+
 // MARK: Action
 enum AppAction: Hashable {
     // Logger for actions
@@ -97,7 +104,6 @@ enum AppAction: Hashable {
         subsystem: Config.default.rdns,
         category: "AppAction"
     )
-    
     /// Sent immediately upon store creation
     case start
 
@@ -211,9 +217,8 @@ enum AppAction: Hashable {
     case failCollectPeersToIndex(_ error: String)
 
     /// Index the contents of a sphere in the database
-    case indexPeer(_ petname: Petname)
-    case succeedIndexPeer(_ peer: PeerRecord)
-    case failIndexPeer(petname: Petname, error: String)
+    case indexPeers(_ petnames: [Petname])
+    case completeIndexPeers(results: [PeerIndexResult])
 
     /// Purge the contents of a sphere from the database
     case purgePeer(_ did: Did)
@@ -917,24 +922,17 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .indexPeer(let petname):
-            return indexPeer(
+        case .indexPeers(let petnames):
+            return indexPeers(
                 state: state,
                 environment: environment,
-                petname: petname
+                petnames: petnames
             )
-        case .succeedIndexPeer(let peer):
-            return succeedIndexPeer(
+        case let .completeIndexPeers(results):
+            return completeIndexPeers(
                 state: state,
                 environment: environment,
-                peer: peer
-            )
-        case let .failIndexPeer(petname, error):
-            return failIndexPeer(
-                state: state,
-                environment: environment,
-                petname: petname,
-                error: error
+                results: results
             )
         case .purgePeer(let identity):
             return purgePeer(
@@ -1257,12 +1255,12 @@ struct AppModel: ModelProtocol {
     }
     
     static func fetchNicknameFromProfileMemo(
-        state: AppModel,
+        state: AppModel, 
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
-            let response = try await environment.userProfile.requestOurProfile()
-            if let nickname = response.profile.nickname {
+            let response = try await environment.userProfile.readOurProfile(alias: nil)
+            if let nickname = response.nickname {
                 return AppAction.succeedFetchNicknameFromProfile(nickname)
             }
             
@@ -1983,10 +1981,13 @@ struct AppModel: ModelProtocol {
         peers: [PeerRecord]
     ) -> Update<Self> {
         // Transform list of peers into fx publisher of actions.
-        let fx: Fx<Action> = peers
-            .map({ peer in Action.indexPeer(peer.petname) })
-            .publisher
-            .eraseToAnyPublisher()
+        let fx: Fx<Action> = Just(
+            AppAction.indexPeers(
+                peers.map({ peer in peer.petname })
+            )
+        )
+        .eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
     
@@ -2006,63 +2007,50 @@ struct AppModel: ModelProtocol {
     }
     
     /// Index a sphere to the database
-    static func indexPeer(
+    static func indexPeers(
         state: Self,
         environment: Environment,
-        petname: Petname
+        petnames: [Petname]
     ) -> Update<Self> {
-        logger.log(
-            "Indexing peer",
-            metadata: [
-                "petname": petname.description
-            ]
-        )
+        
         let fx: Fx<Action> = Future.detached(priority: .background) {
-            do {
-                let peer = try await environment.data.indexPeer(
-                    petname: petname
-                )
-                return Action.succeedIndexPeer(peer)
-            } catch {
-                return Action.failIndexPeer(
-                    petname: petname,
-                    error: error.localizedDescription
-                )
-            }
-            
-        }.eraseToAnyPublisher()
+            let results = await environment.data.indexPeers(petnames: petnames)
+            return AppAction.completeIndexPeers(results: results)
+        }
+        .eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
     
-    static func succeedIndexPeer(
+    static func completeIndexPeers(
         state: Self,
         environment: Environment,
-        peer: PeerRecord
+        results: [PeerIndexResult]
     ) -> Update<Self> {
-        logger.log(
-            "Indexed peer",
-            metadata: [
-                "petname": peer.petname.description,
-                "identity": peer.identity.description,
-                "since": peer.since ?? "nil"
-            ]
-        )
-        return Update(state: state)
-    }
-    
-    static func failIndexPeer(
-        state: Self,
-        environment: Environment,
-        petname: Petname,
-        error: String
-    ) -> Update<Self> {
-        logger.log(
-            "Failed to index peer",
-            metadata: [
-                "petname": petname.description,
-                "error": error
-            ]
-        )
+        for result in results {
+            switch (result) {
+            case .success(let peer):
+                logger.log(
+                    "Indexed peer",
+                    metadata: [
+                        "petname": peer.petname.description,
+                        "identity": peer.identity.description,
+                        "since": peer.since ?? "nil"
+                    ]
+                )
+                break
+            case .failure(let error):
+                logger.log(
+                    "Failed to index peer",
+                    metadata: [
+                        "petname": error.petname.description,
+                        "error": error.localizedDescription
+                    ]
+                )
+                break
+            }
+        }
+        
         return Update(state: state)
     }
     
@@ -2319,7 +2307,7 @@ struct AppModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .indexPeer(petname),
+            action: .indexPeers([petname]),
             environment: environment
         )
     }
@@ -2581,11 +2569,19 @@ struct AppEnvironment {
         
         let sentry = SentryIntegration()
 
+        // If we're in debug, we want detailed logs from Noosphere.
+        let noosphereLogLevel: Noosphere.NoosphereLogLevel = (
+            Config.default.debug ?
+                .academic :
+                .basic
+        )
+
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: defaultGateway,
             sphereIdentity: defaultSphereIdentity,
+            noosphereLogLevel: noosphereLogLevel,
             errorLoggingService: sentry
         )
         self.noosphere = noosphere

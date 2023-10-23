@@ -87,9 +87,9 @@ extension UserProfileDetailAction {
 extension UserProfileDetailAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
+        case .completeIndexPeers(let results):
+            return .completeIndexPeers(results)
         case .succeedIndexOurSphere:
-            return .refresh(forceSync: false)
-        case .succeedIndexPeer:
             return .refresh(forceSync: false)
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
@@ -174,21 +174,7 @@ enum UserProfileDetailAction {
     case dismissEditProfileError
     case succeedEditProfile
     
-    case succeedIndexPeer(_ peer: PeerRecord)
-}
-
-/// React to actions from the root app store
-extension UserProfileDetailAction {
-    static func fromAppAction(
-        action: AppAction
-    ) -> UserProfileDetailAction? {
-        switch (action) {
-        case let .succeedIndexPeer(peer):
-            return .succeedIndexPeer(peer)
-        case _:
-            return nil
-        }
-    }
+    case completeIndexPeers(_ results: [PeerIndexResult])
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -299,9 +285,13 @@ extension UserProfileDetailModel {
     ) async throws -> UserProfileContentResponse {
         return try await Func.run {
             if let petname = address.toPetname() {
-                return try await environment.userProfile.requestUserProfile(petname: petname)
+                return try await environment
+                    .userProfile
+                    .loadFullProfileData(address: Slashlink(petname: petname))
             } else {
-                return try await environment.userProfile.requestOurProfile()
+                return try await environment
+                    .userProfile
+                    .loadOurFullProfileData()
             }
         }
     }
@@ -596,10 +586,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedIndexPeer(_):
-            return succeedIndexPeer(
+        case .completeIndexPeers(let results):
+            return completeIndexPeers(
                 state: state,
-                environment: environment
+                environment: environment,
+                results: results
             )
         }
     }
@@ -608,6 +599,13 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
+        guard state.loadingState != .loading else {
+            // While initially loading we might be prompted by a notification to refresh _again_
+            // This could happen when indexing completes in the BG or after a sync
+            logger.log("Attempted to refresh while already loading, doing nothing.")
+            return Update(state: state)
+        }
+        
         guard let user = state.user else {
             return Update(state: state)
         }
@@ -632,7 +630,8 @@ struct UserProfileDetailModel: ModelProtocol {
         model.address = address
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
-            try await Self.refresh(address: address, environment: environment)
+            logger.log("Begin loading profile \(address)")
+            return try await Self.refresh(address: address, environment: environment)
         }
         .map { content in
             UserProfileDetailAction.populate(content)
@@ -953,9 +952,12 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update<Self> {
+        
+        // We should not sync after resolution because resolution happens via syncing
+        // in the first place.
         update(
             state: state,
-            action: .refresh(forceSync: true),
+            action: .refresh(forceSync: false),
             environment: environment
         )
     }
@@ -965,10 +967,13 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment,
         error: String
     ) -> Update<Self> {
+        // Skip sync here, any retry/refresh logic is triggered by tapping on this
+        // user in the following list.
+        
         logger.log("Failed to resolve followed user: \(error)")
         return update(
             state: state,
-            action: .refresh(forceSync: true),
+            action: .refresh(forceSync: false),
             environment: environment
         )
     }
@@ -1145,10 +1150,26 @@ struct UserProfileDetailModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func succeedIndexPeer(
+    static func completeIndexPeers(
         state: Self,
-        environment: Environment
+        environment: Environment,
+        results: [PeerIndexResult]
     ) -> Update<Self> {
+        // Check if we're in the list of successfully indexed peers
+        let shouldRefresh = results.contains(where: { result in
+            switch (result) {
+            case .success(let peer) where peer.identity == state.user?.did:
+                return true
+            default:
+                return false
+            }
+        })
+        
+        guard shouldRefresh else {
+            logger.log("Skipping refresh, we are not in the list of peers")
+            return Update(state: state)
+        }
+        
         return update(
             state: state,
             action: .refresh(forceSync: false),

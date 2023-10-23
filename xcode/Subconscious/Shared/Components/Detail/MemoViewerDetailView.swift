@@ -295,8 +295,7 @@ extension MemoViewerDetailAction {
         _ action: AppAction
     ) -> MemoViewerDetailAction? {
         switch (action) {
-        case .succeedIndexOurSphere(_),
-             .succeedIndexPeer(_):
+        case .succeedIndexOurSphere, .completeIndexPeers:
             return .succeedIndexBackgroundSphere
         case _:
             return nil
@@ -557,7 +556,7 @@ struct MemoViewerDetailModel: ModelProtocol {
                 guard let petname = state.address?.toPetname() else {
                      return try await environment
                         .userProfile
-                        .requestOurProfile()
+                        .loadOurFullProfileData()
                         .profile
                 }
                 
