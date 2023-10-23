@@ -661,23 +661,12 @@ extension Subtext {
     private static let maxExcerptBlocks = 2
     private static let maxGeneratedSlugSize = 128
     
-    /// Take the first `maxBlocks` blocks or `Subtext.maxExcerptSize * maxBlocks` characters worth of blocks.
-    /// If a block cannot fit in the limit, it will be dropped.
-    static func truncate(markup: String, maxBlocks: Int, fallback: String = "") -> Subtext {
-        let body = String.truncateAtWordBoundary(
-            markup: markup,
-            maxChars: maxBlocks * Self.maxExcerptSize
-        )
-        return Subtext(markup: body).truncate(maxBlocks: maxBlocks, fallback: fallback)
-    }
-    
-    /// Take the first `maxBlocks` blocks or `Subtext.maxExcerptSize * maxBlocks` characters worth of blocks.
-    /// If a block cannot fit in the limit, it will be dropped.
-    func truncate(maxBlocks: Int, fallback: String = "") -> Subtext {
-        let length = Self.maxExcerptSize * maxBlocks
+    /// Derive an excerpt
+    func excerpt(fallback: String = "") -> Subtext {
+        let length = Self.maxExcerptSize * Self.maxExcerptBlocks
         let blocks = self.blocks
             .filter({ block in !block.isEmpty })
-            .prefix(maxBlocks)
+            .prefix(Self.maxExcerptBlocks)
         
         // If the content fits, no work to do!
         if self.toString().count < length {
@@ -703,21 +692,16 @@ extension Subtext {
         return Subtext(base: dom.base, blocks: Array(output))
     }
     
-    /// Derive an excerpt
-    func excerpt(fallback: String = "") -> Subtext {
-        return self.truncate(maxBlocks: Self.maxExcerptBlocks, fallback: fallback)
-    }
-    
     static func excerpt(markup: any StringProtocol, fallback: String = "") -> Subtext {
-        let output = String.truncateAtWordBoundary(
+        let body = String.truncateAtWordBoundary(
             markup: markup,
-            maxChars: Self.maxExcerptSize * Self.maxExcerptBlocks
+            maxChars: Self.maxExcerptBlocks * Self.maxExcerptSize
         )
-        return Subtext(markup: output).truncate(maxBlocks: Self.maxExcerptBlocks, fallback: fallback)
+        return Subtext(markup: body).excerpt(fallback: fallback)
     }
     
     func title() -> String {
-        self.truncate(maxBlocks: 1).toString().title()
+        self.toString().title()
     }
     
     static func generateSlug(markup: String) -> Slug? {
