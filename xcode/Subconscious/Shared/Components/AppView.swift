@@ -2569,11 +2569,19 @@ struct AppEnvironment {
         
         let sentry = SentryIntegration()
 
+        // If we're in debug, we want detailed logs from Noosphere.
+        let noosphereLogLevel: Noosphere.NoosphereLogLevel = (
+            Config.default.debug ?
+                .academic :
+                .basic
+        )
+
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             gatewayURL: defaultGateway,
             sphereIdentity: defaultSphereIdentity,
+            noosphereLogLevel: noosphereLogLevel,
             errorLoggingService: sentry
         )
         self.noosphere = noosphere
