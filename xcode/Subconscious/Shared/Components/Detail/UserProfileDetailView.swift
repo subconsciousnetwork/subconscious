@@ -636,11 +636,9 @@ struct UserProfileDetailModel: ModelProtocol {
         .map { content in
             UserProfileDetailAction.populate(content)
         }
-        .catch { error in
-            Just(
-                UserProfileDetailAction.failedToPopulate(
-                    error.localizedDescription
-                )
+        .recover { error in
+            UserProfileDetailAction.failedToPopulate(
+                error.localizedDescription
             )
         }
         .eraseToAnyPublisher()

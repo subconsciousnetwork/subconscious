@@ -450,8 +450,8 @@ struct FeedModel: ModelProtocol {
             .map({ stories in
                 FeedAction.succeedFetchFeed(stories)
             })
-            .catch({ error in
-                Just(FeedAction.failFetchFeed(error.localizedDescription))
+            .recover({ error in
+                FeedAction.failFetchFeed(error.localizedDescription)
             })
             .eraseToAnyPublisher()
         
