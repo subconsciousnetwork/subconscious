@@ -193,7 +193,7 @@ struct AuthorizationSettingsView_Previews: PreviewProvider {
     }
 }
 
-enum AuthorizationSettingsFormAction: Equatable {
+enum AuthorizationSettingsFormAction: Hashable, Equatable {
     case didField(FormFieldAction<String>)
     case nameField(FormFieldAction<String>)
     case reset
@@ -253,7 +253,7 @@ struct AuthorizationSettingsFormModel: ModelProtocol {
 }
 
 // MARK: Actions
-enum AuthorizationSettingsAction {
+enum AuthorizationSettingsAction: Hashable {
     case appear
     case listAuthorizations
     case succeedListAuthorizations([Authorization])

@@ -85,7 +85,7 @@ struct NotebookView: View {
 /// Actions for modifying state
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
-enum NotebookAction {
+enum NotebookAction: Hashable {
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "NotebookAction"
@@ -115,7 +115,7 @@ enum NotebookAction {
     /// Set the count of existing entries
     case setEntryCount(Int)
     /// Fail to get count of existing entries
-    case failEntryCount(Error)
+    case failEntryCount(String)
     
     // List entries
     case listRecent
@@ -211,6 +211,8 @@ struct NotebookDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
         switch action {
+        case let .requestDeleteMemo(slashlink):
+            return .requestDeleteMemo(slashlink)
         case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedMoveEntry(from: from, to: to):
@@ -430,8 +432,11 @@ struct NotebookModel: ModelProtocol {
                 address: address
             )
         case .failDeleteMemo(let error):
-            logger.log("failDeleteMemo: \(error)")
-            return Update(state: state)
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .succeedDeleteMemo(let address):
             return succeedDeleteMemo(
                 state: state,
@@ -575,15 +580,16 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.countMemosPublisher()
+        let fx: Fx<NotebookAction> = environment.data
+            .countMemosPublisher()
             .map({ count in
                 NotebookAction.setEntryCount(count)
             })
-            .catch({ error in
-                Just(NotebookAction.failEntryCount(error))
+            .recover({ error in
+                NotebookAction.failEntryCount(error.localizedDescription)
             })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     /// Set entry count
@@ -727,7 +733,7 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
-    /// Entry delete succeeded
+    /// Entry delete failed
     static func failDeleteMemo(
         state: Self,
         environment: Environment,

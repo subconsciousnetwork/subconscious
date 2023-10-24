@@ -12,7 +12,7 @@ import ObservableStore
 /// Tests for Notebook.update
 class Tests_NotebookUpdate: XCTestCase {
     let environment = AppEnvironment()
-
+    
     func testEntryCount() throws {
         let state = NotebookModel()
         let update = NotebookModel.update(
@@ -26,7 +26,7 @@ class Tests_NotebookUpdate: XCTestCase {
             "Entry count correctly set"
         )
     }
-
+    
     func testDeleteEntry() throws {
         let a = Slug(formatting: "A")!.toSlashlink()
         let b = Slug(formatting: "B")!.toLocalSlashlink()
@@ -74,6 +74,4 @@ class Tests_NotebookUpdate: XCTestCase {
             "Slug C moved up because slug B was removed"
         )
     }
-    
-    
 }

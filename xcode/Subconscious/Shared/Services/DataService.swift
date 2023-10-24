@@ -243,7 +243,7 @@ actor DataService {
                 results.append(
                     PeerIndexResult.failure(
                         PeerIndexError(
-                            error: error,
+                            error: error.localizedDescription,
                             petname: petname
                         )
                     )

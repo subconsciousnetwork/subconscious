@@ -90,15 +90,15 @@ typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname.Name>
 typealias GatewayUrlFormField = FormField<String, GatewayURL>
 
-struct PeerIndexError: Error {
-    let error: Error
+struct PeerIndexError: Error, Hashable {
+    let error: String
     let petname: Petname
 }
 
 typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
 
 // MARK: Action
-enum AppAction {
+enum AppAction: Hashable {
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -466,7 +466,7 @@ enum AppDatabaseState {
     case ready
 }
 
-enum FirstRunStep {
+enum FirstRunStep: Hashable {
     case sphere
     case recovery
     case profile
