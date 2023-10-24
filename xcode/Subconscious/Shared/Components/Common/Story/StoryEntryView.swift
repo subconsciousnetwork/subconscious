@@ -42,7 +42,7 @@ struct StoryEntryView: View {
             action: {
                 onRequestDetail(
                     story.entry.address,
-                    story.entry.excerpt.toString()
+                    story.entry.excerpt.description
                 )
             },
             label: {
@@ -74,7 +74,7 @@ struct StoryEntryView: View {
                         subtext: story.entry.excerpt,
                         transcludePreviews: [:],
                         onViewTransclude: { slashlink in
-                            onRequestDetail(slashlink, story.entry.excerpt.toString())
+                            onRequestDetail(slashlink, story.entry.excerpt.description)
                         },
                         onTranscludeLink: { address, link in
                             onLink(address, link)
