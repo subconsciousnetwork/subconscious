@@ -68,17 +68,3 @@ extension Date {
         return Date.from(iso8601String)
     }
 }
-
-extension Data {
-    func toStory() -> Story? {
-        let decoder = JSONDecoder()
-        return try? decoder.decode(Story.self, from: self)
-    }
-}
-
-extension Story {
-    func toData() -> Data? {
-        let encoder = JSONEncoder()
-        return try? encoder.encode(self)
-    }
-}

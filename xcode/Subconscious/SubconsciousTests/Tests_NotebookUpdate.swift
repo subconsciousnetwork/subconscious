@@ -36,19 +36,22 @@ class Tests_NotebookUpdate: XCTestCase {
                 EntryStub(
                     did: Did.dummyData(),
                     address: a,
-                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
+                    excerpt: Subtext(markup: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero."),
+                    isTruncated: false,
                     modified: Date.now
                 ),
                 EntryStub(
                     did: Did.dummyData(),
                     address: b,
-                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
+                    excerpt: Subtext(markup: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero."),
+                    isTruncated: false,
                     modified: Date.now
                 ),
                 EntryStub(
                     did: Did.dummyData(),
                     address: c,
-                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
+                    excerpt: Subtext(markup: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero."),
+                    isTruncated: false,
                     modified: Date.now
                 )
             ]

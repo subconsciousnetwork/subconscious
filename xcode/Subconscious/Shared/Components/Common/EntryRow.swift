@@ -15,7 +15,7 @@ struct EntryRow: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
-            ExcerptView(excerpt: entry.excerpt, spacing: AppTheme.unitHalf)
+            Text("\(entry.excerpt.excerpt().description)")
                 .font(.callout)
                 .multilineTextAlignment(.leading)
             
@@ -54,10 +54,13 @@ struct EntryRow_Previews: PreviewProvider {
                         peer: Peer.did(Did.local),
                         slug: Slug(formatting: "Anything that can be derived should be derived")!
                     ),
-                    excerpt: """
-                             Anything that can be derived should be derived.
-                             Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.
-                             """,
+                    excerpt: Subtext(
+                        markup: """
+                              Anything that can be derived should be derived.
+                              Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.
+                              """
+                    ),
+                    isTruncated: false,
                     modified: Date.now
                 )
             )
@@ -67,7 +70,10 @@ struct EntryRow_Previews: PreviewProvider {
                     address: Slashlink(
                         "@here/anything-that-can-be-derived-should-be-derived"
                     )!,
-                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    excerpt: Subtext(
+                        markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
+                    ),
+                    isTruncated: false,
                     modified: Date.now
                 )
             )
@@ -77,7 +83,10 @@ struct EntryRow_Previews: PreviewProvider {
                     address: Slashlink(
                         "did:key:abc123/anything-that-can-be-derived-should-be-derived"
                     )!,
-                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    excerpt: Subtext(
+                        markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
+                    ),
+                    isTruncated: false,
                     modified: Date.now
                 )
             )
@@ -87,7 +96,10 @@ struct EntryRow_Previews: PreviewProvider {
                     address: Slashlink(
                         "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
                     )!,
-                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    excerpt: Subtext(
+                        markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
+                    ),
+                    isTruncated: false,
                     modified: Date.now
                 )
             )

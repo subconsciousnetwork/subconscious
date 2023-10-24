@@ -24,16 +24,13 @@ private struct StoryEntryUserDetailsView: View {
 struct StoryEntryView: View {
     var story: StoryEntry
     var onRequestDetail: (Slashlink, String) -> Void
-    var onLink: (SubSlashlinkLink) -> Void
+    var onLink: (_ context: Slashlink, SubSlashlinkLink) -> Void
     var sharedNote: String {
         """
         \(story.entry.excerpt)
         
         \(story.entry.address)
         """
-    }
-    var excerptSubtext: Subtext {
-        Subtext(markup: story.entry.excerpt)
     }
     
     var author: UserProfile {
@@ -45,7 +42,7 @@ struct StoryEntryView: View {
             action: {
                 onRequestDetail(
                     story.entry.address,
-                    story.entry.excerpt
+                    story.entry.excerpt.description
                 )
             },
             label: {
@@ -74,10 +71,13 @@ struct StoryEntryView: View {
                     
                     // MARK: excerpt
                     SubtextView(
-                        subtext: excerptSubtext,
+                        subtext: story.entry.excerpt,
                         transcludePreviews: [:],
                         onViewTransclude: { slashlink in
-                            onRequestDetail(slashlink, story.entry.excerpt)
+                            onRequestDetail(slashlink, story.entry.excerpt.description)
+                        },
+                        onTranscludeLink: { address, link in
+                            onLink(address, link)
                         }
                     )
                     .padding([.leading, .trailing], AppTheme.padding)
@@ -88,34 +88,42 @@ struct StoryEntryView: View {
                             return .systemAction
                         }
                         
-                        onLink(subslashlink)
+                        onLink(story.entry.address, subslashlink)
                         return .handled
                     })
                     
-                    // MARK: footer
-                    HStack(alignment: .center, spacing: AppTheme.unit) {
-                        Image(audience: .public)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: AppTheme.unit3, height: AppTheme.unit3)
+                    VStack(alignment: .leading) {
+                        if story.entry.isTruncated {
+                            Text("Show more…")
+                                .foregroundColor(.accentColor)
+                                .font(.callout)
+                        }
                         
-                        SlashlinkDisplayView(slashlink: Slashlink(
-                            peer: author.address.peer,
-                            slug: story.entry.address.slug
-                        ))
-                        .theme(base: .secondary, slug: .secondary)
-                        
-                        Spacer()
-                        
-                        Text(
-                            NiceDateFormatter.shared.string(
-                                from: story.entry.modified,
-                                relativeTo: Date.now
+                        // MARK: footer
+                        HStack(alignment: .center, spacing: AppTheme.unit) {
+                            Image(audience: .public)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: AppTheme.unit3, height: AppTheme.unit3)
+                            
+                            SlashlinkDisplayView(slashlink: Slashlink(
+                                peer: author.address.peer,
+                                slug: story.entry.address.slug
+                            ))
+                            .theme(base: .secondary, slug: .secondary)
+                            
+                            Spacer()
+                            
+                            Text(
+                                NiceDateFormatter.shared.string(
+                                    from: story.entry.modified,
+                                    relativeTo: Date.now
+                                )
                             )
-                        )
+                        }
+                        .foregroundColor(.secondary)
+                        .font(.caption)
                     }
-                    .foregroundColor(.secondary)
-                    .font(.caption)
                     .padding([.leading, .trailing, .bottom], AppTheme.padding)
                 }
                 .background(Color.background)
@@ -152,7 +160,7 @@ struct StoryPlainView_Previews: PreviewProvider {
                 author: UserProfile.dummyData()
             ),
             onRequestDetail: { _, _ in },
-            onLink: { _ in }
+            onLink: { _, _ in }
         )
     }
 }

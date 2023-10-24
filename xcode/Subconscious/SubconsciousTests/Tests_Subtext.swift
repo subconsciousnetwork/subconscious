@@ -1167,7 +1167,7 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
-    func testExcerpt() throws {
+    func testExcerptBasic() throws {
         let subtext = Subtext.parse(
             markup: """
             Here comes the sun, doo da doo doo
@@ -1176,7 +1176,7 @@ class Tests_Subtext: XCTestCase {
             """
         )
         XCTAssertEqual(
-            subtext.excerpt(),
+            subtext.excerpt().description,
             """
             Here comes the sun, doo da doo doo
             Here comes the sun, and I say
@@ -1240,12 +1240,72 @@ class Tests_Subtext: XCTestCase {
             """
         )
         XCTAssertEqual(
-            subtext.excerpt(),
+            subtext.excerpt().description,
             """
             Here comes the sun, doo da doo doo
             Here comes the sun, and I say
             """,
             "Excerpt returns string for first non-empty block"
         )
+    }
+    
+    func testSingleBlockExcerpt() {
+        let text = """
+                   # Title
+                   
+                   """
+        
+        let dom = Subtext.excerpt(markup: text)
+        
+        XCTAssertEqual(dom.blocks.count, 1)
+        XCTAssertEqual(String(dom.blocks[0].span), "# Title")
+    }
+    
+    func testLongSingleBlockExcerpt() {
+        let text = """
+                   Cras eleifend lacus sed fringilla ultricies. Ut maximus lacus elit, sit amet dapibus nunc porta eget. Duis placerat condimentum elit, at iaculis nulla pellentesque quis. Nunc iaculis sollicitudin odio blandit consequat. Duis augue dolor, venenatis ac posuere in, auctor vitae nisl. Quisque commodo massa lobortis tortor facilisis, a fringilla justo ultricies. Morbi leo nulla, varius at lacus sit amet, fringilla commodo est. Proin auctor felis et turpis elementum cursus. Sed pharetra porttitor arcu. Donec dignissim pellentesque cursus. Integer nisi /egestas accumsan finibus. Vestibulum sed lacinia diam. Proin sagittis, arcu at auctor feugiat, ligula nunc malesuada lectus, vitae sagittis tortor justo non ante. Donec efficitur, augue in tempus pretium, odio nisi ornare leo, eu interdum neque felis a felis. Curabitur sit amet augue molestie, dapibus metus vel, tristique lacus.
+                   """
+        
+        let dom = Subtext.excerpt(markup: text)
+        
+        XCTAssertEqual(dom.blocks.count, 1)
+        XCTAssertEqual(String(dom.blocks[0].span), "Cras eleifend lacus sed fringilla ultricies. Ut maximus lacus elit, sit amet dapibus nunc porta eget. Duis placerat condimentum elit, at iaculis nulla pellentesque quis. Nunc iaculis sollicitudin odio blandit consequat. Duis augue dolor, venenatis ac posuere in, auctor vitae nisl. Quisque commodo massa lobortis tortor facilisis, a fringilla justo ultricies. Morbi leo nulla, varius at lacus sit amet, fringilla commodo est. Proin auctor felis et turpis elementum cursus. Sed pharetra porttitor arcu. Donec dignissim pellentesque cursus. Integer nisi…")
+    }
+    
+    func testExcerptLongNote() {
+        // Engineered to try and force truncation within a slashlink (/egestas)
+        let text = """
+                   Cras eleifend lacus sed fringilla ultricies. Ut maximus lacus elit, sit amet dapibus nunc porta eget. Duis placerat condimentum elit, at iaculis nulla pellentesque quis. Nunc iaculis sollicitudin odio blandit consequat. Duis augue dolor, venenatis ac posuere in, auctor vitae nisl. Quisque commodo massa lobortis tortor facilisis, a fringilla justo ultricies. Morbi leo nulla, varius at lacus sit amet, fringilla commodo est. Proin auctor felis et turpis elementum cursus. Sed pharetra porttitor arcu. Donec dignissim pellentesque cursus. Integer nisi /egestas accumsan finibus. Vestibulum sed lacinia diam. Proin sagittis, arcu at auctor feugiat, ligula nunc malesuada lectus, vitae sagittis tortor justo non ante. Donec efficitur, augue in tempus pretium, odio nisi ornare leo, eu interdum neque felis a felis. Curabitur sit amet augue molestie, dapibus metus vel, tristique lacus.
+
+                   
+                   
+                   
+                   Maecenas ut est lacus. Proin mattis massa ut arcu interdum, non pharetra sapien congue. Vestibulum lobortis, metus eget interdum laoreet, enim felis tincidunt nisl, nec accumsan lacus magna eu diam. Cras lectus nulla, mollis nec volutpat eu, elementum eu elit. Donec scelerisque imperdiet fermentum. Nam ullamcorper massa ante, vitae semper magna malesuada nec. Nulla vestibulum pharetra augue, in mattis purus luctus et. Nunc non ultricies metus, eu volutpat nulla. Aenean lorem nisl, hendrerit at feugiat ac, interdum sed quam. Fusce rutrum metus a pulvinar laoreet. Suspendisse quam tellus, sodales ac gravida id, tempus eu leo. Sed porttitor lobortis diam, nec laoreet eros laoreet id. Praesent sed ipsum id nisl egestas volutpat eget a arcu.
+                   """
+        
+        let dom = Subtext.excerpt(markup: text)
+        
+        XCTAssertEqual(dom.blocks.count, 1)
+        XCTAssertEqual(String(dom.blocks[0].span), "Cras eleifend lacus sed fringilla ultricies. Ut maximus lacus elit, sit amet dapibus nunc porta eget. Duis placerat condimentum elit, at iaculis nulla pellentesque quis. Nunc iaculis sollicitudin odio blandit consequat. Duis augue dolor, venenatis ac posuere in, auctor vitae nisl. Quisque commodo massa lobortis tortor facilisis, a fringilla justo ultricies. Morbi leo nulla, varius at lacus sit amet, fringilla commodo est. Proin auctor felis et turpis elementum cursus. Sed pharetra porttitor arcu. Donec dignissim pellentesque cursus. Integer nisi…")
+    }
+    
+    func testExcerptLongSecondBlock() {
+        // Engineered to ensure there's a potential ".…" at the end and that we handle it correctly.
+        let text = """
+                   # Cras eleifend lacus
+
+                   
+                   
+                   
+                   Maecenas ut est lacus. Proin mattis massa ut arcu interdum, non pharetra sapien congue. Vestibulum lobortis, metus eget interdum laoreet, enim felis tincidunt nisl, nec accumsan lacus magna eu diam. Cras lectus nulla, mollis nec volutpat eu, elementum eu elit. Donec scelerisque imperdiet fermentum. Nam ullamcorper massa ante, vitae semper magna malesuada nec. Nulla vestibulum pharetra augue, in mattis purus luctus et. Nunc non ultricies metus, eu volutpat nulla. Aenean lorem nisl, hendrerit at feugiat ac, interdum sed quam. Fusce rutrum metus a pulvinar laoreet. Suspendisse quam tellus, sodales ac gravida id, tempus eu leo. Sed porttitor lobortis diam, nec laoreet eros laoreet id. Praesent sed ipsum id nisl egestas volutpat eget a arcu.
+                   
+                   Another block.
+                   """
+        
+        let dom = Subtext.excerpt(markup: text)
+        
+        XCTAssertEqual(dom.blocks.count, 2)
+        XCTAssertEqual(String(dom.blocks[0].span), "# Cras eleifend lacus")
+        XCTAssertEqual(String(dom.blocks[1].span), "Maecenas ut est lacus. Proin mattis massa ut arcu interdum, non pharetra sapien congue. Vestibulum lobortis, metus eget interdum laoreet, enim felis tincidunt nisl, nec accumsan lacus magna eu diam. Cras lectus nulla, mollis nec volutpat eu, elementum eu elit. Donec scelerisque imperdiet fermentum. Nam ullamcorper massa ante, vitae semper magna malesuada nec. Nulla vestibulum pharetra augue, in mattis purus luctus et. Nunc non ultricies metus, eu volutpat nulla. Aenean lorem nisl, hendrerit at feugiat ac, interdum sed quam…")
     }
 }

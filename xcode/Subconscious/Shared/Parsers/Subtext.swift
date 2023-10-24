@@ -16,20 +16,10 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
         return Self.init(markup: markup)
     }
 
-    private init(
-        base: Substring,
-        blocks: [Block]
-    ) {
-        self.base = base
-        self.blocks = blocks
-    }
-
-
     /// Parse Subtext body from tape
     init(_ tape: inout Tape) {
-        let base = tape.rest
-        let blocks = Self.parseBlocks(&tape)
-        self.init(base: base, blocks: blocks)
+        self.base = tape.rest
+        self.blocks = Self.parseBlocks(&tape)
     }
 
     /// Parse Subtext body from string
@@ -651,33 +641,50 @@ extension Subtext {
 
 extension Subtext {
     private static let maxExcerptSize = 280
+    private static let maxExcerptBlocks = 2
     private static let maxGeneratedSlugSize = 128
     
     /// Derive an excerpt
-    func excerpt(fallback: String = "") -> String {
-        // Filter out empty blocks
-        let validBlocks = blocks
-            .filter { block in !block.isEmpty }
-            .map { block in String(block.span) }
-            .prefix(2) // Take first two blocks
+    func excerpt(fallback: String = "") -> Subtext {
+        let length = Self.maxExcerptSize * Self.maxExcerptBlocks
         
-        let output = validBlocks.joined(separator: "\n")
+        // Fast path: we're already the right length
+        if self.description.count < length &&
+            self.blocks.count <= Self.maxExcerptBlocks {
+            return self
+        }
         
-        return output.isEmpty ? fallback : output
+        // Otherwise we need to truncate the string
+        let truncated = self.description.truncateAtWordBoundary(
+            maxChars: length
+        )
+        // Re-parse it
+        let dom = Subtext(markup: truncated)
+        
+        // If we have less than `maxExcerptBlocks` blocks, we can just return
+        if dom.blocks.count <= Self.maxExcerptBlocks {
+            return dom
+        }
+        
+        // Otherwise we have to trim excess blocks
+        let markup = dom.blocks
+            .filter({ block in !block.isEmpty })
+            .prefix(Self.maxExcerptBlocks)
+            .map { block in block.description }
+            .joined(separator: "\n")
+       
+        return Subtext(markup: markup)
     }
     
-    func truncate(_ maxBlocks: Int = 2, fallback: String = "") -> Subtext {
-        // Filter out empty blocks
-        let validBlocks = blocks
-            .filter { block in !block.isEmpty }
-            .prefix(maxBlocks)
-        
-        return Subtext(base: self.base, blocks: Array(validBlocks))
+    static func excerpt<S: StringProtocol>(markup: S, fallback: String = "") -> Subtext {
+        let body = markup.truncateAtWordBoundary(
+            maxChars: Self.maxExcerptBlocks * Self.maxExcerptSize
+        )
+        return Subtext(markup: body).excerpt(fallback: fallback)
     }
     
-    static func excerpt(markup: String, fallback: String = "") -> String {
-        let prefix = markup.truncate(maxLength: maxExcerptSize)
-        return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
+    func title() -> String {
+        self.description.title()
     }
     
     static func generateSlug(markup: String) -> Slug? {

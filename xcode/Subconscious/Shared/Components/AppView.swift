@@ -202,6 +202,10 @@ enum AppAction: Hashable {
     case indexOurSphere
     case succeedIndexOurSphere(OurSphereRecord)
     case failIndexOurSphere(String)
+    /// Developer utility function, for now
+    case resetIndex
+    case succeedResetIndex
+    case failResetIndex(String)
     
     /// Sync database with file system.
     /// File system always wins.
@@ -884,6 +888,22 @@ struct AppModel: ModelProtocol {
             )
         case let .failIndexOurSphere(error):
             return failIndexOurSphere(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .resetIndex:
+            return resetIndex(
+                state: state,
+                environment: environment
+            )
+        case .succeedResetIndex:
+            return succeedResetIndex(
+                state: state,
+                environment: environment
+            )
+        case .failResetIndex(let error):
+            return failResetIndex(
                 state: state,
                 environment: environment,
                 error: error
@@ -1896,6 +1916,44 @@ struct AppModel: ModelProtocol {
         )
     }
     
+    static func resetIndex(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = Future.detached(priority: .utility) {
+            do {
+                try await environment.data.resetIndex()
+                return AppAction.succeedResetIndex
+            } catch {
+                return AppAction.failResetIndex(error.localizedDescription)
+            }
+        }.eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedResetIndex(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        logger.log("Cleared index")
+        return Update(state: state)
+    }
+    
+    static func failResetIndex(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log(
+            "Failed to clear index",
+            metadata: [
+                "error": error
+            ]
+        )
+        return Update(state: state)
+    }
+    
     /// Start file sync
     static func syncLocalFilesWithDatabase(
         state: AppModel,
@@ -2519,7 +2577,6 @@ struct AppEnvironment {
     var noosphere: NoosphereService
     var database: DatabaseService
     var data: DataService
-    var feed: FeedService
     var transclude: TranscludeService
     
     var recoveryPhrase: RecoveryPhraseEnvironment = RecoveryPhraseEnvironment()
@@ -2618,7 +2675,6 @@ struct AppEnvironment {
             userProfile: userProfile
         )
         
-        self.feed = FeedService()
         self.gatewayProvisioningService = GatewayProvisioningService()
         self.transclude = TranscludeService(
             database: database,

@@ -47,10 +47,10 @@ struct RecentTabView: View {
                             )
                         )
                     },
-                    onLink: { link in
+                    onLink: { address, link in
                         notify(
                             .requestFindLinkDetail(
-                                address: entry.address,
+                                address: address,
                                 link: link
                             )
                         )

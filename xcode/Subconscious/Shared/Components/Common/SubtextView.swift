@@ -15,8 +15,9 @@ struct RenderableBlock: Hashable {
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
-    var transcludePreviews: [Slashlink: EntryStub]
-    var onViewTransclude: (Slashlink) -> Void
+    var transcludePreviews: [Slashlink: EntryStub] = [:]
+    var onViewTransclude: (Slashlink) -> Void  = { _ in }
+    var onTranscludeLink: (_ context: Slashlink, SubSlashlinkLink) -> Void = { _, _ in }
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks
@@ -29,7 +30,7 @@ struct SubtextView: View {
             }
             .filter { entry in
                 // Avoid empty transclude blocks
-                entry.excerpt.count > 0
+                entry.excerpt.blocks.count > 0
             }
     }
     
@@ -72,8 +73,11 @@ struct SubtextView: View {
                 ForEach(renderable.entries, id: \.self) { entry in
                     TranscludeView(
                         entry: entry,
-                        action: {
+                        onRequestDetail: {
                             onViewTransclude(entry.address)
+                        },
+                        onLink: { link in
+                            onTranscludeLink(entry.address, link)
                         }
                     )
                 }
@@ -120,7 +124,8 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/wanderer-your-footsteps-are-the-road"
                         )!,
-                        excerpt: "hello mother",
+                        excerpt: Subtext(markup: "hello mother"),
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     Slashlink("/voice")!: EntryStub(
@@ -128,7 +133,8 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/voice"
                         )!,
-                        excerpt: "hello father",
+                        excerpt: Subtext(markup: "hello father"),
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     Slashlink("/memory")!: EntryStub(
@@ -136,13 +142,15 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/memory"
                         )!,
-                        excerpt: "hello world",
+                        excerpt: Subtext(markup: "hello world"),
+                        isTruncated: false,
                         modified: Date.now
                     )
                 ],
                 onViewTransclude: {
                     _ in 
-                }
+                },
+                onTranscludeLink: { address, link in }
             )
         }
     }

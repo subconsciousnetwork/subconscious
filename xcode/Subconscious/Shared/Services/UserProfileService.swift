@@ -269,6 +269,8 @@ actor UserProfileService {
             guard let memo = memo.toMemo() else {
                 continue
             }
+            
+            let excerpt = Subtext.excerpt(markup: memo.body)
 
             entries.append(
                 EntryStub(
@@ -277,7 +279,8 @@ actor UserProfileService {
                         petname: address.petname,
                         slug: slug
                     ),
-                    excerpt: memo.excerpt(),
+                    excerpt: excerpt,
+                    isTruncated: excerpt.description.count < memo.body.count,
                     modified: memo.modified
                 )
             )

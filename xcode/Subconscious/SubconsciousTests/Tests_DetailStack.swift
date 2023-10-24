@@ -57,12 +57,11 @@ class Tests_DetailStack: XCTestCase {
     }
 
     func testEditorSlashlinkConstruction() throws {
-        let model = DetailStackModel()
-        
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         
         let action = MemoEditorDetailNotification.requestFindLinkDetail(
+            Slashlink.ourProfile,
             link: link
         )
         
