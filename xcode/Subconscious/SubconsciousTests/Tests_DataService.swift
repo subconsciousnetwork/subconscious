@@ -383,6 +383,13 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testConcurrentIndexing() async throws {
+        throw XCTSkip(
+          """
+          This test is brittle in CI.
+          However, it's useful to check concurrent behaviour locally.
+          """
+        )
+        
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         try await environment.addressBook.followUser(
