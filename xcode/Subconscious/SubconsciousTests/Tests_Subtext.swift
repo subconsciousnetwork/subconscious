@@ -1176,7 +1176,7 @@ class Tests_Subtext: XCTestCase {
             """
         )
         XCTAssertEqual(
-            subtext.excerpt().toString(),
+            subtext.excerpt().description,
             """
             Here comes the sun, doo da doo doo
             Here comes the sun, and I say
@@ -1240,7 +1240,7 @@ class Tests_Subtext: XCTestCase {
             """
         )
         XCTAssertEqual(
-            subtext.excerpt().toString(),
+            subtext.excerpt().description,
             """
             Here comes the sun, doo da doo doo
             Here comes the sun, and I say

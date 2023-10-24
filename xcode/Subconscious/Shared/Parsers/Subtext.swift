@@ -655,8 +655,7 @@ extension Subtext {
         }
         
         // Otherwise we need to truncate the string
-        let truncated = String.truncateAtWordBoundary(
-            markup: self.description,
+        let truncated = self.description.truncateAtWordBoundary(
             maxChars: length
         )
         // Re-parse it
@@ -677,9 +676,8 @@ extension Subtext {
         return Subtext(markup: markup)
     }
     
-    static func excerpt(markup: any StringProtocol, fallback: String = "") -> Subtext {
-        let body = String.truncateAtWordBoundary(
-            markup: markup,
+    static func excerpt<S: StringProtocol>(markup: S, fallback: String = "") -> Subtext {
+        let body = markup.truncateAtWordBoundary(
             maxChars: Self.maxExcerptBlocks * Self.maxExcerptSize
         )
         return Subtext(markup: body).excerpt(fallback: fallback)

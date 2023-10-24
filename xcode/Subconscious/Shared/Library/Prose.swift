@@ -22,18 +22,16 @@ extension Character {
     }
 }
 
-extension String {
-    private static let visibleContentRegex = /[^\s]/
-    
+extension StringProtocol {
     /// Truncate string to max length, appending ellipsis if truncated.
     func truncate(
         maxLength: Int = 256,
         ellipsis: String = "…"
     ) -> String {
         guard self.count > maxLength else {
-            return self
+            return String(self)
         }
-        let adjustedMaxLength = max(0, maxLength - ellipsis.count)
+        let adjustedMaxLength = Swift.max(0, maxLength - ellipsis.count)
         guard adjustedMaxLength > 0 else {
             return ""
         }
@@ -48,22 +46,25 @@ extension String {
     /// Take the first `maxBlocks` blocks or `Subtext.maxExcerptSize * maxBlocks` characters worth, terminating with an
     /// ellipsis. If the string is truncated, it will be sliced to the nearest word boundary to avoid breaking markup.
     /// This is used to implement `Subtext.excerpt`.
-    static func truncateAtWordBoundary(markup: any StringProtocol, maxChars: Int, fallback: String = "") -> String {
-        let length = maxChars
-    
-        if markup.count <= length {
+    func truncateAtWordBoundary(
+        maxChars: Int
+    ) -> String {
+        let markup = self
+        
+        if markup.count <= maxChars {
             return "\(markup)"
         } else {
-            
-            // Trim the string
-            let index = markup.index(markup.startIndex, offsetBy: length)
+            // Trim the string to max length
+            let index = markup.index(markup.startIndex, offsetBy: maxChars)
             var truncated = "\(markup[..<index])"
             
-            // Slice the string to the nearest word boundary to avoid breaking markup
+            // Slice the string to the nearest word boundary to avoid breaking markup.
             // This case will only ever be visible to a user when a note has a very
             // large first or second block.
             if let lastSpace = truncated.lastIndex(of: " ") {
                 truncated = String(truncated[..<lastSpace])
+            } else {
+                return markup.truncate(maxLength: maxChars)
             }
             
             // Remove any trailing punctuation before we add the ellipsis
@@ -75,7 +76,11 @@ extension String {
             return truncated + "…"
         }
     }
+}
 
+extension String {
+    private static let visibleContentRegex = /[^\s]/
+    
     /// Get first sentence of substring
     var firstSentence: Substring {
         self.prefix(while: { character in
