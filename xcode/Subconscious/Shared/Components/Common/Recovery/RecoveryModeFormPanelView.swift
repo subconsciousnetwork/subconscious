@@ -23,9 +23,9 @@ struct RecoveryModeFormPanelView: View {
             Spacer()
             
             Text(
-                "Enter your 24-word recovery phrase to re-download your data."
+                "Enter your 24-word recovery phrase to download and restore your data."
             )
-            .multilineTextAlignment(.center)
+            .expandAlignedLeading()
             
             ValidatedFormField(
                 placeholder: "one two three four five six seven eight...",
