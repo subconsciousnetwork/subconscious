@@ -11,6 +11,7 @@ import SwiftUI
 struct ErrorDetailView: View {
     var title = String(localized: "Issue Details")
     var error: String
+    var errorMaxHeight: CGFloat = 80
     @Binding var isExpanded: Bool
     
     var body: some View {
@@ -20,9 +21,9 @@ struct ErrorDetailView: View {
                     .font(.caption.monospaced())
                     .multilineTextAlignment(.leading)
                     .textSelection(.enabled)
-                    .frame(idealHeight: 24, maxHeight: 128)
             }
             .expandAlignedLeading()
+            .frame(maxHeight: errorMaxHeight)
             .padding(AppTheme.tightPadding)
             .foregroundColor(.primary)
             .background(Color.secondaryBackground)
@@ -36,13 +37,19 @@ struct ErrorDetailView: View {
 struct ErrorDetailView_Previews: PreviewProvider {
     
     struct TestView: View {
-        @State var isExpanded = false
+        @State private var isExpanded = false
+        var error: String
         var body: some View {
-           ErrorDetailView(error: "This is a test error", isExpanded: $isExpanded)
+           ErrorDetailView(error: error, isExpanded: $isExpanded)
         }
     }
     
     static var previews: some View {
-        TestView()
+        TestView(
+            error: ""
+        )
+        TestView(
+            error: "This is a test error with a longunbrokenstringtotestwrappingbehaviorofthetextbox The skilful traveller leaves no traces of his wheels or footsteps; the skilful speaker says nothing that can be found fault with or blamed; the skilful reckoner uses no tallies; the skilful closer needs no bolts or bars, while to open what he has shut will be impossible; the skilful binder uses no strings or knots, while to unloose what he has bound will be impossible."
+        )
     }
 }
