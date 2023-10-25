@@ -41,12 +41,11 @@ struct RecoveryModeExplainPanelView: View {
                     }
                     .padding([.bottom], AppTheme.padding)
                 }
-                Text("Your local data is unreadable.")
+                Text("Your sphere needs to be recovered.")
                     .multilineTextAlignment(.center)
                 
                 Text(
-                    "Subconscious will attempt to " +
-                    "recover your data from your gateway, using your recovery phrase."
+                    "Subconscious will re-download your data from your gateway, using your recovery phrase."
                 )
                 .multilineTextAlignment(.center)
                 
@@ -78,11 +77,6 @@ struct RecoveryModeExplainPanelView: View {
                 .multilineTextAlignment(.center)
                 
             }
-            
-            Text(
-                "We'll re-download and restore from the remote copy of your notes."
-            )
-            .multilineTextAlignment(.center)
             
             Spacer()
             
@@ -122,7 +116,7 @@ struct RecoveryModeExplainPanel_Previews: PreviewProvider {
     static var previews: some View {
         RecoveryModeExplainPanelView(
             store: Store(
-                state: RecoveryModeModel(launchContext: .unreadableDatabase("Hello world")),
+                state: RecoveryModeModel(launchContext: .unreadableDatabase("Hello world"), isDebugDetailExpanded: true),
                 environment: AppEnvironment()
             )
             .viewStore(

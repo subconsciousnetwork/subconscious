@@ -26,6 +26,7 @@ struct ErrorDetailView: View {
             .foregroundColor(.secondary)
             .background(Color.secondaryBackground)
             .cornerRadius(AppTheme.cornerRadius)
+            .padding([.top], AppTheme.unit2)
         }
     }
 }

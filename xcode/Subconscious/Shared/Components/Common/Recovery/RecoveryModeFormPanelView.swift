@@ -23,12 +23,10 @@ struct RecoveryModeFormPanelView: View {
             Spacer()
             
             Text(
-                "Enter your Recovery Phrase to restore your data."
+                "Enter your 24-word recovery phrase to re-download your data."
             )
             .multilineTextAlignment(.center)
             
-            Spacer()
-    
             ValidatedFormField(
                 placeholder: "one two three four five six seven eight...",
                 field: store.state.recoveryPhraseField,
@@ -119,6 +117,7 @@ struct RecoveryModeFormPanel_Previews: PreviewProvider {
                 state: RecoveryModeModel(
                     launchContext: .unreadableDatabase("Hello world"),
                     recoveryStatus: .failed("Test message"),
+                    isSphereDetailExpanded: true,
                     recoveryDidField: RecoveryDidFormField(
                         value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
                         validate: { x in Did(x) })
