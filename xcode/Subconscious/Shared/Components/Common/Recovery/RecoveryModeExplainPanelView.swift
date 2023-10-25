@@ -21,7 +21,7 @@ struct RecoveryModeExplainPanelView: View {
             Spacer()
             
             switch store.state.launchContext {
-            case .unreadableDatabase(let error):
+            case .unreadableDatabase(_):
                 if let did = did {
                     ZStack {
                         StackedGlowingImage() {
@@ -44,13 +44,13 @@ struct RecoveryModeExplainPanelView: View {
                 Text("Your local data is unreadable.")
                     .multilineTextAlignment(.center)
                 
-                ErrorDetailView(error: error)
-                
                 Text(
                     "Subconscious will attempt to " +
                     "recover your data from your gateway, using your recovery phrase."
                 )
                 .multilineTextAlignment(.center)
+                
+               
             case .userInitiated:
                 if let did = did {
                     StackedGlowingImage() {
@@ -80,7 +80,7 @@ struct RecoveryModeExplainPanelView: View {
             }
             
             Text(
-                "We'll download and restore from the remote copy of your notes."
+                "We'll re-download and restore from the remote copy of your notes."
             )
             .multilineTextAlignment(.center)
             
@@ -99,8 +99,36 @@ struct RecoveryModeExplainPanelView: View {
                     }
                 )
             }
+            
+            switch store.state.launchContext {
+            case .unreadableDatabase(let error):
+                ErrorDetailView(
+                    error: error,
+                    isExpanded: store.binding(
+                        get: \.isDebugDetailExpanded,
+                        tag: RecoveryModeAction.setDebugDetailExpanded
+                    )
+                )
+            default:
+                EmptyView()
+            }
         }
         .padding(AppTheme.padding)
         .navigationTitle("Recovery Mode")
+    }
+}
+
+struct RecoveryModeExplainPanel_Previews: PreviewProvider {
+    static var previews: some View {
+        RecoveryModeExplainPanelView(
+            store: Store(
+                state: RecoveryModeModel(launchContext: .unreadableDatabase("Hello world")),
+                environment: AppEnvironment()
+            )
+            .viewStore(
+                get: { x in x},
+                tag: { x in x }
+            )
+        )
     }
 }

@@ -78,6 +78,7 @@ enum RecoveryModeAction: Hashable {
     case succeedRecovery
     case failRecovery(_ error: String)
     case pressRecoveryButton
+    case setDebugDetailExpanded(Bool)
 }
 
 typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
@@ -156,6 +157,7 @@ struct RecoveryModeModel: ModelProtocol {
     
     var launchContext: RecoveryModeLaunchContext = .userInitiated
     var recoveryStatus: ResourceStatus = .initial
+    var isDebugDetailExpanded: Bool = false
     
     var recoveryPhraseField = RecoveryPhraseFormField(
         value: "",
@@ -229,6 +231,12 @@ struct RecoveryModeModel: ModelProtocol {
             return pressRecoveryButton(
                 state: state,
                 environment: environment
+            )
+        case .setDebugDetailExpanded(let expanded):
+            return setDebugDetailExpanded(
+                state: state,
+                environment: environment,
+                expanded: expanded
             )
         }
     }
@@ -336,6 +344,18 @@ struct RecoveryModeModel: ModelProtocol {
             action: .attemptRecovery(did, gatewayUrl, recoveryPhrase),
             environment: environment
         )
+    }
+    
+    static func setDebugDetailExpanded(
+        state: Self,
+        environment: Environment,
+        expanded: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isDebugDetailExpanded = expanded
+        return Update(
+            state: model
+        ).animation(.default)
     }
 }
 
