@@ -53,7 +53,16 @@ struct ValidatedFormField<Output: Equatable>: View {
                     onFocusChanged(focused)
                 }
                 .onChange(of: innerText) { innerText in
-                    send(.setValue(input: innerText))
+                    var text = innerText
+                    let isSubstring = text.contains(field.value) || field.value.contains(text)
+                    let lengthDelta = abs(text.count - field.value.count)
+                    // Trim whitespace from pasted values only
+                    // We detect a "paste" when the text changes substantially
+                    if !isSubstring && text.count > 0 && lengthDelta > 1 {
+                        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+                    
+                    send(.setValue(input: text))
                 }
                 .onChange(of: field) { field in
                     // The store value has been reset via side-effect
