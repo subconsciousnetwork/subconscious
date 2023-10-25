@@ -108,7 +108,7 @@ struct RecoveryModeExplainPanelView: View {
             }
         }
         .padding(AppTheme.padding)
-        .navigationTitle("Recovery Mode")
+        .navigationTitle("Recovery")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

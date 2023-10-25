@@ -116,7 +116,7 @@ struct RecoveryModeFormPanelView: View {
         }
         .disabled(store.state.recoveryStatus == .pending)
         .padding(AppTheme.padding)
-        .navigationTitle("Recovery")
+        .navigationTitle("Recover Sphere")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
