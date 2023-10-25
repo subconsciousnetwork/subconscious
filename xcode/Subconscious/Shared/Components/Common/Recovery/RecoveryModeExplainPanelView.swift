@@ -47,7 +47,7 @@ struct RecoveryModeExplainPanelView: View {
                 .expandAlignedLeading()
                 
                 Text(
-                    "Subconscious will download and restore your data from your gateway, using your recovery phrase."
+                    "Subconscious will download and restore your data from the gateway, using your recovery phrase."
                 )
                 .expandAlignedLeading()
                 
@@ -93,7 +93,7 @@ struct RecoveryModeExplainPanelView: View {
 
             Spacer()
             
-            NavigationLink("Proceed", value: RecoveryViewStep.form)
+            NavigationLink("Next", value: RecoveryViewStep.form)
                 .buttonStyle(PillButtonStyle())
             
             if store.state.launchContext == .userInitiated {
@@ -109,63 +109,70 @@ struct RecoveryModeExplainPanelView: View {
         }
         .padding(AppTheme.padding)
         .navigationTitle("Recovery Mode")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 struct RecoveryModeExplainPanel_Previews: PreviewProvider {
     static var previews: some View {
-        RecoveryModeExplainPanelView(
-            store: Store(
-                state: RecoveryModeModel(
-                    launchContext: .unreadableDatabase("Hello world"),
-                    isDebugDetailExpanded: false,
-                    recoveryDidField: RecoveryDidFormField(
-                        value: "did:key:abc123",
-                        validate: { string in Did(string) }
-                    )
-                ),
-                environment: AppEnvironment()
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        isDebugDetailExpanded: false,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-            .viewStore(
-                get: { x in x},
-                tag: { x in x }
-            )
-        )
+        }
 
-        RecoveryModeExplainPanelView(
-            store: Store(
-                state: RecoveryModeModel(
-                    launchContext: .unreadableDatabase("Hello world"),
-                    isDebugDetailExpanded: true,
-                    recoveryDidField: RecoveryDidFormField(
-                        value: "did:key:abc123",
-                        validate: { string in Did(string) }
-                    )
-                ),
-                environment: AppEnvironment()
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        isDebugDetailExpanded: true,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-            .viewStore(
-                get: { x in x},
-                tag: { x in x }
-            )
-        )
+        }
 
-        RecoveryModeExplainPanelView(
-            store: Store(
-                state: RecoveryModeModel(
-                    launchContext: .userInitiated,
-                    isDebugDetailExpanded: false,
-                    recoveryDidField: RecoveryDidFormField(
-                        value: "did:key:abc123",
-                        validate: { string in Did(string) }
-                    )
-                ),
-                environment: AppEnvironment()
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .userInitiated,
+                        isDebugDetailExpanded: false,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-            .viewStore(
-                get: { x in x},
-                tag: { x in x }
-            )
-        )
+        }
     }
 }
