@@ -73,7 +73,7 @@ struct RecoveryModeExplainPanelView: View {
                 }
                 Spacer()
                 Text(
-                    "If your local data is damaged or unavailable, you can download and restore your data from your gateway, using your recovery phrase."
+                    "If your sphere data is damaged or unavailable, you can download and restore your data from your gateway, using your recovery phrase."
                 )
                 .expandAlignedLeading()
             }
