@@ -175,13 +175,13 @@ struct RecoveryModeModel: ModelProtocol {
         value: "",
         validate: { value in GatewayURL(value) }
     )
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "DetailStackModel"
     )
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -259,6 +259,12 @@ struct RecoveryModeModel: ModelProtocol {
         var model = state
         model.recoveryStatus = .initial
         model.launchContext = context
+        
+        // If we're missing information present the extra fields
+        if did == nil || gatewayURL == nil {
+            model.isSphereDetailExpanded = true
+        }
+        
         return update(
             state: model,
             actions: [
