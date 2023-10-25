@@ -23,9 +23,10 @@ struct RecoveryModeFormPanelView: View {
             Spacer()
             
             Text(
-                "Enter your 24-word recovery phrase to re-download your data."
+                "Enter your recovery phrase:"
             )
-            .multilineTextAlignment(.center)
+            .font(.headline)
+            .expandAlignedLeading()
             
             ValidatedFormField(
                 placeholder: "one two three four five six seven eight...",
@@ -34,13 +35,20 @@ struct RecoveryModeFormPanelView: View {
                     send: store.send,
                     tag: RecoveryModeAction.recoveryPhraseField
                 ),
-                caption: "Recovery phrase",
                 axis: .vertical
             )
+            .font(.body.monospaced())
             .textFieldStyle(.roundedBorder)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
             
+            Text(
+                "This is the 24-word recovery phrase you saved when you first set up Subconscious."
+            )
+            .font(.callout)
+            .foregroundColor(.secondary)
+            .expandAlignedLeading()
+
             DisclosureGroup(
                 "Sphere Details",
                 isExpanded: store.binding(
@@ -62,7 +70,8 @@ struct RecoveryModeFormPanelView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
-                    
+                    .tint(.accentColor)
+
                     ValidatedFormField(
                         placeholder: "http://example.com",
                         field: store.state.recoveryGatewayURLField,
@@ -78,9 +87,11 @@ struct RecoveryModeFormPanelView: View {
                     .disableAutocorrection(true)
                     .autocapitalization(.none)
                     .keyboardType(.URL)
+                    .tint(.accentColor)
                 }
                 .padding([.top], AppTheme.unit2)
             }
+            .tint(.secondary)
             
             Spacer()
             
@@ -105,29 +116,55 @@ struct RecoveryModeFormPanelView: View {
         }
         .disabled(store.state.recoveryStatus == .pending)
         .padding(AppTheme.padding)
-        .navigationTitle("Recovery")
-
+        .navigationTitle("Recover Sphere")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 struct RecoveryModeFormPanel_Previews: PreviewProvider {
     static var previews: some View {
-        RecoveryModeFormPanelView(
-            store: Store(
-                state: RecoveryModeModel(
-                    launchContext: .unreadableDatabase("Hello world"),
-                    recoveryStatus: .failed("Test message"),
-                    isSphereDetailExpanded: true,
-                    recoveryDidField: RecoveryDidFormField(
-                        value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                        validate: { x in Did(x) })
-                ),
-                environment: AppEnvironment()
+        NavigationStack {
+            RecoveryModeFormPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        recoveryStatus: .failed("Test message"),
+                        isSphereDetailExpanded: true,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                            validate: { x in Did(x) })
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-            .viewStore(
-                get: { x in x},
-                tag: { x in x }
+        }
+
+        NavigationStack {
+            RecoveryModeFormPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        recoveryStatus: .initial,
+                        isSphereDetailExpanded: false,
+                        recoveryPhraseField: RecoveryPhraseFormField(
+                            value: "hotel obvious agent lecture gadget evil jealous keen fragile before damp clarify hotel obvious agent lecture gadget evil jealous keen fragile before damp clarify",
+                            validate: { x in RecoveryPhrase(x) }
+                        ),
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                            validate: { x in Did(x) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-        )
-    }
+        }    }
 }

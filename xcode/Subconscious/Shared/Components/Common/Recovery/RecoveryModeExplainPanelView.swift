@@ -37,17 +37,19 @@ struct RecoveryModeExplainPanelView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 48, height: 48)
                             .offset(x: 48, y: 48)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.secondaryIcon)
                     }
                     .padding([.bottom], AppTheme.padding)
                 }
-                Text("Your sphere needs to be recovered.")
-                    .multilineTextAlignment(.center)
+                Text(
+                    "Your sphere ran into a problem and needs to be recovered."
+                )
+                .expandAlignedLeading()
                 
                 Text(
-                    "Subconscious will re-download your data from your gateway, using your recovery phrase."
+                    "Subconscious will download and restore your data from the gateway, using your recovery phrase."
                 )
-                .multilineTextAlignment(.center)
+                .expandAlignedLeading()
                 
                
             case .userInitiated:
@@ -71,27 +73,9 @@ struct RecoveryModeExplainPanelView: View {
                 }
                 Spacer()
                 Text(
-                    "If your local data is damaged or unavailable you can recover your " +
-                    "data from your gateway using your recovery phrase."
+                    "If your sphere data is damaged or unavailable, you can download and restore your data from your gateway, using your recovery phrase."
                 )
-                .multilineTextAlignment(.center)
-                
-            }
-            
-            Spacer()
-            
-            NavigationLink("Proceed", value: RecoveryViewStep.form)
-                .buttonStyle(PillButtonStyle())
-            
-            if store.state.launchContext == .userInitiated {
-                Button(
-                    action: {
-                        store.send(.requestPresent(false))
-                    },
-                    label: {
-                        Text("Cancel")
-                    }
-                )
+                .expandAlignedLeading()
             }
             
             switch store.state.launchContext {
@@ -106,23 +90,89 @@ struct RecoveryModeExplainPanelView: View {
             default:
                 EmptyView()
             }
+
+            Spacer()
+            
+            NavigationLink("Next", value: RecoveryViewStep.form)
+                .buttonStyle(PillButtonStyle())
+            
+            if store.state.launchContext == .userInitiated {
+                Button(
+                    action: {
+                        store.send(.requestPresent(false))
+                    },
+                    label: {
+                        Text("Cancel")
+                    }
+                )
+            }
         }
         .padding(AppTheme.padding)
-        .navigationTitle("Recovery Mode")
+        .navigationTitle("Recovery")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 struct RecoveryModeExplainPanel_Previews: PreviewProvider {
     static var previews: some View {
-        RecoveryModeExplainPanelView(
-            store: Store(
-                state: RecoveryModeModel(launchContext: .unreadableDatabase("Hello world"), isDebugDetailExpanded: true),
-                environment: AppEnvironment()
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        isDebugDetailExpanded: false,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-            .viewStore(
-                get: { x in x},
-                tag: { x in x }
+        }
+
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        isDebugDetailExpanded: true,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-        )
+        }
+
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .userInitiated,
+                        isDebugDetailExpanded: false,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
+            )
+        }
     }
 }
