@@ -62,7 +62,8 @@ struct RecoveryModeFormPanelView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
-                    
+                    .tint(.accentColor)
+
                     ValidatedFormField(
                         placeholder: "http://example.com",
                         field: store.state.recoveryGatewayURLField,
@@ -78,9 +79,11 @@ struct RecoveryModeFormPanelView: View {
                     .disableAutocorrection(true)
                     .autocapitalization(.none)
                     .keyboardType(.URL)
+                    .tint(.accentColor)
                 }
                 .padding([.top], AppTheme.unit2)
             }
+            .tint(.secondary)
             
             Spacer()
             
@@ -106,28 +109,49 @@ struct RecoveryModeFormPanelView: View {
         .disabled(store.state.recoveryStatus == .pending)
         .padding(AppTheme.padding)
         .navigationTitle("Recovery")
-
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 struct RecoveryModeFormPanel_Previews: PreviewProvider {
     static var previews: some View {
-        RecoveryModeFormPanelView(
-            store: Store(
-                state: RecoveryModeModel(
-                    launchContext: .unreadableDatabase("Hello world"),
-                    recoveryStatus: .failed("Test message"),
-                    isSphereDetailExpanded: true,
-                    recoveryDidField: RecoveryDidFormField(
-                        value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                        validate: { x in Did(x) })
-                ),
-                environment: AppEnvironment()
+        NavigationStack {
+            RecoveryModeFormPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        recoveryStatus: .failed("Test message"),
+                        isSphereDetailExpanded: true,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                            validate: { x in Did(x) })
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-            .viewStore(
-                get: { x in x},
-                tag: { x in x }
+        }
+
+        NavigationStack {
+            RecoveryModeFormPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        recoveryStatus: .initial,
+                        isSphereDetailExpanded: false,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                            validate: { x in Did(x) })
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
             )
-        )
-    }
+        }    }
 }
