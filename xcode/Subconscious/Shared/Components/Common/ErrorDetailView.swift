@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct ErrorDetailView: View {
-    var title = String(localized: "Issue details")
+    var title = String(localized: "Issue Details")
     var error: String
     @Binding var isExpanded: Bool
     
