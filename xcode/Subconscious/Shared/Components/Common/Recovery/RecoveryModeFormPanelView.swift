@@ -37,6 +37,7 @@ struct RecoveryModeFormPanelView: View {
                 ),
                 axis: .vertical
             )
+            .font(.body.monospaced())
             .textFieldStyle(.roundedBorder)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
