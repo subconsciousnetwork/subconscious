@@ -71,6 +71,7 @@ struct RecoveryModeFormPanelView: View {
             if case .failed(let error) = store.state.recoveryStatus {
                 Text(error)
                     .foregroundColor(.red)
+                    .textSelection(.enabled)
             }
             
             Button(
