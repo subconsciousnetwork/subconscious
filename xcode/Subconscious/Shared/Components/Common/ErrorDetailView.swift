@@ -9,11 +9,12 @@ import Foundation
 import SwiftUI
 
 struct ErrorDetailView: View {
+    var title = String(localized: "Issue details")
     var error: String
     @Binding var isExpanded: Bool
     
     var body: some View {
-        DisclosureGroup("Debug Details", isExpanded: $isExpanded) {
+        DisclosureGroup(title, isExpanded: $isExpanded) {
             ScrollView {
                 Text(error)
                     .font(.caption.monospaced())
@@ -23,11 +24,12 @@ struct ErrorDetailView: View {
             }
             .expandAlignedLeading()
             .padding(AppTheme.tightPadding)
-            .foregroundColor(.secondary)
+            .foregroundColor(.primary)
             .background(Color.secondaryBackground)
             .cornerRadius(AppTheme.cornerRadius)
             .padding([.top], AppTheme.unit2)
         }
+        .tint(.secondary)
     }
 }
 

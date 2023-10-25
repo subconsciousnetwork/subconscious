@@ -37,17 +37,19 @@ struct RecoveryModeExplainPanelView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 48, height: 48)
                             .offset(x: 48, y: 48)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.secondaryIcon)
                     }
                     .padding([.bottom], AppTheme.padding)
                 }
-                Text("Your sphere needs to be recovered.")
-                    .multilineTextAlignment(.center)
+                Text(
+                    "Your sphere ran into a problem and needs to be recovered."
+                )
+                .expandAlignedLeading()
                 
                 Text(
-                    "Subconscious will re-download your data from your gateway, using your recovery phrase."
+                    "Subconscious will download and restore your data from your gateway, using your recovery phrase."
                 )
-                .multilineTextAlignment(.center)
+                .expandAlignedLeading()
                 
                
             case .userInitiated:
@@ -71,13 +73,24 @@ struct RecoveryModeExplainPanelView: View {
                 }
                 Spacer()
                 Text(
-                    "If your local data is damaged or unavailable you can recover your " +
-                    "data from your gateway using your recovery phrase."
+                    "If your local data is damaged or unavailable, you can download and restore your data from your gateway, using your recovery phrase."
                 )
-                .multilineTextAlignment(.center)
-                
+                .expandAlignedLeading()
             }
             
+            switch store.state.launchContext {
+            case .unreadableDatabase(let error):
+                ErrorDetailView(
+                    error: error,
+                    isExpanded: store.binding(
+                        get: \.isDebugDetailExpanded,
+                        tag: RecoveryModeAction.setDebugDetailExpanded
+                    )
+                )
+            default:
+                EmptyView()
+            }
+
             Spacer()
             
             NavigationLink("Proceed", value: RecoveryViewStep.form)
@@ -93,19 +106,6 @@ struct RecoveryModeExplainPanelView: View {
                     }
                 )
             }
-            
-            switch store.state.launchContext {
-            case .unreadableDatabase(let error):
-                ErrorDetailView(
-                    error: error,
-                    isExpanded: store.binding(
-                        get: \.isDebugDetailExpanded,
-                        tag: RecoveryModeAction.setDebugDetailExpanded
-                    )
-                )
-            default:
-                EmptyView()
-            }
         }
         .padding(AppTheme.padding)
         .navigationTitle("Recovery Mode")
@@ -116,7 +116,32 @@ struct RecoveryModeExplainPanel_Previews: PreviewProvider {
     static var previews: some View {
         RecoveryModeExplainPanelView(
             store: Store(
-                state: RecoveryModeModel(launchContext: .unreadableDatabase("Hello world"), isDebugDetailExpanded: true),
+                state: RecoveryModeModel(
+                    launchContext: .unreadableDatabase("Hello world"),
+                    isDebugDetailExpanded: false,
+                    recoveryDidField: RecoveryDidFormField(
+                        value: "did:key:abc123",
+                        validate: { string in Did(string) }
+                    )
+                ),
+                environment: AppEnvironment()
+            )
+            .viewStore(
+                get: { x in x},
+                tag: { x in x }
+            )
+        )
+
+        RecoveryModeExplainPanelView(
+            store: Store(
+                state: RecoveryModeModel(
+                    launchContext: .userInitiated,
+                    isDebugDetailExpanded: false,
+                    recoveryDidField: RecoveryDidFormField(
+                        value: "did:key:abc123",
+                        validate: { string in Did(string) }
+                    )
+                ),
                 environment: AppEnvironment()
             )
             .viewStore(
