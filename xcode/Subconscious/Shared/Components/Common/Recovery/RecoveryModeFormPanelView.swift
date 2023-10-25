@@ -19,39 +19,16 @@ struct RecoveryModeFormPanelView: View {
     }
     
     var body: some View {
-        VStack(alignment: .center) {
+        VStack(alignment: .center, spacing: AppTheme.padding) {
+            Spacer()
+            
+            Text(
+                "Enter your Recovery Phrase to restore your data."
+            )
+            .multilineTextAlignment(.center)
+            
             Spacer()
     
-            ValidatedFormField(
-                placeholder: "did:key:abc",
-                field: store.state.recoveryDidField,
-                send: Address.forward(
-                    send: store.send,
-                    tag: RecoveryModeAction.recoveryDidField
-                ),
-                caption: "The identity of your sphere",
-                axis: .vertical
-            )
-            .textFieldStyle(.roundedBorder)
-            .textInputAutocapitalization(.never)
-            .disableAutocorrection(true)
-            
-            ValidatedFormField(
-                placeholder: "http://example.com",
-                field: store.state.recoveryGatewayURLField,
-                send: Address.forward(
-                    send: store.send,
-                    tag: RecoveryModeAction.recoveryGatewayURLField
-                ),
-                caption: String(localized: "The URL of your preferred Noosphere gateway"),
-                axis: .vertical
-            )
-            .textFieldStyle(.roundedBorder)
-            .textInputAutocapitalization(.never)
-            .disableAutocorrection(true)
-            .autocapitalization(.none)
-            .keyboardType(.URL)
-            
             ValidatedFormField(
                 placeholder: "one two three four five six seven eight...",
                 field: store.state.recoveryPhraseField,
@@ -65,6 +42,47 @@ struct RecoveryModeFormPanelView: View {
             .textFieldStyle(.roundedBorder)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
+            
+            DisclosureGroup(
+                "Sphere Details",
+                isExpanded: store.binding(
+                    get: \.isSphereDetailExpanded,
+                    tag: RecoveryModeAction.setSphereDetailExpanded
+                )
+            ) {
+                VStack(spacing: AppTheme.padding) {
+                    ValidatedFormField(
+                        placeholder: "did:key:abc",
+                        field: store.state.recoveryDidField,
+                        send: Address.forward(
+                            send: store.send,
+                            tag: RecoveryModeAction.recoveryDidField
+                        ),
+                        caption: "The identity of your sphere",
+                        axis: .vertical
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    
+                    ValidatedFormField(
+                        placeholder: "http://example.com",
+                        field: store.state.recoveryGatewayURLField,
+                        send: Address.forward(
+                            send: store.send,
+                            tag: RecoveryModeAction.recoveryGatewayURLField
+                        ),
+                        caption: String(localized: "The URL of your preferred Noosphere gateway"),
+                        axis: .vertical
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .autocapitalization(.none)
+                    .keyboardType(.URL)
+                }
+                .padding([.top], AppTheme.unit2)
+            }
             
             Spacer()
             
@@ -91,5 +109,26 @@ struct RecoveryModeFormPanelView: View {
         .padding(AppTheme.padding)
         .navigationTitle("Recovery")
 
+    }
+}
+
+struct RecoveryModeFormPanel_Previews: PreviewProvider {
+    static var previews: some View {
+        RecoveryModeFormPanelView(
+            store: Store(
+                state: RecoveryModeModel(
+                    launchContext: .unreadableDatabase("Hello world"),
+                    recoveryStatus: .failed("Test message"),
+                    recoveryDidField: RecoveryDidFormField(
+                        value: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                        validate: { x in Did(x) })
+                ),
+                environment: AppEnvironment()
+            )
+            .viewStore(
+                get: { x in x},
+                tag: { x in x }
+            )
+        )
     }
 }
