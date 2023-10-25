@@ -135,6 +135,24 @@ struct RecoveryModeExplainPanel_Previews: PreviewProvider {
         RecoveryModeExplainPanelView(
             store: Store(
                 state: RecoveryModeModel(
+                    launchContext: .unreadableDatabase("Hello world"),
+                    isDebugDetailExpanded: true,
+                    recoveryDidField: RecoveryDidFormField(
+                        value: "did:key:abc123",
+                        validate: { string in Did(string) }
+                    )
+                ),
+                environment: AppEnvironment()
+            )
+            .viewStore(
+                get: { x in x},
+                tag: { x in x }
+            )
+        )
+
+        RecoveryModeExplainPanelView(
+            store: Store(
+                state: RecoveryModeModel(
                     launchContext: .userInitiated,
                     isDebugDetailExpanded: false,
                     recoveryDidField: RecoveryDidFormField(
