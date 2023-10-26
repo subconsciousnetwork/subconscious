@@ -126,6 +126,32 @@ enum FailFollowContext {
     case followUserSheet // Tapping a button
 }
 
+enum UserProfileAlert: Equatable, Hashable, Identifiable {
+    // TODO: maybe not good enough
+    var id: String { String(describing: self) }
+    
+    case failFollow(_ error: String)
+    case failFollowNewUser(_ error: String)
+    case failUnfollowUser(_ error: String)
+    case failRenameUser(_ error: String)
+    case failEditProfile(_ error: String)
+    
+    var error: String {
+        switch self {
+        case .failFollow(let error):
+            return error
+        case .failFollowNewUser(let error):
+            return error
+        case .failUnfollowUser(let error):
+            return error
+        case .failRenameUser(let error):
+            return error
+        case .failEditProfile(let error):
+            return error
+        }
+    }
+}
+
 enum UserProfileDetailAction {
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -145,7 +171,10 @@ enum UserProfileDetailAction {
     case presentEditProfile(Bool)
     case presentFollowNewUserFormSheet(Bool)
     case presentRenameSheet(Bool)
-    case presentFailFollowAlert(Bool)
+    
+    case presentAlert(UserProfileAlert)
+    case forcePresentAlert(Bool)
+    case dismissAlert
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
@@ -156,14 +185,12 @@ enum UserProfileDetailAction {
     case attemptFollow(Did, Petname, FailFollowContext)
     case failFollow(error: String, context: FailFollowContext)
     case failFollowDueToPetnameCollision(petname: Petname)
-    case dismissFailFollowError
     case succeedFollow(_ petname: Petname)
     
     case requestRename(UserProfile)
     case attemptRename(from: Petname, to: Petname)
     case failRename(error: String)
     case succeedRename(from: Petname, to: Petname)
-    case dismissFailRenameErrorMessage
     
     case requestWaitForFollowedUserResolution(_ petname: Petname)
     case succeedResolveFollowedUser(petname: Petname, cid: Cid?)
@@ -172,12 +199,10 @@ enum UserProfileDetailAction {
     case requestUnfollow(UserProfile)
     case attemptUnfollow
     case failUnfollow(error: String)
-    case dismissFailUnfollowError
     case succeedUnfollow(identity: Did, petname: Petname)
     
     case requestEditProfile
     case failEditProfile(error: String)
-    case dismissEditProfileError
     case succeedEditProfile
     
     case completeIndexPeers(_ results: [PeerIndexResult])
@@ -318,18 +343,13 @@ struct UserProfileDetailModel: ModelProtocol {
     static let followingTabIndex: Int = 1
     
     var loadingState = LoadingState.loading
+    var isAlertPresented = false
+    var presentedAlert: UserProfileAlert? = nil
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
     var followNewUserFormSheet: FollowNewUserFormSheetModel = FollowNewUserFormSheetModel()
     var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
-    
-    var isFailFollowAlertPresented: Bool = false
-    var failFollowErrorMessage: String?
-    var failFollowContext: FailFollowContext?
-    var failUnfollowErrorMessage: String?
-    var failEditProfileMessage: String?
-    var failRenameMessage: String?
     
     // This view can be invoked with an initial tab focused
     // but if the user has changed the tab we should remember that across profile refreshes
@@ -440,13 +460,24 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-        case .presentFailFollowAlert(let isPresented):
-            return presentFailFollowAlert(
+        case .presentAlert(let alert):
+            return presentAlert(
                 state: state,
                 environment: environment,
-                isPresented: isPresented
+                alert: alert
             )
-            // MARK: Following
+        case .forcePresentAlert(let presented):
+            return forcePresentAlert(
+                state: state,
+                environment: environment,
+                presented: presented
+            )
+        case .dismissAlert:
+            return dismissAlert(
+                state: state,
+                environment: environment
+            )
+        // MARK: Following
         case .requestFollow(let user):
             return requestFollow(
                 state: state,
@@ -507,20 +538,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .dismissFailRenameErrorMessage:
-            var model = state
-            model.failRenameMessage = nil
-            return Update(state: model)
         case .failFollowDueToPetnameCollision(let petname):
             return failFollowDueToPetnameCollision(
                 state: state,
                 environment: environment,
                 petname: petname
-            )
-        case .dismissFailFollowError:
-            return dismissFailFollowError(
-                state: state,
-                environment: environment
             )
         case let .requestWaitForFollowedUserResolution(petname):
             return requestWaitForFollowedUserResolution(
@@ -570,12 +592,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .dismissFailUnfollowError:
-            return dismissFailUnfollowError(
-                state: state,
-                environment: environment
-            )
-            // MARK: Edit Profile
+        // MARK: Edit Profile
         case .presentEditProfile(let isPresented):
             return presentEditProfile(
                 state: state,
@@ -597,11 +614,6 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
-            )
-        case .dismissEditProfileError:
-            return dismissEditProfileError(
-                state: state,
-                environment: environment
             )
         case .completeIndexPeers(let results):
             return completeIndexPeers(
@@ -739,13 +751,40 @@ struct UserProfileDetailModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func presentFailFollowAlert(
+    static func presentAlert(
         state: Self,
         environment: Environment,
-        isPresented: Bool
+        alert: UserProfileAlert
     ) -> Update<Self> {
         var model = state
-        model.isFailFollowAlertPresented = isPresented
+//        model.isRenameSheetPresented = false
+//        model.isFollowSheetPresented = false
+//        model.isUnfollowConfirmationPresented = false
+//        model.isFollowNewUserFormSheetPresented = false
+//        model.isMetaSheetPresented = false
+        
+        model.isAlertPresented = true
+        model.presentedAlert = alert
+        return Update(state: model)
+    }
+    
+    static func forcePresentAlert(
+        state: Self,
+        environment: Environment,
+        presented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isAlertPresented = presented
+        return Update(state: model)
+    }
+    
+    static func dismissAlert(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        var model = state
+        model.isAlertPresented = false
+        model.presentedAlert = nil
         return Update(state: model)
     }
     
@@ -779,7 +818,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 preventOverwrite: true
             )
             .map({ _ in
-                UserProfileDetailAction.succeedFollow(petname)
+                UserProfileDetailAction.failFollow(error: "uh oh", context: context)
             })
             .recover { error in
                 switch error {
@@ -838,10 +877,22 @@ struct UserProfileDetailModel: ModelProtocol {
         context: FailFollowContext
     ) -> Update<Self> {
         var model = state
-        model.isFailFollowAlertPresented = true
-        model.failFollowErrorMessage = error
-        model.failFollowContext = context
-        return Update(state: model)
+        model.isRenameSheetPresented = false
+        
+        // We must delay between dismissing the sheet and presenting the alert
+        // or else SwiftUI throws a tantrum
+        let fx: Fx<UserProfileDetailAction> = Future.detached {
+            switch context {
+            case .followNewUserFormSheet:
+                return .presentAlert( .failFollowNewUser( error ) )
+            case .followUserSheet:
+                return .presentAlert(.failFollow(error))
+            }
+            return .presentAlert(.failRenameUser(error))
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: model, fx: fx)
     }
     
     static func presentRenameSheet(
@@ -889,7 +940,8 @@ struct UserProfileDetailModel: ModelProtocol {
             let did = try await environment.addressBook.unfollowUser(petname: from)
             try await environment.addressBook.followUser(did: did, petname: to)
             
-            return .succeedRename(from: from, to: to)
+            return .failRename(error: "fake error")
+//            return .succeedRename(from: from, to: to)
         }
         .recover { error in
             .failRename(error: error.localizedDescription)
@@ -907,7 +959,6 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.renameCandidate = nil
-        model.failRenameMessage = nil
         
         return update(
             state: model,
@@ -925,9 +976,16 @@ struct UserProfileDetailModel: ModelProtocol {
         error: String
     ) -> Update<Self> {
         var model = state
-        model.failRenameMessage = error
+        model.isRenameSheetPresented = false
         
-        return Update(state: model)
+        // We must delay between dismissing the sheet and presenting the alert
+        // or else SwiftUI throws a tantrum
+        let fx: Fx<UserProfileDetailAction> = Future.detached {
+            return .presentAlert(.failRenameUser(error))
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: model, fx: fx)
     }
     
     static func failFollowDueToPetnameCollision(
@@ -949,17 +1007,6 @@ struct UserProfileDetailModel: ModelProtocol {
             ],
             environment: environment
         )
-    }
-    
-    static func dismissFailFollowError(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        var model = state
-        model.isFailFollowAlertPresented = false
-        model.failFollowErrorMessage = nil
-        model.failFollowContext = nil
-        return Update(state: model)
     }
     
     static func requestWaitForFollowedUserResolution(
@@ -1094,18 +1141,11 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment,
         error: String
     ) -> Update<Self> {
-        var model = state
-        model.failUnfollowErrorMessage = error
-        return Update(state: model)
-    }
-    
-    static func dismissFailUnfollowError(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        var model = state
-        model.failUnfollowErrorMessage = nil
-        return Update(state: model)
+        return update(
+            state: state,
+            action: .presentAlert(.failUnfollowUser(error)),
+            environment: environment
+        )
     }
     
     static func presentEditProfile(
@@ -1171,19 +1211,11 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment,
         error: String
     ) -> Update<Self> {
-        var model = state
-        model.failEditProfileMessage = error
-        model.isEditProfileSheetPresented = true
-        return Update(state: model)
-    }
-    
-    static func dismissEditProfileError(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        var model = state
-        model.failEditProfileMessage = nil
-        return Update(state: model)
+        return update(
+            state: state,
+            action: .presentAlert(.failEditProfile(error)),
+            environment: environment
+        )
     }
     
     static func completeIndexPeers(

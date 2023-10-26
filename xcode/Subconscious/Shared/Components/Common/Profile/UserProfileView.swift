@@ -251,32 +251,26 @@ struct UserProfileView: View {
         .follow(store: store)
         .unfollow(state: state, send: send)
         .editProfile(app: app, store: store)
-        .rename(state: state, send: send)
-        .alert(
-            isPresented: store.binding(
-                get: \.isFailFollowAlertPresented,
-                tag: UserProfileDetailAction.presentFailFollowAlert
-            )
-        ) {
-            Alert(
-                title: Text("Failed to Follow User"),
-                message: Text(store.state.failFollowErrorMessage ?? "An unknown error ocurred"),
-                primaryButton: .default(Text("Try Again"), action: {
-                    switch store.state.failFollowContext {
-                    case .some(.followNewUserFormSheet):
-                        store.send(.presentFollowNewUserFormSheet(true))
-                        break
-                    case .some(.followUserSheet):
+        .rename(store: store)
+        .alert(item: Binding(
+            get: {
+                store.state.presentedAlert
+            },
+            set: { _ in }
+        )) { item in
+            switch item {
+            default:
+                Alert(
+                    title: Text("Sumtin wong"),
+                    message: Text(state.presentedAlert?.error ?? "An unknown error ocurred"),
+                    primaryButton: .default(Text("Try Again"), action: {
                         store.send(.presentFollowSheet(true))
-                        break
-                    default:
-                        break
-                    }
-                }),
-                secondaryButton: .cancel(Text("Cancel"), action: {
-                    store.send(.dismissFailFollowError)
-                })
-            )
+                    }),
+                    secondaryButton: .cancel(Text("Cancel"), action: {
+                        store.send(.dismissAlert)
+                    })
+                )
+            }
         }
     }
 }
@@ -299,10 +293,9 @@ private extension View {
     }
     
     func rename(
-        state: UserProfileDetailModel,
-        send: @escaping (UserProfileDetailAction) -> Void
+        store: Store<UserProfileDetailModel>
     ) -> some View {
-        self.modifier(RenameSheetModifier(state: state, send: send))
+        self.modifier(RenameSheetModifier(store: store))
     }
     
     func metaSheet(

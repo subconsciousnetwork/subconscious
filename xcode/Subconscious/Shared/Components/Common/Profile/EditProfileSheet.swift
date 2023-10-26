@@ -116,14 +116,15 @@ struct EditProfileSheetModel: ModelProtocol {
 
 
 struct EditProfileSheet: View {
-    var state: EditProfileSheetModel
-    var send: (EditProfileSheetAction) -> Void
+    let store: ViewStore<EditProfileSheetModel>
+    
+    var state: EditProfileSheetModel { store.state }
+    var send: (EditProfileSheetAction) -> Void { store.send }
+    
     var user: UserProfile
     var statistics: UserProfileStatistics?
-    var failEditProfileMessage: String?
     var onEditProfile: () -> Void
     var onCancel: () -> Void
-    var onDismissError: () -> Void
     
     var formIsValid: Bool {
         state.bioField.isValid && state.nicknameField.isValid
@@ -201,17 +202,6 @@ struct EditProfileSheet: View {
                         )
                     }
                 }
-            }
-            .alert(
-                isPresented: Binding(
-                    get: { failEditProfileMessage != nil },
-                    set: { _ in onDismissError() }
-                )
-            ) {
-                Alert(
-                    title: Text("Failed to Save Profile"),
-                    message: Text(failEditProfileMessage ?? "An unknown error ocurred")
-                )
             }
             .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)

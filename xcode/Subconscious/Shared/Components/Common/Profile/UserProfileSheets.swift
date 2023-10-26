@@ -55,9 +55,8 @@ struct FollowSheetModifier: ViewModifier {
                 )
             ) {
                 FollowUserSheet(
-                    state: state.followUserSheet,
-                    send: Address.forward(
-                        send: send,
+                    store: store.viewStore(
+                        get: \.followUserSheet,
                         tag: FollowUserSheetCursor.tag
                     ),
                     onAttemptFollow: {
@@ -71,19 +70,16 @@ struct FollowSheetModifier: ViewModifier {
                         
                         send(.attemptFollow(did, name.toPetname(), .followUserSheet))
                     },
-                    label: Text("Follow"),
-                    failFollowError: state.failFollowErrorMessage,
-                    onDismissError: {
-                        send(.dismissFailFollowError)
-                    }
+                    label: Text("Follow")
                 )
             }
     }
 }
 
 struct RenameSheetModifier: ViewModifier {
-    let state: UserProfileDetailModel
-    let send: (UserProfileDetailAction) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var state: UserProfileDetailModel { store.state }
+    var send: (UserProfileDetailAction) -> Void { store.send }
     
     func body(content: Content) -> some View {
         content
@@ -95,9 +91,8 @@ struct RenameSheetModifier: ViewModifier {
                 )
             ) {
                 FollowUserSheet(
-                    state: state.followUserSheet,
-                    send: Address.forward(
-                        send: send,
+                    store: store.viewStore(
+                        get: \.followUserSheet,
                         tag: FollowUserSheetCursor.tag
                     ),
                     onAttemptFollow: {
@@ -111,11 +106,7 @@ struct RenameSheetModifier: ViewModifier {
                         
                         send(.attemptRename(from: candidate, to: name.toPetname()))
                     },
-                    label: Text("Rename"),
-                    failFollowError: state.failRenameMessage,
-                    onDismissError: {
-                        send(.dismissFailRenameErrorMessage)
-                    }
+                    label: Text("Rename")
                 )
             }
     }
@@ -127,17 +118,6 @@ struct UnfollowSheetModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     content
-      .alert(
-          isPresented: Binding(
-              get: { state.failUnfollowErrorMessage != nil },
-              set: { _ in send(.dismissFailUnfollowError) }
-          )
-      ) {
-          Alert(
-              title: Text("Failed to Unfollow User"),
-              message: Text(state.failUnfollowErrorMessage ?? "An unknown error occurred")
-          )
-      }
       .confirmationDialog(
           "Are you sure?",
           isPresented:
@@ -179,22 +159,17 @@ struct EditProfileSheetModifier: ViewModifier {
             ) {
                 if let user = state.user {
                     EditProfileSheet(
-                        state: state.editProfileSheet,
-                        send: Address.forward(
-                            send: send,
+                        store: store.viewStore(
+                            get: \.editProfileSheet,
                             tag: EditProfileSheetCursor.tag
                         ),
                         user: user,
                         statistics: state.statistics,
-                        failEditProfileMessage: state.failEditProfileMessage,
                         onEditProfile: {
                             send(.requestEditProfile)
                         },
                         onCancel: {
                             send(.presentEditProfile(false))
-                        },
-                        onDismissError: {
-                            send(.dismissEditProfileError)
                         }
                     )
                 }

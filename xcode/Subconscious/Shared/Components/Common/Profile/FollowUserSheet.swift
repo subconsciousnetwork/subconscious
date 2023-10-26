@@ -169,14 +169,13 @@ struct FollowUserSheetFormCursor: CursorProtocol {
 }
 
 struct FollowUserSheet: View {
-    var state: FollowUserSheetModel
-    var send: (FollowUserSheetAction) -> Void
+    let store: ViewStore<FollowUserSheetModel>
+   
+    var state: FollowUserSheetModel { store.state }
+    var send: (FollowUserSheetAction) -> Void { store.send }
     
     var onAttemptFollow: () -> Void
     var label: Text
-    
-    var failFollowError: String?
-    var onDismissError: () -> Void
     
     var caption: String {
         let name = state.user?.address.toPetname()?.markup ?? "user"
