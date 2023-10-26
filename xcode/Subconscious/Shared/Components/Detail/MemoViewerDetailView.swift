@@ -291,6 +291,7 @@ enum MemoViewerDetailAction: Hashable {
 
     case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
+    case refreshAll
     case setDetail(_ entry: MemoEntry?)
     case setDom(Subtext)
     case failLoadDetail(_ message: String)
@@ -328,6 +329,8 @@ extension MemoViewerDetailAction {
         switch (action) {
         case .succeedIndexOurSphere, .completeIndexPeers:
             return .succeedIndexBackgroundSphere
+        case .succeedSyncSphereWithGateway:
+            return .refreshAll
         case _:
             return nil
         }
@@ -376,6 +379,11 @@ struct MemoViewerDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 description: description
+            )
+        case .refreshAll:
+            return refreshAll(
+                state: state,
+                environment: environment
             )
         case .setDetail(let entry):
             return setDetail(
@@ -464,20 +472,45 @@ struct MemoViewerDetailModel: ModelProtocol {
         environment: Environment,
         description: MemoViewerDetailDescription
     ) -> Update<Self> {
+        guard state.address != description.address else {
+            logger.log("Attempted to appear with same address, doing nothing")
+            return Update(state: state)
+        }
+        
         var model = state
-        model.loadingState = .loading
         model.address = description.address
         
-        let fx: Fx<Action> = environment.data.readMemoDetailPublisher(
-            address: description.address
-        ).map({ response in
-            Action.setDetail(response)
-        }).eraseToAnyPublisher()
         return update(
             state: model,
             // Set meta sheet address as well
             actions: [
                 .setMetaSheetAddress(description.address),
+                .refreshAll
+            ],
+            environment: environment
+        )
+    }
+    
+    static func refreshAll(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            logger.log("Attempted to refresh with nil address")
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.loadingState = .loading
+        
+        let fx: Fx<Action> = environment.data.readMemoDetailPublisher(
+            address: address
+        ).map({ response in
+            Action.setDetail(response)
+        }).eraseToAnyPublisher()
+        return update(
+            state: model,
+            actions: [
                 .fetchOwnerProfile,
                 .refreshBacklinks
             ],
