@@ -121,6 +121,11 @@ extension UserProfileDetailAction {
     }
 }
 
+enum FailFollowContext {
+    case followNewUserFormSheet // Manually entering DID + name
+    case followUserSheet // Tapping a button
+}
+
 enum UserProfileDetailAction {
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -140,6 +145,7 @@ enum UserProfileDetailAction {
     case presentEditProfile(Bool)
     case presentFollowNewUserFormSheet(Bool)
     case presentRenameSheet(Bool)
+    case presentFailFollowAlert(Bool)
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
@@ -147,8 +153,8 @@ enum UserProfileDetailAction {
     case followNewUserFormSheet(FollowNewUserFormSheetAction)
     
     case requestFollow(UserProfile)
-    case attemptFollow(Did, Petname)
-    case failFollow(error: String)
+    case attemptFollow(Did, Petname, FailFollowContext)
+    case failFollow(error: String, context: FailFollowContext)
     case failFollowDueToPetnameCollision(petname: Petname)
     case dismissFailFollowError
     case succeedFollow(_ petname: Petname)
@@ -317,7 +323,10 @@ struct UserProfileDetailModel: ModelProtocol {
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
     var followNewUserFormSheet: FollowNewUserFormSheetModel = FollowNewUserFormSheetModel()
     var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
+    
+    var isFailFollowAlertPresented: Bool = false
     var failFollowErrorMessage: String?
+    var failFollowContext: FailFollowContext?
     var failUnfollowErrorMessage: String?
     var failEditProfileMessage: String?
     var failRenameMessage: String?
@@ -431,6 +440,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+        case .presentFailFollowAlert(let isPresented):
+            return presentFailFollowAlert(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
             // MARK: Following
         case .requestFollow(let user):
             return requestFollow(
@@ -438,12 +453,13 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 user: user
             )
-        case .attemptFollow(let did, let petname):
+        case .attemptFollow(let did, let petname, let context):
             return attemptFollow(
                 state: state,
                 environment: environment,
                 did: did,
-                petname: petname
+                petname: petname,
+                context: context
             )
         case let .succeedFollow(petname):
             return succeedFollow(
@@ -451,11 +467,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 petname: petname
             )
-        case .failFollow(let error):
+        case .failFollow(let error, let context):
             return failFollow(
                 state: state,
                 environment: environment,
-                error: error
+                error: error,
+                context: context
             )
         // MARK: Rename
         case .presentRenameSheet(let isPresented):
@@ -722,6 +739,16 @@ struct UserProfileDetailModel: ModelProtocol {
         return Update(state: model)
     }
     
+    static func presentFailFollowAlert(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isFailFollowAlertPresented = isPresented
+        return Update(state: model)
+    }
+    
     static func requestFollow(
         state: Self,
         environment: Environment,
@@ -741,7 +768,8 @@ struct UserProfileDetailModel: ModelProtocol {
         state: Self,
         environment: Environment,
         did: Did,
-        petname: Petname
+        petname: Petname,
+        context: FailFollowContext
     ) -> Update<Self> {
         let fx: Fx<UserProfileDetailAction> =
         environment.addressBook
@@ -761,13 +789,19 @@ struct UserProfileDetailModel: ModelProtocol {
                     )
                 case _:
                     return .failFollow(
-                        error: error.localizedDescription
+                        error: error.localizedDescription,
+                        context: context
                     )
                 }
             }
             .eraseToAnyPublisher()
         
-        return Update(state: state, fx: fx)
+        // Dismiss sheet immediately on attempting follow
+        return update(
+            state: state,
+            action: .presentFollowNewUserFormSheet(false),
+            environment: environment
+        ).mergeFx(fx)
     }
     
     static func succeedFollow(
@@ -800,11 +834,13 @@ struct UserProfileDetailModel: ModelProtocol {
     static func failFollow(
         state: Self,
         environment: Environment,
-        error: String
+        error: String,
+        context: FailFollowContext
     ) -> Update<Self> {
         var model = state
+        model.isFailFollowAlertPresented = true
         model.failFollowErrorMessage = error
-        
+        model.failFollowContext = context
         return Update(state: model)
     }
     
@@ -920,7 +956,9 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         var model = state
+        model.isFailFollowAlertPresented = false
         model.failFollowErrorMessage = nil
+        model.failFollowContext = nil
         return Update(state: model)
     }
     

@@ -11,18 +11,20 @@ import ObservableStore
 import CodeScanner
 
 struct FollowNewUserFormSheetView: View {
-    var state: FollowNewUserFormSheetModel
+    let store: ViewStore<FollowNewUserFormSheetModel>
+    var did: Did?
+    
+    var state: FollowNewUserFormSheetModel {
+        store.state
+    }
+    
     var form: FollowUserFormModel {
         get { state.form }
     }
-    var send: (FollowNewUserFormSheetAction) -> Void
     
-    var did: Did?
-    
-    var onAttemptFollow: () -> Void
-    var onCancel: () -> Void
-    
-    var onDismissFailFollowError: () -> Void
+    var send: (FollowNewUserFormSheetAction) -> Void {
+        store.send
+    }
     
     var formIsValid: Bool {
         form.did.isValid && form.petname.isValid
@@ -36,6 +38,25 @@ struct FollowNewUserFormSheetView: View {
             send(.qrCodeScanError(error: error.localizedDescription))
         }
     }
+    
+    func onAttemptFollow() {
+        guard let did = form.did.validated else {
+            return
+        }
+        guard let name = form.petname.validated else {
+            return
+        }
+        
+        send(.attemptFollow(did, name.toPetname()))
+    }
+    
+    func onCancel() { 
+        send(.dismissSheet)
+    }
+    
+//    func onDismissFailFollowError() {
+//        send(.dismissError)
+//    }
     
     var body: some View {
         NavigationStack {
@@ -90,21 +111,9 @@ struct FollowNewUserFormSheetView: View {
                 }
                 .navigationBarTitleDisplayMode(.inline)
             }
-            .alert(
-                isPresented: Binding(
-                    get: { state.failFollowErrorMessage != nil },
-                    set: { _ in onDismissFailFollowError() }
-                )
-            ) {
-                Alert(
-                    title: Text("Failed to Follow User"),
-                    message: Text(state.failFollowErrorMessage ?? "An unknown error ocurred")
-                )
-            }
             .fullScreenCover(
-                isPresented: Binding(
-                    get: { state.isQrCodeScannerPresented },
-                    send: send,
+                isPresented: store.binding(
+                    get: \.isQrCodeScannerPresented,
                     tag: FollowNewUserFormSheetAction.presentQRCodeScanner
                 )
             ) {
@@ -121,12 +130,14 @@ struct FollowNewUserFormSheetView: View {
 struct FollowNewUserFormSheetView_Previews: PreviewProvider {
     static var previews: some View {
         FollowNewUserFormSheetView(
-            state: FollowNewUserFormSheetModel(),
-            send: { action in },
-            did: Did("did:key:123")!,
-            onAttemptFollow: {},
-            onCancel: {},
-            onDismissFailFollowError: {}
+            store: Store(
+                state: FollowNewUserFormSheetModel(),
+                environment: AppEnvironment()
+            ).viewStore(
+                get: { $0 },
+                tag: { $0 }
+            ),
+            did: Did("did:key:123")!
         )
     }
 }
@@ -143,6 +154,9 @@ enum FollowNewUserFormSheetAction {
     case attemptToFindUniquePetname(petname: Petname.Name)
     case succeedFindUniquePetname(petname: Petname.Name)
     case failToFindUniquePetname(_ error: String)
+    
+    case attemptFollow(Did, Petname)
+    case dismissSheet
 }
 
 typealias FollowNewUserFormSheetEnvironment = AppEnvironment
@@ -237,6 +251,13 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             // the caption changed to the message "Petname already in use" or whatever
             // the localizedDescription for the relevant AddressBookServiceError.
             return Update(state: state)
+            
+        case .dismissSheet:
+            // Handled by FollowNewUserFormSheetCursor.tag
+            return Update(state: state)
+        case .attemptFollow:
+            // Handled by FollowNewUserFormSheetCursor.tag
+            return Update(state: state)
         }
     }
 }
@@ -277,7 +298,14 @@ struct FollowNewUserFormSheetCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .followNewUserFormSheet(action)
+        switch action {
+        case let .attemptFollow(did, petname):
+            .attemptFollow(did, petname, .followNewUserFormSheet)
+        case .dismissSheet:
+            .presentFollowNewUserFormSheet(false)
+        default:
+            .followNewUserFormSheet(action)
+        }
     }
 }
 

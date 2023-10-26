@@ -35,8 +35,15 @@ struct MetaSheetModifier: ViewModifier {
 }
 
 struct FollowSheetModifier: ViewModifier {
-    let state: UserProfileDetailModel
-    let send: (UserProfileDetailAction) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    
+    var state: UserProfileDetailModel {
+        store.state
+    }
+    
+    var send: (UserProfileDetailAction) -> Void {
+        store.send
+    }
     
     func body(content: Content) -> some View {
         content
@@ -62,7 +69,7 @@ struct FollowSheetModifier: ViewModifier {
                             return
                         }
                         
-                        send(.attemptFollow(did, name.toPetname()))
+                        send(.attemptFollow(did, name.toPetname(), .followUserSheet))
                     },
                     label: Text("Follow"),
                     failFollowError: state.failFollowErrorMessage,
@@ -219,39 +226,32 @@ struct EditProfileSheetModifier: ViewModifier {
 }
 
 struct FollowNewUserSheetModifier: ViewModifier {
-    let state: UserProfileDetailModel
-    let send: (UserProfileDetailAction) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    
+    var state: UserProfileDetailModel {
+        store.state
+    }
+    
+    var send: (UserProfileDetailAction) -> Void {
+        store.send
+    }
     
     func body(content: Content) -> some View {
         content
             .sheet(
-                isPresented: Binding(
-                    get: { state.isFollowNewUserFormSheetPresented },
-                    send: send,
+                isPresented: store.binding(
+                    get: \.isFollowNewUserFormSheetPresented,
                     tag: UserProfileDetailAction.presentFollowNewUserFormSheet
                 )
             ) {
                 FollowNewUserFormSheetView(
-                    state: state.followNewUserFormSheet,
-                    send: Address.forward(
-                        send: send,
+                    store: store.viewStore(
+                        get: \.followNewUserFormSheet,
                         tag: FollowNewUserFormSheetCursor.tag
                     ),
-                    did: state.user?.did,
-                    onAttemptFollow: {
-                        let form = state.followNewUserFormSheet.form
-                        guard let did = form.did.validated else {
-                            return
-                        }
-                        guard let name = form.petname.validated else {
-                            return
-                        }
-                        
-                        send(.attemptFollow(did, name.toPetname()))
-                    },
-                    onCancel: { send(.presentFollowNewUserFormSheet(false)) },
-                    onDismissFailFollowError: { send(.dismissFailFollowError) }
+                    did: state.user?.did
                 )
             }
+            
     }
 }

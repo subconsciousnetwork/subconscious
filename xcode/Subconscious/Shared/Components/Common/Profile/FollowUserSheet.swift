@@ -225,16 +225,5 @@ struct FollowUserSheet: View {
         }
         .padding(AppTheme.padding)
         .presentationDetents([.fraction(0.33)])
-        .alert(
-            isPresented: Binding(
-                get: { failFollowError != nil },
-                set: { _ in onDismissError() }
-            )
-        ) {
-            Alert(
-                title: Text("Failed to Follow User"),
-                message: Text(failFollowError ?? "An unknown error occurred")
-            )
-        }
     }
 }

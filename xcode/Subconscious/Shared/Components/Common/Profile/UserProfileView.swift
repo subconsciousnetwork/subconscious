@@ -248,11 +248,36 @@ struct UserProfileView: View {
             }
         })
         .metaSheet(state: state, send: send)
-        .follow(state: state, send: send)
+        .follow(store: store)
         .unfollow(state: state, send: send)
         .editProfile(app: app, store: store)
-        .followNewUser(state: state, send: send)
         .rename(state: state, send: send)
+        .alert(
+            isPresented: store.binding(
+                get: \.isFailFollowAlertPresented,
+                tag: UserProfileDetailAction.presentFailFollowAlert
+            )
+        ) {
+            Alert(
+                title: Text("Failed to Follow User"),
+                message: Text(store.state.failFollowErrorMessage ?? "An unknown error ocurred"),
+                primaryButton: .default(Text("Try Again"), action: {
+                    switch store.state.failFollowContext {
+                    case .some(.followNewUserFormSheet):
+                        store.send(.presentFollowNewUserFormSheet(true))
+                        break
+                    case .some(.followUserSheet):
+                        store.send(.presentFollowSheet(true))
+                        break
+                    default:
+                        break
+                    }
+                }),
+                secondaryButton: .cancel(Text("Cancel"), action: {
+                    store.send(.dismissFailFollowError)
+                })
+            )
+        }
     }
 }
 
@@ -266,10 +291,11 @@ private extension View {
     }
     
     func follow(
-        state: UserProfileDetailModel,
-        send: @escaping (UserProfileDetailAction) -> Void
+        store: Store<UserProfileDetailModel>
     ) -> some View {
-        self.modifier(FollowSheetModifier(state: state, send: send))
+        self
+            .modifier(FollowSheetModifier(store: store))
+            .modifier(FollowNewUserSheetModifier(store: store))
     }
     
     func rename(
@@ -291,13 +317,6 @@ private extension View {
         store: Store<UserProfileDetailModel>
     ) -> some View {
         self.modifier(EditProfileSheetModifier(app: app, store: store))
-    }
-    
-    func followNewUser(
-        state: UserProfileDetailModel,
-        send: @escaping (UserProfileDetailAction) -> Void
-    ) -> some View {
-        self.modifier(FollowNewUserSheetModifier(state: state, send: send))
     }
 }
 
