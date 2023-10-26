@@ -258,13 +258,25 @@ struct UserProfileView: View {
             },
             set: { _ in }
         )) { item in
+            let title = item.title
+            let message = state.presentedAlert?.error ?? "An unknown error ocurred"
+            
             switch item {
+            // We have no meaningful view to present for a "Try Again" action or unfollow
+            case .failUnfollowUser:
+                return Alert(
+                    title: Text(title),
+                    message: Text(message),
+                    dismissButton: .default(Text("OK"), action: {
+                        store.send(.dismissAlert)
+                    })
+                )
             default:
-                Alert(
-                    title: Text("Sumtin wong"),
-                    message: Text(state.presentedAlert?.error ?? "An unknown error ocurred"),
+                return Alert(
+                    title: Text(title),
+                    message: Text(message),
                     primaryButton: .default(Text("Try Again"), action: {
-                        store.send(.presentFollowSheet(true))
+                        store.send(.retryFailedAction)
                     }),
                     secondaryButton: .cancel(Text("Cancel"), action: {
                         store.send(.dismissAlert)

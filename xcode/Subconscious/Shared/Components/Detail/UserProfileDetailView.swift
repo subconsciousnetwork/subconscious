@@ -135,6 +135,21 @@ enum UserProfileAlert: Equatable, Hashable, Identifiable {
     case failRenameUser(_ error: String)
     case failEditProfile(_ error: String)
     
+    var title: String {
+        switch self {
+        case .failFollow:
+            return "Failed to follow user"
+        case .failFollowNewUser:
+            return "Failed to follow user"
+        case .failUnfollowUser:
+            return "Failed to unfollow user"
+        case .failRenameUser:
+            return "Failed to rename user"
+        case .failEditProfile:
+            return "Failed to edit profile"
+        }
+    }
+    
     var error: String {
         switch self {
         case .failFollow(let error):
@@ -174,6 +189,7 @@ enum UserProfileDetailAction {
     case presentAlert(UserProfileAlert)
     case forcePresentAlert(Bool)
     case dismissAlert
+    case retryFailedAction
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
@@ -472,6 +488,11 @@ struct UserProfileDetailModel: ModelProtocol {
             )
         case .dismissAlert:
             return dismissAlert(
+                state: state,
+                environment: environment
+            )
+        case .retryFailedAction:
+            return retryFailedAction(
                 state: state,
                 environment: environment
             )
@@ -778,6 +799,48 @@ struct UserProfileDetailModel: ModelProtocol {
         model.isAlertPresented = false
         model.presentedAlert = nil
         return Update(state: model)
+    }
+    
+    static func retryFailedAction(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let action: Self.Action? = Func.run {
+            switch state.presentedAlert {
+            case .some(.failFollow):
+                return Self.Action.presentFollowSheet(true)
+            case .some(.failFollowNewUser):
+                return Self.Action.presentFollowNewUserFormSheet(true)
+            case .some(.failRenameUser):
+                return Self.Action.presentRenameSheet(true)
+            case .some(.failEditProfile):
+                return Self.Action.presentEditProfile(true)
+            default:
+                return nil
+            }
+        }
+        
+        var model = state
+        
+        guard let action = action else {
+            return update(
+                state: state,
+                action: .dismissAlert,
+                environment: environment
+            )
+        }
+        
+        // use Just()
+        let fx: Fx<Self.Action> = Future.detached {
+            action
+        }
+        .eraseToAnyPublisher()
+        
+        return update(
+            state: state,
+            action: .dismissAlert,
+            environment: environment
+        ).mergeFx(fx)
     }
     
     static func requestFollow(
@@ -1152,6 +1215,8 @@ struct UserProfileDetailModel: ModelProtocol {
         )
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
+            throw UserProfileServiceError.other("fake")
+            
             try await environment.userProfile.writeOurProfile(
                 profile: profile
             )
