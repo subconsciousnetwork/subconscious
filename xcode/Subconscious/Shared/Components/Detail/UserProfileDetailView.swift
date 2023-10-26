@@ -877,7 +877,8 @@ struct UserProfileDetailModel: ModelProtocol {
         context: FailFollowContext
     ) -> Update<Self> {
         var model = state
-        model.isRenameSheetPresented = false
+        model.isFollowSheetPresented = false
+        model.isFollowNewUserFormSheetPresented = false
         
         // We must delay between dismissing the sheet and presenting the alert
         // or else SwiftUI throws a tantrum
@@ -888,7 +889,6 @@ struct UserProfileDetailModel: ModelProtocol {
             case .followUserSheet:
                 return .presentAlert(.failFollow(error))
             }
-            return .presentAlert(.failRenameUser(error))
         }
         .eraseToAnyPublisher()
         
