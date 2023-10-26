@@ -932,6 +932,9 @@ struct UserProfileDetailModel: ModelProtocol {
         }
         .eraseToAnyPublisher()
         
+        // Immediately dismiss sheet
+        var model = state
+        model.isRenameSheetPresented = false
         return Update(state: state, fx: fx)
     }
     
@@ -1072,6 +1075,9 @@ struct UserProfileDetailModel: ModelProtocol {
                 })
                 .eraseToAnyPublisher()
             
+            // Immediately dismiss confirmation
+            var model = state
+            model.isUnfollowConfirmationPresented = false
             return Update(state: state, fx: fx)
         }
     }
@@ -1144,8 +1150,6 @@ struct UserProfileDetailModel: ModelProtocol {
             nickname: state.editProfileSheet.nicknameField.validated?.description,
             bio: state.editProfileSheet.bioField.validated?.text
         )
-        var model = state
-        model.isEditProfileSheetPresented = false
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
             try await environment.userProfile.writeOurProfile(
@@ -1158,6 +1162,9 @@ struct UserProfileDetailModel: ModelProtocol {
             )
         }).eraseToAnyPublisher()
         
+        // Dimiss sheet immediately
+        var model = state
+        model.isEditProfileSheetPresented = false
         return Update(state: model, fx: fx)
     }
     
