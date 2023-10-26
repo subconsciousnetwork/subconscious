@@ -183,7 +183,6 @@ enum UserProfileDetailAction {
     case requestFollow(UserProfile)
     case attemptFollow(Did, Petname, FailFollowContext)
     case failFollow(error: String, context: FailFollowContext)
-    case failFollowDueToPetnameCollision(petname: Petname)
     case succeedFollow(_ petname: Petname)
     
     case requestRename(UserProfile)
@@ -537,12 +536,6 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .failFollowDueToPetnameCollision(let petname):
-            return failFollowDueToPetnameCollision(
-                state: state,
-                environment: environment,
-                petname: petname
-            )
         case let .requestWaitForFollowedUserResolution(petname):
             return requestWaitForFollowedUserResolution(
                 state: state,
@@ -820,17 +813,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 UserProfileDetailAction.succeedFollow(petname)
             })
             .recover { error in
-                switch error {
-                case AddressBookError.invalidAttemptToOverwitePetname:
-                    return .failFollowDueToPetnameCollision(
-                        petname: petname
-                    )
-                case _:
-                    return .failFollow(
-                        error: error.localizedDescription,
-                        context: context
-                    )
-                }
+                .failFollow(
+                    error: error.localizedDescription,
+                    context: context
+                )
             }
             .eraseToAnyPublisher()
         
@@ -984,27 +970,6 @@ struct UserProfileDetailModel: ModelProtocol {
         .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
-    }
-    
-    static func failFollowDueToPetnameCollision(
-        state: Self,
-        environment: Environment,
-        petname: Petname
-    ) -> Update<Self> {
-        return update(
-            state: state,
-            actions: [
-                .followNewUserFormSheet(
-                    .failFollowDueToPetnameCollision(
-                        error: AddressBookError
-                            .invalidAttemptToOverwitePetname
-                            .localizedDescription,
-                        petname: petname.root
-                    )
-                )
-            ],
-            environment: environment
-        )
     }
     
     static func requestWaitForFollowedUserResolution(

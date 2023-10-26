@@ -150,7 +150,6 @@ enum FollowNewUserFormSheetAction {
     case qrCodeScanned(scannedContent: String)
     case qrCodeScanError(error: String)
     
-    case failFollowDueToPetnameCollision(error: String, petname: Petname.Name)
     case attemptToFindUniquePetname(petname: Petname.Name)
     case succeedFindUniquePetname(petname: Petname.Name)
     case failToFindUniquePetname(_ error: String)
@@ -211,17 +210,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             var model = state
             model.failQRCodeScanErrorMessage = error
             return Update(state: model)
-            
-        case .failFollowDueToPetnameCollision(let error, let petname):
-            return update(
-                state: state,
-                actions: [
-                    .attemptToFindUniquePetname(petname: petname),
-                    .form(.failFollowDueToPetnameCollision(error))
-                ],
-                environment: environment
-            )
-            
+
         case .attemptToFindUniquePetname(let petname):
             let fx: Fx<FollowNewUserFormSheetAction> = environment
                 .addressBook
@@ -368,7 +357,6 @@ struct FollowUserFormView: View {
 enum FollowUserFormAction: Equatable {
     case didField(FormFieldAction<String>)
     case petnameField(FormFieldAction<String>)
-    case failFollowDueToPetnameCollision(_ error: String)
     case reset
 }
 
@@ -415,16 +403,6 @@ struct FollowUserFormModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
-            )
-        case .failFollowDueToPetnameCollision(let error):
-            var model = state
-            model.failFollowMessage = error
-            return update(
-                state: model,
-                actions: [
-                    .petnameField(.setValidationStatus(valid: false))
-                ],
-                environment: environment
             )
         case .reset:
             var model = state
