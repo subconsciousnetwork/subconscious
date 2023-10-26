@@ -473,7 +473,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         description: MemoViewerDetailDescription
     ) -> Update<Self> {
         guard state.address != description.address else {
-            logger.warning("Attempted to appear with same address, doing nothing")
+            logger.log("Attempted to appear with same address, doing nothing")
             return Update(state: state)
         }
         
@@ -496,7 +496,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         guard let address = state.address else {
-            logger.warning("Attempted to refresh with nil address")
+            logger.log("Attempted to refresh with nil address")
             return Update(state: state)
         }
         
