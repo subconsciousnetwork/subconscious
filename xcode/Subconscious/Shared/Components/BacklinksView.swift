@@ -77,6 +77,15 @@ struct BacklinksView_Previews: PreviewProvider {
                         ),
                         isTruncated: false,
                         modified: Date.now
+                    ),
+                    EntryStub(
+                        did: Did.local,
+                        address: Slashlink(slug: Slug(formatting: "The whale, the whale")!),
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
+                        ),
+                        isTruncated: false,
+                        modified: Date.now
                     )
                 ],
                 onRequestDetail: { title in },
