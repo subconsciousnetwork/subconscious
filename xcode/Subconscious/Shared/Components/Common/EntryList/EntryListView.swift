@@ -33,13 +33,13 @@ struct EntryListView: View {
                             allowsFullSwipe: false
                         ) {
                             Button(
-                                role: .destructive,
                                 action: {
                                     onEntryDelete(entry.address)
                                 }
                             ) {
                                 Text("Delete")
                             }
+                            .tint(.red)
                         }
                     }
                     .background(Color.background)
