@@ -60,7 +60,7 @@ struct MemoEditorDetailView: View {
     
     var body: some View {
         VStack {
-            if AppDefaults.standard.isBlockEditorEnabled {
+            if app.state.isBlockEditorEnabled {
                 BlockEditor.Representable(
                     state: Binding(
                         get: { store.state.blockEditor },

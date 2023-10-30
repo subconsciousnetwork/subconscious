@@ -27,7 +27,7 @@ struct AppDefaults {
     var inviteCode: String? = nil
     
     @UserDefaultsProperty(forKey: "blockEditor")
-    var isBlockEditorEnabled: Bool = true
+    var isBlockEditorEnabled: Bool = false
 
     @UserDefaultsProperty(forKey: "selectedAppTab")
     // default to the notebook on first run because there will be nothing in the feed

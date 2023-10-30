@@ -1568,7 +1568,6 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
-				B51359222AC113C1004385A7 /* Recovery */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -1577,11 +1576,14 @@
 				B822F18C27C9C0AB00943C6B /* CountChip.swift */,
 				B57D63BA29B1CA8B008BBB62 /* DidView.swift */,
 				B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */,
+				B5C918F52A67BB35004C6CD5 /* EllipsisLabelView.swift */,
 				B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */,
 				B88A919F2A4C9BED00422ABF /* EntryList */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
+				B51359272AC11570004385A7 /* ErrorDetailView.swift */,
 				B8A1621729B39337008322EB /* ExpandAlignedLeadingViewModifier.swift */,
 				B83E91D627692EC600045C6A /* FAB.swift */,
+				B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */,
 				B8CBAFA029930C5D0079107E /* Forms */,
 				B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */,
 				B57C0AEC29D280AC00D352E3 /* Layout */,
@@ -1593,6 +1595,7 @@
 				B58A46B829D4001500491E43 /* Profile */,
 				B8AC648B278F757B0099E96B /* ProgressScrimView.swift */,
 				B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */,
+				B51359222AC113C1004385A7 /* Recovery */,
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
 				B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
@@ -1612,9 +1615,6 @@
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
-				B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */,
-				B5C918F52A67BB35004C6CD5 /* EllipsisLabelView.swift */,
-				B51359272AC11570004385A7 /* ErrorDetailView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1988,7 +1988,6 @@
 				B86F1AB728C77E8C00DA264E /* Search.swift in Sources */,
 				B8AB08B12A9D4FC300998099 /* BlockModel.swift in Sources */,
 				B8B3EE75297AEE6600779B7F /* FirstRunSphereView.swift in Sources */,
-				B8A59D6C28B692A00010DB2F /* Story.swift in Sources */,
 				B86DD5722AA0D33E00E1DEA5 /* UIStackViewHelpers.swift in Sources */,
 				B5F68F632A0B1E6900CE4DD7 /* OnboardingTheme.swift in Sources */,
 				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
@@ -2028,10 +2027,8 @@
 				B5C918F02A67ADEF004C6CD5 /* SphereSettingsView.swift in Sources */,
 				B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */,
 				B8AB08D02A9D522D00998099 /* UIViewDivider.swift in Sources */,
-				B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */,
 				B57701962A650C92001F874F /* ProfileHeaderButtonStyle.swift in Sources */,
 				B8AB08CA2A9D518800998099 /* UIBarButtonItemUtilities.swift in Sources */,
-				B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */,
 				B57701962A650C92001F874F /* ProfileHeaderButtonStyle.swift in Sources */,
 				B86DFF3327C072CD002E57ED /* Func.swift in Sources */,
 				B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */,
