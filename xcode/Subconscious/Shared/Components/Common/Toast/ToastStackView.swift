@@ -14,8 +14,8 @@ struct ToastStackView: View {
     var store: ViewStore<ToastStackModel>
     
     var body: some View {
-        if let first = store.state.stack.first {
-            ToastView(message: first.message)
+        if let first = store.state.presented {
+            ToastView(toast: first)
         }
     }
 }
@@ -23,6 +23,11 @@ struct ToastStackView: View {
 struct Toast: Equatable, Hashable {
     var id: UUID
     var message: String
+    
+    init(message: String) {
+        self.id = UUID()
+        self.message = message
+    }
 }
 
 enum ToastStackAction: Hashable, Equatable {
@@ -36,6 +41,7 @@ struct ToastStackModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var stack: [Toast] = []
+    var presented: Toast?
     
     static func update(
         state: Self,
@@ -71,10 +77,7 @@ struct ToastStackModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.stack.append(
-            Toast(
-                id: UUID.init(),
-                message: message
-            )
+            Toast(message: message)
         )
         
         // If this is the only toast, immediately present it
@@ -106,6 +109,7 @@ struct ToastStackModel: ModelProtocol {
             )
         }
         
+        model.presented = nil
         return Update(state: model).animation(.default)
     }
     
@@ -114,12 +118,14 @@ struct ToastStackModel: ModelProtocol {
         environment: Environment,
         toast: Toast
     ) -> Update<Self> {
+        var model = state
         let fx: Fx<ToastStackAction> = Future.detached {
             try? await Task.sleep(nanoseconds: 5_000_000_000)
             return .toastExpired(toast: toast)
         }
         .eraseToAnyPublisher()
+        model.presented = toast
         
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
 }

@@ -9,13 +9,13 @@ import Foundation
 import SwiftUI
 
 struct ToastView: View {
-    var message: String
+    var toast: Toast
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         HStack {
             Spacer()
-            Text(message)
+            Text(toast.message)
             Spacer()
         }
         .padding()
@@ -43,7 +43,7 @@ struct ToastView_Previews: PreviewProvider {
         var body: some View {
             VStack {
                 Button(action: {
-                    withAnimation(.easeInOut(duration: 1.0)) {
+                    withAnimation() {
                         toggled = !toggled
                     }
                 }, label: {
@@ -53,7 +53,7 @@ struct ToastView_Previews: PreviewProvider {
                 Spacer()
                 
                 if (self.toggled) {
-                    ToastView(message: "An alert!")
+                    ToastView(toast: Toast(message: "An alert!"))
                 }
             }
         }
