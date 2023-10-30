@@ -113,6 +113,7 @@ enum AppAction: Hashable {
     case inviteCodeFormField(InviteCodeFormField.Action)
     case gatewayURLField(GatewayUrlFormField.Action)
     case recoveryMode(RecoveryModeModel.Action)
+    case toastStack(ToastStackAction)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -315,6 +316,10 @@ enum AppAction: Hashable {
     static func setAppUpgradeComplete(_ isComplete: Bool) -> AppAction {
         .appUpgrade(.setComplete(isComplete))
     }
+    
+    static func pushToast(message: String) -> AppAction {
+        return .toastStack(.pushToast(message: message))
+    }
 }
 
 extension AppAction {
@@ -466,6 +471,28 @@ struct RecoveryModeCursor: CursorProtocol {
     }
 }
 
+struct ToastStackCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = ToastStackModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.toastStack
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.toastStack = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .toastStack(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -494,6 +521,8 @@ struct AppModel: ModelProtocol {
     /// and persist the new value to UserDefaults.
     var isFirstRunComplete = false
     var firstRunPath: [FirstRunStep] = []
+    
+    var toastStack: ToastStackModel = ToastStackModel()
 
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
@@ -651,6 +680,12 @@ struct AppModel: ModelProtocol {
             )
         case .authorization(let action):
             return AuthorizationSettingsCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .toastStack(let action):
+            return ToastStackCursor.update(
                 state: state,
                 action: action,
                 environment: environment

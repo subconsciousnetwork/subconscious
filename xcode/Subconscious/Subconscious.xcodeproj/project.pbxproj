@@ -44,6 +44,8 @@
 		B569971729B6A0DF003204FC /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971529B6A0DF003204FC /* DidQrCodeView.swift */; };
 		B56C2D4E2A4962D00062DAC0 /* Tests_TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56C2D4D2A4962D00062DAC0 /* Tests_TranscludeService.swift */; };
 		B56C3D3E2A01E5020071EF70 /* InviteCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56C3D3D2A01E5020071EF70 /* InviteCode.swift */; };
+		B57339582AEF800300D43333 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57339572AEF800300D43333 /* ToastView.swift */; };
+		B573395A2AEF829F00D43333 /* ToastStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57339592AEF829F00D43333 /* ToastStackView.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
 		B57701962A650C92001F874F /* ProfileHeaderButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57701952A650C92001F874F /* ProfileHeaderButtonStyle.swift */; };
 		B57701972A650C92001F874F /* ProfileHeaderButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57701952A650C92001F874F /* ProfileHeaderButtonStyle.swift */; };
@@ -549,6 +551,8 @@
 		B569971529B6A0DF003204FC /* DidQrCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
 		B56C2D4D2A4962D00062DAC0 /* Tests_TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_TranscludeService.swift; sourceTree = "<group>"; };
 		B56C3D3D2A01E5020071EF70 /* InviteCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCode.swift; sourceTree = "<group>"; };
+		B57339572AEF800300D43333 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
+		B57339592AEF829F00D43333 /* ToastStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastStackView.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
 		B57701952A650C92001F874F /* ProfileHeaderButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHeaderButtonStyle.swift; sourceTree = "<group>"; };
 		B579FA912A1AE4D1008A4D2F /* ResolutionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolutionStatus.swift; sourceTree = "<group>"; };
@@ -965,6 +969,15 @@
 				B540F8B92A0C748C00876256 /* Line.swift */,
 			);
 			path = Shapes;
+			sourceTree = "<group>";
+		};
+		B57339562AEF7FF200D43333 /* Toast */ = {
+			isa = PBXGroup;
+			children = (
+				B57339572AEF800300D43333 /* ToastView.swift */,
+				B57339592AEF829F00D43333 /* ToastStackView.swift */,
+			);
+			path = Toast;
 			sourceTree = "<group>";
 		};
 		B57C0AEC29D280AC00D352E3 /* Layout */ = {
@@ -1580,6 +1593,8 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B57339562AEF7FF200D43333 /* Toast */,
+				B51359222AC113C1004385A7 /* Recovery */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -2015,6 +2030,7 @@
 				B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */,
 				B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */,
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
+				B573395A2AEF829F00D43333 /* ToastStackView.swift in Sources */,
 				B800ABE8297DE7D20024D1FD /* DataService.swift in Sources */,
 				B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
@@ -2209,6 +2225,7 @@
 				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
 				B8AB08BD2A9D502C00998099 /* ListBlockCell.swift in Sources */,
+				B57339582AEF800300D43333 /* ToastView.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
 				B89DBDE02AF440C6003D2CE3 /* UIHostingView.swift in Sources */,
 				B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */,

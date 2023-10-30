@@ -78,6 +78,14 @@ extension UserProfileDetailAction {
             return .notifySucceedResolveFollowedUser(petname: petname, cid: cid)
         case let .succeedUnfollow(identity, petname):
             return .notifySucceedUnfollow(identity: identity, petname: petname)
+        case let .failRename(error: error):
+            return AppAction.pushToast(message: "Failed to rename user: \(error)")
+        case let .failUnfollow(error: error):
+            return AppAction.pushToast(message: "Failed to unfollow user: \(error)")
+        case let .failEditProfile(error: error):
+            return AppAction.pushToast(message: "Failed to edit profile: \(error)")
+        case let .failFollow(error: error, context: _):
+            return AppAction.pushToast(message: "Failed to follow user: \(error)")
         default:
             return nil
         }
