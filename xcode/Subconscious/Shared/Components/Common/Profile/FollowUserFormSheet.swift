@@ -11,7 +11,7 @@ import ObservableStore
 import CodeScanner
 
 struct FollowNewUserFormSheetView: View {
-    let store: ViewStore<FollowNewUserFormSheetModel>
+    var store: ViewStore<FollowNewUserFormSheetModel>
     var did: Did?
     
     var state: FollowNewUserFormSheetModel {

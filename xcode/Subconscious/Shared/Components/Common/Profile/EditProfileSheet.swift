@@ -116,7 +116,7 @@ struct EditProfileSheetModel: ModelProtocol {
 
 
 struct EditProfileSheet: View {
-    let store: ViewStore<EditProfileSheetModel>
+    var store: ViewStore<EditProfileSheetModel>
     
     var state: EditProfileSheetModel { store.state }
     var send: (EditProfileSheetAction) -> Void { store.send }

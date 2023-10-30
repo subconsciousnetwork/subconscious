@@ -169,7 +169,7 @@ struct FollowUserSheetFormCursor: CursorProtocol {
 }
 
 struct FollowUserSheet: View {
-    let store: ViewStore<FollowUserSheetModel>
+    var store: ViewStore<FollowUserSheetModel>
    
     var state: FollowUserSheetModel { store.state }
     var send: (FollowUserSheetAction) -> Void { store.send }
