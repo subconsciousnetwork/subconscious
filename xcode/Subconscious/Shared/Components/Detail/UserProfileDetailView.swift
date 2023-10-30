@@ -1066,8 +1066,6 @@ struct UserProfileDetailModel: ModelProtocol {
         )
     }
     
-    
-    
     static func failEditProfile(
         state: Self,
         environment: Environment,

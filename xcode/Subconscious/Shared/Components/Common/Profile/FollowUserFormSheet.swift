@@ -54,10 +54,6 @@ struct FollowNewUserFormSheetView: View {
         send(.dismissSheet)
     }
     
-//    func onDismissFailFollowError() {
-//        send(.dismissError)
-//    }
-    
     var body: some View {
         NavigationStack {
             VStack {
