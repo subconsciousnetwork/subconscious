@@ -271,13 +271,15 @@ struct BlockEditorListBlockCell_Previews: PreviewProvider {
                         EntryStub(
                             did: Did("did:key:abc123")!,
                             address: Slashlink("@example/foo")!,
-                            excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                            excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
+                            isTruncated: true,
                             modified: Date.now
                         ),
                         EntryStub(
                             did: Did("did:key:abc123")!,
                             address: Slashlink("@example/bar")!,
-                            excerpt: "Modularity is a form of hierarchy",
+                            excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
+                            isTruncated: false,
                             modified: Date.now
                         ),
                     ]

@@ -110,16 +110,14 @@ extension BlockEditor {
             self.backgroundColor = .tertiarySystemGroupedBackground
         }
 
-        func render(
-            _ stub: EntryStub
-        ) {
+        func render(_ stub: EntryStub) {
             bylineView.render(
                 BlockEditor.BylineModel(
                     pfp: ProfilePicVariant.generated(stub.did),
                     slashlink: stub.address
                 )
             )
-            self.excerptView.text = stub.excerpt
+            self.excerptView.text = stub.excerpt.description
         }
     }
 }
@@ -132,7 +130,8 @@ struct BlockEditorTranscludeView_Previews: PreviewProvider {
                 EntryStub(
                     did: Did("did:key:abc123")!,
                     address: Slashlink("@example/foo")!,
-                    excerpt: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization.",
+                    excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
+                    isTruncated: true,
                     modified: Date.now
                 )
             )
