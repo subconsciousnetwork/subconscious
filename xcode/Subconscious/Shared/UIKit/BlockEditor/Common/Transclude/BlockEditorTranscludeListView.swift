@@ -49,6 +49,8 @@ extension BlockEditor {
         }
         
         func render(_ state: [EntryStub]) {
+            // Hide view if there are no transcludes
+            self.isHidden = state.count < 1
             stackView.removeAllArrangedSubviewsCompletely()
             for stub in state {
                 let transclude = BlockEditor.TranscludeView()

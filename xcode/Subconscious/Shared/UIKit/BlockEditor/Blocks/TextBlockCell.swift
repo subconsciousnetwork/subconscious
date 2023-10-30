@@ -144,8 +144,6 @@ extension BlockEditor {
         func render(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
             transcludeListView.render(state.transcludes)
-            // Hide view if there are no transcludes
-            transcludeListView.isHidden = state.transcludes.count < 1
             if textView.text != state.text {
                 textView.text = state.text
             }
