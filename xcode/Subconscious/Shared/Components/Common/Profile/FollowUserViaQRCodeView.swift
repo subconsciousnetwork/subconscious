@@ -46,18 +46,18 @@ struct FollowUserViaQRCodeView: View {
                 dismiss()
             }
         }
-//        .alert(
-//            isPresented: Binding(
-//                get: { errorMessage != nil },
-//                set: { _ in }
-//            )
-//        ) {
-//            let errorMessage = errorMessage ?? "Failed to scan"
-//            
-//            return Alert(
-//                title: Text("QR Code Error"),
-//                message: Text(errorMessage)
-//            )
-//        }
+        .alert(
+            isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { _ in }
+            )
+        ) {
+            let errorMessage = errorMessage ?? "Failed to scan"
+            
+            return Alert(
+                title: Text("QR Code Error"),
+                message: Text(errorMessage)
+            )
+        }
     }
 }

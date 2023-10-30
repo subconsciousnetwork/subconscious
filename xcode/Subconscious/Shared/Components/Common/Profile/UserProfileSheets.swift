@@ -68,7 +68,7 @@ struct FollowSheetModifier: ViewModifier {
                             return
                         }
                         
-                        send(.attemptFollow(did, name.toPetname(), .followUserSheet))
+                        send(.attemptFollow(did, name.toPetname()))
                     },
                     label: Text("Follow")
                 )

@@ -289,7 +289,7 @@ struct FollowNewUserFormSheetCursor: CursorProtocol {
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
         case let .attemptFollow(did, petname):
-            .attemptFollow(did, petname, .followNewUserFormSheet)
+            .attemptFollow(did, petname)
         case .dismissSheet:
             .presentFollowNewUserFormSheet(false)
         default:
