@@ -236,7 +236,6 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             // the caption changed to the message "Petname already in use" or whatever
             // the localizedDescription for the relevant AddressBookServiceError.
             return Update(state: state)
-            
         case .dismissSheet:
             // Handled by FollowNewUserFormSheetCursor.tag
             return Update(state: state)

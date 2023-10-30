@@ -734,10 +734,13 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             .eraseToAnyPublisher()
         
-        // Dismiss sheet immediately on attempting follow
+        // Dimiss sheet immediately
         return update(
             state: state,
-            action: .presentFollowNewUserFormSheet(false),
+            actions: [
+                .presentFollowNewUserFormSheet(false),
+                .presentFollowSheet(false)
+            ],
             environment: environment
         ).mergeFx(fx)
     }
@@ -832,7 +835,7 @@ struct UserProfileDetailModel: ModelProtocol {
         }
         .eraseToAnyPublisher()
         
-        // Immediately dismiss sheet
+        // Dimiss sheet immediately
         var model = state
         model.isRenameSheetPresented = false
         return Update(state: state, fx: fx)
@@ -967,7 +970,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 })
                 .eraseToAnyPublisher()
             
-            // Immediately dismiss confirmation
+            // Dimiss confirmation immediately
             var model = state
             model.isUnfollowConfirmationPresented = false
             return Update(state: state, fx: fx)
