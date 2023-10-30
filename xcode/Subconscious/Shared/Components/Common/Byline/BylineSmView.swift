@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Compact byline combines a small profile pic, username, and path
 struct BylineSmView: View {
-    var pfp: ProfilePicVariant?
+    var pfp: ProfilePicVariant
     var slashlink: Slashlink
     
     var body: some View {
@@ -30,7 +30,12 @@ struct BylineSmView_Previews: PreviewProvider {
             )
             
             BylineSmView(
-                pfp: .none,
+                pfp: .generated(Did.dummyData()),
+                slashlink: Slashlink("@name/path")!
+            )
+
+            BylineSmView(
+                pfp: .generated(Did.local),
                 slashlink: Slashlink("@name/path")!
             )
         }

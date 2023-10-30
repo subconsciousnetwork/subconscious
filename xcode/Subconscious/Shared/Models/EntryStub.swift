@@ -13,12 +13,13 @@ struct EntryStub:
     Hashable,
     Equatable,
     Identifiable,
-    CustomDebugStringConvertible,
-    Codable
+    CustomDebugStringConvertible
 {
     let did: Did
     let address: Slashlink
-    let excerpt: String
+    let excerpt: Subtext
+    // Is the excerpt shorter than the full body of the entry?
+    let isTruncated: Bool
     let modified: Date
 
     var id: Slashlink { address }
@@ -31,6 +32,7 @@ struct EntryStub:
             did: did,
             address: address,
             excerpt: excerpt,
+            isTruncated: isTruncated,
             modified: modified
         )
     }

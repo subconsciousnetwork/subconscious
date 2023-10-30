@@ -78,6 +78,8 @@ enum RecoveryModeAction: Hashable {
     case succeedRecovery
     case failRecovery(_ error: String)
     case pressRecoveryButton
+    case setDebugDetailExpanded(Bool)
+    case setSphereDetailExpanded(Bool)
 }
 
 typealias RecoveryPhraseFormField = FormField<String, RecoveryPhrase>
@@ -156,6 +158,8 @@ struct RecoveryModeModel: ModelProtocol {
     
     var launchContext: RecoveryModeLaunchContext = .userInitiated
     var recoveryStatus: ResourceStatus = .initial
+    var isDebugDetailExpanded: Bool = false
+    var isSphereDetailExpanded: Bool = false
     
     var recoveryPhraseField = RecoveryPhraseFormField(
         value: "",
@@ -171,13 +175,13 @@ struct RecoveryModeModel: ModelProtocol {
         value: "",
         validate: { value in GatewayURL(value) }
     )
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "DetailStackModel"
     )
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -230,6 +234,18 @@ struct RecoveryModeModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .setDebugDetailExpanded(let expanded):
+            return setDebugDetailExpanded(
+                state: state,
+                environment: environment,
+                expanded: expanded
+            )
+        case .setSphereDetailExpanded(let expanded):
+            return setSphereDetailExpanded(
+                state: state,
+                environment: environment,
+                expanded: expanded
+            )
         }
     }
     
@@ -243,6 +259,12 @@ struct RecoveryModeModel: ModelProtocol {
         var model = state
         model.recoveryStatus = .initial
         model.launchContext = context
+        
+        // If we're missing information present the extra fields
+        if did == nil || gatewayURL == nil {
+            model.isSphereDetailExpanded = true
+        }
+        
         return update(
             state: model,
             actions: [
@@ -336,6 +358,30 @@ struct RecoveryModeModel: ModelProtocol {
             action: .attemptRecovery(did, gatewayUrl, recoveryPhrase),
             environment: environment
         )
+    }
+    
+    static func setDebugDetailExpanded(
+        state: Self,
+        environment: Environment,
+        expanded: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isDebugDetailExpanded = expanded
+        return Update(
+            state: model
+        ).animation(.default)
+    }
+    
+    static func setSphereDetailExpanded(
+        state: Self,
+        environment: Environment,
+        expanded: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isSphereDetailExpanded = expanded
+        return Update(
+            state: model
+        ).animation(.default)
     }
 }
 

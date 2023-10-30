@@ -19,7 +19,7 @@ enum ProfilePicSize {
 }
 
 struct ProfilePic: View {
-    var pfp: ProfilePicVariant?
+    var pfp: ProfilePicVariant
     var size: ProfilePicSize
 
     private var imageSize: CGFloat {
@@ -44,25 +44,33 @@ struct ProfilePic: View {
         }
     }
 
+    private var fontWeight: Font.Weight {
+        switch size {
+        case .large:
+            return .light
+        default:
+            return .regular
+        }
+    }
+
     var body: some View {
-        if let pfp = pfp {
-            switch pfp {
-            case .generated(let did):
-                GenerativeProfilePic(did: did, size: imageSize)
-                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
-            case .image(let img):
-                Image(img)
-                    .resizable()
-                    .profilePicFrame(size: imageSize, lineWidth: lineWidth)
-            }
-        } else {
+        switch pfp {
+        case .generated(let did) where did == Did.local:
             Image(audience: .local)
                 .resizable()
+                .fontWeight(fontWeight)
                 .foregroundStyle(Color.separator)
                 .frame(
                     width: imageSize,
                     height: imageSize
                 )
+        case .generated(let did):
+            GenerativeProfilePic(did: did, size: imageSize)
+                .profilePicFrame(size: imageSize, lineWidth: lineWidth)
+        case .image(let img):
+            Image(img)
+                .resizable()
+                .profilePicFrame(size: imageSize, lineWidth: lineWidth)
         }
     }
 }
@@ -79,7 +87,11 @@ struct ProfilePic_Previews: PreviewProvider {
                 size: .large
             )
             ProfilePic(
-                pfp: .none,
+                pfp: .generated(Did.local),
+                size: .large
+            )
+            ProfilePic(
+                pfp: .generated(Did.local),
                 size: .small
             )
         }

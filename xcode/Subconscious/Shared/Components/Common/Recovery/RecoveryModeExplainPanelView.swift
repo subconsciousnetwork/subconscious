@@ -21,7 +21,7 @@ struct RecoveryModeExplainPanelView: View {
             Spacer()
             
             switch store.state.launchContext {
-            case .unreadableDatabase(let error):
+            case .unreadableDatabase(_):
                 if let did = did {
                     ZStack {
                         StackedGlowingImage() {
@@ -37,20 +37,21 @@ struct RecoveryModeExplainPanelView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 48, height: 48)
                             .offset(x: 48, y: 48)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.secondaryIcon)
                     }
                     .padding([.bottom], AppTheme.padding)
                 }
-                Text("Your local data is unreadable.")
-                    .multilineTextAlignment(.center)
-                
-                ErrorDetailView(error: error)
+                Text(
+                    "Your sphere ran into a problem and needs to be recovered."
+                )
+                .expandAlignedLeading()
                 
                 Text(
-                    "Subconscious will attempt to " +
-                    "recover your data from your gateway, using your recovery phrase."
+                    "Subconscious will download and restore your data from the gateway, using your recovery phrase."
                 )
-                .multilineTextAlignment(.center)
+                .expandAlignedLeading()
+                
+               
             case .userInitiated:
                 if let did = did {
                     StackedGlowingImage() {
@@ -72,21 +73,27 @@ struct RecoveryModeExplainPanelView: View {
                 }
                 Spacer()
                 Text(
-                    "If your local data is damaged or unavailable you can recover your " +
-                    "data from your gateway using your recovery phrase."
+                    "If your sphere data is damaged or unavailable, you can download and restore your data from your gateway, using your recovery phrase."
                 )
-                .multilineTextAlignment(.center)
-                
+                .expandAlignedLeading()
             }
             
-            Text(
-                "We'll download and restore from the remote copy of your notes."
-            )
-            .multilineTextAlignment(.center)
-            
+            switch store.state.launchContext {
+            case .unreadableDatabase(let error):
+                ErrorDetailView(
+                    error: error,
+                    isExpanded: store.binding(
+                        get: \.isDebugDetailExpanded,
+                        tag: RecoveryModeAction.setDebugDetailExpanded
+                    )
+                )
+            default:
+                EmptyView()
+            }
+
             Spacer()
             
-            NavigationLink("Proceed", value: RecoveryViewStep.form)
+            NavigationLink("Next", value: RecoveryViewStep.form)
                 .buttonStyle(PillButtonStyle())
             
             if store.state.launchContext == .userInitiated {
@@ -101,6 +108,71 @@ struct RecoveryModeExplainPanelView: View {
             }
         }
         .padding(AppTheme.padding)
-        .navigationTitle("Recovery Mode")
+        .navigationTitle("Recovery")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct RecoveryModeExplainPanel_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        isDebugDetailExpanded: false,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
+            )
+        }
+
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .unreadableDatabase("Hello world"),
+                        isDebugDetailExpanded: true,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
+            )
+        }
+
+        NavigationStack {
+            RecoveryModeExplainPanelView(
+                store: Store(
+                    state: RecoveryModeModel(
+                        launchContext: .userInitiated,
+                        isDebugDetailExpanded: false,
+                        recoveryDidField: RecoveryDidFormField(
+                            value: "did:key:abc123",
+                            validate: { string in Did(string) }
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
+                .viewStore(
+                    get: { x in x},
+                    tag: { x in x }
+                )
+            )
+        }
     }
 }

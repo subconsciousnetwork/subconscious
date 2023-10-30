@@ -83,10 +83,15 @@ struct HomeProfileView: View {
         .onAppear {
             store.send(.appear)
         }
-        /// Replay app actions on local store
+        /// Replay some app actions on store
         .onReceive(
             app.actions.compactMap(HomeProfileAction.from),
             perform: store.send
+        )
+        /// Replay some store actions on app
+        .onReceive(
+            store.actions.compactMap(AppAction.from),
+            perform: app.send
         )
         .onReceive(store.actions) { action in
             HomeProfileAction.logger.debug("\(String(describing: action))")
@@ -96,7 +101,7 @@ struct HomeProfileView: View {
 
 
 // MARK: Action
-enum HomeProfileAction {
+enum HomeProfileAction: Hashable {
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "HomeProfileAction"
@@ -110,6 +115,11 @@ enum HomeProfileAction {
     
     case setSearchPresented(Bool)
     case requestProfileRoot
+    
+    /// DetailStack-related actions
+    case requestDeleteMemo(Slashlink?)
+    case succeedDeleteMemo(Slashlink)
+    case failDeleteMemo(String)
 }
 
 // MARK: Cursors and tagging functions
@@ -128,7 +138,12 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
     }
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .detailStack(action)
+        switch action {
+        case let .requestDeleteMemo(slashlink):
+            return .requestDeleteMemo(slashlink)
+        default:
+            return .detailStack(action)
+        }
     }
 }
 
@@ -139,6 +154,21 @@ extension HomeProfileAction {
             return .ready
         case .requestProfileRoot:
             return .requestProfileRoot
+        case let .succeedDeleteMemo(address):
+            return .succeedDeleteMemo(address)
+        case let .failDeleteMemo(error):
+            return .failDeleteMemo(error)
+        default:
+            return nil
+        }
+    }
+}
+
+extension AppAction {
+    static func from(_ action: HomeProfileAction) -> Self? {
+        switch action {
+        case let .requestDeleteMemo(slashlink):
+            return .deleteMemo(slashlink)
         default:
             return nil
         }
@@ -184,7 +214,7 @@ struct HomeProfileModel: ModelProtocol {
     var details: [MemoDetailDescription] {
         detailStack.details
     }
-
+    
     static func update(
         state: Self,
         action: HomeProfileAction,
@@ -230,15 +260,33 @@ struct HomeProfileModel: ModelProtocol {
                 action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
+        case .requestDeleteMemo(let address):
+            return requestDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case .failDeleteMemo(let error):
+            return failDeleteMemo(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .succeedDeleteMemo(let address):
+            return succeedDeleteMemo(
+                state: state,
+                environment: environment,
+                address: address
+            )
         }
     }
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "HomeProfileModel"
     )
-
+    
     /// Just before view appears (sent by task)
     static func appear(
         state: Self,
@@ -246,7 +294,7 @@ struct HomeProfileModel: ModelProtocol {
     ) -> Update<Self> {
         return Update(state: state)
     }
-
+    
     /// View is ready
     static func ready(
         state: Self,
@@ -254,7 +302,7 @@ struct HomeProfileModel: ModelProtocol {
     ) -> Update<Self> {
         return Update(state: state)
     }
-
+    
     static func requestProfileRoot(
         state: Self,
         environment: AppEnvironment
@@ -275,5 +323,62 @@ struct HomeProfileModel: ModelProtocol {
         var model = state
         model.isSearchPresented = isPresented
         return Update(state: model)
+    }
+    
+    /// Entry delete succeeded
+    static func requestDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink?
+    ) -> Update<Self> {
+        logger.log(
+            "Request delete memo",
+            metadata: [
+                "address": address?.description ?? ""
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.requestDeleteMemo(address)),
+            environment: environment
+        )
+    }
+    
+    /// Entry delete succeeded
+    static func succeedDeleteMemo(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        logger.log(
+            "Memo was deleted",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.succeedDeleteMemo(address)),
+            environment: environment
+        )
+    }
+
+    /// Entry delete failed
+    static func failDeleteMemo(
+        state: Self,
+        environment: Environment,
+        error: String
+    ) -> Update<Self> {
+        logger.log(
+            "Failed to delete memo",
+            metadata: [
+                "error": error
+            ]
+        )
+        return update(
+            state: state,
+            action: .detailStack(.failDeleteMemo(error)),
+            environment: environment
+        )
     }
 }

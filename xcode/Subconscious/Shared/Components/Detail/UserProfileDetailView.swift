@@ -633,13 +633,15 @@ struct UserProfileDetailModel: ModelProtocol {
             logger.log("Begin loading profile \(address)")
             return try await Self.refresh(address: address, environment: environment)
         }
-            .map { content in
-                UserProfileDetailAction.populate(content)
-            }
-            .catch { error in
-                Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
-            }
-            .eraseToAnyPublisher()
+        .map { content in
+            UserProfileDetailAction.populate(content)
+        }
+        .recover { error in
+            UserProfileDetailAction.failedToPopulate(
+                error.localizedDescription
+            )
+        }
+        .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
     }
@@ -656,7 +658,7 @@ struct UserProfileDetailModel: ModelProtocol {
         model.following = content.following
         model.loadingState = .loaded
         
-        return Update(state: model)
+        return Update(state: model).animation(.default)
     }
     
     static func failedToPopulate(

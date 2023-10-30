@@ -9,7 +9,7 @@ import SwiftUI
 import ObservableStore
 import Combine
 
-enum AppTab: String {
+enum AppTab: String, Hashable {
     case feed
     case notebook
     case profile

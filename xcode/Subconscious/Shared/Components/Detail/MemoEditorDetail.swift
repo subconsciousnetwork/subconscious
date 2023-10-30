@@ -48,8 +48,10 @@ struct MemoEditorDetailView: View {
         guard let sub = url.toSubSlashlinkURL() else {
             return true
         }
+        
         notify(
             .requestFindLinkDetail(
+                Slashlink.ourProfile, // Links in the editor are based from our sphere
                 link: sub
             )
         )
@@ -112,15 +114,11 @@ struct MemoEditorDetailView: View {
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
-            guard let link = url.toSubSlashlinkURL() else {
-                return .systemAction
+            if self.onLink(url: url) {
+                return .handled
             }
-            notify(
-                .requestFindLinkDetail(
-                    link: link
-                )
-            )
-            return .handled
+            
+            return .systemAction
         })
         .onReceive(store.actions) { action in
             MemoEditorDetailAction.logger.debug(
@@ -203,22 +201,25 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
-                    }
-                    ThickDividerView()
-                        .padding(.bottom, AppTheme.unit4)
-                    BacklinksView(
-                        backlinks: store.state.backlinks,
-                        onSelect: { link in
-                            notify(
-                                .requestDetail(
-                                    MemoDetailDescription.from(
-                                        address: link.address,
-                                        fallback: link.title
+                        ThickDividerView()
+                            .padding(.bottom, AppTheme.unit4)
+                        BacklinksView(
+                            backlinks: store.state.backlinks,
+                            onRequestDetail: { link in
+                                notify(
+                                    .requestDetail(
+                                        MemoDetailDescription.from(
+                                            address: link.address,
+                                            fallback: link.title
+                                        )
                                     )
                                 )
-                            )
-                        }
-                    )
+                            },
+                            onLink: { address, link in
+                                notify(.requestFindLinkDetail(address, link: link))
+                            }
+                        )
+                    }
                 }
                 if store.state.editor.focus {
                     DetailKeyboardToolbarView(
@@ -274,6 +275,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
+        _ context: Slashlink,
         link: SubSlashlinkLink
     )
     case requestDelete(Slashlink?)
@@ -2137,7 +2139,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         return entry
     }
     
-    func excerpt(fallback: String = "") -> String {
+    func excerpt(fallback: String = "") -> Subtext {
         Subtext.excerpt(markup: self.editor.text, fallback: fallback)
     }
 }

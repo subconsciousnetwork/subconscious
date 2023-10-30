@@ -35,7 +35,8 @@ public enum NoosphereError: Error, LocalizedError {
 
 public struct SphereReceipt:
     CustomStringConvertible,
-    CustomDebugStringConvertible
+    CustomDebugStringConvertible,
+    Hashable
 {
     public var identity: String
     // !!!: Mnemonic is a secret and should never be logged or persisted

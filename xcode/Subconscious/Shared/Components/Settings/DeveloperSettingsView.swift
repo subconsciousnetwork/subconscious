@@ -21,6 +21,24 @@ struct DeveloperSettingsView: View {
                     Text("Reset First Run Experience")
                 }
             )
+            
+            Button(
+                action: {
+                    app.send(.resetIndex)
+                },
+                label: {
+                    Text("Reset Local SQLite Index")
+                }
+            )
+            
+            Button(
+                action: {
+                    app.send(.indexOurSphere)
+                },
+                label: {
+                    Text("Build Local SQLite Index")
+                }
+            )
         }
         .navigationTitle("Developer")
     }

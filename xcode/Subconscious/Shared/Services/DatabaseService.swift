@@ -12,7 +12,7 @@ import Combine
 import os
 
 /// Enum representing the current readiness state of the database service
-enum DatabaseServiceState: String {
+enum DatabaseServiceState: String, Hashable {
     case initial = "initial"
     case broken = "broken"
     case ready = "ready"
@@ -173,6 +173,17 @@ final class DatabaseService {
         )
     }
     
+    /// Drop the record of our sphere to force re-indexing
+    func resetOurSphere(identity: Did) throws {
+        try database.execute(
+            sql: """
+            DELETE FROM our_sphere
+            WHERE did = ?
+            """,
+            parameters: [.text(identity.description)]
+        )
+    }
+    
     /// Given a sphere did, read the sync info from the database (if any).
     func readPeer(identity: Did) throws -> PeerRecord? {
         guard self.state == .ready else {
@@ -325,6 +336,20 @@ final class DatabaseService {
             throw error
         }
     }
+    
+    /// Reset the "since" column for all peers to NULL to force re-indexing
+    func resetPeers() throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        
+        // set the "since" column to NULL for this peer if it exists
+        try database.execute(
+            sql: """
+            UPDATE peer SET since = NULL
+            """
+        )
+    }
 
     /// Write entry synchronously
     func writeMemo(
@@ -451,7 +476,7 @@ final class DatabaseService {
 
         let results = try database.execute(
             sql: """
-            SELECT slashlink, modified, excerpt
+            SELECT slashlink, modified, length(body) > length(excerpt), excerpt
             FROM memo
             WHERE did = ?
                 AND slug = ?
@@ -470,14 +495,18 @@ final class DatabaseService {
                     .toString()?
                     .toSlashlink(),
                 let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let isTruncated = row.col(2)?.toBool()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -520,7 +549,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, slashlink, modified, excerpt
+            SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
             FROM memo
             WHERE did NOT IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -539,14 +568,18 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: slashlink,
                 excerpt: excerpt,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -568,7 +601,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo
             WHERE did IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -588,14 +621,18 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -1019,6 +1056,7 @@ final class DatabaseService {
                 peer.petname,
                 memo_search.slug,
                 memo_search.modified,
+                length(memo_search.body) > length(memo_search.excerpt),
                 memo_search.excerpt
             FROM memo_search
             LEFT JOIN peer ON memo_search.did = peer.did
@@ -1040,7 +1078,8 @@ final class DatabaseService {
             let petname = row.col(1)?.toString()?.toPetname()
             let slug = row.col(2)?.toString()?.toSlug()
             let modified = row.col(3)?.toDate()
-            let excerpt = row.col(4)?.toString() ?? ""
+            let isTruncated = row.col(4)?.toBool() ?? false
+            let excerpt = Subtext(markup: row.col(5)?.toString() ?? "")
             switch (petname, slug, modified) {
             case let (.some(petname), .some(slug), .some(modified)):
                 return EntryStub(
@@ -1050,6 +1089,7 @@ final class DatabaseService {
                         slug: slug
                     ),
                     excerpt: excerpt,
+                    isTruncated: isTruncated,
                     modified: modified
                 )
             case let (.none, .some(slug), .some(modified)):
@@ -1061,6 +1101,7 @@ final class DatabaseService {
                     did: did,
                     address: address,
                     excerpt: excerpt,
+                    isTruncated: isTruncated,
                     modified: modified
                 )
             default:
@@ -1080,7 +1121,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo_search
             WHERE memo_search.modified BETWEEN ? AND ?
                 AND substr(memo_search.slug, 1, 1) != '_'
@@ -1100,14 +1141,18 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -1122,7 +1167,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo
             ORDER BY RANDOM()
                 AND substr(memo.slug, 1, 1) != '_'
@@ -1132,20 +1177,24 @@ final class DatabaseService {
         .compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
-                let address = row.col(0)?
+                let address = row.col(1)?
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
-                let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(2)?.toString()
+                let modified = row.col(2)?.toDate(),
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })
@@ -1163,7 +1212,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, modified, length(body) > length(excerpt), excerpt
             FROM memo_search
             WHERE description MATCH ?
                 AND substr(slug, 1, 1) != '_'
@@ -1183,14 +1232,18 @@ final class DatabaseService {
                     .toSlashlink()?
                     .relativizeIfNeeded(did: owner),
                 let modified = row.col(2)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let isTruncated = row.col(3)?.toBool()
             else {
                 return nil
             }
+            
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
+                isTruncated: isTruncated,
                 modified: modified
             )
         })

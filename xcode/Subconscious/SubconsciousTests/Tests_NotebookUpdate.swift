@@ -12,7 +12,7 @@ import ObservableStore
 /// Tests for Notebook.update
 class Tests_NotebookUpdate: XCTestCase {
     let environment = AppEnvironment()
-
+    
     func testEntryCount() throws {
         let state = NotebookModel()
         let update = NotebookModel.update(
@@ -26,7 +26,7 @@ class Tests_NotebookUpdate: XCTestCase {
             "Entry count correctly set"
         )
     }
-
+    
     func testDeleteEntry() throws {
         let a = Slug(formatting: "A")!.toSlashlink()
         let b = Slug(formatting: "B")!.toLocalSlashlink()
@@ -36,19 +36,22 @@ class Tests_NotebookUpdate: XCTestCase {
                 EntryStub(
                     did: Did.dummyData(),
                     address: a,
-                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
+                    excerpt: Subtext(markup: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero."),
+                    isTruncated: false,
                     modified: Date.now
                 ),
                 EntryStub(
                     did: Did.dummyData(),
                     address: b,
-                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
+                    excerpt: Subtext(markup: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero."),
+                    isTruncated: false,
                     modified: Date.now
                 ),
                 EntryStub(
                     did: Did.dummyData(),
                     address: c,
-                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
+                    excerpt: Subtext(markup: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero."),
+                    isTruncated: false,
                     modified: Date.now
                 )
             ]
@@ -74,6 +77,4 @@ class Tests_NotebookUpdate: XCTestCase {
             "Slug C moved up because slug B was removed"
         )
     }
-    
-    
 }

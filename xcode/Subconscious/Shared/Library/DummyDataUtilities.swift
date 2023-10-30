@@ -156,13 +156,14 @@ extension EntryStub: DummyData {
     static func dummyData(petname: Petname) -> EntryStub {
         let slashlink = Slashlink("@\(petname)/entry-\(Int.random(in: 0..<99))")!
         let address = slashlink
-        let excerpt = String.dummyDataMedium()
+        let excerpt = Subtext(markup: String.dummyDataMedium())
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
+            isTruncated: false,
             modified: modified
         )
     }
@@ -170,13 +171,14 @@ extension EntryStub: DummyData {
     static func dummyData(petname: Petname, slug: Slug) -> EntryStub {
         let slashlink = Slashlink(petname: petname, slug: slug)
         let address = slashlink
-        let excerpt = String.dummyDataMedium()
+        let excerpt = Subtext(markup: String.dummyDataMedium())
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
+            isTruncated: false,
             modified: modified
         )
     }

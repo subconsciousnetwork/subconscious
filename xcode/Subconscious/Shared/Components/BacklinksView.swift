@@ -9,7 +9,8 @@ import SwiftUI
 
 struct BacklinksView: View {
     var backlinks: [EntryStub]
-    var onSelect: (EntryLink) -> Void
+    var onRequestDetail: (EntryLink) -> Void
+    var onLink: (_ context: Slashlink, SubSlashlinkLink) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
@@ -22,8 +23,11 @@ struct BacklinksView: View {
                 ForEach(backlinks) { entry in
                     TranscludeView(
                         entry: entry,
-                        action: {
-                            onSelect(EntryLink(entry))
+                        onRequestDetail: {
+                            onRequestDetail(EntryLink(entry))
+                        },
+                        onLink: { link in
+                            onLink(entry.address, link)
                         }
                     )
                 }
@@ -52,27 +56,45 @@ struct BacklinksView_Previews: PreviewProvider {
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
-                        excerpt: "Short",
+                        excerpt: Subtext(markup: "Short"),
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink("/loomings")!,
-                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
+                        ),
+                        isTruncated: false,
                         modified: Date.now
                     ),
                     EntryStub(
                         did: Did.dummyData(),
                         address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
-                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
+                        ),
+                        isTruncated: false,
+                        modified: Date.now
+                    ),
+                    EntryStub(
+                        did: Did.local,
+                        address: Slashlink(slug: Slug(formatting: "The whale, the whale")!),
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
+                        ),
+                        isTruncated: false,
                         modified: Date.now
                     )
                 ],
-                onSelect: { title in }
+                onRequestDetail: { title in },
+                onLink: { address, link in }
             )
             BacklinksView(
                 backlinks: [],
-                onSelect: { title in }
+                onRequestDetail: { title in },
+                onLink: { address, link in }
             )
         }
     }

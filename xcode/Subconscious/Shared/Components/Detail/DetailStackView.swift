@@ -638,9 +638,9 @@ extension DetailStackAction {
             return .requestDeleteMemo(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindLinkDetail(link):
+        case let .requestFindLinkDetail(context, link):
             return .findAndPushLinkDetail(
-                address: Slashlink.ourProfile,
+                address: context,
                 link: link
             )
         case let .succeedMoveEntry(from, to):
