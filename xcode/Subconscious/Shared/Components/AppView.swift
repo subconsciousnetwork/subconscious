@@ -546,6 +546,9 @@ struct AppModel: ModelProtocol {
     /// This property is updated at `.start` with the corresponding value
     /// stored in `AppDefaults`.
     var sphereIdentity: String?
+    var sphereDid: Did? {
+        Did(sphereIdentity ?? "")
+    }
     /// Default sphere version, if any.
     var sphereVersion: String?
     /// State for rendering mnemonic/recovery phrase UI.
@@ -2517,7 +2520,7 @@ struct AppModel: ModelProtocol {
                 .presentRecoveryMode(true),
                 .recoveryMode(
                     .populate(
-                        Did(state.sphereIdentity ?? ""),
+                        state.sphereDid,
                         GatewayURL(state.gatewayURL),
                         context
                     )

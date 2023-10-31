@@ -49,7 +49,7 @@ struct MemoEditorDetailView: View {
             return true
         }
         
-        guard let did = Did(app.state.sphereIdentity ?? "") else {
+        guard let did = app.state.sphereDid else {
             return true
         }
         
