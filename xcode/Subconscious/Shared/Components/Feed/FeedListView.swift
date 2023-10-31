@@ -33,11 +33,12 @@ struct FeedListView: View {
                                 )
                             )
                         },
-                        onLink: { address, link in
+                        onLink: { entry, link in
                             store.send(
                                 .detailStack(
                                     .findAndPushLinkDetail(
-                                        address: address,
+                                        did: entry.did,
+                                        address: entry.address,
                                         link: link
                                     )
                                 )

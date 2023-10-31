@@ -53,7 +53,7 @@ struct MemoViewerDetailView: View {
                 )
             case .notFound:
                 MemoViewerDetailNotFoundView(
-                    backlinks: store.state.backlinks,
+                    store: store,
                     notify: notify
                 )
             }
@@ -102,7 +102,12 @@ struct MemoViewerDetailView: View {
 
 /// View for the "not found" state of content
 struct MemoViewerDetailNotFoundView: View {
-    var backlinks: [EntryStub]
+    @ObservedObject var store: Store<MemoViewerDetailModel>
+    
+    var backlinks: [EntryStub] {
+        store.state.backlinks
+    }
+    
     var notify: (MemoViewerDetailNotification) -> Void
     var contentFrameHeight = UIFont.appTextMono.lineHeight * 8
     
@@ -125,8 +130,14 @@ struct MemoViewerDetailNotFoundView: View {
             BacklinksView(
                 backlinks: backlinks,
                 onRequestDetail: onBacklinkSelect,
-                onLink: { address, link in
-                    notify(.requestFindLinkDetail(address: address, link: link))
+                onLink: { context, link in
+                    notify(
+                        .requestFindLinkDetail(
+                            did: context.did,
+                            address: context.address,
+                            link: link
+                        )
+                    )
                 }
             )
         }
@@ -169,8 +180,13 @@ struct MemoViewerDetailLoadedView: View {
             return .systemAction
         }
         
+        guard let did = user?.did else {
+            return .systemAction
+        }
+        
         notify(
             .requestFindLinkDetail(
+                did: did,
                 address: address,
                 link: link
             )
@@ -179,7 +195,7 @@ struct MemoViewerDetailLoadedView: View {
     }
     
     private func onLink(
-        context: Slashlink,
+        context: EntryStub,
         url: URL
     ) -> OpenURLAction.Result {
         guard let link = url.toSubSlashlinkURL() else {
@@ -188,7 +204,8 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindLinkDetail(
-                address: context,
+                did: context.did,
+                address: context.address,
                 link: link
             )
         )
@@ -218,10 +235,11 @@ struct MemoViewerDetailLoadedView: View {
                             subtext: dom,
                             transcludePreviews: transcludePreviews,
                             onViewTransclude: self.onViewTransclude,
-                            onTranscludeLink: { address, link in
+                            onTranscludeLink: { context, link in
                                 notify(
                                     .requestFindLinkDetail(
-                                        address: address,
+                                        did: context.did,
+                                        address: context.address,
                                         link: link
                                     )
                                 )
@@ -229,7 +247,7 @@ struct MemoViewerDetailLoadedView: View {
                         ).textSelection(
                             .enabled
                         ).environment(\.openURL, OpenURLAction { url in
-                            self.onLink(context: address, url: url)
+                            self.onLink(url: url)
                         })
                         Spacer()
                     }
@@ -242,8 +260,14 @@ struct MemoViewerDetailLoadedView: View {
                     BacklinksView(
                         backlinks: backlinks,
                         onRequestDetail: onBacklinkSelect,
-                        onLink: { address, link in
-                            notify(.requestFindLinkDetail(address: address, link: link))
+                        onLink: { context, link in
+                            notify(
+                                .requestFindLinkDetail(
+                                    did: context.did,
+                                    address: context.address,
+                                    link: link
+                                )
+                            )
                         }
                     )
                 }
@@ -259,6 +283,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
+        did: Did,
         address: Slashlink,
         link: SubSlashlinkLink
     )
@@ -735,26 +760,35 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
         )
 
         MemoViewerDetailNotFoundView(
-            backlinks: [
-                EntryStub(
-                    did: Did.dummyData(),
-                    address: Slashlink("@bob/bar")!,
-                    excerpt: Subtext(
-                        markup: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless."
-                    ),
-                    isTruncated: false,
-                    modified: Date.now
+            store: Store(
+                state: MemoViewerDetailModel(
+                    backlinks: [
+                        EntryStub(
+                            did: Did.dummyData(),
+                            address: Slashlink(
+                                "@bob/bar"
+                            )!,
+                            excerpt: Subtext(
+                                markup: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless."
+                            ),
+                            isTruncated: false,
+                            modified: Date.now
+                        ),
+                        EntryStub(
+                            did: Did.dummyData(),
+                            address: Slashlink(
+                                "@bob/baz"
+                            )!,
+                            excerpt: Subtext(
+                                markup: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?"
+                            ),
+                            isTruncated: false,
+                            modified: Date.now
+                        )
+                    ]
                 ),
-                EntryStub(
-                    did: Did.dummyData(),
-                    address: Slashlink("@bob/baz")!,
-                    excerpt: Subtext(
-                        markup: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?"
-                    ),
-                    isTruncated: false,
-                    modified: Date.now
-                )
-            ],
+                environment: AppEnvironment()
+            ),
             notify: {
                 action in 
             }
