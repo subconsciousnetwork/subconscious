@@ -40,15 +40,18 @@ class Tests_DetailStack: XCTestCase {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
+        let did = Did.dummyData()
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
+            owner: did,
             address: address,
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
         switch newAction {
-        case let .findAndPushLinkDetail(newAddress, newLink):
+        case let .findAndPushLinkDetail(newDid, newAddress, newLink):
+            XCTAssertEqual(did, newDid)
             XCTAssertEqual(address, newAddress)
             XCTAssertEqual(link, newLink)
         default:
@@ -59,16 +62,19 @@ class Tests_DetailStack: XCTestCase {
     func testEditorSlashlinkConstruction() throws {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
+        let did = Did.dummyData()
         
         let action = MemoEditorDetailNotification.requestFindLinkDetail(
-            Slashlink.ourProfile,
+            owner: did,
+            address: Slashlink.ourProfile,
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
         
         switch newAction {
-        case let .findAndPushLinkDetail(newAddress, newLink):
+        case let .findAndPushLinkDetail(newDid, newAddress, newLink):
+            XCTAssertEqual(newDid, did)
             XCTAssertEqual(newAddress, Slashlink.ourProfile)
             XCTAssertEqual(newLink, link)
         default:
