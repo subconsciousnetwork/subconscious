@@ -13,8 +13,6 @@ class Tests_DetailStack: XCTestCase {
     let environment = AppEnvironment()
     
     func testSubSlashlinkRebase() throws {
-        let model = DetailStackModel()
-        
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let baseAddress = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
@@ -32,11 +30,38 @@ class Tests_DetailStack: XCTestCase {
             return
         }
     }
+    
+    func testFindAndPushLinkDetail() throws {
+        let model = DetailStackModel()
+        
+        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
+        let address = Slashlink(petname: Petname("origin")!)
+        let link = SubSlashlinkLink(slashlink: slashlink)
+        let did = Did.dummyData()
+        
+        let update = DetailStackModel.update(state: model, action: .findAndPushLinkDetail(owner: did, address: address, link: link), environment: environment)
+            let expectation = XCTestExpectation(
+                description: "findAndPushDetail is sent"
+            )
+            _ = update.fx.sink(
+                receiveCompletion: { completion in
+                    expectation.fulfill()
+                },
+                receiveValue: { action in
+                    switch action {
+                    case let .findAndPushDetail(address: newAddress, link: newLink):
+                        XCTAssertEqual(newLink, link)
+                        XCTAssertEqual(Slashlink("@bob.alice.origin/hello"), newAddress)
+                    default:
+                        XCTFail("Incorrect action")
+                    }
+                }
+            )
+            wait(for: [expectation], timeout: 2.0)
+    }
 
 
     func testViewerSlashlinkConstruction() throws {
-        let model = DetailStackModel()
-        
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
