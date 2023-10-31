@@ -7,10 +7,12 @@
 
 import XCTest
 import ObservableStore
+import Combine
 @testable import Subconscious
 
 class Tests_DetailStack: XCTestCase {
     let environment = AppEnvironment()
+    var cancellable: AnyCancellable?
     
     func testSubSlashlinkRebase() throws {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
@@ -43,21 +45,21 @@ class Tests_DetailStack: XCTestCase {
             let expectation = XCTestExpectation(
                 description: "findAndPushDetail is sent"
             )
-            _ = update.fx.sink(
-                receiveCompletion: { completion in
-                    expectation.fulfill()
-                },
-                receiveValue: { action in
-                    switch action {
-                    case let .findAndPushDetail(address: newAddress, link: newLink):
-                        XCTAssertEqual(newLink, link)
-                        XCTAssertEqual(Slashlink("@bob.alice.origin/hello"), newAddress)
+        self.cancellable = update.fx.sink(
+            receiveCompletion: { completion in
+                expectation.fulfill()
+            },
+            receiveValue: { action in
+                switch action {
+                case let .findAndPushDetail(address: newAddress, link: newLink):
+                    XCTAssertEqual(newLink, link)
+                    XCTAssertEqual(Slashlink("@bob.alice.origin/hello"), newAddress)
                     default:
                         XCTFail("Incorrect action")
                     }
                 }
             )
-            wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 2.0)
     }
 
 
