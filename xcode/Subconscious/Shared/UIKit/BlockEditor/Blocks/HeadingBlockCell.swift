@@ -27,6 +27,7 @@ extension BlockEditor {
         
         weak var delegate: HeadingBlockCellDelegate?
         
+        private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var textView = UITextView(frame: .zero)
         
         private lazy var toolbar = self.createToolbar()
@@ -56,7 +57,24 @@ extension BlockEditor {
             )
             contentView.addSubview(textView)
 
+            selectView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(selectView)
+
             NSLayoutConstraint.activate([
+                selectView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: AppTheme.unit
+                ),
+                selectView.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor,
+                    constant: -1 * AppTheme.unit
+                ),
+                selectView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor
+                ),
+                selectView.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor
+                ),
                 textView.leadingAnchor.constraint(
                     equalTo: contentView.leadingAnchor
                 ),
@@ -85,6 +103,12 @@ extension BlockEditor {
                 textView.selectedRange = state.selection
             }
             textView.setFirstResponder(state.isEditing)
+            // Set editability of textview
+            if textView.isEditable != !state.isBlockSelectMode {
+                textView.isEditable = !state.isBlockSelectMode
+            }
+            // Handle select mode
+            selectView.isHidden = !state.isBlockSelected
         }
         
         func textView(

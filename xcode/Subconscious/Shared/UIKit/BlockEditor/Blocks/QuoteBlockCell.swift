@@ -20,6 +20,7 @@ extension BlockEditor {
         
         weak var delegate: TextBlockDelegate?
         
+        private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
         private var quoteContainerMargins = NSDirectionalEdgeInsets(
@@ -106,8 +107,25 @@ extension BlockEditor {
             transcludeListView.directionalLayoutMargins = transcludeMargins
             stackView.addArrangedSubview(transcludeListView)
 
+            selectView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(selectView)
+
             let quoteContainerGuide = quoteContainer.layoutMarginsGuide
             NSLayoutConstraint.activate([
+                selectView.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: AppTheme.unit
+                ),
+                selectView.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor,
+                    constant: -1 * AppTheme.unit
+                ),
+                selectView.topAnchor.constraint(
+                    equalTo: contentView.topAnchor
+                ),
+                selectView.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor
+                ),
                 textView.leadingAnchor.constraint(
                     equalTo: quoteContainerGuide.leadingAnchor
                 ),
@@ -194,6 +212,12 @@ extension BlockEditor {
                 textView.selectedRange = state.selection
             }
             textView.setFirstResponder(state.isEditing)
+            // Set editability of textview
+            if textView.isEditable != !state.isBlockSelectMode {
+                textView.isEditable = !state.isBlockSelectMode
+            }
+            // Handle select mode
+            selectView.isHidden = !state.isBlockSelected
         }
         
         func textView(
