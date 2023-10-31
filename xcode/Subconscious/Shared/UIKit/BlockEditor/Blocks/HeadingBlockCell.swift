@@ -104,9 +104,7 @@ extension BlockEditor {
             }
             textView.setFirstResponder(state.isEditing)
             // Set editability of textview
-            if textView.isEditable != !state.isBlockSelectMode {
-                textView.isEditable = !state.isBlockSelectMode
-            }
+            textView.setModifiable(!state.isBlockSelectMode)
             // Handle select mode
             selectView.isHidden = !state.isBlockSelected
         }
