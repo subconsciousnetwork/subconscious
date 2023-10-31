@@ -41,10 +41,14 @@ class Tests_DetailStack: XCTestCase {
         let link = SubSlashlinkLink(slashlink: slashlink)
         let did = Did.dummyData()
         
-        let update = DetailStackModel.update(state: model, action: .findAndPushLinkDetail(owner: did, address: address, link: link), environment: environment)
-            let expectation = XCTestExpectation(
-                description: "findAndPushDetail is sent"
-            )
+        let update = DetailStackModel.update(
+            state: model,
+            action: .findAndPushLinkDetail(owner: did, address: address, link: link),
+            environment: environment
+        )
+        let expectation = XCTestExpectation(
+            description: "findAndPushDetail is sent"
+        )
         self.cancellable = update.fx.sink(
             receiveCompletion: { completion in
                 expectation.fulfill()
