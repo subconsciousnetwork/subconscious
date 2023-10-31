@@ -31,4 +31,15 @@ extension UITextView {
         }
         return text(in: textRange)
     }
+    
+    /// Shortcut for setting `isUserInteractionEnabled` and `isEditable`
+    /// together.
+    func setModifiable(_ isModifiable: Bool) {
+        if (self.isUserInteractionEnabled != isModifiable) {
+            self.isUserInteractionEnabled = isModifiable
+        }
+        if (self.isEditable != isModifiable) {
+            self.isEditable = isModifiable
+        }
+    }
 }
