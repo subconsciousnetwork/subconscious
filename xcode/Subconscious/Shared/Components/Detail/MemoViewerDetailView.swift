@@ -53,7 +53,7 @@ struct MemoViewerDetailView: View {
                 )
             case .notFound:
                 MemoViewerDetailNotFoundView(
-                    store: store,
+                    backlinks: store.state.backlinks,
                     notify: notify
                 )
             }
@@ -102,12 +102,7 @@ struct MemoViewerDetailView: View {
 
 /// View for the "not found" state of content
 struct MemoViewerDetailNotFoundView: View {
-    @ObservedObject var store: Store<MemoViewerDetailModel>
-    
-    var backlinks: [EntryStub] {
-        store.state.backlinks
-    }
-    
+    var backlinks: [EntryStub]
     var notify: (MemoViewerDetailNotification) -> Void
     var contentFrameHeight = UIFont.appTextMono.lineHeight * 8
     
@@ -133,7 +128,7 @@ struct MemoViewerDetailNotFoundView: View {
                 onLink: { context, link in
                     notify(
                         .requestFindLinkDetail(
-                            did: context.did,
+                            owner: context.did,
                             address: context.address,
                             link: link
                         )
@@ -186,7 +181,7 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindLinkDetail(
-                did: did,
+                owner: did,
                 address: address,
                 link: link
             )
@@ -204,7 +199,7 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindLinkDetail(
-                did: context.did,
+                owner: context.did,
                 address: context.address,
                 link: link
             )
@@ -238,7 +233,7 @@ struct MemoViewerDetailLoadedView: View {
                             onTranscludeLink: { context, link in
                                 notify(
                                     .requestFindLinkDetail(
-                                        did: context.did,
+                                        owner: context.did,
                                         address: context.address,
                                         link: link
                                     )
@@ -263,7 +258,7 @@ struct MemoViewerDetailLoadedView: View {
                         onLink: { context, link in
                             notify(
                                 .requestFindLinkDetail(
-                                    did: context.did,
+                                    owner: context.did,
                                     address: context.address,
                                     link: link
                                 )
@@ -283,7 +278,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
-        did: Did,
+        owner: Did,
         address: Slashlink,
         link: SubSlashlinkLink
     )
@@ -760,35 +755,30 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
         )
 
         MemoViewerDetailNotFoundView(
-            store: Store(
-                state: MemoViewerDetailModel(
-                    backlinks: [
-                        EntryStub(
-                            did: Did.dummyData(),
-                            address: Slashlink(
-                                "@bob/bar"
-                            )!,
-                            excerpt: Subtext(
-                                markup: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless."
-                            ),
-                            isTruncated: false,
-                            modified: Date.now
-                        ),
-                        EntryStub(
-                            did: Did.dummyData(),
-                            address: Slashlink(
-                                "@bob/baz"
-                            )!,
-                            excerpt: Subtext(
-                                markup: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?"
-                            ),
-                            isTruncated: false,
-                            modified: Date.now
-                        )
-                    ]
+            backlinks: [
+                EntryStub(
+                    did: Did.dummyData(),
+                    address: Slashlink(
+                        "@bob/bar"
+                    )!,
+                    excerpt: Subtext(
+                        markup: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless."
+                    ),
+                    isTruncated: false,
+                    modified: Date.now
                 ),
-                environment: AppEnvironment()
-            ),
+                EntryStub(
+                    did: Did.dummyData(),
+                    address: Slashlink(
+                        "@bob/baz"
+                    )!,
+                    excerpt: Subtext(
+                        markup: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?"
+                    ),
+                    isTruncated: false,
+                    modified: Date.now
+                )
+            ],
             notify: {
                 action in 
             }

@@ -66,7 +66,7 @@ enum UserProfileDetailNotification: Hashable {
     case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
     case requestFindLinkDetail(
-        did: Did,
+        owner: Did,
         address: Slashlink,
         link: SubSlashlinkLink
     )

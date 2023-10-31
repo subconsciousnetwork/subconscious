@@ -109,7 +109,7 @@ enum DetailStackAction: Hashable {
     )
     
     case findAndPushLinkDetail(
-        did: Did,
+        owner: Did,
         address: Slashlink,
         link: SubSlashlinkLink
     )
@@ -182,11 +182,11 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 details: details
             )
-        case let .findAndPushLinkDetail(did, address, link):
+        case let .findAndPushLinkDetail(owner, address, link):
             return findAndPushLinkDetail(
                 state: state,
                 environment: environment,
-                did: did,
+                owner: owner,
                 address: address,
                 link: link
             )
@@ -308,7 +308,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
     static func findAndPushLinkDetail(
         state: Self,
         environment: Environment,
-        did: Did,
+        owner: Did,
         address: Slashlink,
         link: SubSlashlinkLink
     ) -> Update<Self> {
@@ -317,12 +317,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
         let fx: Fx<DetailStackAction> = Future.detached {
             let identity = try await environment.noosphere.identity()
             let following = await environment.addressBook.followingStatus(
-                did: did,
+                did: owner,
                 expectedName: address.petname?.leaf
             )
             
             // Is this us? Trim off the peer
-            guard did != identity else {
+            guard owner != identity else {
                 return .findAndPushDetail(
                     address: Slashlink(slug: slashlink.slug),
                     link: link
@@ -640,9 +640,9 @@ extension DetailStackAction {
             return .requestDeleteMemo(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindLinkDetail(did, address, link):
+        case let .requestFindLinkDetail(owner, address, link):
             return .findAndPushLinkDetail(
-                did: did,
+                owner: owner,
                 address: address,
                 link: link
             )
@@ -661,9 +661,9 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindLinkDetail(did, address, link):
+        case let .requestFindLinkDetail(owner, address, link):
             return .findAndPushLinkDetail(
-                did: did,
+                owner: owner,
                 address: address,
                 link: link
             )
@@ -682,9 +682,9 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindLinkDetail(did, address, link):
+        case let .requestFindLinkDetail(owner, address, link):
             return .findAndPushLinkDetail(
-                did: did,
+                owner: owner,
                 address: address,
                 link: link
             )

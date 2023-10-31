@@ -76,8 +76,8 @@ struct StoryEntryView: View {
                         onViewTransclude: { slashlink in
                             onRequestDetail(slashlink, story.entry.excerpt.description)
                         },
-                        onTranscludeLink: { entry, link in
-                            onLink(entry, link)
+                        onTranscludeLink: { context, link in
+                            onLink(context, link)
                         }
                     )
                     .padding([.leading, .trailing], AppTheme.padding)
