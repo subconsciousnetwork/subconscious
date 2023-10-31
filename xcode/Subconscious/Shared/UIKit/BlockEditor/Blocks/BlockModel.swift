@@ -40,6 +40,32 @@ extension BlockEditor {
             }
         }
         
+        var isBlockSelected: Bool {
+            switch self {
+            case let .text(block):
+                return block.isBlockSelected
+            case let .heading(block):
+                return block.isBlockSelected
+            case let .quote(block):
+                return block.isBlockSelected
+            case let .list(block):
+                return block.isBlockSelected
+            }
+        }
+
+        var isBlockSelectedMode: Bool {
+            switch self {
+            case let .text(block):
+                return block.isBlockSelectMode
+            case let .heading(block):
+                return block.isBlockSelectMode
+            case let .quote(block):
+                return block.isBlockSelectMode
+            case let .list(block):
+                return block.isBlockSelectMode
+            }
+        }
+
         /// Update inner text block model, returning a new self, of the same
         /// case as the original.
         /// In the case the block is not a text block, returns nil. There is
