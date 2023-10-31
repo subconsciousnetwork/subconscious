@@ -40,109 +40,67 @@ extension BlockEditor {
             }
         }
         
+        /// Update inner text block model, returning a new self, of the same
+        /// case as the original.
+        /// In the case the block is not a text block, returns nil. There is
+        /// currently no such block type, but in future there may be non-text
+        /// block types, such as image.
+        /// - Returns: self of same case, or nil
+        func update(_ transform: (TextBlockModel) -> TextBlockModel) -> Self? {
+            switch self {
+            case .text(let block):
+                return .text(transform(block))
+            case .heading(let block):
+                return .heading(transform(block))
+            case .quote(let block):
+                return .quote(transform(block))
+            case .list(let block):
+                return .list(transform(block))
+            }
+        }
+
         func setText(
             text: String,
             selection: NSRange
         ) -> Self? {
-            switch self {
-            case let .text(block):
-                return .text(block.setText(text: text, selection: selection))
-            case let .heading(block):
-                return .heading(block.setText(text: text, selection: selection))
-            case let .quote(block):
-                return .quote(block.setText(text: text, selection: selection))
-            case .list(let block):
-                return .list(block.setText(text: text, selection: selection))
+            update { block in
+                block.setText(text: text, selection: selection)
             }
         }
         
         func setSelection(
             selection: NSRange
         ) -> Self? {
-            switch self {
-            case let .text(block):
-                return .text(block.setSelection(selection: selection))
-            case let .heading(block):
-                return .heading(block.setSelection(selection: selection))
-            case let .quote(block):
-                return .quote(block.setSelection(selection: selection))
-            case .list(let block):
-                return .list(block.setSelection(selection: selection))
+            update { block in
+                block.setSelection(selection: selection)
             }
         }
         
-        func setEditing(_ isEditing: Bool) -> Self {
-            switch self {
-            case let .text(block):
+        func setEditing(_ isEditing: Bool) -> Self? {
+            update { block in
                 var block = block
                 block.isEditing = isEditing
-                return .text(block)
-            case let .heading(block):
-                var block = block
-                block.isEditing = isEditing
-                return .heading(block)
-            case let .quote(block):
-                var block = block
-                block.isEditing = isEditing
-                return .quote(block)
-            case let .list(block):
-                var block = block
-                block.isEditing = isEditing
-                return .list(block)
+                return block
             }
         }
 
         func setBlockSelectMode(
             _ isBlockSelectMode: Bool
-        ) -> Self {
-            switch self {
-            case let .text(block):
+        ) -> Self? {
+            update { block in
                 var block = block
                 block.isBlockSelectMode = isBlockSelectMode
-                return .text(block)
-            case let .quote(block):
-                var block = block
-                block.isBlockSelectMode = isBlockSelectMode
-                return .text(block)
-            case let .list(block):
-                var block = block
-                block.isBlockSelectMode = isBlockSelectMode
-                return .list(block)
-            case let .heading(block):
-                var block = block
-                block.isBlockSelectMode = isBlockSelectMode
-                return .heading(block)
+                return block
             }
         }
         
         func setBlockSelected(
             _ isBlockSelected: Bool
-        ) -> Self {
-            switch self {
-            case let .text(block):
+        ) -> Self? {
+            update { block in
                 var block = block
                 block.isBlockSelected = isBlockSelected
-                return .text(
-                    block
-                )
-            case let .quote(block):
-                var block = block
-                block.isBlockSelected = isBlockSelected
-                return .quote(
-                    block
-                )
-            case let .list(block):
-                var block = block
-                block.isBlockSelected = isBlockSelected
-                return .list(
-                    block
-                )
-            case let .heading(block):
-                var block = block
-                block.isBlockSelected = isBlockSelected
-                return .heading(
-                    block
-                )
+                return block
             }
         }
     }

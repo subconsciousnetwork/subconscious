@@ -720,7 +720,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
     ) -> Update {
         var model = state
         model.blocks = state.blocks.map({ block in
-            block.setEditing(block.id == id)
+            block.setEditing(block.id == id) ?? block
         })
         return Update(state: model)
     }
@@ -741,7 +741,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         
         var model = state
         model.blocks = state.blocks.map({ block in
-            block.setEditing(block.id == id)
+            block.setEditing(block.id == id) ?? block
         })
 
         let render = {
@@ -758,7 +758,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         var model = state
         model.blocks = state.blocks.map({ block in
             if block.id == id {
-                return block.setEditing(false)
+                return block.setEditing(false) ?? block
             }
             return block
         })
@@ -782,7 +782,7 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         var model = state
         model.blocks = state.blocks.map({ block in
             if block.id == id {
-                return block.setEditing(false)
+                return block.setEditing(false) ?? block
             }
             return block
         })
@@ -827,9 +827,13 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         
         model.isBlockSelectMode = true
         model.blocks = state.blocks.map({ block in
-            block
-                .setBlockSelectMode(true)
-                .setBlockSelected(block.id == id)
+            let updated = block.update { block in
+                var block = block
+                block.isBlockSelectMode = true
+                block.isBlockSelected = block.id == id
+                return block
+            }
+            return updated ?? block
         })
         
         let render = {
@@ -850,9 +854,13 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         
         model.isBlockSelectMode = false
         model.blocks = state.blocks.map({ block in
-            block
-                .setBlockSelectMode(false)
-                .setBlockSelected(false)
+            let updated = block.update { block in
+                var block = block
+                block.isBlockSelectMode = false
+                block.isBlockSelected = false
+                return block
+            }
+            return updated ?? block
         })
         
         let render = {
@@ -883,7 +891,8 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         var model = state
         
         let block = model.blocks[i]
-        model.blocks[i] = block.setBlockSelected(true)
+        let updatedBlock = block.setBlockSelected(true) ?? block
+        model.blocks[i] = updatedBlock
         
         let render = {
             self.collectionView.reconfigureItems(
