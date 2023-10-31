@@ -682,10 +682,10 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindLinkDetail(context, link):
+        case let .requestFindLinkDetail(did, address, link):
             return .findAndPushLinkDetail(
-                did: context.did,
-                address: context.address,
+                did: did,
+                address: address,
                 link: link
             )
         case let .requestNavigateToProfile(address):

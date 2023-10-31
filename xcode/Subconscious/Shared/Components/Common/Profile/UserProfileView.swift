@@ -50,7 +50,8 @@ struct RecentTabView: View {
                     onLink: { context, link in
                         notify(
                             .requestFindLinkDetail(
-                                context: context,
+                                did: context.did,
+                                address: context.address,
                                 link: link
                             )
                         )
