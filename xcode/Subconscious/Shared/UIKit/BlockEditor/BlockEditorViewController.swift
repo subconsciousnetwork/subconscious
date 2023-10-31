@@ -61,7 +61,13 @@ extension BlockEditor {
             target: self,
             action: #selector(onLongPress)
         )
-        
+
+        /// Gesture used to select blocks in selection mode
+        private lazy var tapGesture = UILongPressGestureRecognizer(
+            target: self,
+            action: #selector(onTap)
+        )
+
         private lazy var collectionView = Self.createCollectionView(
             frame: .zero
         )
@@ -82,7 +88,10 @@ extension BlockEditor {
             
             longPressGesture.delegate = self
             view.addGestureRecognizer(longPressGesture)
-            
+
+            tapGesture.delegate = self
+            view.addGestureRecognizer(tapGesture)
+
             collectionView.register(
                 ErrorCell.self,
                 forCellWithReuseIdentifier: ErrorCell.identifier
@@ -137,6 +146,16 @@ extension BlockEditor {
             case .ended:
                 let point = gesture.location(in: self.collectionView)
                 store.send(.longPress(point))
+            default:
+                break
+            }
+        }
+
+        @objc private func onTap(_ gesture: UIGestureRecognizer) {
+            switch gesture.state {
+            case .ended:
+                let point = gesture.location(in: self.collectionView)
+                store.send(.tap(point))
             default:
                 break
             }
@@ -383,12 +402,17 @@ extension BlockEditor {
         /// Issues a long-press event at a point.
         /// If the point matches a block, this will enter edit mode.
         case longPress(CGPoint)
+        /// Issues a tap event at a point.
+        /// If the point matches a block, and the editor is in selection mode,
+        /// this will toggle block selection.
+        case tap(CGPoint)
         /// Enter edit mode, optionally selecting a block
         case enterBlockSelectMode(selecting: UUID?)
         /// Exit edit mode. Also de-selects all blocks
         case exitBlockSelectMode
         /// Select a block
-        case selectBlock(id: UUID)
+        case selectBlock(id: UUID, isSelected: Bool = true)
+        case toggleSelectBlock(id: UUID)
         /// Move the block up one position in the stack.
         /// If block is first block, this does nothing.
         case moveBlockUp(id: UUID)
@@ -467,6 +491,11 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
                 state: state,
                 point: point
             )
+        case let .tap(point):
+            return tap(
+                state: state,
+                point: point
+            )
         case let .enterBlockSelectMode(selecting):
             return enterBlockSelectMode(
                 state: state,
@@ -476,8 +505,14 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             return exitBlockSelectMode(
                 state: state
             )
-        case let .selectBlock(id):
+        case let .selectBlock(id, isSelected):
             return selectBlock(
+                state: state,
+                id: id,
+                isSelected: isSelected
+            )
+        case let .toggleSelectBlock(id: id):
+            return toggleSelectBlock(
                 state: state,
                 id: id
             )
@@ -799,9 +834,9 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         point: CGPoint
     ) -> Update {
         guard !state.isBlockSelectMode else {
-            Self.logger.debug("Long-pressed while in block select mode. No-op.")
             return Update(state: state)
         }
+        Self.logger.debug("Long press triggering select mode")
         guard let indexPath = collectionView.indexPathForItem(at: point) else {
             let x = point.x
             let y = point.y
@@ -819,6 +854,31 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         return Update(state: state, effects: [selectModeEffect])
     }
     
+    func tap(
+        state: Model,
+        point: CGPoint
+    ) -> Update {
+        guard state.isBlockSelectMode else {
+            return Update(state: state)
+        }
+        Self.logger.debug("Tap triggering block selection")
+        guard let indexPath = collectionView.indexPathForItem(at: point) else {
+            let x = point.x
+            let y = point.y
+            Self.logger.debug("No block at point (\(x), \(y)). No-op.")
+            return Update(state: state)
+        }
+        let index = indexPath.row
+        guard let block = state.blocks.get(index) else {
+            Self.logger.log("No model found at index \(index). No-op.")
+            return Update(state: state)
+        }
+        let selectModeEffect = {
+            Action.toggleSelectBlock(id: block.id)
+        }
+        return Update(state: state, effects: [selectModeEffect])
+    }
+
     func enterBlockSelectMode(
         state: Model,
         selecting id: UUID?
@@ -874,7 +934,60 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         return Update(state: model, render: render)
     }
 
+    private func updateBlock(
+        state: Model,
+        id: UUID,
+        transform: (BlockEditor.BlockModel) -> BlockEditor.BlockModel
+    ) -> Model? {
+        guard let i = state.blocks.firstIndex(whereID: id) else {
+            Self.logger.log("block#\(id) not found. Doing nothing.")
+            return nil
+        }
+        var model = state
+        let block = model.blocks[i]
+        model.blocks[i] = transform(block)
+        return model
+    }
+
     func selectBlock(
+        state: Model,
+        id: UUID,
+        isSelected: Bool
+    ) -> Update {
+        guard state.isBlockSelectMode else {
+            Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
+            return Update(state: state)
+        }
+        
+        guard let i = state.block(id: id) else {
+            return Update(state: state)
+        }
+        
+        var model = state
+        let block = model.blocks[i]
+        let updatedBlock = block.setBlockSelected(isSelected) ?? block
+
+        guard block != updatedBlock else {
+            Self.logger.debug("Block selection state did not change.")
+            return Update(state: state)
+        }
+        model.blocks[i] = updatedBlock
+        
+        let render = {
+            self.collectionView.reconfigureItems(
+                at: [
+                    IndexPath(
+                        row: i,
+                        section: BlockEditor.Section.blocks.rawValue
+                    )
+                ]
+            )
+        }
+        
+        return Update(state: model, render: render)
+    }
+
+    func toggleSelectBlock(
         state: Model,
         id: UUID
     ) -> Update {
@@ -883,15 +996,19 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
             return Update(state: state)
         }
         
-        guard let i = state.blocks.firstIndex(whereID: id) else {
-            Self.logger.log("block#\(id) not found. Doing nothing.")
+        guard let i = state.block(id: id) else {
             return Update(state: state)
         }
         
         var model = state
-        
         let block = model.blocks[i]
-        let updatedBlock = block.setBlockSelected(true) ?? block
+        let isSelected = block.isBlockSelected
+        let updatedBlock = block.setBlockSelected(!isSelected) ?? block
+
+        guard block != updatedBlock else {
+            Self.logger.debug("Block selection state did not change.")
+            return Update(state: state)
+        }
         model.blocks[i] = updatedBlock
         
         let render = {
