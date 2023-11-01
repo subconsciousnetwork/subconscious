@@ -619,76 +619,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     /// The text editor
     var editor = SubtextTextModel()
     /// Block editor
-    var blockEditor = BlockEditor.Model(
-        blocks: [
-            BlockEditor.BlockModel.heading(
-                BlockEditor.TextBlockModel(
-                    text: "Autopoiesis"
-                )
-            ),
-            BlockEditor.BlockModel.text(
-                BlockEditor.TextBlockModel(
-                    text: "The property of a living system (such as a bacterial cell or a multicellular organism) that allows it to maintain and renew itself by regulating its composition and conserving its boundaries.",
-                    transcludes: [
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/foo")!,
-                            excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                            isTruncated: true,
-                            modified: Date.now
-                        ),
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/bar")!,
-                            excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                            isTruncated: false,
-                            modified: Date.now
-                        ),
-                    ]
-                )
-            ),
-            BlockEditor.BlockModel.quote(
-                BlockEditor.TextBlockModel(
-                    text: "The notion of autopoiesis is at the core of a shift in perspective about biological phenomena: it expresses that the mechanisms of self-production are the key to understand both the diversity and the uniqueness of the living. (Francisco J. Varela, in Self-Organizing Systems: An Interdisciplinary Approach, 1981)"
-                )
-            ),
-            BlockEditor.BlockModel.list(
-                BlockEditor.TextBlockModel(
-                    text: "List item"
-                )
-            ),
-            BlockEditor.BlockModel.list(
-                BlockEditor.TextBlockModel(
-                    text: "List item"
-                )
-            ),
-        ],
-        appendix: BlockEditor.RelatedModel(
-            related: [
-                EntryStub(
-                    did: Did("did:key:abc123")!,
-                    address: Slashlink("@example/foo")!,
-                    excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                    isTruncated: true,
-                    modified: Date.now
-                ),
-                EntryStub(
-                    did: Did("did:key:abc123")!,
-                    address: Slashlink("@example/bar")!,
-                    excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                    isTruncated: false,
-                    modified: Date.now
-                ),
-                EntryStub(
-                    did: Did("did:key:abc123")!,
-                    address: Slashlink("@example/baz")!,
-                    excerpt: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
-                    isTruncated: true,
-                    modified: Date.now
-                )
-            ]
-        )
-    )
+    var blockEditor = BlockEditor.Model.draft()
     
     /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false
