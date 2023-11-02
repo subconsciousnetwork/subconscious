@@ -9,7 +9,7 @@ import Foundation
 
 /// Model enumerating the possible audience/scopes for a piece of content.
 /// Right now we only have two: local-only draft or fully public
-enum Audience: String, Codable, CustomStringConvertible {
+enum Audience: String, Hashable, Codable, CustomStringConvertible {
     /// A local-only draft
     case local = "local"
     /// Public sphere content

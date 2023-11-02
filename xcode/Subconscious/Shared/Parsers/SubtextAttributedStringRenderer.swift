@@ -128,10 +128,12 @@ struct SubtextAttributedStringRenderer {
         let sub = SubSlashlinkLink(slashlink: slashlink)
         return sub.toURL()
     }
-    
-    /// Body font size. Should be passed down from view using
-    /// `@ScaledMetric(relativeTo: .body)`.
-    var bodySize: CGFloat = AppTheme.textSize
+
+    /// Body font. We use this as the base for body-style text, and customize
+    /// it with italic and bold variants for markup.
+    var bodyFont: UIFont = .preferredFont(forTextStyle: .body)
+    /// Heading font. Used for heading blocks.
+    var headingFont: UIFont = .preferredFont(forTextStyle: .headline)
     /// Delegate allowing slashlink-to-url override
     var slashlinkToURL: (String) -> URL? = Self.slashlinkToURL
     /// Delegate allowing wikilink-to-url override
@@ -295,7 +297,7 @@ struct SubtextAttributedStringRenderer {
         // Set default font for entire string
         attributedString.addAttribute(
             .font,
-            value: UIFont.appTextMono.withSize(bodySize),
+            value: bodyFont,
             range: baseNSRange
         )
         
@@ -330,7 +332,7 @@ struct SubtextAttributedStringRenderer {
             let nsRange = NSRange(line.range, in: attributedString.string)
             attributedString.addAttribute(
                 .font,
-                value: UIFont.appTextMonoBold,
+                value: headingFont,
                 range: nsRange
             )
         case .list(_, let inline):
@@ -344,7 +346,7 @@ struct SubtextAttributedStringRenderer {
             let nsRange = NSRange(line.range, in: attributedString.string)
             attributedString.addAttribute(
                 .font,
-                value: UIFont.appTextMonoItalic,
+                value: bodyFont.italic(),
                 range: nsRange
             )
             for inline in inline {
@@ -432,7 +434,7 @@ struct SubtextAttributedStringRenderer {
         case .bold(let bold):
             attributedString.addAttribute(
                 .font,
-                value: UIFont.appTextMonoBold,
+                value: bodyFont.bold(),
                 range: NSRange(
                     bold.span.range,
                     in: attributedString.string
@@ -441,7 +443,7 @@ struct SubtextAttributedStringRenderer {
         case .italic(let italic):
             attributedString.addAttribute(
                 .font,
-                value: UIFont.appTextMonoItalic,
+                value: bodyFont.italic(),
                 range: NSRange(
                     italic.span.range,
                     in: attributedString.string

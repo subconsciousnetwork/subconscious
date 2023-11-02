@@ -9,7 +9,7 @@ import SwiftUI
 
 enum AppTheme {}
 
-//  MARK: Theme units
+// MARK: Theme units
 extension AppTheme {
     static let unit: CGFloat = 4
     static let unitHalf: CGFloat = unit / 2
@@ -53,10 +53,10 @@ extension AppTheme {
         )
 }
 
-//  MARK: UIFonts
-//  Note you can convert from UIFont to Font easily, but you can't yet convert
-//  from Font to UIFont. So, we define our fonts as UIFonts.
-//  2021-12-15 Gordon Brander
+// MARK: UIFonts
+// Note you can convert from UIFont to Font easily, but you can't yet convert
+// from Font to UIFont. So, we define our fonts as UIFonts.
+// 2021-12-15 Gordon Brander
 extension UIFont {
     static let appTextMono = UIFont(
         name: "IBMPlexMono",
@@ -74,7 +74,7 @@ extension UIFont {
     )!
 }
 
-//  MARK: Color
+// MARK: Color
 extension Color {
     static let separator = SwiftUI.Color(uiColor: UIColor.separator)
     static let placeholderText = SwiftUI.Color(
@@ -167,5 +167,14 @@ extension Color {
     
     static func brandDropShadow(_ colorScheme: ColorScheme) -> Color {
         colorScheme == .dark ? Color.brandMarkPink : Color.brandMarkPurple
+    }
+}
+
+extension UIColor {
+    /// The accent color as a UIColor
+    /// We return this dynamically so that the accent color will be recomputed
+    /// for light/dark mode.
+    static var accent: UIColor {
+        UIColor(Color.accentColor)
     }
 }

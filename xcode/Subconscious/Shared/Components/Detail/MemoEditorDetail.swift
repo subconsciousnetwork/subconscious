@@ -10,8 +10,9 @@ import os
 import ObservableStore
 import Combine
 
-//  MARK: View
+// MARK: View
 struct MemoEditorDetailView: View {
+    typealias Action = MemoEditorDetailAction
     @ObservedObject var app: Store<AppModel>
     
     /// Detail keeps a separate internal store for editor state that does not
@@ -40,7 +41,7 @@ struct MemoEditorDetailView: View {
             return store.state.address?.markup ?? store.state.title
         }
     }
-
+    
     private func onLink(
         url: URL
     ) -> Bool {
@@ -56,92 +57,22 @@ struct MemoEditorDetailView: View {
         )
         return false
     }
-
+    
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                ScrollView(.vertical) {
-                    VStack(spacing: 0) {
-                        SubtextTextViewRepresentable(
-                            state: store.state.editor,
-                            send: Address.forward(
-                                send: store.send,
-                                tag: MemoEditorDetailSubtextTextCursor.tag
-                            ),
-                            frame: geometry.frame(in: .local),
-                            onLink: self.onLink
-                        )
-                        .insets(
-                            EdgeInsets(
-                                top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
-                            )
-                        )
-                        .frame(
-                            minHeight: UIFont.appTextMono.lineHeight * 8
-                        )
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
-                        BacklinksView(
-                            backlinks: store.state.backlinks,
-                            onRequestDetail: { link in
-                                notify(
-                                    .requestDetail(
-                                        MemoDetailDescription.from(
-                                            address: link.address,
-                                            fallback: link.title
-                                        )
-                                    )
-                                )
-                            },
-                            onLink: { address, link in
-                                notify(.requestFindLinkDetail(address, link: link))
-                            }
-                        )
-                    }
-                }
-                if store.state.editor.focus {
-                    DetailKeyboardToolbarView(
-                        isSheetPresented: Binding(
-                            get: { store.state.isLinkSheetPresented },
-                            send: store.send,
-                            tag: MemoEditorDetailAction.setLinkSheetPresented
-                        ),
-                        selectedShortlink: store.state.selectedShortlink,
-                        suggestions: store.state.linkSuggestions,
-                        onSelectLinkCompletion: { link in
-                            store.send(.selectLinkCompletion(link))
-                        },
-                        onInsertWikilink: {
-                            store.send(.insertEditorWikilinkAtSelection)
-                        },
-                        onInsertBold: {
-                            store.send(.insertEditorBoldAtSelection)
-                        },
-                        onInsertItalic: {
-                            store.send(.insertEditorItalicAtSelection)
-                        },
-                        onInsertCode: {
-                            store.send(.insertEditorCodeAtSelection)
-                        },
-                        onDoneEditing: {
-                            store.send(.doneEditing)
-                        }
+        VStack {
+            if app.state.isBlockEditorEnabled {
+                BlockEditor.Representable(
+                    state: Binding(
+                        get: { store.state.blockEditor },
+                        send: store.send,
+                        tag: Action.forceSetBlockEditor
                     )
-                    .transition(
-                        .asymmetric(
-                            insertion: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
-                                .delay(Duration.keyboard)
-                            ),
-                            removal: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
-                            )
-                        )
-                    )
-                }
+                )
+                .frame(
+                    minHeight: UIFont.appTextMono.lineHeight * 8
+                )
+            } else {
+                plainEditor()
             }
         }
         .navigationTitle(navigationTitle)
@@ -243,9 +174,99 @@ struct MemoEditorDetailView: View {
             )
         }
     }
+    
+    /// Constructs a plain text editor for the view
+    private func plainEditor() -> some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                ScrollView(.vertical) {
+                    VStack(spacing: 0) {
+                        SubtextTextViewRepresentable(
+                            state: store.state.editor,
+                            send: Address.forward(
+                                send: store.send,
+                                tag: MemoEditorDetailSubtextTextCursor.tag
+                            ),
+                            frame: geometry.frame(in: .local),
+                            onLink: self.onLink
+                        )
+                        .insets(
+                            EdgeInsets(
+                                top: AppTheme.padding,
+                                leading: AppTheme.padding,
+                                bottom: AppTheme.padding,
+                                trailing: AppTheme.padding
+                            )
+                        )
+                        .frame(
+                            minHeight: UIFont.appTextMono.lineHeight * 8
+                        )
+                        ThickDividerView()
+                            .padding(.bottom, AppTheme.unit4)
+                        BacklinksView(
+                            backlinks: store.state.backlinks,
+                            onRequestDetail: { link in
+                                notify(
+                                    .requestDetail(
+                                        MemoDetailDescription.from(
+                                            address: link.address,
+                                            fallback: link.title
+                                        )
+                                    )
+                                )
+                            },
+                            onLink: { address, link in
+                                notify(.requestFindLinkDetail(address, link: link))
+                            }
+                        )
+                    }
+                }
+                if store.state.editor.focus {
+                    DetailKeyboardToolbarView(
+                        isSheetPresented: Binding(
+                            get: { store.state.isLinkSheetPresented },
+                            send: store.send,
+                            tag: MemoEditorDetailAction.setLinkSheetPresented
+                        ),
+                        selectedShortlink: store.state.selectedShortlink,
+                        suggestions: store.state.linkSuggestions,
+                        onSelectLinkCompletion: { link in
+                            store.send(.selectLinkCompletion(link))
+                        },
+                        onInsertWikilink: {
+                            store.send(.insertEditorWikilinkAtSelection)
+                        },
+                        onInsertBold: {
+                            store.send(.insertEditorBoldAtSelection)
+                        },
+                        onInsertItalic: {
+                            store.send(.insertEditorItalicAtSelection)
+                        },
+                        onInsertCode: {
+                            store.send(.insertEditorCodeAtSelection)
+                        },
+                        onDoneEditing: {
+                            store.send(.doneEditing)
+                        }
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                                .delay(Duration.keyboard)
+                            ),
+                            removal: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
 }
 
-//  MARK: Action
+// MARK: Action
 
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
@@ -307,6 +328,10 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
+
+    //  Block editor actions
+    /// Force set the block editor's state
+    case forceSetBlockEditor(BlockEditor.Model)
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -485,7 +510,7 @@ extension MemoEditorDetailAction {
     }
 }
 
-//  MARK: Cursors
+// MARK: Cursors
 /// Editor cursor
 struct MemoEditorDetailSubtextTextCursor: CursorProtocol {
     static func get(state: MemoEditorDetailModel) -> SubtextTextModel {
@@ -555,7 +580,7 @@ struct DetailMetaSheetCursor: CursorProtocol {
     }
 }
 
-//  MARK: Model
+// MARK: Model
 struct MemoEditorDetailModel: ModelProtocol {
     var address: Slashlink?
     var defaultAudience = Audience.local
@@ -593,6 +618,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     /// The text editor
     var editor = SubtextTextModel()
+    /// Block editor
+    var blockEditor = BlockEditor.Model.draft()
     
     /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false
@@ -623,7 +650,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         category: "MemoEditorDetail"
     )
     
-    //  MARK: Update
+    // MARK: Update
     static func update(
         state: MemoEditorDetailModel,
         action: MemoEditorDetailAction,
@@ -658,6 +685,12 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
+            )
+        case let .forceSetBlockEditor(blockEditor):
+            return forceSetBlockEditor(
+                state: state,
+                environment: environment,
+                blockEditor: blockEditor
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -1031,6 +1064,16 @@ struct MemoEditorDetailModel: ModelProtocol {
         )
     }
     
+    static func forceSetBlockEditor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        blockEditor: BlockEditor.Model
+    ) -> Update<MemoEditorDetailModel> {
+        var model = state
+        model.blockEditor = blockEditor
+        return Update(state: model)
+    }
+
     /// Set the contents of the editor and mark save state and modified time.
     static func setEditor(
         state: MemoEditorDetailModel,
@@ -2037,7 +2080,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     }
 }
 
-//  MARK: Outer Model
+// MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
 struct MemoEditorDetailDescription: Hashable {
     var address: Slashlink?

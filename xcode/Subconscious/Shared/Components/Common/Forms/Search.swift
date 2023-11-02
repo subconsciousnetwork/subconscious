@@ -12,7 +12,7 @@ import Combine
 import ObservableStore
 import os
 
-//  MARK: Action
+// MARK: Action
 enum SearchAction: Hashable {
     /// Set search presented state
     case requestPresent(Bool)
@@ -77,7 +77,7 @@ extension SearchAction: CustomStringConvertible {
     }
 }
 
-//  MARK: Model
+// MARK: Model
 struct SearchModel: ModelProtocol {
     var clearSearchTimeout = Duration.keyboard + 0.1
 
@@ -92,7 +92,7 @@ struct SearchModel: ModelProtocol {
         category: "Search"
     )
 
-    //  MARK: Update
+    // MARK: Update
     static func update(
         state: SearchModel,
         action: SearchAction,
@@ -304,7 +304,7 @@ struct SearchModel: ModelProtocol {
     }
 }
 
-//  MARK: View
+// MARK: View
 struct SearchView: View {
     var store: ViewStore<SearchModel>
     var suggestionHeight: CGFloat = 56

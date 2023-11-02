@@ -161,6 +161,9 @@ enum AppAction: Hashable {
     /// persisted already.
     case notifyFirstRunComplete(_ isComplete: Bool)
 
+    /// Set and persist experimental block editor enabled
+    case persistBlockEditorEnabled(Bool)
+
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
     /// `Noosphere` and `SphereFS`.
@@ -497,6 +500,9 @@ struct AppModel: ModelProtocol {
         !isFirstRunComplete
     }
     
+    /// Is experimental block editor enabled?
+    var isBlockEditorEnabled = false
+
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
     var recoveryMode = RecoveryModeModel()
@@ -813,6 +819,12 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isComplete: isComplete
             )
+        case let .persistBlockEditorEnabled(isBlockEditorEnabled):
+            return persistBlockEditorEnabled(
+                state: state,
+                environment: environment,
+                isBlockEditorEnabled: isBlockEditorEnabled
+            )
         case .resetNoosphereService:
             return resetNoosphereService(
                 state: state,
@@ -1117,6 +1129,7 @@ struct AppModel: ModelProtocol {
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
         model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
+        model.isBlockEditorEnabled = AppDefaults.standard.isBlockEditorEnabled
         
         // Update model from app defaults
         return update(
@@ -1485,6 +1498,19 @@ struct AppModel: ModelProtocol {
         return Update(state: model).animation(.default)
     }
     
+    /// Persist first run complete state
+    static func persistBlockEditorEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isBlockEditorEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.isBlockEditorEnabled = isBlockEditorEnabled
+        var model = state
+        model.isBlockEditorEnabled = isBlockEditorEnabled
+        return Update(state: model)
+    }
+
     static func requestOfflineMode(
         state: AppModel,
         environment: AppEnvironment

@@ -72,7 +72,7 @@ struct FeedNavigationView: View {
     }
 }
 
-//  MARK: View
+// MARK: View
 struct FeedView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
@@ -123,7 +123,7 @@ struct FeedView: View {
     }
 }
 
-//  MARK: Action
+// MARK: Action
 enum FeedAction: Hashable {
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -249,7 +249,7 @@ struct FeedDetailStackCursor: CursorProtocol {
     }
 }
 
-//  MARK: Model
+// MARK: Model
 /// A feed of stories
 struct FeedModel: ModelProtocol {
     var status: LoadingState = .loading
@@ -268,7 +268,7 @@ struct FeedModel: ModelProtocol {
         category: "Feed"
     )
     
-    //  MARK: Update
+    // MARK: Update
     static func update(
         state: FeedModel,
         action: FeedAction,

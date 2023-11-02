@@ -1,7 +1,7 @@
 import SQLite3
 import Foundation
 
-//  MARK: SQLite3 Database
+// MARK: SQLite3 Database
 final class SQLite3Database {
     /// The default value of the user_version pragma.
     /// This constant is for code readability purposes.
@@ -272,7 +272,7 @@ final class SQLite3Database {
     }
 
 
-    //  MARK: SQLite3Connection
+    // MARK: SQLite3Connection
     /// SQLite connection manager designed along RAII lines.
     /// Connection lifetime is object lifetime.
     /// Initializing opens a connection to the database.

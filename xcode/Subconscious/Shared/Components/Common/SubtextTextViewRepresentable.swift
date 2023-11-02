@@ -34,7 +34,7 @@ import SwiftUI
 import Combine
 import ObservableStore
 
-//  MARK: Action
+// MARK: Action
 enum SubtextTextAction: Hashable {
     case requestFocus(Bool)
     case scheduleFocusChange
@@ -46,7 +46,7 @@ enum SubtextTextAction: Hashable {
     case setEditable(Bool)
 }
 
-//  MARK: Model
+// MARK: Model
 struct SubtextTextModel: ModelProtocol {
     var isFocusChangeScheduled = false
     var focusRequest = false
@@ -55,7 +55,7 @@ struct SubtextTextModel: ModelProtocol {
     var selection = NSMakeRange(0, 0)
     var isEditable = true
 
-    //  MARK: Update
+    // MARK: Update
     static func update(
         state: Self,
         action: SubtextTextAction,
@@ -108,7 +108,7 @@ struct SubtextTextModel: ModelProtocol {
 
 /// A textview that grows to the height of its content
 struct SubtextTextViewRepresentable: UIViewRepresentable {
-    //  MARK: UITextView subclass
+    // MARK: UITextView subclass
     class SubtextTextView: UITextView {
         var fixedWidth: CGFloat = 0
 
@@ -161,7 +161,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    //  MARK: Coordinator
+    // MARK: Coordinator
     class Coordinator:
         NSObject,
         UITextViewDelegate,
@@ -186,9 +186,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
-            self.renderer = SubtextAttributedStringRenderer(
-                bodySize: representable.bodySize
-            )
+            self.renderer = SubtextAttributedStringRenderer()
         }
         
         /// NSTextStorageDelegate method
@@ -326,7 +324,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         category: "SubtextTextViewRepresentable"
     )
 
-    //  MARK: Properties
+    // MARK: Properties
     @ScaledMetric(relativeTo: .body)
     private var bodySize: CGFloat = AppTheme.textSize
     
@@ -339,7 +337,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     var textContainerInset: UIEdgeInsets = .zero
     var onLink: (URL) -> Bool
     
-    //  MARK: makeUIView
+    // MARK: makeUIView
     func makeUIView(context: Context) -> SubtextTextView {
         Self.logger.debug("makeUIView")
         
@@ -370,10 +368,13 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         view.textColor = textColor
         view.isScrollEnabled = false
         view.isEditable = state.isEditable
+        // Tell UITextView to automatically adjust font size based on
+        // system font size
+        view.adjustsFontForContentSizeCategory = true
         return view
     }
 
-    //  MARK: updateUIView
+    // MARK: updateUIView
     /// Note that this function gets called every time the parent of
     /// SubtextViewRepresentable has to recalculate its `body` property.
     ///
@@ -393,17 +394,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             context.coordinator.isUIViewUpdating = false
         }
 
-        // Update/re-render text if text changed or font size
-        // preferences changed.
-        if (
-            view.text != state.text ||
-            self.bodySize != context.coordinator.renderer.bodySize
-        ) {
+        if (view.text != state.text) {
             SubtextTextViewRepresentable.logger.debug("updateUIView: set text")
-            // Set body size on renderer. This costs nothing, and makes sure
-            // that the next text render will have the new body size if the
-            // body size preferenced changed.
-            context.coordinator.renderer.bodySize = bodySize
             view.text = state.text
         }
 
