@@ -18,10 +18,10 @@ extension BlockEditor {
         
         var id: UUID = UUID()
         private var margins = NSDirectionalEdgeInsets(
-            top: 16,
-            leading: 16,
-            bottom: 16,
-            trailing: 16
+            top: AppTheme.padding,
+            leading: AppTheme.padding,
+            bottom: AppTheme.padding,
+            trailing: AppTheme.padding
         )
         private var relatedView = RelatedView(frame: .zero)
 

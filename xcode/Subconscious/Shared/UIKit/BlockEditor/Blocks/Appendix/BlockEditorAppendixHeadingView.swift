@@ -11,12 +11,12 @@ import SwiftUI
 extension BlockEditor {
     class AppendixHeadingView: UIView, UIViewRenderableProtocol {
         private var insets = NSDirectionalEdgeInsets(
-            top: 20,
-            leading: 16,
+            top: AppTheme.unit * 5,
+            leading: AppTheme.padding,
             bottom: 0,
-            trailing: 16
+            trailing: AppTheme.padding
         )
-        private var labelHeight: CGFloat = 16
+        private var labelHeight: CGFloat = AppTheme.textSize
         private var labelView = UILabel()
         
         override init(frame: CGRect) {

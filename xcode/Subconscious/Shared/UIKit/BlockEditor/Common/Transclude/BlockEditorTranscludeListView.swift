@@ -10,7 +10,7 @@ import SwiftUI
 
 extension BlockEditor {
     class TranscludeListView: UIView, UIViewRenderableProtocol {
-        private var transcludeSpacing: CGFloat = 8
+        private var transcludeSpacing: CGFloat = AppTheme.unit2
         private var stackView = UIStackView()
         
         override init(frame: CGRect) {

@@ -18,7 +18,14 @@ extension UIView {
             subsystem: Config.default.rdns,
             category: "SubtextTextView#\(id)"
         )
-        
+
+        private let defaultTextContainerInset = UIEdgeInsets(
+            top: AppTheme.unit2,
+            left: AppTheme.padding,
+            bottom: AppTheme.unit2,
+            right: AppTheme.padding
+        )
+
         override init(frame: CGRect, textContainer: NSTextContainer?) {
             super.init(frame: frame, textContainer: textContainer)
             textStorage.delegate = self
@@ -26,12 +33,7 @@ extension UIView {
             // Automatically adjust font size based on system font size
             adjustsFontForContentSizeCategory = true
             font = .preferredFont(forTextStyle: .body)
-            textContainerInset = UIEdgeInsets(
-                top: 8,
-                left: 16,
-                bottom: 8,
-                right: 16
-            )
+            textContainerInset = defaultTextContainerInset
             self.textContainer.lineFragmentPadding = 0
         }
                 

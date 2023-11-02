@@ -161,7 +161,6 @@ extension BlockEditor {
                 stackView.bottomAnchor.constraint(
                     equalTo: bottomAnchor
                 )
-
             ])
         }
         
@@ -171,8 +170,8 @@ extension BlockEditor {
         
         private func createBulletView() -> UIView {
             let bulletSize: CGFloat = 6
-            let frameWidth: CGFloat = 8
-            let lineHeight: CGFloat = 22
+            let frameWidth: CGFloat = AppTheme.unit2
+            let lineHeight: CGFloat = AppTheme.smPfpSize
             
             let frameView = UIView()
             frameView.isUserInteractionEnabled = false

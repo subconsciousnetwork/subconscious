@@ -15,8 +15,8 @@ extension BlockEditor {
     }
 
     class BylineView: UIView, UIViewRenderableProtocol {
-        private var height: CGFloat = 22
-        private var spacing: CGFloat = 8
+        private var height: CGFloat = AppTheme.smPfpSize
+        private var spacing: CGFloat = AppTheme.unit2
         private var stackView = UIStackView()
         private var pfpView = ProfilePicSmView()
         private var slashlinkView = SlashlinkDisplayView()

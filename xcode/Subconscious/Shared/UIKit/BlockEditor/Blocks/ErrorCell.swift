@@ -1,5 +1,5 @@
 //
-//  EmptyCell.swift
+//  ErrorCell.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 8/30/23.

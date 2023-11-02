@@ -41,10 +41,10 @@ extension BlockEditor {
             textView.font = .preferredFont(forTextStyle: .headline)
             textView.adjustsFontForContentSizeCategory = true
             textView.textContainerInset = UIEdgeInsets(
-                top: 8,
-                left: 16,
-                bottom: 8,
-                right: 16
+                top: AppTheme.unit2,
+                left: AppTheme.padding,
+                bottom: AppTheme.unit2,
+                right: AppTheme.padding
             )
             textView.textContainer.lineFragmentPadding = 0
             textView.translatesAutoresizingMaskIntoConstraints = false
