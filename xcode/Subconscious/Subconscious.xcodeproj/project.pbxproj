@@ -306,6 +306,7 @@
 		B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89DBDDA2AF3EF3D003D2CE3 /* Tests_StringSplitAtRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89DBDD92AF3EF3D003D2CE3 /* Tests_StringSplitAtRange.swift */; };
+		B89DBDE02AF440C6003D2CE3 /* UIHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89DBDDF2AF440C6003D2CE3 /* UIHostingView.swift */; };
 		B89E30772911B51A00A4721F /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E30762911B51A00A4721F /* Migration.swift */; };
 		B89E30782911B51A00A4721F /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E30762911B51A00A4721F /* Migration.swift */; };
 		B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E307C2911D7F900A4721F /* IntUtilities.swift */; };
@@ -735,6 +736,7 @@
 		B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDetailDescription.swift; sourceTree = "<group>"; };
 		B89966C628B6EE2300DF1F8C /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
 		B89DBDD92AF3EF3D003D2CE3 /* Tests_StringSplitAtRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_StringSplitAtRange.swift; sourceTree = "<group>"; };
+		B89DBDDF2AF440C6003D2CE3 /* UIHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHostingView.swift; sourceTree = "<group>"; };
 		B89E30762911B51A00A4721F /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		B89E307C2911D7F900A4721F /* IntUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntUtilities.swift; sourceTree = "<group>"; };
 		B8A1621329B2AB3A008322EB /* CloseButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseButtonView.swift; sourceTree = "<group>"; };
@@ -1255,6 +1257,7 @@
 				B83E0E282A9D13CE009F18AE /* BlockEditor */,
 				B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */,
 				B8CAF2102A9E89A30057D5DE /* UIFontHelpers.swift */,
+				B89DBDDF2AF440C6003D2CE3 /* UIHostingView.swift */,
 				B86DD5712AA0D33E00E1DEA5 /* UIStackViewHelpers.swift */,
 				B8AB08D52A9D52B300998099 /* UITextViewHelpers.swift */,
 				B8AB08CF2A9D522D00998099 /* UIViewDivider.swift */,
@@ -2203,6 +2206,7 @@
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
 				B8AB08BD2A9D502C00998099 /* ListBlockCell.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
+				B89DBDE02AF440C6003D2CE3 /* UIHostingView.swift in Sources */,
 				B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */,
 				B83E91D727692EC600045C6A /* FAB.swift in Sources */,
 				B848FDAA2991837900245115 /* DeveloperSettingsView.swift in Sources */,
