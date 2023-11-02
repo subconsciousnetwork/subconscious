@@ -48,9 +48,9 @@ extension BlockEditor {
                 collectionViewLayout: layout
             )
             collectionView.contentInset = UIEdgeInsets(
-                top: 8,
+                top: AppTheme.unit2,
                 left: 0,
-                bottom: 8,
+                bottom: AppTheme.unit2,
                 right: 0
             )
             return collectionView
