@@ -10,7 +10,7 @@ import os
 import ObservableStore
 import Combine
 
-//  MARK: View
+// MARK: View
 struct MemoEditorDetailView: View {
     typealias Action = MemoEditorDetailAction
     @ObservedObject var app: Store<AppModel>
@@ -266,7 +266,7 @@ struct MemoEditorDetailView: View {
     }
 }
 
-//  MARK: Action
+// MARK: Action
 
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
@@ -510,7 +510,7 @@ extension MemoEditorDetailAction {
     }
 }
 
-//  MARK: Cursors
+// MARK: Cursors
 /// Editor cursor
 struct MemoEditorDetailSubtextTextCursor: CursorProtocol {
     static func get(state: MemoEditorDetailModel) -> SubtextTextModel {
@@ -580,7 +580,7 @@ struct DetailMetaSheetCursor: CursorProtocol {
     }
 }
 
-//  MARK: Model
+// MARK: Model
 struct MemoEditorDetailModel: ModelProtocol {
     var address: Slashlink?
     var defaultAudience = Audience.local
@@ -650,7 +650,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         category: "MemoEditorDetail"
     )
     
-    //  MARK: Update
+    // MARK: Update
     static func update(
         state: MemoEditorDetailModel,
         action: MemoEditorDetailAction,
@@ -2080,7 +2080,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     }
 }
 
-//  MARK: Outer Model
+// MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
 struct MemoEditorDetailDescription: Hashable {
     var address: Slashlink?

@@ -283,7 +283,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     }
 }
 
-//  MARK: RenameSearchCursor
+// MARK: RenameSearchCursor
 struct MemoEditorDetailMetaSheetRenameSearchCursor: CursorProtocol {
     typealias Model = MemoEditorDetailMetaSheetModel
     typealias ViewModel = RenameSearchModel

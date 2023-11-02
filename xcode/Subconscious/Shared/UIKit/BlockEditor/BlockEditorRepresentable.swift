@@ -10,7 +10,7 @@ import Combine
 import os
 
 extension BlockEditor {
-    //  MARK: View Representable
+    // MARK: View Representable
     struct Representable: UIViewControllerRepresentable {
         @Binding var state: Model
         

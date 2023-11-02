@@ -9,7 +9,7 @@ import Foundation
 import os
 
 extension BlockEditor {
-    //  MARK: Model
+    // MARK: Model
     struct Model: Hashable {
         static let logger = Logger(
             subsystem: Config.default.rdns,

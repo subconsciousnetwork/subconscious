@@ -34,7 +34,7 @@ import SwiftUI
 import Combine
 import ObservableStore
 
-//  MARK: Action
+// MARK: Action
 enum SubtextTextAction: Hashable {
     case requestFocus(Bool)
     case scheduleFocusChange
@@ -46,7 +46,7 @@ enum SubtextTextAction: Hashable {
     case setEditable(Bool)
 }
 
-//  MARK: Model
+// MARK: Model
 struct SubtextTextModel: ModelProtocol {
     var isFocusChangeScheduled = false
     var focusRequest = false
@@ -55,7 +55,7 @@ struct SubtextTextModel: ModelProtocol {
     var selection = NSMakeRange(0, 0)
     var isEditable = true
 
-    //  MARK: Update
+    // MARK: Update
     static func update(
         state: Self,
         action: SubtextTextAction,
@@ -108,7 +108,7 @@ struct SubtextTextModel: ModelProtocol {
 
 /// A textview that grows to the height of its content
 struct SubtextTextViewRepresentable: UIViewRepresentable {
-    //  MARK: UITextView subclass
+    // MARK: UITextView subclass
     class SubtextTextView: UITextView {
         var fixedWidth: CGFloat = 0
 
@@ -161,7 +161,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    //  MARK: Coordinator
+    // MARK: Coordinator
     class Coordinator:
         NSObject,
         UITextViewDelegate,
@@ -324,7 +324,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         category: "SubtextTextViewRepresentable"
     )
 
-    //  MARK: Properties
+    // MARK: Properties
     @ScaledMetric(relativeTo: .body)
     private var bodySize: CGFloat = AppTheme.textSize
     
@@ -337,7 +337,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     var textContainerInset: UIEdgeInsets = .zero
     var onLink: (URL) -> Bool
     
-    //  MARK: makeUIView
+    // MARK: makeUIView
     func makeUIView(context: Context) -> SubtextTextView {
         Self.logger.debug("makeUIView")
         
@@ -374,7 +374,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         return view
     }
 
-    //  MARK: updateUIView
+    // MARK: updateUIView
     /// Note that this function gets called every time the parent of
     /// SubtextViewRepresentable has to recalculate its `body` property.
     ///

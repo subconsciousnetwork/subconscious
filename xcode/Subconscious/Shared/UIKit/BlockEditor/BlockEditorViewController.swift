@@ -385,7 +385,7 @@ extension BlockEditor.ViewController: TextBlockDelegate {
 extension BlockEditor.ViewController: HeadingBlockCellDelegate {}
 
 extension BlockEditor {
-    //  MARK: Actions
+    // MARK: Actions
     enum Action {
         case textDidChange(id: UUID?, text: String, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
@@ -425,7 +425,7 @@ extension BlockEditor {
     }
 }
 
-//  MARK: Controller
+// MARK: Controller
 extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
     typealias Model = BlockEditor.Model
     typealias Action = BlockEditor.Action
