@@ -207,8 +207,8 @@ struct RenameSearchView_Previews: PreviewProvider {
         }
         .sheet(isPresented: .constant(true)) {
             RenameSearchView(
-                store: PreviewViewStore.from(
-                    RenameSearchModel(
+                store: Store(
+                    state: RenameSearchModel(
                         subject: Slashlink(
                             peer: Peer.did(
                                 Did.local
@@ -237,7 +237,7 @@ struct RenameSearchView_Previews: PreviewProvider {
                         ]
                     ),
                     environment: RenameSearchModel.Environment()
-                )
+                ).toViewStore()
             )
         }
     }

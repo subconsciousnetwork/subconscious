@@ -33,6 +33,8 @@
 		B540F8BA2A0C748C00876256 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = B540F8B92A0C748C00876256 /* Line.swift */; };
 		B54187B829EF5CA00056E4A9 /* FollowUserFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */; };
 		B542EF802AF4B88500BE29F1 /* ResolvedAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = B542EF7F2AF4B88500BE29F1 /* ResolvedAddress.swift */; };
+		B542EF672AF48F2100BE29F1 /* StoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */; };
+		B542EF682AF48F2100BE29F1 /* StoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */; };
 		B5432B8329F8BAED003BBB23 /* Tests_UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */; };
 		B54930B12A2F0FE300958F12 /* StoryPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54930B02A2F0FE300958F12 /* StoryPlaceholderView.swift */; };
 		B549B16B2A0CDAC10070C6AD /* FirstRunRecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */; };
@@ -543,6 +545,7 @@
 		B540F8B92A0C748C00876256 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserFormSheet.swift; sourceTree = "<group>"; };
 		B542EF7F2AF4B88500BE29F1 /* ResolvedAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedAddress.swift; sourceTree = "<group>"; };
+		B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreUtilities.swift; sourceTree = "<group>"; };
 		B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserProfileService.swift; sourceTree = "<group>"; };
 		B54930B02A2F0FE300958F12 /* StoryPlaceholderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryPlaceholderView.swift; sourceTree = "<group>"; };
 		B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunRecoveryView.swift; sourceTree = "<group>"; };
@@ -1586,6 +1589,7 @@
 				B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
+				B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1594,7 +1598,6 @@
 			isa = PBXGroup;
 			children = (
 				B57339562AEF7FF200D43333 /* Toast */,
-				B51359222AC113C1004385A7 /* Recovery */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -1992,6 +1995,7 @@
 				B515E9DB2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift in Sources */,
 				B88CC958284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
 				B569971729B6A0DF003204FC /* DidQrCodeView.swift in Sources */,
+				B542EF672AF48F2100BE29F1 /* StoreUtilities.swift in Sources */,
 				B8EA3EE82915C23200B92C2E /* HeaderSubtext.swift in Sources */,
 				B58C73A729DBB3B500B00EA1 /* UserProfileView.swift in Sources */,
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
@@ -2295,6 +2299,7 @@
 				B8E00A312992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8E00A2B29928DD2003B40C1 /* AppDefaults.swift in Sources */,
+				B542EF682AF48F2100BE29F1 /* StoreUtilities.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8B4251C28FE1DA60081B8D5 /* Entry.swift in Sources */,
 				B82BB7FC2821DA61000C9FCC /* Parser.swift in Sources */,

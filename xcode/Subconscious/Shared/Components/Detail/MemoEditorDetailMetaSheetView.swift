@@ -313,14 +313,14 @@ struct MemoEditorDetailActionBottomSheetView_Previews: PreviewProvider {
         }
         .sheet(isPresented: .constant(true)) {
             MemoEditorDetailMetaSheetView(
-                store: PreviewViewStore.from(
-                    MemoEditorDetailMetaSheetModel(
+                store: Store(
+                    state: MemoEditorDetailMetaSheetModel(
                         address: Slashlink.local(
                             Slug("the-whale-the-whale")!
                         )
                     ),
                     environment: MemoEditorDetailMetaSheetModel.Environment()
-                )
+                ).toViewStore()
             )
         }
     }

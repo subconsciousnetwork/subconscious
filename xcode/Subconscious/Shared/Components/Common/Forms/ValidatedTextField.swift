@@ -108,21 +108,6 @@ struct ValidatedFormField<Output: Equatable>: View {
     }
 }
 
-extension Store where Model : ModelProtocol {
-    func toViewStore() -> ViewStore<Model> {
-        return self.viewStore(get: { $0 }, tag: { $0 })
-    }
-}
-
-class PreviewViewStore {
-    static func from<Model: ModelProtocol>(
-        _ model: Model,
-        environment: Model.Environment
-    ) -> ViewStore<Model> {
-        return Store(state: model, environment: environment).toViewStore()
-    }
-}
-
 struct ValidatedTextField_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
