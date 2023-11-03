@@ -62,7 +62,20 @@ struct MemoEditorDetailView: View {
     
     var body: some View {
         VStack {
-            plainEditor()
+            if app.state.isBlockEditorEnabled {
+                BlockEditor.Representable(
+                    state: Binding(
+                        get: { store.state.blockEditor },
+                        send: store.send,
+                        tag: Action.forceSetBlockEditor
+                    )
+                )
+                .frame(
+                    minHeight: UIFont.appTextMono.lineHeight * 8
+                )
+            } else {
+                plainEditor()
+            }
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
