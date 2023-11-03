@@ -11,7 +11,7 @@ import SwiftUI
 import Combine
 
 enum EditProfileSheetAction: Equatable {
-    case populate(UserProfileEntry?)
+    case populate(UserProfile, UserProfileStatistics?)
     case nicknameField(FormFieldAction<String>)
     case bioField(FormFieldAction<String>)
     
@@ -63,6 +63,9 @@ struct EditProfileSheetModel: ModelProtocol {
     typealias Action = EditProfileSheetAction
     typealias Environment = EditProfileSheetEnvironment
     
+    var user: UserProfile? = nil
+    var statistics: UserProfileStatistics? = nil
+    
     var nicknameField: FormField<String, Petname.Name> = FormField(
         value: "",
         validate: { value in
@@ -88,14 +91,18 @@ struct EditProfileSheetModel: ModelProtocol {
     ) -> Update<Self> {
         
         switch action {
-        case .populate(let user):
+        case let .populate(user, statistics):
+            var model = state
+            model.user = user
+            model.statistics = statistics
+            
             return update(
-                state: state,
+                state: model,
                 actions: [
                     .nicknameField(.reset),
                     .bioField(.reset),
-                    .nicknameField(.setValue(input: user?.nickname ?? "")),
-                    .bioField(.setValue(input: user?.bio ?? "")),
+                    .nicknameField(.setValue(input: user.nickname?.description ?? "")),
+                    .bioField(.setValue(input: user.bio?.text ?? "")),
                 ],
                 environment: environment
             )
@@ -126,15 +133,14 @@ struct EditProfileSheetModel: ModelProtocol {
 struct EditProfileSheet: View {
     var store: ViewStore<EditProfileSheetModel>
     
-    // TODO: copy into model
-    var user: UserProfile
-    var statistics: UserProfileStatistics?
-    
     var formIsValid: Bool {
         store.state.bioField.isValid && store.state.nicknameField.isValid
     }
     
-    func makePreview(nickname: Petname.Name) -> UserProfile {
+    func makePreview(nickname: Petname.Name) -> UserProfile? {
+        guard let user = store.state.user else {
+            return nil
+        }
         let pfp: ProfilePicVariant = ProfilePicVariant.generated(user.did)
         
         return UserProfile(
@@ -193,13 +199,12 @@ struct EditProfileSheet: View {
                     }
                 }
                 
-                if let nickname = store.state.nicknameField.validated {
-                    let preview = makePreview(nickname: nickname)
-                    
+                if let nickname = store.state.nicknameField.validated,
+                   let preview = makePreview(nickname: nickname) {
                     Section("Preview") {
                         UserProfileHeaderView(
                             user: preview,
-                            statistics: statistics,
+                            statistics: store.state.statistics,
                             hideActionButton: true
                         )
                     }

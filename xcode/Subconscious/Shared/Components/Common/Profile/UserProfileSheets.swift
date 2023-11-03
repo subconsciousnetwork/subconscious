@@ -24,8 +24,7 @@ struct MetaSheetModifier: ViewModifier {
                     store: store.viewStore(
                         get: \.metaSheet,
                         tag: UserProfileDetailMetaSheetCursor.tag
-                    ),
-                    profile: store.state
+                    )
                 )
             }
     }
@@ -111,16 +110,12 @@ struct EditProfileSheetModifier: ViewModifier {
                     tag: UserProfileDetailAction.presentEditProfile
                 )
             ) {
-                if let user = store.state.user {
-                    EditProfileSheet(
-                        store: store.viewStore(
-                            get: \.editProfileSheet,
-                            tag: EditProfileSheetCursor.tag
-                        ),
-                        user: user,
-                        statistics: store.state.statistics
+                EditProfileSheet(
+                    store: store.viewStore(
+                        get: \.editProfileSheet,
+                        tag: EditProfileSheetCursor.tag
                     )
-                }
+                )
             }
             .onReceive(
                 store.actions.compactMap(AppAction.from),

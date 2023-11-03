@@ -681,7 +681,17 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.isMetaSheetPresented = isPresented
-        return Update(state: model)
+        
+        guard let user = state.user else {
+            logger.log("Missing user, cannot present meta sheet")
+            return Update(state: state)
+        }
+        
+        return update(
+            state: model,
+            action: .metaSheet(.populate(user)),
+            environment: environment
+        )
     }
     
     static func presentFollowNewUserFormSheet(
@@ -1096,13 +1106,14 @@ struct UserProfileDetailModel: ModelProtocol {
         var model = state
         model.isEditProfileSheetPresented = isPresented
         
-        let profile = UserProfileEntry(
-            nickname: state.user?.nickname?.description,
-            bio: state.user?.bio?.text
-        )
+        guard let user = state.user else {
+            logger.log("Missing user, cannot edit profile")
+            return Update(state: state)
+        }
+        
         return update(
             state: model,
-            action: .editProfileSheet(.populate(profile)),
+            action: .editProfileSheet(.populate(user, state.statistics)),
             environment: environment
         )
     }

@@ -27,14 +27,12 @@ struct UserProfileMetaSheetDetailsView: View {
 struct UserProfileDetailMetaSheet: View {
     @Environment(\.dismiss) private var dismiss
     var store: ViewStore<UserProfileDetailMetaSheetModel>
-    // TODO: copy this data into the local model rather than passing
-    var profile: UserProfileDetailModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                    if let user = profile.user {
+                    if let user = store.state.user {
                         SlashlinkDisplayView(
                             slashlink: user.address
                         ).theme(
@@ -54,7 +52,7 @@ struct UserProfileDetailMetaSheet: View {
             
             ScrollView {
                 VStack(alignment: .center) {
-                    if let user = profile.user {
+                    if let user = store.state.user {
                         MetaTableView {
                             MetaTableItemShareLinkView(
                                 label: "Share Link",
@@ -77,7 +75,7 @@ struct UserProfileDetailMetaSheet: View {
         .presentationDragIndicator(.hidden)
         .presentationDetents([.medium, .large])
         .confirmationDialog(
-            "Are you sure you want to unfollow \(profile.user?.displayName ?? "")",
+            "Are you sure you want to unfollow \(store.state.user?.displayName ?? "")",
             isPresented: store.binding(
                 get: \.isDeleteConfirmationDialogPresented,
                 tag: UserProfileDetailMetaSheetAction.presentDeleteConfirmationDialog
@@ -87,14 +85,14 @@ struct UserProfileDetailMetaSheet: View {
             Button(
                 role: .destructive,
                 action: {
-                    guard let did = profile.user?.did else {
+                    guard let did = store.state.user?.did else {
                         return
                     }
                     
                     store.send(.requestUnfollow(did: did))
                 }
             ) {
-                Text("Unfollow \(profile.user?.displayName ?? "")")
+                Text("Unfollow \(store.state.user?.displayName ?? "")")
             }
         }
     }
@@ -126,6 +124,7 @@ struct UserProfileDetailMetaSheetCursor: CursorProtocol {
 }
 
 enum UserProfileDetailMetaSheetAction: Hashable {
+    case populate(_ user: UserProfile)
     /// Show/hide delete confirmation dialog
     case presentDeleteConfirmationDialog(Bool)
     /// Request to follow this user
@@ -142,9 +141,10 @@ struct UserProfileDetailMetaSheetModel: ModelProtocol {
     typealias Action = UserProfileDetailMetaSheetAction
     typealias Environment = AppEnvironment
     
+    var user: UserProfile? = nil
+    
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
-    
     var isDetailsTablePresented = false
     
     static func update(
@@ -153,6 +153,10 @@ struct UserProfileDetailMetaSheetModel: ModelProtocol {
         environment: Environment
     ) -> ObservableStore.Update<Self> {
         switch action {
+        case let .populate(user):
+            var model = state
+            model.user = user
+            return Update(state: model)
         case .requestUnfollow:
             return Update(state: state)
         case .requestFollow:
