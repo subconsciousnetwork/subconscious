@@ -693,9 +693,17 @@ struct UserProfileDetailModel: ModelProtocol {
         model.isFollowNewUserFormSheetPresented = isPresented
         
         if isPresented {
+            guard let user = model.user else {
+                logger.log("Missing user, cannot present follow new user form sheet")
+                return Update(state: state)
+            }
+            
             return update(
                 state: model,
-                action: .followNewUserFormSheet(.form(.reset)),
+                actions: [
+                    .followNewUserFormSheet(.form(.reset)),
+                    .followNewUserFormSheet(.populate(user.did))
+                ],
                 environment: environment
             )
         }

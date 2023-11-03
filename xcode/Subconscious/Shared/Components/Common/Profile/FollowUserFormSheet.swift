@@ -12,8 +12,6 @@ import CodeScanner
 
 struct FollowNewUserFormSheetView: View {
     var store: ViewStore<FollowNewUserFormSheetModel>
-    // TODO: should be copied into this model
-    var did: Did?
     
     var form: FollowUserFormModel {
         get { store.state.form }
@@ -66,7 +64,7 @@ struct FollowNewUserFormSheetView: View {
                         )
                     }
                     
-                    if let did = did {
+                    if let did = store.state.did {
                         Section(header: Text("Your DID")) {
                             DidView(did: did)
                         }
@@ -114,8 +112,7 @@ struct FollowNewUserFormSheetView_Previews: PreviewProvider {
             store: Store(
                 state: FollowNewUserFormSheetModel(),
                 environment: AppEnvironment()
-            ).toViewStore(),
-            did: Did("did:key:123")!
+            ).toViewStore()
         )
     }
 }
@@ -124,6 +121,7 @@ struct FollowNewUserFormSheetView_Previews: PreviewProvider {
 enum FollowNewUserFormSheetAction {
     case form(FollowUserFormAction)
     
+    case populate(_ did: Did)
     case presentQRCodeScanner(_ isPresented: Bool)
     case qrCodeScanned(scannedContent: String)
     case qrCodeScanError(error: String)
@@ -148,6 +146,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         category: "FollowNewUserFormSheetModel"
     )
     
+    var did: Did? = nil
     var isQrCodeScannerPresented = false
     
     var form: FollowUserFormModel = FollowUserFormModel()
@@ -167,7 +166,10 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
                 action: action,
                 environment: ()
             )
-            
+        case .populate(let did):
+            var model = state
+            model.did = did
+            return Update(state: model)
         case .presentQRCodeScanner(let isPresented):
             var model = state
             model.failQRCodeScanErrorMessage = nil

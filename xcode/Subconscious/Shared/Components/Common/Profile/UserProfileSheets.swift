@@ -163,8 +163,7 @@ struct FollowNewUserSheetModifier: ViewModifier {
                     store: store.viewStore(
                         get: \.followNewUserFormSheet,
                         tag: FollowNewUserFormSheetCursor.tag
-                    ),
-                    did: store.state.user?.did
+                    )
                 )
             }
             
