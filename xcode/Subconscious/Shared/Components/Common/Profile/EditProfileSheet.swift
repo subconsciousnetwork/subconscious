@@ -14,6 +14,9 @@ enum EditProfileSheetAction: Equatable {
     case populate(UserProfileEntry?)
     case nicknameField(FormFieldAction<String>)
     case bioField(FormFieldAction<String>)
+    
+    case submit
+    case dismiss
 }
 
 private struct NicknameFieldCursor: CursorProtocol {
@@ -110,6 +113,11 @@ struct EditProfileSheetModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
+        // Notifications
+        case .submit:
+            return Update(state: state)
+        case .dismiss:
+            return Update(state: state)
         }
     }
 }
@@ -118,12 +126,9 @@ struct EditProfileSheetModel: ModelProtocol {
 struct EditProfileSheet: View {
     var store: ViewStore<EditProfileSheetModel>
     
+    // TODO: copy into model
     var user: UserProfile
     var statistics: UserProfileStatistics?
-    
-    // TODO: should be notification actions
-    var onEditProfile: () -> Void
-    var onCancel: () -> Void
     
     var formIsValid: Bool {
         store.state.bioField.isValid && store.state.nicknameField.isValid
@@ -205,13 +210,13 @@ struct EditProfileSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        onEditProfile()
+                        store.send(.submit)
                     }
                     .disabled(!formIsValid)
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel", role: .cancel) {
-                        onCancel()
+                        store.send(.dismiss)
                     }
                 }
             }

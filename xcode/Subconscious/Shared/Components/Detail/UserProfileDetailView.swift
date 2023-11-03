@@ -253,7 +253,14 @@ struct EditProfileSheetCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .editProfileSheet(action)
+        switch action {
+        case .submit:
+            .requestEditProfile
+        case .dismiss:
+            .presentEditProfile(false)
+        default:
+            .editProfileSheet(action)
+        }
     }
 }
 

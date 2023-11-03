@@ -118,13 +118,7 @@ struct EditProfileSheetModifier: ViewModifier {
                             tag: EditProfileSheetCursor.tag
                         ),
                         user: user,
-                        statistics: store.state.statistics,
-                        onEditProfile: {
-                            store.send(.requestEditProfile)
-                        },
-                        onCancel: {
-                            store.send(.presentEditProfile(false))
-                        }
+                        statistics: store.state.statistics
                     )
                 }
             }
