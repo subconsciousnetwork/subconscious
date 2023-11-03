@@ -255,11 +255,11 @@ struct EditProfileSheetCursor: CursorProtocol {
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
         case .submit:
-            .requestEditProfile
+            return .requestEditProfile
         case .dismiss:
-            .presentEditProfile(false)
+            return .presentEditProfile(false)
         default:
-            .editProfileSheet(action)
+            return .editProfileSheet(action)
         }
     }
 }
