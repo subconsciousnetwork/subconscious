@@ -18,6 +18,8 @@ enum FollowUserSheetAction: Equatable {
     case populatePetnameCollisionStatus(Petname.Name, Bool)
     case attemptToFindUniquePetname(Petname.Name)
     case failToFindUniquePetname(String)
+    
+    case submit
 }
 
 struct FollowUserSheetEnvironment {
@@ -126,7 +128,30 @@ struct FollowUserSheetModel: ModelProtocol {
             // seems redundant.
             logger.warning("Failed to find a unique petname: \(error)")
             return Update(state: state)
+            
+        // Notifications
+        case .submit:
+            return Update(state: state)
         }
+    }
+}
+
+struct RenameUserSheetCursor: CursorProtocol {
+    typealias Model = UserProfileDetailModel
+    typealias ViewModel = FollowUserSheetModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.renameUserSheet
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.renameUserSheet = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .renameUserSheet(action)
     }
 }
 
@@ -170,16 +195,11 @@ struct FollowUserSheetFormCursor: CursorProtocol {
 
 struct FollowUserSheet: View {
     var store: ViewStore<FollowUserSheetModel>
-   
-    var state: FollowUserSheetModel { store.state }
-    var send: (FollowUserSheetAction) -> Void { store.send }
-    
-    var onAttemptFollow: () -> Void
     var label: Text
     
     var caption: String {
-        let name = state.user?.address.toPetname()?.markup ?? "user"
-        return state.petnameFieldCaption ?? String(localized: "Choose a nickname for \(name)")
+        let name = store.state.user?.address.toPetname()?.markup ?? "user"
+        return store.state.petnameFieldCaption ?? String(localized: "Choose a nickname for \(name)")
     }
     
     var body: some View {
@@ -188,9 +208,8 @@ struct FollowUserSheet: View {
                 ValidatedFormField(
                     alignment: .center,
                     placeholder: "petname",
-                    field: state.followUserForm.petname,
-                    send: Address.forward(
-                        send: send,
+                    field: store.viewStore(
+                        get: \.followUserForm.petname,
                         tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
                     ),
                     caption: caption
@@ -202,8 +221,8 @@ struct FollowUserSheet: View {
                 
                 Spacer()
                 
-                if let user = state.user,
-                   let name = state.followUserForm.petname.validated {
+                if let user = store.state.user,
+                   let name = store.state.followUserForm.petname.validated {
                     HStack(spacing: AppTheme.padding) {
                         ProfilePic(pfp: user.pfp, size: .large)
                         PetnameView(name: .unknown(user.address, name))
@@ -213,13 +232,13 @@ struct FollowUserSheet: View {
                 }
                 
                 Button(
-                    action: onAttemptFollow,
+                    action: { store.send(.submit) },
                     label: {
                         label
                     }
                 )
                 .buttonStyle(PillButtonStyle())
-                .disabled(!state.followUserForm.petname.isValid)
+                .disabled(!store.state.followUserForm.petname.isValid)
             }
         }
         .padding(AppTheme.padding)

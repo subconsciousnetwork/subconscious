@@ -247,9 +247,9 @@ struct UserProfileView: View {
                 )
             }
         })
-        .metaSheet(state: state, send: send)
+        .metaSheet(store: store)
         .follow(store: store)
-        .unfollow(state: state, send: send)
+        .unfollow(store: store)
         .editProfile(app: app, store: store)
         .rename(store: store)
     }
@@ -258,10 +258,9 @@ struct UserProfileView: View {
 // Only used _directly_ above
 private extension View {
     func unfollow(
-        state: UserProfileDetailModel,
-        send: @escaping (UserProfileDetailAction) -> Void
+        store: Store<UserProfileDetailModel>
     ) -> some View {
-        self.modifier(UnfollowSheetModifier(state: state, send: send))
+        self.modifier(UnfollowSheetModifier(store: store))
     }
     
     func follow(
@@ -279,10 +278,9 @@ private extension View {
     }
     
     func metaSheet(
-        state: UserProfileDetailModel,
-        send: @escaping (UserProfileDetailAction) -> Void
+        store: Store<UserProfileDetailModel>
     ) -> some View {
-        self.modifier(MetaSheetModifier(state: state, send: send))
+        self.modifier(MetaSheetModifier(store: store))
     }
     
     func editProfile(

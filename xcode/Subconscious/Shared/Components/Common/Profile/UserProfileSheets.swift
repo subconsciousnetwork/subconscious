@@ -10,25 +10,22 @@ import SwiftUI
 import ObservableStore
 
 struct MetaSheetModifier: ViewModifier {
-    let state: UserProfileDetailModel
-    let send: (UserProfileDetailAction) -> Void
+    @ObservedObject var store: Store<UserProfileDetailModel>
     
     func body(content: Content) -> some View {
         content
             .sheet(
-                isPresented: Binding(
-                    get: { state.isMetaSheetPresented },
-                    send: send,
+                isPresented: store.binding(
+                    get: \.isMetaSheetPresented,
                     tag: UserProfileDetailAction.presentMetaSheet
                 )
             ) {
                 UserProfileDetailMetaSheet(
-                    state: state.metaSheet,
-                    profile: state,
-                    send: Address.forward(
-                        send: send,
+                    store: store.viewStore(
+                        get: \.metaSheet,
                         tag: UserProfileDetailMetaSheetCursor.tag
-                    )
+                    ),
+                    profile: store.state
                 )
             }
     }
@@ -36,21 +33,12 @@ struct MetaSheetModifier: ViewModifier {
 
 struct FollowSheetModifier: ViewModifier {
     @ObservedObject var store: Store<UserProfileDetailModel>
-    
-    var state: UserProfileDetailModel {
-        store.state
-    }
-    
-    var send: (UserProfileDetailAction) -> Void {
-        store.send
-    }
-    
+
     func body(content: Content) -> some View {
         content
             .sheet(
-                isPresented: Binding(
-                    get: { state.isFollowSheetPresented },
-                    send: send,
+                isPresented: store.binding(
+                    get: \.isFollowSheetPresented,
                     tag: UserProfileDetailAction.presentFollowSheet
                 )
             ) {
@@ -59,17 +47,6 @@ struct FollowSheetModifier: ViewModifier {
                         get: \.followUserSheet,
                         tag: FollowUserSheetCursor.tag
                     ),
-                    onAttemptFollow: {
-                        let form = state.followUserSheet.followUserForm
-                        guard let did = form.did.validated else {
-                            return
-                        }
-                        guard let name = form.petname.validated else {
-                            return
-                        }
-                        
-                        send(.attemptFollow(did, name.toPetname()))
-                    },
                     label: Text("Follow")
                 )
             }
@@ -78,34 +55,20 @@ struct FollowSheetModifier: ViewModifier {
 
 struct RenameSheetModifier: ViewModifier {
     @ObservedObject var store: Store<UserProfileDetailModel>
-    var state: UserProfileDetailModel { store.state }
-    var send: (UserProfileDetailAction) -> Void { store.send }
     
     func body(content: Content) -> some View {
         content
             .sheet(
-                isPresented: Binding(
-                    get: { state.isRenameSheetPresented },
-                    send: send,
+                isPresented: store.binding(
+                    get: \.isRenameSheetPresented,
                     tag: UserProfileDetailAction.presentRenameSheet
                 )
             ) {
                 FollowUserSheet(
                     store: store.viewStore(
-                        get: \.followUserSheet,
-                        tag: FollowUserSheetCursor.tag
+                        get: \.renameUserSheet,
+                        tag: RenameUserSheetCursor.tag
                     ),
-                    onAttemptFollow: {
-                        let form = state.followUserSheet.followUserForm
-                        guard let name = form.petname.validated else {
-                            return
-                        }
-                        guard let candidate = state.renameCandidate else {
-                            return
-                        }
-                        
-                        send(.attemptRename(from: candidate, to: name.toPetname()))
-                    },
                     label: Text("Rename")
                 )
             }
@@ -113,63 +76,54 @@ struct RenameSheetModifier: ViewModifier {
 }
 
 struct UnfollowSheetModifier: ViewModifier {
-  let state: UserProfileDetailModel
-  let send: (UserProfileDetailAction) -> Void
-
-  func body(content: Content) -> some View {
-    content
-      .confirmationDialog(
-          "Are you sure?",
-          isPresented:
-              Binding(
-                  get: { state.isUnfollowConfirmationPresented },
-                  set: { _ in send(.presentUnfollowConfirmation(false)) }
-              )
-      ) {
-          Button(
-              "Unfollow \(state.unfollowCandidate?.displayName ?? "user")?",
-              role: .destructive
-          ) {
-              send(.attemptUnfollow)
-          }
-      } message: {
-          Text("You cannot undo this action")
-      }
-  }
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog(
+                "Are you sure?",
+                isPresented: store.binding(
+                    get: \.isUnfollowConfirmationPresented,
+                    tag: UserProfileDetailAction.presentUnfollowConfirmation
+                )
+            ) {
+                Button(
+                    "Unfollow \(store.state.unfollowCandidate?.displayName ?? "user")?",
+                    role: .destructive
+                ) {
+                    store.send(.attemptUnfollow)
+                }
+            } message: {
+                Text("You cannot undo this action")
+            }
+    }
 }
 
 struct EditProfileSheetModifier: ViewModifier {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<UserProfileDetailModel>
-    private var state: UserProfileDetailModel {
-        store.state
-    }
-    private var send: (UserProfileDetailAction) -> Void {
-        store.send
-    }
     
     func body(content: Content) -> some View {
         content
             .sheet(
-                isPresented: Binding(
-                    get: { state.isEditProfileSheetPresented },
-                    send: send,
+                isPresented: store.binding(
+                    get: \.isRenameSheetPresented,
                     tag: UserProfileDetailAction.presentEditProfile
                 )
             ) {
-                if let user = state.user {
+                if let user = store.state.user {
                     EditProfileSheet(
                         store: store.viewStore(
                             get: \.editProfileSheet,
                             tag: EditProfileSheetCursor.tag
                         ),
                         user: user,
-                        statistics: state.statistics,
+                        statistics: store.state.statistics,
                         onEditProfile: {
-                            send(.requestEditProfile)
+                            store.send(.requestEditProfile)
                         },
                         onCancel: {
-                            send(.presentEditProfile(false))
+                            store.send(.presentEditProfile(false))
                         }
                     )
                 }
@@ -184,7 +138,7 @@ struct EditProfileSheetModifier: ViewModifier {
                     // Only refresh the view if the presented user was indexed
                     where results.contains(where: { result in
                         switch (result) {
-                        case .success(let peer) where peer.identity == state.user?.did:
+                        case .success(let peer) where peer.identity == store.state.user?.did:
                             return true
                         default:
                             return false
@@ -203,14 +157,6 @@ struct EditProfileSheetModifier: ViewModifier {
 struct FollowNewUserSheetModifier: ViewModifier {
     @ObservedObject var store: Store<UserProfileDetailModel>
     
-    var state: UserProfileDetailModel {
-        store.state
-    }
-    
-    var send: (UserProfileDetailAction) -> Void {
-        store.send
-    }
-    
     func body(content: Content) -> some View {
         content
             .sheet(
@@ -224,7 +170,7 @@ struct FollowNewUserSheetModifier: ViewModifier {
                         get: \.followNewUserFormSheet,
                         tag: FollowNewUserFormSheetCursor.tag
                     ),
-                    did: state.user?.did
+                    did: store.state.user?.did
                 )
             }
             

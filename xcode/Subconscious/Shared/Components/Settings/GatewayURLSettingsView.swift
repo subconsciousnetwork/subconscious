@@ -17,9 +17,8 @@ struct GatewayURLSettingsView: View {
                 content: {
                     ValidatedFormField(
                         placeholder: "http://example.com",
-                        field: app.state.gatewayURLField,
-                        send: Address.forward(
-                            send: app.send,
+                        field: app.viewStore(
+                            get: \.gatewayURLField,
                             tag: AppAction.gatewayURLField
                         ),
                         caption: String(localized: "The URL of your preferred Noosphere gateway")

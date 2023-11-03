@@ -26,9 +26,9 @@ struct UserProfileMetaSheetDetailsView: View {
 
 struct UserProfileDetailMetaSheet: View {
     @Environment(\.dismiss) private var dismiss
-    var state: UserProfileDetailMetaSheetModel
+    var store: ViewStore<UserProfileDetailMetaSheetModel>
+    // TODO: copy this data into the local model rather than passing
     var profile: UserProfileDetailModel
-    var send: (UserProfileDetailMetaSheetAction) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -78,9 +78,8 @@ struct UserProfileDetailMetaSheet: View {
         .presentationDetents([.medium, .large])
         .confirmationDialog(
             "Are you sure you want to unfollow \(profile.user?.displayName ?? "")",
-            isPresented: Binding(
-                get: { state.isDeleteConfirmationDialogPresented },
-                send: send,
+            isPresented: store.binding(
+                get: \.isDeleteConfirmationDialogPresented,
                 tag: UserProfileDetailMetaSheetAction.presentDeleteConfirmationDialog
             ),
             titleVisibility: .visible
@@ -92,7 +91,7 @@ struct UserProfileDetailMetaSheet: View {
                         return
                     }
                     
-                    send(.requestUnfollow(did: did))
+                    store.send(.requestUnfollow(did: did))
                 }
             ) {
                 Text("Unfollow \(profile.user?.displayName ?? "")")

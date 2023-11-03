@@ -62,20 +62,7 @@ struct MemoEditorDetailView: View {
     
     var body: some View {
         VStack {
-            if app.state.isBlockEditorEnabled {
-                BlockEditor.Representable(
-                    state: Binding(
-                        get: { store.state.blockEditor },
-                        send: store.send,
-                        tag: Action.forceSetBlockEditor
-                    )
-                )
-                .frame(
-                    minHeight: UIFont.appTextMono.lineHeight * 8
-                )
-            } else {
-                plainEditor()
-            }
+            plainEditor()
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -145,9 +132,8 @@ struct MemoEditorDetailView: View {
             )
         ) {
             MemoEditorDetailMetaSheetView(
-                state: store.state.metaSheet,
-                send: Address.forward(
-                    send: store.send,
+                store: store.viewStore(
+                    get: \.metaSheet,
                     tag: DetailMetaSheetCursor.tag
                 )
             )

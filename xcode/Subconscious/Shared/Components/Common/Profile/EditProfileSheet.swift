@@ -118,16 +118,15 @@ struct EditProfileSheetModel: ModelProtocol {
 struct EditProfileSheet: View {
     var store: ViewStore<EditProfileSheetModel>
     
-    var state: EditProfileSheetModel { store.state }
-    var send: (EditProfileSheetAction) -> Void { store.send }
-    
     var user: UserProfile
     var statistics: UserProfileStatistics?
+    
+    // TODO: should be notification actions
     var onEditProfile: () -> Void
     var onCancel: () -> Void
     
     var formIsValid: Bool {
-        state.bioField.isValid && state.nicknameField.isValid
+        store.state.bioField.isValid && store.state.nicknameField.isValid
     }
     
     func makePreview(nickname: Petname.Name) -> UserProfile {
@@ -138,7 +137,7 @@ struct EditProfileSheet: View {
             nickname: nickname,
             address: user.address,
             pfp: pfp,
-            bio: UserProfileBio(state.bioField.validated?.text ?? ""),
+            bio: UserProfileBio(store.state.bioField.validated?.text ?? ""),
             category: .ourself,
             ourFollowStatus: .notFollowing,
             aliases: []
@@ -146,7 +145,7 @@ struct EditProfileSheet: View {
     }
     
     var bioCaption: String {
-        "A short description of yourself (\(state.bioField.value.count)/280)"
+        "A short description of yourself (\(store.state.bioField.value.count)/280)"
     }
     
     var body: some View {
@@ -158,9 +157,8 @@ struct EditProfileSheet: View {
                             .foregroundColor(.accentColor)
                         ValidatedFormField(
                             placeholder: "nickname",
-                            field: state.nicknameField,
-                            send: Address.forward(
-                                send: send,
+                            field: store.viewStore(
+                                get: \.nicknameField,
                                 tag: EditProfileSheetAction.nicknameField
                             ),
                             caption: String(
@@ -178,9 +176,8 @@ struct EditProfileSheet: View {
                         
                         ValidatedFormField(
                             placeholder: "bio",
-                            field: state.bioField,
-                            send: Address.forward(
-                                send: send,
+                            field: store.viewStore(
+                                get: \.bioField,
                                 tag: EditProfileSheetAction.bioField
                             ),
                             caption: bioCaption,
@@ -191,7 +188,7 @@ struct EditProfileSheet: View {
                     }
                 }
                 
-                if let nickname = state.nicknameField.validated {
+                if let nickname = store.state.nicknameField.validated {
                     let preview = makePreview(nickname: nickname)
                     
                     Section("Preview") {

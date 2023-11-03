@@ -16,9 +16,8 @@ struct ProfileSettingsView: View {
             Section {
                 ValidatedFormField(
                     placeholder: "nickname",
-                    field: app.state.nicknameFormField,
-                    send: Address.forward(
-                        send: app.send,
+                    field: app.viewStore(
+                        get: \.nicknameFormField,
                         tag: AppAction.nicknameFormField
                     ),
                     caption: String(localized: "Lowercase letters, numbers and dashes only.")

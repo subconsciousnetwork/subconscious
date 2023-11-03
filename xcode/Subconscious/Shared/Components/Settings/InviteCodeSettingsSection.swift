@@ -62,9 +62,8 @@ struct ValidatedInviteCodeFormField: View {
     var body: some View {
         ValidatedFormField(
             placeholder: "Enter an invite code",
-            field: app.state.inviteCodeFormField,
-            send: Address.forward(
-                send: app.send,
+            field: app.viewStore(
+                get: \.inviteCodeFormField,
                 tag: AppAction.inviteCodeFormField
             ),
             caption: caption

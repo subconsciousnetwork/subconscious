@@ -51,9 +51,8 @@ struct AuthorizationSettingsView: View {
                 content: {
                     ValidatedFormField(
                         placeholder: "DID",
-                        field: state.form.did,
-                        send: Address.forward(
-                            send: app.send,
+                        field: app.viewStore(
+                            get: \.authorization.form.did,
                             tag: { a in .authorization(.form(.didField(a))) }
                         ),
                         caption: String(
@@ -69,9 +68,8 @@ struct AuthorizationSettingsView: View {
                     
                     ValidatedFormField(
                         placeholder: "name",
-                        field: state.form.name,
-                        send: Address.forward(
-                            send: app.send,
+                        field: app.viewStore(
+                            get: \.authorization.form.name,
                             tag: { a in .authorization(.form(.nameField(a))) }
                         ),
                         caption: String(

@@ -50,9 +50,8 @@ struct FirstRunProfileView: View {
                 ValidatedFormField(
                     alignment: .center,
                     placeholder: "nickname",
-                    field: app.state.nicknameFormField,
-                    send: Address.forward(
-                        send: app.send,
+                    field: app.viewStore(
+                        get: \.nicknameFormField,
                         tag: AppAction.nicknameFormField
                     ),
                     caption: "Lowercase letters, numbers and dashes only.",

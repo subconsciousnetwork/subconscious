@@ -10,15 +10,14 @@ import ObservableStore
 
 struct MemoEditorDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    var state: MemoEditorDetailMetaSheetModel
-    var send: (MemoEditorDetailMetaSheetAction) -> Void
-
+    var store: ViewStore<MemoEditorDetailMetaSheetModel>
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slashlink = state.address {
+                        if let slashlink = store.state.address {
                             SlashlinkDisplayView(slashlink: slashlink).theme(
                                 base: Color.primary,
                                 slug: Color.secondary
@@ -30,9 +29,8 @@ struct MemoEditorDetailMetaSheetView: View {
                     }
                     .font(.callout)
                     AudienceMenuButtonView(
-                        audience: Binding(
-                            get: { state.audience },
-                            send: send,
+                        audience: store.binding(
+                            get: \.audience,
                             tag: MemoEditorDetailMetaSheetAction.requestUpdateAudience
                         )
                     )
@@ -47,7 +45,7 @@ struct MemoEditorDetailMetaSheetView: View {
                     MetaTableView {
                         Button(
                             action: {
-                                send(.presentRenameSheetFor(state.address))
+                                store.send(.presentRenameSheetFor(store.state.address))
                             }
                         ) {
                             Label(
@@ -60,7 +58,7 @@ struct MemoEditorDetailMetaSheetView: View {
                         Button(
                             role: .destructive,
                             action: {
-                                send(.presentDeleteConfirmationDialog(true))
+                                store.send(.presentDeleteConfirmationDialog(true))
                             }
                         ) {
                             Label(
@@ -77,25 +75,22 @@ struct MemoEditorDetailMetaSheetView: View {
         .presentationDragIndicator(.hidden)
         .presentationDetents([.medium, .large])
         .sheet(
-            isPresented: Binding(
-                get: { state.isRenameSheetPresented },
-                send: send,
+            isPresented: store.binding(
+                get: \.isRenameSheetPresented,
                 tag: MemoEditorDetailMetaSheetAction.presentRenameSheet
             )
         ) {
             RenameSearchView(
-                state: state.renameSearch,
-                send: Address.forward(
-                    send: send,
+                store: store.viewStore(
+                    get: \.renameSearch,
                     tag: MemoEditorDetailMetaSheetRenameSearchCursor.tag
                 )
             )
         }
         .confirmationDialog(
             "Are you sure you want to delete this note?",
-            isPresented: Binding(
-                get: { state.isDeleteConfirmationDialogPresented },
-                send: send,
+            isPresented: store.binding(
+                get: \.isDeleteConfirmationDialogPresented,
                 tag: MemoEditorDetailMetaSheetAction.presentDeleteConfirmationDialog
             ),
             titleVisibility: .visible
@@ -103,7 +98,7 @@ struct MemoEditorDetailMetaSheetView: View {
             Button(
                 role: .destructive,
                 action: {
-                    send(.requestDelete(state.address))
+                    store.send(.requestDelete(store.state.address))
                 }
             ) {
                 Text("Delete")
@@ -318,10 +313,14 @@ struct MemoEditorDetailActionBottomSheetView_Previews: PreviewProvider {
         }
         .sheet(isPresented: .constant(true)) {
             MemoEditorDetailMetaSheetView(
-                state: MemoEditorDetailMetaSheetModel(
-                    address: Slashlink.local(Slug("the-whale-the-whale")!)
-                ),
-                send: { action in }
+                store: PreviewViewStore.from(
+                    MemoEditorDetailMetaSheetModel(
+                        address: Slashlink.local(
+                            Slug("the-whale-the-whale")!
+                        )
+                    ),
+                    environment: MemoEditorDetailMetaSheetModel.Environment()
+                )
             )
         }
     }

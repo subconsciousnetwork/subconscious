@@ -12,18 +12,11 @@ import CodeScanner
 
 struct FollowNewUserFormSheetView: View {
     var store: ViewStore<FollowNewUserFormSheetModel>
+    // TODO: should be copied into this model
     var did: Did?
     
-    var state: FollowNewUserFormSheetModel {
-        store.state
-    }
-    
     var form: FollowUserFormModel {
-        get { state.form }
-    }
-    
-    var send: (FollowNewUserFormSheetAction) -> Void {
-        store.send
+        get { store.state.form }
     }
     
     var formIsValid: Bool {
@@ -33,9 +26,9 @@ struct FollowNewUserFormSheetView: View {
     func onQRCodeScanResult(res: Result<ScanResult, ScanError>) {
         switch res {
         case .success(let result):
-            send(.qrCodeScanned(scannedContent: result.string))
+            store.send(.qrCodeScanned(scannedContent: result.string))
         case .failure(let error):
-            send(.qrCodeScanError(error: error.localizedDescription))
+            store.send(.qrCodeScanError(error: error.localizedDescription))
         }
     }
     
@@ -47,11 +40,11 @@ struct FollowNewUserFormSheetView: View {
             return
         }
         
-        send(.attemptFollow(did, name.toPetname()))
+        store.send(.attemptFollow(did, name.toPetname()))
     }
     
     func onCancel() { 
-        send(.dismissSheet)
+        store.send(.dismissSheet)
     }
     
     var body: some View {
@@ -59,9 +52,8 @@ struct FollowNewUserFormSheetView: View {
             VStack {
                 Form {
                     FollowUserFormView(
-                        state: form,
-                        send: Address.forward(
-                            send: send,
+                        store: store.viewStore(
+                            get: \.form,
                             tag: FollowUserFormCursor.tag
                         )
                     )
@@ -69,7 +61,7 @@ struct FollowNewUserFormSheetView: View {
                     Section(header: Text("Add via QR Code")) {
                         Button(
                             action: {
-                                send(.presentQRCodeScanner(true))
+                                store.send(.presentQRCodeScanner(true))
                             },
                             label: {
                                 HStack {
@@ -115,8 +107,8 @@ struct FollowNewUserFormSheetView: View {
             ) {
                 FollowUserViaQRCodeView(
                     onScanResult: onQRCodeScanResult,
-                    onCancel: { send(.presentQRCodeScanner(false)) },
-                    errorMessage: state.failQRCodeScanErrorMessage
+                    onCancel: { store.send(.presentQRCodeScanner(false)) },
+                    errorMessage: store.state.failQRCodeScanErrorMessage
                 )
             }
         }
@@ -129,10 +121,7 @@ struct FollowNewUserFormSheetView_Previews: PreviewProvider {
             store: Store(
                 state: FollowNewUserFormSheetModel(),
                 environment: AppEnvironment()
-            ).viewStore(
-                get: { $0 },
-                tag: { $0 }
-            ),
+            ).toViewStore(),
             did: Did("did:key:123")!
         )
     }
@@ -296,11 +285,10 @@ struct FollowNewUserFormSheetCursor: CursorProtocol {
 
 // MARK: Inner FollowUserForm
 struct FollowUserFormView: View {
-    var state: FollowUserFormModel
-    var send: (FollowUserFormAction) -> Void
+    var store: ViewStore<FollowUserFormModel>
     
     var petnameCaption: String {
-        state.failFollowMessage ?? "Lowercase letters, numbers and dashes only."
+        store.state.failFollowMessage ?? "Lowercase letters, numbers and dashes only."
     }
     
     var body: some View {
@@ -311,9 +299,8 @@ struct FollowUserFormView: View {
                 
                 ValidatedFormField(
                     placeholder: "DID",
-                    field: state.did,
-                    send: Address.forward(
-                        send: send,
+                    field: store.viewStore(
+                        get: \.did,
                         tag: FollowUserFormAction.didField
                     ),
                     caption: String(
@@ -332,9 +319,8 @@ struct FollowUserFormView: View {
                 
                 ValidatedFormField(
                     placeholder: "petname",
-                    field: state.petname,
-                    send: Address.forward(
-                        send: send,
+                    field: store.viewStore(
+                        get: \.petname,
                         tag: FollowUserFormAction.petnameField
                     ),
                     caption: petnameCaption

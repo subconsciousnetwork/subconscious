@@ -15,8 +15,10 @@ struct ValidatedFormField<Output: Equatable>: View {
     
     var alignment: HorizontalAlignment = .leading
     var placeholder: String
-    var field: FormField<String, Output>
-    var send: (FormFieldAction<String>) -> Void
+    var field: ViewStore<FormField<String, Output>>
+    
+//    var field: FormField<String, Output>
+//    var send: (FormFieldAction<String>) -> Void
     var caption: String? = nil
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
@@ -49,22 +51,22 @@ struct ValidatedFormField<Output: Equatable>: View {
                 )
                 .focused($focused)
                 .onChange(of: focused) { focused in
-                    send(.focusChange(focused: focused))
+                    field.send(.focusChange(focused: focused))
                     onFocusChanged(focused)
                 }
                 .onChange(of: innerText) { innerText in
                     var text = innerText
-                    let isSubstring = text.contains(field.value) || field.value.contains(text)
-                    let lengthDelta = abs(text.count - field.value.count)
+                    let isSubstring = text.contains(field.state.value) || field.state.value.contains(text)
+                    let lengthDelta = abs(text.count - field.state.value.count)
                     // Trim whitespace from pasted values only
                     // We detect a "paste" when the text changes substantially
                     if !isSubstring && text.count > 0 && lengthDelta > 1 {
                         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
                     }
                     
-                    send(.setValue(input: text))
+                    field.send(.setValue(input: text))
                 }
-                .onChange(of: field) { field in
+                .onChange(of: field.state) { field in
                     // The store value has been reset via side-effect
                     // we must re-sync our inner value
                     if !field.touched && innerText != field.value {
@@ -84,8 +86,8 @@ struct ValidatedFormField<Output: Equatable>: View {
                 // this avoids the text suddenly wrapping when the validation status changes
                 if axis == .vertical {
                     invalidBadge
-                        .opacity(field.shouldPresentAsInvalid ? 1 : 0)
-                } else if field.shouldPresentAsInvalid {
+                        .opacity(field.state.shouldPresentAsInvalid ? 1 : 0)
+                } else if field.state.shouldPresentAsInvalid {
                     // Actually add/remove badge from layout in the axis == .horizontal case
                     invalidBadge
                 }
@@ -94,15 +96,30 @@ struct ValidatedFormField<Output: Equatable>: View {
                 Text(verbatim: caption)
                     .lineLimit(1)
                     .foregroundColor(
-                        field.shouldPresentAsInvalid ? Color.red : Color.secondary
+                        field.state.shouldPresentAsInvalid ? Color.red : Color.secondary
                     )
-                    .animation(.default, value: field.shouldPresentAsInvalid)
+                    .animation(.default, value: field.state.shouldPresentAsInvalid)
                     .font(.caption)
             }
         }
         .onAppear {
-            innerText = field.value
+            innerText = field.state.value
         }
+    }
+}
+
+extension Store where Model : ModelProtocol {
+    func toViewStore() -> ViewStore<Model> {
+        return self.viewStore(get: { $0 }, tag: { $0 })
+    }
+}
+
+class PreviewViewStore {
+    static func from<Model: ModelProtocol>(
+        _ model: Model,
+        environment: Model.Environment
+    ) -> ViewStore<Model> {
+        return Store(state: model, environment: environment).toViewStore()
     }
 }
 
@@ -111,27 +128,35 @@ struct ValidatedTextField_Previews: PreviewProvider {
         VStack {
             ValidatedFormField(
                 placeholder: "nickname",
-                field: FormField(value: "", validate: { _ in "" }),
-                send: { _ in },
+                field: Store(
+                    state: FormField(value: "", validate: { _ in "" }),
+                    environment: FormFieldEnvironment()
+                ).toViewStore(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             ValidatedFormField(
                 placeholder: "nickname",
-                field: FormField(value: "", validate: { _ in nil as String? }),
-                send: { _ in },
+                field: Store(
+                    state: FormField(value: "", validate: { _ in nil as String? }),
+                    environment: FormFieldEnvironment()
+                ).toViewStore(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             ValidatedFormField(
                 placeholder: "nickname",
-                field: FormField(value: "", validate: { _ in "" }),
-                send: { _ in },
+                field: Store(
+                    state: FormField(value: "", validate: { _ in "" }),
+                    environment: FormFieldEnvironment()
+                ).toViewStore(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
             ValidatedFormField(
                 placeholder: "nickname",
-                field: FormField(value: "A very long run of text to test how this interacts with the icon", validate: { _ in nil as String? }),
-                send: { _ in },
+                field: Store(
+                    state: FormField(value: "A very long run of text to test how this interacts with the icon", validate: { _ in nil as String? }),
+                    environment: FormFieldEnvironment()
+                ).toViewStore(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
@@ -142,16 +167,20 @@ struct ValidatedTextField_Previews: PreviewProvider {
             Form {
                 ValidatedFormField(
                     placeholder: "nickname",
-                    field: FormField(value: "", validate: { _ in "" }),
-                    send: { _ in },
+                    field: Store(
+                        state: FormField(value: "", validate: { _ in "" }),
+                        environment: FormFieldEnvironment()
+                    ).toViewStore(),
                     caption: String(localized: "Lowercase letters and numbers only."),
                     autoFocus: true
                 )
                 .formField()
                 ValidatedFormField(
                     placeholder: "nickname",
-                    field: FormField(value: "", validate: { _ in nil as String? }),
-                    send: { _ in },
+                    field: Store(
+                        state: FormField(value: "", validate: { _ in nil as String? }),
+                        environment: FormFieldEnvironment()
+                    ).toViewStore(),
                     caption: String(localized: "Lowercase letters and numbers only.")
                 )
                 .formField()

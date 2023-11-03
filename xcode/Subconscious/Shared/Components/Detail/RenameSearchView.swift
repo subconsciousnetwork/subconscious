@@ -12,16 +12,17 @@ import os
 
 struct RenameSearchView: View {
     @Environment(\.dismiss) private var dismiss
-    var state: RenameSearchModel
-    var send: (RenameSearchAction) -> Void
+    var store: ViewStore<RenameSearchModel>
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 ValidatedFormField(
                     placeholder: String(localized: "Enter link for note"),
-                    field: state.queryField,
-                    send: { action in send(QueryFieldCursor.tag(action)) },
+                    field: store.viewStore(
+                        get: \.queryField,
+                        tag: RenameSearchAction.queryField
+                    ),
                     autoFocus: true
                 )
                 .modifier(RoundedTextFieldViewModifier())
@@ -29,10 +30,10 @@ struct RenameSearchView: View {
                 .padding(.bottom, AppTheme.padding)
                 .padding(.horizontal, AppTheme.padding)
                 
-                List(state.renameSuggestions) { suggestion in
+                List(store.state.renameSuggestions) { suggestion in
                     Button(
                         action: {
-                            send(.selectRenameSuggestion(suggestion))
+                            store.send(.selectRenameSuggestion(suggestion))
                         },
                         label: {
                             RenameSuggestionLabelView(suggestion: suggestion)
@@ -206,23 +207,37 @@ struct RenameSearchView_Previews: PreviewProvider {
         }
         .sheet(isPresented: .constant(true)) {
             RenameSearchView(
-                state: RenameSearchModel(
-                    subject: Slashlink(
-                        peer: Peer.did(Did.local),
-                        slug: Slug("/loomings")!
-                    ),
-                    renameSuggestions: [
-                        .move(
-                            from: Slashlink("@here/loomings")!,
-                            to: Slashlink("@here/the-lee-shore")!
+                store: PreviewViewStore.from(
+                    RenameSearchModel(
+                        subject: Slashlink(
+                            peer: Peer.did(
+                                Did.local
+                            ),
+                            slug: Slug(
+                                "/loomings"
+                            )!
                         ),
-                        .merge(
-                            parent: Slashlink("@here/breakfast")!,
-                            child: Slashlink("@here/the-street")!
-                        )
-                    ]
-                ),
-                send: { action in }
+                        renameSuggestions: [
+                            .move(
+                                from: Slashlink(
+                                    "@here/loomings"
+                                )!,
+                                to: Slashlink(
+                                    "@here/the-lee-shore"
+                                )!
+                            ),
+                            .merge(
+                                parent: Slashlink(
+                                    "@here/breakfast"
+                                )!,
+                                child: Slashlink(
+                                    "@here/the-street"
+                                )!
+                            )
+                        ]
+                    ),
+                    environment: RenameSearchModel.Environment()
+                )
             )
         }
     }

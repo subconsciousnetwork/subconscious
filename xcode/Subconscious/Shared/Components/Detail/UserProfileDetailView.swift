@@ -151,6 +151,7 @@ enum UserProfileDetailAction {
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
+    case renameUserSheet(FollowUserSheetAction)
     case editProfileSheet(EditProfileSheetAction)
     case followNewUserFormSheet(FollowNewUserFormSheetAction)
     
@@ -316,10 +317,11 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var loadingState = LoadingState.loading
     
-    var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
-    var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
-    var followNewUserFormSheet: FollowNewUserFormSheetModel = FollowNewUserFormSheetModel()
-    var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
+    var metaSheet = UserProfileDetailMetaSheetModel()
+    var followUserSheet = FollowUserSheetModel()
+    var renameUserSheet = FollowUserSheetModel()
+    var followNewUserFormSheet = FollowNewUserFormSheetModel()
+    var editProfileSheet = EditProfileSheetModel()
     
     // This view can be invoked with an initial tab focused
     // but if the user has changed the tab we should remember that across profile refreshes
@@ -362,6 +364,12 @@ struct UserProfileDetailModel: ModelProtocol {
             )
         case .followUserSheet(let action):
             return FollowUserSheetCursor.update(
+                state: state,
+                action: action,
+                environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
+            )
+        case .renameUserSheet(let action):
+            return RenameUserSheetCursor.update(
                 state: state,
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)

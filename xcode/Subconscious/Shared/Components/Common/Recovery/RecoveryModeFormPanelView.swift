@@ -30,9 +30,8 @@ struct RecoveryModeFormPanelView: View {
             
             ValidatedFormField(
                 placeholder: "one two three four five six seven eight...",
-                field: store.state.recoveryPhraseField,
-                send: Address.forward(
-                    send: store.send,
+                field: store.viewStore(
+                    get: \.recoveryPhraseField,
                     tag: RecoveryModeAction.recoveryPhraseField
                 ),
                 axis: .vertical
@@ -59,9 +58,8 @@ struct RecoveryModeFormPanelView: View {
                 VStack(spacing: AppTheme.padding) {
                     ValidatedFormField(
                         placeholder: "did:key:abc",
-                        field: store.state.recoveryDidField,
-                        send: Address.forward(
-                            send: store.send,
+                        field: store.viewStore(
+                            get: \.recoveryDidField,
                             tag: RecoveryModeAction.recoveryDidField
                         ),
                         caption: "The identity of your sphere",
@@ -74,9 +72,8 @@ struct RecoveryModeFormPanelView: View {
 
                     ValidatedFormField(
                         placeholder: "http://example.com",
-                        field: store.state.recoveryGatewayURLField,
-                        send: Address.forward(
-                            send: store.send,
+                        field: store.viewStore(
+                            get: \.recoveryGatewayURLField,
                             tag: RecoveryModeAction.recoveryGatewayURLField
                         ),
                         caption: String(localized: "The URL of your preferred Noosphere gateway"),
