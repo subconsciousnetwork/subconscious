@@ -280,7 +280,7 @@ private extension View {
     func metaSheet(
         store: Store<UserProfileDetailModel>
     ) -> some View {
-        self.modifier(MetaSheetModifier(store: store))
+        self.modifier(UserProfileDetialMetaSheetModifier(store: store))
     }
     
     func editProfile(

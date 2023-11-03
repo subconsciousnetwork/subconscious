@@ -136,27 +136,24 @@ struct FollowUserSheetModel: ModelProtocol {
     }
 }
 
-struct RenameUserSheetCursor: CursorProtocol {
-    typealias Model = UserProfileDetailModel
-    typealias ViewModel = FollowUserSheetModel
+// MARK: Cursors
+
+struct FollowUserSheetFormCursor: CursorProtocol {
+    typealias Model = FollowUserSheetModel
+    typealias ViewModel = FollowUserFormModel
     
     static func get(state: Model) -> ViewModel {
-        state.renameUserSheet
+        state.followUserForm
     }
     
     static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
-        model.renameUserSheet = inner
+        model.followUserForm = inner
         return model
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        switch action {
-        case .submit:
-            return .attemptRename
-        default:
-            return .renameUserSheet(action)
-        }
+        .followUserForm(action)
     }
 }
 
@@ -181,25 +178,6 @@ struct FollowUserSheetCursor: CursorProtocol {
         default:
             return .followUserSheet(action)
         }
-    }
-}
-
-struct FollowUserSheetFormCursor: CursorProtocol {
-    typealias Model = FollowUserSheetModel
-    typealias ViewModel = FollowUserFormModel
-    
-    static func get(state: Model) -> ViewModel {
-        state.followUserForm
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.followUserForm = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .followUserForm(action)
     }
 }
 

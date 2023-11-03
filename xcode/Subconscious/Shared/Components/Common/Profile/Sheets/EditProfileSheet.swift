@@ -129,7 +129,6 @@ struct EditProfileSheetModel: ModelProtocol {
     }
 }
 
-
 struct EditProfileSheet: View {
     var store: ViewStore<EditProfileSheetModel>
     
