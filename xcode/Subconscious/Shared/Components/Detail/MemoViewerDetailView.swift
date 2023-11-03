@@ -176,7 +176,8 @@ struct MemoViewerDetailLoadedView: View {
         }
         
         guard let did = user?.did else {
-            return .systemAction
+            MemoViewerDetailModel.logger.log("User profile is not loaded, can't handle link")
+            return .handled
         }
         
         notify(
