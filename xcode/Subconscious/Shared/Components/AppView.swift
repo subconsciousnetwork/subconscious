@@ -546,9 +546,8 @@ struct AppModel: ModelProtocol {
     /// This property is updated at `.start` with the corresponding value
     /// stored in `AppDefaults`.
     var sphereIdentity: String?
-    var sphereDid: Did? {
-        Did(sphereIdentity ?? "")
-    }
+    var sphereDid: Did?
+    
     /// Default sphere version, if any.
     var sphereVersion: String?
     /// State for rendering mnemonic/recovery phrase UI.
@@ -1429,6 +1428,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.sphereIdentity = sphereIdentity
+        model.sphereDid = Did(sphereIdentity ?? "")
         if let sphereIdentity = sphereIdentity {
             logger.debug("Set sphere ID: \(sphereIdentity)")
         }
