@@ -128,8 +128,7 @@ struct MemoViewerDetailNotFoundView: View {
                 onLink: { context, link in
                     notify(
                         .requestFindLinkDetail(
-                            owner: context.did,
-                            address: context.address,
+                            context: context,
                             link: link
                         )
                     )
@@ -182,8 +181,7 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindLinkDetail(
-                owner: did,
-                address: address,
+                context: ResolvedAddress(owner: did, slashlink: address),
                 link: link
             )
         )
@@ -191,7 +189,7 @@ struct MemoViewerDetailLoadedView: View {
     }
     
     private func onLink(
-        context: EntryStub,
+        context: ResolvedAddress,
         url: URL
     ) -> OpenURLAction.Result {
         guard let link = url.toSubSlashlinkURL() else {
@@ -200,8 +198,7 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindLinkDetail(
-                owner: context.did,
-                address: context.address,
+                context: context,
                 link: link
             )
         )
@@ -234,8 +231,7 @@ struct MemoViewerDetailLoadedView: View {
                             onTranscludeLink: { context, link in
                                 notify(
                                     .requestFindLinkDetail(
-                                        owner: context.did,
-                                        address: context.address,
+                                        context: context,
                                         link: link
                                     )
                                 )
@@ -259,8 +255,7 @@ struct MemoViewerDetailLoadedView: View {
                         onLink: { context, link in
                             notify(
                                 .requestFindLinkDetail(
-                                    owner: context.did,
-                                    address: context.address,
+                                    context: context,
                                     link: link
                                 )
                             )
@@ -279,8 +274,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
-        owner: Did,
-        address: Slashlink,
+        context: ResolvedAddress,
         link: SubSlashlinkLink
     )
     case requestUserProfileDetail(_ address: Slashlink)

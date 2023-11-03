@@ -40,10 +40,11 @@ class Tests_DetailStack: XCTestCase {
         let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         let did = Did.dummyData()
+        let context = ResolvedAddress(owner: did, slashlink: address)
         
         let update = DetailStackModel.update(
             state: model,
-            action: .findAndPushLinkDetail(owner: did, address: address, link: link),
+            action: .findAndPushLinkDetail(context: context, link: link),
             environment: environment
         )
         let expectation = XCTestExpectation(
