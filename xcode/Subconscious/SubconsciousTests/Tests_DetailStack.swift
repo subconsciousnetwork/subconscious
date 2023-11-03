@@ -75,16 +75,15 @@ class Tests_DetailStack: XCTestCase {
         let did = Did.dummyData()
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            owner: did,
-            address: address,
+            context: ResolvedAddress(owner: did, slashlink: address),
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
         switch newAction {
-        case let .findAndPushLinkDetail(newDid, newAddress, newLink):
-            XCTAssertEqual(did, newDid)
-            XCTAssertEqual(address, newAddress)
+        case let .findAndPushLinkDetail(context, newLink):
+            XCTAssertEqual(did, context.owner)
+            XCTAssertEqual(address, context.slashlink)
             XCTAssertEqual(link, newLink)
         default:
             XCTFail("Incorrect action")
@@ -97,17 +96,16 @@ class Tests_DetailStack: XCTestCase {
         let did = Did.dummyData()
         
         let action = MemoEditorDetailNotification.requestFindLinkDetail(
-            owner: did,
-            address: Slashlink.ourProfile,
+            context: ResolvedAddress(owner: did, slashlink: Slashlink.ourProfile),
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
         
         switch newAction {
-        case let .findAndPushLinkDetail(newDid, newAddress, newLink):
-            XCTAssertEqual(newDid, did)
-            XCTAssertEqual(newAddress, Slashlink.ourProfile)
+        case let .findAndPushLinkDetail(context, newLink):
+            XCTAssertEqual(did, context.owner)
+            XCTAssertEqual(Slashlink.ourProfile, context.slashlink)
             XCTAssertEqual(newLink, link)
         default:
             XCTFail("Incorrect action")
