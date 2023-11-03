@@ -32,8 +32,8 @@ struct Toast: Equatable, Hashable {
 
 enum ToastStackAction: Hashable, Equatable {
     case pushToast(message: String)
-    case toastPresented(toast: Toast)
-    case toastExpired(toast: Toast)
+    case toastPresented(_ toast: Toast)
+    case toastExpired(_ toast: Toast)
 }
 
 struct ToastStackModel: ModelProtocol {
@@ -82,12 +82,12 @@ struct ToastStackModel: ModelProtocol {
         
         // If this is the only toast, immediately present it
         if (model.stack.count == 1) {
-            return update(
-                state: model,
-                action: .toastPresented(toast: model.stack.first!),
-                environment: environment
-            )
-            .animation(.default)
+            let fx: Fx<ToastStackAction> = Just(
+                ToastStackAction.toastPresented(
+                    model.stack.first!
+                )
+            ).eraseToAnyPublisher()
+            return Update(state: model, fx: fx)
         }
         
         return Update(state: model)
@@ -102,15 +102,14 @@ struct ToastStackModel: ModelProtocol {
         model.stack.removeAll(where: { $0.id == toast.id })
         
         if let first = model.stack.first {
-            return update(
-                state: model,
-                action: .toastPresented(toast: first),
-                environment: environment
-            )
+            let fx: Fx<ToastStackAction> = Just(
+                ToastStackAction.toastPresented(first)
+            ).eraseToAnyPublisher()
+            return Update(state: model, fx: fx)
         }
         
         model.presented = nil
-        return Update(state: model).animation(.default)
+        return Update(state: model).animation(.spring())
     }
     
     static func toastPresented(
@@ -121,11 +120,11 @@ struct ToastStackModel: ModelProtocol {
         var model = state
         let fx: Fx<ToastStackAction> = Future.detached {
             try? await Task.sleep(nanoseconds: 5_000_000_000)
-            return .toastExpired(toast: toast)
+            return .toastExpired(toast)
         }
         .eraseToAnyPublisher()
         model.presented = toast
         
-        return Update(state: model, fx: fx)
+        return Update(state: model, fx: fx).animation(.spring())
     }
 }
