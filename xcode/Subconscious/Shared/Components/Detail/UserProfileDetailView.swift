@@ -156,12 +156,13 @@ enum UserProfileDetailAction {
     case followNewUserFormSheet(FollowNewUserFormSheetAction)
     
     case requestFollow(UserProfile)
-    case attemptFollow(Did, Petname)
+    case attemptFollow
+    case attemptFollowNewUser
     case failFollow(error: String)
     case succeedFollow(_ petname: Petname)
     
     case requestRename(UserProfile)
-    case attemptRename(from: Petname, to: Petname)
+    case attemptRename
     case failRename(error: String)
     case succeedRename(from: Petname, to: Petname)
     
@@ -445,12 +446,15 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 user: user
             )
-        case .attemptFollow(let did, let petname):
+        case .attemptFollow:
             return attemptFollow(
                 state: state,
-                environment: environment,
-                did: did,
-                petname: petname
+                environment: environment
+            )
+        case .attemptFollowNewUser:
+            return attemptFollowNewUser(
+                state: state,
+                environment: environment
             )
         case let .succeedFollow(petname):
             return succeedFollow(
@@ -477,12 +481,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 user: user
             )
-        case let .attemptRename(from, to):
+        case .attemptRename:
             return attemptRename(
                 state: state,
-                environment: environment,
-                from: from,
-                to: to
+                environment: environment
             )
         case let .succeedRename(from, to):
             return succeedRename(
@@ -721,10 +723,17 @@ struct UserProfileDetailModel: ModelProtocol {
     
     static func attemptFollow(
         state: Self,
-        environment: Environment,
-        did: Did,
-        petname: Petname
+        environment: Environment
     ) -> Update<Self> {
+        let form = state.followUserSheet.followUserForm
+        guard let did = form.did.validated else {
+            return Update(state: state)
+        }
+        
+        guard let petname = form.petname.validated?.toPetname() else {
+            return Update(state: state)
+        }
+        
         let fx: Fx<UserProfileDetailAction> =
         environment.addressBook
             .followUserPublisher(
@@ -746,8 +755,47 @@ struct UserProfileDetailModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .presentFollowNewUserFormSheet(false),
                 .presentFollowSheet(false)
+            ],
+            environment: environment
+        ).mergeFx(fx)
+    }
+    
+    static func attemptFollowNewUser(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let form = state.followNewUserFormSheet.form
+        guard let did = form.did.validated else {
+            return Update(state: state)
+        }
+        
+        guard let petname = form.petname.validated?.toPetname() else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<UserProfileDetailAction> =
+        environment.addressBook
+            .followUserPublisher(
+                did: did,
+                petname: petname,
+                preventOverwrite: true
+            )
+            .map({ _ in
+                UserProfileDetailAction.succeedFollow(petname)
+            })
+            .recover { error in
+                .failFollow(
+                    error: error.localizedDescription
+                )
+            }
+            .eraseToAnyPublisher()
+        
+        // Dimiss sheet immediately
+        return update(
+            state: state,
+            actions: [
+                .presentFollowNewUserFormSheet(false)
             ],
             environment: environment
         ).mergeFx(fx)
@@ -819,7 +867,7 @@ struct UserProfileDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .presentRenameSheet(true),
-                .followUserSheet(.populate(user))
+                .renameUserSheet(.populate(user))
             ],
             environment: environment
         )
@@ -827,10 +875,17 @@ struct UserProfileDetailModel: ModelProtocol {
     
     static func attemptRename(
         state: Self,
-        environment: Environment,
-        from: Petname,
-        to: Petname
+        environment: Environment
     ) -> Update<Self> {
+        guard let from = state.renameCandidate else {
+            logger.log("No rename candidate")
+            return Update(state: state)
+        }
+        guard let to = state.renameUserSheet.followUserForm.petname.validated?.toPetname() else {
+            logger.log("New name is invalid or missing")
+            return Update(state: state)
+        }
+        
         let fx: Fx<UserProfileDetailAction> =
         Future.detached {
             let did = try await environment.addressBook.unfollowUser(petname: from)

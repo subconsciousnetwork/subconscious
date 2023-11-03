@@ -151,7 +151,12 @@ struct RenameUserSheetCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .renameUserSheet(action)
+        switch action {
+        case .submit:
+            return .attemptRename
+        default:
+            return .renameUserSheet(action)
+        }
     }
 }
 
@@ -170,7 +175,12 @@ struct FollowUserSheetCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .followUserSheet(action)
+        switch action {
+        case .submit:
+            return .attemptFollow
+        default:
+            return .followUserSheet(action)
+        }
     }
 }
 

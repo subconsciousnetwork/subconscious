@@ -33,14 +33,7 @@ struct FollowNewUserFormSheetView: View {
     }
     
     func onAttemptFollow() {
-        guard let did = form.did.validated else {
-            return
-        }
-        guard let name = form.petname.validated else {
-            return
-        }
-        
-        store.send(.attemptFollow(did, name.toPetname()))
+        store.send(.attemptFollow)
     }
     
     func onCancel() { 
@@ -139,7 +132,7 @@ enum FollowNewUserFormSheetAction {
     case succeedFindUniquePetname(petname: Petname.Name)
     case failToFindUniquePetname(_ error: String)
     
-    case attemptFollow(Did, Petname)
+    case attemptFollow
     case dismissSheet
 }
 
@@ -272,8 +265,8 @@ struct FollowNewUserFormSheetCursor: CursorProtocol {
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
-        case let .attemptFollow(did, petname):
-            return UserProfileDetailAction.attemptFollow(did, petname)
+        case .attemptFollow:
+            return UserProfileDetailAction.attemptFollowNewUser
         case .dismissSheet:
             return UserProfileDetailAction.presentFollowNewUserFormSheet(false)
         default:

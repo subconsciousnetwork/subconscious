@@ -107,7 +107,7 @@ struct EditProfileSheetModifier: ViewModifier {
         content
             .sheet(
                 isPresented: store.binding(
-                    get: \.isRenameSheetPresented,
+                    get: \.isEditProfileSheetPresented,
                     tag: UserProfileDetailAction.presentEditProfile
                 )
             ) {
