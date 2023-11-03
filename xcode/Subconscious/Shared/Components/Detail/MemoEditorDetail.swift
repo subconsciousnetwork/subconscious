@@ -183,9 +183,7 @@ struct MemoEditorDetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        SubtextTextViewRepresentable(
-                            state: store.state.editor,
-                            send: Address.forward(
+                        SubtextTextViewRepresentable( state: store.state.editor, send: Address.forward(
                                 send: store.send,
                                 tag: MemoEditorDetailSubtextTextCursor.tag
                             ),
@@ -217,8 +215,13 @@ struct MemoEditorDetailView: View {
                                     )
                                 )
                             },
-                            onLink: { address, link in
-                                notify(.requestFindLinkDetail(address, link: link))
+                            onLink: { context, link in
+                                notify(
+                                    .requestFindLinkDetail(
+                                        context: context,
+                                        link: link
+                                    )
+                                )
                             }
                         )
                     }
