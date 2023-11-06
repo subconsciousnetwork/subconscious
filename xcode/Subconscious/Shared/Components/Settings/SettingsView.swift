@@ -75,7 +75,7 @@ struct SettingsView: View {
                             label: {
                                 LabeledContent(
                                     "Sphere",
-                                    value: app.state.sphereIdentity ?? unknown
+                                    value: app.state.sphereIdentity?.description ?? unknown
                                 )
                                 .lineLimit(1)
                             }

@@ -46,7 +46,7 @@ struct MemoEditorDetailView: View {
         url: URL
     ) -> Bool {
         guard let sub = url.toSubSlashlinkURL(),
-              let did = app.state.sphereDid else {
+              let did = app.state.sphereIdentity else {
             return true
         }
         

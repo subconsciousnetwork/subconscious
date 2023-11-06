@@ -13,7 +13,7 @@ struct FirstRunProfileView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var did: Did? {
-        app.state.sphereDid
+        app.state.sphereIdentity
     }
     
     var body: some View {

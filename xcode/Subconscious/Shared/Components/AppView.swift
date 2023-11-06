@@ -545,8 +545,7 @@ struct AppModel: ModelProtocol {
     ///
     /// This property is updated at `.start` with the corresponding value
     /// stored in `AppDefaults`.
-    var sphereIdentity: String?
-    var sphereDid: Did?
+    var sphereIdentity: Did?
     
     /// Default sphere version, if any.
     var sphereVersion: String?
@@ -1174,7 +1173,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let sphereIdentity = state.sphereIdentity ?? "nil"
+        let sphereIdentity = state.sphereIdentity?.description ?? "nil"
         logger.debug(
             "appear",
             metadata: [
@@ -1427,8 +1426,7 @@ struct AppModel: ModelProtocol {
         sphereIdentity: String?
     ) -> Update<AppModel> {
         var model = state
-        model.sphereIdentity = sphereIdentity
-        model.sphereDid = Did(sphereIdentity ?? "")
+        model.sphereIdentity = Did(sphereIdentity ?? "")
         if let sphereIdentity = sphereIdentity {
             logger.debug("Set sphere ID: \(sphereIdentity)")
         }
@@ -2249,8 +2247,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         inviteCode: InviteCode
     ) -> Update<AppModel> {
-        guard let did = state.sphereIdentity,
-              let did = Did(did) else {
+        guard let did = state.sphereIdentity else {
             // Attempt to create the sphere if it's missing.
             // We could retry redeeming the code automatically but
             // if .createSphere fails we'll end up in an infinite loop
@@ -2520,7 +2517,7 @@ struct AppModel: ModelProtocol {
                 .presentRecoveryMode(true),
                 .recoveryMode(
                     .populate(
-                        state.sphereDid,
+                        state.sphereIdentity,
                         GatewayURL(state.gatewayURL),
                         context
                     )

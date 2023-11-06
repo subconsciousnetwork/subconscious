@@ -31,7 +31,7 @@ struct FirstRunDoneView: View {
     }
     
     private var did: Did? {
-        app.state.sphereDid
+        app.state.sphereIdentity
     }
     
     var statusLabel: String {
