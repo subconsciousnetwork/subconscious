@@ -302,6 +302,13 @@ enum AppAction: Hashable {
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
     
+    /// Keep all detail stacks in sync across the app via notifications
+    case notifySucceedDeleteMemo(Slashlink)
+    case notifySucceedMoveEntry(from: Slashlink, to: Slashlink)
+    case notifySucceedMergeEntry(parent: Slashlink, child: Slashlink)
+    case notifySucceedSaveEntry(address: Slashlink, modified: Date)
+    case notifySucceedUpdateAudience(MoveReceipt)
+    
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
@@ -1107,6 +1114,18 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+            
+        // Notifications
+        case let .notifySucceedDeleteMemo(address):
+            return Update(state: state)
+        case let .notifySucceedSaveEntry(address, modified):
+            return Update(state: state)
+        case let .notifySucceedMergeEntry(parent, child):
+            return Update(state: state)
+        case let .notifySucceedMoveEntry(from, to):
+            return Update(state: state)
+        case let .notifySucceedUpdateAudience(receipt):
+            return Update(state: state)
         }
     }
     

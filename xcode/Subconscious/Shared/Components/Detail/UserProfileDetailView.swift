@@ -93,6 +93,16 @@ extension UserProfileDetailAction {
             return .refresh(forceSync: false)
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
+        case .notifySucceedDeleteMemo:
+            return .refresh(forceSync: false)
+        case .notifySucceedSaveEntry:
+            return .refresh(forceSync: false)
+        case .notifySucceedMergeEntry:
+            return .refresh(forceSync: false)
+        case .notifySucceedMoveEntry:
+            return .refresh(forceSync: false)
+        case .notifySucceedUpdateAudience:
+            return .refresh(forceSync: false)
         default:
             return nil
         }
@@ -625,8 +635,6 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.initialTabIndex = initialTabIndex
-        // We might be passed some basic profile data
-        // we can use this in the loading state for a preview
         model.address = address
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {

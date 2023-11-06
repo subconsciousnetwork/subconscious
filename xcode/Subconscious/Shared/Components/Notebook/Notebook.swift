@@ -145,6 +145,12 @@ enum NotebookAction: Hashable {
     /// Audience was changed for address
     case succeedUpdateAudience(MoveReceipt)
     
+    case notifySucceedDeleteMemo(Slashlink)
+    case notifySucceedMoveEntry(from: Slashlink, to: Slashlink)
+    case notifySucceedMergeEntry(parent: Slashlink, child: Slashlink)
+    case notifySucceedSaveEntry(address: Slashlink, modified: Date)
+    case notifySucceedUpdateAudience(MoveReceipt)
+    
     //  Search
     /// Hit submit ("go") while focused on search field
     case submitSearch(String)
@@ -213,6 +219,8 @@ struct NotebookDetailStackCursor: CursorProtocol {
         switch action {
         case let .requestDeleteMemo(slashlink):
             return .requestDeleteMemo(slashlink)
+        case let .succeedDeleteMemo(address):
+            return .succeedDeleteMemo(address)
         case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedMoveEntry(from: from, to: to):
@@ -246,6 +254,16 @@ extension NotebookAction {
             return .failDeleteMemo(error)
         case .requestNotebookRoot:
             return .requestNotebookRoot
+        case .notifySucceedDeleteMemo:
+            return .refreshLists
+        case .notifySucceedSaveEntry:
+            return .refreshLists
+        case .notifySucceedMergeEntry:
+            return .refreshLists
+        case .notifySucceedMoveEntry:
+            return .refreshLists
+        case .notifySucceedUpdateAudience:
+            return .refreshLists
         default:
             return nil
         }
@@ -257,6 +275,16 @@ extension AppAction {
         switch action {
         case let .requestDeleteMemo(address):
             return .deleteMemo(address)
+        case let .succeedSaveEntry(address, modified):
+            return .notifySucceedSaveEntry(address: address, modified: modified)
+        case let .succeedMergeEntry(parent, child):
+            return .notifySucceedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from, to):
+            return .notifySucceedMoveEntry(from: from, to: to)
+        case let .succeedDeleteMemo(slashlink):
+            return .notifySucceedDeleteMemo(slashlink)
+        case let .succeedUpdateAudience(receipt):
+            return .notifySucceedUpdateAudience(receipt)
         default:
             return nil
         }
@@ -438,37 +466,74 @@ struct NotebookModel: ModelProtocol {
                 error: error
             )
         case .succeedDeleteMemo(let address):
-            return succeedDeleteMemo(
+            return update(
                 state: state,
-                environment: environment,
-                address: address
-            )
-        case let .succeedSaveEntry(address, modified):
-            return succeedSaveEntry(
-                state: state,
-                environment: environment,
-                address: address,
-                modified: modified
-            )
-        case let .succeedMoveEntry(from, to):
-            return succeedMoveEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case let .succeedMergeEntry(parent, child):
-            return succeedMergeEntry(
-                state: state,
-                environment: environment,
-                parent: parent,
-                child: child
+                actions: [ ],
+                environment: environment
             )
         case let .succeedUpdateAudience(receipt):
-            return succeedUpdateAudience(
+            return update(
                 state: state,
-                environment: environment,
-                receipt: receipt
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .notifySucceedDeleteMemo(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedDeleteMemo(address))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedUpdateAudience(receipt):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedUpdateAudience(receipt))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMoveEntry(from: from, to: to))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMergeEntry(parent: parent, child: child))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedSaveEntry(address: address, modified: modified))
+                ],
+                environment: environment
             )
         case .submitSearch(let query):
             return submitSearch(

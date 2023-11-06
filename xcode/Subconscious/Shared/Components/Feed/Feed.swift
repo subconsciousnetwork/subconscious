@@ -141,12 +141,18 @@ enum FeedAction: Hashable {
     
     /// DetailStack-related actions
     case requestDeleteMemo(Slashlink?)
-    case succeedDeleteMemo(Slashlink)
     case failDeleteMemo(String)
+    case succeedDeleteMemo(Slashlink)
     case succeedSaveEntry(slug: Slashlink, modified: Date)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(MoveReceipt)
+    
+    case notifySucceedDeleteMemo(Slashlink)
+    case notifySucceedMoveEntry(from: Slashlink, to: Slashlink)
+    case notifySucceedMergeEntry(parent: Slashlink, child: Slashlink)
+    case notifySucceedSaveEntry(address: Slashlink, modified: Date)
+    case notifySucceedUpdateAudience(MoveReceipt)
     
     // Feed
     /// Fetch stories for feed
@@ -164,6 +170,16 @@ extension AppAction {
         switch action {
         case let .requestDeleteMemo(slashlink):
             return .deleteMemo(slashlink)
+        case let .succeedSaveEntry(address, modified):
+            return .notifySucceedSaveEntry(address: address, modified: modified)
+        case let .succeedMergeEntry(parent, child):
+            return .notifySucceedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from, to):
+            return .notifySucceedMoveEntry(from: from, to: to)
+        case let .succeedDeleteMemo(slashlink):
+            return .notifySucceedDeleteMemo(slashlink)
+        case let .succeedUpdateAudience(receipt):
+            return .notifySucceedUpdateAudience(receipt)
         default:
             return nil
         }
@@ -185,6 +201,16 @@ extension FeedAction {
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
             return .failDeleteMemo(error)
+        case let .notifySucceedDeleteMemo(address):
+            return .notifySucceedDeleteMemo(address)
+        case let .notifySucceedSaveEntry(address, modified):
+            return .notifySucceedSaveEntry(address: address, modified: modified)
+        case let .notifySucceedMergeEntry(parent, child):
+            return .notifySucceedMergeEntry(parent: parent, child: child)
+        case let .notifySucceedMoveEntry(from, to):
+            return .notifySucceedMoveEntry(from: from, to: to)
+        case let .notifySucceedUpdateAudience(receipt):
+            return .notifySucceedUpdateAudience(receipt)
         default:
             return nil
         }
@@ -352,13 +378,46 @@ struct FeedModel: ModelProtocol {
         case let .succeedUpdateAudience(receipt):
             return update(
                 state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .notifySucceedDeleteMemo(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedDeleteMemo(address)),
+                    .refreshAll
+                ],
+                environment: environment
+            )
+        case let .notifySucceedUpdateAudience(receipt):
+            return update(
+                state: state,
                 actions: [
                     .detailStack(.succeedUpdateAudience(receipt)),
                     .refreshAll
                 ],
                 environment: environment
             )
-        case let .succeedMoveEntry(from, to):
+        case let .notifySucceedMoveEntry(from, to):
             return update(
                 state: state,
                 actions: [
@@ -367,7 +426,7 @@ struct FeedModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case let .succeedMergeEntry(parent, child):
+        case let .notifySucceedMergeEntry(parent, child):
             return update(
                 state: state,
                 actions: [
@@ -376,7 +435,7 @@ struct FeedModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case let .succeedSaveEntry(address, modified):
+        case let .notifySucceedSaveEntry(address, modified):
             return update(
                 state: state,
                 actions: [
@@ -533,10 +592,7 @@ struct FeedModel: ModelProtocol {
         )
         return update(
             state: state,
-            actions: [
-                .detailStack(.succeedDeleteMemo(address)),
-                .refreshAll
-            ],
+            actions: [ ], // TODO: clean up
             environment: environment
         )
     }

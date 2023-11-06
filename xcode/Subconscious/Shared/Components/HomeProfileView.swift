@@ -119,7 +119,17 @@ enum HomeProfileAction: Hashable {
     /// DetailStack-related actions
     case requestDeleteMemo(Slashlink?)
     case succeedDeleteMemo(Slashlink)
+    case succeedSaveEntry(slug: Slashlink, modified: Date)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedUpdateAudience(MoveReceipt)
     case failDeleteMemo(String)
+    
+    case notifySucceedDeleteMemo(Slashlink)
+    case notifySucceedMoveEntry(from: Slashlink, to: Slashlink)
+    case notifySucceedMergeEntry(parent: Slashlink, child: Slashlink)
+    case notifySucceedSaveEntry(address: Slashlink, modified: Date)
+    case notifySucceedUpdateAudience(MoveReceipt)
 }
 
 // MARK: Cursors and tagging functions
@@ -141,6 +151,16 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
         switch action {
         case let .requestDeleteMemo(slashlink):
             return .requestDeleteMemo(slashlink)
+        case let .succeedDeleteMemo(address):
+            return .succeedDeleteMemo(address)
+        case let .succeedMergeEntry(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from: from, to: to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+        case let .succeedSaveEntry(address: address, modified: modified):
+            return .succeedSaveEntry(slug: address, modified: modified)
         default:
             return .detailStack(action)
         }
@@ -169,6 +189,16 @@ extension AppAction {
         switch action {
         case let .requestDeleteMemo(slashlink):
             return .deleteMemo(slashlink)
+        case let .succeedSaveEntry(address, modified):
+            return .notifySucceedSaveEntry(address: address, modified: modified)
+        case let .succeedMergeEntry(parent, child):
+            return .notifySucceedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from, to):
+            return .notifySucceedMoveEntry(from: from, to: to)
+        case let .succeedDeleteMemo(slashlink):
+            return .notifySucceedDeleteMemo(slashlink)
+        case let .succeedUpdateAudience(receipt):
+            return .notifySucceedUpdateAudience(receipt)
         default:
             return nil
         }
@@ -278,6 +308,70 @@ struct HomeProfileModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
+        case let .succeedUpdateAudience(receipt):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .succeedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [ ],
+                environment: environment
+            )
+        case let .notifySucceedDeleteMemo(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedDeleteMemo(address))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedUpdateAudience(receipt):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedUpdateAudience(receipt))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMoveEntry(from: from, to: to))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMergeEntry(parent: parent, child: child))
+                ],
+                environment: environment
+            )
+        case let .notifySucceedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedSaveEntry(address: address, modified: modified))
+                ],
+                environment: environment
+            )
         }
     }
     
@@ -356,11 +450,8 @@ struct HomeProfileModel: ModelProtocol {
                 "address": address.description
             ]
         )
-        return update(
-            state: state,
-            action: .detailStack(.succeedDeleteMemo(address)),
-            environment: environment
-        )
+        
+        return Update(state: state)
     }
 
     /// Entry delete failed
