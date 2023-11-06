@@ -112,7 +112,7 @@ struct FollowNewUserFormSheetView_Previews: PreviewProvider {
             store: Store(
                 state: FollowNewUserFormSheetModel(),
                 environment: AppEnvironment()
-            ).toViewStore()
+            ).toViewStoreForSwiftUIPreview()
         )
     }
 }

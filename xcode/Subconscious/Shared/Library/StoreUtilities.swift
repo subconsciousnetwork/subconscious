@@ -10,7 +10,7 @@ import ObservableStore
 
 extension Store where Model : ModelProtocol {
     /// Utility method to turn a store into a  ViewStore, intended for use in SwiftUI previews.
-    func toViewStore() -> ViewStore<Model> {
+    func toViewStoreForSwiftUIPreview() -> ViewStore<Model> {
         return self.viewStore(get: { $0 }, tag: { $0 })
     }
 }

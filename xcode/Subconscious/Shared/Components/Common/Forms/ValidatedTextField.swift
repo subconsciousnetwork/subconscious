@@ -114,7 +114,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 field: Store(
                     state: FormField(value: "", validate: { _ in "" }),
                     environment: FormFieldEnvironment()
-                ).toViewStore(),
+                ).toViewStoreForSwiftUIPreview(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             ValidatedFormField(
@@ -122,7 +122,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 field: Store(
                     state: FormField(value: "", validate: { _ in nil as String? }),
                     environment: FormFieldEnvironment()
-                ).toViewStore(),
+                ).toViewStoreForSwiftUIPreview(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             ValidatedFormField(
@@ -130,7 +130,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 field: Store(
                     state: FormField(value: "", validate: { _ in "" }),
                     environment: FormFieldEnvironment()
-                ).toViewStore(),
+                ).toViewStoreForSwiftUIPreview(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
@@ -139,7 +139,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 field: Store(
                     state: FormField(value: "A very long run of text to test how this interacts with the icon", validate: { _ in nil as String? }),
                     environment: FormFieldEnvironment()
-                ).toViewStore(),
+                ).toViewStoreForSwiftUIPreview(),
                 caption: String(localized: "Lowercase letters and numbers only.")
             )
             .textFieldStyle(.roundedBorder)
@@ -153,7 +153,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     field: Store(
                         state: FormField(value: "", validate: { _ in "" }),
                         environment: FormFieldEnvironment()
-                    ).toViewStore(),
+                    ).toViewStoreForSwiftUIPreview(),
                     caption: String(localized: "Lowercase letters and numbers only."),
                     autoFocus: true
                 )
@@ -163,7 +163,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                     field: Store(
                         state: FormField(value: "", validate: { _ in nil as String? }),
                         environment: FormFieldEnvironment()
-                    ).toViewStore(),
+                    ).toViewStoreForSwiftUIPreview(),
                     caption: String(localized: "Lowercase letters and numbers only.")
                 )
                 .formField()
