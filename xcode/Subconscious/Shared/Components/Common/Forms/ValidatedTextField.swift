@@ -17,8 +17,6 @@ struct ValidatedFormField<Output: Equatable>: View {
     var placeholder: String
     var field: ViewStore<FormField<String, Output>>
     
-//    var field: FormField<String, Output>
-//    var send: (FormFieldAction<String>) -> Void
     var caption: String? = nil
     var axis: Axis = .horizontal
     var autoFocus: Bool = false
