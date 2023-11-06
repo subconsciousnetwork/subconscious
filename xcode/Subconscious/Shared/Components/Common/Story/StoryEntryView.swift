@@ -24,7 +24,7 @@ private struct StoryEntryUserDetailsView: View {
 struct StoryEntryView: View {
     var story: StoryEntry
     var onRequestDetail: (Slashlink, String) -> Void
-    var onLink: (_ context: Slashlink, SubSlashlinkLink) -> Void
+    var onLink: (_ context: ResolvedAddress, SubSlashlinkLink) -> Void
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -76,8 +76,8 @@ struct StoryEntryView: View {
                         onViewTransclude: { slashlink in
                             onRequestDetail(slashlink, story.entry.excerpt.description)
                         },
-                        onTranscludeLink: { address, link in
-                            onLink(address, link)
+                        onTranscludeLink: { context, link in
+                            onLink(context, link)
                         }
                     )
                     .padding([.leading, .trailing], AppTheme.padding)
@@ -88,7 +88,7 @@ struct StoryEntryView: View {
                             return .systemAction
                         }
                         
-                        onLink(story.entry.address, subslashlink)
+                        onLink(story.entry.toResolvedAddress(), subslashlink)
                         return .handled
                     })
                     

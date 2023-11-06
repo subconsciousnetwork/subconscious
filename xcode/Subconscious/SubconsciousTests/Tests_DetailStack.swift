@@ -7,14 +7,14 @@
 
 import XCTest
 import ObservableStore
+import Combine
 @testable import Subconscious
 
 class Tests_DetailStack: XCTestCase {
     let environment = AppEnvironment()
+    var cancellable: AnyCancellable?
     
     func testSubSlashlinkRebase() throws {
-        let model = DetailStackModel()
-        
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let baseAddress = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
@@ -32,24 +32,58 @@ class Tests_DetailStack: XCTestCase {
             return
         }
     }
-
-
-    func testViewerSlashlinkConstruction() throws {
+    
+    func testFindAndPushLinkDetail() throws {
         let model = DetailStackModel()
         
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
+        let did = Did.dummyData()
+        let context = ResolvedAddress(owner: did, slashlink: address)
+        
+        let update = DetailStackModel.update(
+            state: model,
+            action: .findAndPushLinkDetail(context: context, link: link),
+            environment: environment
+        )
+        let expectation = XCTestExpectation(
+            description: "findAndPushDetail is sent"
+        )
+        self.cancellable = update.fx.sink(
+            receiveCompletion: { completion in
+                expectation.fulfill()
+            },
+            receiveValue: { action in
+                switch action {
+                case let .findAndPushDetail(address: newAddress, link: newLink):
+                    XCTAssertEqual(newLink, link)
+                    XCTAssertEqual(Slashlink("@bob.alice.origin/hello"), newAddress)
+                    default:
+                        XCTFail("Incorrect action")
+                    }
+                }
+            )
+        wait(for: [expectation], timeout: 2.0)
+    }
+
+
+    func testViewerSlashlinkConstruction() throws {
+        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
+        let address = Slashlink(petname: Petname("origin")!)
+        let link = SubSlashlinkLink(slashlink: slashlink)
+        let did = Did.dummyData()
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            address: address,
+            context: ResolvedAddress(owner: did, slashlink: address),
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
         switch newAction {
-        case let .findAndPushLinkDetail(newAddress, newLink):
-            XCTAssertEqual(address, newAddress)
+        case let .findAndPushLinkDetail(context, newLink):
+            XCTAssertEqual(did, context.owner)
+            XCTAssertEqual(address, context.slashlink)
             XCTAssertEqual(link, newLink)
         default:
             XCTFail("Incorrect action")
@@ -59,17 +93,19 @@ class Tests_DetailStack: XCTestCase {
     func testEditorSlashlinkConstruction() throws {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
+        let did = Did.dummyData()
         
         let action = MemoEditorDetailNotification.requestFindLinkDetail(
-            Slashlink.ourProfile,
+            context: ResolvedAddress(owner: did, slashlink: Slashlink.ourProfile),
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
         
         switch newAction {
-        case let .findAndPushLinkDetail(newAddress, newLink):
-            XCTAssertEqual(newAddress, Slashlink.ourProfile)
+        case let .findAndPushLinkDetail(context, newLink):
+            XCTAssertEqual(did, context.owner)
+            XCTAssertEqual(Slashlink.ourProfile, context.slashlink)
             XCTAssertEqual(newLink, link)
         default:
             XCTFail("Incorrect action")

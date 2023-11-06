@@ -36,6 +36,10 @@ struct EntryStub:
             modified: modified
         )
     }
+    
+    func toResolvedAddress() -> ResolvedAddress {
+        ResolvedAddress(owner: did, slashlink: address)
+    }
 }
 
 extension EntryLink {

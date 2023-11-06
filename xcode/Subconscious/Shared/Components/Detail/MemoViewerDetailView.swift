@@ -125,8 +125,13 @@ struct MemoViewerDetailNotFoundView: View {
             BacklinksView(
                 backlinks: backlinks,
                 onRequestDetail: onBacklinkSelect,
-                onLink: { address, link in
-                    notify(.requestFindLinkDetail(address: address, link: link))
+                onLink: { context, link in
+                    notify(
+                        .requestFindLinkDetail(
+                            context: context,
+                            link: link
+                        )
+                    )
                 }
             )
         }
@@ -151,6 +156,11 @@ struct MemoViewerDetailLoadedView: View {
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
     
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoViewerDetailLoadedView"
+    )
+    
     func onBacklinkSelect(_ link: EntryLink) {
         notify(
             .requestDetail(
@@ -169,9 +179,14 @@ struct MemoViewerDetailLoadedView: View {
             return .systemAction
         }
         
+        guard let did = user?.did else {
+            Self.logger.log("User profile is not loaded, can't handle link")
+            return .handled
+        }
+        
         notify(
             .requestFindLinkDetail(
-                address: address,
+                context: ResolvedAddress(owner: did, slashlink: address),
                 link: link
             )
         )
@@ -179,7 +194,7 @@ struct MemoViewerDetailLoadedView: View {
     }
     
     private func onLink(
-        context: Slashlink,
+        context: ResolvedAddress,
         url: URL
     ) -> OpenURLAction.Result {
         guard let link = url.toSubSlashlinkURL() else {
@@ -188,7 +203,7 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindLinkDetail(
-                address: context,
+                context: context,
                 link: link
             )
         )
@@ -218,10 +233,10 @@ struct MemoViewerDetailLoadedView: View {
                             subtext: dom,
                             transcludePreviews: transcludePreviews,
                             onViewTransclude: self.onViewTransclude,
-                            onTranscludeLink: { address, link in
+                            onTranscludeLink: { context, link in
                                 notify(
                                     .requestFindLinkDetail(
-                                        address: address,
+                                        context: context,
                                         link: link
                                     )
                                 )
@@ -229,7 +244,7 @@ struct MemoViewerDetailLoadedView: View {
                         ).textSelection(
                             .enabled
                         ).environment(\.openURL, OpenURLAction { url in
-                            self.onLink(context: address, url: url)
+                            self.onLink(url: url)
                         })
                         Spacer()
                     }
@@ -242,8 +257,13 @@ struct MemoViewerDetailLoadedView: View {
                     BacklinksView(
                         backlinks: backlinks,
                         onRequestDetail: onBacklinkSelect,
-                        onLink: { address, link in
-                            notify(.requestFindLinkDetail(address: address, link: link))
+                        onLink: { context, link in
+                            notify(
+                                .requestFindLinkDetail(
+                                    context: context,
+                                    link: link
+                                )
+                            )
                         }
                     )
                 }
@@ -259,7 +279,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
-        address: Slashlink,
+        context: ResolvedAddress,
         link: SubSlashlinkLink
     )
     case requestUserProfileDetail(_ address: Slashlink)
@@ -738,7 +758,9 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
             backlinks: [
                 EntryStub(
                     did: Did.dummyData(),
-                    address: Slashlink("@bob/bar")!,
+                    address: Slashlink(
+                        "@bob/bar"
+                    )!,
                     excerpt: Subtext(
                         markup: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless."
                     ),
@@ -747,7 +769,9 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 ),
                 EntryStub(
                     did: Did.dummyData(),
-                    address: Slashlink("@bob/baz")!,
+                    address: Slashlink(
+                        "@bob/baz"
+                    )!,
                     excerpt: Subtext(
                         markup: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?"
                     ),

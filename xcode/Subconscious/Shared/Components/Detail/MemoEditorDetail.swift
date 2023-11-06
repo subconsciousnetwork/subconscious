@@ -45,13 +45,15 @@ struct MemoEditorDetailView: View {
     private func onLink(
         url: URL
     ) -> Bool {
-        guard let sub = url.toSubSlashlinkURL() else {
+        guard let sub = url.toSubSlashlinkURL(),
+              let did = app.state.sphereIdentity else {
             return true
         }
         
         notify(
+            // Links in the editor are based from our sphere
             .requestFindLinkDetail(
-                Slashlink.ourProfile, // Links in the editor are based from our sphere
+                context: ResolvedAddress(owner: did, slashlink: Slashlink.ourProfile),
                 link: sub
             )
         )
@@ -181,9 +183,7 @@ struct MemoEditorDetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        SubtextTextViewRepresentable(
-                            state: store.state.editor,
-                            send: Address.forward(
+                        SubtextTextViewRepresentable( state: store.state.editor, send: Address.forward(
                                 send: store.send,
                                 tag: MemoEditorDetailSubtextTextCursor.tag
                             ),
@@ -215,8 +215,13 @@ struct MemoEditorDetailView: View {
                                     )
                                 )
                             },
-                            onLink: { address, link in
-                                notify(.requestFindLinkDetail(address, link: link))
+                            onLink: { context, link in
+                                notify(
+                                    .requestFindLinkDetail(
+                                        context: context,
+                                        link: link
+                                    )
+                                )
                             }
                         )
                     }
@@ -275,7 +280,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
-        _ context: Slashlink,
+        context: ResolvedAddress,
         link: SubSlashlinkLink
     )
     case requestDelete(Slashlink?)
