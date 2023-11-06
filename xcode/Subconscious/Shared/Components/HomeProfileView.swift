@@ -178,6 +178,16 @@ extension HomeProfileAction {
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
             return .failDeleteMemo(error)
+        case let .notifySucceedDeleteMemo(address):
+            return .notifySucceedDeleteMemo(address)
+        case let .notifySucceedSaveEntry(address, modified):
+            return .notifySucceedSaveEntry(address: address, modified: modified)
+        case let .notifySucceedMergeEntry(parent, child):
+            return .notifySucceedMergeEntry(parent: parent, child: child)
+        case let .notifySucceedMoveEntry(from, to):
+            return .notifySucceedMoveEntry(from: from, to: to)
+        case let .notifySucceedUpdateAudience(receipt):
+            return .notifySucceedUpdateAudience(receipt)
         default:
             return nil
         }

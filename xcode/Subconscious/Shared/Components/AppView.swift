@@ -273,6 +273,7 @@ enum AppAction: Hashable {
     case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
     /// Notification that an unfollow happened somewhere else
     case notifySucceedUnfollow(identity: Did, petname: Petname)
+    case notifySucceedRename(from: Petname, to: Petname)
     
     case authorization(_ action: AuthorizationSettingsAction)
     
@@ -1062,6 +1063,13 @@ struct AppModel: ModelProtocol {
                 identity: did,
                 petname: petname
             )
+        case let .notifySucceedRename(from, to):
+            return notifySucceedRenamePeer(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
         case let .deleteMemo(address):
             return deleteMemo(
                 state: state,
@@ -1312,8 +1320,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Future.detached {
-            let response = try await environment.userProfile.readOurProfile(alias: nil)
-            if let nickname = response.nickname {
+            let response = await environment.userProfile.readProfileMemo(
+                sphere: environment.noosphere
+            )
+            
+            if let nickname = response?.nickname,
+               let nickname = Petname.Name(nickname) {
                 return AppAction.succeedFetchNicknameFromProfile(nickname)
             }
             
@@ -2431,6 +2443,26 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             action: .purgePeer(identity),
+            environment: environment
+        )
+    }
+    
+    static func notifySucceedRenamePeer(
+        state: Self,
+        environment: Environment,
+        from: Petname,
+        to: Petname
+    ) -> Update<Self> {
+        logger.log(
+            "Notify renamed peer",
+            metadata: [
+                "from": from.description,
+                "to": to.description
+            ]
+        )
+        return update(
+            state: state,
+            action: .indexOurSphere,
             environment: environment
         )
     }

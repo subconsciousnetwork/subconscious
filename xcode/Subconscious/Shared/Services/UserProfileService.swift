@@ -362,7 +362,6 @@ actor UserProfileService {
     }
 
     func readOurProfile(alias: Petname?) async throws -> UserProfile {
-        
         return try await self.loadProfileFromMemo(
             sphere: self.noosphere,
             address: Slashlink.ourProfile,
@@ -426,7 +425,7 @@ actor UserProfileService {
         )
         
         // Determine the preferred navigation address for a user
-        // If we follow someone, use our petname for then to visit their profile
+        // If we follow someone, use our petname for them to visit their profile
         // If this is us, chop off the petname altogether
         let address = Func.run {
             switch (petname, context) {
@@ -489,37 +488,46 @@ actor UserProfileService {
         return profile
     }
     
-    /// Read all data needed to render a user's profile.
-    /// Recent entries are read from the DB if we follow this user, otherwise we traverse to and list the sphere.
-    /// The user profile (nickname, bio, following list) are read directly from the sphere and never cached.
-    func loadFullProfileData(
-        address: Slashlink
-    ) async throws -> UserProfileContentResponse {
+    public func loadRecentEntries(address: Slashlink) async throws -> [EntryStub] {
         logger.log("Opening sphere...")
         let sphere = try await self.noosphere.sphere(address: address)
         let did = try await sphere.identity()
         logger.log("Opened sphere \(did)")
         
-        logger.log("Load profile memo")
-        let profile = try await self.loadProfileFromMemo(
-            sphere: sphere,
-            address: address,
-            alias: address.petname
-        )
-        
-        logger.log("Produce following list")
-        let following = try await self.getFollowingList(
-            address: address,
-            sphere: sphere
-        )
         logger.log("Get following status")
         let followingStatus = await self.addressBook.followingStatus(
             did: did,
             expectedName: address.petname?.leaf
         )
         
-        logger.log("Read entries")
+        return try await loadRecentEntries(
+            sphere: sphere,
+            did: did,
+            address: address,
+            followingStatus: followingStatus
+        )
+    }
+    
+    public func loadOurRecentEntries() async throws -> [EntryStub] {
+        let did = try await noosphere.identity()
+        logger.log("List our notes from database")
+        return try database.listRecentMemos(owner: did)
+    }
+    
+    private func loadRecentEntries<Sphere: SphereProtocol>(
+        sphere: Sphere,
+        did: Did,
+        address: Slashlink,
+        followingStatus: UserProfileFollowStatus
+    ) async throws -> [EntryStub] {
+        let ownerIdentity = try await noosphere.identity()
         let entries = try await Func.run {
+            
+            // Load our entries from the database
+            guard ownerIdentity != did else {
+                return try await loadOurRecentEntries()
+            }
+            
             switch (followingStatus) {
             // Read from DB if we follow this user
             case .following(let name):
@@ -555,13 +563,51 @@ actor UserProfileService {
             )
         }
         
-        let recentEntries = sortEntriesByModified(entries: entries)
+        return sortEntriesByModified(entries: entries)
+    }
+    
+    /// Read all data needed to render a user's profile.
+    /// Recent entries are read from the DB if we follow this user, otherwise we traverse to and list the sphere.
+    /// The user profile (nickname, bio, following list) are read directly from the sphere and never cached.
+    func loadFullProfileData(
+        address: Slashlink
+    ) async throws -> UserProfileContentResponse {
+        logger.log("Opening sphere...")
+        let sphere = try await self.noosphere.sphere(address: address)
+        let did = try await sphere.identity()
+        logger.log("Opened sphere \(did)")
+        
+        logger.log("Load profile memo")
+        let profile = try await self.loadProfileFromMemo(
+            sphere: sphere,
+            address: address,
+            alias: address.petname
+        )
+        
+        logger.log("Produce following list")
+        let following = try await self.getFollowingList(
+            address: address,
+            sphere: sphere
+        )
+        logger.log("Get following status")
+        let followingStatus = await self.addressBook.followingStatus(
+            did: did,
+            expectedName: address.petname?.leaf
+        )
+        
+        logger.log("Read entries")
+        let recentEntries = try await loadRecentEntries(
+            sphere: sphere,
+            did: did,
+            address: address,
+            followingStatus: followingStatus
+        )
         
         logger.log("Assemble response")
         return UserProfileContentResponse(
             profile: profile,
             statistics: UserProfileStatistics(
-                noteCount: entries.count,
+                noteCount: recentEntries.count,
                 backlinkCount: -1, // TODO: populate with real count
                 followingCount: following.count
             ),

@@ -201,6 +201,7 @@ extension FeedAction {
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
             return .failDeleteMemo(error)
+            
         case let .notifySucceedDeleteMemo(address):
             return .notifySucceedDeleteMemo(address)
         case let .notifySucceedSaveEntry(address, modified):
@@ -493,8 +494,8 @@ struct FeedModel: ModelProtocol {
         return FeedModel.update(
             state: state,
             actions: [
-                .search(.refreshSuggestions),
-                .fetchFeed
+                .fetchFeed,
+                .search(.refreshSuggestions)
             ],
             environment: environment
         )

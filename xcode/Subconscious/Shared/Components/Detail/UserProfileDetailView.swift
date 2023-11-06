@@ -78,6 +78,8 @@ extension UserProfileDetailAction {
             return .notifySucceedResolveFollowedUser(petname: petname, cid: cid)
         case let .succeedUnfollow(identity, petname):
             return .notifySucceedUnfollow(identity: identity, petname: petname)
+        case let .succeedRename(from, to):
+            return .notifySucceedRename(from: from, to: to)
         default:
             return nil
         }
@@ -94,15 +96,15 @@ extension UserProfileDetailAction {
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
         case .notifySucceedDeleteMemo:
-            return .refresh(forceSync: false)
+            return .refreshNotes
         case .notifySucceedSaveEntry:
-            return .refresh(forceSync: false)
+            return .refreshNotes
         case .notifySucceedMergeEntry:
-            return .refresh(forceSync: false)
+            return .refreshNotes
         case .notifySucceedMoveEntry:
-            return .refresh(forceSync: false)
+            return .refreshNotes
         case .notifySucceedUpdateAudience:
-            return .refresh(forceSync: false)
+            return .refreshNotes
         default:
             return nil
         }
@@ -139,6 +141,9 @@ enum UserProfileDetailAction {
 
     case appear(Slashlink, Int)
     case refresh(forceSync: Bool)
+    case refreshNotes
+    case succeedRefreshNotes([EntryStub])
+    case failRefreshNotes(_ error: String)
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
     
@@ -602,6 +607,32 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 results: results
             )
+        case .refreshNotes:
+            guard let address = state.address else {
+                return Update(state: state)
+            }
+            
+            guard address.isOurs else {
+                return Update(state: state)
+            }
+            
+            let fx: Fx<UserProfileDetailAction> = Future.detached {
+                let entries = try await environment.userProfile.loadOurRecentEntries()
+                return .succeedRefreshNotes(entries)
+            }
+            .recover { error in
+                return .failRefreshNotes(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedRefreshNotes(let notes):
+            var model = state
+            model.recentEntries = notes
+            return Update(state: model).animation()
+        case .failRefreshNotes(let error):
+            logger.warning("Failed to refresh notes: \(error)")
+            return Update(state: state)
         }
     }
     
@@ -1178,7 +1209,7 @@ struct UserProfileDetailModel: ModelProtocol {
         
         return update(
             state: state,
-            action: .refresh(forceSync: false),
+            action: .refreshNotes,
             environment: environment
         )
     }
