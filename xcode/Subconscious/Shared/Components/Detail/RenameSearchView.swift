@@ -237,7 +237,7 @@ struct RenameSearchView_Previews: PreviewProvider {
                         ]
                     ),
                     environment: RenameSearchModel.Environment()
-                ).toViewStore()
+                ).toViewStoreForSwiftUIPreview()
             )
         }
     }

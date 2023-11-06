@@ -320,7 +320,7 @@ struct MemoEditorDetailActionBottomSheetView_Previews: PreviewProvider {
                         )
                     ),
                     environment: MemoEditorDetailMetaSheetModel.Environment()
-                ).toViewStore()
+                ).toViewStoreForSwiftUIPreview()
             )
         }
     }
