@@ -156,6 +156,11 @@ struct MemoViewerDetailLoadedView: View {
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
     
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoViewerDetailLoadedView"
+    )
+    
     func onBacklinkSelect(_ link: EntryLink) {
         notify(
             .requestDetail(
@@ -175,7 +180,7 @@ struct MemoViewerDetailLoadedView: View {
         }
         
         guard let did = user?.did else {
-            MemoViewerDetailModel.logger.log("User profile is not loaded, can't handle link")
+            Self.logger.log("User profile is not loaded, can't handle link")
             return .handled
         }
         
