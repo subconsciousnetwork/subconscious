@@ -1167,10 +1167,10 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, length(body) > length(excerpt), excerpt
+            SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
             FROM memo
+            WHERE substr(memo.slug, 1, 1) != '_'
             ORDER BY RANDOM()
-                AND substr(memo.slug, 1, 1) != '_'
             LIMIT 1
             """
         )
@@ -1179,9 +1179,7 @@ final class DatabaseService {
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
-                    .toLink()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
+                    .toSlashlink(),
                 let modified = row.col(2)?.toDate(),
                 let isTruncated = row.col(3)?.toBool()
             else {
