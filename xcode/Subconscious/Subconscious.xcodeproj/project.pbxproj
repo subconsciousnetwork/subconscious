@@ -85,6 +85,7 @@
 		B58C1FBB2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */; };
 		B58C73A729DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
 		B58C73A829DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
+		B58E90A62AFA02B0000C0E65 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58E90A52AFA02B0000C0E65 /* DeckView.swift */; };
 		B58FD6712A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */; };
 		B58FD6732A4E4C0E00826548 /* InviteCodeSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */; };
 		B58FD6752A4E4C8200826548 /* ResourceSyncBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */; };
@@ -589,6 +590,7 @@
 		B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileDetailMetaSheet.swift; sourceTree = "<group>"; };
 		B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFrameViewModifier.swift; sourceTree = "<group>"; };
 		B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
+		B58E90A52AFA02B0000C0E65 /* DeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckView.swift; sourceTree = "<group>"; };
 		B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayProvisioningSettingsSection.swift; sourceTree = "<group>"; };
 		B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeSettingsSection.swift; sourceTree = "<group>"; };
 		B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceSyncBadge.swift; sourceTree = "<group>"; };
@@ -961,6 +963,7 @@
 				B513FFC92AD9035300492A73 /* FeedPlaceholderView.swift */,
 				B513FFCB2AD904F200492A73 /* FeedListView.swift */,
 				B8CA8F2528909E66005F8802 /* Feed.swift */,
+				B58E90A52AFA02B0000C0E65 /* DeckView.swift */,
 			);
 			path = Feed;
 			sourceTree = "<group>";
@@ -2137,6 +2140,7 @@
 				B579FA922A1AE4D1008A4D2F /* ResolutionStatus.swift in Sources */,
 				B8EB2A1F26F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B866868127AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */,
+				B58E90A62AFA02B0000C0E65 /* DeckView.swift in Sources */,
 				B824FDD126FA98F300B81BBD /* MemoEditorDetailResponse.swift in Sources */,
 				B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B8925B3129C2320D001F9503 /* MemoDetailDescription.swift in Sources */,
