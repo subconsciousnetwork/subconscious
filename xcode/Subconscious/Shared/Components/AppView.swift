@@ -229,8 +229,8 @@ enum AppAction: Hashable {
     case completeIndexPeers(results: [PeerIndexResult])
 
     /// Purge the contents of a sphere from the database
-    case purgePeer(_ did: Did)
-    case succeedPurgePeer(_ did: Did)
+    case purgePeer(_ petname: Petname)
+    case succeedPurgePeer(_ petname: Petname)
     case failPurgePeer(_ error: String)
 
     case followDefaultGeist
@@ -1002,17 +1002,17 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 results: results
             )
-        case .purgePeer(let identity):
+        case .purgePeer(let petname):
             return purgePeer(
                 state: state,
                 environment: environment,
-                identity: identity
+                petname: petname
             )
-        case .succeedPurgePeer(let identity):
+        case .succeedPurgePeer(let petname):
             return succeedPurgePeer(
                 state: state,
                 environment: environment,
-                identity: identity
+                petname: petname
             )
         case .failPurgePeer(let error):
             return failPurgePeer(
@@ -2177,14 +2177,14 @@ struct AppModel: ModelProtocol {
     static func purgePeer(
         state: Self,
         environment: Environment,
-        identity: Did
+        petname: Petname
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached(priority: .utility) {
             do {
                 try environment.database.purgePeer(
-                    identity: identity
+                    petname: petname
                 )
-                return Action.succeedPurgePeer(identity)
+                return Action.succeedPurgePeer(petname)
             } catch {
                 return Action.failPurgePeer(error.localizedDescription)
             }
@@ -2192,7 +2192,7 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Purging peer",
             metadata: [
-                "identity": identity.description
+                "identity": petname.description
             ]
         )
         return Update(state: state, fx: fx)
@@ -2201,12 +2201,12 @@ struct AppModel: ModelProtocol {
     static func succeedPurgePeer(
         state: Self,
         environment: Environment,
-        identity: Did
+        petname: Petname
     ) -> Update<Self> {
         logger.log(
             "Purged peer from database",
             metadata: [
-                "identity": identity.description
+                "identity": petname.description
             ]
         )
         return Update(state: state)
@@ -2446,7 +2446,7 @@ struct AppModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .purgePeer(identity),
+            action: .purgePeer(petname),
             environment: environment
         )
     }
