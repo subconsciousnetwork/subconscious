@@ -69,7 +69,12 @@ struct DeckModel: ModelProtocol {
             let fx: Fx<DeckAction> = Future.detached {
                 var results: [EntryStub] = []
                 let us = try await environment.noosphere.identity()
-                for _ in 0..<5 {
+                var max = 5
+                for _ in 0..<25 {
+                    guard max > 0 else {
+                        break
+                    }
+                    
                     guard let entry = environment.database.readRandomEntry(owner: us) else {
                         break
                     }
@@ -78,6 +83,7 @@ struct DeckModel: ModelProtocol {
                         break
                     }
                     
+                    max -= 1
                     results.append(entry)
                 }
                 
@@ -93,7 +99,12 @@ struct DeckModel: ModelProtocol {
             let fx: Fx<DeckAction> = Future.detached {
                 var results: [EntryStub] = []
                 let us = try await environment.noosphere.identity()
-                for _ in 0..<5 {
+                var max = 5
+                for _ in 0..<25 {
+                    guard max > 0 else {
+                        break
+                    }
+                    
                     guard let entry = environment.database.readRandomEntry(owner: us) else {
                         break
                     }
@@ -102,6 +113,7 @@ struct DeckModel: ModelProtocol {
                         break
                     }
                     
+                    max -= 1
                     results.append(entry)
                 }
                 
