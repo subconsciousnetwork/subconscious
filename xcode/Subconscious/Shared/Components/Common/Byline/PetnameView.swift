@@ -71,6 +71,7 @@ struct PetnameView: View {
             return aliases.filter { alias in
                 name != alias.leaf
             }
+            .uniquing(with: { $0 })
         case _:
             return []
         }
