@@ -11,9 +11,12 @@ import SwiftUI
 import Combine
 
 enum EditProfileSheetAction: Equatable {
-    case populate(UserProfileEntry?)
+    case populate(UserProfile, UserProfileStatistics?)
     case nicknameField(FormFieldAction<String>)
     case bioField(FormFieldAction<String>)
+    
+    case submit
+    case dismiss
 }
 
 private struct NicknameFieldCursor: CursorProtocol {
@@ -60,6 +63,9 @@ struct EditProfileSheetModel: ModelProtocol {
     typealias Action = EditProfileSheetAction
     typealias Environment = EditProfileSheetEnvironment
     
+    var user: UserProfile? = nil
+    var statistics: UserProfileStatistics? = nil
+    
     var nicknameField: FormField<String, Petname.Name> = FormField(
         value: "",
         validate: { value in
@@ -85,14 +91,18 @@ struct EditProfileSheetModel: ModelProtocol {
     ) -> Update<Self> {
         
         switch action {
-        case .populate(let user):
+        case let .populate(user, statistics):
+            var model = state
+            model.user = user
+            model.statistics = statistics
+            
             return update(
-                state: state,
+                state: model,
                 actions: [
                     .nicknameField(.reset),
                     .bioField(.reset),
-                    .nicknameField(.setValue(input: user?.nickname ?? "")),
-                    .bioField(.setValue(input: user?.bio ?? "")),
+                    .nicknameField(.setValue(input: user.nickname?.description ?? "")),
+                    .bioField(.setValue(input: user.bio?.text ?? "")),
                 ],
                 environment: environment
             )
@@ -110,26 +120,26 @@ struct EditProfileSheetModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
+        // Notifications
+        case .submit:
+            return Update(state: state)
+        case .dismiss:
+            return Update(state: state)
         }
     }
 }
 
-
 struct EditProfileSheet: View {
-    var state: EditProfileSheetModel
-    var send: (EditProfileSheetAction) -> Void
-    var user: UserProfile
-    var statistics: UserProfileStatistics?
-    var failEditProfileMessage: String?
-    var onEditProfile: () -> Void
-    var onCancel: () -> Void
-    var onDismissError: () -> Void
+    var store: ViewStore<EditProfileSheetModel>
     
     var formIsValid: Bool {
-        state.bioField.isValid && state.nicknameField.isValid
+        store.state.bioField.isValid && store.state.nicknameField.isValid
     }
     
-    func makePreview(nickname: Petname.Name) -> UserProfile {
+    func makePreview(nickname: Petname.Name) -> UserProfile? {
+        guard let user = store.state.user else {
+            return nil
+        }
         let pfp: ProfilePicVariant = ProfilePicVariant.generated(user.did)
         
         return UserProfile(
@@ -137,7 +147,7 @@ struct EditProfileSheet: View {
             nickname: nickname,
             address: user.address,
             pfp: pfp,
-            bio: UserProfileBio(state.bioField.validated?.text ?? ""),
+            bio: UserProfileBio(store.state.bioField.validated?.text ?? ""),
             category: .ourself,
             ourFollowStatus: .notFollowing,
             aliases: []
@@ -145,7 +155,7 @@ struct EditProfileSheet: View {
     }
     
     var bioCaption: String {
-        "A short description of yourself (\(state.bioField.value.count)/280)"
+        "A short description of yourself (\(store.state.bioField.value.count)/280)"
     }
     
     var body: some View {
@@ -157,9 +167,8 @@ struct EditProfileSheet: View {
                             .foregroundColor(.accentColor)
                         ValidatedFormField(
                             placeholder: "nickname",
-                            field: state.nicknameField,
-                            send: Address.forward(
-                                send: send,
+                            field: store.viewStore(
+                                get: \.nicknameField,
                                 tag: EditProfileSheetAction.nicknameField
                             ),
                             caption: String(
@@ -177,9 +186,8 @@ struct EditProfileSheet: View {
                         
                         ValidatedFormField(
                             placeholder: "bio",
-                            field: state.bioField,
-                            send: Address.forward(
-                                send: send,
+                            field: store.viewStore(
+                                get: \.bioField,
                                 tag: EditProfileSheetAction.bioField
                             ),
                             caption: bioCaption,
@@ -190,41 +198,29 @@ struct EditProfileSheet: View {
                     }
                 }
                 
-                if let nickname = state.nicknameField.validated {
-                    let preview = makePreview(nickname: nickname)
-                    
+                if let nickname = store.state.nicknameField.validated,
+                   let preview = makePreview(nickname: nickname) {
                     Section("Preview") {
                         UserProfileHeaderView(
                             user: preview,
-                            statistics: statistics,
+                            statistics: store.state.statistics,
                             hideActionButton: true
                         )
                     }
                 }
-            }
-            .alert(
-                isPresented: Binding(
-                    get: { failEditProfileMessage != nil },
-                    set: { _ in onDismissError() }
-                )
-            ) {
-                Alert(
-                    title: Text("Failed to Save Profile"),
-                    message: Text(failEditProfileMessage ?? "An unknown error ocurred")
-                )
             }
             .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        onEditProfile()
+                        store.send(.submit)
                     }
                     .disabled(!formIsValid)
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel", role: .cancel) {
-                        onCancel()
+                        store.send(.dismiss)
                     }
                 }
             }

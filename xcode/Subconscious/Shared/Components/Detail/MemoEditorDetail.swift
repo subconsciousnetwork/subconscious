@@ -145,9 +145,8 @@ struct MemoEditorDetailView: View {
             )
         ) {
             MemoEditorDetailMetaSheetView(
-                state: store.state.metaSheet,
-                send: Address.forward(
-                    send: store.send,
+                store: store.viewStore(
+                    get: \.metaSheet,
                     tag: DetailMetaSheetCursor.tag
                 )
             )

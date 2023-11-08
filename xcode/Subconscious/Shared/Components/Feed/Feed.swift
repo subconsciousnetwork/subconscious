@@ -105,6 +105,17 @@ struct FeedView: View {
             )
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
+            VStack {
+                Spacer()
+                ToastStackView(
+                    store: app.viewStore(
+                        get: \.toastStack,
+                        tag: ToastStackCursor.tag
+                    )
+                )
+            }
+            .padding()
+            .zIndex(3)
         }
         .background(Color.background)
         /// Replay some app actions on feed store

@@ -60,6 +60,17 @@ struct NotebookView: View {
             )
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
+            VStack {
+                Spacer()
+                ToastStackView(
+                    store: app.viewStore(
+                        get: \.toastStack,
+                        tag: ToastStackCursor.tag
+                    )
+                )
+            }
+            .padding()
+            .zIndex(3)
         }
         .onAppear {
             store.send(.appear)

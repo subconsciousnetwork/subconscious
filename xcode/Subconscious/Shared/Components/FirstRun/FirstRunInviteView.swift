@@ -90,9 +90,8 @@ struct FirstRunInviteView: View {
                 ValidatedFormField(
                     alignment: .center,
                     placeholder: "Enter your invite code",
-                    field: app.state.inviteCodeFormField,
-                    send: Address.forward(
-                        send: app.send,
+                    field: app.viewStore(
+                        get: \.inviteCodeFormField,
                         tag: AppAction.inviteCodeFormField
                     ),
                     caption: inviteCodeCaption,

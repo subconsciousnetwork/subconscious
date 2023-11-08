@@ -39,7 +39,7 @@ struct DeveloperSettingsView: View {
                     Text("Build Local SQLite Index")
                 }
             )
-
+            
             Section(footer: Text("The block editor is an experimental feature that is currently in-development. Not everything will work correctly.")) {
                 Toggle(
                     isOn: app.binding(

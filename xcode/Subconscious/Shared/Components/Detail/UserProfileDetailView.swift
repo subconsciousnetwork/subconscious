@@ -78,6 +78,14 @@ extension UserProfileDetailAction {
             return .notifySucceedResolveFollowedUser(petname: petname, cid: cid)
         case let .succeedUnfollow(identity, petname):
             return .notifySucceedUnfollow(identity: identity, petname: petname)
+        case .failRename:
+            return AppAction.pushToast(message: String(localized: "Failed to rename user"))
+        case .failUnfollow:
+            return AppAction.pushToast(message: String(localized: "Failed to unfollow user"))
+        case .failEditProfile:
+            return AppAction.pushToast(message: String(localized: "Failed to edit profile"))
+        case .failFollow:
+            return AppAction.pushToast(message: String(localized: "Failed to follow user"))
         default:
             return nil
         }
@@ -143,21 +151,20 @@ enum UserProfileDetailAction {
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
+    case renameUserSheet(FollowUserSheetAction)
     case editProfileSheet(EditProfileSheetAction)
     case followNewUserFormSheet(FollowNewUserFormSheetAction)
     
     case requestFollow(UserProfile)
-    case attemptFollow(Did, Petname)
+    case attemptFollow
+    case attemptFollowNewUser
     case failFollow(error: String)
-    case failFollowDueToPetnameCollision(petname: Petname)
-    case dismissFailFollowError
     case succeedFollow(_ petname: Petname)
     
     case requestRename(UserProfile)
-    case attemptRename(from: Petname, to: Petname)
+    case attemptRename
     case failRename(error: String)
     case succeedRename(from: Petname, to: Petname)
-    case dismissFailRenameErrorMessage
     
     case requestWaitForFollowedUserResolution(_ petname: Petname)
     case succeedResolveFollowedUser(petname: Petname, cid: Cid?)
@@ -166,12 +173,10 @@ enum UserProfileDetailAction {
     case requestUnfollow(UserProfile)
     case attemptUnfollow
     case failUnfollow(error: String)
-    case dismissFailUnfollowError
     case succeedUnfollow(identity: Did, petname: Petname)
     
     case requestEditProfile
     case failEditProfile(error: String)
-    case dismissEditProfileError
     case succeedEditProfile
     
     case completeIndexPeers(_ results: [PeerIndexResult])
@@ -248,7 +253,14 @@ struct EditProfileSheetCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .editProfileSheet(action)
+        switch action {
+        case .submit:
+            return .requestEditProfile
+        case .dismiss:
+            return .presentEditProfile(false)
+        default:
+            return .editProfileSheet(action)
+        }
     }
 }
 
@@ -313,14 +325,11 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var loadingState = LoadingState.loading
     
-    var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
-    var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
-    var followNewUserFormSheet: FollowNewUserFormSheetModel = FollowNewUserFormSheetModel()
-    var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
-    var failFollowErrorMessage: String?
-    var failUnfollowErrorMessage: String?
-    var failEditProfileMessage: String?
-    var failRenameMessage: String?
+    var metaSheet = UserProfileDetailMetaSheetModel()
+    var followUserSheet = FollowUserSheetModel()
+    var renameUserSheet = FollowUserSheetModel()
+    var followNewUserFormSheet = FollowNewUserFormSheetModel()
+    var editProfileSheet = EditProfileSheetModel()
     
     // This view can be invoked with an initial tab focused
     // but if the user has changed the tab we should remember that across profile refreshes
@@ -363,6 +372,12 @@ struct UserProfileDetailModel: ModelProtocol {
             )
         case .followUserSheet(let action):
             return FollowUserSheetCursor.update(
+                state: state,
+                action: action,
+                environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
+            )
+        case .renameUserSheet(let action):
+            return RenameUserSheetCursor.update(
                 state: state,
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
@@ -431,19 +446,22 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-            // MARK: Following
+        // MARK: Following
         case .requestFollow(let user):
             return requestFollow(
                 state: state,
                 environment: environment,
                 user: user
             )
-        case .attemptFollow(let did, let petname):
+        case .attemptFollow:
             return attemptFollow(
                 state: state,
-                environment: environment,
-                did: did,
-                petname: petname
+                environment: environment
+            )
+        case .attemptFollowNewUser:
+            return attemptFollowNewUser(
+                state: state,
+                environment: environment
             )
         case let .succeedFollow(petname):
             return succeedFollow(
@@ -470,12 +488,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 user: user
             )
-        case let .attemptRename(from, to):
+        case .attemptRename:
             return attemptRename(
                 state: state,
-                environment: environment,
-                from: from,
-                to: to
+                environment: environment
             )
         case let .succeedRename(from, to):
             return succeedRename(
@@ -489,21 +505,6 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
-            )
-        case .dismissFailRenameErrorMessage:
-            var model = state
-            model.failRenameMessage = nil
-            return Update(state: model)
-        case .failFollowDueToPetnameCollision(let petname):
-            return failFollowDueToPetnameCollision(
-                state: state,
-                environment: environment,
-                petname: petname
-            )
-        case .dismissFailFollowError:
-            return dismissFailFollowError(
-                state: state,
-                environment: environment
             )
         case let .requestWaitForFollowedUserResolution(petname):
             return requestWaitForFollowedUserResolution(
@@ -553,12 +554,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .dismissFailUnfollowError:
-            return dismissFailUnfollowError(
-                state: state,
-                environment: environment
-            )
-            // MARK: Edit Profile
+        // MARK: Edit Profile
         case .presentEditProfile(let isPresented):
             return presentEditProfile(
                 state: state,
@@ -580,11 +576,6 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
-            )
-        case .dismissEditProfileError:
-            return dismissEditProfileError(
-                state: state,
-                environment: environment
             )
         case .completeIndexPeers(let results):
             return completeIndexPeers(
@@ -690,7 +681,17 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.isMetaSheetPresented = isPresented
-        return Update(state: model)
+        
+        guard let user = state.user else {
+            logger.log("Missing user, cannot present meta sheet")
+            return Update(state: state)
+        }
+        
+        return update(
+            state: model,
+            action: .metaSheet(.populate(user)),
+            environment: environment
+        )
     }
     
     static func presentFollowNewUserFormSheet(
@@ -702,9 +703,17 @@ struct UserProfileDetailModel: ModelProtocol {
         model.isFollowNewUserFormSheetPresented = isPresented
         
         if isPresented {
+            guard let user = model.user else {
+                logger.log("Missing user, cannot present follow new user form sheet")
+                return Update(state: state)
+            }
+            
             return update(
                 state: model,
-                action: .followNewUserFormSheet(.form(.reset)),
+                actions: [
+                    .followNewUserFormSheet(.form(.reset)),
+                    .followNewUserFormSheet(.populate(user.did))
+                ],
                 environment: environment
             )
         }
@@ -739,10 +748,17 @@ struct UserProfileDetailModel: ModelProtocol {
     
     static func attemptFollow(
         state: Self,
-        environment: Environment,
-        did: Did,
-        petname: Petname
+        environment: Environment
     ) -> Update<Self> {
+        let form = state.followUserSheet.followUserForm
+        guard let did = form.did.validated else {
+            return Update(state: state)
+        }
+        
+        guard let petname = form.petname.validated?.toPetname() else {
+            return Update(state: state)
+        }
+        
         let fx: Fx<UserProfileDetailAction> =
         environment.addressBook
             .followUserPublisher(
@@ -754,20 +770,60 @@ struct UserProfileDetailModel: ModelProtocol {
                 UserProfileDetailAction.succeedFollow(petname)
             })
             .recover { error in
-                switch error {
-                case AddressBookError.invalidAttemptToOverwitePetname:
-                    return .failFollowDueToPetnameCollision(
-                        petname: petname
-                    )
-                case _:
-                    return .failFollow(
-                        error: error.localizedDescription
-                    )
-                }
+                .failFollow(
+                    error: error.localizedDescription
+                )
             }
             .eraseToAnyPublisher()
         
-        return Update(state: state, fx: fx)
+        // Dimiss sheet immediately
+        return update(
+            state: state,
+            actions: [
+                .presentFollowSheet(false)
+            ],
+            environment: environment
+        ).mergeFx(fx)
+    }
+    
+    static func attemptFollowNewUser(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let form = state.followNewUserFormSheet.form
+        guard let did = form.did.validated else {
+            return Update(state: state)
+        }
+        
+        guard let petname = form.petname.validated?.toPetname() else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<UserProfileDetailAction> =
+        environment.addressBook
+            .followUserPublisher(
+                did: did,
+                petname: petname,
+                preventOverwrite: true
+            )
+            .map({ _ in
+                UserProfileDetailAction.succeedFollow(petname)
+            })
+            .recover { error in
+                .failFollow(
+                    error: error.localizedDescription
+                )
+            }
+            .eraseToAnyPublisher()
+        
+        // Dimiss sheet immediately
+        return update(
+            state: state,
+            actions: [
+                .presentFollowNewUserFormSheet(false)
+            ],
+            environment: environment
+        ).mergeFx(fx)
     }
     
     static func succeedFollow(
@@ -803,8 +859,8 @@ struct UserProfileDetailModel: ModelProtocol {
         error: String
     ) -> Update<Self> {
         var model = state
-        model.failFollowErrorMessage = error
-        
+        model.isFollowSheetPresented = false
+        model.isFollowNewUserFormSheetPresented = false
         return Update(state: model)
     }
     
@@ -836,7 +892,7 @@ struct UserProfileDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .presentRenameSheet(true),
-                .followUserSheet(.populate(user))
+                .renameUserSheet(.populate(user))
             ],
             environment: environment
         )
@@ -844,10 +900,17 @@ struct UserProfileDetailModel: ModelProtocol {
     
     static func attemptRename(
         state: Self,
-        environment: Environment,
-        from: Petname,
-        to: Petname
+        environment: Environment
     ) -> Update<Self> {
+        guard let from = state.renameCandidate else {
+            logger.log("No rename candidate")
+            return Update(state: state)
+        }
+        guard let to = state.renameUserSheet.followUserForm.petname.validated?.toPetname() else {
+            logger.log("New name is invalid or missing")
+            return Update(state: state)
+        }
+        
         let fx: Fx<UserProfileDetailAction> =
         Future.detached {
             let did = try await environment.addressBook.unfollowUser(petname: from)
@@ -860,6 +923,9 @@ struct UserProfileDetailModel: ModelProtocol {
         }
         .eraseToAnyPublisher()
         
+        // Dimiss sheet immediately
+        var model = state
+        model.isRenameSheetPresented = false
         return Update(state: state, fx: fx)
     }
     
@@ -871,7 +937,6 @@ struct UserProfileDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.renameCandidate = nil
-        model.failRenameMessage = nil
         
         return update(
             state: model,
@@ -889,38 +954,7 @@ struct UserProfileDetailModel: ModelProtocol {
         error: String
     ) -> Update<Self> {
         var model = state
-        model.failRenameMessage = error
-        
-        return Update(state: model)
-    }
-    
-    static func failFollowDueToPetnameCollision(
-        state: Self,
-        environment: Environment,
-        petname: Petname
-    ) -> Update<Self> {
-        return update(
-            state: state,
-            actions: [
-                .followNewUserFormSheet(
-                    .failFollowDueToPetnameCollision(
-                        error: AddressBookError
-                            .invalidAttemptToOverwitePetname
-                            .localizedDescription,
-                        petname: petname.root
-                    )
-                )
-            ],
-            environment: environment
-        )
-    }
-    
-    static func dismissFailFollowError(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        var model = state
-        model.failFollowErrorMessage = nil
+        model.isRenameSheetPresented = false
         return Update(state: model)
     }
     
@@ -1024,6 +1058,9 @@ struct UserProfileDetailModel: ModelProtocol {
                 })
                 .eraseToAnyPublisher()
             
+            // Dimiss confirmation immediately
+            var model = state
+            model.isUnfollowConfirmationPresented = false
             return Update(state: state, fx: fx)
         }
     }
@@ -1050,23 +1087,14 @@ struct UserProfileDetailModel: ModelProtocol {
             environment: environment
         )
     }
-    
+   
     static func failUnfollow(
         state: Self,
         environment: Environment,
         error: String
     ) -> Update<Self> {
         var model = state
-        model.failUnfollowErrorMessage = error
-        return Update(state: model)
-    }
-    
-    static func dismissFailUnfollowError(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        var model = state
-        model.failUnfollowErrorMessage = nil
+        model.isUnfollowConfirmationPresented = false
         return Update(state: model)
     }
     
@@ -1078,13 +1106,14 @@ struct UserProfileDetailModel: ModelProtocol {
         var model = state
         model.isEditProfileSheetPresented = isPresented
         
-        let profile = UserProfileEntry(
-            nickname: state.user?.nickname?.description,
-            bio: state.user?.bio?.text
-        )
+        guard let user = state.user else {
+            logger.log("Missing user, cannot edit profile")
+            return Update(state: state)
+        }
+        
         return update(
             state: model,
-            action: .editProfileSheet(.populate(profile)),
+            action: .editProfileSheet(.populate(user, state.statistics)),
             environment: environment
         )
     }
@@ -1097,8 +1126,6 @@ struct UserProfileDetailModel: ModelProtocol {
             nickname: state.editProfileSheet.nicknameField.validated?.description,
             bio: state.editProfileSheet.bioField.validated?.text
         )
-        var model = state
-        model.isEditProfileSheetPresented = false
         
         let fx: Fx<UserProfileDetailAction> = Future.detached {
             try await environment.userProfile.writeOurProfile(
@@ -1111,6 +1138,9 @@ struct UserProfileDetailModel: ModelProtocol {
             )
         }).eraseToAnyPublisher()
         
+        // Dimiss sheet immediately
+        var model = state
+        model.isEditProfileSheetPresented = false
         return Update(state: model, fx: fx)
     }
     
@@ -1134,17 +1164,7 @@ struct UserProfileDetailModel: ModelProtocol {
         error: String
     ) -> Update<Self> {
         var model = state
-        model.failEditProfileMessage = error
-        model.isEditProfileSheetPresented = true
-        return Update(state: model)
-    }
-    
-    static func dismissEditProfileError(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        var model = state
-        model.failEditProfileMessage = nil
+        model.isEditProfileSheetPresented = false
         return Update(state: model)
     }
     
