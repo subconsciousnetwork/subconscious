@@ -57,6 +57,7 @@ extension BlockEditor {
                 stackView.addArrangedSubview(transclude)
                 transclude.render(stub)
             }
+            stackView.addArrangedSubview(.spacer())
         }
     }
 }
