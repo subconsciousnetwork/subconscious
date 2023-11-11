@@ -62,7 +62,9 @@ class UIHostingView<Content: View>: UIView {
     /// Update the SwiftUI View being managed by the hosting controller.
     /// This method is idempotent when called repeatedly with the
     /// same controller.
-    func update(parentController: UIViewController) {
+    func moveToParentControllerIfNeeded(
+        _ parentController: UIViewController
+    ) {
         guard hostingController.parent != parentController else {
             return
         }
@@ -89,7 +91,7 @@ class UIHostingView<Content: View>: UIView {
         parentController: UIViewController,
         rootView: Content?
     ) {
-        update(parentController: parentController)
+        moveToParentControllerIfNeeded(parentController)
         update(rootView: rootView)
     }
 
@@ -98,7 +100,6 @@ class UIHostingView<Content: View>: UIView {
             return
         }
         hostingController.willMove(toParent: nil)
-        hostingController.view.removeFromSuperview()
         hostingController.removeFromParent()
     }
 }

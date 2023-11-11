@@ -314,7 +314,7 @@ extension BlockEditor {
                 for: indexPath
             ) as! RelatedCell
             let state = store.state.appendix
-            cell.render(state, parentController: self)
+            cell.update(parentController: self, state: state)
             return cell
         }
     }

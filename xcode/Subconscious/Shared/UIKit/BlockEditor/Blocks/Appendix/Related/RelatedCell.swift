@@ -48,20 +48,10 @@ extension BlockEditor {
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
-        
-        override func prepareForReuse() {
-            relatedHostingView.update(
-                rootView: BacklinksView(
-                    backlinks: [],
-                    onRequestDetail: { _ in },
-                    onLink: { _, _ in }
-                )
-            )
-        }
-        
-        func render(
-            _ state: BlockEditor.RelatedModel,
-            parentController: UIViewController
+                
+        func update(
+            parentController: UIViewController,
+            state: BlockEditor.RelatedModel
         ) {
             self.id = state.id
             relatedHostingView.update(
@@ -81,8 +71,9 @@ struct BlockEditorRelatedCell_Previews: PreviewProvider {
         UIViewPreviewRepresentable {
             let controller = UIViewController()
             let view = BlockEditor.RelatedCell()
-            view.render(
-                BlockEditor.RelatedModel(
+            view.update(
+                parentController: controller,
+                state: BlockEditor.RelatedModel(
                     related: [
                         EntryStub(
                             did: Did("did:key:abc123")!,
@@ -106,8 +97,7 @@ struct BlockEditorRelatedCell_Previews: PreviewProvider {
                             modified: Date.now
                         )
                     ]
-                ),
-                parentController: controller
+                )
             )
             return view
         }
