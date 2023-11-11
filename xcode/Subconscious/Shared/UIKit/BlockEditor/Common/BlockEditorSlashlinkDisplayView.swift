@@ -8,7 +8,7 @@
 import UIKit
 
 extension BlockEditor {
-    class SlashlinkDisplayView: UIView, UIViewRenderableProtocol {
+    class SlashlinkDisplayView: UIView {
         private var height: CGFloat = AppTheme.smPfpSize
         private var stackView = UIStackView(frame: .zero)
         private var petnameView = UILabel(frame: .zero)

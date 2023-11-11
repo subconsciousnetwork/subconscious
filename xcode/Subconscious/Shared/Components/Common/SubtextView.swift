@@ -70,17 +70,13 @@ struct SubtextView: View {
                     Text(Self.renderer.render(renderable.block.description))
                 }
                 
-                ForEach(renderable.entries, id: \.self) { entry in
-                    TranscludeView(
-                        entry: entry,
-                        onRequestDetail: {
-                            onViewTransclude(entry.address)
-                        },
-                        onLink: { link in
-                            onTranscludeLink(entry.toResolvedAddress(), link)
-                        }
-                    )
-                }
+                TranscludeListView(
+                    entries: renderable.entries,
+                    onViewTransclude: { entry in
+                        onViewTransclude(entry.address)
+                    },
+                    onTranscludeLink: onTranscludeLink
+                )
             }
         }
         .expandAlignedLeading()
