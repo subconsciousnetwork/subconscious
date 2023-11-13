@@ -18,7 +18,7 @@ struct OmniboxView: View {
     
     var address: Slashlink?
     var defaultAudience: Audience
-    var status: LoadingState = .loaded
+    @Binding var status: LoadingState
 
     private func icon() -> Image {
         guard let address = address else {
@@ -71,22 +71,26 @@ struct OmniboxView: View {
                 .stroke(Color.separator, lineWidth: 0.5)
         )
         .overlay(
-            // Loading pulse
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                .stroke(
-                    .conicGradient(
-                        gradient,
-                        center: .center,
-                        angle: Angle.radians(phase)),
-                    lineWidth: 2
-                )
-                .animation(
-                    .linear(duration: Duration.loading * 2)
-                        .repeatForever(autoreverses: false),
-                    value: phase
-                )
-                // Keep the view mounted but invisible
-                .opacity(status == .loading ? 0.5 : 0)
+            VStack {
+                if status == .loading {
+                // Loading pulse
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                    .stroke(
+                        .conicGradient(
+                            gradient,
+                            center: .center,
+                            angle: Angle.radians(phase)),
+                        lineWidth: 2
+                    )
+                    .animation(
+                        .linear(duration: Duration.loading * 2)
+                            .repeatForever(autoreverses: false),
+                        value: phase
+                    )
+                    // Keep the view mounted but invisible
+                    .opacity(status == .loading ? 0.5 : 0)
+                }
+            }
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
         .task {
@@ -94,6 +98,13 @@ struct OmniboxView: View {
                 phase = Self.initialAngle + Self.fullRotation
             }
         }
+        .onChange(of: status, perform: { s in
+            if s == .loading {
+                phase = Self.initialAngle + Self.fullRotation
+            } else {
+                phase = Self.initialAngle
+            }
+        })
     }
 }
 
@@ -147,22 +158,25 @@ struct OmniboxView_Previews: PreviewProvider {
         ]
         
         @State private var address: Slashlink? = nil
+        @State private var status: LoadingState = [LoadingState.loaded, LoadingState.loading].randomElement()!
         var defaultAudience = Audience.local
-        let status = [LoadingState.loaded, LoadingState.loading].randomElement()!
 
         var body: some View {
             OmniboxView(
                 address: address,
                 defaultAudience: defaultAudience,
-                status: .loading
+                status: $status
             )
             .onTapGesture {
                 withAnimation {
                     self.address = addresses.randomElement()
+                    self.status = [LoadingState.loaded, LoadingState.loading].randomElement()!
                 }
             }
         }
     }
+    
+    static let status = Binding(get: { LoadingState.loaded }, set: { _ in })
 
     static var previews: some View {
         VStack {
@@ -174,59 +188,73 @@ struct OmniboxView_Previews: PreviewProvider {
             Group {
                 OmniboxView(
                     address: Slashlink("@here/red-mars")!,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink("@here.now/red-mars-very-long-slug")!,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink(petname: Petname("ksr")!),
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink(petname: Petname("ksr.biz.gov")!),
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink("/red-mars")!,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
             }
             Group {
                 OmniboxView(
                     address: Slashlink(slug: Slug.profile),
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink.local(Slug("red-mars")!),
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink.local(Slug("BLUE-mars")!),
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink("@KSR.scifi/GREEN-mars")!,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink("did:key:abc123/GREEN-mars")!,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink("did:key:abc123")!,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
                     address: Slashlink("/_profile_")!,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    status: status
                 )
                 OmniboxView(
-                    defaultAudience: .public
+                    defaultAudience: .public,
+                    status: status
                 )
             }
         }

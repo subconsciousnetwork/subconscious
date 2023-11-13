@@ -69,7 +69,7 @@ struct MemoViewerDetailView: View {
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
                 },
-                status: store.state.loadingState
+                status: store.readOnlyBinding(get: \.loadingState)
             )
         })
         .onAppear {
