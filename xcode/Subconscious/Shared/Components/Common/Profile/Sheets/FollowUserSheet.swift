@@ -174,7 +174,7 @@ struct FollowUserSheetCursor: CursorProtocol {
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
         case .submit:
-            return .attemptFollow
+            return .submitFollow
         default:
             return .followUserSheet(action)
         }

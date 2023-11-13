@@ -291,37 +291,46 @@ final class DatabaseService {
             )
         })
     }
-
-    /// Purge all content of sphere with given DID from the database.
+ 
+    /// Purge all content of sphere with given petname from the database.
+    /// This method accounts for the possibility of following the same DID
+    /// under multiple names.
     ///
     /// This does not delete the content from file system or sphere,
     /// only removes knowledge of it from the database.
-    func purgePeer(identity: Did) throws {
+    func purgePeer(petname: Petname) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let savepoint = "purge"
+        
+        guard let peer = try readPeer(petname: petname) else {
+            logger.log("Failed to purge, no peer with petname \(petname) found")
+            return
+        }
 
+        // Otherwise, we only delete the peer
+        // The other alias still references all the indexed memos
         try database.savepoint(savepoint)
         do {
             try database.execute(
                 sql: """
                 DELETE FROM memo WHERE did = ?
                 """,
-                parameters: [.text(identity.description)]
+                parameters: [.text(peer.identity.description)]
             )
             // Remove sync info
             try database.execute(
                 sql: """
-                DELETE FROM peer WHERE did = ?
+                DELETE FROM peer WHERE petname = ?
                 """,
-                parameters: [.text(identity.description)]
+                parameters: [.text(petname.description)]
             )
             try database.release(savepoint)
             logger.log(
                 "Purged peer from database",
                 metadata: [
-                    "identity": identity.description
+                    "petname": petname.description
                 ]
             )
         } catch {
@@ -329,7 +338,7 @@ final class DatabaseService {
             logger.log(
                 "Failed to purge peer from database",
                 metadata: [
-                    "identity": identity.description,
+                    "petname": petname.description,
                     "error": error.localizedDescription
                 ]
             )

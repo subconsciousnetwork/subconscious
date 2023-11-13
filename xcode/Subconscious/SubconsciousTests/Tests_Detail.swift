@@ -44,8 +44,8 @@ class Tests_Detail: XCTestCase {
         )
         
         XCTAssertEqual(
-            update.state.isLoading,
-            false,
+            update.state.loadingState,
+            .loaded,
             "isDetailLoading set to false"
         )
         XCTAssertEqual(
