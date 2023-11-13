@@ -11,19 +11,23 @@ struct TranscludeListView: View {
     var entries: [EntryStub]
     var onViewTransclude: (EntryStub) -> Void
     var onTranscludeLink: (ResolvedAddress, SubSlashlinkLink) -> Void
+    var padding = EdgeInsets()
     
     var body: some View {
-        ForEach(entries, id: \.self) { entry in
-            TranscludeView(
-                entry: entry,
-                onRequestDetail: {
-                    onViewTransclude(entry)
-                },
-                onLink: { link in
-                    onTranscludeLink(entry.toResolvedAddress(), link)
-                }
-            )
+        VStack {
+            ForEach(entries, id: \.self) { entry in
+                TranscludeView(
+                    entry: entry,
+                    onRequestDetail: {
+                        onViewTransclude(entry)
+                    },
+                    onLink: { link in
+                        onTranscludeLink(entry.toResolvedAddress(), link)
+                    }
+                )
+            }
         }
+        .padding(padding)
     }
 }
 

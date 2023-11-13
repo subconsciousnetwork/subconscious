@@ -22,7 +22,7 @@ extension BlockEditor {
         private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
-        private var transcludeMargins = NSDirectionalEdgeInsets(
+        private var transcludePadding = EdgeInsets(
             top: AppTheme.unit,
             leading: AppTheme.padding,
             bottom: AppTheme.padding,
@@ -96,7 +96,6 @@ extension BlockEditor {
             textView.inputAccessoryView = toolbar
             stackView.addArrangedSubview(textView)
 
-            transcludeListView.directionalLayoutMargins = transcludeMargins
             stackView.addArrangedSubview(transcludeListView)
             stackView.addArrangedSubview(.spacer())
             
@@ -147,7 +146,8 @@ extension BlockEditor {
                 rootView: TranscludeListView(
                     entries: state.transcludes,
                     onViewTransclude: { _ in },
-                    onTranscludeLink: { _, _ in }
+                    onTranscludeLink: { _, _ in },
+                    padding: transcludePadding
                 )
             )
             if textView.text != state.text {

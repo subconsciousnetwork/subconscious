@@ -30,11 +30,11 @@ extension BlockEditor {
         private lazy var listContainer = UIView()
         private lazy var textView = SubtextTextView()
         private lazy var bulletView = createBulletView()
-        private var transcludeMargins = NSDirectionalEdgeInsets(
+        private var transcludeMargins = UIEdgeInsets(
             top: AppTheme.unit,
-            leading: AppTheme.padding,
+            left: AppTheme.padding,
             bottom: AppTheme.padding,
-            trailing: AppTheme.padding
+            right: AppTheme.padding
         )
         
         private var transcludeListView = UIHostingView<TranscludeListView>()
@@ -107,7 +107,7 @@ extension BlockEditor {
             
             listContainer.addSubview(bulletView)
             
-            transcludeListView.directionalLayoutMargins = transcludeMargins
+            transcludeListView.layoutMargins = transcludeMargins
             stackView.addArrangedSubview(transcludeListView)
             stackView.addArrangedSubview(.spacer())
 

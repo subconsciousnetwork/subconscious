@@ -65,18 +65,21 @@ struct SubtextView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
             ForEach(blocks, id: \.self) { renderable in
-                if renderable.entries.isEmpty ||
-                    !shouldReplaceBlockWithTransclude(block: renderable.block) {
-                    Text(Self.renderer.render(renderable.block.description))
+                VStack(spacing: AppTheme.tightPadding) {
+                    if renderable.entries.isEmpty ||
+                        !shouldReplaceBlockWithTransclude(block: renderable.block) {
+                        Text(Self.renderer.render(renderable.block.description))
+                    }
+                    if (!renderable.entries.isEmpty) {
+                        TranscludeListView(
+                            entries: renderable.entries,
+                            onViewTransclude: { entry in
+                                onViewTransclude(entry.address)
+                            },
+                            onTranscludeLink: onTranscludeLink
+                        )
+                    }
                 }
-                
-                TranscludeListView(
-                    entries: renderable.entries,
-                    onViewTransclude: { entry in
-                        onViewTransclude(entry.address)
-                    },
-                    onTranscludeLink: onTranscludeLink
-                )
             }
         }
         .expandAlignedLeading()
@@ -120,7 +123,7 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/wanderer-your-footsteps-are-the-road"
                         )!,
-                        excerpt: Subtext(markup: "hello mother"),
+                        excerpt: Subtext(markup: "hello"),
                         isTruncated: false,
                         modified: Date.now
                     ),
@@ -129,7 +132,7 @@ struct SubtextView_Previews: PreviewProvider {
                         address: Slashlink(
                             "/voice"
                         )!,
-                        excerpt: Subtext(markup: "hello father"),
+                        excerpt: Subtext(markup: "hello"),
                         isTruncated: false,
                         modified: Date.now
                     ),
