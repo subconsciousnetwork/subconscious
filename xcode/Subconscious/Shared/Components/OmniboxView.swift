@@ -171,8 +171,6 @@ struct OmniboxView_Previews: PreviewProvider {
             }
         }
     }
-    
-    static let status = Binding(get: { LoadingState.loaded }, set: { _ in })
 
     static var previews: some View {
         VStack {

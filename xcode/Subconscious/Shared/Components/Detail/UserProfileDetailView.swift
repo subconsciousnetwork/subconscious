@@ -764,7 +764,7 @@ struct UserProfileDetailModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .presentFollowSheet(false),
+                .presentFollowSheet(false)
             ],
             environment: environment
         ).mergeFx(fx)
@@ -791,7 +791,7 @@ struct UserProfileDetailModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .presentFollowNewUserFormSheet(false),
+                .presentFollowNewUserFormSheet(false)
             ],
             environment: environment
         ).mergeFx(fx)
@@ -817,10 +817,8 @@ struct UserProfileDetailModel: ModelProtocol {
             }
         }
         
-        var model = state
-        
         return update(
-            state: model,
+            state: state,
             actions: actions,
             environment: environment
         )
@@ -1019,10 +1017,9 @@ struct UserProfileDetailModel: ModelProtocol {
                 "did:": identity.description
             ]
         )
-        var model = state
         
         return update(
-            state: model,
+            state: state,
             actions: [
                 .presentUnfollowConfirmation(false),
                 .refresh(forceSync: false)

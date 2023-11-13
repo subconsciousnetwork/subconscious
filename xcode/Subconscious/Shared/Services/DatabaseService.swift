@@ -309,10 +309,14 @@ final class DatabaseService {
             return
         }
 
-        // Otherwise, we only delete the peer
-        // The other alias still references all the indexed memos
         try database.savepoint(savepoint)
         do {
+            // We (currently) do need to delete all memos even though we may know this peer by
+            // another name. The petname is baked into the `slashlink` column and leaving them
+            // as-is will leave stale slashlinks in the feed.
+            
+            // We should consider doing a "smart" check where we update the rows in-place if
+            // we have another name, or perhaps reconsider the modelling of the `slashlink` column.
             try database.execute(
                 sql: """
                 DELETE FROM memo WHERE did = ?
