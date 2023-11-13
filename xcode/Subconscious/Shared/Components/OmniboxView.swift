@@ -18,7 +18,7 @@ struct OmniboxView: View {
     
     var address: Slashlink?
     var defaultAudience: Audience
-    @Binding var status: LoadingState
+    var status: LoadingState = .loaded
 
     private func icon() -> Image {
         guard let address = address else {
@@ -89,22 +89,18 @@ struct OmniboxView: View {
                     )
                     // Keep the view mounted but invisible
                     .opacity(status == .loading ? 0.5 : 0)
+                    .task {
+                        if status == .loading {
+                            phase = Self.initialAngle + Self.fullRotation
+                        } 
+                    }
+                    .onDisappear() {
+                        phase = Self.initialAngle
+                    }
                 }
             }
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
-        .task {
-            if status == .loading {
-                phase = Self.initialAngle + Self.fullRotation
-            }
-        }
-        .onChange(of: status, perform: { s in
-            if s == .loading {
-                phase = Self.initialAngle + Self.fullRotation
-            } else {
-                phase = Self.initialAngle
-            }
-        })
     }
 }
 
@@ -165,7 +161,7 @@ struct OmniboxView_Previews: PreviewProvider {
             OmniboxView(
                 address: address,
                 defaultAudience: defaultAudience,
-                status: $status
+                status: status
             )
             .onTapGesture {
                 withAnimation {
@@ -188,73 +184,59 @@ struct OmniboxView_Previews: PreviewProvider {
             Group {
                 OmniboxView(
                     address: Slashlink("@here/red-mars")!,
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink("@here.now/red-mars-very-long-slug")!,
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink(petname: Petname("ksr")!),
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink(petname: Petname("ksr.biz.gov")!),
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink("/red-mars")!,
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
             }
             Group {
                 OmniboxView(
                     address: Slashlink(slug: Slug.profile),
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink.local(Slug("red-mars")!),
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink.local(Slug("BLUE-mars")!),
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink("@KSR.scifi/GREEN-mars")!,
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink("did:key:abc123/GREEN-mars")!,
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink("did:key:abc123")!,
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
                     address: Slashlink("/_profile_")!,
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
-                    defaultAudience: .local,
-                    status: status
+                    defaultAudience: .local
                 )
                 OmniboxView(
-                    defaultAudience: .public,
-                    status: status
+                    defaultAudience: .public
                 )
             }
         }

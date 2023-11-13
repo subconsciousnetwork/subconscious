@@ -12,7 +12,7 @@ struct DetailToolbarContent: ToolbarContent {
     var address: Slashlink?
     var defaultAudience: Audience
     var onTapOmnibox: () -> Void
-    @Binding var status: LoadingState
+    var status: LoadingState
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
@@ -20,7 +20,7 @@ struct DetailToolbarContent: ToolbarContent {
                 OmniboxView(
                     address: address,
                     defaultAudience: defaultAudience,
-                    status: $status
+                    status: status
                 )
             }
         }
@@ -37,7 +37,7 @@ struct DetailToolbarContent_Previews: PreviewProvider {
                 DetailToolbarContent(
                     defaultAudience: .local,
                     onTapOmnibox: {},
-                    status: Binding(get: { LoadingState.loaded }, set: { _ in })
+                    status: LoadingState.loaded
                 )
             })
         }

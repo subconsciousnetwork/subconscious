@@ -244,7 +244,7 @@ struct UserProfileView: View {
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
                     },
-                    status: store.readOnlyBinding(get: \.loadingState)
+                    status: store.state.loadingState
                 )
             } else {
                 DetailToolbarContent(
@@ -252,7 +252,7 @@ struct UserProfileView: View {
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
                     },
-                    status: store.readOnlyBinding(get: \.loadingState)
+                    status: store.state.loadingState
                 )
             }
         })
@@ -261,17 +261,6 @@ struct UserProfileView: View {
         .unfollow(store: store)
         .editProfile(app: app, store: store)
         .rename(store: store)
-    }
-}
-
-extension ObservableStore.StoreProtocol {
-    public func readOnlyBinding<Value>(
-        get: @escaping (Self.Model) -> Value
-    ) -> Binding<Value> {
-        Binding(
-            get: { get(self.state) },
-            set: { _ in }
-        )
     }
 }
 
