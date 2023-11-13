@@ -168,6 +168,8 @@
 		B826B27527B5D95F003D3C03 /* SaveState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B826B27427B5D95F003D3C03 /* SaveState.swift */; };
 		B828F0A32AFFF05800FDE4AE /* TranscludeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B828F0A22AFFF05800FDE4AE /* TranscludeListView.swift */; };
 		B828F0A42AFFF05800FDE4AE /* TranscludeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B828F0A22AFFF05800FDE4AE /* TranscludeListView.swift */; };
+		B828F0AA2B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B828F0A92B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift */; };
+		B828F0AB2B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B828F0A92B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift */; };
 		B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82BB7FA2821DA61000C9FCC /* Parser.swift */; };
 		B82BB7FC2821DA61000C9FCC /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82BB7FA2821DA61000C9FCC /* Parser.swift */; };
 		B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */; };
@@ -649,6 +651,7 @@
 		B824FDD026FA98F300B81BBD /* MemoEditorDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetailResponse.swift; sourceTree = "<group>"; };
 		B826B27427B5D95F003D3C03 /* SaveState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveState.swift; sourceTree = "<group>"; };
 		B828F0A22AFFF05800FDE4AE /* TranscludeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeListView.swift; sourceTree = "<group>"; };
+		B828F0A92B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorTranscludeListView.swift; sourceTree = "<group>"; };
 		B82BB7FA2821DA61000C9FCC /* Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
 		B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Parser.swift; sourceTree = "<group>"; };
 		B82C3A5226F528B000833CC8 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
@@ -1117,6 +1120,14 @@
 			path = SubconsciousTests;
 			sourceTree = "<group>";
 		};
+		B828F0AC2B029F6F00FDE4AE /* Transclude */ = {
+			isa = PBXGroup;
+			children = (
+				B828F0A92B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift */,
+			);
+			path = Transclude;
+			sourceTree = "<group>";
+		};
 		B831BDBD2825BA6900C4CE92 /* Parsers */ = {
 			isa = PBXGroup;
 			children = (
@@ -1428,6 +1439,7 @@
 			isa = PBXGroup;
 			children = (
 				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
+				B828F0AC2B029F6F00FDE4AE /* Transclude */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -2050,6 +2062,7 @@
 				B54930B12A2F0FE300958F12 /* StoryPlaceholderView.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */,
+				B828F0AA2B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
 				B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
 				B85BF47527BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,
@@ -2278,6 +2291,7 @@
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
+				B828F0AB2B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift in Sources */,
 				B58C1FBB2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */,
 				B542EF722AF4949B00BE29F1 /* EditProfileSheetModifier.swift in Sources */,
 				B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */,

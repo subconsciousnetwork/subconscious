@@ -40,7 +40,10 @@ struct SubtextView: View {
                 return nil
             }
             
-            return RenderableBlock(block: block, entries: self.entries(for: block))
+            return RenderableBlock(
+                block: block,
+                entries: self.entries(for: block)
+            )
         }
     }
     
@@ -66,9 +69,13 @@ struct SubtextView: View {
         VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
             ForEach(blocks, id: \.self) { renderable in
                 VStack(spacing: AppTheme.tightPadding) {
-                    if renderable.entries.isEmpty ||
-                        !shouldReplaceBlockWithTransclude(block: renderable.block) {
-                        Text(Self.renderer.render(renderable.block.description))
+                    if !shouldReplaceBlockWithTransclude(
+                        block: renderable.block
+                    ) {
+                        Text(
+                            Self.renderer.render(renderable.block.description)
+                        )
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                     if (!renderable.entries.isEmpty) {
                         TranscludeListView(
@@ -89,68 +96,74 @@ struct SubtextView: View {
 struct SubtextView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            SubtextView(
-                subtext: Subtext(
-                    markup: """
-                    # The Prophet, Kahlil Gibran
-                    
-                    People of [[Orphalese]], the wind bids me leave you.
-                    
-                    Less _hasty_ am I than the *wind*, yet I must go.
-                    
-                    http://example.com
-                    
-                    We [[wanderers]], ever seeking the lonelier way, begin no day where we have ended another day; and no sunrise finds us where sunset left us.
-                    
-                    /wanderer-your-footsteps-are-the-road
-                    
-                    Even while the `earth` sleeps we travel.
-                    
-                    > We are the seeds of the tenacious plant, and it is in our ripeness and our fullness of heart that we are given to the wind and are scattered.
-                    
-                    Brief were my days among you, and briefer still the words I have spoken.
-                    
-                    But should my /voice fade in your ears, and my love vanish in your /memory, then I will come again,
-                    
-                    And with a richer heart and lips more yielding to the spirit will I speak.
-                    
-                    Yea, I shall return with the tide,
-                    """
-                ),
-                transcludePreviews: [
-                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(
-                        did: Did.dummyData(),
-                        address: Slashlink(
-                            "/wanderer-your-footsteps-are-the-road"
-                        )!,
-                        excerpt: Subtext(markup: "hello"),
-                        isTruncated: false,
-                        modified: Date.now
+            ScrollView {
+                SubtextView(
+                    subtext: Subtext(
+                        markup: """
+                        # The Prophet, Kahlil Gibran
+                        
+                        People of [[Orphalese]], the wind bids me leave you.
+                        
+                        Less _hasty_ am I than the *wind*, yet I must go.
+                        
+                        http://example.com
+                        
+                        /voice /voice
+                        
+                        
+                        
+                        We [[wanderers]], ever seeking the lonelier way, begin no day where we have ended another day; and no sunrise finds us where sunset left us.
+                        
+                        /wanderer-your-footsteps-are-the-road
+                        
+                        Even while the `earth` sleeps we travel.
+                        
+                        > We are the seeds of the tenacious plant, and it is in our ripeness and our fullness of heart that we are given to the wind and are scattered.
+                        
+                        Brief were my days among you, and briefer still the words I have spoken.
+                        
+                        But should my /voice fade in your ears, and my love vanish in your /memory, then I will come again,
+                        
+                        And with a richer heart and lips more yielding to the spirit will I speak.
+                        
+                        Yea, I shall return with the tide,
+                        """
                     ),
-                    Slashlink("/voice")!: EntryStub(
-                        did: Did.dummyData(),
-                        address: Slashlink(
-                            "/voice"
-                        )!,
-                        excerpt: Subtext(markup: "hello"),
-                        isTruncated: false,
-                        modified: Date.now
-                    ),
-                    Slashlink("/memory")!: EntryStub(
-                        did: Did.dummyData(),
-                        address: Slashlink(
-                            "/memory"
-                        )!,
-                        excerpt: Subtext(markup: "hello world"),
-                        isTruncated: false,
-                        modified: Date.now
-                    )
-                ],
-                onViewTransclude: {
-                    _ in 
-                },
-                onTranscludeLink: { address, link in }
-            )
+                    transcludePreviews: [
+                        Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(
+                            did: Did.dummyData(),
+                            address: Slashlink(
+                                "/wanderer-your-footsteps-are-the-road"
+                            )!,
+                            excerpt: Subtext(markup: "hello"),
+                            isTruncated: false,
+                            modified: Date.now
+                        ),
+                        Slashlink("/voice")!: EntryStub(
+                            did: Did.dummyData(),
+                            address: Slashlink(
+                                "/voice"
+                            )!,
+                            excerpt: Subtext(markup: "hello"),
+                            isTruncated: false,
+                            modified: Date.now
+                        ),
+                        Slashlink("/memory")!: EntryStub(
+                            did: Did.dummyData(),
+                            address: Slashlink(
+                                "/memory"
+                            )!,
+                            excerpt: Subtext(markup: "hello world"),
+                            isTruncated: false,
+                            modified: Date.now
+                        )
+                    ],
+                    onViewTransclude: {
+                        _ in
+                    },
+                    onTranscludeLink: { address, link in }
+                )
+            }
         }
     }
 }

@@ -15,6 +15,8 @@ extension BlockEditor {
     {
         static let identifier = "ListBlockCell"
         
+        typealias TranscludeListView = BlockEditor.TranscludeListView
+        
         var id: UUID = UUID()
         
         weak var delegate: TextBlockDelegate?

@@ -11,7 +11,6 @@ struct TranscludeListView: View {
     var entries: [EntryStub]
     var onViewTransclude: (EntryStub) -> Void
     var onTranscludeLink: (ResolvedAddress, SubSlashlinkLink) -> Void
-    var padding = EdgeInsets()
     
     var body: some View {
         VStack {
@@ -27,7 +26,6 @@ struct TranscludeListView: View {
                 )
             }
         }
-        .padding(padding)
     }
 }
 

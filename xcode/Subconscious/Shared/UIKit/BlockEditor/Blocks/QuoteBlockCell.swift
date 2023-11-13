@@ -15,6 +15,8 @@ extension BlockEditor {
     {
         static let identifier = "QuoteBlockCell"
         
+        typealias TranscludeListView = BlockEditor.TranscludeListView
+
         var id: UUID = UUID()
         
         weak var delegate: TextBlockDelegate?
@@ -30,7 +32,7 @@ extension BlockEditor {
         )
         private lazy var quoteContainer = UIView()
         private lazy var quoteBar = createQuoteBar()
-        private var transcludeMargins = NSDirectionalEdgeInsets(
+        private var transcludePadding = EdgeInsets(
             top: AppTheme.unit,
             leading: AppTheme.padding,
             bottom: AppTheme.padding,
@@ -103,7 +105,6 @@ extension BlockEditor {
             
             quoteContainer.addSubview(quoteBar)
             
-            transcludeListView.directionalLayoutMargins = transcludeMargins
             stackView.addArrangedSubview(transcludeListView)
             stackView.addArrangedSubview(.spacer())
 
