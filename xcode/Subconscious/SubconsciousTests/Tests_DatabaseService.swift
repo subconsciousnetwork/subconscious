@@ -1044,7 +1044,7 @@ class Tests_DatabaseService: XCTestCase {
             )
         )
         
-        try service.purgePeer(identity: did)
+        try service.purgePeer(petname: Petname("alice")!)
         
         let syncInfo = try service.readPeer(identity: did)
         XCTAssertNil(syncInfo)
