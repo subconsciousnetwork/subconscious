@@ -24,12 +24,6 @@ extension BlockEditor {
         private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
-        private var transcludePadding = EdgeInsets(
-            top: AppTheme.unit,
-            leading: AppTheme.padding,
-            bottom: AppTheme.padding,
-            trailing: AppTheme.padding
-        )
         private var transcludeListView = UIHostingView<TranscludeListView>()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
