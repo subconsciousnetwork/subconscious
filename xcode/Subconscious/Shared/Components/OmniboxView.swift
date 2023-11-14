@@ -71,29 +71,36 @@ struct OmniboxView: View {
                 .stroke(Color.separator, lineWidth: 0.5)
         )
         .overlay(
-            // Loading pulse
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                .stroke(
-                    .conicGradient(
-                        gradient,
-                        center: .center,
-                        angle: Angle.radians(phase)),
-                    lineWidth: 2
-                )
-                .animation(
-                    .linear(duration: Duration.loading * 2)
-                        .repeatForever(autoreverses: false),
-                    value: phase
-                )
-                // Keep the view mounted but invisible
-                .opacity(status == .loading ? 0.5 : 0)
+            VStack {
+                if status == .loading {
+                // Loading pulse
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                    .stroke(
+                        .conicGradient(
+                            gradient,
+                            center: .center,
+                            angle: Angle.radians(phase)),
+                        lineWidth: 2
+                    )
+                    .animation(
+                        .linear(duration: Duration.loading * 2)
+                            .repeatForever(autoreverses: false),
+                        value: phase
+                    )
+                    // Keep the view mounted but invisible
+                    .opacity(status == .loading ? 0.5 : 0)
+                    .task {
+                        if status == .loading {
+                            phase = Self.initialAngle + Self.fullRotation
+                        } 
+                    }
+                    .onDisappear() {
+                        phase = Self.initialAngle
+                    }
+                }
+            }
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
-        .task {
-            if status == .loading {
-                phase = Self.initialAngle + Self.fullRotation
-            }
-        }
     }
 }
 
@@ -147,18 +154,19 @@ struct OmniboxView_Previews: PreviewProvider {
         ]
         
         @State private var address: Slashlink? = nil
+        @State private var status: LoadingState = [LoadingState.loaded, LoadingState.loading].randomElement()!
         var defaultAudience = Audience.local
-        let status = [LoadingState.loaded, LoadingState.loading].randomElement()!
 
         var body: some View {
             OmniboxView(
                 address: address,
                 defaultAudience: defaultAudience,
-                status: .loading
+                status: status
             )
             .onTapGesture {
                 withAnimation {
                     self.address = addresses.randomElement()
+                    self.status = [LoadingState.loaded, LoadingState.loading].randomElement()!
                 }
             }
         }

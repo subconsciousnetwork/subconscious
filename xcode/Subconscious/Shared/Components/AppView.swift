@@ -229,8 +229,8 @@ enum AppAction: Hashable {
     case completeIndexPeers(results: [PeerIndexResult])
 
     /// Purge the contents of a sphere from the database
-    case purgePeer(_ did: Did)
-    case succeedPurgePeer(_ did: Did)
+    case purgePeer(_ petname: Petname)
+    case succeedPurgePeer(_ petname: Petname)
     case failPurgePeer(_ error: String)
 
     case followDefaultGeist
@@ -270,10 +270,22 @@ enum AppAction: Hashable {
     /// Control the visibility of the recovery mode overlay
     case presentRecoveryMode(_ isPresented: Bool)
     
+    // TODO: refactor this as part of https://github.com/subconsciousnetwork/subconscious/pull/996
     /// Notification that a follow happened, and the sphere was resolved
     case notifySucceedResolveFollowedUser(petname: Petname, cid: Cid?)
-    /// Notification that an unfollow happened somewhere else
-    case notifySucceedUnfollow(identity: Did, petname: Petname)
+    
+    // Addressbook Management Actions
+    case followPeer(identity: Did, petname: Petname)
+    case failFollowPeer(error: String)
+    case succeedFollowPeer(_ petname: Petname)
+    
+    case renamePeer(from: Petname, to: Petname)
+    case failRenamePeer(error: String)
+    case succeedRenamePeer(identity: Did, from: Petname, to: Petname)
+    
+    case unfollowPeer(identity: Did, petname: Petname)
+    case failUnfollowPeer(error: String)
+    case succeedUnfollowPeer(identity: Did, petname: Petname)
     
     case authorization(_ action: AuthorizationSettingsAction)
     
@@ -1002,17 +1014,17 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 results: results
             )
-        case .purgePeer(let identity):
+        case .purgePeer(let petname):
             return purgePeer(
                 state: state,
                 environment: environment,
-                identity: identity
+                petname: petname
             )
-        case .succeedPurgePeer(let identity):
+        case .succeedPurgePeer(let petname):
             return succeedPurgePeer(
                 state: state,
                 environment: environment,
-                identity: identity
+                petname: petname
             )
         case .failPurgePeer(let error):
             return failPurgePeer(
@@ -1083,13 +1095,68 @@ struct AppModel: ModelProtocol {
                 petname: petname,
                 cid: cid
             )
-        case let .notifySucceedUnfollow(did, petname):
-            return notifySucceedUnfollow(
+        // MARK: Address book actions
+        case .followPeer(let identity, let petname):
+            return followPeer(
                 state: state,
                 environment: environment,
-                identity: did,
+                identity: identity,
                 petname: petname
             )
+        case .failFollowPeer(let error):
+            return failFollowPeer(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .succeedFollowPeer(let petname):
+            return succeedFollowPeer(
+                state: state,
+                environment: environment,
+                petname: petname
+            )
+        case .renamePeer(let from, let to):
+            return renamePeer(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .failRenamePeer(let error):
+            return failRenamePeer(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .succeedRenamePeer(let identity, let from, let to):
+            return succeedRenamePeer(
+                state: state,
+                environment: environment,
+                identity: identity,
+                from: from,
+                to: to
+            )
+        case .unfollowPeer(let identity, let petname):
+            return unfollowPeer(
+                state: state,
+                environment: environment,
+                identity: identity,
+                petname: petname
+            )
+        case .failUnfollowPeer(let error):
+            return failUnfollowPeer(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .succeedUnfollowPeer(let identity, let petname):
+            return succeedUnfollowPeer(
+                state: state,
+                environment: environment,
+                identity: identity,
+                petname: petname
+            )
+        // MARK: Note management
         case let .deleteMemo(address):
             return deleteMemo(
                 state: state,
@@ -2177,14 +2244,14 @@ struct AppModel: ModelProtocol {
     static func purgePeer(
         state: Self,
         environment: Environment,
-        identity: Did
+        petname: Petname
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached(priority: .utility) {
             do {
                 try environment.database.purgePeer(
-                    identity: identity
+                    petname: petname
                 )
-                return Action.succeedPurgePeer(identity)
+                return Action.succeedPurgePeer(petname)
             } catch {
                 return Action.failPurgePeer(error.localizedDescription)
             }
@@ -2192,7 +2259,7 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Purging peer",
             metadata: [
-                "identity": identity.description
+                "petname": petname.description
             ]
         )
         return Update(state: state, fx: fx)
@@ -2201,12 +2268,12 @@ struct AppModel: ModelProtocol {
     static func succeedPurgePeer(
         state: Self,
         environment: Environment,
-        identity: Did
+        petname: Petname
     ) -> Update<Self> {
         logger.log(
             "Purged peer from database",
             metadata: [
-                "identity": identity.description
+                "petname": petname.description
             ]
         )
         return Update(state: state)
@@ -2431,14 +2498,157 @@ struct AppModel: ModelProtocol {
         )
     }
     
-    static func notifySucceedUnfollow(
+    static func followPeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        identity: Did,
+        petname: Petname
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> =
+            environment.addressBook
+                .followUserPublisher(
+                    did: identity,
+                    petname: petname,
+                    preventOverwrite: true
+                )
+                .map({ _ in
+                    .succeedFollowPeer(petname)
+                })
+                .recover { error in
+                    .failFollowPeer(
+                        error: error.localizedDescription
+                    )
+                }
+                .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+
+    static func failFollowPeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.warning("Failed to follow user: \(error)")
+        return update(
+            state: state,
+            action: .pushToast(message: String(localized: "Failed to follow user")),
+            environment: environment
+        )
+    }
+
+    static func succeedFollowPeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        petname: Petname
+    ) -> Update<AppModel> {
+        logger.log(
+            "Followed sphere",
+            metadata: [
+                "petname": petname.description
+            ]
+        )
+        
+        return update(
+            state: state,
+            actions: [
+                .pushToast(message: "Followed \(petname.markup)"),
+                .indexPeers([petname]),
+                .syncAll
+            ],
+            environment: environment
+        )
+    }
+
+    static func renamePeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        from: Petname,
+        to: Petname
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> =
+        Future.detached {
+            let did = try await environment.addressBook.unfollowUser(petname: from)
+            try await environment.addressBook.followUser(did: did, petname: to)
+            
+            return .succeedRenamePeer(identity: did, from: from, to: to)
+        }
+        .recover { error in
+            .failRenamePeer(error: error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        // Implement functionality
+        return Update(state: state, fx: fx)
+    }
+
+    static func failRenamePeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.warning("Failed to rename user: \(error)")
+        return update(
+            state: state,
+            action: .pushToast(message: String(localized: "Failed to rename user")),
+            environment: environment
+        )
+    }
+
+    static func succeedRenamePeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        identity: Did,
+        from: Petname,
+        to: Petname
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            action: .pushToast(message: String(localized: "Renamed to \(to.markup)")),
+            environment: environment
+        )
+    }
+
+    static func unfollowPeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        identity: Did,
+        petname: Petname
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = environment.addressBook
+            .unfollowUserPublisher(petname: petname)
+            .map({ identity in
+                .succeedUnfollowPeer(identity: identity, petname: petname)
+            })
+            .recover({ error in
+                .failUnfollowPeer(error: error.localizedDescription)
+            })
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+
+    static func failUnfollowPeer(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.warning("Failed to unfollow user: \(error)")
+        return update(
+            state: state,
+            action: .pushToast(message: String(localized: "Failed to unfollow user")),
+            environment: environment
+        )
+    }
+    
+    static func succeedUnfollowPeer(
         state: Self,
         environment: Environment,
         identity: Did,
         petname: Petname
     ) -> Update<Self> {
         logger.log(
-            "Notify unfollowed sphere",
+            "Unfollowed sphere",
             metadata: [
                 "did": identity.description,
                 "petname": petname.description
@@ -2446,7 +2656,11 @@ struct AppModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .purgePeer(identity),
+            actions: [
+                .pushToast(message: "Unfollowed \(petname.markup)"),
+                .purgePeer(petname),
+                .syncAll
+            ],
             environment: environment
         )
     }

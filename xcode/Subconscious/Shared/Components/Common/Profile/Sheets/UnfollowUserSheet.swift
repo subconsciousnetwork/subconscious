@@ -25,7 +25,7 @@ struct UnfollowSheetModifier: ViewModifier {
                     "Unfollow \(store.state.unfollowCandidate?.displayName ?? "user")?",
                     role: .destructive
                 ) {
-                    store.send(.attemptUnfollow)
+                    store.send(.submitUnfollow)
                 }
             } message: {
                 Text("You cannot undo this action")

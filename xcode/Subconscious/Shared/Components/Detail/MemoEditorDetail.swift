@@ -87,7 +87,8 @@ struct MemoEditorDetailView: View {
                 defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
-                }
+                },
+                status: store.state.loadingState
             )
         })
         .onAppear {
@@ -613,7 +614,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     var saveState = SaveState.saved
     
     /// Is editor in loading state?
-    var isLoading = true
+    var loadingState = LoadingState.loading
     /// When was the last time the editor issued a fetch from source of truth?
     var lastLoadStarted = Date.distantPast
     
@@ -1088,6 +1089,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.saveState = saveState
+        model.loadingState = .loaded
         model.headers.modified = modified
         return update(
             state: model,
@@ -1207,7 +1209,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func prepareLoadDetail(_ state: MemoEditorDetailModel) -> MemoEditorDetailModel {
         var model = state
         // Mark loading state
-        model.isLoading = true
+        model.loadingState = .loading
         // Mark time of load start
         model.lastLoadStarted = Date.now
         return model
@@ -1313,7 +1315,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         detail: MemoEditorDetailResponse
     ) -> Update<MemoEditorDetailModel> {
         var model = state
-        model.isLoading = false
+        model.loadingState = .loaded
         model.address = detail.entry.address
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
@@ -1349,7 +1351,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     ) -> Update<MemoEditorDetailModel> {
         var model = state
         // Mark loading finished
-        model.isLoading = false
+        model.loadingState = .loaded
         
         let change = FileFingerprintChange.create(
             left: FileFingerprint(state),
@@ -1475,7 +1477,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.additionalHeaders = []
         model.editor = SubtextTextModel()
         model.backlinks = []
-        model.isLoading = true
+        model.loadingState = .loading
         model.saveState = .saved
         return Update(state: model)
     }

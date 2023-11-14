@@ -15,7 +15,7 @@ struct StoryUser:
     CustomStringConvertible,
     Codable {
     
-    var id = UUID()
+    var id: String { user.address.id }
     var entry: AddressBookEntry
     var user: UserProfile
     var statistics: UserProfileStatistics?

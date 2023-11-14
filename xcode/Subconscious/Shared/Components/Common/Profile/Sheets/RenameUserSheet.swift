@@ -48,7 +48,7 @@ struct RenameUserSheetCursor: CursorProtocol {
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
         case .submit:
-            return .attemptRename
+            return .submitRename
         default:
             return .renameUserSheet(action)
         }

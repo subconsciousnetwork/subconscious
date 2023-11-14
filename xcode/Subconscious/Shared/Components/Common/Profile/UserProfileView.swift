@@ -30,8 +30,9 @@ struct RecentTabView: View {
     var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        if let user = store.state.user {
-            ForEach(store.state.recentEntries) { entry in
+        if let user = store.state.user,
+           let recent = store.state.recentEntries {
+            ForEach(recent) { entry in
                 StoryEntryView(
                     story: StoryEntry(
                         entry: entry,
@@ -59,15 +60,16 @@ struct RecentTabView: View {
                 
                 Divider()
             }
-        }
-        
-        if store.state.recentEntries.count == 0 {
-            let name = store.state.user?.address.peer?.markup ?? "This user"
-            EmptyStateView(
-                message: "\(name) has not posted any notes yet."
-            )
-        } else {
-            FabSpacerView()
+            .transition(.opacity)
+            
+            if recent.count == 0 {
+                let name = user.address.peer?.markup ?? "This user"
+                EmptyStateView(
+                    message: "\(name) has not posted any notes yet."
+                )
+            } else {
+                FabSpacerView()
+            }
         }
     }
 }
@@ -77,36 +79,39 @@ struct FollowTabView: View {
     var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        ForEach(store.state.following) { follow in
-            StoryUserView(
-                story: follow,
-                action: { address in
-                    notify(
-                        .requestNavigateToProfile(address)
-                    )
-                },
-                profileAction: { user, action in
-                    store.send(
-                        UserProfileDetailAction.from(user, action)
-                    )
-                },
-                onRefreshUser: {
-                    store.send(
-                        .requestWaitForFollowedUserResolution(follow.entry.petname)
-                    )
-                }
-            )
+        if let following = store.state.following {
+            ForEach(following) { follow in
+                StoryUserView(
+                    story: follow,
+                    action: { address in
+                        notify(
+                            .requestNavigateToProfile(address)
+                        )
+                    },
+                    profileAction: { user, action in
+                        store.send(
+                            UserProfileDetailAction.from(user, action)
+                        )
+                    },
+                    onRefreshUser: {
+                        store.send(
+                            .requestWaitForFollowedUserResolution(follow.entry.petname)
+                        )
+                    }
+                )
+                
+                Divider()
+            }
+            .transition(.opacity)
             
-            Divider()
-        }
-        
-        if store.state.following.count == 0 {
-            let name = store.state.user?.address.peer?.markup ?? "This user"
-            EmptyStateView(
-                message: "\(name) does not follow anyone."
-            )
-        } else {
-            FabSpacerView()
+            if following.count == 0 {
+                let name = store.state.user?.address.peer?.markup ?? "This user"
+                EmptyStateView(
+                    message: "\(name) does not follow anyone."
+                )
+            } else {
+                FabSpacerView()
+            }
         }
     }
 }
@@ -160,18 +165,7 @@ struct UserProfileView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 switch state.loadingState {
-                case .loading:
-                    ProfileHeaderPlaceholderView()
-                    
-                    TabbedTwoColumnView(
-                        columnA: columnLoading(label: "Notes"),
-                        columnB: columnLoading(label: "Following"),
-                        selectedColumnIndex: state.currentTabIndex,
-                        changeColumn: { index in
-                            send(.tabIndexSelected(index))
-                        }
-                    )
-                case .loaded:
+                case .loading, .loaded:
                     if let user = state.user {
                         UserProfileHeaderView(
                             user: user,
@@ -179,7 +173,6 @@ struct UserProfileView: View {
                             action: { action in
                                 store.send(UserProfileDetailAction.from(user, action))
                             },
-                            hideActionButton: state.loadingState != .loaded,
                             onTapStatistics: {
                                 send(
                                     .tabIndexSelected(
@@ -188,20 +181,37 @@ struct UserProfileView: View {
                                 )
                             }
                         )
+                        .disabled(state.loadingState != .loaded)
                         .padding(
                             .init([.top, .horizontal]),
                             AppTheme.padding
                         )
+                    } else {
+                        ProfileHeaderPlaceholderView()
                     }
                     
-                    TabbedTwoColumnView(
-                        columnA: columnRecent,
-                        columnB: columnFollowing,
-                        selectedColumnIndex: state.currentTabIndex,
-                        changeColumn: { index in
-                            send(.tabIndexSelected(index))
-                        }
-                    )
+                    // Only render these if we have data, each subcomponent fetches its own data
+                    // so discard the value.
+                    if let _ = state.recentEntries,
+                       let _ = state.following {
+                        TabbedTwoColumnView(
+                            columnA: columnRecent,
+                            columnB: columnFollowing,
+                            selectedColumnIndex: state.currentTabIndex,
+                            changeColumn: { index in
+                                send(.tabIndexSelected(index))
+                            }
+                        )
+                    } else {
+                        TabbedTwoColumnView(
+                            columnA: columnLoading(label: "Notes"),
+                            columnB: columnLoading(label: "Following"),
+                            selectedColumnIndex: state.currentTabIndex,
+                            changeColumn: { index in
+                                send(.tabIndexSelected(index))
+                            }
+                        )
+                    }
                 case .notFound:
                     NotFoundView()
                     // extra padding to visually center the group
@@ -236,14 +246,15 @@ struct UserProfileView: View {
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
                     },
-                    status: state.loadingState
+                    status: store.state.loadingState
                 )
             } else {
                 DetailToolbarContent(
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
-                    }
+                    },
+                    status: store.state.loadingState
                 )
             }
         })
