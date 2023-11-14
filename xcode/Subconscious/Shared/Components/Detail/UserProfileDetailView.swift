@@ -605,7 +605,7 @@ struct UserProfileDetailModel: ModelProtocol {
             state: model,
             action: .appear(user.address, state.initialTabIndex),
             environment: environment
-        )
+        ).animation(.default)
     }
     
     static func appear(
@@ -901,7 +901,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 .requestWaitForFollowedUserResolution(to) // TODO: refactor
             ],
             environment: environment
-        )
+        ).animation(.default)
     }
     
     static func requestWaitForFollowedUserResolution(

@@ -13,7 +13,7 @@ struct StoryEntry:
     Identifiable,
     CustomStringConvertible
 {
-    var id = UUID()
+    var id: String { entry.id.description }
     var entry: EntryStub
     var author: UserProfile
 

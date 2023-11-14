@@ -60,6 +60,7 @@ struct RecentTabView: View {
                 
                 Divider()
             }
+            .transition(.opacity)
             
             if recent.count == 0 {
                 let name = user.address.peer?.markup ?? "This user"
@@ -70,8 +71,6 @@ struct RecentTabView: View {
                 FabSpacerView()
             }
         }
-        
-        
     }
 }
 
@@ -103,6 +102,7 @@ struct FollowTabView: View {
                 
                 Divider()
             }
+            .transition(.opacity)
             
             if following.count == 0 {
                 let name = store.state.user?.address.peer?.markup ?? "This user"
@@ -173,7 +173,6 @@ struct UserProfileView: View {
                             action: { action in
                                 store.send(UserProfileDetailAction.from(user, action))
                             },
-                            hideActionButton: state.loadingState != .loaded,
                             onTapStatistics: {
                                 send(
                                     .tabIndexSelected(
@@ -182,6 +181,7 @@ struct UserProfileView: View {
                                 )
                             }
                         )
+                        .disabled(state.loadingState != .loaded)
                         .padding(
                             .init([.top, .horizontal]),
                             AppTheme.padding
@@ -190,8 +190,10 @@ struct UserProfileView: View {
                         ProfileHeaderPlaceholderView()
                     }
                     
-                    if let recent = state.recentEntries,
-                       let following = state.following {
+                    // Only render these if we have data, each subcomponent fetches its own data
+                    // so discard the value.
+                    if let _ = state.recentEntries,
+                       let _ = state.following {
                         TabbedTwoColumnView(
                             columnA: columnRecent,
                             columnB: columnFollowing,
