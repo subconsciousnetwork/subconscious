@@ -11,12 +11,26 @@ import UIKit
 
 // See here for another approach https://github.com/SwiftUIX/SwiftUIX/blob/master/Sources/Intermodular/Helpers/UIKit/UIHostingView.swift
 
-// Get a view for a UIHostingController
-// Assigns the UIHostingController to a parent controller
+/// Get a view for a UIHostingController.
+///
+/// View holds a reference to UIHostingController. Controller can be added to
+/// a parent controller during initialization, or after using
+/// `.moveToParentControllerIfNeeded()`. Hosting controller will be removed
+/// from parent controller automatically when this view is deinitialized.
+///
+/// This is particularly useful when embedding a SwiftUI view inside something
+/// that must be a view, such as UICollectionViewCell.
 class UIHostingView<Content: View>: UIView {
     /// A reference to the hosting controller for this UIHostingView.
     /// We use this to remove hostingController from the parent controller
     /// on deinit.
+    ///
+    /// Note that we allow for an optional view in the hosting controller.
+    /// This lets us set a SwiftUI view after initialization.
+    /// Useful for cases like
+    /// `.collectionView.dequeueReusableCell(withReuseIdentifier:for:)`,
+    /// where the cell must be initialized with zero arguments, and then
+    /// configured after initialization.
     private var hostingController = UIHostingController<Content?>(
         rootView: nil
     )
