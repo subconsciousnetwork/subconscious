@@ -20,17 +20,15 @@ struct BacklinksView: View {
                 Spacer()
             }
             if backlinks.count > 0 {
-                ForEach(backlinks) { entry in
-                    TranscludeView(
-                        entry: entry,
-                        onRequestDetail: {
-                            onRequestDetail(EntryLink(entry))
-                        },
-                        onLink: { link in
-                            onLink(entry.toResolvedAddress(), link)
-                        }
-                    )
-                }
+                TranscludeListView(
+                    entries: backlinks,
+                    onViewTransclude: { entry in
+                        onRequestDetail(EntryLink(entry))
+                    },
+                    onTranscludeLink: { context, subSlashlink in
+                        onLink(context, subSlashlink)
+                    }
+                )
             } else {
                 TitleGroupView(
                     title: Text("No related notes yet")

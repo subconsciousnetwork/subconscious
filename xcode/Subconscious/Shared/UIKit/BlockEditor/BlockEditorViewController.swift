@@ -259,7 +259,7 @@ extension BlockEditor {
                 for: indexPath
             ) as! TextBlockCell
             cell.delegate = self
-            cell.render(state)
+            cell.update(parentController: self, state: state)
             return cell
         }
         
@@ -287,7 +287,7 @@ extension BlockEditor {
                 for: indexPath
             ) as! QuoteBlockCell
             cell.delegate = self
-            cell.render(state)
+            cell.update(parentController: self, state: state)
             return cell
         }
         
@@ -301,7 +301,7 @@ extension BlockEditor {
                 for: indexPath
             ) as! ListBlockCell
             cell.delegate = self
-            cell.render(state)
+            cell.update(parentController: self, state: state)
             return cell
         }
 
@@ -314,7 +314,7 @@ extension BlockEditor {
                 for: indexPath
             ) as! RelatedCell
             let state = store.state.appendix
-            cell.render(state)
+            cell.update(parentController: self, state: state)
             return cell
         }
     }

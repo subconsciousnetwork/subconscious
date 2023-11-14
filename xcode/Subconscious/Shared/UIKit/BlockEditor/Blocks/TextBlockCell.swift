@@ -11,10 +11,11 @@ import SwiftUI
 extension BlockEditor {
     class TextBlockCell:
         UICollectionViewCell,
-        UITextViewDelegate,
-        UIViewComponentProtocol
+        UITextViewDelegate
     {
         static let identifier = "TextBlockCell"
+        
+        typealias TranscludeListView = BlockEditor.TranscludeListView
         
         var id: UUID = UUID()
         
@@ -23,13 +24,7 @@ extension BlockEditor {
         private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var stackView = UIStackView()
         private lazy var textView = SubtextTextView()
-        private var transcludeMargins = NSDirectionalEdgeInsets(
-            top: AppTheme.unit,
-            leading: AppTheme.padding,
-            bottom: AppTheme.padding,
-            trailing: AppTheme.padding
-        )
-        private lazy var transcludeListView = BlockEditor.TranscludeListView()
+        private var transcludeListView = UIHostingView<TranscludeListView>()
         
         private lazy var toolbar = UIToolbar.blockToolbar(
             upButtonPressed: { [weak self] in
@@ -97,8 +92,8 @@ extension BlockEditor {
             textView.inputAccessoryView = toolbar
             stackView.addArrangedSubview(textView)
 
-            transcludeListView.directionalLayoutMargins = transcludeMargins
             stackView.addArrangedSubview(transcludeListView)
+            stackView.addArrangedSubview(.spacer())
             
             selectView.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(selectView)
@@ -137,13 +132,19 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        override func prepareForReuse() {
-            self.render(BlockEditor.TextBlockModel())
-        }
-        
-        func render(_ state: BlockEditor.TextBlockModel) {
+        func update(
+            parentController: UIViewController,
+            state: BlockEditor.TextBlockModel
+        ) {
             self.id = state.id
-            transcludeListView.render(state.transcludes)
+            transcludeListView.update(
+                parentController: parentController,
+                rootView: TranscludeListView(
+                    entries: state.transcludes,
+                    onViewTransclude: { _ in },
+                    onTranscludeLink: { _, _ in }
+                )
+            )
             if textView.text != state.text {
                 textView.text = state.text
             }
@@ -210,8 +211,10 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
     static var previews: some View {
         UIViewPreviewRepresentable {
             let view = BlockEditor.TextBlockCell()
-            view.render(
-                BlockEditor.TextBlockModel(
+            let controller = UIViewController()
+            view.update(
+                parentController: controller,
+                state: BlockEditor.TextBlockModel(
                     text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
                     transcludes: [
                         EntryStub(
@@ -236,8 +239,10 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
 
         UIViewPreviewRepresentable {
             let view = BlockEditor.TextBlockCell()
-            view.render(
-                BlockEditor.TextBlockModel(
+            let controller = UIViewController()
+            view.update(
+                parentController: controller,
+                state: BlockEditor.TextBlockModel(
                     text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
                     isBlockSelectMode: true,
                     isBlockSelected: true,

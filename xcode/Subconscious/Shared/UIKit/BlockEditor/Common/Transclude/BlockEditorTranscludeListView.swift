@@ -1,96 +1,70 @@
 //
 //  BlockEditorTranscludeListView.swift
-//  Subconscious (iOS)
+//  Subconscious
 //
-//  Created by Gordon Brander on 9/8/23.
+//  Created by Gordon Brander on 11/13/23.
 //
 
-import UIKit
 import SwiftUI
 
+/// A configured transclude list view suitable for embedding in block cells.
+/// UIHostingController requires a concrete type, making view decorators like
+/// padding impractical on the UIKit side. To work around this, we create a
+/// wrapper view that applies any needed transformations to the view, and
+/// gives this configured view a concrete type.
 extension BlockEditor {
-    class TranscludeListView: UIView, UIViewRenderableProtocol {
-        private var transcludeSpacing: CGFloat = AppTheme.unit2
-        private var stackView = UIStackView()
-        
-        override init(frame: CGRect) {
-            super.init(frame: frame)
+    struct TranscludeListView: View {
+        var entries: [EntryStub]
+        var onViewTransclude: (EntryStub) -> Void
+        var onTranscludeLink: (ResolvedAddress, SubSlashlinkLink) -> Void
 
-            setContentHuggingPriority(.defaultHigh, for: .vertical)
-
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.axis = .vertical
-            stackView.spacing = transcludeSpacing
-            stackView.alignment = .fill
-            stackView.distribution = .fill
-            stackView.setContentHuggingPriority(.defaultHigh, for: .vertical)
-            
-            addSubview(stackView)
-
-            let guide = layoutMarginsGuide
-            NSLayoutConstraint.activate([
-                stackView.leadingAnchor.constraint(
-                    equalTo: guide.leadingAnchor
-                ),
-                stackView.trailingAnchor.constraint(
-                    equalTo: guide.trailingAnchor
-                ),
-                stackView.topAnchor.constraint(
-                    equalTo: guide.topAnchor
-                ),
-                stackView.bottomAnchor.constraint(
-                    equalTo: guide.bottomAnchor
-                ),
-            ])
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        func render(_ state: [EntryStub]) {
-            // Hide view if there are no transcludes
-            self.isHidden = state.count < 1
-            stackView.removeAllArrangedSubviewsCompletely()
-            for stub in state {
-                let transclude = BlockEditor.TranscludeView()
-                stackView.addArrangedSubview(transclude)
-                transclude.render(stub)
-            }
+        var body: some View {
+            Subconscious.TranscludeListView(
+                entries: entries,
+                onViewTransclude: onViewTransclude,
+                onTranscludeLink: onTranscludeLink
+            )
+            .padding(.vertical, AppTheme.unit2)
+            .padding(.horizontal, AppTheme.padding)
         }
     }
 }
 
-struct BlockEditorTranscludeListView_Previews: PreviewProvider {
+struct BlockTranscludeListView_Previews: PreviewProvider {
     static var previews: some View {
-        UIViewPreviewRepresentable {
-            let view = BlockEditor.TranscludeListView()
-            view.render(
-                [
+        VStack {
+            BlockEditor.TranscludeListView(
+                entries: [
                     EntryStub(
-                        did: Did("did:key:abc123")!,
-                        address: Slashlink("@example/foo")!,
-                        excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                        isTruncated: true,
-                        modified: Date.now
-                    ),
-                    EntryStub(
-                        did: Did("did:key:abc123")!,
-                        address: Slashlink("@example/bar")!,
-                        excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
+                        did: Did.dummyData(),
+                        address: Slashlink("@handle/short")!,
+                        excerpt: Subtext(markup: "Short"),
                         isTruncated: false,
                         modified: Date.now
                     ),
                     EntryStub(
-                        did: Did("did:key:abc123")!,
-                        address: Slashlink("@example/baz")!,
-                        excerpt: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
+                        did: Did.dummyData(),
+                        address: Slashlink("/loomings")!,
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
+                        ),
                         isTruncated: false,
                         modified: Date.now
-                    )
-                ]
+                    ),
+                    EntryStub(
+                        did: Did.dummyData(),
+                        address: Slashlink(slug: Slug(formatting: "The Lee Shore")!),
+                        excerpt: Subtext(
+                            markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
+                        ),
+                        isTruncated: false,
+                        modified: Date.now
+                    ),
+                ],
+                onViewTransclude: { _ in },
+                onTranscludeLink: { _, _ in}
             )
-            return view
         }
+        .background(.gray)
     }
 }
