@@ -17,9 +17,18 @@ struct DeckView: View {
     var body: some View {
         VStack {
             Text("\(store.state.deck.count) cards in deck")
+            CardStack(
+                cards: store.state.deck,
+                onCardRemoved: { card in
+                    store.send(
+                        .skipCard(
+                            card
+                        )
+                    )
+                }
+            )
+            
             if let topCard = store.state.deck.first {
-                TranscludeView(entry: topCard, onRequestDetail: { }, onLink: { _ in })
-                
                 Button(action: { store.send(.skipCard(topCard)) }, label: { Text("Skip") })
                 Button(action: { store.send(.chooseCard(topCard)) }, label: { Text("Choose") })
             }
