@@ -133,7 +133,7 @@ extension UserProfileDetailAction {
     }
 }
 
-enum UserProfileDetailAction {
+enum UserProfileDetailAction: Equatable {
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "UserProfileDetailAction"

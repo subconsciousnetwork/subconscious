@@ -118,7 +118,7 @@ struct FollowNewUserFormSheetView_Previews: PreviewProvider {
 }
 
 // MARK: Actions
-enum FollowNewUserFormSheetAction {
+enum FollowNewUserFormSheetAction: Equatable {
     case form(FollowUserFormAction)
     
     case populate(_ did: Did)

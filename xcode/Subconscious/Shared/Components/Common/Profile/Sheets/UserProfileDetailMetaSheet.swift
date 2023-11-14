@@ -123,7 +123,7 @@ struct UserProfileDetailMetaSheetCursor: CursorProtocol {
     }
 }
 
-enum UserProfileDetailMetaSheetAction: Hashable {
+enum UserProfileDetailMetaSheetAction: Equatable, Hashable {
     case populate(_ user: UserProfile)
     /// Show/hide delete confirmation dialog
     case presentDeleteConfirmationDialog(Bool)
