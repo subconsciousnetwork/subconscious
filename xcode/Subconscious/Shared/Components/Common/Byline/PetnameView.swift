@@ -68,10 +68,12 @@ struct PetnameView: View {
     var uniqueAliases: [Petname] {
         switch name {
         case .known(_, let name):
-            return aliases.filter { alias in
-                name != alias.leaf
-            }
-            .uniquing(with: { $0 })
+            return aliases
+                .filter { alias in
+                    name != alias.leaf
+                }
+                .uniquing(with: \.id)
+            
         case _:
             return []
         }
