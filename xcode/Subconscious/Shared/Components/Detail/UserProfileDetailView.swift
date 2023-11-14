@@ -354,6 +354,9 @@ struct UserProfileDetailModel: ModelProtocol {
     var address: Slashlink? = nil
     var user: UserProfile? = nil
     
+    // These are optional so we can differentiate between 
+    // (1) first load (no content, show placeholder state)
+    // (2) a refresh (existing content, keep showing old content during load)
     var recentEntries: [EntryStub]? = nil
     var following: [StoryUser]? = nil
     
