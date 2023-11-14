@@ -1089,6 +1089,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.saveState = saveState
+        model.loadingState = .loaded
         model.headers.modified = modified
         return update(
             state: model,
