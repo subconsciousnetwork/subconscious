@@ -2259,7 +2259,7 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Purging peer",
             metadata: [
-                "identity": petname.description
+                "petname": petname.description
             ]
         )
         return Update(state: state, fx: fx)
@@ -2273,7 +2273,7 @@ struct AppModel: ModelProtocol {
         logger.log(
             "Purged peer from database",
             metadata: [
-                "identity": petname.description
+                "petname": petname.description
             ]
         )
         return Update(state: state)
