@@ -1035,16 +1035,25 @@ class Tests_DatabaseService: XCTestCase {
             )
         )
         
+        let alice = Petname("alice")!
+        let version = "bafyxyz123"
+        
         // Write fake sphere sync info so we can purge it
         try service.writePeer(
             PeerRecord(
-                petname: Petname("alice")!,
+                petname: alice,
                 identity: did,
-                since: "bafyxyz123"
+                since: version
             )
         )
         
-        try service.purgePeer(petname: Petname("alice")!)
+        let peer = try service.readPeer(petname: alice)
+        XCTAssertNotNil(peer)
+        XCTAssertEqual(peer?.identity, did)
+        XCTAssertEqual(peer?.petname, alice)
+        XCTAssertEqual(peer?.since, version)
+        
+        try service.purgePeer(petname: alice)
         
         let syncInfo = try service.readPeer(identity: did)
         XCTAssertNil(syncInfo)
