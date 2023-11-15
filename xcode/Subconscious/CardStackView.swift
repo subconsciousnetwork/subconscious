@@ -23,7 +23,12 @@ struct CardStack: View {
         return cards.firstIndex(where: { $0.id == card.id })
     }
     
-    @State var offset: CGFloat = 0.0
+    @State var offsets: [EntryStub:CGFloat] = [:]
+    @State var pointer: Int = 0
+    
+    func offset(`for`: EntryStub) -> CGFloat {
+        offsets[`for`] ?? 0
+    }
     
     var body: some View {
         VStack {
@@ -34,34 +39,37 @@ struct CardStack: View {
                 let deck = Array(cards.enumerated().reversed())
                 ForEach(deck, id: \.element.id) { index, card in
                     VStack {
-                        let t = CGFloat(index) / 8.0
+                        let t = max(0, CGFloat(index - pointer)) / 8.0
                         CardView(entry: card)
                         .offset(x: 0, y: sqrt(t) * 20) // CGFloat(index) * -10)
-                        .offset(x: index == 0 ? offset : 0, y: 0)
-                        .rotationEffect(index == 0 ? .degrees(Double(offset / 32)) : .degrees(0))
+                        .offset(x: offset(for: card), y: 0)
+                        .rotationEffect(.degrees(Double(offset(for: card) / 32.0)))
                         .gesture(DragGesture()
                                     .onChanged { gesture in
-                                        withAnimation(.spring()) {
-                                            offset = gesture.translation.width
+                                        withAnimation(.interactiveSpring()) {
+                                            offsets[card] = gesture.translation.width
                                         }
                                     }
                                     .onEnded { _ in
-                                        withAnimation(.spring()) {
-                                            if abs(offset) > 100 {
+                                        withAnimation(.spring(duration: 0.4)) {
+                                            if abs(offset(for: card)) > 100 {
                                                 // Swipe out the card
-                                                offset = offset > 0 ? 512 : -512
+                                                offsets[card] = offset(for: card) > 0 ? 512 : -512
                                                 
                                                 withAnimation(.spring()) {
                                                     onCardRemoved(card)
-                                                    offset = 0
+                                                    pointer += 1
                                                 }
                                             } else {
                                                 // Reset the card position
-                                                offset = 0
+                                                offsets[card] = 0
                                             }
                                         }
                                     })
-                        .zIndex(offset == 0 ? 0 : 1) // Bring card to front during drag
+                        .zIndex(offset(for: card) == 0 ? 0 : 1) // Bring card to front during drag
+                        .disabled(index != pointer)
+                        .opacity(index >= pointer ? 1 : 0)
+                        .animation(.easeOutCubic(duration: 0.1), value: pointer)
                     }
                 }
             }
