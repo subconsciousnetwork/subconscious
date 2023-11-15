@@ -17,7 +17,8 @@ struct CardView: View {
 
 struct CardStack: View {
     var cards: [EntryStub]
-    var onCardRemoved: (EntryStub) -> Void
+    var onSwipeRight: (EntryStub) -> Void
+    var onSwipeLeft: (EntryStub) -> Void
     
     func indexOf(card: EntryStub) -> Int? {
         return cards.firstIndex(where: { $0.id == card.id })
@@ -29,6 +30,16 @@ struct CardStack: View {
     func offset(`for`: EntryStub) -> CGFloat {
         offsets[`for`] ?? 0
     }
+    
+    func offset(for index: Int) -> CGFloat {
+        if index < 0 || index >= cards.count {
+            return 0
+        }
+        
+        return offset(for: cards[index])
+    }
+    
+    private static let THRESHOLD = 100.0
     
     var body: some View {
         VStack {
@@ -57,7 +68,12 @@ struct CardStack: View {
                                                 offsets[card] = offset(for: card) > 0 ? 512 : -512
                                                 
                                                 withAnimation(.spring()) {
-                                                    onCardRemoved(card)
+                                                    if (offset(for: card) > 0) {
+                                                        onSwipeRight(card)
+                                                    } else {
+                                                        onSwipeLeft(card)
+                                                    }
+                                                    
                                                     pointer += 1
                                                 }
                                             } else {
@@ -74,6 +90,20 @@ struct CardStack: View {
                 }
             }
         }
+        .overlay(
+            Rectangle()
+                .frame(width: 64, height: 200)
+                .foregroundStyle(Color.red)
+                .offset(x: 200, y: 0)
+                .opacity(offset(for: pointer) / Self.THRESHOLD)
+        )
+        .overlay(
+            Rectangle()
+                .frame(width: 64, height: 200)
+                .foregroundStyle(Color.blue)
+                .offset(x: -200, y: 0)
+                .opacity(-offset(for: pointer) / Self.THRESHOLD)
+        )
     }
     
 //    func updateStack() {
@@ -94,6 +124,6 @@ struct CardStack_Previews: PreviewProvider {
             EntryStub.dummyData(),
             EntryStub.dummyData(),
             EntryStub.dummyData(),
-        ], onCardRemoved: { _ in })
+        ], onSwipeRight: { _ in }, onSwipeLeft: { _ in })
     }
 }

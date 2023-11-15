@@ -19,7 +19,14 @@ struct DeckView: View {
             Text("\(store.state.deck.count) cards in deck")
             CardStack(
                 cards: store.state.deck,
-                onCardRemoved: { card in
+                onSwipeRight: { card in
+                    store.send(
+                        .chooseCard(
+                            card
+                        )
+                    )
+                },
+                onSwipeLeft: { card in
                     store.send(
                         .skipCard(
                             card
@@ -85,11 +92,11 @@ struct DeckModel: ModelProtocol {
                     }
                     
                     guard let entry = environment.database.readRandomEntry(owner: us) else {
-                        break
+                        continue
                     }
                     
                     guard !isTooShort(card: entry) else {
-                        break
+                        continue
                     }
                     
                     max -= 1
@@ -139,7 +146,7 @@ struct DeckModel: ModelProtocol {
             return Update(state: model)
         case let .chooseCard(entry):
             var model = state
-            model.deck = model.deck.filter({ card in card != entry })
+//            model.deck = model.deck.filter({ card in card != entry })
             
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
@@ -161,7 +168,7 @@ struct DeckModel: ModelProtocol {
             return Update(state: model, fx: fx)
         case let .skipCard(entry):
             var model = state
-            model.deck = model.deck.filter({ card in card != entry })
+//            model.deck = model.deck.filter({ card in card != entry })
             
             if model.deck.count == 0 {
                 return update(state: model, action: .topupDeck, environment: environment)
