@@ -17,11 +17,6 @@ struct CardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
-            BylineSmView(
-                pfp: .generated(entry.did),
-                slashlink: entry.address
-            )
-            
             SubtextView(subtext: entry.excerpt)
                 .environment(\.openURL, OpenURLAction { url in
                     guard let subslashlink = url.toSubSlashlinkURL() else {
@@ -43,8 +38,15 @@ struct CardView: View {
     }
 }
 
+enum Progress {
+    case inactive
+    case started
+    case changed
+}
+
 struct CardStack: View {
     var cards: [EntryStub]
+    var pointer: Int
     var onSwipeRight: (EntryStub) -> Void
     var onSwipeLeft: (EntryStub) -> Void
     
@@ -53,7 +55,7 @@ struct CardStack: View {
     }
     
     @State var offsets: [EntryStub:CGFloat] = [:]
-    @State var pointer: Int = 0
+    @GestureState private var gestureState: Progress = .inactive
     
     func offset(`for`: EntryStub) -> CGFloat {
         offsets[`for`] ?? 0
@@ -68,26 +70,68 @@ struct CardStack: View {
     }
     
     private static let THRESHOLD = 100.0
+    var feedbackGenerator = UIImpactFeedbackGenerator()
+    
+    var swipeProgress: CGFloat {
+        return abs(offset(for: pointer) / Self.THRESHOLD).clamp(min: 0.0, max: 1.0)
+    }
+    
+    func rotation(for index: Int) -> Double {
+        let fundamental = 4.0*Double(sin(CGFloat(index - pointer) * 5.0))
+        let harmonic = 1.0*Double(sin(CGFloat(index) * 5.0))
+        
+        let distance = index - pointer
+        
+        return (fundamental + harmonic) * (1 - swipeProgress)
+    }
+    
+    func rotation(t: CGFloat) -> Double {
+        let newT = t + (swipeProgress / 80.0)
+        let fundamental = 4.0*Double(sin(CGFloat(newT - 0.1) * 20.0))
+        let harmonic = 1.0*Double(sin((newT - 0.1) * 10))
+        
+        let result = (fundamental + harmonic)
+        
+        if (newT < 0.01) {
+            return (0.1 + 0.9*(max(0, newT) / 0.01)) * result
+        } else {
+            return result
+        }
+    }
     
     var body: some View {
         VStack {
-            Text("\(cards.count)")
-                .contentTransition(.numericText())
-            
             ZStack {
                 let deck = Array(cards.enumerated().reversed())
                 ForEach(deck, id: \.element.id) { index, card in
                     VStack {
-                        let t = max(0, CGFloat(index - pointer)) / 8.0
-                        CardView(entry: card)
-                        .offset(x: 0, y: sqrt(t) * 20) // CGFloat(index) * -10)
-                        .offset(x: offset(for: card), y: 0)
-                        .rotationEffect(
-                            index != pointer
-                                ? .degrees(2.0*Double(sin(CGFloat(index) * 2.0)))
-                                : .degrees(Double(offset(for: card) / 32.0))
-                        )
-                        .gesture(DragGesture()
+                        if (index >= pointer - 1) {
+                            let t = max(0, CGFloat(index - pointer)) / 16.0 - abs(offset(for: pointer) / Self.THRESHOLD) / 24.0
+                            CardView(entry: card)
+                                .scaleEffect(min(1, 1-t + 0.03))
+                                .offset(x: offset(for: card), y: 0)
+                                .rotationEffect(
+                                    index != pointer
+                                    ? .degrees(rotation(t: t))
+                                    : .degrees(Double(offset(for: card) / 32.0))
+                                )
+                                .gesture(DragGesture()
+                                    .updating(
+                                        $gestureState,
+                                        body: { (value, state, transaction) in
+                                            switch state {
+                                            case .inactive:
+                                                state = .started
+                                                feedbackGenerator.prepare()
+                                                break
+                                            case .started:
+                                                state = .changed
+                                                break
+                                            case .changed:
+                                                break
+                                            }
+                                        }
+                                    )
                                     .onChanged { gesture in
                                         withAnimation(.interactiveSpring()) {
                                             offsets[card] = gesture.translation.width
@@ -95,18 +139,18 @@ struct CardStack: View {
                                     }
                                     .onEnded { _ in
                                         withAnimation(.spring(duration: 0.4)) {
-                                            if abs(offset(for: card)) > 100 {
+                                            if abs(offset(for: card)) > Self.THRESHOLD {
                                                 // Swipe out the card
                                                 offsets[card] = offset(for: card) > 0 ? 512 : -512
                                                 
                                                 withAnimation(.spring()) {
                                                     if (offset(for: card) > 0) {
+//                                                        feedbackGenerator.impactOccurred()
                                                         onSwipeRight(card)
                                                     } else {
+//                                                        feedbackGenerator.impactOccurred()
                                                         onSwipeLeft(card)
                                                     }
-                                                    
-                                                    pointer += 1
                                                 }
                                             } else {
                                                 // Reset the card position
@@ -114,24 +158,33 @@ struct CardStack: View {
                                             }
                                         }
                                     })
-                        .zIndex(offset(for: card) == 0 ? 0 : 1) // Bring card to front during drag
-                        .disabled(index != pointer)
-                        .opacity(index >= pointer ? 1 : 0)
-                        .animation(.easeOutCubic(duration: 0.2), value: pointer)
+                                .zIndex(offset(for: card) == 0 ? 0 : 1) // Bring card to front during drag
+                                .disabled(index != pointer)
+                                .opacity(index >= pointer ? 1 : 0)
+                                .animation(.spring(duration: 0.2), value: pointer)
+                        }
                     }
                 }
             }
+            
+            VStack {
+                Text("\(pointer)/\(cards.count)")
+                    .contentTransition(.numericText())
+                Text("\(swipeProgress)")
+                    .contentTransition(.numericText())
+            }
+            .font(.caption)
         }
         .overlay(
             Rectangle()
-                .frame(width: 64, height: 200)
+                .frame(width: 32, height: 200)
                 .foregroundStyle(Color.red)
                 .offset(x: 200, y: 0)
                 .opacity(offset(for: pointer) / Self.THRESHOLD)
         )
         .overlay(
             Rectangle()
-                .frame(width: 64, height: 200)
+                .frame(width: 32, height: 200)
                 .foregroundStyle(Color.blue)
                 .offset(x: -200, y: 0)
                 .opacity(-offset(for: pointer) / Self.THRESHOLD)
@@ -156,6 +209,6 @@ struct CardStack_Previews: PreviewProvider {
             EntryStub.dummyData(),
             EntryStub.dummyData(),
             EntryStub.dummyData(),
-        ], onSwipeRight: { _ in }, onSwipeLeft: { _ in })
+        ], pointer: 0, onSwipeRight: { _ in }, onSwipeLeft: { _ in })
     }
 }

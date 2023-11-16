@@ -58,6 +58,8 @@
 		B5690C3D29FB4DEF00067580 /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971529B6A0DF003204FC /* DidQrCodeView.swift */; };
 		B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */; };
 		B569971729B6A0DF003204FC /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971529B6A0DF003204FC /* DidQrCodeView.swift */; };
+		B56B80942B05AEA800AABF08 /* MathUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56B80932B05AEA800AABF08 /* MathUtilities.swift */; };
+		B56B80952B05AEA800AABF08 /* MathUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56B80932B05AEA800AABF08 /* MathUtilities.swift */; };
 		B56C2D4E2A4962D00062DAC0 /* Tests_TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56C2D4D2A4962D00062DAC0 /* Tests_TranscludeService.swift */; };
 		B56C3D3E2A01E5020071EF70 /* InviteCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56C3D3D2A01E5020071EF70 /* InviteCode.swift */; };
 		B57339582AEF800300D43333 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57339572AEF800300D43333 /* ToastView.swift */; };
@@ -97,8 +99,6 @@
 		B5A7AD332A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
 		B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */; };
 		B5AD5C902AA7FF1900FC5BC5 /* Tests_DetailStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */; };
-		B5BBA7352A89E20300864220 /* UserProfileSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BBA7342A89E20300864220 /* UserProfileSheets.swift */; };
-		B5BBA7362A89E20300864220 /* UserProfileSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BBA7342A89E20300864220 /* UserProfileSheets.swift */; };
 		B5C818D62AF380A7001F65BE /* CardStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C818D52AF380A7001F65BE /* CardStackView.swift */; };
 		B5C918EE2A67A16A004C6CD5 /* AuthorizationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */; };
 		B5C918F02A67ADEF004C6CD5 /* SphereSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */; };
@@ -571,6 +571,7 @@
 		B5604DAD2A6A263E004C9590 /* Tests_Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Config.swift; sourceTree = "<group>"; };
 		B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserViaQRCodeView.swift; sourceTree = "<group>"; };
 		B569971529B6A0DF003204FC /* DidQrCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
+		B56B80932B05AEA800AABF08 /* MathUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathUtilities.swift; sourceTree = "<group>"; };
 		B56C2D4D2A4962D00062DAC0 /* Tests_TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_TranscludeService.swift; sourceTree = "<group>"; };
 		B56C3D3D2A01E5020071EF70 /* InviteCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCode.swift; sourceTree = "<group>"; };
 		B57339572AEF800300D43333 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
@@ -603,7 +604,6 @@
 		B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailStackView.swift; sourceTree = "<group>"; };
 		B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DetailStack.swift; sourceTree = "<group>"; };
-		B5BBA7342A89E20300864220 /* UserProfileSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileSheets.swift; sourceTree = "<group>"; };
 		B5C818D52AF380A7001F65BE /* CardStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStackView.swift; sourceTree = "<group>"; };
 		B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationSettingsView.swift; sourceTree = "<group>"; };
 		B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereSettingsView.swift; sourceTree = "<group>"; };
@@ -1617,6 +1617,7 @@
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 				B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */,
+				B56B80932B05AEA800AABF08 /* MathUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -2080,6 +2081,7 @@
 				B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
 				B5C818D62AF380A7001F65BE /* CardStackView.swift in Sources */,
 				B85BF47527BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,
+				B56B80942B05AEA800AABF08 /* MathUtilities.swift in Sources */,
 				B86BC75429B143CD005B5833 /* Identified.swift in Sources */,
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
@@ -2295,6 +2297,7 @@
 				B85DF78D29B660C60042D725 /* Prose.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B83E91D827692EC600045C6A /* FAB.swift in Sources */,
+				B56B80952B05AEA800AABF08 /* MathUtilities.swift in Sources */,
 				B88CC959284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
 				B89E307E2911D7F900A4721F /* IntUtilities.swift in Sources */,
 				B8249DA127E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,

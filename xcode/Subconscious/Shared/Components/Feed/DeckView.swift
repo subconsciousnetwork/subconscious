@@ -15,10 +15,34 @@ struct DeckView: View {
     @StateObject var store: Store<DeckModel> = Store(state: DeckModel(), environment: AppEnvironment.default)
     
     var body: some View {
-        VStack {
-            Text("\(store.state.deck.count) cards in deck")
+        VStack(alignment: .leading) {
+            Spacer()
+            
+            if let author = store.state.author {
+                HStack(alignment: .center, spacing: AppTheme.unit3) {
+                    ProfilePic(pfp: author.pfp, size: .large)
+                    
+                    if let name = author.toNameVariant(),
+                       let slashlink = store.state.topCard?.address {
+                        VStack(alignment: .leading, spacing: AppTheme.unit) {
+                            PetnameView(
+                                name: name,
+                                aliases: author.aliases,
+                                showMaybePrefix: false
+                            )
+                            // Trim off peer, we have it above
+                            SlashlinkDisplayView(slashlink: Slashlink(slug: slashlink.slug))
+                                .theme(slug: .secondary)
+                        }
+                   }
+                }
+                
+                Spacer()
+            }
+            
             CardStack(
                 cards: store.state.deck,
+                pointer: store.state.pointer,
                 onSwipeRight: { card in
                     store.send(
                         .chooseCard(
@@ -35,11 +59,10 @@ struct DeckView: View {
                 }
             )
             
-            if let topCard = store.state.deck.first {
-                Button(action: { store.send(.skipCard(topCard)) }, label: { Text("Skip") })
-                Button(action: { store.send(.chooseCard(topCard)) }, label: { Text("Choose") })
-            }
+            Spacer()
+            
         }
+        .padding(AppTheme.padding)
         .onAppear {
             store.send(.appear)
         }
@@ -56,6 +79,12 @@ enum DeckAction: Hashable {
     case appendCards([EntryStub])
     case topupDeck
     case noCardsToDraw
+    
+    case nextCard
+    case cardPresented(EntryStub)
+    
+    case succeedLoadAuthorProfile(UserProfile)
+    case failLoadAuthorProfile(_ error: String)
 }
 
 typealias DeckEnvironment = AppEnvironment
@@ -72,6 +101,33 @@ struct DeckModel: ModelProtocol {
     
     var deck: [EntryStub] = []
     var seen: [EntryStub] = []
+    var pointer: Int = 0
+    var author: UserProfile? = nil
+    
+    static func insertAtRandomIndex<T>(item: T, into array: inout [T], skippingFirst skipCount: Int) {
+        // Calculate the starting index for the random range
+        let startIndex = array.count < skipCount ? 0 : skipCount
+        // Ensure the end index is at least equal to the start index
+        let endIndex = max(startIndex, array.count)
+        
+        if (startIndex == endIndex) {
+            array.append(item)
+            return
+        }
+        
+        // Generate a random index within the range
+        let randomIndex = Int.random(in: startIndex..<endIndex)
+        
+        array.insert(item, at: randomIndex)
+    }
+    
+    var topCard: EntryStub? {
+        if pointer < 0 || pointer >= deck.count {
+            return nil
+        }
+        
+        return deck[pointer]
+    }
     
     static func update(
         state: Self,
@@ -143,10 +199,19 @@ struct DeckModel: ModelProtocol {
             var model = state
             model.deck = deck
             model.seen = deck
+            model.pointer = 0
+            
+            if let topCard = deck.first {
+                return update(
+                    state: model,
+                    action: .cardPresented(topCard),
+                    environment: environment
+                )
+            }
+            
             return Update(state: model)
         case let .chooseCard(entry):
             var model = state
-//            model.deck = model.deck.filter({ card in card != entry })
             
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
@@ -165,20 +230,22 @@ struct DeckModel: ModelProtocol {
                 return .noCardsToDraw
             })
             .eraseToAnyPublisher()
-            return Update(state: model, fx: fx)
+            
+            return update(state: model, action: .nextCard, environment: environment).mergeFx(fx)
         case let .skipCard(entry):
             var model = state
-//            model.deck = model.deck.filter({ card in card != entry })
             
             if model.deck.count == 0 {
                 return update(state: model, action: .topupDeck, environment: environment)
             }
             
-            return Update(state: model)
+            return update(state: model, action: .nextCard, environment: environment)
         case let .appendCards(entries):
             var model = state
             for entry in entries.filter({ entry in !inDeck(card: entry) }) {
-                model.deck.append(entry)
+                
+                // insert entry into deck at random index (not the first 2 spots)
+                Self.insertAtRandomIndex(item: entry, into: &model.deck, skippingFirst: state.pointer + 2)
                 model.seen.append(entry)
             }
             
@@ -193,6 +260,33 @@ struct DeckModel: ModelProtocol {
             return Update(state: model)
         case .noCardsToDraw:
             logger.log("No cards to draw")
+            return Update(state: state)
+        case .nextCard:
+            var model = state
+            model.pointer += 1
+            
+            if let topCard = model.topCard {
+                return update(state: model, action: .cardPresented(topCard), environment: environment)
+            }
+            
+            return Update(state: model)
+        case .cardPresented(let card):
+            logger.log("Card presented \(card.id)")
+            
+            let fx: Fx<DeckAction> = Future.detached {
+                let user = try await environment.userProfile.identifyUser(did: card.did, address: card.address, context: nil)
+                return .succeedLoadAuthorProfile(user)
+            }
+                .recover { error in .failLoadAuthorProfile(error.localizedDescription) }
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedLoadAuthorProfile(let author):
+            var model = state
+            model.author = author
+            return Update(state: model).animation(.spring(duration: 0.2))
+        case .failLoadAuthorProfile(let error):
+            logger.log("Failed to load author profile: \(error)")
             return Update(state: state)
         }
         
