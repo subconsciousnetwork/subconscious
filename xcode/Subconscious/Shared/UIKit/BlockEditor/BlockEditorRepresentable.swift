@@ -7,9 +7,10 @@
 
 import SwiftUI
 import Combine
+import ObservableStore
 import os
 
-typealias BlockEditorStore = ControllerStore.Store<BlockEditor.ViewController>
+typealias BlockEditorStore = ObservableStore.Store<BlockEditor.Model>
 
 extension BlockEditor {
     // MARK: View Representable
@@ -29,7 +30,9 @@ extension BlockEditor {
         func updateUIViewController(
             _ uiViewController: ViewController,
             context: Context
-        ) {}
+        ) {
+            uiViewController.update(state: context.coordinator.store.state)
+        }
         
         /// The coordinator acts as a delegate and coordinator between the
         /// SwiftUI representable, and the UIViewController.

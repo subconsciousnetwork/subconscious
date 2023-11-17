@@ -421,6 +421,7 @@
 		B8B6BCBB29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */; };
 		B8B6BCBC29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */; };
 		B8C0A1B4297C938000D59532 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C0A1B3297C938000D59532 /* Error.swift */; };
+		B8C420E12B08140800AE356C /* BlockEditorCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C420E02B08140800AE356C /* BlockEditorCellModel.swift */; };
 		B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BD2809F19500E439DC /* Markup.swift */; };
 		B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */; };
 		B8C80F0129FC201000BAC84D /* Peer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C80F0029FC201000BAC84D /* Peer.swift */; };
@@ -832,6 +833,7 @@
 		B8B6BCB429CCDDF6000DB410 /* ResourceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceStatus.swift; sourceTree = "<group>"; };
 		B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressTorusView.swift; sourceTree = "<group>"; };
 		B8C0A1B3297C938000D59532 /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
+		B8C420E02B08140800AE356C /* BlockEditorCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorCellModel.swift; sourceTree = "<group>"; };
 		B8C7E8BD2809F19500E439DC /* Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Markup.swift; sourceTree = "<group>"; };
 		B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test_Markup.swift; sourceTree = "<group>"; };
 		B8C80F0029FC201000BAC84D /* Peer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Peer.swift; sourceTree = "<group>"; };
@@ -1151,7 +1153,7 @@
 				B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */,
 				B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */,
 				B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */,
-				B8E0BBA62AAB913A00FBCB57 /* Blocks */,
+				B8C420DF2B0813F900AE356C /* Cell */,
 				B8E0BBA52AAB90D000FBCB57 /* Common */,
 			);
 			path = BlockEditor;
@@ -1380,6 +1382,16 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+		B8C420DF2B0813F900AE356C /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				B8E0BBA42AAB90AD00FBCB57 /* Appendix */,
+				B8C420E02B08140800AE356C /* BlockEditorCellModel.swift */,
+				B8E0BBA62AAB913A00FBCB57 /* Blocks */,
+			);
+			path = Cell;
+			sourceTree = "<group>";
+		};
 		B8CA8F1B288F07CB005F8802 /* Data */ = {
 			isa = PBXGroup;
 			children = (
@@ -1450,7 +1462,6 @@
 		B8E0BBA62AAB913A00FBCB57 /* Blocks */ = {
 			isa = PBXGroup;
 			children = (
-				B8E0BBA42AAB90AD00FBCB57 /* Appendix */,
 				B834C0422AB4D40200705F2F /* BlockEditorBlockSelectView.swift */,
 				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
 				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
@@ -2166,6 +2177,7 @@
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
+				B8C420E12B08140800AE356C /* BlockEditorCellModel.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */,
 				B59D556329BBFF56007915E2 /* FormField.swift in Sources */,

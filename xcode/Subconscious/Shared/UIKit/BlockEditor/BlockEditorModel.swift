@@ -4,8 +4,8 @@
 //
 //  Created by Gordon Brander on 7/28/23.
 //
-
 import Foundation
+import ObservableStore
 import os
 
 extension BlockEditor {
@@ -37,5 +37,15 @@ extension BlockEditor {
             }
             return i
         }
+    }
+}
+
+extension BlockEditor.Model: ModelProtocol {
+    static func update(
+        state: BlockEditor.Model,
+        action: BlockEditor.Action,
+        environment: AppEnvironment
+    ) -> ObservableStore.Update<BlockEditor.Model> {
+        return Update(state: state)
     }
 }
