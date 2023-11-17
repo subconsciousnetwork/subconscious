@@ -1171,6 +1171,48 @@ final class DatabaseService {
         })
         .first
     }
+    
+    func readRandomFreshEntryForCard(owner: Did?, seen: [Slashlink]) -> EntryStub? {
+        guard self.state == .ready else {
+            return nil
+        }
+
+        return try? database.execute(
+            sql: """
+            SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
+            FROM memo
+            WHERE substr(memo.slug, 1, 1) != '_'
+            AND length(excerpt) > 100
+            AND slashlink NOT IN (SELECT value FROM json_each(?))
+            ORDER BY RANDOM()
+            LIMIT 1
+            """,
+            parameters: [.json(seen.map { s in s.description }, or: "[]")]
+        )
+        .compactMap({ row in
+            guard
+                let did = row.col(0)?.toString()?.toDid(),
+                let address = row.col(1)?
+                    .toString()?
+                    .toSlashlink(),
+                let modified = row.col(2)?.toDate(),
+                let isTruncated = row.col(3)?.toBool()
+            else {
+                return nil
+            }
+            
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            
+            return EntryStub(
+                did: did,
+                address: address,
+                excerpt: excerpt,
+                isTruncated: isTruncated,
+                modified: modified
+            )
+        })
+        .first
+    }
 
     /// Select a random entry
     func readRandomEntry(owner: Did?) -> EntryStub? {

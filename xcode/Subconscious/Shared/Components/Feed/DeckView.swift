@@ -16,8 +16,6 @@ struct DeckView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Spacer()
-            
             if let author = store.state.author {
                 HStack(alignment: .center, spacing: AppTheme.unit3) {
                     ProfilePic(pfp: author.pfp, size: .large)
@@ -37,8 +35,9 @@ struct DeckView: View {
                    }
                 }
                 
-                Spacer()
             }
+            
+            Spacer()
             
             CardStack(
                 cards: store.state.deck,
@@ -66,6 +65,17 @@ struct DeckView: View {
         .onAppear {
             store.send(.appear)
         }
+        .background(
+            LinearGradient(
+                stops: [
+                    Gradient.Stop(color: Color(red: 0.87, green: 0.86, blue: 0.92), location: 0.00),
+                    Gradient.Stop(color: Color(red: 0.93, green: 0.81, blue: 0.92), location: 0.38),
+                    Gradient.Stop(color: Color(red: 0.92, green: 0.92, blue: 0.85), location: 1.00),
+                ],
+                startPoint: UnitPoint(x: 0.5, y: 0.9),
+                endPoint: UnitPoint(x: 0.5, y: 0)
+            )
+        )
     }
 }
 
@@ -177,11 +187,7 @@ struct DeckModel: ModelProtocol {
                         break
                     }
                     
-                    guard let entry = environment.database.readRandomEntry(owner: us) else {
-                        break
-                    }
-                    
-                    guard !isSeen(card: entry), !isTooShort(card: entry) else {
+                    guard let entry = environment.database.readRandomFreshEntryForCard(owner: us, seen: model.seen.map { entry in entry.address }) else {
                         break
                     }
                     
@@ -194,7 +200,7 @@ struct DeckModel: ModelProtocol {
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return Update(state: model, fx: fx)
         case let .setDeck(deck):
             var model = state
             model.deck = deck
@@ -234,12 +240,31 @@ struct DeckModel: ModelProtocol {
             return update(state: model, action: .nextCard, environment: environment).mergeFx(fx)
         case let .skipCard(entry):
             var model = state
+            model.pointer += 1
             
-            if model.deck.count == 0 {
-                return update(state: model, action: .topupDeck, environment: environment)
+            let fx: Fx<DeckAction> = Future.detached {
+                var results: [EntryStub] = []
+                let us = try await environment.noosphere.identity()
+                var max = 1
+                for _ in 0..<25 {
+                    guard max > 0 else {
+                        break
+                    }
+                    
+                    guard let entry = environment.database.readRandomFreshEntryForCard(owner: us, seen: model.seen.map { entry in entry.address }) else {
+                        break
+                    }
+                    
+                    max -= 1
+                    results.append(entry)
+                }
+                
+                return .appendCards(results)
             }
+            .recover({ error in .appendCards([]) })
+            .eraseToAnyPublisher()
             
-            return update(state: model, action: .nextCard, environment: environment)
+            return Update(state: model, fx: fx)
         case let .appendCards(entries):
             var model = state
             for entry in entries.filter({ entry in !inDeck(card: entry) }) {
