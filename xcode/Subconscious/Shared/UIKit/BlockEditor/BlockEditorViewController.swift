@@ -24,8 +24,6 @@ extension BlockEditor {
         UICollectionViewDelegateFlowLayout,
         UICollectionViewDataSource
     {
-        typealias Store = ControllerStore.Store<BlockEditor.ViewController>
-        
         static var logger = Logger(
             subsystem: Config.default.rdns,
             category: "BlockEditorViewController"
@@ -71,9 +69,10 @@ extension BlockEditor {
         private lazy var collectionView = Self.createCollectionView(
             frame: .zero
         )
-        let store: ControllerStore.Store<BlockEditor.ViewController>
         
-        init(store: Store) {
+        let store: BlockEditorStore
+        
+        init(store: BlockEditorStore) {
             Self.logger.log("init")
             self.store = store
             super.init(nibName: nil, bundle: nil)
@@ -138,7 +137,7 @@ extension BlockEditor {
                 ),
             ])
             
-            self.store.connect(self)
+            self.store.controller = self
         }
         
         @objc private func onLongPress(_ gesture: UIGestureRecognizer) {
@@ -426,20 +425,16 @@ extension BlockEditor {
 }
 
 // MARK: Controller
-extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
+extension BlockEditor.ViewController: ControllerStoreUpdateableProtocol {
     typealias Model = BlockEditor.Model
     typealias Action = BlockEditor.Action
-    
-    func reconfigure(
-        state: BlockEditor.Model,
-        send: @escaping (BlockEditor.Action) -> Void
-    ) {
-        self.collectionView.reloadData()
-    }
+    typealias Environment = AppEnvironment
+    typealias Update = ControllerStore.Update<Model, Action>
     
     func update(
         state: Model,
-        action: Action
+        action: Action,
+        environment: AppEnvironment
     ) -> Update {
         switch action {
         case let .textDidChange(id, text, selection):
@@ -1046,18 +1041,20 @@ extension BlockEditor.ViewController: ControllerStoreControllerProtocol {
         var model = state
         model.blocks = blocksArray
         
-        collectionView.moveItem(
-            at: IndexPath(
-                row: i,
-                section: BlockEditor.Section.blocks.rawValue
-            ),
-            to: IndexPath(
-                row: h,
-                section: BlockEditor.Section.blocks.rawValue
+        let render = {
+            self.collectionView.moveItem(
+                at: IndexPath(
+                    row: i,
+                    section: BlockEditor.Section.blocks.rawValue
+                ),
+                to: IndexPath(
+                    row: h,
+                    section: BlockEditor.Section.blocks.rawValue
+                )
             )
-        )
+        }
         
-        return Update(state: model)
+        return Update(state: model, render: render)
     }
     
     func moveBlockDown(

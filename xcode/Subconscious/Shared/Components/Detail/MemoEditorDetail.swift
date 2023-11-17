@@ -25,6 +25,12 @@ struct MemoEditorDetailView: View {
         action: .start,
         environment: AppEnvironment.default
     )
+
+    @StateObject private var blockEditorStore = BlockEditorStore(
+        state: .draft(),
+        environment: AppEnvironment.default
+    )
+
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
@@ -64,11 +70,7 @@ struct MemoEditorDetailView: View {
         VStack {
             if app.state.isBlockEditorEnabled {
                 BlockEditor.Representable(
-                    state: Binding(
-                        get: { store.state.blockEditor },
-                        send: store.send,
-                        tag: Action.forceSetBlockEditor
-                    )
+                    store: blockEditorStore
                 )
                 .frame(
                     minHeight: UIFont.appTextMono.lineHeight * 8
@@ -333,10 +335,6 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
-
-    //  Block editor actions
-    /// Force set the block editor's state
-    case forceSetBlockEditor(BlockEditor.Model)
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -623,8 +621,6 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     /// The text editor
     var editor = SubtextTextModel()
-    /// Block editor
-    var blockEditor = BlockEditor.Model.draft()
     
     /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false
@@ -690,12 +686,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
-            )
-        case let .forceSetBlockEditor(blockEditor):
-            return forceSetBlockEditor(
-                state: state,
-                environment: environment,
-                blockEditor: blockEditor
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -1067,16 +1057,6 @@ struct MemoEditorDetailModel: ModelProtocol {
             ),
             environment: environment
         )
-    }
-    
-    static func forceSetBlockEditor(
-        state: MemoEditorDetailModel,
-        environment: AppEnvironment,
-        blockEditor: BlockEditor.Model
-    ) -> Update<MemoEditorDetailModel> {
-        var model = state
-        model.blockEditor = blockEditor
-        return Update(state: model)
     }
 
     /// Set the contents of the editor and mark save state and modified time.

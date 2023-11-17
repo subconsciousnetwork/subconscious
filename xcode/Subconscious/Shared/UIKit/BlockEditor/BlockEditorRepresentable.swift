@@ -9,13 +9,15 @@ import SwiftUI
 import Combine
 import os
 
+typealias BlockEditorStore = ControllerStore.Store<BlockEditor.ViewController>
+
 extension BlockEditor {
     // MARK: View Representable
     struct Representable: UIViewControllerRepresentable {
-        @Binding var state: Model
+        @ObservedObject var store: BlockEditorStore
         
         func makeCoordinator() -> Coordinator {
-            Coordinator(state: self.$state)
+            Coordinator(store: store)
         }
         
         func makeUIViewController(context: Context) -> ViewController {
@@ -27,39 +29,17 @@ extension BlockEditor {
         func updateUIViewController(
             _ uiViewController: ViewController,
             context: Context
-        ) {
-            uiViewController.store.reset(
-                controller: uiViewController,
-                state: context.coordinator.state
-            )
-        }
+        ) {}
         
         /// The coordinator acts as a delegate and coordinator between the
         /// SwiftUI representable, and the UIViewController.
         class Coordinator: NSObject {
             private var controllerStoreChanges: AnyCancellable?
-            /// Reference to the outer `@State` variable
-            @Binding var state: Model
-            var store: ControllerStore.Store<ViewController>
+            var store: BlockEditorStore
             
-            init(state: Binding<Model>) {
-                self._state = state
-                self.store = ControllerStore.Store(
-                    state: state.wrappedValue
-                )
+            init(store: BlockEditorStore) {
+                self.store = store
                 super.init()
-                // Replay internal changes to state on to SwiftUI binding
-                // We debounce the updates so that at most, we get one state
-                // change every half second.
-                self.controllerStoreChanges = self.store.changes
-                    .debounce(
-                        for: .seconds(0.5),
-                        scheduler: DispatchQueue.main
-                    )
-                    .receive(on: DispatchQueue.main)
-                    .sink { [weak self] state in
-                        self?.state = state
-                    }
             }
         }
     }
@@ -67,25 +47,28 @@ extension BlockEditor {
 
 struct BlockStackEditorViewControllerRepresentable_Previews: PreviewProvider {
     struct TestView: View {
-        @State private var state = BlockEditor.Model(
-            blocks: [
-                BlockEditor.BlockModel.heading(
-                    BlockEditor.TextBlockModel(
-                        text: "Foo"
+        @StateObject private var store = BlockEditorStore(
+            state: BlockEditor.Model(
+                blocks: [
+                    BlockEditor.BlockModel.heading(
+                        BlockEditor.TextBlockModel(
+                            text: "Foo"
+                        )
+                    ),
+                    BlockEditor.BlockModel.text(
+                        BlockEditor.TextBlockModel(
+                            text: "Bar"
+                        )
                     )
-                ),
-                BlockEditor.BlockModel.text(
-                    BlockEditor.TextBlockModel(
-                        text: "Bar"
-                    )
-                )
-            ]
+                ]
+            ),
+            environment: AppEnvironment.default
         )
+        
+        
 
         var body: some View {
-            BlockEditor.Representable(
-                state: $state
-            )
+            BlockEditor.Representable(store: store)
         }
     }
 

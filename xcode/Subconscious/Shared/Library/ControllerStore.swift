@@ -36,73 +36,50 @@ extension ControllerStore {
     }
 }
 
-protocol ControllerStoreControllerProtocol: AnyObject {
-    associatedtype Model: Equatable
+/// A type responsible for returning updates for state and controller
+protocol ControllerStoreUpdateableProtocol: AnyObject {
+    associatedtype Model
     associatedtype Action
-    typealias Update = ControllerStore.Update<Model, Action>
-    typealias Effect = ControllerStore.Update<Model, Action>.Effect
-    
-    @MainActor
-    func reconfigure(
-        state: Model,
-        send: @escaping (Action) -> Void
-    )
+    associatedtype Environment
     
     @MainActor
     func update(
         state: Model,
-        action: Action
-    ) -> Update
+        action: Action,
+        environment: Environment
+    ) -> ControllerStore.Update<Model, Action>
 }
 
 extension ControllerStore {
-    class Store<Controller>
-    where Controller: ControllerStoreControllerProtocol
+    final class Store<Controller>: ObservableObject
+    where Controller: ControllerStoreUpdateableProtocol
     {
         private let logger = Logger(
             subsystem: Bundle.main.bundleIdentifier!,
             category: "ControllerStore.Store"
         )
-        private weak var controller: Controller?
+        
         private var _changes = PassthroughSubject<Controller.Model, Never>()
         var changes: AnyPublisher<Controller.Model, Never> {
             _changes.eraseToAnyPublisher()
         }
+        
+        private(set) var environment: Controller.Environment
+        
         private(set) var state: Controller.Model
-
+        
+        weak var controller: Controller?
+        
         init(
-            state: Controller.Model
+            state: Controller.Model,
+            environment: Controller.Environment
         ) {
             self.state = state
+            self.environment = environment
         }
         
         @MainActor
-        func connect(_ controller: Controller) {
-            logger.debug("Connect controller")
-            controller.reconfigure(
-                state: self.state,
-                send: { [weak self] action in
-                    self?.send(action)
-                }
-            )
-            self.controller = controller
-        }
-
-        @MainActor
-        func reset(
-            controller: Controller,
-            state: Controller.Model
-        ) {
-            if state != state || controller !== controller {
-                logger.debug("Reset controller state")
-                logger.debug("State: \(String(describing: state))")
-                self.state = state
-                connect(controller)
-            }
-        }
-
-        @MainActor
-        func transact(_ action: Controller.Action) {
+        func send(_ action: Controller.Action) {
             logger.debug("Action: \(String(describing: action))")
             guard let controller = self.controller else {
                 logger.warning("Cannot transact without controller. Doing nothing.")
@@ -110,7 +87,8 @@ extension ControllerStore {
             }
             let update = controller.update(
                 state: state,
-                action: action
+                action: action,
+                environment: environment
             )
             self.state = update.state
             logger.debug("State: \(String(describing: self.state))")
@@ -124,17 +102,11 @@ extension ControllerStore {
                 self.run(effect)
             }
         }
-
+        
         func run(_ effect: @escaping () async -> Controller.Action) {
             Task.detached {
                 let action = await effect()
-                self.send(action)
-            }
-        }
-
-        func send(_ action: Controller.Action) {
-            Task { @MainActor in
-                self.transact(action)
+                await self.send(action)
             }
         }
     }
