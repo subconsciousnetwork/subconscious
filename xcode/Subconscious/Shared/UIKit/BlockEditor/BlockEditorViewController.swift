@@ -46,13 +46,14 @@ extension BlockEditor {
             collectionView: collectionView
         )
         
-        private var store: BlockEditorStore
+        private var state: BlockEditorStore.Model?
+        private var send: (BlockEditorStore.Model.Action) -> Void
         
         init(
-            store: BlockEditorStore
+            send: @escaping (BlockEditorStore.Model.Action) -> Void
         ) {
             Self.logger.log("init")
-            self.store = store
+            self.send = send
             super.init(nibName: nil, bundle: nil)
         }
         
@@ -91,10 +92,16 @@ extension BlockEditor {
             ])
         }
         
-        func update(state: BlockEditor.Model) {
-            print("!!! hit")
-            var snapshot = NSDiffableDataSourceSnapshot
-                <BlockEditor.Section, BlockEditor.CellModel>()
+        func update(_ state: BlockEditor.Model) {
+            guard self.state != state else {
+                return
+            }
+            Self.logger.log("State: \(String(describing: state))")
+            self.state = state
+            var snapshot = NSDiffableDataSourceSnapshot<
+                BlockEditor.Section,
+                BlockEditor.CellModel
+            >()
             snapshot.appendSections([.blocks, .appendix])
             snapshot.appendItems(
                 state.blocks.map({ block in .init(content: .blocks(block))}),
@@ -107,7 +114,7 @@ extension BlockEditor {
             switch gesture.state {
             case .ended:
                 let point = gesture.location(in: self.collectionView)
-                store.send(.longPress(point))
+                send(.longPress(point))
             default:
                 break
             }
@@ -117,7 +124,7 @@ extension BlockEditor {
             switch gesture.state {
             case .ended:
                 let point = gesture.location(in: self.collectionView)
-                store.send(.tap(point))
+                send(.tap(point))
             default:
                 break
             }
@@ -149,34 +156,38 @@ extension BlockEditor {
         private func createDataSource(
             collectionView: UICollectionView
         ) -> UICollectionViewDiffableDataSource<Section, CellModel> {
-            var textCellRegistration = UICollectionView
+            let textCellRegistration = UICollectionView
                 .CellRegistration<TextBlockCell, TextBlockModel> {
                     cell, indexPath, item in
+                    cell.delegate = self
                     cell.update(
                         parentController: self,
                         state: item
                     )
                 }
 
-            var headingCellRegistration = UICollectionView
+            let headingCellRegistration = UICollectionView
                 .CellRegistration<HeadingBlockCell, TextBlockModel> {
                     cell, indexPath, item in
+                    cell.delegate = self
                     cell.render(item)
                 }
             
-            var listCellRegistration = UICollectionView
+            let listCellRegistration = UICollectionView
                 .CellRegistration<ListBlockCell, TextBlockModel> {
                     cell, indexPath, item in
+                    cell.delegate = self
                     cell.update(parentController: self, state: item)
                 }
             
-            var quoteCellRegistration = UICollectionView
+            let quoteCellRegistration = UICollectionView
                 .CellRegistration<QuoteBlockCell, TextBlockModel> {
                     cell, indexPath, item in
+                    cell.delegate = self
                     cell.update(parentController: self, state: item)
                 }
             
-            var appendixCellRegistration = UICollectionView
+            let appendixCellRegistration = UICollectionView
                 .CellRegistration<RelatedCell, RelatedModel> {
                     cell, indexPath, item in
                     cell.update(parentController: self, state: item)
@@ -231,27 +242,27 @@ extension BlockEditor {
 // MARK: TextBlockDelegate
 extension BlockEditor.ViewController: TextBlockDelegate {
     func boldButtonPressed(id: UUID, text: String, selection: NSRange) {
-        store.send(.insertBold(id: id, selection: selection))
+        send(.insertBold(id: id, selection: selection))
     }
     
     func italicButtonPressed(id: UUID, text: String, selection: NSRange) {
-        store.send(.insertItalic(id: id, selection: selection))
+        send(.insertItalic(id: id, selection: selection))
     }
     
     func codeButtonPressed(id: UUID, text: String, selection: NSRange) {
-        store.send(.insertCode(id: id, selection: selection))
+        send(.insertCode(id: id, selection: selection))
     }
     
     func requestSplit(id: UUID, selection: NSRange) {
-        store.send(.splitBlock(id: id, selection: selection))
+        send(.splitBlock(id: id, selection: selection))
     }
     
     func requestMerge(id: UUID) {
-        store.send(.mergeBlockUp(id: id))
+        send(.mergeBlockUp(id: id))
     }
     
     func didChange(id: UUID, text: String, selection: NSRange) {
-        store.send(
+        send(
             .textDidChange(
                 id: id,
                 text: text,
@@ -261,7 +272,7 @@ extension BlockEditor.ViewController: TextBlockDelegate {
     }
 
     func didChangeSelection(id: UUID, selection: NSRange) {
-        store.send(
+        send(
             .didChangeSelection(
                 id: id,
                 selection: selection
@@ -270,23 +281,23 @@ extension BlockEditor.ViewController: TextBlockDelegate {
     }
     
     func didBeginEditing(id: UUID) {
-        store.send(.focus(id: id))
+        send(.focus(id: id))
     }
     
     func didEndEditing(id: UUID) {
-        store.send(.blur(id: id))
+        send(.blur(id: id))
     }
     
     func upButtonPressed(id: UUID) {
-        store.send(.moveBlockUp(id: id))
+        send(.moveBlockUp(id: id))
     }
     
     func downButtonPressed(id: UUID) {
-        store.send(.moveBlockDown(id: id))
+        send(.moveBlockDown(id: id))
     }
     
     func dismissKeyboardButtonPressed(id: UUID) {
-        store.send(.renderBlur(id: id))
+        send(.renderBlur(id: id))
     }
 }
 

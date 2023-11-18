@@ -27,7 +27,7 @@ struct MemoEditorDetailView: View {
     )
 
     @StateObject private var blockEditorStore = BlockEditorStore(
-        state: .draft(),
+        state: BlockEditor.Model.draft(),
         environment: AppEnvironment.default
     )
 

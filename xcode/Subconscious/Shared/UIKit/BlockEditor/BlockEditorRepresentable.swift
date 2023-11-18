@@ -15,6 +15,11 @@ typealias BlockEditorStore = ObservableStore.Store<BlockEditor.Model>
 extension BlockEditor {
     // MARK: View Representable
     struct Representable: UIViewControllerRepresentable {
+        static let logger = Logger(
+            subsystem: Config.default.rdns,
+            category: "BlockEditor.Representable"
+        )
+        
         @ObservedObject var store: BlockEditorStore
         
         func makeCoordinator() -> Coordinator {
@@ -22,8 +27,9 @@ extension BlockEditor {
         }
         
         func makeUIViewController(context: Context) -> ViewController {
-            ViewController(
-                store: context.coordinator.store
+            Self.logger.debug("makeUIViewController")
+            return ViewController(
+                send: context.coordinator.store.send
             )
         }
         
@@ -31,7 +37,8 @@ extension BlockEditor {
             _ uiViewController: ViewController,
             context: Context
         ) {
-            uiViewController.update(state: context.coordinator.store.state)
+            Self.logger.debug("updateUIViewController")
+            uiViewController.update(context.coordinator.store.state)
         }
         
         /// The coordinator acts as a delegate and coordinator between the
@@ -68,8 +75,6 @@ struct BlockStackEditorViewControllerRepresentable_Previews: PreviewProvider {
             environment: AppEnvironment.default
         )
         
-        
-
         var body: some View {
             BlockEditor.Representable(store: store)
         }
