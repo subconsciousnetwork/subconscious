@@ -13,6 +13,27 @@ import Combine
 struct DeckView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject var store: Store<DeckModel> = Store(state: DeckModel(), environment: AppEnvironment.default)
+    @Environment(\.colorScheme) var colorScheme
+    
+    let lightBg = LinearGradient(
+        stops: [
+            Gradient.Stop(color: Color(red: 0.87, green: 0.86, blue: 0.92), location: 0.00),
+            Gradient.Stop(color: Color(red: 0.93, green: 0.81, blue: 0.92), location: 0.38),
+            Gradient.Stop(color: Color(red: 0.92, green: 0.92, blue: 0.85), location: 1.00),
+        ],
+        startPoint: UnitPoint(x: 0.5, y: 0.9),
+        endPoint: UnitPoint(x: 0.5, y: 0)
+    )
+    
+    let darkBg = LinearGradient(
+        stops: [
+            Gradient.Stop(color: Color(red: 0.13, green: 0.14, blue: 0.2), location: 0.00),
+            Gradient.Stop(color: Color(red: 0.2, green: 0.14, blue: 0.26), location: 0.44),
+            Gradient.Stop(color: Color(red: 0.1, green: 0.04, blue: 0.11), location: 1.00),
+        ],
+        startPoint: UnitPoint(x: 0.5, y: 0),
+        endPoint: UnitPoint(x: 0.5, y: 1)
+    )
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -66,15 +87,7 @@ struct DeckView: View {
             store.send(.appear)
         }
         .background(
-            LinearGradient(
-                stops: [
-                    Gradient.Stop(color: Color(red: 0.87, green: 0.86, blue: 0.92), location: 0.00),
-                    Gradient.Stop(color: Color(red: 0.93, green: 0.81, blue: 0.92), location: 0.38),
-                    Gradient.Stop(color: Color(red: 0.92, green: 0.92, blue: 0.85), location: 1.00),
-                ],
-                startPoint: UnitPoint(x: 0.5, y: 0.9),
-                endPoint: UnitPoint(x: 0.5, y: 0)
-            )
+            colorScheme == .dark ? darkBg : lightBg
         )
     }
 }

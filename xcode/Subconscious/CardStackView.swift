@@ -103,10 +103,11 @@ struct CardStack: View {
                 let deck = Array(cards.enumerated().reversed())
                 ForEach(deck, id: \.element.id) { index, card in
                     VStack {
-//                        if (index >= pointer - 1) {
+                        if (index >= pointer - 1 && index < pointer + 5) {
                             let t = max(0, CGFloat(index - pointer)) / 16.0 - abs(swipeProgress) / 64.0
                             CardView(entry: card)
-                                .scaleEffect(min(1, 1-t + 0.03))
+                                .scaleEffect(max(0,min(1, 1-t + 0.03)))
+                                .opacity(max(0,min(1, 1-t + 0.03)))
                                 .offset(x: offset(for: card), y: 0)
                                 .rotationEffect(
                                     index != pointer
@@ -132,6 +133,7 @@ struct CardStack: View {
                                     )
                                     .onChanged { gesture in
                                         withAnimation(.interactiveSpring()) {
+                                            offsets.removeAll()
                                             offsets[card] = gesture.translation.width
                                         }
                                     }
@@ -162,7 +164,7 @@ struct CardStack: View {
                                 .opacity(index >= pointer ? 1 : 0)
                                 .animation(.spring(duration: 0.2), value: pointer)
                         }
-//                    }
+                    }
                 }
             }
             
