@@ -42,7 +42,7 @@ struct DeckView: View {
                     ProfilePic(pfp: author.pfp, size: .large)
                     
                     if let name = author.toNameVariant(),
-                       let slashlink = store.state.topCard?.address {
+                       case let .entry(entry) = store.state.topCard?.card {
                         VStack(alignment: .leading, spacing: AppTheme.unit) {
                             PetnameView(
                                 name: name,
@@ -50,8 +50,12 @@ struct DeckView: View {
                                 showMaybePrefix: false
                             )
                             // Trim off peer, we have it above
-                            SlashlinkDisplayView(slashlink: Slashlink(slug: slashlink.slug))
-                                .theme(slug: .secondary)
+                            SlashlinkDisplayView(
+                                slashlink: Slashlink(
+                                    slug: entry.address.slug
+                                )
+                            )
+                            .theme(slug: .secondary)
                         }
                    }
                 }
@@ -76,6 +80,12 @@ struct DeckView: View {
                             card
                         )
                     )
+                },
+                onPickUpNote: {
+                    store.send(.cardPickedUp)
+                },
+                onCardReleased: {
+                    store.send(.cardReleased)
                 }
             )
             
@@ -95,22 +105,34 @@ struct DeckView: View {
 // MARK: Actions
 enum DeckAction: Hashable {
     case appear
-    case setDeck([EntryStub])
-    case chooseCard(EntryStub)
-    case skipCard(EntryStub)
-    case prependCards([EntryStub])
-    case appendCards([EntryStub])
+    case setDeck([CardModel])
+    case chooseCard(CardModel)
+    case cardPickedUp
+    case cardReleased
+    case skipCard(CardModel)
+    case prependCards([CardModel])
+    case appendCards([CardModel])
     case topupDeck
     case noCardsToDraw
     
     case nextCard
-    case cardPresented(EntryStub)
+    case cardPresented(CardModel)
     
     case succeedLoadAuthorProfile(UserProfile)
     case failLoadAuthorProfile(_ error: String)
 }
 
 typealias DeckEnvironment = AppEnvironment
+
+enum CardType: Equatable, Hashable {
+    case entry(EntryStub)
+    case action(String)
+}
+
+struct CardModel: Identifiable, Equatable, Hashable {
+    var id: UUID = UUID()
+    var card: CardType
+}
 
 // MARK: Model
 struct DeckModel: ModelProtocol {
@@ -122,10 +144,12 @@ struct DeckModel: ModelProtocol {
         category: "DeckModel"
     )
     
-    var deck: [EntryStub] = []
+    var deck: [CardModel] = []
     var seen: [EntryStub] = []
     var pointer: Int = 0
     var author: UserProfile? = nil
+    var selectionFeedback = UISelectionFeedbackGenerator()
+    var feedback = UIImpactFeedbackGenerator()
     
     static func insertAtRandomIndex<T>(item: T, into array: inout [T], skippingFirst skipCount: Int) {
         // Calculate the starting index for the random range
@@ -144,7 +168,7 @@ struct DeckModel: ModelProtocol {
         array.insert(item, at: randomIndex)
     }
     
-    var topCard: EntryStub? {
+    var topCard: CardModel? {
         if pointer < 0 || pointer >= deck.count {
             return nil
         }
@@ -182,7 +206,9 @@ struct DeckModel: ModelProtocol {
                     results.append(entry)
                 }
                 
-                return .setDeck(results)
+                var deck = results.map { entry in CardModel(card: .entry(entry))}
+                deck.insert(CardModel(card: .action("MY ACTION")), at: 0)
+                return .setDeck(deck)
             }
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
@@ -208,7 +234,7 @@ struct DeckModel: ModelProtocol {
                     results.append(entry)
                 }
                 
-                return .appendCards(results)
+                return .appendCards(results.map { entry in CardModel(card: .entry(entry))})
             }
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
@@ -217,7 +243,14 @@ struct DeckModel: ModelProtocol {
         case let .setDeck(deck):
             var model = state
             model.deck = deck
-            model.seen = deck
+            model.seen = deck.compactMap { card in
+                switch card.card {
+                case let .entry(entry):
+                    return entry
+                default:
+                    return nil
+                }
+            }
             model.pointer = 0
             
             if let topCard = deck.first {
@@ -229,31 +262,53 @@ struct DeckModel: ModelProtocol {
             }
             
             return Update(state: model)
-        case let .chooseCard(entry):
+        case .cardPickedUp:
+            state.feedback.prepare()
+            state.selectionFeedback.prepare()
+            state.selectionFeedback.selectionChanged()
+            return Update(state: state)
+        case .cardReleased:
+            state.selectionFeedback.prepare()
+            state.selectionFeedback.selectionChanged()
+            return Update(state: state)
+        case let .chooseCard(card):
             var model = state
+            state.feedback.impactOccurred()
             
-            let fx: Fx<DeckAction> = Future.detached {
-                let us = try await environment.noosphere.identity()
-                var backlinks = try environment.database
-                    .readEntryBacklinks(owner: us, did: entry.did, slug: entry.address.slug)
-                    .filter({ backlink in !isSeen(card: backlink) && !isTooShort(card: backlink) })
-                backlinks.shuffle()
-                
-                if backlinks.count == 0 {
-                    return .topupDeck
+            switch card.card {
+            case .entry(let entry):
+                let fx: Fx<DeckAction> = Future.detached {
+                    let us = try await environment.noosphere.identity()
+                    var backlinks = try environment.database
+                        .readEntryBacklinks(owner: us, did: entry.did, slug: entry.address.slug)
+                        .filter({ backlink in !isSeen(card: backlink) && !isTooShort(card: backlink) })
+                    backlinks.shuffle()
+                    
+                    if backlinks.count == 0 {
+                        return .topupDeck
+                    }
+                    
+                    return .appendCards(Array(
+                        backlinks.prefix(3)
+                    ).map { entry in
+                        CardModel(card: .entry(entry))
+                    })
                 }
+                .recover({ error in
+                    return .noCardsToDraw
+                })
+                .eraseToAnyPublisher()
                 
-                return .appendCards(Array(backlinks.prefix(3)))
+                return update(state: model, action: .nextCard, environment: environment).mergeFx(fx)
+            case .action(let msg):
+                logger.log("Action: \(msg)")
+                return update(state: model, action: .nextCard, environment: environment)
             }
-            .recover({ error in
-                return .noCardsToDraw
-            })
-            .eraseToAnyPublisher()
             
-            return update(state: model, action: .nextCard, environment: environment).mergeFx(fx)
         case let .skipCard(entry):
             var model = state
             model.pointer += 1
+            state.feedback.impactOccurred()
             
             let fx: Fx<DeckAction> = Future.detached {
                 var results: [EntryStub] = []
@@ -272,7 +327,7 @@ struct DeckModel: ModelProtocol {
                     results.append(entry)
                 }
                 
-                return .appendCards(results)
+                return .appendCards(results.map { entry in CardModel(card: .entry(entry))})
             }
             .recover({ error in .appendCards([]) })
             .eraseToAnyPublisher()
@@ -284,7 +339,14 @@ struct DeckModel: ModelProtocol {
                 
                 // insert entry into deck at random index (not the first 2 spots)
                 Self.insertAtRandomIndex(item: entry, into: &model.deck, skippingFirst: state.pointer + 2)
-                model.seen.append(entry)
+                
+                switch entry.card {
+                case .entry(let entry):
+                    model.seen.append(entry)
+                    break
+                default:
+                    break
+                }
             }
             
             return Update(state: model)
@@ -292,7 +354,13 @@ struct DeckModel: ModelProtocol {
             var model = state
             for entry in entries.filter({ entry in !inDeck(card: entry) }) {
                 model.deck.insert(entry, at: 0)
-                model.seen.append(entry)
+                switch entry.card {
+                case .entry(let entry):
+                    model.seen.append(entry)
+                    break
+                default:
+                    break
+                }
             }
             
             return Update(state: model)
@@ -304,21 +372,36 @@ struct DeckModel: ModelProtocol {
             model.pointer += 1
             
             if let topCard = model.topCard {
-                return update(state: model, action: .cardPresented(topCard), environment: environment)
+                return update(
+                    state: model,
+                    action: .cardPresented( topCard ),
+                    environment: environment
+                )
             }
             
             return Update(state: model)
         case .cardPresented(let card):
             logger.log("Card presented \(card.id)")
             
-            let fx: Fx<DeckAction> = Future.detached {
-                let user = try await environment.userProfile.identifyUser(did: card.did, address: card.address, context: nil)
-                return .succeedLoadAuthorProfile(user)
+            switch card.card {
+            case .entry(let entry):
+                let fx: Fx<DeckAction> = Future.detached {
+                    let user = try await environment.userProfile.identifyUser(
+                        did: entry.did,
+                        address: entry.address,
+                        context: nil
+                    )
+                    return .succeedLoadAuthorProfile(user)
+                }
+                    .recover { error in .failLoadAuthorProfile(error.localizedDescription) }
+                .eraseToAnyPublisher()
+                
+                return Update(state: state, fx: fx)
+                break
+            default:
+                return Update(state: state)
             }
-                .recover { error in .failLoadAuthorProfile(error.localizedDescription) }
-            .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
         case .succeedLoadAuthorProfile(let author):
             var model = state
             model.author = author
@@ -336,7 +419,7 @@ struct DeckModel: ModelProtocol {
             return state.seen.contains(where: { entry in entry == card })
         }
         
-        func inDeck(card: EntryStub) -> Bool {
+        func inDeck(card: CardModel) -> Bool {
             return state.deck.contains(where: { entry in entry == card })
         }
     }
