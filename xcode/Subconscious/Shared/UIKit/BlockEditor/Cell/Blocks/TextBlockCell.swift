@@ -18,6 +18,7 @@ extension BlockEditor {
         typealias TranscludeListView = BlockEditor.TranscludeListView
         
         var id: UUID = UUID()
+        private var state = BlockEditor.TextBlockModel()
         
         weak var delegate: TextBlockDelegate?
         
@@ -134,28 +135,34 @@ extension BlockEditor {
         
         func update(
             parentController: UIViewController,
-            state: BlockEditor.TextBlockModel
+            state next: BlockEditor.TextBlockModel
         ) {
+            guard self.state != next else {
+                return
+            }
+            self.state = next
             self.id = state.id
-            transcludeListView.update(
-                parentController: parentController,
-                rootView: TranscludeListView(
-                    entries: state.transcludes,
-                    onViewTransclude: { _ in },
-                    onTranscludeLink: { _, _ in }
+            DispatchQueue.main.async {
+                self.transcludeListView.update(
+                    parentController: parentController,
+                    rootView: TranscludeListView(
+                        entries: self.state.transcludes,
+                        onViewTransclude: { _ in },
+                        onTranscludeLink: { _, _ in }
+                    )
                 )
-            )
-            if textView.text != state.text {
-                textView.text = state.text
+                if self.textView.text != self.state.text {
+                    self.textView.text = self.state.text
+                }
+                if self.textView.selectedRange != self.state.selection {
+                    self.textView.selectedRange = self.state.selection
+                }
+                self.textView.setFirstResponder(self.state.isEditing)
+                // Set editability of textview
+                self.textView.setModifiable(!self.state.isBlockSelectMode)
+                // Handle select mode
+                self.selectView.isHidden = !self.state.isBlockSelected
             }
-            if textView.selectedRange != state.selection {
-                textView.selectedRange = state.selection
-            }
-            textView.setFirstResponder(state.isEditing)
-            // Set editability of textview
-            textView.setModifiable(!state.isBlockSelectMode)
-            // Handle select mode
-            selectView.isHidden = !state.isBlockSelected
         }
         
         func textView(

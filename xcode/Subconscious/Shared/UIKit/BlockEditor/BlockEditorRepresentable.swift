@@ -10,8 +10,6 @@ import Combine
 import ObservableStore
 import os
 
-typealias BlockEditorStore = ObservableStore.Store<BlockEditor.Model>
-
 extension BlockEditor {
     // MARK: View Representable
     struct Representable: UIViewControllerRepresentable {
@@ -20,7 +18,7 @@ extension BlockEditor {
             category: "BlockEditor.Representable"
         )
         
-        @ObservedObject var store: BlockEditorStore
+        @ObservedObject var store: Store<BlockEditor.Model>
         
         func makeCoordinator() -> Coordinator {
             Coordinator(store: store)
@@ -29,7 +27,8 @@ extension BlockEditor {
         func makeUIViewController(context: Context) -> ViewController {
             Self.logger.debug("makeUIViewController")
             return ViewController(
-                send: context.coordinator.store.send
+                state: store.state,
+                send: context.coordinator.store.send(onMainActor:)
             )
         }
         
@@ -45,9 +44,9 @@ extension BlockEditor {
         /// SwiftUI representable, and the UIViewController.
         class Coordinator: NSObject {
             private var controllerStoreChanges: AnyCancellable?
-            var store: BlockEditorStore
+            var store: Store<BlockEditor.Model>
             
-            init(store: BlockEditorStore) {
+            init(store: Store<BlockEditor.Model>) {
                 self.store = store
                 super.init()
             }
@@ -57,7 +56,7 @@ extension BlockEditor {
 
 struct BlockStackEditorViewControllerRepresentable_Previews: PreviewProvider {
     struct TestView: View {
-        @StateObject private var store = BlockEditorStore(
+        @StateObject private var store = Store<BlockEditor.Model>(
             state: BlockEditor.Model(
                 blocks: [
                     BlockEditor.BlockModel.heading(

@@ -7,6 +7,7 @@
 import Foundation
 import ObservableStore
 import os
+import Combine
 
 extension BlockEditor {
     // MARK: Model
@@ -32,12 +33,19 @@ extension BlockEditor {
         var blocks: [BlockEditor.BlockModel] = []
         var appendix = BlockEditor.RelatedModel()
 
-        func block(id: UUID) -> Array.Index? {
+        func blockIndex(id: UUID) -> Array.Index? {
             guard let i = blocks.firstIndex(whereID: id) else {
                 Self.logger.log("block#\(id) not found.")
                 return nil
             }
             return i
+        }
+
+        func block(id: UUID) -> BlockModel? {
+            guard let i = blockIndex(id: id) else {
+                return nil
+            }
+            return blocks[i]
         }
     }
 }
@@ -293,11 +301,13 @@ extension BlockEditor.Model: ModelProtocol {
             .text(blockB),
             at: indexB
         )
-
-        let indexPathB = IndexPath(
-            row: indexB,
-            section: BlockEditor.Section.blocks.rawValue
-        )
+        let fx: Fx<BlockEditor.Action> = Just(.renderFocus(id: blockB.id))
+            .eraseToAnyPublisher()
+        
+        //        let indexPathB = IndexPath(
+//            row: indexB,
+//            section: BlockEditor.Section.blocks.rawValue
+//        )
 
 //        let render = {
 //            UIView.performWithoutAnimation {
@@ -322,7 +332,7 @@ extension BlockEditor.Model: ModelProtocol {
 //            }
 //        }
 
-        return Update(state: model)
+        return Update(state: model, fx: fx)
     }
 
     private static func mergeBlockUp(
@@ -369,11 +379,14 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         model.blocks[indexUp] = blockUp
         model.blocks.remove(at: indexDown)
+        
+        let fx: Fx<BlockEditor.Action> = Just(.renderFocus(id: blockUp.id))
+            .eraseToAnyPublisher()
 
-        let indexPathUp = IndexPath(
-            row: indexUp,
-            section: BlockEditor.Section.blocks.rawValue
-        )
+//        let indexPathUp = IndexPath(
+//            row: indexUp,
+//            section: BlockEditor.Section.blocks.rawValue
+//        )
 
 //        let render = {
 //            UIView.performWithoutAnimation {
@@ -398,7 +411,7 @@ extension BlockEditor.Model: ModelProtocol {
 //            }
 //        }
 //
-        return Update(state: model)
+        return Update(state: model, fx: fx)
     }
 
     private static func focus(
@@ -611,7 +624,7 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
 
-        guard let i = state.block(id: id) else {
+        guard let i = state.blockIndex(id: id) else {
             return Update(state: state)
         }
 
@@ -648,7 +661,7 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
 
-        guard let i = state.block(id: id) else {
+        guard let i = state.blockIndex(id: id) else {
             return Update(state: state)
         }
 

@@ -93,7 +93,7 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func render(_ state: BlockEditor.TextBlockModel) {
+        func update(_ state: BlockEditor.TextBlockModel) {
             self.id = state.id
             if textView.text != state.text {
                 textView.text = state.text
@@ -101,7 +101,7 @@ extension BlockEditor {
             if textView.selectedRange != state.selection {
                 textView.selectedRange = state.selection
             }
-            textView.setFirstResponder(state.isEditing)
+            textView.setFirstResponderAsync(state.isEditing)
             // Set editability of textview
             textView.setModifiable(!state.isBlockSelectMode)
             // Handle select mode
@@ -207,7 +207,7 @@ struct BlockEditorHeadingBlockCell_Previews: PreviewProvider {
     static var previews: some View {
         UIViewPreviewRepresentable {
             let view = BlockEditor.HeadingBlockCell()
-            view.render(
+            view.update(
                 BlockEditor.TextBlockModel(
                     text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."
                 )

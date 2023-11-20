@@ -42,17 +42,15 @@ extension BlockEditor {
 
         private lazy var collectionView = createCollectionView()
         
-        private lazy var dataSource = createDataSource(
-            collectionView: collectionView
-        )
-        
-        private var state: BlockEditorStore.Model?
-        private var send: (BlockEditorStore.Model.Action) -> Void
+        private var state: BlockEditor.Model
+        private var send: @MainActor (BlockEditor.Model.Action) -> Void
         
         init(
-            send: @escaping (BlockEditorStore.Model.Action) -> Void
+            state: BlockEditor.Model,
+            send: @escaping @MainActor (BlockEditor.Model.Action) -> Void
         ) {
             Self.logger.log("init")
+            self.state = state
             self.send = send
             super.init(nibName: nil, bundle: nil)
         }
@@ -71,8 +69,6 @@ extension BlockEditor {
             view.addGestureRecognizer(tapGesture)
             
             collectionView.translatesAutoresizingMaskIntoConstraints = false
-            collectionView.autoresizingMask = [.flexibleHeight]
-            collectionView.delegate = self
             view.addSubview(collectionView)
             
             let guide = view.safeAreaLayoutGuide
@@ -90,24 +86,85 @@ extension BlockEditor {
                     equalTo: guide.bottomAnchor
                 ),
             ])
+            initialize()
         }
         
-        func update(_ state: BlockEditor.Model) {
-            guard self.state != state else {
+        private func initialize() {
+            self.collectionView.reloadData()
+        }
+
+        func update(_ next: BlockEditor.Model) {
+            // If state has not changed, return early
+            guard self.state != next else {
                 return
             }
-            Self.logger.log("State: \(String(describing: state))")
-            self.state = state
-            var snapshot = NSDiffableDataSourceSnapshot<
-                BlockEditor.Section,
-                BlockEditor.CellModel
-            >()
-            snapshot.appendSections([.blocks, .appendix])
-            snapshot.appendItems(
-                state.blocks.map({ block in .init(content: .blocks(block))}),
-                toSection: .blocks
+            let prev = self.state
+            // Set state.
+            // It's important to update the state before updating the UI,
+            // since this is the data source for the UICollectionView.
+            self.state = next
+            Self.logger.log("State: \(String(describing: self.state))")
+            updateBlocks(withPrevious: prev.blocks)
+        }
+        
+        private func updateBlocks(
+            withPrevious prev: [BlockEditor.BlockModel]
+        ) {
+            guard self.state.blocks != prev else {
+                return
+            }
+            Self.logger.log("Update blocks")
+            // Calculate insertions/addtions using the IDs of elements,
+            // rather than their hash values. This allows us to track the
+            // location and identity of blocks, even as they change value.
+            let blocksDiff = state.blocks.differenceByID(
+                from: prev
             )
-            dataSource.apply(snapshot, animatingDifferences: true)
+            // Calculate changes to block data
+            let blocksChanges = state.blocks.changes(from: prev)
+            print("!!!", blocksDiff)
+            print("!!!", blocksChanges)
+            UIView.performWithoutAnimation {
+                collectionView.performBatchUpdates {
+                    for change in blocksDiff {
+                        switch change {
+                        case let .insert(offset, _, _):
+                            self.collectionView.insertItems(
+                                at: [
+                                    IndexPath(
+                                        row: offset,
+                                        section: Section.blocks.rawValue
+                                    )
+                                ]
+                            )
+                        case let .remove(offset, _, _):
+                            self.collectionView.deleteItems(
+                                at: [
+                                    IndexPath(
+                                        row: offset,
+                                        section: Section.blocks.rawValue
+                                    )
+                                ]
+                            )
+                        }
+                    }
+                    for change in blocksChanges {
+                        switch change {
+                        case .added(_, _):
+                            continue
+                        case let .updated(offset, _):
+                            self.collectionView.reconfigureItems(
+                                at: [
+                                    IndexPath(
+                                        row: offset,
+                                        section: Section.blocks.rawValue
+                                    )
+                                ]
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         @objc private func onLongPress(_ gesture: UIGestureRecognizer) {
@@ -150,91 +207,36 @@ extension BlockEditor {
                 bottom: AppTheme.unit2,
                 right: 0
             )
-            return collectionView
-        }
-        
-        private func createDataSource(
-            collectionView: UICollectionView
-        ) -> UICollectionViewDiffableDataSource<Section, CellModel> {
-            let textCellRegistration = UICollectionView
-                .CellRegistration<TextBlockCell, TextBlockModel> {
-                    cell, indexPath, item in
-                    cell.delegate = self
-                    cell.update(
-                        parentController: self,
-                        state: item
-                    )
-                }
-
-            let headingCellRegistration = UICollectionView
-                .CellRegistration<HeadingBlockCell, TextBlockModel> {
-                    cell, indexPath, item in
-                    cell.delegate = self
-                    cell.render(item)
-                }
+            collectionView.delegate = self
+            collectionView.dataSource = self
+            collectionView.autoresizingMask = [.flexibleHeight]
             
-            let listCellRegistration = UICollectionView
-                .CellRegistration<ListBlockCell, TextBlockModel> {
-                    cell, indexPath, item in
-                    cell.delegate = self
-                    cell.update(parentController: self, state: item)
-                }
-            
-            let quoteCellRegistration = UICollectionView
-                .CellRegistration<QuoteBlockCell, TextBlockModel> {
-                    cell, indexPath, item in
-                    cell.delegate = self
-                    cell.update(parentController: self, state: item)
-                }
-            
-            let appendixCellRegistration = UICollectionView
-                .CellRegistration<RelatedCell, RelatedModel> {
-                    cell, indexPath, item in
-                    cell.update(parentController: self, state: item)
-                }
-
-            let dataSource = UICollectionViewDiffableDataSource<Section, CellModel>(
-                collectionView: collectionView,
-                cellProvider: { collectionView, indexPath, item in
-                    switch item.content {
-                    case .blocks(let block):
-                        switch block {
-                        case .text(let text):
-                            return collectionView.dequeueConfiguredReusableCell(
-                                using: textCellRegistration,
-                                for: indexPath,
-                                item: text
-                            )
-                        case .heading(let text):
-                            return collectionView.dequeueConfiguredReusableCell(
-                                using: headingCellRegistration,
-                                for: indexPath,
-                                item: text
-                            )
-                        case .list(let text):
-                            return collectionView.dequeueConfiguredReusableCell(
-                                using: listCellRegistration,
-                                for: indexPath,
-                                item: text
-                            )
-                        case .quote(let text):
-                            return collectionView.dequeueConfiguredReusableCell(
-                                using: quoteCellRegistration,
-                                for: indexPath,
-                                item: text
-                            )
-                        }
-                    case .appendix(let related):
-                        return collectionView.dequeueConfiguredReusableCell(
-                            using: appendixCellRegistration,
-                            for: indexPath,
-                            item: related
-                        )
-                    }
-                }
+            collectionView.register(
+                ErrorCell.self,
+                forCellWithReuseIdentifier: ErrorCell.identifier
             )
-            collectionView.dataSource = dataSource
-            return dataSource
+            collectionView.register(
+                TextBlockCell.self,
+                forCellWithReuseIdentifier: TextBlockCell.identifier
+            )
+            collectionView.register(
+                HeadingBlockCell.self,
+                forCellWithReuseIdentifier: HeadingBlockCell.identifier
+            )
+            collectionView.register(
+                QuoteBlockCell.self,
+                forCellWithReuseIdentifier: QuoteBlockCell.identifier
+            )
+            collectionView.register(
+                ListBlockCell.self,
+                forCellWithReuseIdentifier: ListBlockCell.identifier
+            )
+            collectionView.register(
+                RelatedCell.self,
+                forCellWithReuseIdentifier: RelatedCell.identifier
+            )
+            
+            return collectionView
         }
     }
 }
@@ -262,7 +264,7 @@ extension BlockEditor.ViewController: TextBlockDelegate {
     }
     
     func didChange(id: UUID, text: String, selection: NSRange) {
-        send(
+        self.send(
             .textDidChange(
                 id: id,
                 text: text,
@@ -272,7 +274,7 @@ extension BlockEditor.ViewController: TextBlockDelegate {
     }
 
     func didChangeSelection(id: UUID, selection: NSRange) {
-        send(
+        self.send(
             .didChangeSelection(
                 id: id,
                 selection: selection
@@ -281,11 +283,11 @@ extension BlockEditor.ViewController: TextBlockDelegate {
     }
     
     func didBeginEditing(id: UUID) {
-        send(.focus(id: id))
+        self.send(.focus(id: id))
     }
     
     func didEndEditing(id: UUID) {
-        send(.blur(id: id))
+        self.send(.blur(id: id))
     }
     
     func upButtonPressed(id: UUID) {
@@ -298,6 +300,174 @@ extension BlockEditor.ViewController: TextBlockDelegate {
     
     func dismissKeyboardButtonPressed(id: UUID) {
         send(.renderBlur(id: id))
+    }
+}
+
+extension BlockEditor.ViewController: UICollectionViewDataSource {
+    typealias Section = BlockEditor.Section
+    typealias TextBlockModel = BlockEditor.TextBlockModel
+    typealias ErrorCell = BlockEditor.ErrorCell
+    typealias TextBlockCell = BlockEditor.TextBlockCell
+    typealias HeadingBlockCell = BlockEditor.HeadingBlockCell
+    typealias QuoteBlockCell = BlockEditor.QuoteBlockCell
+    typealias ListBlockCell = BlockEditor.ListBlockCell
+    typealias RelatedCell = BlockEditor.RelatedCell
+    
+    /// Return 2 sections
+    /// - 1 blocks
+    /// - 2 "footer" containing related notes
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        Section.allCases.count
+    }
+    
+    /// Provides a count for data in a particular section
+    func collectionView(
+        _ collectionView: UICollectionView,
+        numberOfItemsInSection section: Int
+    ) -> Int {
+        switch Section(rawValue: section) {
+        case .blocks:
+            return state.blocks.count
+        case .appendix:
+            return 1
+        default:
+            return 0
+        }
+    }
+    
+    /// Provides a UICollectionViewCell for an index path.
+    /// This method is responsible for looking up data from a data source
+    /// (state in our case) using the index path.
+    func collectionView(
+        _ collectionView: UICollectionView,
+        cellForItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
+        switch Section(rawValue: indexPath.section) {
+        case .blocks:
+            return blockCell(collectionView, forItemAt: indexPath)
+        case .appendix:
+            return appendixCell(collectionView, forItemAt: indexPath)
+        default:
+            return errorCell(collectionView, forItemAt: indexPath)
+        }
+    }
+    
+    /// Error cells are dequeued when we don't know what else to display.
+    ///
+    /// Error cells should never be displayed in practice, but we must
+    /// have something to dequeue since `collectionView(_:cellForItemAt:)`
+    /// requires a cell to be returned for every case.
+    private func errorCell(
+        _ collectionView: UICollectionView,
+        forItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: ErrorCell.identifier,
+            for: indexPath
+        ) as! ErrorCell
+        return cell
+    }
+    
+    private func blockCell(
+        _ collectionView: UICollectionView,
+        forItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
+        let block = state.blocks[indexPath.row]
+        switch block {
+        case let .heading(state):
+            return headingCell(
+                collectionView,
+                forItemAt: indexPath,
+                state: state
+            )
+        case let .text(state):
+            return textCell(
+                collectionView,
+                forItemAt: indexPath,
+                state: state
+            )
+        case let .quote(state):
+            return quoteCell(
+                collectionView,
+                forItemAt: indexPath,
+                state: state
+            )
+        case let .list(state):
+            return listCell(
+                collectionView,
+                forItemAt: indexPath,
+                state: state
+            )
+        }
+    }
+    
+    private func textCell(
+        _ collectionView: UICollectionView,
+        forItemAt indexPath: IndexPath,
+        state: TextBlockModel
+    ) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: TextBlockCell.identifier,
+            for: indexPath
+        ) as! TextBlockCell
+        cell.delegate = self
+        cell.update(parentController: self, state: state)
+        return cell
+    }
+    
+    private func headingCell(
+        _ collectionView: UICollectionView,
+        forItemAt indexPath: IndexPath,
+        state: TextBlockModel
+    ) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: HeadingBlockCell.identifier,
+            for: indexPath
+        ) as! HeadingBlockCell
+        cell.delegate = self
+        cell.update(state)
+        return cell
+    }
+    
+    private func quoteCell(
+        _ collectionView: UICollectionView,
+        forItemAt indexPath: IndexPath,
+        state: TextBlockModel
+    ) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: QuoteBlockCell.identifier,
+            for: indexPath
+        ) as! QuoteBlockCell
+        cell.delegate = self
+        cell.update(parentController: self, state: state)
+        return cell
+    }
+    
+    private func listCell(
+        _ collectionView: UICollectionView,
+        forItemAt indexPath: IndexPath,
+        state: TextBlockModel
+    ) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: ListBlockCell.identifier,
+            for: indexPath
+        ) as! ListBlockCell
+        cell.delegate = self
+        cell.update(parentController: self, state: state)
+        return cell
+    }
+    
+    private func appendixCell(
+        _ collectionView: UICollectionView,
+        forItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: RelatedCell.identifier,
+            for: indexPath
+        ) as! RelatedCell
+        let state = state.appendix
+        cell.update(parentController: self, state: state)
+        return cell
     }
 }
 
