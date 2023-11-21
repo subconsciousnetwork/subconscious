@@ -83,7 +83,7 @@ struct RenameSearchModel: ModelProtocol {
         state: RenameSearchModel,
         action: RenameSearchAction,
         environment: AppEnvironment
-    ) -> ObservableStore.Update<RenameSearchModel> {
+    ) -> Update<RenameSearchModel> {
         switch action {
         case let .queryField(action):
             return QueryFieldCursor.update(

@@ -25,6 +25,12 @@ struct MemoEditorDetailView: View {
         action: .start,
         environment: AppEnvironment.default
     )
+
+    @StateObject private var blockEditorStore = Store(
+        state: BlockEditor.Model.draft(),
+        environment: AppEnvironment.default
+    )
+
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
@@ -64,11 +70,7 @@ struct MemoEditorDetailView: View {
         VStack {
             if app.state.isBlockEditorEnabled {
                 BlockEditor.Representable(
-                    state: Binding(
-                        get: { store.state.blockEditor },
-                        send: store.send,
-                        tag: Action.forceSetBlockEditor
-                    )
+                    store: blockEditorStore
                 )
                 .frame(
                     minHeight: UIFont.appTextMono.lineHeight * 8

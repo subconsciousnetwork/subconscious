@@ -208,8 +208,6 @@
 		B83B19A32A005C6B007657D9 /* Did+SubconsciousLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A22A005C6B007657D9 /* Did+SubconsciousLocal.swift */; };
 		B83B19A52A015D93007657D9 /* Tests_Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A42A015D93007657D9 /* Tests_Did.swift */; };
 		B83B19A92A0183AA007657D9 /* Tests_Did+SubconsciousLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B19A82A0183AA007657D9 /* Tests_Did+SubconsciousLocal.swift */; };
-		B83E0E2A2A9D1668009F18AE /* ControllerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E0E292A9D1668009F18AE /* ControllerStore.swift */; };
-		B83E0E2B2A9D1668009F18AE /* ControllerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E0E292A9D1668009F18AE /* ControllerStore.swift */; };
 		B83E0E2F2A9D16A5009F18AE /* Tests_ControllerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E0E2E2A9D16A5009F18AE /* Tests_ControllerStore.swift */; };
 		B83E91D727692EC600045C6A /* FAB.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FAB.swift */; };
 		B83E91D827692EC600045C6A /* FAB.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FAB.swift */; };
@@ -677,7 +675,6 @@
 		B83B19A22A005C6B007657D9 /* Did+SubconsciousLocal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Did+SubconsciousLocal.swift"; sourceTree = "<group>"; };
 		B83B19A42A015D93007657D9 /* Tests_Did.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tests_Did.swift; sourceTree = "<group>"; };
 		B83B19A82A0183AA007657D9 /* Tests_Did+SubconsciousLocal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests_Did+SubconsciousLocal.swift"; sourceTree = "<group>"; };
-		B83E0E292A9D1668009F18AE /* ControllerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerStore.swift; sourceTree = "<group>"; };
 		B83E0E2E2A9D16A5009F18AE /* Tests_ControllerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_ControllerStore.swift; sourceTree = "<group>"; };
 		B83E91D627692EC600045C6A /* FAB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAB.swift; sourceTree = "<group>"; };
 		B848FDA82991836900245115 /* DeveloperSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperSettingsView.swift; sourceTree = "<group>"; };
@@ -1580,7 +1577,6 @@
 				B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */,
 				B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */,
 				B82C3A5526F529EF00833CC8 /* CombineUtilities.swift */,
-				B83E0E292A9D1668009F18AE /* ControllerStore.swift */,
 				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
 				B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */,
 				B8C0A1B3297C938000D59532 /* Error.swift */,
@@ -1600,6 +1596,7 @@
 				B5293B882A426645001C4DA7 /* Sentry.swift */,
 				B8B4D7EB27EA890B00633B5F /* ShadowStyle.swift */,
 				B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */,
+				B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */,
 				B8AB08DB2A9D537F00998099 /* StringSplitAtRange.swift */,
 				B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */,
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
@@ -1607,7 +1604,6 @@
 				B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
-				B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -2029,7 +2025,6 @@
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B513FFCC2AD904F200492A73 /* FeedListView.swift in Sources */,
 				B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
-				B83E0E2A2A9D1668009F18AE /* ControllerStore.swift in Sources */,
 				B8B6BCBB29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */,
 				B8AB08C52A9D50AB00998099 /* BlockToolbar.swift in Sources */,
 				B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */,
@@ -2389,7 +2384,6 @@
 				B5690C3D29FB4DEF00067580 /* DidQrCodeView.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
-				B83E0E2B2A9D1668009F18AE /* ControllerStore.swift in Sources */,
 				B8E00A2E299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
 				B8B4251628FDE8570081B8D5 /* Memo.swift in Sources */,
 				B85EC461296F099700558761 /* ProfilePic.swift in Sources */,
@@ -2937,8 +2931,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				kind = exactVersion;
-				version = 0.4.0;
+				branch = "2023-11-20-fx-runner";
+				kind = branch;
 			};
 		};
 		B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */ = {

@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gordonbrander/ObservableStore",
       "state" : {
-        "revision" : "85b73227e7bbee0d4e75f4087953f510287f6a6f",
-        "version" : "0.4.0"
+        "branch" : "2023-11-20-fx-runner",
+        "revision" : "fc647a1b9e5353453d43be1ae580df976e919cd1"
       }
     },
     {
