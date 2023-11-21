@@ -65,17 +65,71 @@ struct DeckView: View {
         ZStack {
             DeckNavigationView(app: app, store: store)
                 .zIndex(1)
+            
+            if store.state.isSearchPresented {
+                SearchView(
+                    store: store.viewStore(
+                        get: \.search,
+                        tag: DeckSearchCursor.tag
+                    )
+                )
+                .zIndex(3)
+                .transition(SearchView.presentTransition)
+            }
+            PinTrailingBottom(
+                content: FABView(
+                    action: {
+                        store.send(.setSearchPresented(true))
+                    }
+                )
+                .padding()
+            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .zIndex(2)
+            VStack {
+                Spacer()
+                ToastStackView(
+                    store: app.viewStore(
+                        get: \.toastStack,
+                        tag: ToastStackCursor.tag
+                    )
+                )
+            }
+            .padding()
+            .zIndex(3)
         }
         .onAppear {
             store.send(.appear)
         }
         .frame(maxWidth: .infinity)
+        /// Replay some app actions on feed store
+        .onReceive(
+            app.actions.compactMap(DeckAction.from),
+            perform: store.send
+        )
+        /// Replay some feed actions on app store
+        .onReceive(
+            store.actions.compactMap(AppAction.from),
+            perform: app.send
+        )
+        .onReceive(store.actions) { action in
+            DeckAction.logger.debug("\(String(describing: action))")
+        }
     }
 }
 
 // MARK: Actions
 enum DeckAction: Hashable {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "DeckAction"
+    )
+    
     case detailStack(DetailStackAction)
+    
+    case setSearchPresented(Bool)
+    case activatedSuggestion(Suggestion)
+    case search(SearchAction)
     
     case appear
     case setDeck([CardModel])
@@ -93,6 +147,24 @@ enum DeckAction: Hashable {
     case cardPresented(CardModel)
 }
 
+extension AppAction {
+    static func from(_ action: DeckAction) -> Self? {
+        switch action {
+        default:
+            return nil
+        }
+    }
+}
+
+extension DeckAction {
+    static func from(_ action: AppAction) -> Self? {
+        switch action {
+        default:
+            return nil
+        }
+    }
+}
+
 typealias DeckEnvironment = AppEnvironment
 
 enum CardType: Equatable, Hashable {
@@ -108,6 +180,32 @@ struct CardModel: Identifiable, Equatable, Hashable {
 extension CardModel {
     init(entry: EntryStub, user: UserProfile, backlinks: [EntryStub]) {
         self.init(card: .entry(entry: entry, author: user, backlinks: backlinks))
+    }
+}
+
+struct DeckSearchCursor: CursorProtocol {
+    typealias Model = DeckModel
+    typealias ViewModel = SearchModel
+
+    static func get(state: Model) -> ViewModel {
+        state.search
+    }
+
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.search = inner
+        return model
+    }
+
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case .activatedSuggestion(let suggestion):
+            return .activatedSuggestion(suggestion)
+        case .requestPresent(let isPresented):
+            return .setSearchPresented(isPresented)
+        default:
+            return .search(action)
+        }
     }
 }
 
@@ -155,7 +253,15 @@ struct DeckModel: ModelProtocol {
     
     var deck: [CardModel] = []
     var seen: [EntryStub] = []
+    
     var detailStack = DetailStackModel()
+    /// Search HUD
+    var isSearchPresented = false
+    /// Search HUD
+    var search = SearchModel(
+        placeholder: "Search or create..."
+    )
+    
     var pointer: Int = 0
     var author: UserProfile? = nil
     var selectionFeedback = UISelectionFeedbackGenerator()
@@ -196,6 +302,22 @@ struct DeckModel: ModelProtocol {
             return DeckDetailStackCursor.update(
                 state: state,
                 action: action,
+                environment: environment
+            )
+        case .search(let action):
+            return DeckSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case let .setSearchPresented(presented):
+            var model = state
+            model.isSearchPresented = presented
+            return Update(state: model)
+        case let .activatedSuggestion(suggestion):
+            return DeckDetailStackCursor.update(
+                state: state,
+                action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
         case .appear:
