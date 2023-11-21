@@ -12,61 +12,77 @@ import SwiftUI
 struct DeckNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<DeckModel>
+    @Environment(\.colorScheme) var colorScheme
     
     var detailStack: ViewStore<DetailStackModel> {
         store.viewStore(
-            get: FeedDetailStackCursor.get,
-            tag: FeedDetailStackCursor.tag
+            get: DeckDetailStackCursor.get,
+            tag: DeckDetailStackCursor.tag
         )
     }
     
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             VStack {
-                switch (store.state.status, store.state.entries) {
-                case (.loading, _):
-                    FeedPlaceholderView()
-                case let (.loaded, .some(feed)):
-                    switch feed.count {
-                    case 0:
-                        FeedEmptyView(
-                            onRefresh: { app.send(.syncAll) }
-                        )
-                    default:
-                        FeedListView(
-                            feed: feed,
-                            store: store
-                        )
+                VStack(alignment: .leading) {
+                    HStack(alignment: .center, spacing: AppTheme.unit3) {
+                        if case let .entry(_, author, _) = store.state.topCard?.card,
+                           let name = author.toNameVariant() {
+                            ProfilePic(pfp: author.pfp, size: .large)
+                            
+                            VStack(alignment: .leading, spacing: AppTheme.unit) {
+                                PetnameView(
+                                    name: name,
+                                    aliases: [],
+                                    showMaybePrefix: false
+                                )
+                            }
+                        }
                     }
-                case (.notFound, _):
-                    NotFoundView()
-                default:
-                    EmptyView()
+                    
+                    Spacer()
+                    
+                    if (store.state.deck.isEmpty) {
+                        ProgressView()
+                    }
+                    
+                    CardStack(
+                        cards: store.state.deck,
+                        pointer: store.state.pointer,
+                        onSwipeRight: { card in
+                            store.send(
+                                .chooseCard(
+                                    card
+                                )
+                            )
+                        },
+                        onSwipeLeft: { card in
+                            store.send(
+                                .skipCard(
+                                    card
+                                )
+                            )
+                        },
+                        onPickUpNote: {
+                            store.send(.cardPickedUp)
+                        },
+                        onCardReleased: {
+                            store.send(.cardReleased)
+                        },
+                        onCardTapped: { card in
+                            store.send(.cardTapped(card))
+                        }
+                    )
+                    
+                    Spacer()
+                    
                 }
+                .padding(AppTheme.padding)
             }
-            .background(Color.background)
-            .refreshable {
-                app.send(.syncAll)
-            }
-            .onAppear {
-                store.send(.fetchFeed)
-            }
-            .navigationTitle("Feed")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                MainToolbar(
-                    app: app,
-                    profileAction: {
-                        store.send(.detailStack(.requestOurProfileDetail))
-                    }
-                )
-                
-                ToolbarItemGroup(placement: .principal) {
-                    HStack {
-                        Text("Feed").bold()
-                    }
-                }
-            }
+            .frame(maxWidth: .infinity)
+            .background(
+                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+            )
         }
     }
 }

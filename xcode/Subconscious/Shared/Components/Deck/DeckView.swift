@@ -13,20 +13,24 @@ import Combine
 enum DeckTheme {}
 
 extension DeckTheme {
+    static let lightFog = Color(red: 0.93, green: 0.81, blue: 0.92)
+    
     static let lightBg = LinearGradient(
         stops: [
             Gradient.Stop(color: Color(red: 0.87, green: 0.86, blue: 0.92), location: 0.00),
-            Gradient.Stop(color: Color(red: 0.93, green: 0.81, blue: 0.92), location: 0.38),
+            Gradient.Stop(color: lightFog, location: 0.38),
             Gradient.Stop(color: Color(red: 0.92, green: 0.92, blue: 0.85), location: 1.00),
         ],
         startPoint: UnitPoint(x: 0.5, y: 0.9),
         endPoint: UnitPoint(x: 0.5, y: 0)
     )
     
+    static let darkFog = Color(red: 0.2, green: 0.14, blue: 0.26)
+    
     static let darkBg = LinearGradient(
         stops: [
             Gradient.Stop(color: Color(red: 0.13, green: 0.14, blue: 0.2), location: 0.00),
-            Gradient.Stop(color: Color(red: 0.2, green: 0.14, blue: 0.26), location: 0.44),
+            Gradient.Stop(color: darkFog, location: 0.44),
             Gradient.Stop(color: Color(red: 0.1, green: 0.04, blue: 0.11), location: 1.00),
         ],
         startPoint: UnitPoint(x: 0.5, y: 0),
@@ -40,75 +44,39 @@ extension DeckTheme {
         Color(red: 0.74, green: 0.52, blue: 0.95),
         Color(red: 0.97, green: 0.75, blue: 0.48)
     ]
+    
+    static let darkCardColors: [Color] = [
+        Color(red: 0.64, green: 0.35, blue: 0.93),
+        Color(red: 0.91, green: 0.37, blue: 0.35),
+        Color(red: 0.72, green: 0.37, blue: 0.84),
+        Color(red: 0.97, green: 0.43, blue: 0.72),
+        Color(red: 0.9, green: 0.62, blue: 0.28)
+    ]
 }
 
 struct DeckView: View {
     @ObservedObject var app: Store<AppModel>
-    @StateObject var store: Store<DeckModel> = Store(state: DeckModel(), environment: AppEnvironment.default)
-    @Environment(\.colorScheme) var colorScheme
+    @StateObject var store: Store<DeckModel> = Store(
+        state: DeckModel(),
+        environment: AppEnvironment.default
+    )
     
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack(alignment: .center, spacing: AppTheme.unit3) {
-                if case let .entry(_, author, _) = store.state.topCard?.card,
-                   let name = author.toNameVariant() {
-                    ProfilePic(pfp: author.pfp, size: .large)
-                    
-                    VStack(alignment: .leading, spacing: AppTheme.unit) {
-                        PetnameView(
-                            name: name,
-                            aliases: [],
-                            showMaybePrefix: false
-                        )
-                    }
-               }
-            }
-            
-            Spacer()
-            
-            CardStack(
-                cards: store.state.deck,
-                pointer: store.state.pointer,
-                onSwipeRight: { card in
-                    store.send(
-                        .chooseCard(
-                            card
-                        )
-                    )
-                },
-                onSwipeLeft: { card in
-                    store.send(
-                        .skipCard(
-                            card
-                        )
-                    )
-                },
-                onPickUpNote: {
-                    store.send(.cardPickedUp)
-                },
-                onCardReleased: {
-                    store.send(.cardReleased)
-                },
-                onCardTapped: { card in
-                    store.send(.cardTapped(card))
-                }
-            )
-            
-            Spacer()
-            
+        ZStack {
+            DeckNavigationView(app: app, store: store)
+                .zIndex(1)
         }
-        .padding(AppTheme.padding)
         .onAppear {
             store.send(.appear)
         }
-        .background(
-            colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
-        )
+        .frame(maxWidth: .infinity)
     }
 }
 
 // MARK: Actions
 enum DeckAction: Hashable {
+    case detailStack(DetailStackAction)
+    
     case appear
     case setDeck([CardModel])
     case chooseCard(CardModel)
@@ -143,6 +111,38 @@ extension CardModel {
     }
 }
 
+struct DeckDetailStackCursor: CursorProtocol {
+    typealias Model = DeckModel
+    typealias ViewModel = DetailStackModel
+
+    static func get(state: Model) -> ViewModel {
+        state.detailStack
+    }
+
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.detailStack = inner
+        return model
+    }
+
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+//        case let .requestDeleteMemo(slashlink):
+//            return .requestDeleteMemo(slashlink)
+//        case let .succeedMergeEntry(parent: parent, child: child):
+//            return .succeedMergeEntry(parent: parent, child: child)
+//        case let .succeedMoveEntry(from: from, to: to):
+//            return .succeedMoveEntry(from: from, to: to)
+//        case let .succeedUpdateAudience(receipt):
+//            return .succeedUpdateAudience(receipt)
+//        case let .succeedSaveEntry(address: address, modified: modified):
+//            return .succeedSaveEntry(slug: address, modified: modified)
+        case _:
+            return .detailStack(action)
+        }
+    }
+}
+
 // MARK: Model
 struct DeckModel: ModelProtocol {
     typealias Action = DeckAction
@@ -155,6 +155,7 @@ struct DeckModel: ModelProtocol {
     
     var deck: [CardModel] = []
     var seen: [EntryStub] = []
+    var detailStack = DetailStackModel()
     var pointer: Int = 0
     var author: UserProfile? = nil
     var selectionFeedback = UISelectionFeedbackGenerator()
@@ -191,6 +192,12 @@ struct DeckModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch (action) {
+        case .detailStack(let action):
+            return DeckDetailStackCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .appear:
             let fx: Fx<DeckAction> = Future.detached {
                 var results: [EntryStub] = []
@@ -320,7 +327,24 @@ struct DeckModel: ModelProtocol {
         case let .cardTapped(card):
             state.feedback.prepare()
             state.feedback.impactOccurred()
-            return Update(state: state)
+            switch card.card {
+            case let .entry(entry, author, backlinks):
+                return update(
+                    state: state,
+                    action: .detailStack(
+                        .pushDetail(
+                            MemoDetailDescription.from(
+                                address: entry.address,
+                                fallback: entry.excerpt.description
+                            )
+                        )
+                    ),
+                    environment: environment
+                )
+            case _:
+                return Update(state: state)
+            }
+            
         case let .chooseCard(card):
             state.feedback.impactOccurred()
             

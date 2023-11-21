@@ -2,20 +2,26 @@ import SwiftUI
 
 struct CardView: View {
     var entry: CardModel
-//    var t: CGFloat
+    @Environment(\.colorScheme) var colorScheme
     
     var color: Color {
-        DeckTheme.lightCardColors[abs(entry.hashValue) % DeckTheme.lightCardColors.count]
+        (colorScheme == .dark ? DeckTheme.darkCardColors : DeckTheme.lightCardColors)[abs(entry.hashValue) % DeckTheme.lightCardColors.count]
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             switch entry.card {
-            case let .entry(entry, author, backlinks):
+            case let .entry(entry, _, backlinks):
                 SubtextView(subtext: entry.excerpt)
                 .foregroundStyle(.primary.opacity(0.8))
-                .blendMode(.plusDarker)
+                .blendMode(
+                    colorScheme == .dark
+                       ? .plusLighter
+                       : .plusDarker
+                )
+                
                 Spacer()
+                
                 HStack {
                     Text(
                         entry.address.markup
@@ -33,7 +39,11 @@ struct CardView: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.tertiary)
-                .blendMode(.plusDarker)
+                .blendMode(
+                    colorScheme == .dark
+                       ? .plusLighter
+                       : .plusDarker
+                )
             case .action(let string):
                 VStack {
                     Image(systemName: "scribble.variable")
@@ -43,7 +53,11 @@ struct CardView: View {
                     Text(string)
                 }
                 .foregroundStyle(.secondary)
-                .blendMode(.plusDarker)
+                .blendMode(
+                    colorScheme == .dark
+                       ? .plusLighter
+                       : .plusDarker
+                )
             }
             
         }
@@ -71,13 +85,14 @@ struct CardStack: View {
     var onPickUpNote: () -> Void
     var onCardReleased: () -> Void
     var onCardTapped: (CardModel) -> Void
+        
+    @State var offsets: [CardModel:CGSize] = [:]
+    @GestureState private var gestureState: Progress = .inactive
+    @Environment(\.colorScheme) var colorScheme
     
     func indexOf(card: CardModel) -> Int? {
         return cards.firstIndex(where: { $0.id == card.id })
     }
-    
-    @State var offsets: [CardModel:CGSize] = [:]
-    @GestureState private var gestureState: Progress = .inactive
     
     func offset(`for`: CardModel) -> CGSize {
         offsets[`for`] ?? CGSize.zero
@@ -127,6 +142,9 @@ struct CardStack: View {
                         VStack {
                             let t = max(0, CGFloat(index - pointer)) / 16.0 - abs(swipeProgress) / 64.0
                             CardView(entry: card)
+                                .overlay(RoundedRectangle(cornerSize: CGSize(width: 32, height: 32), style: .continuous)
+                                    .fill(colorScheme == .dark ? DeckTheme.darkFog : DeckTheme.lightFog)
+                                    .opacity(4.0*t) )
                                 .scaleEffect(max(0,min(1, 1-t + 0.03)))
 //                                .blur(radius: (0.33-swipeProgress*t)*5*max(0,min(1, 10*t + 0.03)))
                                 .rotation3DEffect(
@@ -137,6 +155,7 @@ struct CardStack: View {
                                     ? .degrees(rotation(for: index))
                                     : .degrees(Double(offset(for: card).width / 32.0))
                                 )
+                                
                                 .gesture(TapGesture().onEnded({ onCardTapped(card) }))
                                 .gesture(DragGesture()
                                     .updating(
@@ -186,19 +205,11 @@ struct CardStack: View {
                                 .disabled(index != pointer)
                                 .opacity(index >= pointer ? 1 : 0)
                                 .animation(.spring(duration: 0.2), value: pointer)
+                                
                         }
                     }
                 }
             }
-            
-//            VStack {
-//                Text("\(pointer)/\(cards.count)")
-//                    .contentTransition(.numericText())
-//                Text("\(swipeProgress)")
-//                    .contentTransition(.numericText())
-//            }
-//            .font(.caption)
-//            .foregroundStyle(.secondary)
         }
         .overlay(
             Rectangle()
