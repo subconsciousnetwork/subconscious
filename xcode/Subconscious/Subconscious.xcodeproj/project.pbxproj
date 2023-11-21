@@ -87,6 +87,7 @@
 		B58C1FBB2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */; };
 		B58C73A729DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
 		B58C73A829DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
+		B58CC8DF2B0C6ED5004CFFEA /* DeckNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58CC8DE2B0C6ED5004CFFEA /* DeckNavigationView.swift */; };
 		B58E90A62AFA02B0000C0E65 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58E90A52AFA02B0000C0E65 /* DeckView.swift */; };
 		B58FD6712A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */; };
 		B58FD6732A4E4C0E00826548 /* InviteCodeSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */; };
@@ -594,6 +595,7 @@
 		B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileDetailMetaSheet.swift; sourceTree = "<group>"; };
 		B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFrameViewModifier.swift; sourceTree = "<group>"; };
 		B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
+		B58CC8DE2B0C6ED5004CFFEA /* DeckNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckNavigationView.swift; sourceTree = "<group>"; };
 		B58E90A52AFA02B0000C0E65 /* DeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckView.swift; sourceTree = "<group>"; };
 		B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayProvisioningSettingsSection.swift; sourceTree = "<group>"; };
 		B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeSettingsSection.swift; sourceTree = "<group>"; };
@@ -968,7 +970,6 @@
 				B513FFC92AD9035300492A73 /* FeedPlaceholderView.swift */,
 				B513FFCB2AD904F200492A73 /* FeedListView.swift */,
 				B8CA8F2528909E66005F8802 /* Feed.swift */,
-				B58E90A52AFA02B0000C0E65 /* DeckView.swift */,
 			);
 			path = Feed;
 			sourceTree = "<group>";
@@ -1050,6 +1051,16 @@
 				B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */,
 			);
 			path = Profile;
+			sourceTree = "<group>";
+		};
+		B58CC8DD2B0C6C26004CFFEA /* Deck */ = {
+			isa = PBXGroup;
+			children = (
+				B58E90A52AFA02B0000C0E65 /* DeckView.swift */,
+				B5C818D52AF380A7001F65BE /* CardStackView.swift */,
+				B58CC8DE2B0C6ED5004CFFEA /* DeckNavigationView.swift */,
+			);
+			path = Deck;
 			sourceTree = "<group>";
 		};
 		B80057E927DC355E002C0129 /* SubconsciousTests */ = {
@@ -1477,7 +1488,6 @@
 		B8EB29ED26F27794006E97C3 = {
 			isa = PBXGroup;
 			children = (
-				B5C818D52AF380A7001F65BE /* CardStackView.swift */,
 				B8EB29FD26F27797006E97C3 /* iOS */,
 				B8EB2A0426F27797006E97C3 /* macOS */,
 				B8EB29FC26F27797006E97C3 /* Products */,
@@ -1561,6 +1571,7 @@
 		B8EB2A3826F27CD1006E97C3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				B58CC8DD2B0C6C26004CFFEA /* Deck */,
 				B82F053628D60EE60025A8B5 /* AppTabView.swift */,
 				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
@@ -2054,6 +2065,7 @@
 				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B8E1A9462A12F69E00B757A5 /* LogFmt.swift in Sources */,
 				B5D8FEB72AAC426C002CBF00 /* MainToolbar.swift in Sources */,
+				B58CC8DF2B0C6ED5004CFFEA /* DeckNavigationView.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */,
 				B8C80F0129FC201000BAC84D /* Peer.swift in Sources */,
@@ -2629,7 +2641,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LA8RNJ2LQP;
+				DEVELOPMENT_TEAM = UQU98W83FV;
 				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

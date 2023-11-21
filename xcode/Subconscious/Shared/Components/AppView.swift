@@ -311,6 +311,7 @@ enum AppAction: Hashable {
     case requestNotebookRoot
     case requestFeedRoot
     case requestProfileRoot
+    case requestDeckRoot
     
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
@@ -1186,6 +1187,8 @@ struct AppModel: ModelProtocol {
         case .requestFeedRoot:
             return Update(state: state)
         case .requestProfileRoot:
+            return Update(state: state)
+        case .requestDeckRoot:
             return Update(state: state)
         case .checkRecoveryStatus:
             return checkRecoveryStatus(
@@ -2731,6 +2734,8 @@ struct AppModel: ModelProtocol {
                 switch (tab) {
                 case .feed:
                     return AppAction.requestFeedRoot
+                case .deck:
+                    return AppAction.requestDeckRoot
                 case .notebook:
                     return AppAction.requestNotebookRoot
                 case .profile:

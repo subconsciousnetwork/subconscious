@@ -82,10 +82,8 @@ struct FeedView: View {
     
     var body: some View {
         ZStack {
-//            FeedNavigationView(app: app, store: store)
-//                .zIndex(1)
-            
-            DeckView(app: app)
+            FeedNavigationView(app: app, store: store)
+                .zIndex(1)
             
             if store.state.isSearchPresented {
                 SearchView(

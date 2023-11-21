@@ -99,7 +99,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var followingStatus: UserProfileFollowStatus
 }
 
-struct UserProfileEntry: Codable, Equatable {
+struct UserProfileEntry: Codable, Equatable, Hashable {
     static let currentVersion = "0.0"
     
     init(nickname: String?, bio: String?) {
@@ -194,7 +194,7 @@ actor UserProfileService {
     
     /// Attempt to read & deserialize a user `_profile_.json` from the indexed copy.
     /// This can only work for user's we follow & have indexed, otherwise it returns nil
-    func readProfileFromDb(
+    public func readProfileFromDb(
         did: Did
     ) async throws -> UserProfileEntry? {
         guard let data = try database.readUserProfile(did: did) else {

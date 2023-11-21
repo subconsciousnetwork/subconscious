@@ -4,30 +4,35 @@ struct CardView: View {
     var entry: CardModel
 //    var t: CGFloat
     
-    static let colors: [Color] = [
-        Color(red: 0.97, green: 0.49, blue: 0.75),
-        Color(red: 0.56, green: 0.62, blue: 0.93),
-        Color(red: 0.93, green: 0.59, blue: 0.56),
-        Color(red: 0.74, green: 0.52, blue: 0.95),
-        Color(red: 0.97, green: 0.75, blue: 0.48)
-    ]
     var color: Color {
-        Self.colors[abs(entry.hashValue) % Self.colors.count]
+        DeckTheme.lightCardColors[abs(entry.hashValue) % DeckTheme.lightCardColors.count]
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             switch entry.card {
-            case .entry(let entry):
+            case let .entry(entry, author, backlinks):
                 SubtextView(subtext: entry.excerpt)
-                    .environment(\.openURL, OpenURLAction { url in
-                        guard let subslashlink = url.toSubSlashlinkURL() else {
-                            return .systemAction
+                .foregroundStyle(.primary.opacity(0.8))
+                .blendMode(.plusDarker)
+                Spacer()
+                HStack {
+                    Text(
+                        entry.address.markup
+                    )
+                    .lineLimit(1)
+                    
+                    if !backlinks.isEmpty {
+                        Spacer()
+                        
+                        HStack {
+                            Image(systemName: "link")
+                            Text("\(backlinks.count)")
                         }
-
-                        return .handled
-                    })
-                .foregroundStyle(.primary)
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.tertiary)
                 .blendMode(.plusDarker)
             case .action(let string):
                 VStack {
@@ -41,7 +46,6 @@ struct CardView: View {
                 .blendMode(.plusDarker)
             }
             
-            Spacer()
         }
         .padding(AppTheme.padding * 1.5)
         .allowsHitTesting(false)
@@ -66,6 +70,7 @@ struct CardStack: View {
     var onSwipeLeft: (CardModel) -> Void
     var onPickUpNote: () -> Void
     var onCardReleased: () -> Void
+    var onCardTapped: (CardModel) -> Void
     
     func indexOf(card: CardModel) -> Int? {
         return cards.firstIndex(where: { $0.id == card.id })
@@ -123,7 +128,7 @@ struct CardStack: View {
                             let t = max(0, CGFloat(index - pointer)) / 16.0 - abs(swipeProgress) / 64.0
                             CardView(entry: card)
                                 .scaleEffect(max(0,min(1, 1-t + 0.03)))
-                                .blur(radius: (0.33-swipeProgress*t)*5*max(0,min(1, 10*t + 0.03)))
+//                                .blur(radius: (0.33-swipeProgress*t)*5*max(0,min(1, 10*t + 0.03)))
                                 .rotation3DEffect(
                                     .degrees(-swipeProgress * 100.0 * (0.1-t)), axis: (offset(for: card).height / 100.0, 1, 0), perspective: 0.5)
                                 .offset(x: offset(for: card).width, y: offset(for: card).height / 4.0)
@@ -132,6 +137,7 @@ struct CardStack: View {
                                     ? .degrees(rotation(for: index))
                                     : .degrees(Double(offset(for: card).width / 32.0))
                                 )
+                                .gesture(TapGesture().onEnded({ onCardTapped(card) }))
                                 .gesture(DragGesture()
                                     .updating(
                                         $gestureState,
@@ -185,14 +191,14 @@ struct CardStack: View {
                 }
             }
             
-            VStack {
-                Text("\(pointer)/\(cards.count)")
-                    .contentTransition(.numericText())
-                Text("\(swipeProgress)")
-                    .contentTransition(.numericText())
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+//            VStack {
+//                Text("\(pointer)/\(cards.count)")
+//                    .contentTransition(.numericText())
+//                Text("\(swipeProgress)")
+//                    .contentTransition(.numericText())
+//            }
+//            .font(.caption)
+//            .foregroundStyle(.secondary)
         }
         .overlay(
             Rectangle()
@@ -229,17 +235,18 @@ struct CardStack_Previews: PreviewProvider {
     static var previews: some View {
         CardStack(
             cards: [
-                CardModel(card: .entry(EntryStub.dummyData())),
-                CardModel(card: .entry(EntryStub.dummyData())),
-                CardModel(card: .entry(EntryStub.dummyData())),
-                CardModel(card: .entry(EntryStub.dummyData())),
-                CardModel(card: .entry(EntryStub.dummyData()))
+                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
+                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
+                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
+                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
+                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
             ],
             pointer: 0,
             onSwipeRight: { _ in },
             onSwipeLeft: { _ in },
             onPickUpNote: { },
-            onCardReleased: { }
+            onCardReleased: { },
+            onCardTapped: { _ in }
         )
     }
 }
