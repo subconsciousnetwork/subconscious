@@ -145,9 +145,11 @@ struct CardStack: View {
                         card in
                         if (index >= current - 1 && index < current + 5) {
                             VStack {
+                                Spacer()
+                                
                                 let t = max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
                                 CardView(entry: card)
-                                    .frame(width: geo.size.width, height: geo.size.width * 1.2)
+                                    .frame(width: geo.size.width, height: geo.size.width * 1.25)
                                     .overlay(
                                         RoundedRectangle(
                                             cornerSize: CGSize(
@@ -238,8 +240,11 @@ struct CardStack: View {
                                         y: 2
                                     )
                                     .animation(.spring(duration: 0.2), value: current)
+                                
+                                Spacer()
                             }
                             .zIndex(Double(deck.count - index))
+                            
                         }
                     }
                 }

@@ -40,8 +40,6 @@ struct DeckNavigationView: View {
                         }
                     }
                     
-                    Spacer()
-                    
                     if (store.state.deck.isEmpty) {
                         ProgressView()
                     }
@@ -73,9 +71,7 @@ struct DeckNavigationView: View {
                             store.send(.cardTapped(card))
                         }
                     )
-                    
-                    Spacer()
-                    
+                    .offset(x: 0, y: -AppTheme.unit * 8)
                 }
                 .padding(AppTheme.padding)
             }
