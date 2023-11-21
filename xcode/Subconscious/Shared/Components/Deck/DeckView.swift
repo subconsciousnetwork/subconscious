@@ -13,9 +13,13 @@ import Combine
 enum DeckTheme {}
 
 extension DeckTheme {
+    static let reboundSpring = Animation.spring(duration: 0.4, bounce: 0.5)
+    
     static let cardPadding = AppTheme.unit * 5
     static let cornerRadius: CGFloat = 32.0
     static let cardSize = CGSize(width: 374, height: 420)
+    
+    static let cardShadow = Color(red: 0.45, green: 0.25, blue: 0.75)
     
     static let lightFog = Color(red: 0.93, green: 0.81, blue: 0.92)
     

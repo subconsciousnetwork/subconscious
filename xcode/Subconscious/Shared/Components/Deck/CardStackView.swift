@@ -63,10 +63,6 @@ struct CardView: View {
         .blendMode(blendMode)
         .padding(DeckTheme.cardPadding)
         .allowsHitTesting(false)
-        .frame(
-            width: DeckTheme.cardSize.width,
-            height: DeckTheme.cardSize.height
-        )
         .background(color)
         .cornerRadius(DeckTheme.cornerRadius)
     }
@@ -140,78 +136,110 @@ struct CardStack: View {
     
     var body: some View {
         VStack {
-            ZStack {
-                let deck = Array(deck.enumerated().reversed())
-                ForEach(deck, id: \.element.id) { index, card in
+            Spacer()
+            GeometryReader { geo in
+                ZStack {
+                    let deck = Array(deck.enumerated())
+                    ForEach(deck, id: \.element.id) {
+                        index,
+                        card in
                         if (index >= current - 1 && index < current + 5) {
-                        VStack {
-                            let t = max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
-                            CardView(entry: card)
-                                .overlay(RoundedRectangle(cornerSize: CGSize(width: 32, height: 32), style: .continuous)
-                                    .fill(colorScheme == .dark ? DeckTheme.darkFog : DeckTheme.lightFog)
-                                    .opacity(4.0*t) )
-                                .scaleEffect(max(0,min(1, 1-t + 0.03)))
-//                                .blur(radius: (0.33-swipeProgress*t)*5*max(0,min(1, 10*t + 0.03)))
-                                .rotation3DEffect(
-                                    .degrees(-swipeProgress * 100.0 * (0.1-t)), axis: (offset(for: card).height / 100.0, 1, 0), perspective: 0.5)
-                                .offset(x: offset(for: card).width, y: offset(for: card).height / 4.0)
-                                .rotationEffect(
-                                    index != current
-                                    ? .degrees(rotation(for: index))
-                                    : .degrees(Double(offset(for: card).width / 32.0))
-                                )
-                                
-                                .gesture(TapGesture().onEnded({ onCardTapped(card) }))
-                                .gesture(DragGesture()
-                                    .updating(
-                                        $gestureState,
-                                        body: { (value, state, transaction) in
-                                            switch state {
-                                            case .inactive:
-                                                state = .started
-                                                onSwipeStart()
-                                                break
-                                            case .started:
-                                                state = .changed
-                                                break
-                                            case .changed:
-                                                break
-                                            }
-                                        }
+                            VStack {
+                                let t = max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
+                                CardView(entry: card)
+                                    .frame(width: geo.size.width, height: geo.size.width * 1.2)
+                                    .overlay(
+                                        RoundedRectangle(
+                                            cornerSize: CGSize(
+                                                width: 32,
+                                                height: 32
+                                            ),
+                                            style: .continuous
+                                        )
+                                        .fill(colorScheme == .dark ? DeckTheme.darkFog : DeckTheme.lightFog)
+                                        .opacity(4.0*t)
                                     )
-                                    .onChanged { gesture in
-                                        withAnimation(.interactiveSpring()) {
-                                            offsets.removeAll()
-                                            offsets[card] = gesture.translation
-                                        }
-                                    }
-                                    .onEnded { _ in
-                                        withAnimation(.spring(duration: 0.4, bounce: 0.5)) {
-                                            let offset = offset(for: card).width
-                                            if abs(offset) > Self.THRESHOLD {
-                                                // Swipe out the card
-                                                offsets[card]?.width = offset > 0 ? 1024 : -1024
-                                                
-                                                withAnimation(.spring(duration: 0.4, bounce: 0.5)) {
-                                                    if (offset > 0) {
-                                                        onSwipeRight(card)
-                                                    } else {
-                                                        onSwipeLeft(card)
-                                                    }
+                                    .scaleEffect(max(0,min(1, 1-t + 0.03)))
+                                    .rotation3DEffect(
+                                        .degrees(
+                                            -swipeProgress * 100.0 * (
+                                                0.1-t
+                                            )
+                                        ),
+                                        axis: (
+                                            offset(
+                                                for: card
+                                            ).height / 100.0,
+                                            1,
+                                            0
+                                        ),
+                                        perspective: 0.5
+                                    )
+                                    .offset(
+                                        x: offset(for: card).width,
+                                        y: offset(for: card).height / 4.0
+                                    )
+                                    .rotationEffect(
+                                        index != current
+                                        ? .degrees(rotation(for: index))
+                                        : .degrees(Double(offset(for: card).width / 32.0))
+                                    )
+                                    .gesture(TapGesture().onEnded({ onCardTapped(card) }))
+                                    .gesture(DragGesture()
+                                        .updating(
+                                            $gestureState,
+                                            body: { (value, state, transaction) in
+                                                switch state {
+                                                case .inactive:
+                                                    state = .started
+                                                    onSwipeStart()
+                                                    break
+                                                case .started:
+                                                    state = .changed
+                                                    break
+                                                case .changed:
+                                                    break
                                                 }
-                                            } else {
-                                                // Reset the card position
-                                                offsets[card] = CGSize.zero
-                                                onSwipeAbandoned()
                                             }
-                                        }
-                                    })
-                                .zIndex(offset(for: card).width == 0 ? 0 : 1) // Bring card to front during drag
-                                .disabled(index != current)
-                                .opacity(index >= current ? 1 : 0)
-                                .shadow(color: Color(red: 0.45, green: 0.25, blue: 0.75).opacity(0.25 * (1.0 - 5.0*t)), radius: 4, x: 0, y: 2)
-                                .animation(.spring(duration: 0.2), value: current)
-                                
+                                        )
+                                            .onChanged { gesture in
+                                                withAnimation(.interactiveSpring()) {
+                                                    offsets.removeAll()
+                                                    offsets[card] = gesture.translation
+                                                }
+                                            }
+                                        .onEnded { _ in
+                                            withAnimation(DeckTheme.reboundSpring) {
+                                                let offset = offset(for: card).width
+                                                if abs(offset) > Self.THRESHOLD {
+                                                    // Swipe out the card
+                                                    offsets[card]?.width = offset > 0 ? 1024 : -1024
+                                                    
+                                                    withAnimation(DeckTheme.reboundSpring) {
+                                                        if (offset > 0) {
+                                                            onSwipeRight(card)
+                                                        } else {
+                                                            onSwipeLeft(card)
+                                                        }
+                                                    }
+                                                } else {
+                                                    // Reset the card position
+                                                    offsets[card] = CGSize.zero
+                                                    onSwipeAbandoned()
+                                                }
+                                            }
+                                        })
+                                    .disabled(index != current)
+                                    .opacity(index >= current ? 1 : 0)
+                                    .shadow(
+                                        color: DeckTheme.cardShadow.opacity(0.25 * (1.0 - 5.0*t)),
+                                        radius: 4,
+                                        x: 0,
+                                        y: 2
+                                    )
+                                    .animation(.spring(duration: 0.2), value: current)
+                            }
+                            .zIndex(Double(deck.count - index))
                         }
                     }
                 }
