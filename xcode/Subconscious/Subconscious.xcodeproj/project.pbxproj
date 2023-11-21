@@ -2931,7 +2931,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				branch = "2023-11-20-fx-runner";
+				branch = "2023-11-21-update-protocol";
 				kind = branch;
 			};
 		};

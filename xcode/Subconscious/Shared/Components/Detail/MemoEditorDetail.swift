@@ -12,6 +12,11 @@ import Combine
 
 // MARK: View
 struct MemoEditorDetailView: View {
+    private static let blockEditorStoreLogger = Logger(
+        subsystem: Config.default.rdns,
+        category: "BlockEditorStore"
+    )
+
     typealias Action = MemoEditorDetailAction
     @ObservedObject var app: Store<AppModel>
     
@@ -28,7 +33,8 @@ struct MemoEditorDetailView: View {
 
     @StateObject private var blockEditorStore = Store(
         state: BlockEditor.Model.draft(),
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        logger: blockEditorStoreLogger
     )
 
     /// Is this view presented? Used to detect when back button is pressed.
