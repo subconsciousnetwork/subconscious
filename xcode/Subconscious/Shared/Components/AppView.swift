@@ -164,6 +164,8 @@ enum AppAction: Hashable {
 
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
+    case persistFeedTabEnabled(Bool)
+    case persistDeckTabEnabled(Bool)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -544,6 +546,8 @@ struct AppModel: ModelProtocol {
     
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
+    var isFeedTabEnabled = false
+    var isDeckTabEnabled = false
 
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
@@ -873,6 +877,18 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isBlockEditorEnabled: isBlockEditorEnabled
+            )
+        case let .persistFeedTabEnabled(isFeedTabEnabled):
+            return persistFeedTabEnabled(
+                state: state,
+                environment: environment,
+                isFeedTabEnabled: isFeedTabEnabled
+            )
+        case let .persistDeckTabEnabled(isDeckTabEnabled):
+            return persistDeckTabEnabled(
+                state: state,
+                environment: environment,
+                isDeckTabEnabled: isDeckTabEnabled
             )
         case .resetNoosphereService:
             return resetNoosphereService(
@@ -1236,6 +1252,8 @@ struct AppModel: ModelProtocol {
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
         model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
         model.isBlockEditorEnabled = AppDefaults.standard.isBlockEditorEnabled
+        model.isFeedTabEnabled = AppDefaults.standard.isFeedTabEnabled
+        model.isDeckTabEnabled = AppDefaults.standard.isDeckTabEnabled
         
         // Update model from app defaults
         return update(
@@ -1604,7 +1622,6 @@ struct AppModel: ModelProtocol {
         return Update(state: model).animation(.default)
     }
     
-    /// Persist first run complete state
     static func persistBlockEditorEnabled(
         state: AppModel,
         environment: AppEnvironment,
@@ -1614,6 +1631,30 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.isBlockEditorEnabled = isBlockEditorEnabled
         var model = state
         model.isBlockEditorEnabled = isBlockEditorEnabled
+        return Update(state: model)
+    }
+    
+    static func persistFeedTabEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isFeedTabEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.isFeedTabEnabled = isFeedTabEnabled
+        var model = state
+        model.isFeedTabEnabled = isFeedTabEnabled
+        return Update(state: model)
+    }
+    
+    static func persistDeckTabEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isDeckTabEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.isDeckTabEnabled = isDeckTabEnabled
+        var model = state
+        model.isDeckTabEnabled = isDeckTabEnabled
         return Update(state: model)
     }
 

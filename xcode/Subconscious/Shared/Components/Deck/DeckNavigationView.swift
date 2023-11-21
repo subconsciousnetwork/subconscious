@@ -47,8 +47,8 @@ struct DeckNavigationView: View {
                     }
                     
                     CardStack(
-                        cards: store.state.deck,
-                        pointer: store.state.pointer,
+                        deck: store.state.deck,
+                        current: store.state.pointer,
                         onSwipeRight: { card in
                             store.send(
                                 .chooseCard(
@@ -63,10 +63,10 @@ struct DeckNavigationView: View {
                                 )
                             )
                         },
-                        onPickUpNote: {
+                        onSwipeStart: {
                             store.send(.cardPickedUp)
                         },
-                        onCardReleased: {
+                        onSwipeAbandoned: {
                             store.send(.cardReleased)
                         },
                         onCardTapped: { card in

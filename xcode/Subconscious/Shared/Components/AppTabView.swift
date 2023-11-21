@@ -27,17 +27,21 @@ struct AppTabView: View {
                 tag: AppAction.setSelectedAppTab
             )
         ) {
-            FeedView(app: store)
-                .tabItem {
-                    Label("Feed", systemImage: "newspaper")
-                }
-                .tag(AppTab.feed)
+            if AppDefaults.standard.isFeedTabEnabled {
+                FeedView(app: store)
+                    .tabItem {
+                        Label("Feed", systemImage: "newspaper")
+                    }
+                    .tag(AppTab.feed)
+            }
             
-            DeckView(app: store)
-                .tabItem {
-                    Label("Deck", systemImage: "square.stack.3d.up.fill")
-                }
-                .tag(AppTab.deck)
+            if AppDefaults.standard.isDeckTabEnabled {
+                DeckView(app: store)
+                    .tabItem {
+                        Label("Deck", systemImage: "square.stack.3d.up.fill")
+                    }
+                    .tag(AppTab.deck)
+            }
             
             NotebookView(app: store)
                 .tabItem {

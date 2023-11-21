@@ -4,8 +4,19 @@ struct CardView: View {
     var entry: CardModel
     @Environment(\.colorScheme) var colorScheme
     
+    var colors: [Color] {
+        colorScheme == .dark
+            ? DeckTheme.darkCardColors
+            : DeckTheme.lightCardColors
+    }
     var color: Color {
-        (colorScheme == .dark ? DeckTheme.darkCardColors : DeckTheme.lightCardColors)[abs(entry.hashValue) % DeckTheme.lightCardColors.count]
+        colors[abs(entry.hashValue) % colors.count]
+    }
+    
+    var blendMode: BlendMode {
+        colorScheme == .dark
+           ? .plusLighter
+           : .plusDarker
     }
     
     var body: some View {
@@ -13,16 +24,13 @@ struct CardView: View {
             switch entry.card {
             case let .entry(entry, _, backlinks):
                 SubtextView(subtext: entry.excerpt)
-                .foregroundStyle(.primary.opacity(0.8))
-                .blendMode(
-                    colorScheme == .dark
-                       ? .plusLighter
-                       : .plusDarker
-                )
+                    // Opacity allows blendMode to work
+                    .foregroundStyle(.primary.opacity(0.8))
                 
                 Spacer()
                 
                 HStack {
+                    // Consider: should the date go here?
                     Text(
                         entry.address.markup
                     )
@@ -39,12 +47,8 @@ struct CardView: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.tertiary)
-                .blendMode(
-                    colorScheme == .dark
-                       ? .plusLighter
-                       : .plusDarker
-                )
             case .action(let string):
+                // TEMP
                 VStack {
                     Image(systemName: "scribble.variable")
                         .resizable()
@@ -53,45 +57,46 @@ struct CardView: View {
                     Text(string)
                 }
                 .foregroundStyle(.secondary)
-                .blendMode(
-                    colorScheme == .dark
-                       ? .plusLighter
-                       : .plusDarker
-                )
             }
             
         }
-        .padding(AppTheme.padding * 1.5)
+        .blendMode(blendMode)
+        .padding(DeckTheme.cardPadding)
         .allowsHitTesting(false)
-        .frame(width: 374 - 0, height: 420 - 0)
+        .frame(
+            width: DeckTheme.cardSize.width,
+            height: DeckTheme.cardSize.height
+        )
         .background(color)
-        .cornerRadius(32)
-        .shadow(color: Color(red: 0.45, green: 0.25, blue: 0.75).opacity(0.25), radius: 4, x: 0, y: 2)
-//            .scaleEffect(CGSize(width: 1.0, height: 1.0))
+        .cornerRadius(DeckTheme.cornerRadius)
     }
 }
 
-enum Progress {
+enum CardDragGestureProgress {
     case inactive
     case started
     case changed
 }
 
 struct CardStack: View {
-    var cards: [CardModel]
-    var pointer: Int
+    var deck: [CardModel]
+    var current: Int
+    
     var onSwipeRight: (CardModel) -> Void
     var onSwipeLeft: (CardModel) -> Void
-    var onPickUpNote: () -> Void
-    var onCardReleased: () -> Void
+    var onSwipeStart: () -> Void
+    var onSwipeAbandoned: () -> Void
     var onCardTapped: (CardModel) -> Void
         
+    // Use a dictionary of offsets so that we can animate two cards
+    // at once during the transition between.
+    // This dictionary is cleared by the gesture lifecycle
     @State var offsets: [CardModel:CGSize] = [:]
-    @GestureState private var gestureState: Progress = .inactive
+    @GestureState private var gestureState: CardDragGestureProgress = .inactive
     @Environment(\.colorScheme) var colorScheme
     
     func indexOf(card: CardModel) -> Int? {
-        return cards.firstIndex(where: { $0.id == card.id })
+        return deck.firstIndex(where: { $0.id == card.id })
     }
     
     func offset(`for`: CardModel) -> CGSize {
@@ -99,21 +104,21 @@ struct CardStack: View {
     }
     
     func offset(for index: Int) -> CGSize {
-        if index < 0 || index >= cards.count {
+        if index < 0 || index >= deck.count {
             return CGSize.zero
         }
         
-        return offset(for: cards[index])
+        return offset(for: deck[index])
     }
     
     private static let THRESHOLD = 128.0
     
     var swipeProgress: CGFloat {
-        return (offset(for: pointer).width / Self.THRESHOLD).clamp(min: -1.0, max: 1.0)
+        return (offset(for: current).width / Self.THRESHOLD).clamp(min: -1.0, max: 1.0)
     }
     
     func rotation(for index: Int) -> Double {
-        let t = max(0, CGFloat(index - pointer)) / 16.0 + (swipeProgress) / 64.0
+        let t = max(0, CGFloat(index - current)) / 16.0 + (swipeProgress) / 64.0
         let newT = t
         let fundamental = 6.0*Double(sin(CGFloat(newT - 0.1) * 40))
         let harmonic = 2.0*Double(sin((newT - 0.45) * 10))
@@ -136,11 +141,11 @@ struct CardStack: View {
     var body: some View {
         VStack {
             ZStack {
-                let deck = Array(cards.enumerated().reversed())
+                let deck = Array(deck.enumerated().reversed())
                 ForEach(deck, id: \.element.id) { index, card in
-                        if (index >= pointer - 1 && index < pointer + 5) {
+                        if (index >= current - 1 && index < current + 5) {
                         VStack {
-                            let t = max(0, CGFloat(index - pointer)) / 16.0 - abs(swipeProgress) / 64.0
+                            let t = max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
                             CardView(entry: card)
                                 .overlay(RoundedRectangle(cornerSize: CGSize(width: 32, height: 32), style: .continuous)
                                     .fill(colorScheme == .dark ? DeckTheme.darkFog : DeckTheme.lightFog)
@@ -151,7 +156,7 @@ struct CardStack: View {
                                     .degrees(-swipeProgress * 100.0 * (0.1-t)), axis: (offset(for: card).height / 100.0, 1, 0), perspective: 0.5)
                                 .offset(x: offset(for: card).width, y: offset(for: card).height / 4.0)
                                 .rotationEffect(
-                                    index != pointer
+                                    index != current
                                     ? .degrees(rotation(for: index))
                                     : .degrees(Double(offset(for: card).width / 32.0))
                                 )
@@ -164,7 +169,7 @@ struct CardStack: View {
                                             switch state {
                                             case .inactive:
                                                 state = .started
-                                                onPickUpNote()
+                                                onSwipeStart()
                                                 break
                                             case .started:
                                                 state = .changed
@@ -197,14 +202,15 @@ struct CardStack: View {
                                             } else {
                                                 // Reset the card position
                                                 offsets[card] = CGSize.zero
-                                                onCardReleased()
+                                                onSwipeAbandoned()
                                             }
                                         }
                                     })
                                 .zIndex(offset(for: card).width == 0 ? 0 : 1) // Bring card to front during drag
-                                .disabled(index != pointer)
-                                .opacity(index >= pointer ? 1 : 0)
-                                .animation(.spring(duration: 0.2), value: pointer)
+                                .disabled(index != current)
+                                .opacity(index >= current ? 1 : 0)
+                                .shadow(color: Color(red: 0.45, green: 0.25, blue: 0.75).opacity(0.25 * (1.0 - 5.0*t)), radius: 4, x: 0, y: 2)
+                                .animation(.spring(duration: 0.2), value: current)
                                 
                         }
                     }
@@ -245,18 +251,18 @@ struct CardStack: View {
 struct CardStack_Previews: PreviewProvider {
     static var previews: some View {
         CardStack(
-            cards: [
+            deck: [
                 CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
                 CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
                 CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
                 CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
                 CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
             ],
-            pointer: 0,
+            current: 0,
             onSwipeRight: { _ in },
             onSwipeLeft: { _ in },
-            onPickUpNote: { },
-            onCardReleased: { },
+            onSwipeStart: { },
+            onSwipeAbandoned: { },
             onCardTapped: { _ in }
         )
     }

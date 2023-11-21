@@ -13,6 +13,10 @@ import Combine
 enum DeckTheme {}
 
 extension DeckTheme {
+    static let cardPadding = AppTheme.unit * 5
+    static let cornerRadius: CGFloat = 32.0
+    static let cardSize = CGSize(width: 374, height: 420)
+    
     static let lightFog = Color(red: 0.93, green: 0.81, blue: 0.92)
     
     static let lightBg = LinearGradient(
