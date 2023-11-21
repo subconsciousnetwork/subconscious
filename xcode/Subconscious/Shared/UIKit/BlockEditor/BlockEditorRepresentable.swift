@@ -49,18 +49,20 @@ struct BlockStackEditorViewControllerRepresentable_Previews: PreviewProvider {
     struct TestView: View {
         @StateObject private var store = Store(
             state: BlockEditor.Model(
-                blocks: [
-                    BlockEditor.BlockModel.heading(
-                        BlockEditor.TextBlockModel(
-                            text: "Foo"
+                blocks: BlockEditor.BlocksModel(
+                    blocks:[
+                        BlockEditor.BlockModel.heading(
+                            BlockEditor.TextBlockModel(
+                                text: "Foo"
+                            )
+                        ),
+                        BlockEditor.BlockModel.text(
+                            BlockEditor.TextBlockModel(
+                                text: "Bar"
+                            )
                         )
-                    ),
-                    BlockEditor.BlockModel.text(
-                        BlockEditor.TextBlockModel(
-                            text: "Bar"
-                        )
-                    )
-                ]
+                    ]
+                )
             ),
             environment: AppEnvironment.default
         )

@@ -12,12 +12,13 @@ extension UIView {
     /// A subclass of UITextView that automatically renders Subtext
     /// as attributes on text storage.
     class SubtextTextView: UITextView, Identifiable, NSTextStorageDelegate {
+        static let logger = Logger(
+            subsystem: Config.default.rdns,
+            category: "SubtextTextView"
+        )
+        
         var id = UUID()
         var renderer = SubtextAttributedStringRenderer()
-        lazy var logger = Logger(
-            subsystem: Config.default.rdns,
-            category: "SubtextTextView#\(id)"
-        )
 
         private let defaultTextContainerInset = UIEdgeInsets(
             top: AppTheme.unit2,
@@ -58,7 +59,7 @@ extension UIView {
           changeInLength: Int
         ) {
             renderer.renderAttributesOf(textStorage)
-            logger.debug("Rendered Subtext attributes")
+            Self.logger.debug("Rendered Subtext attributes")
         }
     }
 }

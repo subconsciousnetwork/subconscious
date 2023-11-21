@@ -87,6 +87,8 @@ extension BlockEditor {
                 .sink(receiveValue: { [weak self] change in
                     self?.update(change)
                 })
+
+            self.store.send(.ready)
         }
 
         /// Create a configured collection view suitable for our block editor
@@ -189,6 +191,8 @@ extension BlockEditor {
         private func update(_ change: BlockEditor.Change) {
             Self.logger.log("Change: \(String(describing: change))")
             switch change {
+            case .reloadEditor:
+                return reloadEditor()
             case let .reconfigureCollectionItem(indexPath):
                 return reconfigureCollectionItem(indexPath)
             case let .moveBlock(at, to):
@@ -205,6 +209,12 @@ extension BlockEditor {
                     delete: delete,
                     requestEditing: requestEditing
                 )
+            }
+        }
+
+        private func reloadEditor() {
+            UIView.performWithoutAnimation {
+                collectionView.reloadData()
             }
         }
 
@@ -284,7 +294,7 @@ extension BlockEditor {
         ) -> Int {
             switch Section(rawValue: section) {
             case .blocks:
-                return store.state.blocks.count
+                return store.state.blocks.blocks.count
             case .appendix:
                 return 1
             default:
@@ -329,7 +339,7 @@ extension BlockEditor {
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath
         ) -> UICollectionViewCell {
-            let block = store.state.blocks[indexPath.row]
+            let block = store.state.blocks.blocks[indexPath.row]
             switch block {
             case let .heading(state):
                 return headingCell(

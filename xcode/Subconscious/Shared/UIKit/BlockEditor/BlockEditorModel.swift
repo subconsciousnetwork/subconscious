@@ -23,29 +23,33 @@ extension BlockEditor {
         /// A draft is a document with a heading block and nothing else.
         static func draft() -> Self {
             Model(
-                blocks: [
-                    BlockModel.heading(TextBlockModel())
-                ]
+                blocks: BlocksModel(
+                    blocks: [
+                        BlockModel.heading(TextBlockModel())
+                    ]
+                )
             )
         }
 
-        var isBlockSelectMode = false
-        var blocks: [BlockModel] = []
+        var address: Slashlink?
+        var blocks: BlocksModel = BlocksModel()
         var appendix = RelatedModel()
-
-        func block(id: UUID) -> Array.Index? {
-            guard let i = blocks.firstIndex(whereID: id) else {
-                Self.logger.log("block#\(id) not found.")
-                return nil
-            }
-            return i
-        }
     }
 }
 
 extension BlockEditor {
     // MARK: Actions
     enum Action {
+        /// View is ready for updates.
+        /// Sent during viewDidLoad after performing first view update for
+        /// initial state and subscribing to changes.
+        case ready
+        /// Sent from SwiftUI land when the wrapping SwiftUI view appears.
+        case appear(MemoEditorDetailDescription)
+        /// Set document source location
+        case setAddress(Slashlink?)
+        case reloadEditor(detail: MemoEditorDetailResponse, autofocus: Bool)
+        case failReloadEditor(_ error: String)
         case textDidChange(id: UUID?, text: String, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
         case splitBlock(id: UUID, selection: NSRange)
@@ -89,6 +93,7 @@ extension BlockEditor {
     /// the details it needs to perform that change.
     enum Change: Hashable {
         case reconfigureCollectionItem(IndexPath)
+        case reloadEditor
         case moveBlock(
             at: IndexPath,
             to: IndexPath
@@ -148,6 +153,36 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         switch action {
+        case .ready:
+            return ready(
+                state: state,
+                environment: environment
+            )
+        case let .appear(description):
+            return appear(
+                state: state,
+                description: description,
+                environment: environment
+            )
+        case let .setAddress(address):
+            return setAddress(
+                state: state,
+                address: address,
+                environment: environment
+            )
+        case let .reloadEditor(detail, autofocus):
+            return reloadEditor(
+                state: state,
+                detail: detail,
+                autofocus: autofocus,
+                environment: environment
+            )
+        case let .failReloadEditor(error):
+            return failReloadEditor(
+                state: state,
+                error: error,
+                environment: environment
+            )
         case let .textDidChange(id, text, selection):
             return textDidChange(
                 state: state,
@@ -253,6 +288,80 @@ extension BlockEditor.Model: ModelProtocol {
         }
     }
     
+    private static func ready(
+        state: Model,
+        environment: Model.Environment
+    ) -> Update {
+        return Update(state: state)
+    }
+    
+    private static func appear(
+        state: Model,
+        description: MemoEditorDetailDescription,
+        environment: Model.Environment
+    ) -> Update {
+        return setAddress(
+            state: state,
+            address: description.address,
+            fallback: description.fallback,
+            environment: environment
+        )
+    }
+    
+    private static func setAddress(
+        state: Model,
+        address: Slashlink?,
+        fallback: String = "",
+        autofocus: Bool = false,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.address = address
+
+        guard let address = address else {
+            return Update(state: model)
+        }
+
+        let fx: Fx<Action> = environment.data.readMemoEditorDetailPublisher(
+            address: address,
+            fallback: fallback
+        )
+        .map({ detail in
+            return Action.reloadEditor(
+                detail: detail,
+                autofocus: autofocus
+            )
+        })
+        .recover({ error in
+            return Action.failReloadEditor(error.localizedDescription)
+        })
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
+    }
+    
+    private static func reloadEditor(
+        state: Model,
+        detail: MemoEditorDetailResponse,
+        autofocus: Bool = false,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.address = detail.entry.address
+        model.blocks = BlockEditor.BlocksModel(detail.entry.contents.body)
+        return Update(state: model, change: .reloadEditor)
+    }
+    
+    private static func failReloadEditor(
+        state: Model,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        let address = state.address?.description ?? "nil"
+        logger.log("Failed to load detail for \(address). Error: \(error)")
+        return Update(state: state)
+    }
+    
     private static func textDidChange(
         state: Model,
         id: UUID?,
@@ -263,20 +372,23 @@ extension BlockEditor.Model: ModelProtocol {
             Self.logger.log("No block id. Doing nothing.")
             return Update(state: state)
         }
-        guard let i = state.blocks.firstIndex(whereID: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return Update(state: state)
         }
         
         var model = state
-        let block = state.blocks[i].setText(text: text, selection: selection)
+        let block = state.blocks.blocks[i].setText(
+            text: text,
+            selection: selection
+        )
         
         guard let block = block else {
             Self.logger.log("block#\(id) could not update block text. Doing nothing.")
             return Update(state: state)
         }
         
-        model.blocks[i] = block
+        model.blocks.blocks[i] = block
         
         return Update(state: model)
     }
@@ -286,18 +398,18 @@ extension BlockEditor.Model: ModelProtocol {
         id: UUID,
         selection: NSRange
     ) -> Update {
-        guard let i = state.blocks.firstIndex(whereID: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return Update(state: state)
         }
         var model = state
-        guard let block = state.blocks[i].setSelection(
+        guard let block = state.blocks.blocks[i].setSelection(
             selection: selection
         ) else {
             Self.logger.log("block#\(id) could not update block selection. Doing nothing.")
             return Update(state: state)
         }
-        model.blocks[i] = block
+        model.blocks.blocks[i] = block
         return Update(state: model)
     }
     
@@ -306,14 +418,14 @@ extension BlockEditor.Model: ModelProtocol {
         id: UUID,
         selection nsRange: NSRange
     ) -> Update {
-        guard let indexA = state.blocks.firstIndex(whereID: id) else {
+        guard let indexA = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return Update(state: state)
         }
         
         Self.logger.log("block#\(id) splitting at \(nsRange.location)")
         
-        let blockA = state.blocks[indexA]
+        let blockA = state.blocks.blocks[indexA]
         
         guard let blockTextA = blockA.text else {
             Self.logger.log("block#\(id) cannot split block without text. Doing nothing.")
@@ -340,10 +452,10 @@ extension BlockEditor.Model: ModelProtocol {
         var blockB = BlockEditor.TextBlockModel()
         blockB.text = textB
         
-        let indexB = state.blocks.index(after: indexA)
+        let indexB = state.blocks.blocks.index(after: indexA)
         var model = state
-        model.blocks[indexA] = blockA
-        model.blocks.insert(
+        model.blocks.blocks[indexA] = blockA
+        model.blocks.blocks.insert(
             .text(blockB),
             at: indexB
         )
@@ -372,7 +484,7 @@ extension BlockEditor.Model: ModelProtocol {
         state: Model,
         id: UUID
     ) -> Update {
-        guard let indexDown = state.blocks.firstIndex(whereID: id) else {
+        guard let indexDown = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return Update(state: state)
         }
@@ -382,15 +494,15 @@ extension BlockEditor.Model: ModelProtocol {
         }
         Self.logger.log("block#\(id) merging up")
         
-        let indexUp = state.blocks.index(before: indexDown)
-        let blockUp = state.blocks[indexUp]
+        let indexUp = state.blocks.blocks.index(before: indexDown)
+        let blockUp = state.blocks.blocks[indexUp]
         
         guard let blockUpText = blockUp.text else {
             Self.logger.log("block#\(id) cannot merge up into block without text. Doing nothing.")
             return Update(state: state)
         }
         
-        let blockDown = state.blocks[indexDown]
+        let blockDown = state.blocks.blocks[indexDown]
         guard let blockDownText = blockDown.text else {
             Self.logger.log("block#\(id) cannot merge non-text block. Doing nothing.")
             return Update(state: state)
@@ -410,8 +522,8 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         var model = state
-        model.blocks[indexUp] = blockUp
-        model.blocks.remove(at: indexDown)
+        model.blocks.blocks[indexUp] = blockUp
+        model.blocks.blocks.remove(at: indexDown)
         
         let indexPathUp = IndexPath(
             row: indexUp,
@@ -438,7 +550,7 @@ extension BlockEditor.Model: ModelProtocol {
         id: UUID
     ) -> Update {
         var model = state
-        model.blocks = state.blocks.map({ block in
+        model.blocks.blocks = state.blocks.blocks.map({ block in
             block.setEditing(block.id == id) ?? block
         })
         return Update(state: model)
@@ -448,7 +560,7 @@ extension BlockEditor.Model: ModelProtocol {
         state: Model,
         id: UUID
     ) -> Update {
-        guard let index = state.blocks.firstIndex(whereID: id) else {
+        guard let index = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) no block found with ID. Doing nothing.")
             return Update(state: state)
         }
@@ -459,7 +571,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
         
         var model = state
-        model.blocks = state.blocks.map({ block in
+        model.blocks.blocks = state.blocks.blocks.map({ block in
             block.setEditing(block.id == id) ?? block
         })
         
@@ -474,7 +586,7 @@ extension BlockEditor.Model: ModelProtocol {
         id: UUID
     ) -> Update {
         var model = state
-        model.blocks = state.blocks.map({ block in
+        model.blocks.blocks = state.blocks.blocks.map({ block in
             if block.id == id {
                 return block.setEditing(false) ?? block
             }
@@ -487,7 +599,7 @@ extension BlockEditor.Model: ModelProtocol {
         state: Model,
         id: UUID
     ) -> Update {
-        guard let index = state.blocks.firstIndex(whereID: id) else {
+        guard let index = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) no block found with ID. Doing nothing.")
             return Update(state: state)
         }
@@ -498,7 +610,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
         
         var model = state
-        model.blocks = state.blocks.map({ block in
+        model.blocks.blocks = state.blocks.blocks.map({ block in
             if block.id == id {
                 return block.setEditing(false) ?? block
             }
@@ -626,13 +738,13 @@ extension BlockEditor.Model: ModelProtocol {
         id: UUID,
         transform: (BlockEditor.BlockModel) -> BlockEditor.BlockModel
     ) -> Model? {
-        guard let i = state.blocks.firstIndex(whereID: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return nil
         }
         var model = state
-        let block = model.blocks[i]
-        model.blocks[i] = transform(block)
+        let block = model.blocks.blocks[i]
+        model.blocks.blocks[i] = transform(block)
         return model
     }
 
@@ -641,24 +753,24 @@ extension BlockEditor.Model: ModelProtocol {
         id: UUID,
         isSelected: Bool
     ) -> Update {
-        guard state.isBlockSelectMode else {
+        guard state.blocks.isBlockSelectMode else {
             Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
             return Update(state: state)
         }
         
-        guard let i = state.block(id: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             return Update(state: state)
         }
         
         var model = state
-        let block = model.blocks[i]
+        let block = model.blocks.blocks[i]
         let updatedBlock = block.setBlockSelected(isSelected) ?? block
 
         guard block != updatedBlock else {
             Self.logger.debug("Block selection state did not change.")
             return Update(state: state)
         }
-        model.blocks[i] = updatedBlock
+        model.blocks.blocks[i] = updatedBlock
         
         let indexPath = IndexPath(
             row: i,
@@ -675,17 +787,17 @@ extension BlockEditor.Model: ModelProtocol {
         state: Model,
         id: UUID
     ) -> Update {
-        guard state.isBlockSelectMode else {
+        guard state.blocks.isBlockSelectMode else {
             Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
             return Update(state: state)
         }
         
-        guard let i = state.block(id: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             return Update(state: state)
         }
         
         var model = state
-        let block = model.blocks[i]
+        let block = model.blocks.blocks[i]
         let isSelected = block.isBlockSelected
         let updatedBlock = block.setBlockSelected(!isSelected) ?? block
 
@@ -693,7 +805,7 @@ extension BlockEditor.Model: ModelProtocol {
             Self.logger.debug("Block selection state did not change.")
             return Update(state: state)
         }
-        model.blocks[i] = updatedBlock
+        model.blocks.blocks[i] = updatedBlock
         
         let indexPath = IndexPath(
             row: i,
@@ -710,12 +822,12 @@ extension BlockEditor.Model: ModelProtocol {
         state: Model,
         id: UUID
     ) -> Update {
-        guard let i = state.blocks.firstIndex(whereID: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return Update(state: state)
         }
         
-        var blocksArray = state.blocks
+        var blocksArray = state.blocks.blocks
         
         guard i > blocksArray.startIndex else {
             Self.logger.log("block#\(id) can't move up first block. Doing nothing.")
@@ -725,7 +837,7 @@ extension BlockEditor.Model: ModelProtocol {
         let h = blocksArray.index(before: i)
         blocksArray.swapAt(h, i)
         var model = state
-        model.blocks = blocksArray
+        model.blocks.blocks = blocksArray
         
         let atIndexPath = IndexPath(
             row: i,
@@ -747,12 +859,12 @@ extension BlockEditor.Model: ModelProtocol {
         state: Model,
         id: UUID
     ) -> Update {
-        guard let i = state.blocks.firstIndex(whereID: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return Update(state: state)
         }
         
-        var blocksArray = state.blocks
+        var blocksArray = state.blocks.blocks
         
         let lastItemIndex = blocksArray.index(before: blocksArray.endIndex)
         guard i < lastItemIndex else {
@@ -764,7 +876,7 @@ extension BlockEditor.Model: ModelProtocol {
         blocksArray.swapAt(i, j)
         
         var model = state
-        model.blocks = blocksArray
+        model.blocks.blocks = blocksArray
         
         let atIndexPath = IndexPath(
             row: i,
@@ -792,12 +904,12 @@ extension BlockEditor.Model: ModelProtocol {
             Range<String.Index>
         ) -> BlockEditor.SubtextEditorMarkup.Replacement?
     ) -> Update {
-        guard let i = state.blocks.firstIndex(whereID: id) else {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
             Self.logger.log("block#\(id) not found. Doing nothing.")
             return Update(state: state)
         }
         
-        let block = state.blocks[i]
+        let block = state.blocks.blocks[i]
 
         guard let text = block.text else {
             Self.logger.log("block#\(id) can't insert markup. Block has no text. Doing nothing.")
@@ -832,7 +944,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         var model = state
-        model.blocks[i] = block
+        model.blocks.blocks[i] = block
         
         let indexPath = IndexPath(
             row: i,

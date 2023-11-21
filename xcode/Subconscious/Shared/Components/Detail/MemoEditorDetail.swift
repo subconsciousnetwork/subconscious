@@ -103,7 +103,8 @@ struct MemoEditorDetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(MemoEditorDetailAction.appear(description))
+            store.send(.appear(description))
+            blockEditorStore.send(.appear(description))
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
