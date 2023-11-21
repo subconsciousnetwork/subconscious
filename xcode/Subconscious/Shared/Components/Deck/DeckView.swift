@@ -176,7 +176,11 @@ extension DeckAction {
 typealias DeckEnvironment = AppEnvironment
 
 enum CardType: Equatable, Hashable {
-    case entry(entry: EntryStub, author: UserProfile, backlinks: [EntryStub])
+    case entry(
+        entry: EntryStub,
+        author: UserProfile,
+        backlinks: [EntryStub]
+    )
     case action(String)
 }
 
@@ -186,8 +190,18 @@ struct CardModel: Identifiable, Equatable, Hashable {
 }
 
 extension CardModel {
-    init(entry: EntryStub, user: UserProfile, backlinks: [EntryStub]) {
-        self.init(card: .entry(entry: entry, author: user, backlinks: backlinks))
+    init(
+        entry: EntryStub,
+        user: UserProfile,
+        backlinks: [EntryStub]
+    ) {
+        self.init(
+            card: .entry(
+                entry: entry,
+                author: user,
+                backlinks: backlinks
+            )
+        )
     }
 }
 
@@ -233,16 +247,6 @@ struct DeckDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
-//        case let .requestDeleteMemo(slashlink):
-//            return .requestDeleteMemo(slashlink)
-//        case let .succeedMergeEntry(parent: parent, child: child):
-//            return .succeedMergeEntry(parent: parent, child: child)
-//        case let .succeedMoveEntry(from: from, to: to):
-//            return .succeedMoveEntry(from: from, to: to)
-//        case let .succeedUpdateAudience(receipt):
-//            return .succeedUpdateAudience(receipt)
-//        case let .succeedSaveEntry(address: address, modified: modified):
-//            return .succeedSaveEntry(slug: address, modified: modified)
         case _:
             return .detailStack(action)
         }
