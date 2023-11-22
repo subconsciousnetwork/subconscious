@@ -341,7 +341,7 @@
 		B8AB08AC2A9D4F8D00998099 /* BlockEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */; };
 		B8AB08AE2A9D4FA800998099 /* BlockEditorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */; };
 		B8AB08B12A9D4FC300998099 /* BlockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B02A9D4FC300998099 /* BlockModel.swift */; };
-		B8AB08B32A9D4FDD00998099 /* BlockProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */; };
+		B8AB08B32A9D4FDD00998099 /* BlockActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B22A9D4FDD00998099 /* BlockActions.swift */; };
 		B8AB08B52A9D4FF000998099 /* HeadingBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */; };
 		B8AB08B72A9D500C00998099 /* QuoteBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */; };
 		B8AB08B92A9D501600998099 /* TextBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B82A9D501600998099 /* TextBlockCell.swift */; };
@@ -770,7 +770,7 @@
 		B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditor.swift; sourceTree = "<group>"; };
 		B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorModel.swift; sourceTree = "<group>"; };
 		B8AB08B02A9D4FC300998099 /* BlockModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockModel.swift; sourceTree = "<group>"; };
-		B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockProtocols.swift; sourceTree = "<group>"; };
+		B8AB08B22A9D4FDD00998099 /* BlockActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockActions.swift; sourceTree = "<group>"; };
 		B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingBlockCell.swift; sourceTree = "<group>"; };
 		B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteBlockCell.swift; sourceTree = "<group>"; };
 		B8AB08B82A9D501600998099 /* TextBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextBlockCell.swift; sourceTree = "<group>"; };
@@ -1453,7 +1453,7 @@
 				B834C0422AB4D40200705F2F /* BlockEditorBlockSelectView.swift */,
 				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
 				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
-				B8AB08B22A9D4FDD00998099 /* BlockProtocols.swift */,
+				B8AB08B22A9D4FDD00998099 /* BlockActions.swift */,
 				B8E6AACE2B0D41F500A3A11B /* BlocksModel.swift */,
 				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
 				B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */,
@@ -2031,7 +2031,7 @@
 				B8AB08C52A9D50AB00998099 /* BlockToolbar.swift in Sources */,
 				B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */,
 				B508957029E79BE70048106B /* UserProfileService.swift in Sources */,
-				B8AB08B32A9D4FDD00998099 /* BlockProtocols.swift in Sources */,
+				B8AB08B32A9D4FDD00998099 /* BlockActions.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
 				B86F1AB728C77E8C00DA264E /* Search.swift in Sources */,
 				B8AB08B12A9D4FC300998099 /* BlockModel.swift in Sources */,
