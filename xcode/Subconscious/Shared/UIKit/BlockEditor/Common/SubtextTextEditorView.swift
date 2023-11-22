@@ -42,6 +42,7 @@ class SubtextTextEditorView: UIView.SubtextTextView {
     ) {
         self.send = send
         super.init(frame: frame, textContainer: textContainer)
+        self.delegate = self
         self.inputAccessoryView = toolbar
     }
     
