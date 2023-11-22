@@ -71,7 +71,7 @@ struct CardView: View {
 enum CardDragGestureProgress {
     case inactive
     case started
-    case changed
+    case active
 }
 
 struct CardStack: View {
@@ -92,10 +92,6 @@ struct CardStack: View {
     @State var offsets: [CardModel:CGSize] = [:]
     @GestureState private var gestureState: CardDragGestureProgress = .inactive
     @Environment(\.colorScheme) var colorScheme
-    
-//    func indexOf(card: CardModel) -> Int? {
-//        return deck.firstIndex(where: { $0.id == card.id })
-//    }
     
     func offset(`for`: CardModel) -> CGSize {
         offsets[`for`] ?? CGSize.zero
@@ -186,8 +182,12 @@ struct CardStack: View {
                                         // Background cards rotate for decoration
                                         : .degrees(rotation(for: index, stackFactor: stackFactor))
                                     )
-                                    .gesture(TapGesture().onEnded({ onCardTapped(card) }))
+                                    .gesture(TapGesture()
+                                        .onEnded({ onCardTapped(card) })
+                                    )
                                     .gesture(DragGesture()
+                                         // For some reason this seems to be the only way
+                                         // to detect the start of a drag gesture
                                         .updating(
                                             $gestureState,
                                             body: { (value, state, transaction) in
@@ -197,16 +197,18 @@ struct CardStack: View {
                                                     onSwipeStart()
                                                     break
                                                 case .started:
-                                                    state = .changed
+                                                    state = .active
                                                     break
-                                                case .changed:
+                                                case .active:
                                                     break
                                                 }
                                             }
                                         )
                                         .onChanged { gesture in
                                             withAnimation(.interactiveSpring()) {
+                                                // Clear old offsets
                                                 offsets.removeAll()
+                                                // Stick the top card to the gesture
                                                 offsets[card] = gesture.translation
                                             }
                                         }

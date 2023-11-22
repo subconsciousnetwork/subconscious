@@ -194,7 +194,7 @@ actor UserProfileService {
     
     /// Attempt to read & deserialize a user `_profile_.json` from the indexed copy.
     /// This can only work for user's we follow & have indexed, otherwise it returns nil
-    public func readProfileFromDb(
+    func readProfileFromDb(
         did: Did
     ) async throws -> UserProfileEntry? {
         guard let data = try database.readUserProfile(did: did) else {

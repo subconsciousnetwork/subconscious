@@ -1172,7 +1172,7 @@ final class DatabaseService {
         .first
     }
     
-    func readRandomFreshEntryForCard(owner: Did?, seen: [Slashlink]) -> EntryStub? {
+    func readRandomUnseenEntry(owner: Did?, seen: [Slashlink]) -> EntryStub? {
         guard self.state == .ready else {
             return nil
         }
