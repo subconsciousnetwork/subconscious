@@ -24,7 +24,7 @@ struct CardView: View {
             switch entry.card {
             case let .entry(entry, _, backlinks):
                 SubtextView(subtext: entry.excerpt)
-                    // Opacity allows blendMode to work
+                    // Opacity allows blendMode to show through
                     .foregroundStyle(.primary.opacity(0.8))
                 
                 Spacer()
@@ -75,6 +75,9 @@ enum CardDragGestureProgress {
 }
 
 struct CardStack: View {
+    private static let swipeActivationThreshold = 128.0
+    private static let swipeThrowDistance = 1024.0
+    
     var deck: [CardModel]
     var current: Int
     
@@ -84,16 +87,15 @@ struct CardStack: View {
     var onSwipeAbandoned: () -> Void
     var onCardTapped: (CardModel) -> Void
         
-    // Use a dictionary of offsets so that we can animate two cards
-    // at once during the transition between.
-    // This dictionary is cleared by the gesture lifecycle
+    // Use a dictionary of offsets so that we can animate two cards at once during the transition.
+    // This dictionary is frequently cleared during the gesture lifecycle.
     @State var offsets: [CardModel:CGSize] = [:]
     @GestureState private var gestureState: CardDragGestureProgress = .inactive
     @Environment(\.colorScheme) var colorScheme
     
-    func indexOf(card: CardModel) -> Int? {
-        return deck.firstIndex(where: { $0.id == card.id })
-    }
+//    func indexOf(card: CardModel) -> Int? {
+//        return deck.firstIndex(where: { $0.id == card.id })
+//    }
     
     func offset(`for`: CardModel) -> CGSize {
         offsets[`for`] ?? CGSize.zero
@@ -107,31 +109,29 @@ struct CardStack: View {
         return offset(for: deck[index])
     }
     
-    private static let THRESHOLD = 128.0
-    
+    // Ranges from -1 (skip) to 1 (choose)
     var swipeProgress: CGFloat {
-        return (offset(for: current).width / Self.THRESHOLD).clamp(min: -1.0, max: 1.0)
+        return (
+            offset(
+                for: current
+            ).width / Self.swipeActivationThreshold
+        ).clamp(
+            min: -1.0,
+            max: 1.0
+        )
     }
     
-    func rotation(for index: Int) -> Double {
-        let t = max(0, CGFloat(index - current)) / 16.0 + (swipeProgress) / 64.0
-        let newT = t
-        let fundamental = 6.0*Double(sin(CGFloat(newT - 0.1) * 40))
-        let harmonic = 2.0*Double(sin((newT - 0.45) * 10))
+    func stackFactor(for index: Int) -> CGFloat {
+        return max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
+    }
+    
+    func rotation(for index: Int, stackFactor: CGFloat) -> Double {
+        let fundamental = 6.0*Double(sin(CGFloat(stackFactor - 0.1) * 40))
+        let harmonic = 2.0*Double(sin((stackFactor - 0.45) * 10))
         
         let result = (fundamental + harmonic)
         
-        return result + (t * swipeProgress * 5)
-    }
-    
-    func rotation(t: CGFloat) -> Double {
-        let newT = t
-        let fundamental = 4.0*Double(sin(CGFloat(newT - 1) * 5))
-        let harmonic = 1.0*Double(sin((newT - 0.45) * 10))
-        
-        let result = (fundamental + harmonic)
-        
-        return result + (t * swipeProgress / 80.0)
+        return result + (stackFactor * swipeProgress * 5)
     }
     
     var body: some View {
@@ -140,51 +140,51 @@ struct CardStack: View {
             GeometryReader { geo in
                 ZStack {
                     let deck = Array(deck.enumerated())
-                    ForEach(deck, id: \.element.id) {
-                        index,
-                        card in
-                        if (index >= current - 1 && index < current + 5) {
+                    ForEach(deck, id: \.element.id) { index, card in
+                        if (index >= current - 1 && index < current + 3) {
                             VStack {
                                 Spacer()
                                 
-                                let t = max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
+                                let stackFactor = stackFactor(for: index)
                                 CardView(entry: card)
-                                    .frame(width: geo.size.width, height: geo.size.width * 1.25)
-                                    .overlay(
-                                        RoundedRectangle(
-                                            cornerSize: CGSize(
-                                                width: 32,
-                                                height: 32
-                                            ),
-                                            style: .continuous
-                                        )
-                                        .fill(colorScheme == .dark ? DeckTheme.darkFog : DeckTheme.lightFog)
-                                        .opacity(4.0*t)
+                                    // Size card based on available space
+                                    .frame(
+                                        width: geo.size.width,
+                                        height: geo.size.width * 1.25
                                     )
-                                    .scaleEffect(max(0,min(1, 1-t + 0.03)))
+                                    // Fade cards out towards a neutral color based on depth
+                                    .overlay(
+                                        Rectangle()
+                                            .fill(
+                                                colorScheme == .dark
+                                                ? DeckTheme.darkFog
+                                                : DeckTheme.lightFog
+                                            )
+                                            .opacity(4.0*stackFactor)
+                                    )
+                                    .scaleEffect(max(0,min(1, 1-stackFactor + 0.03)))
                                     .rotation3DEffect(
                                         .degrees(
                                             -swipeProgress * 100.0 * (
-                                                0.1-t
+                                                0.1-stackFactor
                                             )
                                         ),
-                                        axis: (
-                                            offset(
-                                                for: card
-                                            ).height / 100.0,
-                                            1,
-                                            0
-                                        ),
+                                        // Tilt the card based on the vertical displacement
+                                        axis: (offset(for: card).height / 100.0, 1, 0),
                                         perspective: 0.5
                                     )
                                     .offset(
+                                        // Move with the swipe
                                         x: offset(for: card).width,
+                                        // Slightly follow the swipe
                                         y: offset(for: card).height / 4.0
                                     )
                                     .rotationEffect(
-                                        index != current
-                                        ? .degrees(rotation(for: index))
-                                        : .degrees(Double(offset(for: card).width / 32.0))
+                                        index == current
+                                        // Foreground card rotates based on gesture
+                                        ? .degrees(Double(offset(for: card).width / 32.0))
+                                        // Background cards rotate for decoration
+                                        : .degrees(rotation(for: index, stackFactor: stackFactor))
                                     )
                                     .gesture(TapGesture().onEnded({ onCardTapped(card) }))
                                     .gesture(DragGesture()
@@ -204,25 +204,26 @@ struct CardStack: View {
                                                 }
                                             }
                                         )
-                                            .onChanged { gesture in
-                                                withAnimation(.interactiveSpring()) {
-                                                    offsets.removeAll()
-                                                    offsets[card] = gesture.translation
-                                                }
+                                        .onChanged { gesture in
+                                            withAnimation(.interactiveSpring()) {
+                                                offsets.removeAll()
+                                                offsets[card] = gesture.translation
                                             }
+                                        }
                                         .onEnded { _ in
                                             withAnimation(DeckTheme.reboundSpring) {
                                                 let offset = offset(for: card).width
-                                                if abs(offset) > Self.THRESHOLD {
-                                                    // Swipe out the card
-                                                    offsets[card]?.width = offset > 0 ? 1024 : -1024
+                                                if abs(offset) > Self.swipeActivationThreshold {
+                                                    // Throw the current card offscreen
+                                                    offsets[card]?.width =
+                                                        offset > 0
+                                                            ? Self.swipeThrowDistance
+                                                            : -Self.swipeThrowDistance
                                                     
-                                                    withAnimation(DeckTheme.reboundSpring) {
-                                                        if (offset > 0) {
-                                                            onSwipeRight(card)
-                                                        } else {
-                                                            onSwipeLeft(card)
-                                                        }
+                                                    if (offset > 0) {
+                                                        onSwipeRight(card)
+                                                    } else {
+                                                        onSwipeLeft(card)
                                                     }
                                                 } else {
                                                     // Reset the card position
@@ -231,10 +232,15 @@ struct CardStack: View {
                                                 }
                                             }
                                         })
+                                    // Prevent any gestures on background cards
                                     .disabled(index != current)
+                                    // Fade out cards as we move past them
                                     .opacity(index >= current ? 1 : 0)
+                                    // Reduce shadow intensity with depth
                                     .shadow(
-                                        color: DeckTheme.cardShadow.opacity(0.25 * (1.0 - 5.0*t)),
+                                        color: DeckTheme.cardShadow.opacity(
+                                            0.25 * (1.0 - 5.0*stackFactor)
+                                        ),
                                         radius: 4,
                                         x: 0,
                                         y: 2
@@ -252,7 +258,10 @@ struct CardStack: View {
         }
         .overlay(
             Rectangle()
-                .frame(width: 16, height: 400)
+                .frame(
+                    width: DeckTheme.dragTargetSize.width,
+                    height: DeckTheme.dragTargetSize.height
+                )
                 .foregroundStyle(Color.brandMarkPink)
                 .offset(x: 200, y: 0)
                 .blur(radius: 16)
@@ -261,7 +270,10 @@ struct CardStack: View {
         )
         .overlay(
             Rectangle()
-                .frame(width: 16, height: 400)
+                .frame(
+                    width: DeckTheme.dragTargetSize.width,
+                    height: DeckTheme.dragTargetSize.height
+                )
                 .foregroundStyle(Color.brandMarkPink)
                 .offset(x: -200, y: 0)
                 .blur(radius: 16)
@@ -269,15 +281,6 @@ struct CardStack: View {
                 .opacity(-swipeProgress)
         )
     }
-    
-//    func updateStack() {
-//        for i in 0..<cards.count {
-//            cards[i].scale = 1 - CGFloat(i) * 0.02
-//            withAnimation(.spring()) {
-//                cards[i].offset.height = CGFloat(i) * 10
-//            }
-//        }
-//    }
 }
 
 

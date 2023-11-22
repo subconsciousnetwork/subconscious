@@ -175,6 +175,8 @@ struct DeckDetailStackCursor: CursorProtocol {
     }
 }
 
+typealias EnumeratedDeck = [EnumeratedSequence<[CardModel]>.Element]
+
 // MARK: Model
 struct DeckModel: ModelProtocol {
     public static let backlinksToDraw = 1
@@ -204,7 +206,11 @@ struct DeckModel: ModelProtocol {
     var selectionFeedback = UISelectionFeedbackGenerator()
     var feedback = UIImpactFeedbackGenerator()
     
-    static func insertAtRandomIndex<T>(item: T, into array: inout [T], skippingFirst skipCount: Int) {
+    static func insertAtRandomIndex<T>(
+        item: T,
+        into array: inout [T],
+        skippingFirst skipCount: Int
+    ) {
         // Calculate the starting index for the random range
         let startIndex = array.count < skipCount ? 0 : skipCount
         // Ensure the end index is at least equal to the start index
@@ -338,21 +344,20 @@ struct DeckModel: ModelProtocol {
             
             return Update(state: model)
         case .cardPickedUp:
-            // Should these be in an FX?
             state.feedback.prepare()
             state.selectionFeedback.prepare()
             state.selectionFeedback.selectionChanged()
+            
             return Update(state: state)
             
         case .cardReleased:
-            // Should these be in an FX?
             state.feedback.prepare()
             state.selectionFeedback.prepare()
             state.selectionFeedback.selectionChanged()
+            
             return Update(state: state)
             
         case let .cardTapped(card):
-            // Should these be in an FX?
             state.feedback.prepare()
             state.feedback.impactOccurred()
             
@@ -424,32 +429,26 @@ struct DeckModel: ModelProtocol {
             }
             
         case .skipCard:
-            var model = state
             state.feedback.impactOccurred()
             
             let fx: Fx<DeckAction> = Future.detached {
                 var results: [EntryStub] = []
                 let us = try await environment.noosphere.identity()
-                var max = 1
-                for _ in 0..<25 {
-                    guard max > 0 else {
-                        break
-                    }
-                    
-                    guard let entry = environment.database.readRandomFreshEntryForCard(
-                        owner: us,
-                        seen: model.seen.map { entry in entry.address }
-                    ) else {
-                        return .topupDeck
-                    }
-                    
-                    max -= 1
-                    results.append(entry)
+                
+                guard let entry = environment.database.readRandomFreshEntryForCard(
+                    owner: us,
+                    seen: state.seen.map { entry in entry.address }
+                ) else {
+                    return .topupDeck
                 }
                 
                 var draw: [CardModel] = []
                 for entry in results {
-                    let card = try await toCard(entry: entry, ourIdentity: us, environment: environment)
+                    let card = try await toCard(
+                        entry: entry,
+                        ourIdentity: us,
+                        environment: environment
+                    )
                     draw.append(card)
                 }
                 
@@ -459,7 +458,7 @@ struct DeckModel: ModelProtocol {
             .eraseToAnyPublisher()
             
             return update(
-                state: model,
+                state: state,
                 action: .nextCard,
                 environment: environment
             ).mergeFx(fx)

@@ -12,6 +12,8 @@ enum DeckTheme {}
 extension DeckTheme {
     static let reboundSpring = Animation.spring(duration: 0.4, bounce: 0.5)
     
+    static let dragTargetSize = CGSize(width: 16, height: 400)
+    
     static let cardPadding = AppTheme.unit * 5
     static let cornerRadius: CGFloat = 32.0
     static let cardSize = CGSize(width: 374, height: 420)
