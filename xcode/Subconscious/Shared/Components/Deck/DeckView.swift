@@ -10,58 +10,6 @@ import SwiftUI
 import ObservableStore
 import Combine
 
-enum DeckTheme {}
-
-extension DeckTheme {
-    static let reboundSpring = Animation.spring(duration: 0.4, bounce: 0.5)
-    
-    static let cardPadding = AppTheme.unit * 5
-    static let cornerRadius: CGFloat = 32.0
-    static let cardSize = CGSize(width: 374, height: 420)
-    
-    static let cardShadow = Color(red: 0.45, green: 0.25, blue: 0.75)
-    
-    static let lightFog = Color(red: 0.93, green: 0.81, blue: 0.92)
-    
-    static let lightBg = LinearGradient(
-        stops: [
-            Gradient.Stop(color: Color(red: 0.87, green: 0.86, blue: 0.92), location: 0.00),
-            Gradient.Stop(color: lightFog, location: 0.38),
-            Gradient.Stop(color: Color(red: 0.92, green: 0.92, blue: 0.85), location: 1.00),
-        ],
-        startPoint: UnitPoint(x: 0.5, y: 0.9),
-        endPoint: UnitPoint(x: 0.5, y: 0)
-    )
-    
-    static let darkFog = Color(red: 0.2, green: 0.14, blue: 0.26)
-    
-    static let darkBg = LinearGradient(
-        stops: [
-            Gradient.Stop(color: Color(red: 0.13, green: 0.14, blue: 0.2), location: 0.00),
-            Gradient.Stop(color: darkFog, location: 0.44),
-            Gradient.Stop(color: Color(red: 0.1, green: 0.04, blue: 0.11), location: 1.00),
-        ],
-        startPoint: UnitPoint(x: 0.5, y: 0),
-        endPoint: UnitPoint(x: 0.5, y: 1)
-    )
-    
-    static let lightCardColors: [Color] = [
-        Color(red: 0.97, green: 0.49, blue: 0.75),
-        Color(red: 0.56, green: 0.62, blue: 0.93),
-        Color(red: 0.93, green: 0.59, blue: 0.56),
-        Color(red: 0.74, green: 0.52, blue: 0.95),
-        Color(red: 0.97, green: 0.75, blue: 0.48)
-    ]
-    
-    static let darkCardColors: [Color] = [
-        Color(red: 0.64, green: 0.35, blue: 0.93),
-        Color(red: 0.91, green: 0.37, blue: 0.35),
-        Color(red: 0.72, green: 0.37, blue: 0.84),
-        Color(red: 0.97, green: 0.43, blue: 0.72),
-        Color(red: 0.9, green: 0.62, blue: 0.28)
-    ]
-}
-
 struct DeckView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject var store: Store<DeckModel> = Store(
@@ -110,12 +58,12 @@ struct DeckView: View {
             store.send(.appear)
         }
         .frame(maxWidth: .infinity)
-        /// Replay some app actions on feed store
+        /// Replay some app actions on deck store
         .onReceive(
             app.actions.compactMap(DeckAction.from),
             perform: store.send
         )
-        /// Replay some feed actions on app store
+        /// Replay some deck actions on app store
         .onReceive(
             store.actions.compactMap(AppAction.from),
             perform: app.send
@@ -141,13 +89,17 @@ enum DeckAction: Hashable {
     
     case appear
     case setDeck([CardModel])
-    case chooseCard(CardModel)
+    
     case cardPickedUp
     case cardReleased
     case cardTapped(CardModel)
+    
+    case chooseCard(CardModel)
     case skipCard(CardModel)
+    
     case appendCards([CardModel])
     case shuffleCardsUpNext([CardModel])
+    
     case topupDeck
     case noCardsToDraw
     
@@ -174,36 +126,6 @@ extension DeckAction {
 }
 
 typealias DeckEnvironment = AppEnvironment
-
-enum CardType: Equatable, Hashable {
-    case entry(
-        entry: EntryStub,
-        author: UserProfile,
-        backlinks: [EntryStub]
-    )
-    case action(String)
-}
-
-struct CardModel: Identifiable, Equatable, Hashable {
-    var id: UUID = UUID()
-    var card: CardType
-}
-
-extension CardModel {
-    init(
-        entry: EntryStub,
-        user: UserProfile,
-        backlinks: [EntryStub]
-    ) {
-        self.init(
-            card: .entry(
-                entry: entry,
-                author: user,
-                backlinks: backlinks
-            )
-        )
-    }
-}
 
 struct DeckSearchCursor: CursorProtocol {
     typealias Model = DeckModel
@@ -255,6 +177,8 @@ struct DeckDetailStackCursor: CursorProtocol {
 
 // MARK: Model
 struct DeckModel: ModelProtocol {
+    public static let backlinksToDraw = 1
+    
     typealias Action = DeckAction
     typealias Environment = DeckEnvironment
     
@@ -263,17 +187,18 @@ struct DeckModel: ModelProtocol {
         category: "DeckModel"
     )
     
-    var deck: [CardModel] = []
-    var seen: [EntryStub] = []
-    
     var detailStack = DetailStackModel()
+    
     /// Search HUD
     var isSearchPresented = false
-    /// Search HUD
     var search = SearchModel(
         placeholder: "Search or create..."
     )
     
+    var deck: [CardModel] = []
+    
+    // The set of cards to avoid drawing again, if possible
+    var seen: Set<EntryStub> = []
     var pointer: Int = 0
     var author: UserProfile? = nil
     var selectionFeedback = UISelectionFeedbackGenerator()
@@ -334,15 +259,18 @@ struct DeckModel: ModelProtocol {
             )
         case .appear:
             let fx: Fx<DeckAction> = Future.detached {
-                var results: [EntryStub] = []
                 let us = try await environment.noosphere.identity()
+                let recent = try environment.database.listFeed(owner: us)
                 
-                var max = 2
-                for _ in 0..<25 {
-                    guard max > 0 else {
-                        break
-                    }
-                    
+                var initialDraw = Array(recent.filter {
+                    entry in !isTooShort(card: entry)
+                }
+                .prefix(10) // take the 10 most recent posts
+                .shuffled() // shuffle
+                .prefix(3)) // take 3
+                
+                // Draw 2 random cards to keep it surprising
+                for _ in 0..<2 {
                     guard let entry = environment.database.readRandomEntry(owner: us) else {
                         continue
                     }
@@ -351,34 +279,19 @@ struct DeckModel: ModelProtocol {
                         continue
                     }
                     
-                    max -= 1
-                    results.append(entry)
+                    initialDraw.append(entry)
                 }
                 
-                let recent = try environment.database.listFeed(owner: us)
-                var draw = Array(recent.filter {
-                    entry in !isTooShort(card: entry)
-                }
-                .prefix(10)
-                .shuffled()
-                .prefix(3))
-                
-                draw.append(contentsOf: results)
-                draw.shuffle()
+                initialDraw.shuffle()
                 
                 var deck: [CardModel] = []
-                for entry in draw {
-                    let user = try await environment.userProfile.identifyUser(
-                        did: entry.did,
-                        address: entry.address,
-                        context: nil
+                for entry in initialDraw {
+                    let card = try await toCard(
+                        entry: entry,
+                        ourIdentity: us,
+                        environment: environment
                     )
-                    let backlinks = try environment.database.readEntryBacklinks(
-                        owner: us,
-                        did: entry.did,
-                        slug: entry.address.slug
-                    )
-                    deck.append(CardModel(entry: entry, user: user, backlinks: backlinks))
+                    deck.append(card)
                 }
                 
                 return .setDeck(deck)
@@ -389,54 +302,29 @@ struct DeckModel: ModelProtocol {
             return Update(state: state, fx: fx)
         case .topupDeck:
             let fx: Fx<DeckAction> = Future.detached {
-                var results: [EntryStub] = []
                 let us = try await environment.noosphere.identity()
-                var max = 1
-                for _ in 0..<25 {
-                    guard max > 0 else {
-                        break
-                    }
-                    
-                    guard let entry = environment.database.readRandomFreshEntryForCard(owner: us, seen: state.seen.map { entry in entry.address }) else {
-                        break
-                    }
-                    
-                    max -= 1
-                    results.append(entry)
+                // We're in a fallback case where we failed to find a card
+                // so just draw ANYTHING
+                guard let entry = environment.database.readRandomEntry(owner: us) else {
+                    return .noCardsToDraw
                 }
                 
-                var deck: [CardModel] = []
-                for entry in results {
-                    let user = try await environment.userProfile.identifyUser(
-                        did: entry.did,
-                        address: entry.address,
-                        context: nil
-                    )
-                    let backlinks = try environment.database.readEntryBacklinks(
-                        owner: us,
-                        did: entry.did,
-                        slug: entry.address.slug
-                    )
-                    deck.append(CardModel(entry: entry, user: user, backlinks: backlinks))
-                }
-                
-                return .appendCards(deck)
+                let card = try await toCard(
+                    entry: entry,
+                    ourIdentity: us,
+                    environment: environment
+                )
+                return .appendCards([card])
             }
-            .recover({ error in .setDeck([]) })
+            .recover({ error in .noCardsToDraw })
             .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
+            
         case let .setDeck(deck):
             var model = state
             model.deck = deck
-            model.seen = deck.compactMap { card in
-                switch card.card {
-                case let .entry(entry, author, backlinks):
-                    return entry
-                default:
-                    return nil
-                }
-            }
+            model.seen = Set(deck.compactMap { card in card.entry })
             model.pointer = 0
             
             if let topCard = deck.first {
@@ -450,19 +338,25 @@ struct DeckModel: ModelProtocol {
             
             return Update(state: model)
         case .cardPickedUp:
+            // Should these be in an FX?
             state.feedback.prepare()
             state.selectionFeedback.prepare()
             state.selectionFeedback.selectionChanged()
             return Update(state: state)
+            
         case .cardReleased:
+            // Should these be in an FX?
+            state.feedback.prepare()
             state.selectionFeedback.prepare()
             state.selectionFeedback.selectionChanged()
             return Update(state: state)
+            
         case let .cardTapped(card):
+            // Should these be in an FX?
             state.feedback.prepare()
             state.feedback.impactOccurred()
-            switch card.card {
-            case let .entry(entry, author, backlinks):
+            
+            if let entry = card.entry {
                 return update(
                     state: state,
                     action: .detailStack(
@@ -475,45 +369,43 @@ struct DeckModel: ModelProtocol {
                     ),
                     environment: environment
                 )
-            case _:
-                return Update(state: state)
             }
+            
+            return Update(state: state)
             
         case let .chooseCard(card):
             state.feedback.impactOccurred()
             
             switch card.card {
-            case let .entry(entry, author, backlinks):
+            case let .entry(_, _, backlinks):
                 let fx: Fx<DeckAction> = Future.detached {
                     let us = try await environment.noosphere.identity()
-                    var backlinks = try environment.database
-                        .readEntryBacklinks(owner: us, did: entry.did, slug: entry.address.slug)
-                        .filter({ backlink in !isSeen(card: backlink) && !isTooShort(card: backlink) })
-                    backlinks.shuffle()
+                    
+                    // Filter to valid backlinks
+                    var backlinks = backlinks
+                        .filter({ backlink in
+                            !isSeen(card: backlink) && !isTooShort(card: backlink)
+                        })
+                        .shuffled()
                     
                     if backlinks.count == 0 {
                         return .topupDeck
                     }
                     
                     var draw: [CardModel] = []
-                    for entry in backlinks.prefix(1) {
-                        let user = try await environment.userProfile.identifyUser(
-                            did: entry.did,
-                            address: entry.address,
-                            context: nil
+                    for entry in backlinks.prefix(backlinksToDraw) {
+                        let card = try await toCard(
+                            entry: entry,
+                            ourIdentity: us,
+                            environment: environment
                         )
-                        let backlinks = try environment.database.readEntryBacklinks(
-                            owner: us,
-                            did: entry.did,
-                            slug: entry.address.slug
-                        )
-                        draw.append(CardModel(entry: entry, user: user, backlinks: backlinks))
+                        draw.append(card)
                     }
                     
                     return .shuffleCardsUpNext(draw)
                 }
                 .recover({ error in
-                    return .noCardsToDraw
+                    return .topupDeck
                 })
                 .eraseToAnyPublisher()
                 
@@ -533,7 +425,6 @@ struct DeckModel: ModelProtocol {
             
         case .skipCard:
             var model = state
-            model.pointer += 1
             state.feedback.impactOccurred()
             
             let fx: Fx<DeckAction> = Future.detached {
@@ -545,8 +436,11 @@ struct DeckModel: ModelProtocol {
                         break
                     }
                     
-                    guard let entry = environment.database.readRandomFreshEntryForCard(owner: us, seen: model.seen.map { entry in entry.address }) else {
-                        break
+                    guard let entry = environment.database.readRandomFreshEntryForCard(
+                        owner: us,
+                        seen: model.seen.map { entry in entry.address }
+                    ) else {
+                        return .topupDeck
                     }
                     
                     max -= 1
@@ -555,17 +449,8 @@ struct DeckModel: ModelProtocol {
                 
                 var draw: [CardModel] = []
                 for entry in results {
-                    let user = try await environment.userProfile.identifyUser(
-                        did: entry.did,
-                        address: entry.address,
-                        context: nil
-                    )
-                    let backlinks = try environment.database.readEntryBacklinks(
-                        owner: us,
-                        did: entry.did,
-                        slug: entry.address.slug
-                    )
-                    draw.append(CardModel(entry: entry, user: user, backlinks: backlinks))
+                    let card = try await toCard(entry: entry, ourIdentity: us, environment: environment)
+                    draw.append(card)
                 }
                 
                 return .appendCards(draw)
@@ -573,17 +458,25 @@ struct DeckModel: ModelProtocol {
             .recover({ error in .appendCards([]) })
             .eraseToAnyPublisher()
             
-            return Update(state: model, fx: fx)
+            return update(
+                state: model,
+                action: .nextCard,
+                environment: environment
+            ).mergeFx(fx)
+            
         case let .shuffleCardsUpNext(entries):
             var model = state
             for entry in entries.filter({ entry in !inDeck(card: entry) }) {
-                
-                // insert entry into deck at random index (not the first 2 spots)
-                Self.insertAtRandomIndex(item: entry, into: &model.deck, skippingFirst: state.pointer + 1)
+                // insert entry into deck at random past our pointer (not the first 2 spots)
+                Self.insertAtRandomIndex(
+                    item: entry,
+                    into: &model.deck,
+                    skippingFirst: state.pointer + 1
+                )
                 
                 switch entry.card {
                 case let .entry(entry, _, _):
-                    model.seen.append(entry)
+                    model.seen.insert(entry)
                     break
                 default:
                     break
@@ -598,7 +491,7 @@ struct DeckModel: ModelProtocol {
                 
                 switch entry.card {
                 case let .entry(entry, _, _):
-                    model.seen.append(entry)
+                    model.seen.insert(entry)
                     break
                 default:
                     break
@@ -625,6 +518,26 @@ struct DeckModel: ModelProtocol {
         case .cardPresented(let card):
             logger.log("Card presented \(card.id)")
             return Update(state: state)
+        }
+        
+        func toCard(
+            entry: EntryStub,
+            ourIdentity: Did,
+            environment: DeckEnvironment
+        ) async throws -> CardModel {
+            let user = try await environment.userProfile.identifyUser(
+                did: entry.did,
+                address: entry.address,
+                context: nil
+            )
+            
+            let backlinks = try environment.database.readEntryBacklinks(
+                owner: ourIdentity,
+                did: entry.did,
+                slug: entry.address.slug
+            )
+            
+            return CardModel(entry: entry, user: user, backlinks: backlinks)
         }
         
         func isTooShort(card: EntryStub) -> Bool {

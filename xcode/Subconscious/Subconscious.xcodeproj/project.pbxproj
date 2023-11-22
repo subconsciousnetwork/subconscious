@@ -88,6 +88,8 @@
 		B58C73A729DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
 		B58C73A829DBB3B500B00EA1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */; };
 		B58CC8DF2B0C6ED5004CFFEA /* DeckNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58CC8DE2B0C6ED5004CFFEA /* DeckNavigationView.swift */; };
+		B58CC8E12B0DCEB2004CFFEA /* DeckTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58CC8E02B0DCEB2004CFFEA /* DeckTheme.swift */; };
+		B58CC8E32B0DCFEE004CFFEA /* CardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58CC8E22B0DCFEE004CFFEA /* CardModel.swift */; };
 		B58E90A62AFA02B0000C0E65 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58E90A52AFA02B0000C0E65 /* DeckView.swift */; };
 		B58FD6712A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */; };
 		B58FD6732A4E4C0E00826548 /* InviteCodeSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */; };
@@ -596,6 +598,8 @@
 		B58C1FB92A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFrameViewModifier.swift; sourceTree = "<group>"; };
 		B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		B58CC8DE2B0C6ED5004CFFEA /* DeckNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckNavigationView.swift; sourceTree = "<group>"; };
+		B58CC8E02B0DCEB2004CFFEA /* DeckTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckTheme.swift; sourceTree = "<group>"; };
+		B58CC8E22B0DCFEE004CFFEA /* CardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardModel.swift; sourceTree = "<group>"; };
 		B58E90A52AFA02B0000C0E65 /* DeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckView.swift; sourceTree = "<group>"; };
 		B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayProvisioningSettingsSection.swift; sourceTree = "<group>"; };
 		B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeSettingsSection.swift; sourceTree = "<group>"; };
@@ -1056,9 +1060,11 @@
 		B58CC8DD2B0C6C26004CFFEA /* Deck */ = {
 			isa = PBXGroup;
 			children = (
+				B58CC8E02B0DCEB2004CFFEA /* DeckTheme.swift */,
 				B58E90A52AFA02B0000C0E65 /* DeckView.swift */,
-				B5C818D52AF380A7001F65BE /* CardStackView.swift */,
 				B58CC8DE2B0C6ED5004CFFEA /* DeckNavigationView.swift */,
+				B58CC8E22B0DCFEE004CFFEA /* CardModel.swift */,
+				B5C818D52AF380A7001F65BE /* CardStackView.swift */,
 			);
 			path = Deck;
 			sourceTree = "<group>";
@@ -2125,6 +2131,7 @@
 				B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */,
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8AB08BF2A9D506300998099 /* BlockEditorRepresentable.swift in Sources */,
+				B58CC8E12B0DCEB2004CFFEA /* DeckTheme.swift in Sources */,
 				B8AB08D22A9D523600998099 /* UIViewIconButton.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */,
@@ -2192,6 +2199,7 @@
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
+				B58CC8E32B0DCFEE004CFFEA /* CardModel.swift in Sources */,
 				B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */,
 				B59D556329BBFF56007915E2 /* FormField.swift in Sources */,
 				B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */,
