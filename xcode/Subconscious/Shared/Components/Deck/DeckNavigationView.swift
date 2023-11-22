@@ -23,58 +23,59 @@ struct DeckNavigationView: View {
     
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
-            VStack {
-                VStack(alignment: .leading) {
-                    HStack(alignment: .center, spacing: AppTheme.unit3) {
-                        if case let .entry(_, author, _) = store.state.topCard?.card,
-                           let name = author.toNameVariant() {
-                            ProfilePic(pfp: author.pfp, size: .large)
-                            
-                            VStack(alignment: .leading, spacing: AppTheme.unit) {
-                                PetnameView(
-                                    name: name,
-                                    aliases: [],
-                                    showMaybePrefix: false
-                                )
-                            }
-                        }
+            VStack(alignment: .leading) {
+                HStack(alignment: .center, spacing: AppTheme.unit3) {
+                    if case let .entry(_, author, _) = store.state.topCard?.card,
+                       let name = author.toNameVariant() {
+                        ProfilePic(pfp: author.pfp, size: .large)
+                        
+                        PetnameView(
+                            name: name,
+                            aliases: [],
+                            showMaybePrefix: false
+                        )
                     }
-                    
-                    if (store.state.deck.isEmpty) {
-                        ProgressView()
-                    }
-                    
-                    CardStack(
-                        deck: store.state.deck,
-                        current: store.state.pointer,
-                        onSwipeRight: { card in
-                            store.send(
-                                .chooseCard(
-                                    card
-                                )
-                            )
-                        },
-                        onSwipeLeft: { card in
-                            store.send(
-                                .skipCard(
-                                    card
-                                )
-                            )
-                        },
-                        onSwipeStart: {
-                            store.send(.cardPickedUp)
-                        },
-                        onSwipeAbandoned: {
-                            store.send(.cardReleased)
-                        },
-                        onCardTapped: { card in
-                            store.send(.cardTapped(card))
-                        }
-                    )
-                    .offset(x: 0, y: -AppTheme.unit * 8)
                 }
-                .padding(AppTheme.padding)
+                
+                if (store.state.deck.isEmpty) {
+                    VStack(alignment: .center) {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                
+                CardStack(
+                    deck: store.state.deck,
+                    current: store.state.pointer,
+                    onSwipeRight: { card in
+                        store.send(
+                            .chooseCard(
+                                card
+                            )
+                        )
+                    },
+                    onSwipeLeft: { card in
+                        store.send(
+                            .skipCard(
+                                card
+                            )
+                        )
+                    },
+                    onSwipeStart: {
+                        store.send(.cardPickedUp)
+                    },
+                    onSwipeAbandoned: {
+                        store.send(.cardReleased)
+                    },
+                    onCardTapped: { card in
+                        store.send(.cardTapped(card))
+                    }
+                )
+                .offset(x: 0, y: -AppTheme.unit * 8)
             }
+            .padding(AppTheme.padding)
             .frame(maxWidth: .infinity)
             .background(
                 colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
