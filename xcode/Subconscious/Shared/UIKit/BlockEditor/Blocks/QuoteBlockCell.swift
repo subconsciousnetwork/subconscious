@@ -100,8 +100,7 @@ extension BlockEditor {
             quoteContainer.addSubview(quoteBar)
             
             stackView.addArrangedSubview(transcludeListView)
-            stackView.addArrangedSubview(.spacer())
-
+            
             selectView.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(selectView)
 
@@ -204,11 +203,9 @@ extension BlockEditor {
             self.id = state.id
             transcludeListView.update(
                 parentController: parentController,
-                rootView: TranscludeListView(
-                    entries: state.transcludes,
-                    onViewTransclude: { _ in },
-                    onTranscludeLink: { _, _ in }
-                )
+                entries: state.transcludes,
+                onViewTransclude: { _ in },
+                onTranscludeLink: { _, _ in }
             )
             if textView.text != state.text {
                 textView.text = state.text

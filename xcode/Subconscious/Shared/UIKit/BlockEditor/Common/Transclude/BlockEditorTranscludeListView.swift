@@ -30,6 +30,28 @@ extension BlockEditor {
     }
 }
 
+extension UIHostingView where Content == BlockEditor.TranscludeListView {
+    /// Define a custom update function for UIHostintViews with
+    /// TranscludeListView. Will automatically hide view if no entries.
+    func update(
+        parentController: UIViewController,
+        entries: [EntryStub],
+        onViewTransclude: @escaping (EntryStub) -> Void,
+        onTranscludeLink: @escaping (ResolvedAddress, SubSlashlinkLink) -> Void
+    ) {
+        // Hide if empty
+        self.isHidden = entries.isEmpty
+        self.update(
+            parentController: parentController,
+            rootView: BlockEditor.TranscludeListView(
+                entries: entries,
+                onViewTransclude: onViewTransclude,
+                onTranscludeLink: onTranscludeLink
+            )
+        )
+    }
+}
+
 struct BlockTranscludeListView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
