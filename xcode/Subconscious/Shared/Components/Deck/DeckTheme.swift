@@ -10,7 +10,7 @@ import SwiftUI
 enum DeckTheme {}
 
 extension DeckTheme {
-    static let reboundSpring = Animation.spring(duration: 0.4, bounce: 0.5)
+    static let reboundSpring: Animation = .spring(duration: 0.4, bounce: 0.5, blendDuration: 0)
     
     static let dragTargetSize = CGSize(width: 16, height: 400)
     
