@@ -26,18 +26,27 @@ extension UIView {
             bottom: AppTheme.unit2,
             right: AppTheme.padding
         )
-
+        
         override init(frame: CGRect, textContainer: NSTextContainer?) {
             super.init(frame: frame, textContainer: textContainer)
-            textStorage.delegate = self
-            
             // Automatically adjust font size based on system font size
             adjustsFontForContentSizeCategory = true
             font = .preferredFont(forTextStyle: .body)
             textContainerInset = defaultTextContainerInset
             self.textContainer.lineFragmentPadding = 0
+            textStorage.delegate = self
+            // !!!: Hack to trigger initial rendering of attributes
+            // UITextView has a bug where a text view that has been created
+            // with an empty string does not correctly render attributes until
+            // given a non-empty string. This results in a jump triggered by
+            // a change in intrinsic content size when the attributes are
+            // first applied.
+            //
+            // After being rendered with a non-empty string, it works properly.
+            self.text = " "
+            self.text = ""
         }
-                
+        
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
@@ -59,7 +68,9 @@ extension UIView {
           changeInLength: Int
         ) {
             renderer.renderAttributesOf(textStorage)
-            Self.logger.debug("Rendered Subtext attributes")
+            Self.logger.debug(
+                "SubtextTextView#\(self.id) Rendered Subtext attributes"
+            )
         }
     }
 }
