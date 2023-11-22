@@ -43,6 +43,7 @@ extension UIView {
             // first applied.
             //
             // After being rendered with a non-empty string, it works properly.
+            // 2023-11-22 Gordon
             self.text = " "
             self.text = ""
         }
