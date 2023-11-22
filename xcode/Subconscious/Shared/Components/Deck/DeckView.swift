@@ -175,8 +175,6 @@ struct DeckDetailStackCursor: CursorProtocol {
     }
 }
 
-typealias EnumeratedDeck = [EnumeratedSequence<[CardModel]>.Element]
-
 // MARK: Model
 struct DeckModel: ModelProtocol {
     public static let backlinksToDraw = 1
@@ -264,6 +262,37 @@ struct DeckModel: ModelProtocol {
                 environment: environment
             )
         case .appear:
+            return appear(state: state, environment: environment)
+        case .topupDeck:
+            return topupDeck(state: state, environment: environment)
+        case let .setDeck(deck):
+            return setDeck(state: state, deck: deck, environment: environment)
+        case .cardPickedUp:
+            return cardPickedUp(state: state)
+        case .cardReleased:
+            return cardReleased(state: state)
+        case let .cardTapped(card):
+            return cardTapped(state: state, card: card, environment: environment)
+        case let .chooseCard(card):
+            return chooseCard(state: state, card: card, environment: environment)
+        case .skipCard:
+            return skipCard(state: state, environment: environment)
+        case let .shuffleCardsUpNext(entries):
+            return shuffleCardsUpNext(state: state, entries: entries)
+        case let .appendCards(entries):
+            return appendCards(state: state, entries: entries)
+        case .noCardsToDraw:
+            return noCardsToDraw(state: state)
+        case .nextCard:
+            return nextCard(state: state, environment: environment)
+        case let .cardPresented(card):
+            return cardPresented(state: state, card: card)
+        }
+        
+        func appear(
+            state: Self,
+            environment: Environment
+        ) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 let recent = try environment.database.listFeed(owner: us)
@@ -306,7 +335,9 @@ struct DeckModel: ModelProtocol {
             .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
-        case .topupDeck:
+        }
+        
+        func topupDeck(state: Self, environment: Environment) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 // We're in a fallback case where we failed to find a card
@@ -326,8 +357,9 @@ struct DeckModel: ModelProtocol {
             .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
-            
-        case let .setDeck(deck):
+        }
+
+        func setDeck(state: Self, deck: [CardModel], environment: Environment) -> Update<Self> {
             var model = state
             model.deck = deck
             model.seen = Set(deck.compactMap { card in card.entry })
@@ -343,21 +375,25 @@ struct DeckModel: ModelProtocol {
             }
             
             return Update(state: model)
-        case .cardPickedUp:
+        }
+
+        func cardPickedUp(state: Self) -> Update<Self> {
             state.feedback.prepare()
             state.selectionFeedback.prepare()
             state.selectionFeedback.selectionChanged()
             
             return Update(state: state)
-            
-        case .cardReleased:
+        }
+
+        func cardReleased(state: Self) -> Update<Self> {
             state.feedback.prepare()
             state.selectionFeedback.prepare()
             state.selectionFeedback.selectionChanged()
             
             return Update(state: state)
-            
-        case let .cardTapped(card):
+        }
+
+        func cardTapped(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.prepare()
             state.feedback.impactOccurred()
             
@@ -377,8 +413,9 @@ struct DeckModel: ModelProtocol {
             }
             
             return Update(state: state)
-            
-        case let .chooseCard(card):
+        }
+
+        func chooseCard(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.impactOccurred()
             
             switch card.card {
@@ -387,7 +424,7 @@ struct DeckModel: ModelProtocol {
                     let us = try await environment.noosphere.identity()
                     
                     // Filter to valid backlinks
-                    var backlinks = backlinks
+                    let backlinks = backlinks
                         .filter({ backlink in
                             !isSeen(card: backlink) && !isTooShort(card: backlink)
                         })
@@ -427,15 +464,16 @@ struct DeckModel: ModelProtocol {
                     environment: environment
                 )
             }
-            
-        case .skipCard:
+        }
+
+        func skipCard(state: Self, environment: Environment) -> Update<Self> {
             state.feedback.impactOccurred()
             
             let fx: Fx<DeckAction> = Future.detached {
                 var results: [EntryStub] = []
                 let us = try await environment.noosphere.identity()
                 
-                guard let entry = environment.database.readRandomFreshEntryForCard(
+                guard let entry = environment.database.readRandomUnseenEntry(
                     owner: us,
                     seen: state.seen.map { entry in entry.address }
                 ) else {
@@ -462,8 +500,9 @@ struct DeckModel: ModelProtocol {
                 action: .nextCard,
                 environment: environment
             ).mergeFx(fx)
-            
-        case let .shuffleCardsUpNext(entries):
+        }
+
+        func shuffleCardsUpNext(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
             for entry in entries.filter({ entry in !inDeck(card: entry) }) {
                 // insert entry into deck at random past our pointer (not the first 2 spots)
@@ -483,7 +522,9 @@ struct DeckModel: ModelProtocol {
             }
             
             return Update(state: model)
-        case let .appendCards(entries):
+        }
+
+        func appendCards(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
             for entry in entries.filter({ entry in !inDeck(card: entry) }) {
                 model.deck.append(entry)
@@ -498,10 +539,14 @@ struct DeckModel: ModelProtocol {
             }
             
             return Update(state: model)
-        case .noCardsToDraw:
+        }
+
+        func noCardsToDraw(state: Self) -> Update<Self> {
             logger.log("No cards to draw")
             return Update(state: state)
-        case .nextCard:
+        }
+
+        func nextCard(state: Self, environment: Environment) -> Update<Self> {
             var model = state
             model.pointer += 1
             
@@ -514,10 +559,13 @@ struct DeckModel: ModelProtocol {
             }
             
             return Update(state: model)
-        case .cardPresented(let card):
+        }
+
+        func cardPresented(state: Self, card: CardModel) -> Update<Self> {
             logger.log("Card presented \(card.id)")
             return Update(state: state)
         }
+
         
         func toCard(
             entry: EntryStub,
