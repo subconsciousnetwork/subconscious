@@ -103,7 +103,7 @@ struct MemoEditorDetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(.appear(description))
+            store.send(MemoEditorDetailAction.appear(description))
             blockEditorStore.send(.appear(description))
         }
         // Track changes to scene phase so we know when app gets
@@ -342,10 +342,6 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
-
-    //  Block editor actions
-    /// Force set the block editor's state
-    case forceSetBlockEditor(BlockEditor.Model)
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -632,8 +628,6 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     /// The text editor
     var editor = SubtextTextModel()
-    /// Block editor
-    var blockEditor = BlockEditor.Model.draft()
     
     /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false
@@ -699,12 +693,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
-            )
-        case let .forceSetBlockEditor(blockEditor):
-            return forceSetBlockEditor(
-                state: state,
-                environment: environment,
-                blockEditor: blockEditor
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -1078,16 +1066,6 @@ struct MemoEditorDetailModel: ModelProtocol {
         )
     }
     
-    static func forceSetBlockEditor(
-        state: MemoEditorDetailModel,
-        environment: AppEnvironment,
-        blockEditor: BlockEditor.Model
-    ) -> Update<MemoEditorDetailModel> {
-        var model = state
-        model.blockEditor = blockEditor
-        return Update(state: model)
-    }
-
     /// Set the contents of the editor and mark save state and modified time.
     static func setEditor(
         state: MemoEditorDetailModel,
