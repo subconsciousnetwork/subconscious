@@ -7,43 +7,42 @@
 
 import Foundation
 
-protocol BlockInlineFormattingDelegate: AnyObject {
-    func boldButtonPressed(id: UUID, text: String, selection: NSRange)
-    func italicButtonPressed(id: UUID, text: String, selection: NSRange)
-    func codeButtonPressed(id: UUID, text: String, selection: NSRange)
-}
-
-protocol BlockTextEditingDelegate: AnyObject {
-    func requestSplit(
-        id: UUID,
-        selection: NSRange
-    )
-    func requestMerge(
-        id: UUID
-    )
-    func didChange(
-        id: UUID,
-        text: String,
-        selection: NSRange
-    )
-    func didChangeSelection(
-        id: UUID,
-        selection: NSRange
-    )
-    func didBeginEditing(id: UUID)
-    func didEndEditing(id: UUID)
-}
-
-protocol BlockControlsDelegate: AnyObject {
-    func upButtonPressed(id: UUID)
-    func downButtonPressed(id: UUID)
-    func dismissKeyboardButtonPressed(id: UUID)
-}
-
-protocol TextBlockDelegate:
-    BlockInlineFormattingDelegate &
-    BlockTextEditingDelegate &
-    BlockControlsDelegate
-{
-
+extension BlockEditor {
+    enum BlockInlineFormattingAction: Hashable {
+        case boldButtonPressed(id: UUID, text: String, selection: NSRange)
+        case italicButtonPressed(id: UUID, text: String, selection: NSRange)
+        case codeButtonPressed(id: UUID, text: String, selection: NSRange)
+    }
+    
+    enum BlockTextEditingAction: Hashable {
+        case requestSplit(
+            id: UUID,
+            selection: NSRange,
+            text: String
+        )
+        case requestMergeUp(id: UUID)
+        case didChange(
+            id: UUID,
+            text: String,
+            selection: NSRange
+        )
+        case didChangeSelection(
+            id: UUID,
+            selection: NSRange
+        )
+        case didBeginEditing(id: UUID)
+        case didEndEditing(id: UUID)
+    }
+    
+    enum BlockControlsAction {
+        case upButtonPressed(id: UUID)
+        case downButtonPressed(id: UUID)
+        case dismissKeyboardButtonPressed(id: UUID)
+    }
+    
+    enum TextBlockAction {
+        case inlineFormatting(BlockInlineFormattingAction)
+        case textEditing(BlockTextEditingAction)
+        case controls(BlockControlsAction)
+    }
 }

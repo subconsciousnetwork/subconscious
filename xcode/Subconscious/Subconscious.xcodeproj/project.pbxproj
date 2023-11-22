@@ -480,6 +480,7 @@
 		B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E2B02A29AD0E4D004A78B3 /* Slug.swift */; };
 		B8E62AE829D61E69008F7E74 /* Tests_UserDefaultProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */; };
 		B8E6AACF2B0D41F500A3A11B /* BlocksModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E6AACE2B0D41F500A3A11B /* BlocksModel.swift */; };
+		B8E6AAD52B0EA8C100A3A11B /* SubtextTextEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E6AAD42B0EA8C100A3A11B /* SubtextTextEditorView.swift */; };
 		B8EA3757299EBA5500D98E2B /* Tests_NoosphereService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EA3756299EBA5500D98E2B /* Tests_NoosphereService.swift */; };
 		B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */; };
 		B8EA3EE629159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */; };
@@ -870,6 +871,7 @@
 		B8E2B02A29AD0E4D004A78B3 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserDefaultProperty.swift; sourceTree = "<group>"; };
 		B8E6AACE2B0D41F500A3A11B /* BlocksModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlocksModel.swift; sourceTree = "<group>"; };
+		B8E6AAD42B0EA8C100A3A11B /* SubtextTextEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextTextEditorView.swift; sourceTree = "<group>"; };
 		B8EA3756299EBA5500D98E2B /* Tests_NoosphereService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_NoosphereService.swift; sourceTree = "<group>"; };
 		B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderSubtextMemoStore.swift; sourceTree = "<group>"; };
 		B8EA3EE72915C23200B92C2E /* HeaderSubtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderSubtext.swift; sourceTree = "<group>"; };
@@ -1438,6 +1440,7 @@
 		B8E0BBA52AAB90D000FBCB57 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B8E6AAD42B0EA8C100A3A11B /* SubtextTextEditorView.swift */,
 				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
 				B828F0AC2B029F6F00FDE4AE /* Transclude */,
 			);
@@ -2044,6 +2047,7 @@
 				B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */,
 				B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */,
 				B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */,
+				B8E6AAD52B0EA8C100A3A11B /* SubtextTextEditorView.swift in Sources */,
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B573395A2AEF829F00D43333 /* ToastStackView.swift in Sources */,
 				B800ABE8297DE7D20024D1FD /* DataService.swift in Sources */,

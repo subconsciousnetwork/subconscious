@@ -187,6 +187,10 @@ extension BlockEditor {
             }
         }
 
+        private func send(_ action: TextBlockAction) {
+            self.store.send(.from(action))
+        }
+
         /// Process a change message and perform related actions on controller.
         private func update(_ change: BlockEditor.Change) {
             Self.logger.log("Change: \(String(describing: change))")
@@ -377,7 +381,9 @@ extension BlockEditor {
                 withReuseIdentifier: TextBlockCell.identifier,
                 for: indexPath
             ) as! TextBlockCell
-            cell.delegate = self
+            cell.send = { [weak self] action in
+                self?.send(action)
+            }
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -391,8 +397,10 @@ extension BlockEditor {
                 withReuseIdentifier: HeadingBlockCell.identifier,
                 for: indexPath
             ) as! HeadingBlockCell
-            cell.delegate = self
-            cell.render(state)
+            cell.send = { [weak self] action in
+                self?.send(action)
+            }
+            cell.update(state)
             return cell
         }
         
@@ -405,7 +413,9 @@ extension BlockEditor {
                 withReuseIdentifier: QuoteBlockCell.identifier,
                 for: indexPath
             ) as! QuoteBlockCell
-            cell.delegate = self
+            cell.send = { [weak self] action in
+                self?.send(action)
+            }
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -419,7 +429,9 @@ extension BlockEditor {
                 withReuseIdentifier: ListBlockCell.identifier,
                 for: indexPath
             ) as! ListBlockCell
-            cell.delegate = self
+            cell.send = { [weak self] action in
+                self?.send(action)
+            }
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -439,69 +451,45 @@ extension BlockEditor {
     }
 }
 
-// MARK: TextBlockDelegate
-extension BlockEditor.ViewController: TextBlockDelegate {
-    func boldButtonPressed(id: UUID, text: String, selection: NSRange) {
-        store.send(.insertBold(id: id, selection: selection))
-    }
-    
-    func italicButtonPressed(id: UUID, text: String, selection: NSRange) {
-        store.send(.insertItalic(id: id, selection: selection))
-    }
-    
-    func codeButtonPressed(id: UUID, text: String, selection: NSRange) {
-        store.send(.insertCode(id: id, selection: selection))
-    }
-    
-    func requestSplit(id: UUID, selection: NSRange) {
-        store.send(.splitBlock(id: id, selection: selection))
-    }
-    
-    func requestMerge(id: UUID) {
-        store.send(.mergeBlockUp(id: id))
-    }
-    
-    func didChange(id: UUID, text: String, selection: NSRange) {
-        store.send(
-            .textDidChange(
-                id: id,
-                text: text,
-                selection: selection
-            )
-        )
-    }
-
-    func didChangeSelection(id: UUID, selection: NSRange) {
-        store.send(
-            .didChangeSelection(
-                id: id,
-                selection: selection
-            )
-        )
-    }
-    
-    func didBeginEditing(id: UUID) {
-        store.send(.editing(id: id))
-    }
-    
-    func didEndEditing(id: UUID) {
-        store.send(.blur(id: id))
-    }
-    
-    func upButtonPressed(id: UUID) {
-        store.send(.moveBlockUp(id: id))
-    }
-    
-    func downButtonPressed(id: UUID) {
-        store.send(.moveBlockDown(id: id))
-    }
-    
-    func dismissKeyboardButtonPressed(id: UUID) {
-        store.send(.renderBlur(id: id))
+extension BlockEditor.Action {
+    static func from(_ action: BlockEditor.TextBlockAction) -> Self {
+        switch action {
+        case .inlineFormatting(let blockInlineFormattingAction):
+            switch blockInlineFormattingAction {
+            case let .boldButtonPressed(id, _, selection):
+                return .insertBold(id: id, selection: selection)
+            case let .italicButtonPressed(id, _, selection):
+                return .insertItalic(id: id, selection: selection)
+            case let .codeButtonPressed(id, _, selection):
+                return .insertCode(id: id, selection: selection)
+            }
+        case .textEditing(let blockTextEditingAction):
+            switch blockTextEditingAction {
+            case let .requestMergeUp(id):
+                return .mergeBlockUp(id: id)
+            case let .requestSplit(id, selection, _):
+                return .splitBlock(id: id, selection: selection)
+            case let .didChange(id, text, selection):
+                return .textDidChange(id: id, text: text, selection: selection)
+            case let .didChangeSelection(id, selection):
+                return .didChangeSelection(id: id, selection: selection)
+            case let .didBeginEditing(id):
+                return .editing(id: id)
+            case let .didEndEditing(id):
+                return .blur(id: id)
+            }
+        case .controls(let blockControlsAction):
+            switch blockControlsAction {
+            case let .upButtonPressed(id):
+                return .moveBlockUp(id: id)
+            case let .downButtonPressed(id):
+                return .moveBlockDown(id: id)
+            case let .dismissKeyboardButtonPressed(id):
+                return .renderBlur(id: id)
+            }
+        }
     }
 }
-
-extension BlockEditor.ViewController: HeadingBlockCellDelegate {}
 
 // MARK: UIGestureRecognizerDelegate
 extension BlockEditor.ViewController: UIGestureRecognizerDelegate {
