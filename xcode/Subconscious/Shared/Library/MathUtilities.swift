@@ -8,8 +8,8 @@
 import Foundation
 
 extension Comparable {
-    public static func clamp<T: Comparable>(x: T, min lower: T, max upper: T) -> T {
-        return min(max(x, lower), upper)
+    public static func clamp<T: Comparable>(value: T, min lower: T, max upper: T) -> T {
+        return min(max(value, lower), upper)
     }
     
     public func clamp(min lower: Self, max upper: Self) -> Self {

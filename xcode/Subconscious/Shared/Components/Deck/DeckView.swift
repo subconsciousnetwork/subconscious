@@ -195,7 +195,7 @@ struct DeckModel: ModelProtocol {
         placeholder: "Search or create..."
     )
     
-    var deck: [CardModel] = []
+    var deck: Array<CardModel> = []
     
     // The set of cards to avoid drawing again, if possible
     var seen: Set<EntryStub> = []
@@ -203,27 +203,6 @@ struct DeckModel: ModelProtocol {
     var author: UserProfile? = nil
     var selectionFeedback = UISelectionFeedbackGenerator()
     var feedback = UIImpactFeedbackGenerator()
-    
-    static func insertAtRandomIndex<T>(
-        item: T,
-        into array: inout [T],
-        skippingFirst skipCount: Int
-    ) {
-        // Calculate the starting index for the random range
-        let startIndex = array.count < skipCount ? 0 : skipCount
-        // Ensure the end index is at least equal to the start index
-        let endIndex = max(startIndex, array.count)
-        
-        if (startIndex == endIndex) {
-            array.append(item)
-            return
-        }
-        
-        // Generate a random index within the range
-        let randomIndex = Int.random(in: startIndex..<endIndex)
-        
-        array.insert(item, at: randomIndex)
-    }
     
     var topCard: CardModel? {
         if pointer < 0 || pointer >= deck.count {
@@ -506,9 +485,8 @@ struct DeckModel: ModelProtocol {
             var model = state
             for entry in entries.filter({ entry in !inDeck(card: entry) }) {
                 // insert entry into deck at random past our pointer (not the first 2 spots)
-                Self.insertAtRandomIndex(
-                    item: entry,
-                    into: &model.deck,
+                model.deck.insertAtRandomIndex(
+                    entry,
                     skippingFirst: state.pointer + 1
                 )
                 
