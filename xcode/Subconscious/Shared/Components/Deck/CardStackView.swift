@@ -137,7 +137,7 @@ struct CardStack: View {
                 ZStack {
                     let deck = Array(deck.enumerated())
                     ForEach(deck, id: \.element.id) { index, card in
-                        if (index >= current - 1 && index < current + 3) {
+                        if (index >= current - 1 && index < current + 4) {
                             VStack {
                                 Spacer()
                                 
