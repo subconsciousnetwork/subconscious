@@ -8,15 +8,6 @@
 import Foundation
 import UIKit
 
-protocol BlockUIToolbarDelegate: AnyObject {
-    func upButtonPressed()
-    func downButtonPressed()
-    func boldButtonPressed()
-    func italicButtonPressed()
-    func codeButtonPressed()
-    func dismissKeyboardButtonPressed()
-}
-
 extension UIToolbar {
     static func blockToolbar(
         upButtonPressed: @escaping () -> Void,
