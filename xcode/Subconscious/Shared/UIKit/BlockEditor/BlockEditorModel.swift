@@ -288,14 +288,14 @@ extension BlockEditor.Model: ModelProtocol {
         }
     }
     
-    private static func ready(
+    static func ready(
         state: Model,
         environment: Model.Environment
     ) -> Update {
         return Update(state: state)
     }
     
-    private static func appear(
+    static func appear(
         state: Model,
         description: MemoEditorDetailDescription,
         environment: Model.Environment
@@ -308,7 +308,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    private static func setAddress(
+    static func setAddress(
         state: Model,
         address: Slashlink?,
         fallback: String = "",
@@ -340,7 +340,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
-    private static func reloadEditor(
+    static func reloadEditor(
         state: Model,
         detail: MemoEditorDetailResponse,
         autofocus: Bool = false,
@@ -352,7 +352,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model, change: .reloadEditor)
     }
     
-    private static func failReloadEditor(
+    static func failReloadEditor(
         state: Model,
         error: String,
         environment: Environment
@@ -362,7 +362,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
-    private static func textDidChange(
+    static func textDidChange(
         state: Model,
         id: UUID?,
         text: String,
@@ -393,7 +393,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model)
     }
     
-    private static func didChangeSelection(
+    static func didChangeSelection(
         state: Model,
         id: UUID,
         selection: NSRange
@@ -413,7 +413,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model)
     }
     
-    private static func splitBlock(
+    static func splitBlock(
         state: Model,
         id: UUID,
         selection nsRange: NSRange
@@ -480,7 +480,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    private static func mergeBlockUp(
+    static func mergeBlockUp(
         state: Model,
         id: UUID
     ) -> Update {
@@ -545,7 +545,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    private static func editing(
+    static func editing(
         state: Model,
         id: UUID
     ) -> Update {
@@ -556,7 +556,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model)
     }
     
-    private static func renderEditing(
+    static func renderEditing(
         state: Model,
         id: UUID
     ) -> Update {
@@ -581,7 +581,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    private static func blur(
+    static func blur(
         state: Model,
         id: UUID
     ) -> Update {
@@ -595,7 +595,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model)
     }
     
-    private static func renderBlur(
+    static func renderBlur(
         state: Model,
         id: UUID
     ) -> Update {
@@ -624,7 +624,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     // TODO: re-implement
-    private static func longPress(
+    static func longPress(
         state: Model,
         point: CGPoint
     ) -> Update {
@@ -651,7 +651,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     // TODO: Reimplement
-    private static func tap(
+    static func tap(
         state: Model,
         point: CGPoint
     ) -> Update {
@@ -677,7 +677,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     // TODO: Reimplement
-    private static func enterBlockSelectMode(
+    static func enterBlockSelectMode(
         state: Model,
         selecting id: UUID?
     ) -> Update {
@@ -706,7 +706,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     // TODO: Reimplement
-    private static func exitBlockSelectMode(
+    static func exitBlockSelectMode(
         state: Model
     ) -> Update {
 //        var model = state
@@ -733,7 +733,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
 
-    private static func updateBlock(
+    static func updateBlock(
         state: Model,
         id: UUID,
         transform: (BlockEditor.BlockModel) -> BlockEditor.BlockModel
@@ -748,7 +748,7 @@ extension BlockEditor.Model: ModelProtocol {
         return model
     }
 
-    private static func selectBlock(
+    static func selectBlock(
         state: Model,
         id: UUID,
         isSelected: Bool
@@ -783,7 +783,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
 
-    private static func toggleSelectBlock(
+    static func toggleSelectBlock(
         state: Model,
         id: UUID
     ) -> Update {
@@ -818,7 +818,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
 
-    private static func moveBlockUp(
+    static func moveBlockUp(
         state: Model,
         id: UUID
     ) -> Update {
@@ -855,7 +855,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    private static func moveBlockDown(
+    static func moveBlockDown(
         state: Model,
         id: UUID
     ) -> Update {
@@ -895,7 +895,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
         
     /// Insert markup at range within a block
-    private static func insertMarkup(
+    static func insertMarkup(
         state: Model,
         id: UUID,
         selection: NSRange,
@@ -957,7 +957,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
 
-    private static func insertBold(
+    static func insertBold(
         state: Model,
         id: UUID,
         selection: NSRange
@@ -970,7 +970,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    private static func insertItalic(
+    static func insertItalic(
         state: Model,
         id: UUID,
         selection: NSRange
@@ -983,7 +983,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    private static func insertCode(
+    static func insertCode(
         state: Model,
         id: UUID,
         selection: NSRange
