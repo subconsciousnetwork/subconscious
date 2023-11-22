@@ -30,14 +30,14 @@ struct MemoEditorDetailView: View {
         action: .start,
         environment: AppEnvironment.default
     )
-
+    
     @StateObject private var blockEditorStore = Store(
         state: BlockEditor.Model.draft(),
         action: .start,
         environment: AppEnvironment.default,
         logger: blockEditorStoreLogger
     )
-
+    
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented

@@ -77,7 +77,11 @@ extension BlockEditor {
         /// Sent from SwiftUI land when the wrapping SwiftUI view appears.
         case appear(MemoEditorDetailDescription)
         /// Set document source location
-        case setAddress(Slashlink?)
+        case setDocument(
+            address: Slashlink?,
+            fallback: String,
+            autofocus: Bool = false
+        )
         /// Reload the editor state with a new document
         case reloadEditor(
             detail: MemoEditorDetailResponse,
@@ -219,10 +223,12 @@ extension BlockEditor.Model: ModelProtocol {
                 description: description,
                 environment: environment
             )
-        case let .setAddress(address):
-            return setAddress(
+        case let .setDocument(address, fallback, autofocus):
+            return setDocument(
                 state: state,
                 address: address,
+                fallback: fallback,
+                autofocus: autofocus,
                 environment: environment
             )
         case let .reloadEditor(detail, autofocus):
@@ -398,19 +404,21 @@ extension BlockEditor.Model: ModelProtocol {
         description: MemoEditorDetailDescription,
         environment: Model.Environment
     ) -> Update {
-        return setAddress(
+        return update(
             state: state,
-            address: description.address,
-            fallback: description.fallback,
+            action: .setDocument(
+                address: description.address,
+                fallback: description.fallback
+            ),
             environment: environment
         )
     }
     
-    static func setAddress(
+    static func setDocument(
         state: Model,
         address: Slashlink?,
-        fallback: String = "",
-        autofocus: Bool = false,
+        fallback: String,
+        autofocus: Bool,
         environment: Environment
     ) -> Update {
         var model = state
@@ -531,7 +539,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
         // If already saved, noop
         guard state.saveState != .saved else {
-            logger.log("Already saved")
+            logger.log("Changes already saved")
             return Update(state: state)
         }
         var model = state
