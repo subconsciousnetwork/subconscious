@@ -33,6 +33,7 @@ struct MemoEditorDetailView: View {
 
     @StateObject private var blockEditorStore = Store(
         state: BlockEditor.Model.draft(),
+        action: .start,
         environment: AppEnvironment.default,
         logger: blockEditorStoreLogger
     )

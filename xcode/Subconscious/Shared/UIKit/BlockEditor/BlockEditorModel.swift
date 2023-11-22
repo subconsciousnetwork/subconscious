@@ -14,11 +14,15 @@ import ObservableStore
 extension BlockEditor {
     // MARK: Model
     struct Model: Hashable {
+        /// Time interval after which a load is considered stale, and should be
+        /// reloaded to make sure it is fresh.
+        static let loadStaleInterval: TimeInterval = 0.2
+        
         static let logger = Logger(
             subsystem: Config.default.rdns,
             category: "BlockEditor.Model"
         )
-
+        
         /// Create a BlockEditor "draft" document.
         /// A draft is a document with a heading block and nothing else.
         static func draft() -> Self {
@@ -30,16 +34,42 @@ extension BlockEditor {
                 )
             )
         }
-
-        var address: Slashlink?
+        
+        /// Is editor in loading state?
+        var loadingState = LoadingState.loading
+        /// When was the last time the editor issued a fetch from source of truth?
+        var lastLoadStarted: Date? = nil
+        
+        /// Is editor saved?
+        private(set) var saveState = SaveState.saved
+        
+        var address: Slashlink? = nil
+        var contentType = ContentType.subtext
+        var fileExtension = ContentType.subtext.fileExtension
+        /// Created date
+        var created: Date? = nil
+        /// Last modified date.
+        var modified: Date? = nil
+        var additionalHeaders: [Header] = []
+        
         var blocks: BlocksModel = BlocksModel()
         var appendix = RelatedModel()
+
+        mutating func setSaveState(_ state: SaveState) {
+            if self.saveState == state {
+                return
+            }
+            self.saveState = state
+            Self.logger.log("Editor save state: \(String(describing: state))")
+        }
     }
 }
 
 extension BlockEditor {
     // MARK: Actions
     enum Action {
+        /// Sent once when store is created
+        case start
         /// View is ready for updates.
         /// Sent during viewDidLoad after performing first view update for
         /// initial state and subscribing to changes.
@@ -48,8 +78,28 @@ extension BlockEditor {
         case appear(MemoEditorDetailDescription)
         /// Set document source location
         case setAddress(Slashlink?)
-        case reloadEditor(detail: MemoEditorDetailResponse, autofocus: Bool)
+        /// Reload the editor state with a new document
+        case reloadEditor(
+            detail: MemoEditorDetailResponse,
+            autofocus: Bool = false
+        )
+        /// Reload the editor if needed, using a last-write-wins strategy.
+        /// Only reloads if the provided state is newer than the current state.
+        case reloadEditorIfNeeded(
+            detail: MemoEditorDetailResponse,
+            autofocus: Bool = false
+        )
         case failReloadEditor(_ error: String)
+        /// Save a snapshot
+        case save(_ snapshot: MemoEntry?)
+        case succeedSave(_ snapshot: MemoEntry)
+        case failSave(
+            snapshot: MemoEntry,
+            error: String
+        )
+        /// Autosave whatever is in the editor.
+        /// Sent at some interval to save draft state.
+        case autosave
         case textDidChange(id: UUID?, text: String, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
         case splitBlock(id: UUID, selection: NSRange)
@@ -153,6 +203,11 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         switch action {
+        case .start:
+            return start(
+                state: state,
+                environment: environment
+            )
         case .ready:
             return ready(
                 state: state,
@@ -177,10 +232,41 @@ extension BlockEditor.Model: ModelProtocol {
                 autofocus: autofocus,
                 environment: environment
             )
+        case let .reloadEditorIfNeeded(detail, autofocus):
+            return reloadEditorIfNeeded(
+                state: state,
+                detail: detail,
+                autofocus: autofocus,
+                environment: environment
+            )
         case let .failReloadEditor(error):
             return failReloadEditor(
                 state: state,
                 error: error,
+                environment: environment
+            )
+        case let .save(snapshot):
+            return save(
+                state: state,
+                snapshot: snapshot,
+                environment: environment
+            )
+        case let .succeedSave(snapshot):
+            return succeedSave(
+                state: state,
+                snapshot: snapshot,
+                environment: environment
+            )
+        case let .failSave(snapshot, error):
+            return failSave(
+                state: state,
+                snapshot: snapshot,
+                error: error,
+                environment: environment
+            )
+        case .autosave:
+            return autosave(
+                state: state,
                 environment: environment
             )
         case let .textDidChange(id, text, selection):
@@ -288,6 +374,18 @@ extension BlockEditor.Model: ModelProtocol {
         }
     }
     
+    static func start(
+        state: Model,
+        environment: Model.Environment
+    ) -> Update {
+        /// Poll and autosave until this store is destroyed.
+        let pollFx: Fx<Model.Action> = AppEnvironment
+            .poll(every: Config.default.pollingInterval)
+            .map({ _ in .autosave })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: pollFx)
+    }
+
     static func ready(
         state: Model,
         environment: Model.Environment
@@ -340,6 +438,10 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
+    /// Reload editor, replacing whatever was previously there.
+    /// This is a "force reload" that does not attempt to gracefully save the
+    /// previous state. You typically want to use `reloadEditorIfNeeded`
+    /// instead.
     static func reloadEditor(
         state: Model,
         detail: MemoEditorDetailResponse,
@@ -347,9 +449,65 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         var model = state
+        // Finished loading. We have the data.
+        model.loadingState = .loaded
+        model.setSaveState(detail.saveState)
         model.address = detail.entry.address
+        model.created = detail.entry.contents.created
+        model.modified = detail.entry.contents.modified
+        // Get content type from loaded file, falling back to subtext
+        // if not provided.
+        model.contentType = (
+            ContentType(rawValue: detail.entry.contents.contentType) ??
+            ContentType.subtext
+        )
+        model.fileExtension = detail.entry.contents.fileExtension
+        model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.blocks = BlockEditor.BlocksModel(detail.entry.contents.body)
         return Update(state: model, change: .reloadEditor)
+    }
+    
+    /// Reload editor if needed, using a last-write-wins strategy.
+    static func reloadEditorIfNeeded(
+        state: Model,
+        detail: MemoEditorDetailResponse,
+        autofocus: Bool = false,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        // Finished loading. We have the data.
+        model.loadingState = .loaded
+
+        // Slugs don't match. Different entries.
+        // Save current state and set new detail.
+        guard (state.address == detail.entry.address) else {
+            let snapshot = MemoEntry(model)
+            logger.log("Block editor given new document. Saving current state and reloading with new document.")
+            return update(
+                state: model,
+                actions: [
+                    .save(snapshot),
+                    .reloadEditor(detail: detail, autofocus: autofocus)
+                ],
+                environment: environment
+            )
+        }
+
+        let modified = state.modified ?? Date.distantPast
+
+        // Make sure detail is newer than current editor modified state.
+        // Otherwise do nothing.
+        guard detail.entry.contents.modified > modified else {
+            logger.log("Block editor state is newer than loaded document. Preferring editor state.")
+            return Update(state: state)
+        }
+        
+        logger.log("Block editor given document that is newer than editor's last modified date. Considering editor content stale and reloading.")
+        return update(
+            state: model,
+            action: .reloadEditor(detail: detail, autofocus: autofocus),
+            environment: environment
+        )
     }
     
     static func failReloadEditor(
@@ -362,6 +520,91 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
+    static func save(
+        state: Model,
+        snapshot: MemoEntry?,
+        environment: Environment
+    ) -> Update {
+        guard let snapshot = snapshot else {
+            logger.log("Nothing to save")
+            return Update(state: state)
+        }
+        // If already saved, noop
+        guard state.saveState != .saved else {
+            logger.log("Already saved")
+            return Update(state: state)
+        }
+        var model = state
+        model.setSaveState(.saving)
+        logger.log("Saving \(snapshot.address)")
+
+        let fx: Fx<BlockEditor.Action> = environment.data
+            .writeEntryPublisher(snapshot)
+            .map({
+                .succeedSave(snapshot)
+            })
+            .recover({ error in
+                .failSave(
+                    snapshot: snapshot,
+                    error: error.localizedDescription
+                )
+            })
+            .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
+    }
+
+    static func succeedSave(
+        state: Model,
+        snapshot: MemoEntry,
+        environment: Environment
+    ) -> Update {
+        logger.log("Saved \(snapshot.address)")
+        
+        var model = state
+        
+        // If editor state is still the state we invoked save with,
+        // then mark the current editor state as "saved".
+        // We check before setting in case changes happened between the
+        // time we invoked save and the time it completed.
+        // If changes did happen in that time, we want to leave the current
+        // state alone, giving future saves a chance to pick up and save the
+        // new changes.
+        // 2023-11-22 Gordon Brander
+        if state.saveState == .saving {
+            let current = MemoEntry(state)
+            if (snapshot == current) {
+                model.setSaveState(.saved)
+            }
+        }
+        
+        return Update(state: model)
+    }
+    
+    static func failSave(
+        state: Model,
+        snapshot: MemoEntry,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.setSaveState(.unsaved)
+        logger.log("Could not save \(snapshot.address). Error: \(error)")
+        return Update(state: model)
+    }
+    
+    static func autosave(
+        state: Model,
+        environment: Environment
+    ) -> Update {
+        let snapshot = MemoEntry(state)
+        return save(
+            state: state,
+            snapshot: snapshot,
+            environment: environment
+        )
+    }
+
     static func textDidChange(
         state: Model,
         id: UUID?,
@@ -378,6 +621,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         var model = state
+        
         let block = state.blocks.blocks[i].setText(
             text: text,
             selection: selection
@@ -389,6 +633,9 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         model.blocks.blocks[i] = block
+
+        // Mark unsaved
+        model.setSaveState(.unsaved)
         
         return Update(state: model)
     }
@@ -470,6 +717,9 @@ extension BlockEditor.Model: ModelProtocol {
             section: BlockEditor.Section.blocks.rawValue
         )
         
+        // Mark unsaved
+        model.setSaveState(.unsaved)
+        
         return Update(
             state: model,
             change: .splitBlock(
@@ -534,7 +784,10 @@ extension BlockEditor.Model: ModelProtocol {
             row: indexDown,
             section: BlockEditor.Section.blocks.rawValue
         )
-        
+
+        // Mark unsaved
+        model.setSaveState(.unsaved)
+
         return Update(
             state: model,
             change: .mergeBlockUp(
@@ -732,22 +985,7 @@ extension BlockEditor.Model: ModelProtocol {
 //
         return Update(state: state)
     }
-
-    static func updateBlock(
-        state: Model,
-        id: UUID,
-        transform: (BlockEditor.BlockModel) -> BlockEditor.BlockModel
-    ) -> Model? {
-        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
-            Self.logger.log("block#\(id) not found. Doing nothing.")
-            return nil
-        }
-        var model = state
-        let block = model.blocks.blocks[i]
-        model.blocks.blocks[i] = transform(block)
-        return model
-    }
-
+    
     static func selectBlock(
         state: Model,
         id: UUID,
@@ -849,6 +1087,9 @@ extension BlockEditor.Model: ModelProtocol {
             section: BlockEditor.Section.blocks.rawValue
         )
         
+        // Mark unsaved
+        model.setSaveState(.unsaved)
+        
         return Update(
             state: model,
             change: .moveBlock(at: atIndexPath, to: toIndexPath)
@@ -887,7 +1128,10 @@ extension BlockEditor.Model: ModelProtocol {
             row: j,
             section: BlockEditor.Section.blocks.rawValue
         )
-
+        
+        // Mark unsaved
+        model.setSaveState(.unsaved)
+        
         return Update(
             state: model,
             change: .moveBlock(at: atIndexPath, to: toIndexPath)
@@ -951,6 +1195,9 @@ extension BlockEditor.Model: ModelProtocol {
             section: BlockEditor.Section.blocks.rawValue
         )
         
+        // Mark unsaved
+        model.setSaveState(.unsaved)
+        
         return Update(
             state: model,
             change: .reconfigureCollectionItem(indexPath)
@@ -993,6 +1240,26 @@ extension BlockEditor.Model: ModelProtocol {
             id: id,
             selection: selection,
             replace: BlockEditor.SubtextEditorMarkup.wrapCode
+        )
+    }
+}
+
+extension MemoEntry {
+    init?(_ model: BlockEditor.Model) {
+        guard let address = model.address else {
+            return nil
+        }
+        let now = Date.now
+        self.init(
+            address: address,
+            contents: Memo(
+                contentType: model.contentType.rawValue,
+                created: model.created ?? now,
+                modified: model.modified ?? now,
+                fileExtension: model.contentType.fileExtension,
+                additionalHeaders: model.additionalHeaders,
+                body: model.blocks.description
+            )
         )
     }
 }
