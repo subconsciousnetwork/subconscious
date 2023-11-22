@@ -526,7 +526,7 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         guard let snapshot = snapshot else {
-            logger.log("Nothing to save")
+            logger.log("Save given empty snapshot. Nothing to save.")
             return Update(state: state)
         }
         // If already saved, noop
