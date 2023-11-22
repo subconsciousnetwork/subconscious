@@ -7,29 +7,35 @@
 
 import UIKit
 
+extension BlockEditor {
+    enum BlockFormatMenuAction: Hashable {
+        case boldButtonPressed
+        case italicButtonPressed
+        case codeButtonPressed
+    }
+}
+
 extension UIMenu {
     static func blockFormatMenu(
-        onBold: @escaping () -> Void,
-        onItalic: @escaping () -> Void,
-        onCode: @escaping () -> Void
+        send: @escaping (BlockEditor.BlockFormatMenuAction) -> Void
     ) -> UIMenu {
         let bold = UIAction(
             title: "Bold",
             image: UIImage(systemName: "bold")
         ) { _ in
-            onBold()
+            send(.boldButtonPressed)
         }
         let italic = UIAction(
             title: "Italic",
             image: UIImage(systemName: "italic")
         ) { _ in
-            onItalic()
+            send(.italicButtonPressed)
         }
         let code = UIAction(
             title: "Code",
             image: UIImage(systemName: "curlybraces")
         ) { _ in
-            onCode()
+            send(.codeButtonPressed)
         }
 
         let menu = UIMenu(

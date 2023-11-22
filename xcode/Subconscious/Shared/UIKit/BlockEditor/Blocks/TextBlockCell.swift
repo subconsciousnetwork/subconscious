@@ -23,7 +23,7 @@ extension BlockEditor {
         
         private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var stackView = UIStackView()
-        private lazy var textView = UIView.SubtextTextEditorView(
+        private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
                 self?.send(action)
             }
@@ -95,7 +95,7 @@ extension BlockEditor {
         }
                
         private func send(
-            _ event: UIView.SubtextTextEditorView.Action
+            _ event: SubtextTextEditorAction
         ) {
             self.send(TextBlockAction.from(id: id, action: event))
         }

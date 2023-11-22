@@ -197,7 +197,7 @@ extension BlockEditor {
         }
 
         private func send(
-            _ event: UIView.SubtextTextEditorView.Action
+            _ event: SubtextTextEditorAction
         ) {
             self.send(TextBlockAction.from(id: id, action: event))
         }

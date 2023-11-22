@@ -46,3 +46,63 @@ extension BlockEditor {
         case controls(BlockControlsAction)
     }
 }
+
+extension BlockEditor.TextBlockAction {
+    static func from(
+        id: UUID,
+        action: SubtextTextEditorAction
+    ) -> Self {
+        switch action {
+        case .requestSplit(let text, let selection):
+            return .textEditing(
+                .requestSplit(id: id, selection: selection, text: text)
+            )
+        case .requestMergeUp:
+            return .textEditing(
+                .requestMergeUp(id: id)
+            )
+        case .textDidChange(let text, let selection):
+            return .textEditing(
+                .didChange(id: id, text: text, selection: selection)
+            )
+        case .selectionDidChange(let selection):
+            return .textEditing(
+                .didChangeSelection(id: id, selection: selection)
+            )
+        case .didBeginEditing:
+            return .textEditing(.didBeginEditing(id: id))
+        case .didEndEditing:
+            return .textEditing(.didEndEditing(id: id))
+        case .upButtonPressed:
+            return .controls(.upButtonPressed(id: id))
+        case .downButtonPressed:
+            return .controls(.downButtonPressed(id: id))
+        case .dismissKeyboardButtonPressed:
+            return .controls(.dismissKeyboardButtonPressed(id: id))
+        case .boldButtonPressed(let text, let selection):
+            return .inlineFormatting(
+                .boldButtonPressed(
+                    id: id,
+                    text: text,
+                    selection: selection
+                )
+            )
+        case .italicButtonPressed(let text, let selection):
+            return .inlineFormatting(
+                .italicButtonPressed(
+                    id: id,
+                    text: text,
+                    selection: selection
+                )
+            )
+        case .codeButtonPressed(let text, let selection):
+            return .inlineFormatting(
+                .codeButtonPressed(
+                    id: id,
+                    text: text,
+                    selection: selection
+                )
+            )
+        }
+    }
+}
