@@ -140,6 +140,48 @@ struct CardEffectModifier: ViewModifier {
     }
 }
 
+struct CardGestureModifier: ViewModifier {
+    @Binding var offsets: [CardModel:CGSize]
+    @GestureState private var gestureState: CardDragGestureProgress = .inactive
+    
+    var onTapped: () -> Void
+    var onSwipeStart: () -> Void
+    var onSwipeChanged: (CGSize) -> Void
+    var onSwipeComplete: () -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .gesture(
+                TapGesture().onEnded { _ in onTapped() }
+            )
+            .gesture(DragGesture()
+                 // For some reason this seems to be the only way
+                 // to detect the start of a drag gesture
+                .updating(
+                    $gestureState,
+                    body: { (value, state, transaction) in
+                        switch state {
+                        case .inactive:
+                            state = .started
+                            onSwipeStart()
+                            break
+                        case .started:
+                            state = .active
+                            break
+                        case .active:
+                            break
+                        }
+                    }
+                )
+                .onChanged { gesture in
+                    onSwipeChanged(gesture.translation)
+                }
+                .onEnded { _ in
+                    onSwipeComplete()
+                }
+            )
+    }
+}
 
 struct CardStack: View {
     private static let swipeActivationThreshold = 128.0
@@ -157,7 +199,6 @@ struct CardStack: View {
     // Use a dictionary of offsets so that we can animate two cards at once during the transition.
     // This dictionary is frequently cleared during the gesture lifecycle.
     @State var offsets: [CardModel:CGSize] = [:]
-    @GestureState private var gestureState: CardDragGestureProgress = .inactive
     @Environment(\.colorScheme) var colorScheme
     
     func offset(`for`: CardModel) -> CGSize {
@@ -186,6 +227,15 @@ struct CardStack: View {
     
     func stackFactor(for index: Int) -> CGFloat {
         return max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
+    }
+    
+    private func dragChanged(card: CardModel, translation: CGSize) {
+        withAnimation(.interactiveSpring()) {
+            // Clear old offsets
+            offsets.removeAll()
+            // Stick the top card to the gesture
+            offsets[card] = translation
+        }
     }
     
     private func dragComplete(card: CardModel) {
@@ -244,39 +294,18 @@ struct CardStack: View {
                                             colorScheme: colorScheme
                                         )
                                     )
-                                    .gesture(
-                                        TapGesture().onEnded({ onCardTapped(card) })
-                                    )
-                                    .gesture(DragGesture()
-                                         // For some reason this seems to be the only way
-                                         // to detect the start of a drag gesture
-                                        .updating(
-                                            $gestureState,
-                                            body: { (value, state, transaction) in
-                                                switch state {
-                                                case .inactive:
-                                                    state = .started
-                                                    onSwipeStart()
-                                                    break
-                                                case .started:
-                                                    state = .active
-                                                    break
-                                                case .active:
-                                                    break
-                                                }
+                                    .modifier(
+                                        CardGestureModifier(
+                                            offsets: $offsets,
+                                            onTapped: { onCardTapped(card) },
+                                            onSwipeStart: onSwipeStart,
+                                            onSwipeChanged: { translation in
+                                                dragChanged(card: card, translation: translation)
+                                            },
+                                            onSwipeComplete: {
+                                                dragComplete(card: card)
                                             }
                                         )
-                                        .onChanged { gesture in
-                                            withAnimation(.interactiveSpring()) {
-                                                // Clear old offsets
-                                                offsets.removeAll()
-                                                // Stick the top card to the gesture
-                                                offsets[card] = gesture.translation
-                                            }
-                                        }
-                                        .onEnded { _ in
-                                            dragComplete(card: card)
-                                        }
                                     )
                                     // Fade out cards as we move past them
                                     .opacity(index >= current ? 1 : 0)
@@ -317,7 +346,6 @@ struct CardStack: View {
         )
     }
 }
-
 
 struct CardStack_Previews: PreviewProvider {
     static var previews: some View {
