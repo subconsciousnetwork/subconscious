@@ -276,20 +276,14 @@ struct DeckModel: ModelProtocol {
                 let us = try await environment.noosphere.identity()
                 let recent = try environment.database.listFeed(owner: us)
                 
-                var initialDraw = Array(recent.filter {
-                    entry in !isTooShort(card: entry)
-                }
-                .prefix(10) // take the 10 most recent posts
-                .shuffled() // shuffle
-                .prefix(3)) // take 3
+                var initialDraw = Array(recent
+                    .prefix(10) // take the 10 most recent posts
+                    .shuffled() // shuffle
+                    .prefix(3)) // take 3
                 
                 // Draw 2 random cards to keep it surprising
                 for _ in 0..<2 {
                     guard let entry = environment.database.readRandomEntry(owner: us) else {
-                        continue
-                    }
-                    
-                    guard !isTooShort(card: entry) else {
                         continue
                     }
                     
@@ -300,11 +294,14 @@ struct DeckModel: ModelProtocol {
                 
                 var deck: [CardModel] = []
                 for entry in initialDraw {
-                    let card = try await toCard(
+                    guard let card = try await toCard(
                         entry: entry,
                         ourIdentity: us,
                         environment: environment
-                    )
+                    ) else {
+                        continue
+                    }
+                    
                     deck.append(card)
                 }
                 
@@ -325,11 +322,14 @@ struct DeckModel: ModelProtocol {
                     return .noCardsToDraw
                 }
                 
-                let card = try await toCard(
+                guard let card = try await toCard(
                     entry: entry,
                     ourIdentity: us,
                     environment: environment
-                )
+                ) else {
+                    return .noCardsToDraw
+                }
+                
                 return .appendCards([card])
             }
             .recover({ error in .noCardsToDraw })
@@ -404,9 +404,7 @@ struct DeckModel: ModelProtocol {
                     
                     // Filter to valid backlinks
                     let backlinks = backlinks
-                        .filter({ backlink in
-                            !isSeen(card: backlink) && !isTooShort(card: backlink)
-                        })
+                        .filter({ backlink in !isSeen(entry: backlink) })
                         .shuffled()
                     
                     if backlinks.count == 0 {
@@ -415,11 +413,14 @@ struct DeckModel: ModelProtocol {
                     
                     var draw: [CardModel] = []
                     for entry in backlinks.prefix(backlinksToDraw) {
-                        let card = try await toCard(
+                        guard let card = try await toCard(
                             entry: entry,
                             ourIdentity: us,
                             environment: environment
-                        )
+                        ) else {
+                            continue
+                        }
+                        
                         draw.append(card)
                     }
                     
@@ -449,7 +450,6 @@ struct DeckModel: ModelProtocol {
             state.feedback.impactOccurred()
             
             let fx: Fx<DeckAction> = Future.detached {
-                var results: [EntryStub] = []
                 let us = try await environment.noosphere.identity()
                 
                 guard let entry = environment.database.readRandomUnseenEntry(
@@ -460,14 +460,14 @@ struct DeckModel: ModelProtocol {
                 }
                 
                 var draw: [CardModel] = []
-                for entry in results {
-                    let card = try await toCard(
-                        entry: entry,
-                        ourIdentity: us,
-                        environment: environment
-                    )
-                    draw.append(card)
+                guard let card = try await toCard(
+                    entry: entry,
+                    ourIdentity: us,
+                    environment: environment
+                ) else {
+                    return .topupDeck
                 }
+                draw.append(card)
                 
                 return .appendCards(draw)
             }
@@ -483,7 +483,7 @@ struct DeckModel: ModelProtocol {
 
         func shuffleCardsUpNext(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
-            for entry in entries.filter({ entry in !inDeck(card: entry) }) {
+            for entry in entries.filter({ entry in !inDeck(entry: entry) }) {
                 // insert entry into deck at random past our pointer (not the first 2 spots)
                 model.deck.insertAtRandomIndex(
                     entry,
@@ -504,7 +504,7 @@ struct DeckModel: ModelProtocol {
 
         func appendCards(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
-            for entry in entries.filter({ entry in !inDeck(card: entry) }) {
+            for entry in entries.filter({ entry in !inDeck(entry: entry) }) {
                 model.deck.append(entry)
                 
                 switch entry.card {
@@ -549,32 +549,47 @@ struct DeckModel: ModelProtocol {
             entry: EntryStub,
             ourIdentity: Did,
             environment: DeckEnvironment
-        ) async throws -> CardModel {
-            let user = try await environment.userProfile.identifyUser(
-                did: entry.did,
-                address: entry.address,
-                context: nil
-            )
-            
+        ) async throws -> CardModel? {
+            // TODO: also list the slashlinks in the body of the card as possible connections
+            // these aren't "backlinks" so we should expand the name to "related"
             let backlinks = try environment.database.readEntryBacklinks(
                 owner: ourIdentity,
                 did: entry.did,
                 slug: entry.address.slug
             )
             
+            // Attempt to traverse THROUGH stub notes to find other links
+            if isTooShort(entry: entry) {
+                if backlinks.count > 0 {
+                    return try await toCard(
+                        entry: backlinks.randomElement()!,
+                        ourIdentity: ourIdentity,
+                        environment: environment
+                    )
+                } else {
+                    return nil
+                }
+            }
+            
+            let user = try await environment.userProfile.identifyUser(
+                did: entry.did,
+                address: entry.address,
+                context: nil
+            )
+            
             return CardModel(entry: entry, user: user, backlinks: backlinks)
         }
         
-        func isTooShort(card: EntryStub) -> Bool {
-            return card.excerpt.base.count < 64
+        func isTooShort(entry: EntryStub) -> Bool {
+            return entry.excerpt.base.count < 64
         }
         
-        func isSeen(card: EntryStub) -> Bool {
-            return state.seen.contains(where: { entry in entry == card })
+        func isSeen(entry: EntryStub) -> Bool {
+            return state.seen.contains(where: { entry in entry == entry })
         }
         
-        func inDeck(card: CardModel) -> Bool {
-            return state.deck.contains(where: { entry in entry == card })
+        func inDeck(entry: CardModel) -> Bool {
+            return state.deck.contains(where: { entry in entry == entry })
         }
     }
 }
