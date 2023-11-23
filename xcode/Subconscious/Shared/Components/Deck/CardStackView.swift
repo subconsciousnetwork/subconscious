@@ -277,6 +277,32 @@ struct CardStack: View {
         Array(deck.enumerated())
     }
     
+    func effects(card: CardModel, stackFactor: CGFloat, focused: Bool) -> CardEffectModifier {
+        CardEffectModifier(
+            stackFactor: stackFactor,
+            swipeProgress: swipeProgress,
+            offset: offset(
+                for: card
+            ),
+            focused: focused,
+            colorScheme: colorScheme
+        )
+    }
+    
+    func gestures(card: CardModel) -> CardGestureModifier {
+        CardGestureModifier(
+            offsets: $offsets,
+            onTapped: { onCardTapped(card) },
+            onSwipeStart: onSwipeStart,
+            onSwipeChanged: { translation in
+                dragChanged(card: card, translation: translation)
+            },
+            onSwipeComplete: {
+                dragComplete(card: card)
+            }
+        )
+    }
+    
     var body: some View {
         VStack {
             Spacer()
@@ -296,28 +322,14 @@ struct CardStack: View {
                                         height: geo.size.width * 1.25
                                     )
                                     .modifier(
-                                        CardEffectModifier(
+                                        effects(
+                                            card: card,
                                             stackFactor: stackFactor,
-                                            swipeProgress: swipeProgress,
-                                            offset: offset(
-                                                for: card
-                                            ),
-                                            focused: index == current,
-                                            colorScheme: colorScheme
+                                            focused: index == current
                                         )
                                     )
                                     .modifier(
-                                        CardGestureModifier(
-                                            offsets: $offsets,
-                                            onTapped: { onCardTapped(card) },
-                                            onSwipeStart: onSwipeStart,
-                                            onSwipeChanged: { translation in
-                                                dragChanged(card: card, translation: translation)
-                                            },
-                                            onSwipeComplete: {
-                                                dragComplete(card: card)
-                                            }
-                                        )
+                                        gestures(card: card)
                                     )
                                     // Fade out cards as we move past them
                                     .opacity(index >= current ? 1 : 0)
