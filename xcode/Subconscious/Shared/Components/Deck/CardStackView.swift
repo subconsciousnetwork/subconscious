@@ -326,7 +326,7 @@ struct CardStack: View {
                 )
                 // Fade out cards as we move past them
                 .opacity(index >= current ? 1 : 0)
-                .animation(.spring(duration: 0.2), value: current)
+                .animation(.spring(), value: current)
             
             Spacer()
         }
