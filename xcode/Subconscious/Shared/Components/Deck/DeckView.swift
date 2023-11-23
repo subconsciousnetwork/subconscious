@@ -294,13 +294,11 @@ struct DeckModel: ModelProtocol {
                 
                 var deck: [CardModel] = []
                 for entry in initialDraw {
-                    guard let card = try await toCard(
+                    let card = try await toCard(
                         entry: entry,
                         ourIdentity: us,
                         environment: environment
-                    ) else {
-                        continue
-                    }
+                    )
                     
                     deck.append(card)
                 }
@@ -322,13 +320,11 @@ struct DeckModel: ModelProtocol {
                     return .noCardsToDraw
                 }
                 
-                guard let card = try await toCard(
+                let card = try await toCard(
                     entry: entry,
                     ourIdentity: us,
                     environment: environment
-                ) else {
-                    return .noCardsToDraw
-                }
+                )
                 
                 return .appendCards([card])
             }
@@ -413,13 +409,11 @@ struct DeckModel: ModelProtocol {
                     
                     var draw: [CardModel] = []
                     for entry in backlinks.prefix(backlinksToDraw) {
-                        guard let card = try await toCard(
+                        let card = try await toCard(
                             entry: entry,
                             ourIdentity: us,
                             environment: environment
-                        ) else {
-                            continue
-                        }
+                        )
                         
                         draw.append(card)
                     }
@@ -460,13 +454,12 @@ struct DeckModel: ModelProtocol {
                 }
                 
                 var draw: [CardModel] = []
-                guard let card = try await toCard(
+                let card = try await toCard(
                     entry: entry,
                     ourIdentity: us,
                     environment: environment
-                ) else {
-                    return .topupDeck
-                }
+                )
+                    
                 draw.append(card)
                 
                 return .appendCards(draw)
@@ -549,7 +542,7 @@ struct DeckModel: ModelProtocol {
             entry: EntryStub,
             ourIdentity: Did,
             environment: DeckEnvironment
-        ) async throws -> CardModel? {
+        ) async throws -> CardModel {
             // TODO: also list the slashlinks in the body of the card as possible connections
             // these aren't "backlinks" so we should expand the name to "related"
             let backlinks = try environment.database.readEntryBacklinks(
@@ -557,20 +550,7 @@ struct DeckModel: ModelProtocol {
                 did: entry.did,
                 slug: entry.address.slug
             )
-            
-            // Attempt to traverse THROUGH stub notes to find other links
-            if isTooShort(entry: entry) {
-                if backlinks.count > 0 {
-                    return try await toCard(
-                        entry: backlinks.randomElement()!,
-                        ourIdentity: ourIdentity,
-                        environment: environment
-                    )
-                } else {
-                    return nil
-                }
-            }
-            
+           
             let user = try await environment.userProfile.identifyUser(
                 did: entry.did,
                 address: entry.address,
