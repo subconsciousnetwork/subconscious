@@ -74,6 +74,62 @@ enum CardDragGestureProgress {
     case active
 }
 
+struct CardEffectModifier: ViewModifier {
+    var stackFactor: CGFloat
+    var swipeProgress: CGFloat
+    var offset: CGSize
+    var focused: Bool
+    var colorScheme: ColorScheme
+    
+    func rotation(_ stackFactor: CGFloat) -> Double {
+        let fundamental = 6.0*Double(sin(CGFloat(stackFactor - 0.1) * 40))
+        let harmonic = 2.0*Double(sin((stackFactor - 0.45) * 10))
+        
+        let result = (fundamental + harmonic)
+        
+        return result + (stackFactor * swipeProgress * 5)
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            // Fade cards out towards a neutral color based on depth
+            .overlay(
+                Rectangle()
+                    .fill(
+                        colorScheme == .dark
+                        ? DeckTheme.darkFog
+                        : DeckTheme.lightFog
+                    )
+                    .opacity(4.0*stackFactor)
+            )
+            .scaleEffect(max(0,min(1, 1-stackFactor + 0.03)))
+            .rotation3DEffect(
+                .degrees(
+                    -swipeProgress * 100.0 * (
+                        0.1-stackFactor
+                    )
+                ),
+                // Tilt the card based on the vertical displacement
+                axis: (offset.height / 100.0, 1, 0),
+                perspective: 0.5
+            )
+            .offset(
+                // Move with the swipe
+                x: offset.width,
+                // Slightly follow the swipe
+                y: offset.height / 4.0
+            )
+            .rotationEffect(
+                focused
+                // Foreground card rotates based on gesture
+                ? .degrees(Double(offset.width / 32.0))
+                // Background cards rotate for decoration
+                : .degrees(rotation(stackFactor))
+            )
+    }
+}
+
+
 struct CardStack: View {
     private static let swipeActivationThreshold = 128.0
     private static let swipeThrowDistance = 1024.0
@@ -121,69 +177,39 @@ struct CardStack: View {
         return max(0, CGFloat(index - current)) / 16.0 - abs(swipeProgress) / 64.0
     }
     
-    func rotation(for index: Int, stackFactor: CGFloat) -> Double {
-        let fundamental = 6.0*Double(sin(CGFloat(stackFactor - 0.1) * 40))
-        let harmonic = 2.0*Double(sin((stackFactor - 0.45) * 10))
-        
-        let result = (fundamental + harmonic)
-        
-        return result + (stackFactor * swipeProgress * 5)
-    }
-    
     var body: some View {
         VStack {
             Spacer()
             GeometryReader { geo in
                 ZStack {
                     let deck = Array(deck.enumerated())
-                    ForEach(deck, id: \.element.id) { index, card in
+                    ForEach(deck, id: \.element.id) {
+                        index,
+                        card in
                         if (index >= current - 1 && index < current + 4) {
                             VStack {
                                 Spacer()
                                 
                                 let stackFactor = stackFactor(for: index)
                                 CardView(entry: card)
-                                    // Size card based on available space
+                                // Size card based on available space
                                     .frame(
                                         width: geo.size.width,
                                         height: geo.size.width * 1.25
                                     )
-                                    // Fade cards out towards a neutral color based on depth
-                                    .overlay(
-                                        Rectangle()
-                                            .fill(
-                                                colorScheme == .dark
-                                                ? DeckTheme.darkFog
-                                                : DeckTheme.lightFog
-                                            )
-                                            .opacity(4.0*stackFactor)
+                                    .modifier(
+                                        CardEffectModifier(
+                                            stackFactor: stackFactor,
+                                            swipeProgress: swipeProgress,
+                                            offset: offset(
+                                                for: card
+                                            ),
+                                            focused: index == current,
+                                            colorScheme: colorScheme
+                                        )
                                     )
-                                    .scaleEffect(max(0,min(1, 1-stackFactor + 0.03)))
-                                    .rotation3DEffect(
-                                        .degrees(
-                                            -swipeProgress * 100.0 * (
-                                                0.1-stackFactor
-                                            )
-                                        ),
-                                        // Tilt the card based on the vertical displacement
-                                        axis: (offset(for: card).height / 100.0, 1, 0),
-                                        perspective: 0.5
-                                    )
-                                    .offset(
-                                        // Move with the swipe
-                                        x: offset(for: card).width,
-                                        // Slightly follow the swipe
-                                        y: offset(for: card).height / 4.0
-                                    )
-                                    .rotationEffect(
-                                        index == current
-                                        // Foreground card rotates based on gesture
-                                        ? .degrees(Double(offset(for: card).width / 32.0))
-                                        // Background cards rotate for decoration
-                                        : .degrees(rotation(for: index, stackFactor: stackFactor))
-                                    )
-                                    .gesture(TapGesture()
-                                        .onEnded({ onCardTapped(card) })
+                                    .gesture(
+                                        TapGesture().onEnded({ onCardTapped(card) })
                                     )
                                     .gesture(DragGesture()
                                          // For some reason this seems to be the only way

@@ -471,7 +471,7 @@ struct DeckModel: ModelProtocol {
                 
                 return .appendCards(draw)
             }
-            .recover({ error in .appendCards([]) })
+            .recover({ error in .topupDeck })
             .eraseToAnyPublisher()
             
             return update(
