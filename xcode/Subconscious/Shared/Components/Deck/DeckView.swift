@@ -483,7 +483,7 @@ struct DeckModel: ModelProtocol {
 
         func shuffleCardsUpNext(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
-            for entry in entries.filter({ entry in !inDeck(entry: entry) }) {
+            for entry in entries {
                 // insert entry into deck at random past our pointer (not the first 2 spots)
                 model.deck.insertAtRandomIndex(
                     entry,
@@ -504,7 +504,7 @@ struct DeckModel: ModelProtocol {
 
         func appendCards(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
-            for entry in entries.filter({ entry in !inDeck(entry: entry) }) {
+            for entry in entries {
                 model.deck.append(entry)
                 
                 switch entry.card {
