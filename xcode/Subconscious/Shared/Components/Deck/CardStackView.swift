@@ -303,6 +303,36 @@ struct CardStack: View {
         )
     }
     
+    private func innerCard(size: CGSize, index: Int, card: CardModel) -> some View {
+        VStack {
+            Spacer()
+            
+            let stackFactor = stackFactor(for: index)
+            CardView(entry: card)
+                // Size card based on available space
+                .frame(
+                    width: size.width,
+                    height: size.width * 1.25
+                )
+                .modifier(
+                    effects(
+                        card: card,
+                        stackFactor: stackFactor,
+                        focused: index == current
+                    )
+                )
+                .modifier(
+                    gestures(card: card)
+                )
+                // Fade out cards as we move past them
+                .opacity(index >= current ? 1 : 0)
+                .animation(.spring(duration: 0.2), value: current)
+            
+            Spacer()
+        }
+        .zIndex(Double(deck.count - index))
+    }
+    
     var body: some View {
         VStack {
             Spacer()
@@ -311,35 +341,7 @@ struct CardStack: View {
                     ForEach(enumeratedDeck, id: \.element.id) {
                         index, card in
                         if (index >= current - 1 && index < current + 4) {
-                            AnyView(
-                                VStack {
-                                    Spacer()
-                                    
-                                    let stackFactor = stackFactor(for: index)
-                                    CardView(entry: card)
-                                        // Size card based on available space
-                                        .frame(
-                                            width: geo.size.width,
-                                            height: geo.size.width * 1.25
-                                        )
-                                        .modifier(
-                                            effects(
-                                                card: card,
-                                                stackFactor: stackFactor,
-                                                focused: index == current
-                                            )
-                                        )
-                                        .modifier(
-                                            gestures(card: card)
-                                        )
-                                        // Fade out cards as we move past them
-                                        .opacity(index >= current ? 1 : 0)
-                                        .animation(.spring(duration: 0.2), value: current)
-                                    
-                                    Spacer()
-                                }
-                                .zIndex(Double(deck.count - index))
-                            )
+                            innerCard(size: geo.size, index: index, card: card)
                         }
                     }
                 }
