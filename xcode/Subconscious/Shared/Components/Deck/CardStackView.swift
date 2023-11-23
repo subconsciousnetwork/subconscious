@@ -183,6 +183,18 @@ struct CardGestureModifier: ViewModifier {
     }
 }
 
+struct CardSwipeGlowEffect: View {
+    var body: some View {
+        Rectangle()
+            .frame(
+                width: DeckTheme.dragTargetSize.width,
+                height: DeckTheme.dragTargetSize.height
+            )
+            .foregroundStyle(Color.brandMarkPink)
+            .blur(radius: 16)
+    }
+}
+
 struct CardStack: View {
     private static let swipeActivationThreshold = 128.0
     private static let swipeThrowDistance = 1024.0
@@ -321,28 +333,16 @@ struct CardStack: View {
             }
         }
         .overlay(
-            Rectangle()
-                .frame(
-                    width: DeckTheme.dragTargetSize.width,
-                    height: DeckTheme.dragTargetSize.height
-                )
-                .foregroundStyle(Color.brandMarkPink)
+            CardSwipeGlowEffect()
                 .offset(x: 200, y: 0)
-                .blur(radius: 16)
                 .blendMode(.screen)
                 .opacity(swipeProgress)
         )
         .overlay(
-            Rectangle()
-                .frame(
-                    width: DeckTheme.dragTargetSize.width,
-                    height: DeckTheme.dragTargetSize.height
-                )
-                .foregroundStyle(Color.brandMarkPink)
+            CardSwipeGlowEffect()
                 .offset(x: -200, y: 0)
-                .blur(radius: 16)
                 .blendMode(.plusDarker)
-                .opacity(-swipeProgress)
+                .opacity(swipeProgress)
         )
     }
 }
