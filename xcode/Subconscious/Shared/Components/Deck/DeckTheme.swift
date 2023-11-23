@@ -11,8 +11,8 @@ enum DeckTheme {}
 
 extension DeckTheme {
     static let reboundSpring: Animation = .spring(
-        response: 0.5,
-        dampingFraction: 0.825,
+        response: 0.25,
+        dampingFraction: 0.5,
         blendDuration: 0
     )
     
