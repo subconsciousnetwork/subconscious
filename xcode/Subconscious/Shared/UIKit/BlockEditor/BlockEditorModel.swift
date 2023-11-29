@@ -77,23 +77,23 @@ extension BlockEditor {
         /// Sent from SwiftUI land when the wrapping SwiftUI view appears.
         case appear(MemoEditorDetailDescription)
         /// Set document source location
-        case setDocument(
+        case loadEditor(
             address: Slashlink?,
             fallback: String,
             autofocus: Bool = false
         )
+        case failLoadEditor(_ error: String)
         /// Reload the editor state with a new document
-        case reloadEditor(
+        case setEditor(
             detail: MemoEditorDetailResponse,
             autofocus: Bool = false
         )
         /// Reload the editor if needed, using a last-write-wins strategy.
         /// Only reloads if the provided state is newer than the current state.
-        case reloadEditorIfNeeded(
+        case setEditorIfNeeded(
             detail: MemoEditorDetailResponse,
             autofocus: Bool = false
         )
-        case failReloadEditor(_ error: String)
         /// Save a snapshot
         case save(_ snapshot: MemoEntry?)
         case succeedSave(_ snapshot: MemoEntry)
@@ -222,32 +222,32 @@ extension BlockEditor.Model: ModelProtocol {
                 description: description,
                 environment: environment
             )
-        case let .setDocument(address, fallback, autofocus):
-            return setDocument(
+        case let .loadEditor(address, fallback, autofocus):
+            return loadEditor(
                 state: state,
                 address: address,
                 fallback: fallback,
                 autofocus: autofocus,
                 environment: environment
             )
-        case let .reloadEditor(detail, autofocus):
-            return reloadEditor(
-                state: state,
-                detail: detail,
-                autofocus: autofocus,
-                environment: environment
-            )
-        case let .reloadEditorIfNeeded(detail, autofocus):
-            return reloadEditorIfNeeded(
-                state: state,
-                detail: detail,
-                autofocus: autofocus,
-                environment: environment
-            )
-        case let .failReloadEditor(error):
-            return failReloadEditor(
+        case let .failLoadEditor(error):
+            return failLoadEditor(
                 state: state,
                 error: error,
+                environment: environment
+            )
+        case let .setEditor(detail, autofocus):
+            return setEditor(
+                state: state,
+                detail: detail,
+                autofocus: autofocus,
+                environment: environment
+            )
+        case let .setEditorIfNeeded(detail, autofocus):
+            return setEditorIfNeeded(
+                state: state,
+                detail: detail,
+                autofocus: autofocus,
                 environment: environment
             )
         case let .save(snapshot):
@@ -405,7 +405,7 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         return update(
             state: state,
-            action: .setDocument(
+            action: .loadEditor(
                 address: description.address,
                 fallback: description.fallback
             ),
@@ -413,7 +413,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func setDocument(
+    static func loadEditor(
         state: Self,
         address: Slashlink?,
         fallback: String,
@@ -432,24 +432,24 @@ extension BlockEditor.Model: ModelProtocol {
             fallback: fallback
         )
         .map({ detail in
-            return Action.reloadEditor(
+            return Action.setEditorIfNeeded(
                 detail: detail,
                 autofocus: autofocus
             )
         })
         .recover({ error in
-            return Action.failReloadEditor(error.localizedDescription)
+            return Action.failLoadEditor(error.localizedDescription)
         })
         .eraseToAnyPublisher()
 
         return Update(state: model, fx: fx)
     }
     
-    /// Reload editor, replacing whatever was previously there.
+    /// Set editor state, replacing whatever was previously there.
     /// This is a "force reload" that does not attempt to gracefully save the
-    /// previous state. You typically want to use `reloadEditorIfNeeded`
+    /// previous state. You typically want to use `setEditorIfNeeded`
     /// instead.
-    static func reloadEditor(
+    static func setEditor(
         state: Self,
         detail: MemoEditorDetailResponse,
         autofocus: Bool = false,
@@ -475,7 +475,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
-    static func reloadEditorIfNeeded(
+    static func setEditorIfNeeded(
         state: Self,
         detail: MemoEditorDetailResponse,
         autofocus: Bool = false,
@@ -494,7 +494,7 @@ extension BlockEditor.Model: ModelProtocol {
                 state: model,
                 actions: [
                     .save(snapshot),
-                    .reloadEditor(detail: detail, autofocus: autofocus)
+                    .setEditor(detail: detail, autofocus: autofocus)
                 ],
                 environment: environment
             )
@@ -512,12 +512,12 @@ extension BlockEditor.Model: ModelProtocol {
         logger.log("Block editor given document that is newer than editor's last modified date. Considering editor content stale and reloading.")
         return update(
             state: model,
-            action: .reloadEditor(detail: detail, autofocus: autofocus),
+            action: .setEditor(detail: detail, autofocus: autofocus),
             environment: environment
         )
     }
     
-    static func failReloadEditor(
+    static func failLoadEditor(
         state: Self,
         error: String,
         environment: Environment
