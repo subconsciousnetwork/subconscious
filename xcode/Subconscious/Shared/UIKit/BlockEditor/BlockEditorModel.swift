@@ -167,7 +167,6 @@ extension BlockEditor {
 
 // MARK: Controller
 extension BlockEditor.Model: ModelProtocol {
-    typealias Model = BlockEditor.Model
     typealias Action = BlockEditor.Action
     typealias Environment = AppEnvironment
     
@@ -195,14 +194,14 @@ extension BlockEditor.Model: ModelProtocol {
             self.change = change
         }
         
-        var state: Model
+        var state: BlockEditor.Model
         var fx: Fx<Action>
         var transaction: Transaction?
         var change: BlockEditor.Change? = nil
     }
 
     static func update(
-        state: Model,
+        state: Self,
         action: Action,
         environment: Environment
     ) -> Update {
@@ -381,11 +380,11 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func start(
-        state: Model,
-        environment: Model.Environment
+        state: Self,
+        environment: Environment
     ) -> Update {
         /// Poll and autosave until this store is destroyed.
-        let pollFx: Fx<Model.Action> = AppEnvironment
+        let pollFx: Fx<Action> = AppEnvironment
             .poll(every: Config.default.pollingInterval)
             .map({ _ in .autosave })
             .eraseToAnyPublisher()
@@ -393,16 +392,16 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     static func ready(
-        state: Model,
-        environment: Model.Environment
+        state: Self,
+        environment: Environment
     ) -> Update {
         return Update(state: state)
     }
     
     static func appear(
-        state: Model,
+        state: Self,
         description: MemoEditorDetailDescription,
-        environment: Model.Environment
+        environment: Environment
     ) -> Update {
         return update(
             state: state,
@@ -415,7 +414,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func setDocument(
-        state: Model,
+        state: Self,
         address: Slashlink?,
         fallback: String,
         autofocus: Bool,
@@ -451,7 +450,7 @@ extension BlockEditor.Model: ModelProtocol {
     /// previous state. You typically want to use `reloadEditorIfNeeded`
     /// instead.
     static func reloadEditor(
-        state: Model,
+        state: Self,
         detail: MemoEditorDetailResponse,
         autofocus: Bool = false,
         environment: Environment
@@ -477,7 +476,7 @@ extension BlockEditor.Model: ModelProtocol {
     
     /// Reload editor if needed, using a last-write-wins strategy.
     static func reloadEditorIfNeeded(
-        state: Model,
+        state: Self,
         detail: MemoEditorDetailResponse,
         autofocus: Bool = false,
         environment: Environment
@@ -519,17 +518,17 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func failReloadEditor(
-        state: Model,
+        state: Self,
         error: String,
         environment: Environment
     ) -> Update {
         let address = state.address?.description ?? "nil"
-        logger.log("Failed to load detail for \(address). Error: \(error)")
+        logger.warning("Failed to load detail for \(address). Error: \(error)")
         return Update(state: state)
     }
     
     static func save(
-        state: Model,
+        state: Self,
         snapshot: MemoEntry?,
         environment: Environment
     ) -> Update {
@@ -563,7 +562,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     static func succeedSave(
-        state: Model,
+        state: Self,
         snapshot: MemoEntry,
         environment: Environment
     ) -> Update {
@@ -590,19 +589,19 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func failSave(
-        state: Model,
+        state: Self,
         snapshot: MemoEntry,
         error: String,
         environment: Environment
     ) -> Update {
         var model = state
         model.setSaveState(.unsaved)
-        logger.log("Could not save \(snapshot.address). Error: \(error)")
+        logger.warning("Could not save \(snapshot.address). Error: \(error)")
         return Update(state: model)
     }
     
     static func autosave(
-        state: Model,
+        state: Self,
         environment: Environment
     ) -> Update {
         let snapshot = MemoEntry(state)
@@ -614,7 +613,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     static func textDidChange(
-        state: Model,
+        state: Self,
         id: UUID?,
         text: String,
         selection: NSRange
@@ -649,7 +648,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func didChangeSelection(
-        state: Model,
+        state: Self,
         id: UUID,
         selection: NSRange
     ) -> Update {
@@ -669,7 +668,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func splitBlock(
-        state: Model,
+        state: Self,
         id: UUID,
         selection nsRange: NSRange
     ) -> Update {
@@ -739,7 +738,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func mergeBlockUp(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         guard let indexDown = state.blocks.blocks.firstIndex(whereID: id) else {
@@ -807,7 +806,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func editing(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         var model = state
@@ -818,7 +817,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func renderEditing(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         guard let index = state.blocks.blocks.firstIndex(whereID: id) else {
@@ -843,7 +842,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func blur(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         var model = state
@@ -857,7 +856,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func renderBlur(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         guard let index = state.blocks.blocks.firstIndex(whereID: id) else {
@@ -886,7 +885,7 @@ extension BlockEditor.Model: ModelProtocol {
 
     // TODO: re-implement
     static func longPress(
-        state: Model,
+        state: Self,
         point: CGPoint
     ) -> Update {
 //        guard !state.isBlockSelectMode else {
@@ -913,7 +912,7 @@ extension BlockEditor.Model: ModelProtocol {
 
     // TODO: Reimplement
     static func tap(
-        state: Model,
+        state: Self,
         point: CGPoint
     ) -> Update {
 //        guard state.isBlockSelectMode else {
@@ -939,7 +938,7 @@ extension BlockEditor.Model: ModelProtocol {
 
     // TODO: Reimplement
     static func enterBlockSelectMode(
-        state: Model,
+        state: Self,
         selecting id: UUID?
     ) -> Update {
 //        var model = state
@@ -968,7 +967,7 @@ extension BlockEditor.Model: ModelProtocol {
 
     // TODO: Reimplement
     static func exitBlockSelectMode(
-        state: Model
+        state: Self
     ) -> Update {
 //        var model = state
 //
@@ -995,7 +994,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func selectBlock(
-        state: Model,
+        state: Self,
         id: UUID,
         isSelected: Bool
     ) -> Update {
@@ -1030,7 +1029,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     static func toggleSelectBlock(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         guard state.blocks.isBlockSelectMode else {
@@ -1065,7 +1064,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     static func moveBlockUp(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
@@ -1105,7 +1104,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func moveBlockDown(
-        state: Model,
+        state: Self,
         id: UUID
     ) -> Update {
         guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
@@ -1148,7 +1147,7 @@ extension BlockEditor.Model: ModelProtocol {
         
     /// Insert markup at range within a block
     static func insertMarkup(
-        state: Model,
+        state: Self,
         id: UUID,
         selection: NSRange,
         replace: (
@@ -1213,7 +1212,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     static func insertBold(
-        state: Model,
+        state: Self,
         id: UUID,
         selection: NSRange
     ) -> Update {
@@ -1226,7 +1225,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func insertItalic(
-        state: Model,
+        state: Self,
         id: UUID,
         selection: NSRange
     ) -> Update {
@@ -1239,7 +1238,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
     
     static func insertCode(
-        state: Model,
+        state: Self,
         id: UUID,
         selection: NSRange
     ) -> Update {

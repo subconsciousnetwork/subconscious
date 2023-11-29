@@ -23,8 +23,23 @@ extension BlockEditor {
             
             relatedHostingView.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(relatedHostingView)
+            
+            relatedHostingView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            
+            relatedHostingView.setContentCompressionResistancePriority(
+                .defaultHigh,
+                for: .vertical
+            )
 
             setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+
+            setContentCompressionResistancePriority(
                 .defaultHigh,
                 for: .vertical
             )
