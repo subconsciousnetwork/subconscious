@@ -33,7 +33,12 @@ extension BlockEditor {
                 .defaultHigh,
                 for: .vertical
             )
-
+            
+            relatedHostingView.setContentCompressionResistancePriority(
+                .defaultLow,
+                for: .horizontal
+            )
+            
             setContentHuggingPriority(
                 .defaultHigh,
                 for: .vertical
@@ -46,16 +51,16 @@ extension BlockEditor {
 
             NSLayoutConstraint.activate([
                 relatedHostingView.leadingAnchor.constraint(
-                    equalTo: leadingAnchor
+                    equalTo: contentView.leadingAnchor
                 ),
                 relatedHostingView.trailingAnchor.constraint(
-                    equalTo: trailingAnchor
+                    equalTo: contentView.trailingAnchor
                 ),
                 relatedHostingView.topAnchor.constraint(
-                    equalTo: topAnchor
+                    equalTo: contentView.topAnchor
                 ),
                 relatedHostingView.bottomAnchor.constraint(
-                    equalTo: bottomAnchor
+                    equalTo: contentView.bottomAnchor
                 ),
             ])
         }
