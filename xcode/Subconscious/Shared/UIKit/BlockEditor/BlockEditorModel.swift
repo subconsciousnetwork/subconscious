@@ -94,6 +94,10 @@ extension BlockEditor {
             detail: MemoEditorDetailResponse,
             autofocus: Bool = false
         )
+        /// Load related notes (backlinks)
+        case loadRelated
+        case succeedLoadRelated(_ related: [EntryStub])
+        case failLoadRelated(_ error: String)
         /// Save a snapshot
         case save(_ snapshot: MemoEntry?)
         case succeedSave(_ snapshot: MemoEntry)
@@ -248,6 +252,23 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 detail: detail,
                 autofocus: autofocus,
+                environment: environment
+            )
+        case .loadRelated:
+            return loadRelated(
+                state: state,
+                environment: environment
+            )
+        case let .succeedLoadRelated(related):
+            return succeedLoadRelated(
+                state: state,
+                related: related,
+                environment: environment
+            )
+        case let .failLoadRelated(error):
+            return failLoadRelated(
+                state: state,
+                error: error,
                 environment: environment
             )
         case let .save(snapshot):
@@ -427,7 +448,9 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: model)
         }
 
-        let fx: Fx<Action> = environment.data.readMemoEditorDetailPublisher(
+        let loadRelatedFx = Just(Action.loadRelated)
+
+        let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
             address: address,
             fallback: fallback
         )
@@ -440,11 +463,23 @@ extension BlockEditor.Model: ModelProtocol {
         .recover({ error in
             return Action.failLoadEditor(error.localizedDescription)
         })
-        .eraseToAnyPublisher()
+
+        let fx: Fx<Action> = loadDetailFx.merge(with: loadRelatedFx)
+            .eraseToAnyPublisher()
 
         return Update(state: model, fx: fx)
     }
     
+    static func failLoadEditor(
+        state: Self,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        let address = state.address?.description ?? "nil"
+        logger.warning("Failed to load detail for \(address). Error: \(error)")
+        return Update(state: state)
+    }
+
     /// Set editor state, replacing whatever was previously there.
     /// This is a "force reload" that does not attempt to gracefully save the
     /// previous state. You typically want to use `setEditorIfNeeded`
@@ -517,13 +552,48 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func failLoadEditor(
+    static func loadRelated(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        guard let address = state.address else {
+            logger.debug("Unable to load related. Note has no address.")
+            return Update(state: state)
+        }
+        
+        let fx: Fx<Action> = Future.detached {
+            try await environment.data.readMemoBacklinks(address: address)
+        }
+        .map { backlinks in
+            .succeedLoadRelated(backlinks)
+        }
+        .recover { error in
+            .failLoadRelated(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedLoadRelated(
+        state: Self,
+        related: [EntryStub],
+        environment: Environment
+    ) -> Update {
+        let address = state.address?.description ?? "nil"
+        logger.info("Loaded \(related.count) related notes for \(address)")
+        var model = state
+        model.appendix.related = related
+        return Update(state: model)
+    }
+
+    static func failLoadRelated(
         state: Self,
         error: String,
         environment: Environment
     ) -> Update {
         let address = state.address?.description ?? "nil"
-        logger.warning("Failed to load detail for \(address). Error: \(error)")
+        logger.warning("Unable to load related notes for \(address). Error: \(error)")
         return Update(state: state)
     }
     
