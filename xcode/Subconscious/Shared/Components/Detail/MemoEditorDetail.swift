@@ -35,6 +35,7 @@ struct MemoEditorDetailView: View {
         state: BlockEditor.Model.draft(),
         action: .start,
         environment: AppEnvironment.default,
+        loggingEnabled: true,
         logger: blockEditorStoreLogger
     )
     
