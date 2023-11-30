@@ -21,9 +21,9 @@ extension BlockEditor {
             text: String
         )
         case requestMergeUp(id: UUID)
-        case didChange(
+        case textDidChange(
             id: UUID,
-            text: String,
+            dom: Subtext,
             selection: NSRange
         )
         case didChangeSelection(
@@ -61,9 +61,9 @@ extension BlockEditor.TextBlockAction {
             return .textEditing(
                 .requestMergeUp(id: id)
             )
-        case .textDidChange(let text, let selection):
+        case .textDidChange(let dom, let selection):
             return .textEditing(
-                .didChange(id: id, text: text, selection: selection)
+                .textDidChange(id: id, dom: dom, selection: selection)
             )
         case .selectionDidChange(let selection):
             return .textEditing(

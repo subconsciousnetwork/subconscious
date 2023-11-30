@@ -9,6 +9,50 @@ import UIKit
 import os
 
 extension UIView {
+    class SubtextTextStorage: NSTextStorage {
+        private let backingStore = NSMutableAttributedString()
+        private var dom = Subtext(markup: "")
+        
+        override var string: String {
+            return backingStore.string
+        }
+        
+        override func attributes(
+            at location: Int,
+            effectiveRange range: NSRangePointer?
+        ) -> [NSAttributedString.Key : Any] {
+            return backingStore.attributes(at: location, effectiveRange: range)
+        }
+        
+        override func replaceCharacters(
+            in range: NSRange,
+            with str: String
+        ) {
+            beginEditing()
+            backingStore.replaceCharacters(in: range, with: str)
+            edited(
+                .editedCharacters,
+                range: range,
+                changeInLength: (str as NSString).length - range.length
+            )
+            endEditing()
+        }
+        
+        override func setAttributes(
+            _ attrs: [NSAttributedString.Key : Any]?,
+            range: NSRange
+        ) {
+            beginEditing()
+            backingStore.setAttributes(attrs, range: range)
+            edited(
+                .editedAttributes,
+                range: range,
+                changeInLength: 0
+            )
+            endEditing()
+        }
+    }
+
     /// A subclass of UITextView that automatically renders Subtext
     /// as attributes on text storage.
     class SubtextTextView: UITextView, Identifiable, NSTextStorageDelegate {
@@ -19,7 +63,8 @@ extension UIView {
         
         var id = UUID()
         var renderer = SubtextAttributedStringRenderer()
-
+        private(set) var dom = Subtext(markup: "")
+        
         private let defaultTextContainerInset = UIEdgeInsets(
             top: AppTheme.unit2,
             left: AppTheme.padding,
@@ -68,7 +113,7 @@ extension UIView {
           range: NSRange,
           changeInLength: Int
         ) {
-            renderer.renderAttributesOf(textStorage)
+            self.dom = renderer.renderAttributesOf(textStorage)
             Self.logger.debug(
                 "SubtextTextView#\(self.id) Rendered Subtext attributes"
             )

@@ -108,7 +108,7 @@ extension BlockEditor {
         /// Autosave whatever is in the editor.
         /// Sent at some interval to save draft state.
         case autosave
-        case textDidChange(id: UUID?, text: String, selection: NSRange)
+        case textDidChange(id: UUID?, dom: Subtext, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
         case splitBlock(id: UUID, selection: NSRange)
         case mergeBlockUp(id: UUID)
@@ -295,11 +295,11 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .textDidChange(id, text, selection):
+        case let .textDidChange(id, dom, selection):
             return textDidChange(
                 state: state,
                 id: id,
-                text: text,
+                dom: dom,
                 selection: selection
             )
         case let .didChangeSelection(id, selection):
@@ -685,7 +685,7 @@ extension BlockEditor.Model: ModelProtocol {
     static func textDidChange(
         state: Self,
         id: UUID?,
-        text: String,
+        dom: Subtext,
         selection: NSRange
     ) -> Update {
         guard let id = id else {
@@ -700,7 +700,7 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         
         let block = state.blocks.blocks[i].setText(
-            text: text,
+            text: dom.description,
             selection: selection
         )
         
