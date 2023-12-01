@@ -23,24 +23,44 @@ extension BlockEditor {
             
             relatedHostingView.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(relatedHostingView)
-
+            
+            relatedHostingView.setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            
+            relatedHostingView.setContentCompressionResistancePriority(
+                .defaultHigh,
+                for: .vertical
+            )
+            
+            relatedHostingView.setContentCompressionResistancePriority(
+                .defaultLow,
+                for: .horizontal
+            )
+            
             setContentHuggingPriority(
+                .defaultHigh,
+                for: .vertical
+            )
+
+            setContentCompressionResistancePriority(
                 .defaultHigh,
                 for: .vertical
             )
 
             NSLayoutConstraint.activate([
                 relatedHostingView.leadingAnchor.constraint(
-                    equalTo: leadingAnchor
+                    equalTo: contentView.leadingAnchor
                 ),
                 relatedHostingView.trailingAnchor.constraint(
-                    equalTo: trailingAnchor
+                    equalTo: contentView.trailingAnchor
                 ),
                 relatedHostingView.topAnchor.constraint(
-                    equalTo: topAnchor
+                    equalTo: contentView.topAnchor
                 ),
                 relatedHostingView.bottomAnchor.constraint(
-                    equalTo: bottomAnchor
+                    equalTo: contentView.bottomAnchor
                 ),
             ])
         }

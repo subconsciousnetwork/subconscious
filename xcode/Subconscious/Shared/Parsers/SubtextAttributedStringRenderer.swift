@@ -267,7 +267,7 @@ struct SubtextAttributedStringRenderer {
         _ attributedString: NSMutableAttributedString
     ) -> Subtext {
         let dom = Subtext(markup: attributedString.string)
-        
+
         renderStandardAttributesOf(attributedString)
         
         for block in dom.blocks {
@@ -283,39 +283,22 @@ struct SubtextAttributedStringRenderer {
     private func renderStandardAttributesOf(
         _ attributedString: NSMutableAttributedString
     ) {
-        // Get range of all text, using new Swift NSRange constructor
-        // that takes a Swift range which knows how to handle Unicode
-        // glyphs correctly.
-        let baseNSRange = NSRange(
-            attributedString.string.startIndex...,
-            in: attributedString.string
-        )
-        
-        // Clear all attributes before rendering
-        attributedString.setAttributes([:], range: baseNSRange)
-        
-        // Set default font for entire string
-        attributedString.addAttribute(
-            .font,
-            value: bodyFont,
-            range: baseNSRange
-        )
-        
-        // Set line-spacing for entire string
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = AppTheme.lineSpacing
-        attributedString.addAttribute(
-            .paragraphStyle,
-            value: paragraphStyle,
-            range: baseNSRange
-        )
+        paragraphStyle.maximumLineHeight = AppTheme.lineHeight
+        paragraphStyle.minimumLineHeight = AppTheme.lineHeight
+        let foregroundColor = UIColor(Color.primary)
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: bodyFont,
+            .foregroundColor: foregroundColor,
+            .paragraphStyle: paragraphStyle
+        ]
         
-        // Set text color
-        attributedString.addAttribute(
-            .foregroundColor,
-            value: UIColor(Color.primary),
-            range: baseNSRange
-        )
+        let baseNSRange = NSRange(location: 0, length: attributedString.length)
+        
+        // Set default styles for entire string.
+        // Clears all previous attributes.
+        attributedString.setAttributes(attributes, range: baseNSRange)
     }
 
     /// Read markup in NSMutableAttributedString, and render as attributes.

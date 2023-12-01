@@ -19,11 +19,15 @@ extension BlockEditor {
 
         var id: UUID = UUID()
         
-        weak var delegate: TextBlockDelegate?
+        var send: (TextBlockAction) -> Void = { _ in }
         
         private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var stackView = UIStackView()
-        private lazy var textView = SubtextTextView()
+        private lazy var textView = SubtextTextEditorView(
+            send: { [weak self] action in
+                self?.send(action)
+            }
+        )
         private var quoteContainerMargins = NSDirectionalEdgeInsets(
             top: 0,
             leading: AppTheme.unit4,
@@ -33,46 +37,7 @@ extension BlockEditor {
         private lazy var quoteContainer = UIView()
         private lazy var quoteBar = createQuoteBar()
         private var transcludeListView = UIHostingView<TranscludeListView>()
-        
-        private lazy var toolbar = UIToolbar.blockToolbar(
-            upButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.upButtonPressed(id: self.id)
-            },
-            downButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.downButtonPressed(id: self.id)
-            },
-            boldButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.boldButtonPressed(
-                    id: self.id,
-                    text: self.textView.text,
-                    selection: self.textView.selectedRange
-                )
-            },
-            italicButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.italicButtonPressed(
-                    id: self.id,
-                    text: self.textView.text,
-                    selection: self.textView.selectedRange
-                )
-            },
-            codeButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.codeButtonPressed(
-                    id: self.id,
-                    text: self.textView.text,
-                    selection: self.textView.selectedRange
-                )
-            },
-            dismissKeyboardButtonPressed: { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.dismissKeyboardButtonPressed(id: self.id)
-            }
-        )
-        
+
         override init(frame: CGRect) {
             super.init(frame: frame)
             
@@ -93,15 +58,12 @@ extension BlockEditor {
             
             textView.translatesAutoresizingMaskIntoConstraints = false
             textView.isScrollEnabled = false
-            textView.delegate = self
-            textView.inputAccessoryView = toolbar
             quoteContainer.addSubview(textView)
             
             quoteContainer.addSubview(quoteBar)
             
             stackView.addArrangedSubview(transcludeListView)
-            stackView.addArrangedSubview(.spacer())
-
+            
             selectView.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(selectView)
 
@@ -197,6 +159,12 @@ extension BlockEditor {
             return quoteFrameView
         }
 
+        private func send(
+            _ event: SubtextTextEditorAction
+        ) {
+            self.send(TextBlockAction.from(id: id, action: event))
+        }
+
         func update(
             parentController: UIViewController,
             state: BlockEditor.TextBlockModel
@@ -204,11 +172,9 @@ extension BlockEditor {
             self.id = state.id
             transcludeListView.update(
                 parentController: parentController,
-                rootView: TranscludeListView(
-                    entries: state.transcludes,
-                    onViewTransclude: { _ in },
-                    onTranscludeLink: { _, _ in }
-                )
+                entries: state.transcludes,
+                onViewTransclude: { _ in },
+                onTranscludeLink: { _, _ in }
             )
             if textView.text != state.text {
                 textView.text = state.text
@@ -221,53 +187,6 @@ extension BlockEditor {
             textView.setModifiable(!state.isBlockSelectMode)
             // Handle select mode
             selectView.isHidden = !state.isBlockSelected
-        }
-        
-        func textView(
-            _ textView: UITextView,
-            shouldChangeTextIn range: NSRange,
-            replacementText text: String
-        ) -> Bool {
-            // Enter/newline
-            if text == "\n" {
-                self.delegate?.requestSplit(
-                    id: self.id,
-                    selection: self.textView.selectedRange
-                )
-                return false
-            }
-            // Hit delete while cursor was at beginning of block
-            else if range.length == 0 && text.isEmpty {
-                self.delegate?.requestMerge(id: self.id)
-                return false
-            }
-            return true
-        }
-        
-        func textViewDidChange(_ textView: UITextView) {
-            UIView.performWithoutAnimation {
-                self.invalidateIntrinsicContentSize()
-            }
-            delegate?.didChange(
-                id: self.id,
-                text: self.textView.text,
-                selection: self.textView.selectedRange
-            )
-        }
-        
-        func textViewDidChangeSelection(_ textView: UITextView) {
-            delegate?.didChangeSelection(
-                id: self.id,
-                selection: self.textView.selectedRange
-            )
-        }
-        
-        func textViewDidBeginEditing(_ textView: UITextView) {
-            delegate?.didBeginEditing(id: self.id)
-        }
-        
-        func textViewDidEndEditing(_ textView: UITextView) {
-            delegate?.didEndEditing(id: self.id)
         }
     }
 }
