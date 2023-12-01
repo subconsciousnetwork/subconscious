@@ -27,16 +27,16 @@ extension BlockEditor {
             }
         }
         
-        var text: String? {
+        var dom: Subtext? {
             switch self {
             case .text(let block):
-                return block.text
+                return block.dom
             case .heading(let block):
-                return block.text
+                return block.dom
             case .quote(let block):
-                return block.text
+                return block.dom
             case .list(let block):
-                return block.text
+                return block.dom
             }
         }
         
@@ -86,11 +86,11 @@ extension BlockEditor {
         }
 
         func setText(
-            text: String,
+            dom: Subtext,
             selection: NSRange
         ) -> Self? {
             update { block in
-                block.setText(text: text, selection: selection)
+                block.setText(dom: dom, selection: selection)
             }
         }
         

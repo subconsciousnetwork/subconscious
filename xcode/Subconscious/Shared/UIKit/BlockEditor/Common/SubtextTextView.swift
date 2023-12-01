@@ -76,3 +76,18 @@ extension UIView {
         }
     }
 }
+
+extension UITextView {
+    /// Set text and selection on textview
+    func setText(
+        _ text: String,
+        selectedRange: NSRange
+    ) {
+        if self.text != text {
+            self.text = text
+        }
+        if self.selectedRange != selectedRange {
+            self.selectedRange = selectedRange
+        }
+    }
+}

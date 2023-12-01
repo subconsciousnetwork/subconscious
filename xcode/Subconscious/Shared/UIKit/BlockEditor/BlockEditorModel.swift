@@ -35,6 +35,9 @@ extension BlockEditor {
             )
         }
         
+        /// Who are we? The did that identifies our sphere.
+        var owner: Did?
+
         /// Is editor in loading state?
         var loadingState = LoadingState.loading
         /// When was the last time the editor issued a fetch from source of truth?
@@ -54,6 +57,9 @@ extension BlockEditor {
         
         var blocks: BlocksModel = BlocksModel()
         var appendix = RelatedModel()
+
+        /// Cached transcludes for links in body
+        var transcludes: [Slashlink: EntryStub] = [:]
 
         mutating func setSaveState(_ state: SaveState) {
             if self.saveState == state {
@@ -98,6 +104,9 @@ extension BlockEditor {
         case loadRelated
         case succeedLoadRelated(_ related: [EntryStub])
         case failLoadRelated(_ error: String)
+        case loadTranscludesFor(slashlinks: Set<Slashlink>)
+        case failLoadTranscludesFor(error: String)
+        case cacheTranscludes([Slashlink: EntryStub])
         /// Save a snapshot
         case save(_ snapshot: MemoEntry?)
         case succeedSave(_ snapshot: MemoEntry)
@@ -271,6 +280,24 @@ extension BlockEditor.Model: ModelProtocol {
                 error: error,
                 environment: environment
             )
+        case let .loadTranscludesFor(slashlinks):
+            return loadTranscludesFor(
+                state: state,
+                slashlinks: slashlinks,
+                environment: environment
+            )
+        case let .failLoadTranscludesFor(error):
+            return failLoadTranscludesFor(
+                state: state,
+                error: error,
+                environment: environment
+            )
+        case let .cacheTranscludes(transcludes):
+            return cacheTranscludes(
+                state: state,
+                transcludes: transcludes,
+                environment: environment
+            )
         case let .save(snapshot):
             return save(
                 state: state,
@@ -300,7 +327,8 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 id: id,
                 dom: dom,
-                selection: selection
+                selection: selection,
+                environment: environment
             )
         case let .didChangeSelection(id, selection):
             return didChangeSelection(
@@ -597,6 +625,60 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
+    static func loadTranscludesFor(
+        state: Self,
+        slashlinks: Set<Slashlink>,
+        environment: Environment
+    ) -> Update {
+        let owner = state.owner.map({ did in Peer.did(did) })
+
+        /// If we've already fetched, don't fetch again.
+        let slashlinks = slashlinks.subtracting(state.transcludes.keys)
+        
+        logger.info("Loading transcludes for \(slashlinks)")
+        
+        let fx: Fx<Action> = Future.detached {
+            do {
+                let transcludes = try await environment.transclude
+                    .fetchTranscludePreviews(
+                        slashlinks: slashlinks,
+                        owner: owner
+                    )
+                return Action.cacheTranscludes(transcludes)
+            } catch {
+                return Action.failLoadTranscludesFor(
+                    error: error.localizedDescription
+                )
+            }
+        }
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    static func failLoadTranscludesFor(
+        state: Self,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Unable to load transcludes. Error: \(error)")
+        return Update(state: state)
+    }
+
+    static func cacheTranscludes(
+        state: Self,
+        transcludes: [Slashlink: EntryStub],
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.transcludes.merge(
+            transcludes,
+            uniquingKeysWith: { old, new in new }
+        )
+        logger.info("Updated cached trancludes for \(transcludes.keys)")
+        return Update(state: model)
+    }
+
     static func save(
         state: Self,
         snapshot: MemoEntry?,
@@ -686,7 +768,8 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         id: UUID?,
         dom: Subtext,
-        selection: NSRange
+        selection: NSRange,
+        environment: Environment
     ) -> Update {
         guard let id = id else {
             Self.logger.log("No block id. Doing nothing.")
@@ -700,7 +783,7 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         
         let block = state.blocks.blocks[i].setText(
-            text: dom.description,
+            dom: dom,
             selection: selection
         )
         
@@ -714,7 +797,22 @@ extension BlockEditor.Model: ModelProtocol {
         // Mark unsaved
         model.setSaveState(.unsaved)
         
-        return Update(state: model)
+        guard let dom = block.dom else {
+            logger.info("block#\(id) block DOM is nil. Skipping transclude load.")
+            return Update(state: model)
+        }
+
+        let slashlinks = Set(
+            dom.slashlinks.compactMap({ slashlink in
+                Slashlink(slashlink.description)
+            })
+        )
+
+        return update(
+            state: model,
+            action: .loadTranscludesFor(slashlinks: slashlinks),
+            environment: environment
+        )
     }
     
     static func didChangeSelection(
@@ -751,7 +849,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         let blockA = state.blocks.blocks[indexA]
         
-        guard let blockTextA = blockA.text else {
+        guard let blockTextA = blockA.dom?.description else {
             Self.logger.log("block#\(id) cannot split block without text. Doing nothing.")
             return Update(state: state)
         }
@@ -764,7 +862,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         guard let blockA = blockA.setText(
-            text: textA,
+            dom: Subtext(markup: textA),
             selection: NSRange(location: nsRange.location, length: 0)
         ) else {
             Self.logger.log(
@@ -774,7 +872,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
 
         var blockB = BlockEditor.TextBlockModel()
-        blockB.text = textB
+        blockB.dom = Subtext(markup: textB)
         
         let indexB = state.blocks.blocks.index(after: indexA)
         var model = state
@@ -824,13 +922,13 @@ extension BlockEditor.Model: ModelProtocol {
         let indexUp = state.blocks.blocks.index(before: indexDown)
         let blockUp = state.blocks.blocks[indexUp]
         
-        guard let blockUpText = blockUp.text else {
+        guard let blockUpText = blockUp.dom?.description else {
             Self.logger.log("block#\(id) cannot merge up into block without text. Doing nothing.")
             return Update(state: state)
         }
         
         let blockDown = state.blocks.blocks[indexDown]
-        guard let blockDownText = blockDown.text else {
+        guard let blockDownText = blockDown.dom?.description else {
             Self.logger.log("block#\(id) cannot merge non-text block. Doing nothing.")
             return Update(state: state)
         }
@@ -841,7 +939,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
         
         guard let blockUp = blockUp.setText(
-            text: blockUpText + blockDownText,
+            dom: Subtext(markup: blockUpText + blockDownText),
             selection: selectionNSRange
         ) else {
             Self.logger.log("block#\(id) could not merge text. Doing nothing.")
@@ -1157,7 +1255,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         let block = state.blocks.blocks[i]
 
-        guard let text = block.text else {
+        guard let text = block.dom?.description else {
             Self.logger.log("block#\(id) can't insert markup. Block has no text. Doing nothing.")
             return Update(state: state)
         }
@@ -1182,7 +1280,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
         
         guard let block = block.setText(
-            text: replacement.string,
+            dom: Subtext(markup: replacement.string),
             selection: cursorNSRange
         ) else {
             Self.logger.log("block#\(id) could not set text. Doing nothing.")

@@ -45,14 +45,14 @@ actor TranscludeService {
     }
     
     func fetchTranscludePreviews(
-        slashlinks: [Slashlink],
-        owner: UserProfile
+        slashlinks: Set<Slashlink>,
+        owner: Peer?
     ) async throws -> [Slashlink: EntryStub] {
         var dict: [Slashlink: EntryStub] = [:]
         
         for link in slashlinks {
             let transclusion = try await resolveAddresses(
-                base: owner.address.peer,
+                base: owner,
                 link: link
             )
             
@@ -72,7 +72,16 @@ actor TranscludeService {
         return dict
     }
 
-    
+    func fetchTranscludePreviews(
+        slashlinks: [Slashlink],
+        owner: UserProfile
+    ) async throws -> [Slashlink: EntryStub] {
+        try await fetchTranscludePreviews(
+            slashlinks: Set(slashlinks),
+            owner: owner.address.peer
+        )
+    }
+
     nonisolated func fetchTranscludePreviewsPublisher(
         slashlinks: [Slashlink],
         owner: UserProfile

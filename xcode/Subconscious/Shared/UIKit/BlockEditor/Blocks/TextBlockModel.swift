@@ -10,7 +10,7 @@ import Foundation
 extension BlockEditor {
     struct TextBlockModel: Hashable, Identifiable {
         var id = UUID()
-        var text = ""
+        var dom = Subtext.empty
         /// The selection/text cursor position
         var selection: NSRange = NSMakeRange(0, 0)
         /// Is the text editor focused?
@@ -25,11 +25,11 @@ extension BlockEditor {
         
         /// Set text, updating selection
         func setText(
-            text: String,
+            dom: Subtext,
             selection: NSRange
         ) -> Self {
             var this = self
-            this.text = text
+            this.dom = dom
             this.selection = selection
             return this
         }
