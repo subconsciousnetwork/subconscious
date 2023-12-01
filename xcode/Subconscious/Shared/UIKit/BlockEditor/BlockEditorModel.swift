@@ -953,7 +953,8 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
 
-    // TODO: re-implement
+    // TODO: Re-implement
+    // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func longPress(
         state: Self,
         point: CGPoint
@@ -962,6 +963,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     // TODO: Reimplement
+    // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func tap(
         state: Self,
         point: CGPoint
@@ -970,6 +972,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     // TODO: Reimplement
+    // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func enterBlockSelectMode(
         state: Self,
         selecting id: UUID?
@@ -978,6 +981,7 @@ extension BlockEditor.Model: ModelProtocol {
     }
 
     // TODO: Reimplement
+    // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func exitBlockSelectMode(
         state: Self
     ) -> Update {
