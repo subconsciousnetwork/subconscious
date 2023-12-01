@@ -469,8 +469,8 @@ extension BlockEditor.Action {
                 return .mergeBlockUp(id: id)
             case let .requestSplit(id, selection, _):
                 return .splitBlock(id: id, selection: selection)
-            case let .didChange(id, text, selection):
-                return .textDidChange(id: id, text: text, selection: selection)
+            case let .didChange(id, dom, selection):
+                return .textDidChange(id: id, dom: dom, selection: selection)
             case let .didChangeSelection(id, selection):
                 return .didChangeSelection(id: id, selection: selection)
             case let .didBeginEditing(id):

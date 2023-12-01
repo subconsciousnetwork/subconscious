@@ -10,7 +10,7 @@ import UIKit
 enum SubtextTextEditorAction: Hashable {
     case requestSplit(text: String, selection: NSRange)
     case requestMergeUp
-    case textDidChange(text: String, selection: NSRange)
+    case textDidChange(dom: Subtext, selection: NSRange)
     case selectionDidChange(selection: NSRange)
     case didBeginEditing
     case didEndEditing
@@ -108,7 +108,7 @@ extension SubtextTextEditorView: UITextViewDelegate {
             self.invalidateIntrinsicContentSize()
         }
         self.send(
-            .textDidChange(text: text, selection: selectedRange)
+            .textDidChange(dom: dom, selection: selectedRange)
         )
     }
     
