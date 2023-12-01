@@ -12,6 +12,7 @@ extension BlockEditor {
     struct BlocksModel: Hashable, CustomStringConvertible {
         var description: String {
             // TODO: serialize to nice Subtext whitespace
+            // https://github.com/subconsciousnetwork/subconscious/issues/1009
             blocks.compactMap(\.text).joined(separator: "\n\n")
         }
         var isBlockSelectMode = false
@@ -27,6 +28,7 @@ extension BlockEditor.BlocksModel: LosslessStringConvertible {
                 switch block {
                 case .empty:
                     // TODO: Do something smarter with whitespace
+                    // https://github.com/subconsciousnetwork/subconscious/issues/1009
                     return nil
                 case let .text(span, _):
                     return .text(
