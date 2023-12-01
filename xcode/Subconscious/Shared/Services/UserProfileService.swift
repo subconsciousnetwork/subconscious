@@ -99,7 +99,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var followingStatus: UserProfileFollowStatus
 }
 
-struct UserProfileEntry: Codable, Equatable {
+struct UserProfileEntry: Codable, Equatable, Hashable {
     static let currentVersion = "0.0"
     
     init(nickname: String?, bio: String?) {
