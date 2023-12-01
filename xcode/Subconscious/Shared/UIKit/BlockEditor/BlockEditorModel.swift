@@ -958,25 +958,6 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         point: CGPoint
     ) -> Update {
-//        guard !state.isBlockSelectMode else {
-//            return Update(state: state)
-//        }
-//        Self.logger.debug("Long press triggering select mode")
-//        guard let indexPath = collectionView.indexPathForItem(at: point) else {
-//            let x = point.x
-//            let y = point.y
-//            Self.logger.debug("No block at point (\(x), \(y)). No-op.")
-//            return Update(state: state)
-//        }
-//        let index = indexPath.row
-//        guard let block = state.blocks.get(index) else {
-//            Self.logger.log("No model found at index \(index). No-op.")
-//            return Update(state: state)
-//        }
-//        let selectModeEffect = {
-//            Action.enterBlockSelectMode(selecting: block.id)
-//        }
-//        return Update(state: state, effects: [selectModeEffect])
         return Update(state: state)
     }
 
@@ -985,24 +966,6 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         point: CGPoint
     ) -> Update {
-//        guard state.isBlockSelectMode else {
-//            return Update(state: state)
-//        }
-//        Self.logger.debug("Tap triggering block selection")
-//        guard let indexPath = collectionView.indexPathForItem(at: point) else {
-//            let x = point.x
-//            let y = point.y
-//            Self.logger.debug("No block at point (\(x), \(y)). No-op.")
-//            return Update(state: state)
-//        }
-//        let index = indexPath.row
-//        guard let block = state.blocks.get(index) else {
-//            Self.logger.log("No model found at index \(index). No-op.")
-//            return Update(state: state)
-//        }
-//        let selectModeEffect = {
-//            Action.toggleSelectBlock(id: block.id)
-//        }
         return Update(state: state)
     }
 
@@ -1011,27 +974,6 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         selecting id: UUID?
     ) -> Update {
-//        var model = state
-//
-//        model.isBlockSelectMode = true
-//        model.blocks = state.blocks.map({ block in
-//            let updated = block.update { block in
-//                var block = block
-//                block.isBlockSelectMode = true
-//                block.isBlockSelected = block.id == id
-//                return block
-//            }
-//            return updated ?? block
-//        })
-//
-//        let render = {
-//            self.collectionView.reloadSections(
-//                IndexSet(
-//                    integer: BlockEditor.Section.blocks.rawValue
-//                )
-//            )
-//        }
-//
         return Update(state: state)
     }
 
@@ -1039,27 +981,6 @@ extension BlockEditor.Model: ModelProtocol {
     static func exitBlockSelectMode(
         state: Self
     ) -> Update {
-//        var model = state
-//
-//        model.isBlockSelectMode = false
-//        model.blocks = state.blocks.map({ block in
-//            let updated = block.update { block in
-//                var block = block
-//                block.isBlockSelectMode = false
-//                block.isBlockSelected = false
-//                return block
-//            }
-//            return updated ?? block
-//        })
-//
-//        let render = {
-//            self.collectionView.reloadSections(
-//                IndexSet(
-//                    integer: BlockEditor.Section.blocks.rawValue
-//                )
-//            )
-//        }
-//
         return Update(state: state)
     }
     
