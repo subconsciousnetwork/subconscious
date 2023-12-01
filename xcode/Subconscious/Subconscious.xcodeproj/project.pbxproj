@@ -2935,8 +2935,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				branch = "2023-11-21-update-protocol";
-				kind = branch;
+				kind = exactVersion;
+				version = 0.5.0;
 			};
 		};
 		B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
