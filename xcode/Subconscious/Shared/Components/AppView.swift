@@ -1996,7 +1996,12 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .indexOurSphere,
+            actions: [
+                .indexOurSphere,
+                .toastStack(
+                    .pushToast(message: "Sync complete")
+                )
+            ],
             environment: environment
         )
     }
@@ -2018,7 +2023,12 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .indexOurSphere,
+            actions: [
+                .indexOurSphere,
+                .toastStack(
+                    .pushToast(message: "Failed to sync")
+                )
+            ],
             environment: environment
         )
     }
