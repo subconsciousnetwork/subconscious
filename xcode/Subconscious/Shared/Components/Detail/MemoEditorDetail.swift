@@ -17,6 +17,11 @@ struct MemoEditorDetailView: View {
         category: "BlockEditorStore"
     )
 
+    private static let memoEditorDetailStoreLogger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoEditorDetailStore"
+    )
+
     typealias Action = MemoEditorDetailAction
     @ObservedObject var app: Store<AppModel>
     
@@ -28,7 +33,9 @@ struct MemoEditorDetailView: View {
     @StateObject private var store = Store(
         state: MemoEditorDetailModel(),
         action: .start,
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: memoEditorDetailStoreLogger
     )
     
     @StateObject private var blockEditorStore = Store(
@@ -134,11 +141,6 @@ struct MemoEditorDetailView: View {
             
             return .systemAction
         })
-        .onReceive(store.actions) { action in
-            MemoEditorDetailAction.logger.debug(
-                "\(String(describing: action))"
-            )
-        }
         // Filtermap actions to outer actions, and forward them to parent
         .onReceive(
             store.actions.compactMap(MemoEditorDetailNotification.from)
@@ -325,11 +327,6 @@ extension MemoEditorDetailNotification {
 
 /// Actions handled by detail's private store.
 enum MemoEditorDetailAction: Hashable {
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "MemoEditorDetailAction"
-    )
-
     /// Tagging action for detail meta bottom sheet
     case metaSheet(MemoEditorDetailMetaSheetAction)
 
