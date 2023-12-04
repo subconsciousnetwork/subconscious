@@ -16,7 +16,12 @@ struct UserProfileDetailView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: UserProfileDetailModel(),
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: Logger(
+            subsystem: Config.default.rdns,
+            category: "UserProfileDetailStore"
+        )
     )
     
     static let logger = Logger(
@@ -52,11 +57,6 @@ struct UserProfileDetailView: View {
             app.actions.compactMap(UserProfileDetailAction.from),
             perform: store.send
         )
-        .onReceive(store.actions) { action in
-            UserProfileDetailAction.logger.debug(
-                "\(String(describing: action))"
-            )
-        }
     }
 }
 
@@ -134,11 +134,6 @@ extension UserProfileDetailAction {
 }
 
 enum UserProfileDetailAction: Equatable {
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "UserProfileDetailAction"
-    )
-
     case appear(Slashlink, Int)
     case refresh(forceSync: Bool)
     case populate(UserProfileContentResponse)
