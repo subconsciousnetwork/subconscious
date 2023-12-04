@@ -77,7 +77,12 @@ struct FeedView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: FeedModel(),
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: Logger(
+            subsystem: Config.default.rdns,
+            category: "FeedStore"
+        )
     )
     
     var body: some View {
@@ -128,19 +133,11 @@ struct FeedView: View {
             store.actions.compactMap(AppAction.from),
             perform: app.send
         )
-        .onReceive(store.actions) { action in
-            FeedAction.logger.debug("\(String(describing: action))")
-        }
     }
 }
 
 // MARK: Action
 enum FeedAction: Hashable {
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "FeedAction"
-    )
-
     case search(SearchAction)
     case activatedSuggestion(Suggestion)
     case detailStack(DetailStackAction)
