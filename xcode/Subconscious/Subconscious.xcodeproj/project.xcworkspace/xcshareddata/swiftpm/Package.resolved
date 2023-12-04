@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gordonbrander/ObservableStore",
       "state" : {
-        "revision" : "e648004489af5aa886335ec0cd833fb0c556f849",
-        "version" : "0.5.0"
+        "branch" : "2023-12-04-public-logging",
+        "revision" : "bb4ac94c12b7e8c2109067340ff655aac042694a"
       }
     },
     {
