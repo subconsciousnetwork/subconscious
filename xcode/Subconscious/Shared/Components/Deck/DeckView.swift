@@ -14,7 +14,12 @@ struct DeckView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject var store: Store<DeckModel> = Store(
         state: DeckModel(),
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: Logger(
+            subsystem: Config.default.rdns,
+            category: "DeckStore"
+        )
     )
     
     var body: some View {
@@ -68,19 +73,11 @@ struct DeckView: View {
             store.actions.compactMap(AppAction.from),
             perform: app.send
         )
-        .onReceive(store.actions) { action in
-            DeckAction.logger.debug("\(String(describing: action))")
-        }
     }
 }
 
 // MARK: Actions
 enum DeckAction: Hashable {
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "DeckAction"
-    )
-    
     case detailStack(DetailStackAction)
     
     case setSearchPresented(Bool)
