@@ -20,7 +20,12 @@ struct NotebookView: View {
     /// Local major view store
     @StateObject private var store = Store(
         state: NotebookModel(),
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: Logger(
+            subsystem: Config.default.rdns,
+            category: "NotebookStore"
+        )
     )
 
     var body: some View {
@@ -85,9 +90,6 @@ struct NotebookView: View {
             store.actions.compactMap(AppAction.from),
             perform: app.send
         )
-        .onReceive(store.actions) { action in
-            NotebookAction.logger.debug("\(String(describing: action))")
-        }
     }
 }
 
@@ -97,11 +99,6 @@ struct NotebookView: View {
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction: Hashable {
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "NotebookAction"
-    )
-    
     /// Tagged action for search HUD
     case search(SearchAction)
     /// Tagged action for detail stack
