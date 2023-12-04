@@ -16,7 +16,12 @@ struct AppView: View {
     @StateObject private var store = Store(
         state: AppModel(),
         action: .start,
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: Logger(
+            subsystem: Config.default.rdns,
+            category: "AppStore"
+        )
     )
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
 
@@ -73,9 +78,6 @@ struct AppView: View {
         .onAppear {
             store.send(.appear)
         }
-        .onReceive(store.actions) { action in
-            AppAction.logger.debug("\(String(describing: action))")
-        }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
@@ -99,11 +101,6 @@ typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
 
 // MARK: Action
 enum AppAction: Hashable {
-    // Logger for actions
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "AppAction"
-    )
     /// Sent immediately upon store creation
     case start
 
