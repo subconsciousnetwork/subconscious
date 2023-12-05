@@ -646,9 +646,12 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         let owner = state.owner.map({ did in Peer.did(did) })
 
-        // Only fetch new slashlinks
-        let existing = Set(state.transcludes.keys)
-        let slashlinksToFetch = Set(slashlinks).subtracting(existing)
+        // Fetch only the slashlinks that are not in the cache
+        let slashlinksToFetch = Set(
+            slashlinks.filter({ slashlink in
+                state.transcludes[slashlink] == nil
+            })
+        )
         
         logger.info("block#\(id) fetching transcludes for \(slashlinksToFetch)")
         
