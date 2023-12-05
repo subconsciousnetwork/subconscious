@@ -319,6 +319,28 @@ actor UserProfileService {
         return following
     }
     
+    /// List all the users followed by the passed sphere.
+    /// Each user will be decorated with whether the current app user is following them.
+    public func listAddressBook(
+        peer: Peer?
+    ) async throws -> [Petname:AddressBookEntry] {
+        logger.log("Opening sphere...")
+        let sphere = try await self.noosphere.sphere(address: Slashlink(peer: peer, slug: Slug.profile))
+        let did = try await sphere.identity()
+        logger.log("Opened sphere \(did)")
+        
+        logger.log("List address book")
+        let localAddressBook = AddressBook(sphere: sphere)
+        let entries = try await localAddressBook.listEntries()
+        
+        var addressBook: [Petname:AddressBookEntry] = [:]
+        for entry in entries {
+            addressBook[entry.petname] = entry
+        }
+        
+        return addressBook
+    }
+    
     /// Sets our nickname, preserving existing profile data.
     /// This is intended to be idempotent for use in the onboarding flow.
     func updateOurNickname(nickname: Petname.Name) async throws {

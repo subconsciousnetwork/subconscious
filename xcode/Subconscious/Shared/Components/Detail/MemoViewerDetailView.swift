@@ -42,13 +42,14 @@ struct MemoViewerDetailView: View {
                 )
             case .loaded:
                 MemoViewerDetailLoadedView(
-                    title: store.state.title,
-                    user: store.state.owner,
-                    dom: store.state.dom,
-                    transcludePreviews: store.state.transcludePreviews,
+                    store: store,
+//                    title: store.state.title,
+//                    user: store.state.owner,
+//                    dom: store.state.dom,
+//                    transcludePreviews: store.state.transcludePreviews,
                     address: description.address,
-                    backlinks: store.state.backlinks,
-                    send: store.send,
+//                    backlinks: store.state.backlinks,
+//                    send: store.send,
                     notify: notify
                 )
             case .notFound:
@@ -127,8 +128,8 @@ struct MemoViewerDetailNotFoundView: View {
                 onRequestDetail: onBacklinkSelect,
                 onLink: { context, link in
                     notify(
-                        .requestFindLinkDetail(
-                            context: context,
+                        .requestLinkDetail(
+                            context: Peer.did(context.owner),
                             link: link
                         )
                     )
@@ -147,13 +148,8 @@ struct MemoViewerDetailLoadingView: View {
 }
 
 struct MemoViewerDetailLoadedView: View {
-    var title: String
-    var user: UserProfile?
-    var dom: Subtext
-    var transcludePreviews: [Slashlink: EntryStub]
+    @ObservedObject var store: Store<MemoViewerDetailModel>
     var address: Slashlink
-    var backlinks: [EntryStub]
-    var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
     
     static let logger = Logger(
@@ -179,14 +175,11 @@ struct MemoViewerDetailLoadedView: View {
             return .systemAction
         }
         
-        guard let did = user?.did else {
-            Self.logger.log("User profile is not loaded, can't handle link")
-            return .handled
-        }
+        let petname = store.state.owner?.address.petname
         
         notify(
-            .requestFindLinkDetail(
-                context: ResolvedAddress(owner: did, slashlink: address),
+            .requestLinkDetail(
+                context: petname.map(Peer.petname),
                 link: link
             )
         )
@@ -202,8 +195,8 @@ struct MemoViewerDetailLoadedView: View {
         }
         
         notify(
-            .requestFindLinkDetail(
-                context: context,
+            .requestLinkDetail(
+                context: Peer.did(context.owner),
                 link: link
             )
         )
@@ -230,13 +223,13 @@ struct MemoViewerDetailLoadedView: View {
                 VStack {
                     VStack {
                         SubtextView(
-                            subtext: dom,
-                            transcludePreviews: transcludePreviews,
+                            subtext: store.state.dom,
+                            transcludePreviews: store.state.transcludePreviews,
                             onViewTransclude: self.onViewTransclude,
                             onTranscludeLink: { context, link in
                                 notify(
-                                    .requestFindLinkDetail(
-                                        context: context,
+                                    .requestLinkDetail(
+                                        context: Peer.did(context.owner),
                                         link: link
                                     )
                                 )
@@ -255,12 +248,12 @@ struct MemoViewerDetailLoadedView: View {
                     ThickDividerView()
                         .padding(.bottom, AppTheme.unit4)
                     BacklinksView(
-                        backlinks: backlinks,
+                        backlinks: store.state.backlinks,
                         onRequestDetail: onBacklinkSelect,
                         onLink: { context, link in
                             notify(
-                                .requestFindLinkDetail(
-                                    context: context,
+                                .requestLinkDetail(
+                                    context: Peer.did(context.owner),
                                     link: link
                                 )
                             )
@@ -279,7 +272,10 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
-        context: ResolvedAddress,
+        address: Slashlink
+    )
+    case requestLinkDetail(
+        context: Peer?,
         link: SubSlashlinkLink
     )
     case requestUserProfileDetail(_ address: Slashlink)
@@ -459,9 +455,10 @@ struct MemoViewerDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedFetchOwnerProfile(let profile):
+        case let .succeedFetchOwnerProfile(profile):
             var model = state
             model.owner = profile
+            
             return update(
                 state: model,
                 actions: [
@@ -637,21 +634,27 @@ struct MemoViewerDetailModel: ModelProtocol {
     ) -> Update<MemoViewerDetailModel> {
         let fx: Fx<MemoViewerDetailAction> =
             Future.detached {
-                guard let petname = state.address?.toPetname() else {
-                     return try await environment
-                        .userProfile
-                        .loadOurFullProfileData()
-                        .profile
+                guard let address = state.address else {
+                    return .failFetchOwnerProfile("Missing address")
                 }
                 
+                let petname = address.toPetname()
                 let did = try await environment.noosphere.resolve(peer: state.address?.peer)
                 
-                return try await environment
-                    .userProfile
-                    .identifyUser(did: did, petname: petname, context: nil)
-            }
-            .map { profile in
-                .succeedFetchOwnerProfile(profile)
+                let profile = try await Func.run {
+                    guard petname != nil else {
+                        return try await environment
+                           .userProfile
+                           .loadOurFullProfileData()
+                           .profile
+                    }
+                    
+                    return try await environment
+                        .userProfile
+                        .identifyUser(did: did, petname: petname, context: nil)
+                }
+                
+                return .succeedFetchOwnerProfile(profile)
             }
             .recover { error in
                 .failFetchOwnerProfile(error.localizedDescription)
@@ -717,40 +720,41 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
 struct MemoViewerDetailView_Previews: PreviewProvider {
     static var previews: some View {
         MemoViewerDetailLoadedView(
-            title: "Truth, The Prophet",
-            dom: Subtext(
-                markup:"""
-                Say not, "I have found _the_ truth," but rather, "I have found a truth."
+            store: Store(
+                state: MemoViewerDetailModel(
+                    title: "Truth, The Prophet",
+                    dom: Subtext(
+                        markup:"""
+                        Say not, "I have found _the_ truth," but rather, "I have found a truth."
 
-                Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
+                        Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
 
-                For the soul walks upon all paths.
-                
-                /infinity-paths
+                        For the soul walks upon all paths.
+                        
+                        /infinity-paths
 
-                The soul walks not upon a line, neither does it grow like a reed.
+                        The soul walks not upon a line, neither does it grow like a reed.
 
-                The soul unfolds itself, like a [[lotus]] of countless petals.
-                """
-            ),
-            transcludePreviews: [
-                Slashlink("/infinity-paths")!: EntryStub(
-                    did: Did.dummyData(),
-                    address: Slashlink(
-                        "/infinity-paths"
-                    )!,
-                    excerpt: Subtext(
-                        markup: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\""
+                        The soul unfolds itself, like a [[lotus]] of countless petals.
+                        """
                     ),
-                    isTruncated: false,
-                    modified: Date.now
-                )
-            ],
+                    transcludePreviews: [
+                        Slashlink("/infinity-paths")!: EntryStub(
+                            did: Did.dummyData(),
+                            address: Slashlink(
+                                "/infinity-paths"
+                            )!,
+                            excerpt: Subtext(
+                                markup: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\""
+                            ),
+                            isTruncated: false,
+                            modified: Date.now
+                        )
+                    ]
+                ),
+                environment: AppEnvironment()
+            ),
             address: Slashlink(slug: Slug("truth-the-prophet")!),
-            backlinks: [],
-            send: {
-                action in 
-            },
             notify: { action in }
         )
 

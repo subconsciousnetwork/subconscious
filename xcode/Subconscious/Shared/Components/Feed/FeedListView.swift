@@ -37,7 +37,7 @@ struct FeedListView: View {
                             store.send(
                                 .detailStack(
                                     .findAndPushLinkDetail(
-                                        context: context,
+                                        context: Peer.did(context.owner),
                                         link: link
                                     )
                                 )
