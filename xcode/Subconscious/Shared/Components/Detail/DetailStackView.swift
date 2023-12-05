@@ -184,8 +184,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
             return findAndPushLinkDetail(
                 state: state,
                 environment: environment,
-                link: link,
-                context: context
+                context: context,
+                link: link
             )
         case let .findAndPushDetail(address, fallback):
             return findAndPushDetail(
@@ -288,8 +288,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
     }
     
     public static func findBestAddressForLink(
-        link: SubSlashlinkLink,
         context: Peer?,
+        link: SubSlashlinkLink,
         environment: TestableEnvironment
     ) async throws -> Slashlink {
         let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
@@ -298,20 +298,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
         
         // We want the find the DID of this user so we can check if we follow them.
         // If we do follow them, we should prefer our petname for them when navigating.
-        
-        // 1. Check the address book of the context peer for this petname
-        // This is faster than a full traverse and resolve
-        var did: Did? = try await Func.run {
-            // No petname? The context is the owner
-            guard let petname = petname else {
-                return context?.did
-            }
-            
-            let addressBook = try await environment.userProfile.listAddressBook(peer: context)
-            return addressBook[petname]?.did
-        }
-        
-        // 2. If we still don't know this user then this is a 2nd, 3rd...nth degree link
         
         // i.e. I am following @bob, @alice and @charlie
         // I am viewing @bob's note /hello at @bob/hello
@@ -322,27 +308,28 @@ struct DetailStackModel: Hashable, ModelProtocol {
         
         // We _could_ also choose to simply bail out and navigate to the address without
         // traversing, at the expense of the clever redirect.
-        if let petname = slashlink.petname,
-           did == nil {
+        var did: Did? = nil
+        if let petname = slashlink.petname {
             do {
                 // Any errors during traversal mean we should give up
                 let sphere = try await environment.noosphere.traverse(petname: petname)
                 did = try await sphere.identity()
             } catch {
-                return slashlink
+                did = nil
             }
         }
         
+        // No identity means we can't check following status
         guard let did = did else {
             return slashlink
         }
         
-        // 3. Is this address ours? Trim off the peer
+        // Is this address ours? Trim off the peer
         guard did != ourIdentity else {
             return Slashlink(slug: slashlink.slug)
         }
     
-        // 4. Are we following this user?
+        // Are we following this user?
         let following = await environment.addressBook.followingStatus(
             did: did,
             expectedName: nil
@@ -363,15 +350,15 @@ struct DetailStackModel: Hashable, ModelProtocol {
     static func findAndPushLinkDetail(
         state: Self,
         environment: Environment,
-        link: SubSlashlinkLink,
-        context: Peer?
+        context: Peer?,
+        link: SubSlashlinkLink
     ) -> Update<Self> {
         let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
         
         let fx: Fx<DetailStackAction> = Future.detached {
             let address = try await self.findBestAddressForLink(
-                link: link,
                 context: context,
+                link: link,
                 environment: environment
             )
             return .findAndPushDetail(address: address, fallback: link.fallback)
