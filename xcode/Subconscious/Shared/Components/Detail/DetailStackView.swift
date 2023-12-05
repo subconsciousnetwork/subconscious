@@ -301,6 +301,68 @@ struct DetailStackModel: Hashable, ModelProtocol {
         return link.slashlink.rebaseIfNeeded(petname: basePetname)
     }
     
+    static func findBestAddressForLink(
+        link: SubSlashlinkLink,
+        context: Peer?,
+        environment: Environment
+    ) async throws -> Slashlink {
+        let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
+        let petname = link.slashlink.petname
+        let addressBook = try await environment.userProfile.listAddressBook(peer: context)
+        let ourIdentity = try await environment.noosphere.identity()
+        
+        // We want the find the DID of this user so we can check if we follow them.
+        // If we do follow them, we should prefer our petname for them when navigating.
+        
+        // 1. Check the address book of the context peer for this petname
+        // This is faster than a full traverse and resolve
+        var did: Did? = Func.run {
+            guard let petname = petname else {
+                return ourIdentity
+            }
+            
+            return addressBook[petname]?.did
+        }
+        
+        // 2. If we still don't know this user then this is a 2nd, 3rd...nth degree link
+        // We can traverse to find the DID.
+        
+        // We _could_ also choose to simply bail out and navigate to the address without
+        // traversing, but this means we can't tell if we have an entry for this user
+        // in our address book.
+        if let petname = petname,
+           did == nil {
+            let sphere = try await environment.noosphere.traverse(petname: petname)
+            did = try await sphere.identity()
+        }
+        
+        guard let did = did else {
+            return slashlink
+        }
+        
+        // 3. Is this address ours? Trim off the peer
+        guard did != ourIdentity else {
+            return Slashlink(slug: slashlink.slug)
+        }
+    
+        // 4. Are we following this user?
+        let following = await environment.addressBook.followingStatus(
+            did: did,
+            expectedName: nil
+        )
+        
+        switch following {
+        // Use the name we know for this user
+        case .following(let name):
+            return Slashlink(
+                petname: name.toPetname(),
+                slug: slashlink.slug
+            )
+        case .notFollowing:
+            return slashlink
+        }
+    }
+    
     static func findAndPushLinkDetail(
         state: Self,
         environment: Environment,
@@ -310,51 +372,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
         let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
         
         let fx: Fx<DetailStackAction> = Future.detached {
-            let petname = link.slashlink.petname
-            let addressBook = try await environment.userProfile.listAddressBook(peer: context)
-            let ourIdentity = try await environment.noosphere.identity()
-            var did = petname == nil
-                ? ourIdentity
-                : addressBook[petname!]?.did
-            
-            // If we still don't know this user (AKA this is a 2nd, 3rd, nth degree link)
-            if let petname = petname,
-               did == nil {
-                let sphere = try await environment.noosphere.traverse(petname: petname)
-                did = try await sphere.identity()
-            }
-            
-            guard let did = did else {
-                return .findAndPushDetail(
-                    address: slashlink
-                )
-            }
-            
-            let identity = try await environment.noosphere.identity()
-            let following = await environment.addressBook.followingStatus(
-                did: did,
-                expectedName: nil
+            let address = try await self.findBestAddressForLink(
+                link: link,
+                context: context,
+                environment: environment
             )
-            
-            // Is this us? Trim off the peer
-            guard did != identity else {
-                return .findAndPushDetail(
-                    address: Slashlink(slug: slashlink.slug)
-                )
-            }
-            
-            switch following {
-            // Use the shortest name we know for this user
-            case .following(let name):
-                return .findAndPushDetail(
-                    address: Slashlink(
-                        petname: name.toPetname(),
-                        slug: slashlink.slug
-                    )
-                )
-            case .notFollowing:
-                return .findAndPushDetail(address: slashlink)
-            }
+            return .findAndPushDetail(address: address)
         }
         .recover { error in
             logger.error("Failed to resolve peer: \(error)")
