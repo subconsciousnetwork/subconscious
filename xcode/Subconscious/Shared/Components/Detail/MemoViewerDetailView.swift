@@ -17,7 +17,12 @@ struct MemoViewerDetailView: View {
     
     @StateObject private var store = Store(
         state: MemoViewerDetailModel(),
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: Logger(
+            subsystem: Config.default.rdns,
+            category: "MemoViewerDetailStore"
+        )
     )
     
     var metaSheet: ViewStore<MemoViewerDetailMetaSheetModel> {
@@ -74,11 +79,6 @@ struct MemoViewerDetailView: View {
         })
         .onAppear {
             store.send(.appear(description))
-        }
-        .onReceive(store.actions) { action in
-            MemoViewerDetailAction.logger.debug(
-                "\(String(describing: action))"
-            )
         }
         .onReceive(
             store.actions.compactMap(MemoViewerDetailNotification.from),
@@ -304,11 +304,6 @@ struct MemoViewerDetailDescription: Hashable {
 
 // MARK: Actions
 enum MemoViewerDetailAction: Hashable {
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "MemoViewerDetailAction"
-    )
-
     case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
     case refreshAll

@@ -48,7 +48,12 @@ struct HomeProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: HomeProfileModel(),
-        environment: AppEnvironment.default
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: Logger(
+            subsystem: Config.default.rdns,
+            category: "HomeProfileStore"
+        )
     )
 
     var body: some View {
@@ -105,20 +110,12 @@ struct HomeProfileView: View {
             store.actions.compactMap(AppAction.from),
             perform: app.send
         )
-        .onReceive(store.actions) { action in
-            HomeProfileAction.logger.debug("\(String(describing: action))")
-        }
     }
 }
 
 
 // MARK: Action
 enum HomeProfileAction: Hashable {
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "HomeProfileAction"
-    )
-    
     case search(SearchAction)
     case activatedSuggestion(Suggestion)
     case detailStack(DetailStackAction)
