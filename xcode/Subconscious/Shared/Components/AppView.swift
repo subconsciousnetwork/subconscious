@@ -2896,7 +2896,7 @@ struct AppModel: ModelProtocol {
     }
 }
 
-protocol DataServicesEnvironment {
+protocol TestableEnvironment {
     var noosphere: NoosphereService { get }
     var database: DatabaseService { get }
     var data: DataService { get }
@@ -2908,7 +2908,7 @@ protocol DataServicesEnvironment {
 
 // MARK: Environment
 /// A place for constants and services
-struct AppEnvironment: DataServicesEnvironment {
+struct AppEnvironment: TestableEnvironment {
     /// Default environment constant
     static let `default` = AppEnvironment()
 

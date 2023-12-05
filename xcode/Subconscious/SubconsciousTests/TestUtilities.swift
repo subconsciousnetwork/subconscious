@@ -25,7 +25,7 @@ struct TestUtilities {
         return url
     }
     
-    struct DataServiceEnvironment: DataServicesEnvironment {
+    struct DataServiceEnvironment: TestableEnvironment {
         var data: DataService
         var database: DatabaseService
         var noosphere: NoosphereService

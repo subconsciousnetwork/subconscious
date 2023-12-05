@@ -289,7 +289,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
     public static func findBestAddressForLink(
         link: SubSlashlinkLink,
         context: Peer?,
-        environment: DataServicesEnvironment
+        environment: TestableEnvironment
     ) async throws -> Slashlink {
         let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
         let petname = link.slashlink.petname
