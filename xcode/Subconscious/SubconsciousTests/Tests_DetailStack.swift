@@ -38,8 +38,8 @@ class Tests_DetailStack: XCTestCase {
         let link = SubSlashlinkLink(slashlink: slashlink)
         
         let address = try await DetailStackModel.findBestAddressForLink(
-            link: link,
             context: nil,
+            link: link,
             environment: data
         )
        
@@ -78,8 +78,10 @@ class Tests_DetailStack: XCTestCase {
         
         let peer = Peer.petname(friendName)
         let address = try await DetailStackModel.findBestAddressForLink(
+            context: Peer.petname(
+                friendName
+            ),
             link: link,
-            context: Peer.petname(friendName),
             environment: data
         )
        
@@ -98,7 +100,6 @@ class Tests_DetailStack: XCTestCase {
         let model = DetailStackModel()
         
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         let did = Did.dummyData()
         let context = Peer.did(did)
@@ -117,7 +118,8 @@ class Tests_DetailStack: XCTestCase {
             },
             receiveValue: { action in
                 switch action {
-                case let .findAndPushDetail(address: newAddress):
+                case let .findAndPushDetail(address: newAddress, fallback):
+                    XCTAssertEqual(link.fallback, fallback)
                     XCTAssertEqual(Slashlink("@bob.alice.origin/hello"), newAddress)
                     default:
                         XCTFail("Incorrect action")
@@ -130,7 +132,6 @@ class Tests_DetailStack: XCTestCase {
 
     func testViewerSlashlinkConstruction() throws {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         let did = Did.dummyData()
         
