@@ -104,7 +104,8 @@ enum DetailStackAction: Hashable {
     /// If slashlink does not have a peer part, this will
     /// request an editor detail.
     case findAndPushDetail(
-        address: Slashlink
+        address: Slashlink,
+        fallback: String?
     )
     
     case findAndPushLinkDetail(
@@ -186,12 +187,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 link: link,
                 context: context
             )
-        case let .findAndPushDetail(address):
+        case let .findAndPushDetail(address, fallback):
             return findAndPushDetail(
                 state: state,
                 environment: environment,
                 address: address,
-                fallback: nil
+                fallback: fallback
             )
         case let .findAndPushMemoEditorDetail(slug, fallback):
             return findAndPushMemoEditorDetail(
@@ -324,6 +325,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         if let petname = slashlink.petname,
            did == nil {
             do {
+                // Any errors during traversal mean we should give up
                 let sphere = try await environment.noosphere.traverse(petname: petname)
                 did = try await sphere.identity()
             } catch {
@@ -372,11 +374,11 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 context: context,
                 environment: environment
             )
-            return .findAndPushDetail(address: address)
+            return .findAndPushDetail(address: address, fallback: link.fallback)
         }
         .recover { error in
             logger.error("Failed to resolve peer: \(error)")
-            return .findAndPushDetail(address: slashlink)
+            return .findAndPushDetail(address: slashlink, fallback: nil)
         }
         .eraseToAnyPublisher()
         
@@ -691,8 +693,8 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(address):
-            return .findAndPushDetail(address: address)
+        case let .requestFindDetail(address, fallback):
+            return .findAndPushDetail(address: address, fallback: fallback)
         case let .requestFindLinkDetail(context, link):
             return .findAndPushLinkDetail(
                 context: context,

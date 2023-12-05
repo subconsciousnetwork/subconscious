@@ -272,7 +272,8 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindDetail(
-        address: Slashlink
+        address: Slashlink,
+        fallback: String?
     )
     case requestFindLinkDetail(
         context: Peer?,
