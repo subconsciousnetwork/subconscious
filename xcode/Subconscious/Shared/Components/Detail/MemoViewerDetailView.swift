@@ -43,13 +43,7 @@ struct MemoViewerDetailView: View {
             case .loaded:
                 MemoViewerDetailLoadedView(
                     store: store,
-//                    title: store.state.title,
-//                    user: store.state.owner,
-//                    dom: store.state.dom,
-//                    transcludePreviews: store.state.transcludePreviews,
                     address: description.address,
-//                    backlinks: store.state.backlinks,
-//                    send: store.send,
                     notify: notify
                 )
             case .notFound:
