@@ -101,18 +101,16 @@ extension BlockEditor {
             autofocus: Bool = false
         )
         /// Load related notes (backlinks)
-        case loadRelated
-        case succeedLoadRelated(_ related: [EntryStub])
-        case failLoadRelated(_ error: String)
-        case loadTranscludesFor(id: UUID, slashlinks: Set<Slashlink>)
-        case succeedLoadTranscludesFor(
+        case fetchRelated
+        case succeedFetchRelated(_ related: [EntryStub])
+        case failFetchRelated(_ error: String)
+        case fetchTranscludesFor(id: UUID, slashlinks: [Slashlink])
+        case succeedFetchTranscludesFor(
             id: UUID,
-            desired: Set<Slashlink>,
-            loaded: [EntryStub]
+            fetched: [EntryStub]
         )
-        case failLoadTranscludesFor(id: UUID, error: String)
-        case cacheTranscludes([EntryStub])
-        case setTranscludesFor(id: UUID, transcludes: [EntryStub])
+        case failFetchTranscludesFor(id: UUID, error: String)
+        case refreshTranscludesFor(id: UUID)
         /// Save a snapshot
         case save(_ snapshot: MemoEntry?)
         case succeedSave(_ snapshot: MemoEntry)
@@ -269,56 +267,48 @@ extension BlockEditor.Model: ModelProtocol {
                 autofocus: autofocus,
                 environment: environment
             )
-        case .loadRelated:
-            return loadRelated(
+        case .fetchRelated:
+            return fetchRelated(
                 state: state,
                 environment: environment
             )
-        case let .succeedLoadRelated(related):
-            return succeedLoadRelated(
+        case let .succeedFetchRelated(related):
+            return succeedFetchRelated(
                 state: state,
                 related: related,
                 environment: environment
             )
-        case let .failLoadRelated(error):
-            return failLoadRelated(
+        case let .failFetchRelated(error):
+            return failFetchRelated(
                 state: state,
                 error: error,
                 environment: environment
             )
-        case let .loadTranscludesFor(id, slashlinks):
-            return loadTranscludesFor(
+        case let .fetchTranscludesFor(id, slashlinks):
+            return fetchTranscludesFor(
                 state: state,
                 id: id,
                 slashlinks: slashlinks,
                 environment: environment
             )
-        case let .succeedLoadTranscludesFor(id, desired, loaded):
-            return succeedLoadTranscludesFor(
+        case let .succeedFetchTranscludesFor(id, fetched):
+            return succeedFetchTranscludesFor(
                 state: state,
                 id: id,
-                desired: desired,
-                loaded: loaded,
+                fetched: fetched,
                 environment: environment
             )
-        case let .failLoadTranscludesFor(id, error):
-            return failLoadTranscludesFor(
+        case let .failFetchTranscludesFor(id, error):
+            return failFetchTranscludesFor(
                 state: state,
                 id: id,
                 error: error,
                 environment: environment
             )
-        case let .cacheTranscludes(transcludes):
-            return cacheTranscludes(
-                state: state,
-                transcludes: transcludes,
-                environment: environment
-            )
-        case let .setTranscludesFor(id, transcludes):
-            return setTranscludesFor(
+        case let .refreshTranscludesFor(id):
+            return refreshTranscludesFor(
                 state: state,
                 id: id,
-                transcludes: transcludes,
                 environment: environment
             )
         case let .save(snapshot):
@@ -499,7 +489,7 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: model)
         }
 
-        let loadRelatedFx = Just(Action.loadRelated)
+        let loadRelatedFx = Just(Action.fetchRelated)
 
         let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
             address: address,
@@ -603,7 +593,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func loadRelated(
+    static func fetchRelated(
         state: Self,
         environment: Environment
     ) -> Update {
@@ -616,17 +606,17 @@ extension BlockEditor.Model: ModelProtocol {
             try await environment.data.readMemoBacklinks(address: address)
         }
         .map { backlinks in
-            .succeedLoadRelated(backlinks)
+            .succeedFetchRelated(backlinks)
         }
         .recover { error in
-            .failLoadRelated(error.localizedDescription)
+            .failFetchRelated(error.localizedDescription)
         }
         .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
     
-    static func succeedLoadRelated(
+    static func succeedFetchRelated(
         state: Self,
         related: [EntryStub],
         environment: Environment
@@ -638,7 +628,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model)
     }
 
-    static func failLoadRelated(
+    static func failFetchRelated(
         state: Self,
         error: String,
         environment: Environment
@@ -648,33 +638,33 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
-    static func loadTranscludesFor(
+    static func fetchTranscludesFor(
         state: Self,
         id: UUID,
-        slashlinks: Set<Slashlink>,
+        slashlinks: [Slashlink],
         environment: Environment
     ) -> Update {
         let owner = state.owner.map({ did in Peer.did(did) })
 
-        /// If we've already fetched, don't fetch again.
-        let slashlinks = slashlinks.subtracting(state.transcludes.keys)
+        // Only fetch new slashlinks
+        let existing = Set(state.transcludes.keys)
+        let slashlinksToFetch = Set(slashlinks).subtracting(existing)
         
-        logger.info("block#\(id) loading transcludes for \(slashlinks)")
+        logger.info("block#\(id) fetching transcludes for \(slashlinksToFetch)")
         
         let fx: Fx<Action> = Future.detached {
             do {
                 let transcludes = try await environment.transclude
                     .fetchTranscludePreviews(
-                        slashlinks: slashlinks,
+                        slashlinks: slashlinksToFetch,
                         owner: owner
                     )
-                return Action.succeedLoadTranscludesFor(
+                return Action.succeedFetchTranscludesFor(
                     id: id,
-                    desired: slashlinks,
-                    loaded: Array(transcludes.values)
+                    fetched: Array(transcludes.values)
                 )
             } catch {
-                return Action.failLoadTranscludesFor(
+                return Action.failFetchTranscludesFor(
                     id: id,
                     error: error.localizedDescription
                 )
@@ -685,36 +675,33 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state, fx: fx)
     }
 
-    static func succeedLoadTranscludesFor(
+    static func cacheTranscludes(
         state: Self,
-        id: UUID,
-        desired: Set<Slashlink>,
-        loaded: [EntryStub],
-        environment: Environment
-    ) -> Update {
-
+        transcludes: [EntryStub]
+    ) -> Self {
         var model = state
-        
-        for transclude in loaded {
+        for transclude in transcludes {
             logger.info("Updated cached transclude for \(transclude.address)")
             model.transcludes[transclude.address] = transclude
         }
-        
-        let desiredTranscludes = desired.compactMap({ slashlink in
-            model.transcludes[slashlink]
-        })
-        
+        return model
+    }
+
+    static func succeedFetchTranscludesFor(
+        state: Self,
+        id: UUID,
+        fetched: [EntryStub],
+        environment: Environment
+    ) -> Update {
+        let model = cacheTranscludes(state: state, transcludes: fetched)
         return update(
-            state: state,
-            action: .setTranscludesFor(
-                id: id,
-                transcludes: desiredTranscludes
-            ),
+            state: model,
+            action: .refreshTranscludesFor(id: id),
             environment: environment
         )
     }
 
-    static func failLoadTranscludesFor(
+    static func failFetchTranscludesFor(
         state: Self,
         id: UUID,
         error: String,
@@ -724,40 +711,42 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
 
-    static func cacheTranscludes(
-        state: Self,
-        transcludes: [EntryStub],
-        environment: Environment
-    ) -> Update {
-        var model = state
-        for transclude in transcludes {
-            logger.info("Updated cached transclude for \(transclude.address)")
-            model.transcludes[transclude.address] = transclude
-        }
-        return Update(state: model)
-    }
 
-    static func setTranscludesFor(
+    static func refreshTranscludesFor(
         state: Self,
         id: UUID,
-        transcludes: [EntryStub],
         environment: Environment
     ) -> Update {
         guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
-            Self.logger.log("block#\(id) not found. Doing nothing.")
+            Self.logger.log("block#\(id) not found. Skipping transclude refresh.")
             return Update(state: state)
         }
-        var model = state
-        let block = model.blocks.blocks[i]
+
+        let block = state.blocks.blocks[i]
+
+        guard let slashlinks = block.dom?.parsedSlashlinks else {
+            logger.log("block#\(id) no DOM for this block. Skipping transclude update for block.")
+            return Update(state: state)
+        }
+
+        let transcludes = slashlinks
+            .uniquing()
+            .compactMap({ slashlink in
+                state.transcludes[slashlink]
+            })
+
         let blockWithTranscludes = block.update { textBlock in
             var textBlock = textBlock
             textBlock.transcludes = transcludes
             return textBlock
         }
+
         guard let blockWithTranscludes = blockWithTranscludes else {
             Self.logger.log("block#\(id) unable to update as text block. Doing nothing.")
             return Update(state: state)
         }
+
+        var model = state
         model.blocks.blocks[i] = blockWithTranscludes
 
         let indexPath = IndexPath(
@@ -890,7 +879,7 @@ extension BlockEditor.Model: ModelProtocol {
         model.setSaveState(.unsaved)
         
         guard let dom = block.dom else {
-            logger.info("block#\(id) block DOM is nil. Skipping transclude load.")
+            logger.info("block#\(id) no DOM for this block. Skipping transclude load.")
             return Update(state: model)
         }
 
@@ -902,9 +891,9 @@ extension BlockEditor.Model: ModelProtocol {
 
         return update(
             state: model,
-            action: .loadTranscludesFor(
+            action: .fetchTranscludesFor(
                 id: id,
-                slashlinks: slashlinks
+                slashlinks: dom.parsedSlashlinks
             ),
             environment: environment
         )
