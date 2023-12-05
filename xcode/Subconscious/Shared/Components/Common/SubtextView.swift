@@ -17,7 +17,7 @@ struct SubtextView: View {
     var subtext: Subtext
     var transcludePreviews: [Slashlink: EntryStub] = [:]
     var onViewTransclude: (Slashlink) -> Void  = { _ in }
-    var onTranscludeLink: (_ context: ResolvedAddress, SubSlashlinkLink) -> Void = { _, _ in }
+    var onTranscludeLink: (_ context: Peer, SubSlashlinkLink) -> Void = { _, _ in }
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks

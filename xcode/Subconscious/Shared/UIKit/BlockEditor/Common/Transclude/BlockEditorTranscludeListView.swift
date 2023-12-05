@@ -16,7 +16,7 @@ extension BlockEditor {
     struct TranscludeListView: View {
         var entries: [EntryStub]
         var onViewTransclude: (EntryStub) -> Void
-        var onTranscludeLink: (ResolvedAddress, SubSlashlinkLink) -> Void
+        var onTranscludeLink: (Peer, SubSlashlinkLink) -> Void
 
         var body: some View {
             Subconscious.TranscludeListView(
@@ -37,7 +37,7 @@ extension UIHostingView where Content == BlockEditor.TranscludeListView {
         parentController: UIViewController,
         entries: [EntryStub],
         onViewTransclude: @escaping (EntryStub) -> Void,
-        onTranscludeLink: @escaping (ResolvedAddress, SubSlashlinkLink) -> Void
+        onTranscludeLink: @escaping (Peer, SubSlashlinkLink) -> Void
     ) {
         // Hide if empty
         self.isHidden = entries.isEmpty

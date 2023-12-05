@@ -129,7 +129,7 @@ struct MemoViewerDetailNotFoundView: View {
                 onLink: { context, link in
                     notify(
                         .requestFindLinkDetail(
-                            context: Peer.did(context.owner),
+                            context: context,
                             link: link
                         )
                     )
@@ -187,7 +187,7 @@ struct MemoViewerDetailLoadedView: View {
     }
     
     private func onLink(
-        context: ResolvedAddress,
+        context: Peer,
         url: URL
     ) -> OpenURLAction.Result {
         guard let link = url.toSubSlashlinkURL() else {
@@ -196,7 +196,7 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindLinkDetail(
-                context: Peer.did(context.owner),
+                context: context,
                 link: link
             )
         )
@@ -229,7 +229,7 @@ struct MemoViewerDetailLoadedView: View {
                             onTranscludeLink: { context, link in
                                 notify(
                                     .requestFindLinkDetail(
-                                        context: Peer.did(context.owner),
+                                        context: context,
                                         link: link
                                     )
                                 )
@@ -253,7 +253,7 @@ struct MemoViewerDetailLoadedView: View {
                         onLink: { context, link in
                             notify(
                                 .requestFindLinkDetail(
-                                    context: Peer.did(context.owner),
+                                    context: context,
                                     link: link
                                 )
                             )

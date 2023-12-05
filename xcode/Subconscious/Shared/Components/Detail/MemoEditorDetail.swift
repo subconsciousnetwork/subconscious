@@ -228,7 +228,7 @@ struct MemoEditorDetailView: View {
                             onLink: { context, link in
                                 notify(
                                     .requestFindLinkDetail(
-                                        context: Peer.did(context.owner),
+                                        context: context,
                                         link: link
                                     )
                                 )

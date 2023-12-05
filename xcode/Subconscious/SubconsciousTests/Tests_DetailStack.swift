@@ -14,23 +14,77 @@ class Tests_DetailStack: XCTestCase {
     let environment = AppEnvironment()
     var cancellable: AnyCancellable?
     
-    func testSubSlashlinkRebase() throws {
+    func testFindBestLinkAddressNoContext() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
+        
+        try await data.noosphere.write(
+            slug: Slug(
+                "test"
+            )!,
+            contentType: "text/subtext",
+            additionalHeaders: [],
+            body: (
+                "hello"
+            ).toData(
+                encoding: .utf8
+            )!
+        )
+        try await data.noosphere.save()
+        
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let baseAddress = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         
-        let rebasedAddress = DetailStackModel.rebaseLinkOnAddress(
-            address: baseAddress,
-            link: link
+        let address = try await DetailStackModel.findBestAddressForLink(
+            link: link,
+            context: nil,
+            environment: data
         )
+       
+        XCTAssertEqual(address.slug, slashlink.slug)
+        XCTAssertEqual(address.peer, slashlink.peer)
+    }
+    
+    func testFindBestLinkAddressWithContext() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
-        if let petname = rebasedAddress.petname {
-            XCTAssertEqual(petname, Petname("bob.alice.origin")!)
-            XCTAssertEqual(rebasedAddress.slug, Slug("hello")!)
-        } else {
-            XCTFail("Missing petname")
-            return
-        }
+        let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
+        
+        // Follow a user and attempt to navigate to a link based on them
+        
+        try await data.noosphere.write(
+            slug: Slug(
+                "test"
+            )!,
+            contentType: "text/subtext",
+            additionalHeaders: [],
+            body: (
+                "hello"
+            ).toData(
+                encoding: .utf8
+            )!
+        )
+        try await data.noosphere.save()
+        
+        let friend = Did.dummyData()
+        let friendName = Petname("friend")!
+        try await data.addressBook.followUser(did: friend, petname: friendName)
+        
+        let slashlink = Slashlink(slug: Slug("hello")!)
+        let link = SubSlashlinkLink(slashlink: slashlink)
+        
+        let peer = Peer.petname(friendName)
+        let address = try await DetailStackModel.findBestAddressForLink(
+            link: link,
+            context: Peer.petname(friendName),
+            environment: data
+        )
+       
+        XCTAssertEqual(address.slug, slashlink.slug)
+        XCTAssertEqual(address.peer, peer)
     }
     
     func testFindAndPushLinkDetail() throws {
@@ -47,7 +101,7 @@ class Tests_DetailStack: XCTestCase {
         let address = Slashlink(petname: Petname("origin")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         let did = Did.dummyData()
-        let context = ResolvedAddress(owner: did, slashlink: address)
+        let context = Peer.did(did)
         
         let update = DetailStackModel.update(
             state: model,
@@ -63,8 +117,7 @@ class Tests_DetailStack: XCTestCase {
             },
             receiveValue: { action in
                 switch action {
-                case let .findAndPushDetail(address: newAddress, link: newLink):
-                    XCTAssertEqual(newLink, link)
+                case let .findAndPushDetail(address: newAddress):
                     XCTAssertEqual(Slashlink("@bob.alice.origin/hello"), newAddress)
                     default:
                         XCTFail("Incorrect action")
@@ -82,15 +135,14 @@ class Tests_DetailStack: XCTestCase {
         let did = Did.dummyData()
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            context: ResolvedAddress(owner: did, slashlink: address),
+            context: Peer.did(did),
             link: link
         )
         
         let newAction = DetailStackAction.tag(action)
         switch newAction {
         case let .findAndPushLinkDetail(context, newLink):
-            XCTAssertEqual(did, context.owner)
-            XCTAssertEqual(address, context.slashlink)
+            XCTAssertEqual(did, context?.did)
             XCTAssertEqual(link, newLink)
         default:
             XCTFail("Incorrect action")
@@ -103,7 +155,7 @@ class Tests_DetailStack: XCTestCase {
         let did = Did.dummyData()
         
         let action = MemoEditorDetailNotification.requestFindLinkDetail(
-            context: ResolvedAddress(owner: did, slashlink: Slashlink.ourProfile),
+            context: Peer.did(did),
             link: link
         )
         
@@ -111,8 +163,7 @@ class Tests_DetailStack: XCTestCase {
         
         switch newAction {
         case let .findAndPushLinkDetail(context, newLink):
-            XCTAssertEqual(did, context.owner)
-            XCTAssertEqual(Slashlink.ourProfile, context.slashlink)
+            XCTAssertEqual(did, context?.did)
             XCTAssertEqual(newLink, link)
         default:
             XCTFail("Incorrect action")

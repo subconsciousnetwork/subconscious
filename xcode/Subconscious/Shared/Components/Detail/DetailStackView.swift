@@ -286,14 +286,13 @@ struct DetailStackModel: Hashable, ModelProtocol {
         return Update(state: model)
     }
     
-    static func findBestAddressForLink(
+    public static func findBestAddressForLink(
         link: SubSlashlinkLink,
         context: Peer?,
-        environment: Environment
+        environment: DataServicesEnvironment
     ) async throws -> Slashlink {
         let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
         let petname = link.slashlink.petname
-        let addressBook = try await environment.userProfile.listAddressBook(peer: context)
         let ourIdentity = try await environment.noosphere.identity()
         
         // We want the find the DID of this user so we can check if we follow them.
@@ -301,11 +300,13 @@ struct DetailStackModel: Hashable, ModelProtocol {
         
         // 1. Check the address book of the context peer for this petname
         // This is faster than a full traverse and resolve
-        var did: Did? = Func.run {
+        var did: Did? = try await Func.run {
+            // No petname? The context is the owner
             guard let petname = petname else {
-                return ourIdentity
+                return context?.did
             }
             
+            let addressBook = try await environment.userProfile.listAddressBook(peer: context)
             return addressBook[petname]?.did
         }
         
@@ -320,10 +321,14 @@ struct DetailStackModel: Hashable, ModelProtocol {
         
         // We _could_ also choose to simply bail out and navigate to the address without
         // traversing, at the expense of the clever redirect.
-        if let petname = petname,
+        if let petname = slashlink.petname,
            did == nil {
-            let sphere = try await environment.noosphere.traverse(petname: petname)
-            did = try await sphere.identity()
+            do {
+                let sphere = try await environment.noosphere.traverse(petname: petname)
+                did = try await sphere.identity()
+            } catch {
+                return slashlink
+            }
         }
         
         guard let did = did else {
