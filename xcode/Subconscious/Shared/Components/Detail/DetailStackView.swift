@@ -286,21 +286,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
         return Update(state: model)
     }
     
-    static func rebaseLinkOnAddress(
-        address: Slashlink,
-        link: SubSlashlinkLink
-    ) -> Slashlink {
-        // Stitch the base address on to the tapped link, making any
-        // bare slashlinks relative to the sphere they belong to.
-        //
-        // This is needed in the viewer but address will always based
-        // on our sphere in the editor case.
-        guard case let .petname(basePetname) = address.peer else {
-            return link.slashlink
-        }
-        return link.slashlink.rebaseIfNeeded(petname: basePetname)
-    }
-    
     static func findBestAddressForLink(
         link: SubSlashlinkLink,
         context: Peer?,
@@ -325,11 +310,16 @@ struct DetailStackModel: Hashable, ModelProtocol {
         }
         
         // 2. If we still don't know this user then this is a 2nd, 3rd...nth degree link
-        // We can traverse to find the DID.
+        
+        // i.e. I am following @bob, @alice and @charlie
+        // I am viewing @bob's note /hello at @bob/hello
+        // There is a link in @bob's note to @charlie.alice/hey
+        // The relative address would be @charlie.alice.bob/hey
+        // BUT if we resolve the address we realise that we know @charlie already!
+        // So we rewrite the address to @charlie/hey
         
         // We _could_ also choose to simply bail out and navigate to the address without
-        // traversing, but this means we can't tell if we have an entry for this user
-        // in our address book.
+        // traversing, at the expense of the clever redirect.
         if let petname = petname,
            did == nil {
             let sphere = try await environment.noosphere.traverse(petname: petname)
