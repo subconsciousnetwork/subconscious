@@ -48,6 +48,11 @@ actor TranscludeService {
         slashlinks: Set<Slashlink>,
         owner: Peer?
     ) async throws -> [Slashlink: EntryStub] {
+        // Cheap early exit if no slashlinks are requested
+        guard slashlinks.count > 0 else {
+            return [:]
+        }
+
         var dict: [Slashlink: EntryStub] = [:]
         
         for link in slashlinks {
