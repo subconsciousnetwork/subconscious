@@ -13,6 +13,8 @@ struct EntryListView: View {
     var onEntryPress: (EntryStub) -> Void
     var onEntryDelete: (Slashlink) -> Void
     var onRefresh: () -> Void
+    
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         if let entries = entries {
@@ -27,6 +29,7 @@ struct EntryListView: View {
                             EntryRow(entry: entry)
                                 .equatable()
                         }
+                        .buttonStyle(EntryListRowButtonStyle(color: entry.color(colorScheme: colorScheme)))
                         .modifier(RowViewModifier())
                         .swipeActions(
                             edge: .trailing,
@@ -42,16 +45,21 @@ struct EntryListView: View {
                             .tint(.red)
                         }
                     }
-                    .background(Color.background)
                     
                     FabSpacerView()
+                        .listRowBackground(Color.clear)
                 }
-                .animation(.easeOutCubic(), value: entries)
+                .listStyle(.plain)
+                .background(.clear)
+                .scrollContentBackground(.hidden)
                 .transition(.opacity)
                 .refreshable {
                     onRefresh()
                 }
-                .listStyle(.plain)
+                .padding(
+                    [.leading, .trailing],
+                    AppTheme.unit2
+                )
             } else {
                 EntryListEmptyView(onRefresh: onRefresh)
             }
@@ -64,7 +72,30 @@ struct EntryListView: View {
 struct EntryListView_Previews: PreviewProvider {
     static var previews: some View {
         EntryListView(
-            entries: [],
+            entries: [
+                EntryStub(
+                    did: Did.dummyData(),
+                    address: Slashlink(
+                        "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
+                    )!,
+                    excerpt: Subtext(
+                        markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
+                    ),
+                    isTruncated: false,
+                    modified: Date.now
+                ),
+                EntryStub(
+                    did: Did.dummyData(),
+                    address: Slashlink(
+                        "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
+                    )!,
+                    excerpt: Subtext(
+                        markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
+                    ),
+                    isTruncated: false,
+                    modified: Date.now
+                )
+            ],
             onEntryPress: { entry in },
             onEntryDelete: { slug in },
             onRefresh: {}

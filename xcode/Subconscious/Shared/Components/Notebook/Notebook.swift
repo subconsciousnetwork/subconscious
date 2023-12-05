@@ -90,6 +90,7 @@ struct NotebookView: View {
             store.actions.compactMap(AppAction.from),
             perform: app.send
         )
+        .toolbarBackground(Color(red: 0.88, green: 0.86, blue: 0.93), for: .tabBar)
     }
 }
 

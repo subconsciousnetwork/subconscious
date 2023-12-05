@@ -10,6 +10,8 @@ import ObservableStore
 struct NotebookNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<NotebookModel>
+    
+    @Environment (\.colorScheme) var colorScheme
 
     var body: some View {
         DetailStackView(
@@ -77,6 +79,10 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
+            .background(
+                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+            )
+            .toolbarBackground(Color(red: 0.93, green: 0.93, blue: 0.86), for: .navigationBar)
         }
     }
 }

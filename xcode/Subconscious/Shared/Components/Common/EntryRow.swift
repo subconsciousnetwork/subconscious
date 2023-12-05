@@ -46,7 +46,7 @@ struct EntryRow: View, Equatable {
 
 struct EntryRow_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
+        VStack(spacing: AppTheme.unit2) {
             EntryRow(
                 entry: EntryStub(
                     did: Did.dummyData(),
@@ -104,5 +104,6 @@ struct EntryRow_Previews: PreviewProvider {
                 )
             )
         }
+        .padding(AppTheme.unit2)
     }
 }

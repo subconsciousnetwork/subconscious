@@ -1,16 +1,29 @@
 import SwiftUI
 
-struct CardView: View {
-    var entry: CardModel
-    @Environment(\.colorScheme) var colorScheme
-    
-    var colors: [Color] {
+extension Hashable {
+    private func colors(colorScheme: ColorScheme) -> [Color] {
         colorScheme == .dark
             ? DeckTheme.darkCardColors
             : DeckTheme.lightCardColors
     }
+    
+    func color(colorScheme: ColorScheme) -> Color {
+        let colors = colors(colorScheme: colorScheme)
+        return colors[abs(self.hashValue) % colors.count]
+    }
+}
+
+struct CardView: View {
+    var entry: CardModel
+    @Environment(\.colorScheme) var colorScheme
+    
     var color: Color {
-        colors[abs(entry.hashValue) % colors.count]
+        switch entry.card {
+        case let .entry(entry, _, _):
+            return entry.color(colorScheme: colorScheme)
+        default:
+            return entry.card.color(colorScheme: colorScheme)
+        }
     }
     
     var blendMode: BlendMode {

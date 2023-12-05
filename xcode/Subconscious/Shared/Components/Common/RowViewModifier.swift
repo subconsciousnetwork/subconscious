@@ -17,18 +17,16 @@ struct RowViewModifier: ViewModifier {
         VStack(spacing: 0) {
             content
                 .multilineTextAlignment(.leading)
-                .padding(insets)
-            Divider()
-                .padding(.leading, insets.leading)
         }
         .listRowInsets(
             EdgeInsets(
                 top: 0,
                 leading: 0,
-                bottom: 0,
+                bottom: AppTheme.unit2,
                 trailing: 0
             )
         )
         .listRowSeparator(.hidden, edges: .all)
+        .listRowBackground(Color.clear)
     }
 }

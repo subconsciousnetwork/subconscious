@@ -16,6 +16,16 @@ enum AppTab: String, Hashable {
     case profile
 }
 
+struct TabBarStyle: ViewModifier {
+   let backgroundColor: Color
+   
+   func body(content: Content) -> some View {
+       content
+           .tabViewStyle(DefaultTabViewStyle())
+           .background(backgroundColor)
+   }
+}
+
 struct AppTabView: View {
     @ObservedObject var store: Store<AppModel>
 
