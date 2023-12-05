@@ -128,7 +128,7 @@ struct MemoViewerDetailNotFoundView: View {
                 onRequestDetail: onBacklinkSelect,
                 onLink: { context, link in
                     notify(
-                        .requestLinkDetail(
+                        .requestFindLinkDetail(
                             context: Peer.did(context.owner),
                             link: link
                         )
@@ -178,7 +178,7 @@ struct MemoViewerDetailLoadedView: View {
         let petname = store.state.owner?.address.petname
         
         notify(
-            .requestLinkDetail(
+            .requestFindLinkDetail(
                 context: petname.map(Peer.petname),
                 link: link
             )
@@ -195,7 +195,7 @@ struct MemoViewerDetailLoadedView: View {
         }
         
         notify(
-            .requestLinkDetail(
+            .requestFindLinkDetail(
                 context: Peer.did(context.owner),
                 link: link
             )
@@ -228,7 +228,7 @@ struct MemoViewerDetailLoadedView: View {
                             onViewTransclude: self.onViewTransclude,
                             onTranscludeLink: { context, link in
                                 notify(
-                                    .requestLinkDetail(
+                                    .requestFindLinkDetail(
                                         context: Peer.did(context.owner),
                                         link: link
                                     )
@@ -252,7 +252,7 @@ struct MemoViewerDetailLoadedView: View {
                         onRequestDetail: onBacklinkSelect,
                         onLink: { context, link in
                             notify(
-                                .requestLinkDetail(
+                                .requestFindLinkDetail(
                                     context: Peer.did(context.owner),
                                     link: link
                                 )
@@ -271,10 +271,10 @@ struct MemoViewerDetailLoadedView: View {
 enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
-    case requestFindLinkDetail(
+    case requestFindDetail(
         address: Slashlink
     )
-    case requestLinkDetail(
+    case requestFindLinkDetail(
         context: Peer?,
         link: SubSlashlinkLink
     )

@@ -312,9 +312,17 @@ struct DetailStackModel: Hashable, ModelProtocol {
         let fx: Fx<DetailStackAction> = Future.detached {
             let petname = link.slashlink.petname
             let addressBook = try await environment.userProfile.listAddressBook(peer: context)
-            let did = petname == nil
-                ? nil
+            let ourIdentity = try await environment.noosphere.identity()
+            var did = petname == nil
+                ? ourIdentity
                 : addressBook[petname!]?.did
+            
+            // If we still don't know this user (AKA this is a 2nd, 3rd, nth degree link)
+            if let petname = petname,
+               did == nil {
+                let sphere = try await environment.noosphere.traverse(petname: petname)
+                did = try await sphere.identity()
+            }
             
             guard let did = did else {
                 return .findAndPushDetail(
@@ -325,7 +333,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             let identity = try await environment.noosphere.identity()
             let following = await environment.addressBook.followingStatus(
                 did: did,
-                expectedName: slashlink.petname?.leaf
+                expectedName: nil
             )
             
             // Is this us? Trim off the peer
@@ -665,13 +673,13 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestLinkDetail(context, link):
+        case let .requestFindDetail(address):
+            return .findAndPushDetail(address: address)
+        case let .requestFindLinkDetail(context, link):
             return .findAndPushLinkDetail(
                 context: context,
                 link: link
             )
-        case let .requestFindLinkDetail(address):
-            return .pushDetail(MemoDetailDescription.viewer(.init(address: address)))
         case let .requestUserProfileDetail(address):
             return .pushDetail(
                 MemoDetailDescription.profile(
