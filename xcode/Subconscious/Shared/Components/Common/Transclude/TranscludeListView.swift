@@ -10,7 +10,7 @@ import SwiftUI
 struct TranscludeListView: View {
     var entries: [EntryStub]
     var onViewTransclude: (EntryStub) -> Void
-    var onTranscludeLink: (ResolvedAddress, SubSlashlinkLink) -> Void
+    var onTranscludeLink: (Peer, SubSlashlinkLink) -> Void
     
     var body: some View {
         VStack {
@@ -21,7 +21,7 @@ struct TranscludeListView: View {
                         onViewTransclude(entry)
                     },
                     onLink: { link in
-                        onTranscludeLink(entry.toResolvedAddress(), link)
+                        onTranscludeLink(entry.toPeer(), link)
                     }
                 )
             }

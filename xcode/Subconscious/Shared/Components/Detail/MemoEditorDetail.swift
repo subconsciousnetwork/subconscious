@@ -66,16 +66,15 @@ struct MemoEditorDetailView: View {
     private func onLink(
         url: URL
     ) -> Bool {
-        guard let sub = url.toSubSlashlinkURL(),
+        guard let link = url.toSubSlashlinkURL(),
               let did = app.state.sphereIdentity else {
             return true
         }
         
         notify(
-            // Links in the editor are based from our sphere
             .requestFindLinkDetail(
-                context: ResolvedAddress(owner: did, slashlink: Slashlink.ourProfile),
-                link: sub
+                context: Peer.did(did),
+                link: link
             )
         )
         return false
@@ -293,7 +292,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
-        context: ResolvedAddress,
+        context: Peer,
         link: SubSlashlinkLink
     )
     case requestDelete(Slashlink?)

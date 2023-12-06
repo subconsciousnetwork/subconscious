@@ -10,7 +10,7 @@ import SwiftUI
 struct BacklinksView: View {
     var backlinks: [EntryStub]
     var onRequestDetail: (EntryLink) -> Void
-    var onLink: (_ context: ResolvedAddress, SubSlashlinkLink) -> Void
+    var onLink: (_ context: Peer, SubSlashlinkLink) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {

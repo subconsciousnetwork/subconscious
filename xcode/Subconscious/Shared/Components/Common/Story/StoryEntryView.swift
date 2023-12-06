@@ -24,7 +24,7 @@ private struct StoryEntryUserDetailsView: View {
 struct StoryEntryView: View {
     var story: StoryEntry
     var onRequestDetail: (Slashlink, String) -> Void
-    var onLink: (_ context: ResolvedAddress, SubSlashlinkLink) -> Void
+    var onLink: (_ context: Peer, SubSlashlinkLink) -> Void
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -88,7 +88,7 @@ struct StoryEntryView: View {
                             return .systemAction
                         }
                         
-                        onLink(story.entry.toResolvedAddress(), subslashlink)
+                        onLink(story.entry.toPeer(), subslashlink)
                         return .handled
                     })
                     
