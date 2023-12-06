@@ -886,12 +886,6 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: model)
         }
 
-        let slashlinks = Set(
-            dom.slashlinks.compactMap({ slashlink in
-                Slashlink(slashlink.description)
-            })
-        )
-
         return update(
             state: model,
             action: .fetchTranscludesFor(
