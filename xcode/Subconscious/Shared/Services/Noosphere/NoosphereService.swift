@@ -53,12 +53,9 @@ extension NoosphereService {
         // traversing, at the expense of the clever redirect.
         var did: Did? = nil
         if let petname = slashlink.petname {
-            do {
-                // Any errors during traversal mean we should give up
+            did = try? await Func.run {
                 let sphere = try await self.traverse(petname: petname)
-                did = try await sphere.identity()
-            } catch {
-                did = nil
+                return try await sphere.identity()
             }
         }
         
