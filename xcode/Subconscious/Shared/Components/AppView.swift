@@ -2896,19 +2896,9 @@ struct AppModel: ModelProtocol {
     }
 }
 
-protocol TestableEnvironment {
-    var noosphere: NoosphereService { get }
-    var database: DatabaseService { get }
-    var data: DataService { get }
-    var transclude: TranscludeService { get }
-    
-    var addressBook: AddressBookService { get }
-    var userProfile: UserProfileService { get }
-}
-
 // MARK: Environment
 /// A place for constants and services
-struct AppEnvironment: TestableEnvironment {
+struct AppEnvironment {
     /// Default environment constant
     static let `default` = AppEnvironment()
 

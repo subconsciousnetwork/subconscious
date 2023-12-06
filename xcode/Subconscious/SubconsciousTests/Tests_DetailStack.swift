@@ -37,10 +37,9 @@ class Tests_DetailStack: XCTestCase {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         
-        let address = try await DetailStackModel.findBestAddressForLink(
+        let address = try await data.noosphere.findBestAddressForLink(
             context: nil,
-            link: link,
-            environment: data
+            link: link
         )
        
         XCTAssertEqual(address.slug, slashlink.slug)
@@ -77,12 +76,11 @@ class Tests_DetailStack: XCTestCase {
         let link = SubSlashlinkLink(slashlink: slashlink)
         
         let peer = Peer.petname(friendName)
-        let address = try await DetailStackModel.findBestAddressForLink(
+        let address = try await data.noosphere.findBestAddressForLink(
             context: Peer.petname(
                 friendName
             ),
-            link: link,
-            environment: data
+            link: link
         )
        
         XCTAssertEqual(address.slug, slashlink.slug)

@@ -31,6 +31,67 @@ enum NoosphereServiceError: Error, LocalizedError {
     }
 }
 
+extension NoosphereService {
+    public func findBestAddressForLink(
+        context: Peer?,
+        link: SubSlashlinkLink
+    ) async throws -> Slashlink {
+        let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
+        let ourIdentity = try await self.identity()
+        
+        // We want the find the DID of this user so we can check if we follow them.
+        // If we do follow them, we should prefer our petname for them when navigating.
+        
+        // i.e. I am following @bob, @alice and @charlie
+        // I am viewing @bob's note /hello at @bob/hello
+        // There is a link in @bob's note to @charlie.alice/hey
+        // The relative address would be @charlie.alice.bob/hey
+        // BUT if we resolve the address we realise that we know @charlie already!
+        // So we rewrite the address to @charlie/hey
+        
+        // We _could_ also choose to simply bail out and navigate to the address without
+        // traversing, at the expense of the clever redirect.
+        var did: Did? = nil
+        if let petname = slashlink.petname {
+            do {
+                // Any errors during traversal mean we should give up
+                let sphere = try await self.traverse(petname: petname)
+                did = try await sphere.identity()
+            } catch {
+                did = nil
+            }
+        }
+        
+        // No identity means we can't check following status
+        guard let did = did else {
+            return slashlink
+        }
+        
+        // Is this address ours? Trim off the peer
+        guard did != ourIdentity else {
+            return Slashlink(slug: slashlink.slug)
+        }
+    
+        // Are we following this user?
+        let addressBook = AddressBook(sphere: self)
+        let following = await addressBook.followingStatus(
+            did: did,
+            expectedName: nil
+        )
+        
+        switch following {
+        // Use the name we know for this user
+        case .following(let name):
+            return Slashlink(
+                petname: name.toPetname(),
+                slug: slashlink.slug
+            )
+        case .notFollowing:
+            return slashlink
+        }
+    }
+}
+
 protocol NoosphereServiceProtocol {
     var globalStorageURL: URL { get async }
     var sphereStorageURL: URL { get async }
