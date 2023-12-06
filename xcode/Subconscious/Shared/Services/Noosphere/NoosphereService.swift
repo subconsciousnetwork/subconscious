@@ -193,6 +193,12 @@ actor NoosphereService:
         self._sphere = nil
     }
     
+    func setLogLevel(_ level: Noosphere.NoosphereLogLevel) {
+        logger.log("Set log level: \(level.description)")
+        self._noosphereLogLevel = level
+        self.reset()
+    }
+    
     /// Gets or creates memoized Noosphere singleton instance
     private func noosphere() throws -> Noosphere {
         if let noosphere = self._noosphere {

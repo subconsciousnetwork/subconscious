@@ -34,4 +34,7 @@ struct AppDefaults {
     // enums must be serialized when stored as AppDefaults:
     // https://cocoacasts.com/ud-6-how-to-store-an-enum-in-user-defaults-in-swift
     var selectedAppTab: String = AppTab.notebook.rawValue
+    
+    @UserDefaultsProperty(forKey: "noosphereLogLevel")
+    var noosphereLogLevel: String = Noosphere.NoosphereLogLevel.basic.description
 }
