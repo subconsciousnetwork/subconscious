@@ -15,7 +15,7 @@ struct TranscludeListView: View {
     @Environment (\.colorScheme) var colorScheme
     
     var body: some View {
-        VStack {
+        VStack(spacing: AppTheme.unit2) {
             ForEach(entries, id: \.self) { entry in
                 VStack {
                     TranscludeView(

@@ -22,6 +22,8 @@ struct TranscludeButtonStyle: ButtonStyle {
             .padding(.horizontal, AppTheme.unit3)
             .expandAlignedLeading()
             .background(
+                // halve opacity on dark mode to reduce eyeburn on black background
+                // this will change when we get the gradient background into the editor
                 color.opacity(colorScheme == .dark ? 0.5 : 1)
             )
             .overlay(

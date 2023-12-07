@@ -19,7 +19,7 @@ struct EntryListRowButtonStyle: ButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(AppTheme.unit2)
+            .padding(AppTheme.unit3)
             .expandAlignedLeading()
             .background(
                 color
