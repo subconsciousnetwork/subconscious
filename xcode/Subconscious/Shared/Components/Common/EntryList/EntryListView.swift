@@ -26,10 +26,21 @@ struct EntryListView: View {
                                 onEntryPress(entry)
                             }
                         ) {
-                            EntryRow(entry: entry)
-                                .equatable()
+                            EntryRow(
+                                entry: entry,
+                                highlight: entry.address.highlightColor(
+                                    colorScheme: colorScheme
+                                )
+                            )
+                            .equatable()
                         }
-                        .buttonStyle(EntryListRowButtonStyle(color: entry.color(colorScheme: colorScheme)))
+                        .buttonStyle(
+                            EntryListRowButtonStyle(
+                                color: entry.address.color(
+                                    colorScheme: colorScheme
+                                )
+                            )
+                        )
                         .modifier(RowViewModifier())
                         .swipeActions(
                             edge: .trailing,

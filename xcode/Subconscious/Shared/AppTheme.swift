@@ -166,7 +166,7 @@ extension Color {
     }
     
     static func brandDropShadow(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color.brandMarkPink : Color.brandMarkPurple
+        colorScheme == .dark ? Color.brandBgSlate : Color.brandMarkPurple
     }
 }
 

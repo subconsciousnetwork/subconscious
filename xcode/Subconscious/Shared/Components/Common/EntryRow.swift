@@ -12,18 +12,27 @@ import SwiftUI
 struct EntryRow: View, Equatable {
     var entry: EntryStub
     var emptyExcerpt = "Empty"
+    var highlight: Color = .secondary
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
-            Text("\(entry.excerpt.excerpt().description)")
+            SubtextView(subtext: entry.excerpt)
+                .environment(\.openURL, OpenURLAction { url in
+                    guard let subslashlink = url.toSubSlashlinkURL() else {
+                        return .systemAction
+                    }
+
+                    return .handled
+                })
                 .font(.callout)
                 .multilineTextAlignment(.leading)
+                .padding(.bottom, AppTheme.unit2)
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
                 SlashlinkDisplayView(slashlink: entry.address)
-                    .theme(base: .secondary, slug: .secondary)
+                    .theme(base: highlight, slug: highlight)
 
                 Spacer()
 
@@ -34,13 +43,14 @@ struct EntryRow: View, Equatable {
                     )
                 )
                 .font(.subheadline)
-                .foregroundColor(Color.secondary)
+                .foregroundColor(highlight)
             }
             .font(.callout)
             .lineLimit(1)
-            .foregroundColor(Color.secondary)
+            .foregroundColor(highlight)
             .multilineTextAlignment(.leading)
         }
+        .tint(highlight)
     }
 }
 

@@ -22,45 +22,65 @@ extension DeckTheme {
     static let cornerRadius: CGFloat = 32.0
     static let cardSize = CGSize(width: 374, height: 420)
     
-    static let cardShadow = Color(red: 0.45, green: 0.25, blue: 0.75)
+    static let cardShadow = Color(red: 0.19, green: 0.09, blue: 0.33)
     
-    static let lightFog = Color(red: 0.93, green: 0.81, blue: 0.92)
+    static let lightBgStart = Color(red: 0.92, green: 0.92, blue: 0.85)
+    static let lightBgMid = Color(red: 0.93, green: 0.81, blue: 0.92)
+    static let lightBgEnd = Color(red: 0.87, green: 0.86, blue: 0.92)
     
     static let lightBg = LinearGradient(
         stops: [
-            Gradient.Stop(color: Color(red: 0.87, green: 0.86, blue: 0.92), location: 0.00),
-            Gradient.Stop(color: lightFog, location: 0.38),
-            Gradient.Stop(color: Color(red: 0.92, green: 0.92, blue: 0.85), location: 1.00),
+            Gradient.Stop(color: lightBgStart, location: 0.00),
+            Gradient.Stop(color: lightBgMid, location: 0.38),
+            Gradient.Stop(color: lightBgEnd, location: 1.00),
         ],
-        startPoint: UnitPoint(x: 0.5, y: 0.9),
-        endPoint: UnitPoint(x: 0.5, y: 0)
+        startPoint: UnitPoint(x: 0.5, y: 0),
+        endPoint: UnitPoint(x: 0.5, y: 1)
     )
     
-    static let darkFog = Color(red: 0.2, green: 0.14, blue: 0.26)
+    static let darkBgStart = Color(red: 0.13, green: 0.14, blue: 0.2)
+    static let darkBgMid = Color(red: 0.2, green: 0.14, blue: 0.26)
+    static let darkBgEnd = Color(red: 0.1, green: 0.04, blue: 0.11)
     
     static let darkBg = LinearGradient(
         stops: [
-            Gradient.Stop(color: Color(red: 0.13, green: 0.14, blue: 0.2), location: 0.00),
-            Gradient.Stop(color: darkFog, location: 0.44),
-            Gradient.Stop(color: Color(red: 0.1, green: 0.04, blue: 0.11), location: 1.00),
+            Gradient.Stop(color: darkBgStart, location: 0.00),
+            Gradient.Stop(color: darkBgMid, location: 0.44),
+            Gradient.Stop(color: darkBgEnd, location: 1.00),
         ],
         startPoint: UnitPoint(x: 0.5, y: 0),
         endPoint: UnitPoint(x: 0.5, y: 1)
     )
     
     static let lightCardColors: [Color] = [
-        Color(red: 0.97, green: 0.49, blue: 0.75),
-        Color(red: 0.56, green: 0.62, blue: 0.93),
-        Color(red: 0.93, green: 0.59, blue: 0.56),
-        Color(red: 0.74, green: 0.52, blue: 0.95),
-        Color(red: 0.97, green: 0.75, blue: 0.48)
+        Color(red: 0.98, green: 0.96, blue: 0.94),
+        Color(red: 0.92, green: 0.98, blue: 0.97),
+        Color(red: 0.97, green: 0.93, blue: 0.97),
+        Color(red: 0.98, green: 0.92, blue: 0.94),
+        Color(red: 0.93, green: 0.94, blue: 0.97)
+    ]
+    
+    static let lightCardHighlightColors: [Color] = [
+        Color(red: 0.76, green: 0.7, blue: 0.61),
+        Color(red: 0.55, green: 0.75, blue: 0.73),
+        Color(red: 0.73, green: 0.58, blue: 0.71),
+        Color(red: 0.75, green: 0.55, blue: 0.61),
+        Color(red: 0.56, green: 0.62, blue: 0.73)
     ]
     
     static let darkCardColors: [Color] = [
-        Color(red: 0.64, green: 0.35, blue: 0.93),
-        Color(red: 0.91, green: 0.37, blue: 0.35),
-        Color(red: 0.72, green: 0.37, blue: 0.84),
-        Color(red: 0.97, green: 0.43, blue: 0.72),
-        Color(red: 0.9, green: 0.62, blue: 0.28)
+        Color(red: 0.7, green: 0.55, blue: 0.4),
+        Color(red: 0.4, green: 0.7, blue: 0.64),
+        Color(red: 0.73, green: 0.49, blue: 0.71),
+        Color(red: 0.78, green: 0.44, blue: 0.53),
+        Color(red: 0.47, green: 0.55, blue: 0.73)
+    ]
+    
+    static let darkCardHighlightColors: [Color] = [
+        Color(red: 1, green: 0.87, blue: 0.68),
+        Color(red: 0.68, green: 1, blue: 1),
+        Color(red: 1, green: 0.79, blue: 1),
+        Color(red: 1, green: 0.74, blue: 0.85),
+        Color(red: 0.77, green: 0.88, blue: 1)
     ]
 }

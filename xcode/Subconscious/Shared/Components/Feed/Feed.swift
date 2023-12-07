@@ -13,6 +13,7 @@ import os
 struct FeedNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<FeedModel>
+    @Environment (\.colorScheme) var colorScheme
     
     var detailStack: ViewStore<DetailStackModel> {
         store.viewStore(
@@ -111,15 +112,14 @@ struct FeedView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
             VStack {
-                Spacer()
                 ToastStackView(
                     store: app.viewStore(
                         get: \.toastStack,
                         tag: ToastStackCursor.tag
                     )
                 )
+                Spacer()
             }
-            .padding()
             .zIndex(3)
         }
         .background(Color.background)

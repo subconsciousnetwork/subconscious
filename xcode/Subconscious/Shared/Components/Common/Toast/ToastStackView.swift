@@ -119,7 +119,7 @@ struct ToastStackModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         let fx: Fx<ToastStackAction> = Future.detached {
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
             return .toastExpired(toast)
         }
         .eraseToAnyPublisher()

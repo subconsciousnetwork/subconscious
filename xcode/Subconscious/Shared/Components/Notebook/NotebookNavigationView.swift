@@ -82,7 +82,10 @@ struct NotebookNavigationView: View {
             .background(
                 colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
             )
-            .toolbarBackground(Color(red: 0.93, green: 0.93, blue: 0.86), for: .navigationBar)
+            .toolbarBackground(
+                colorScheme == .dark ? DeckTheme.darkBgStart : DeckTheme.lightBgStart,
+                for: .navigationBar
+            )
         }
     }
 }

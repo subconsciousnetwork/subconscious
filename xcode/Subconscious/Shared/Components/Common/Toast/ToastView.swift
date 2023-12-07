@@ -14,25 +14,32 @@ struct ToastView: View {
     
     var body: some View {
         HStack {
-            Spacer()
             Text(toast.message)
-            Spacer()
         }
         .padding()
         .frame(
-            height: AppTheme.fabSize,
+            height: AppTheme.minTouchSize,
             alignment: .center
         )
         .background(.background)
         .foregroundColor(.primary)
-        .cornerRadius(AppTheme.cornerRadiusLg)
+        .cornerRadius(100)
         .shadow(
-            color: Color.brandDropShadow(colorScheme).opacity(0.5),
-            radius: 8,
+            color: Color.brandDropShadow(colorScheme).opacity(0.25),
+            radius: 2.5,
             x: 0,
-            y: 4
+            y: 2
         )
-        .transition(.asymmetric(insertion: .push(from: .bottom), removal: .opacity))
+        .transition(
+            .asymmetric(
+                insertion: .push(
+                    from: .top
+                ),
+                removal: .push(
+                    from: .bottom
+                )
+            )
+        )
     }
 }
 

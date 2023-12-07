@@ -8,11 +8,13 @@
 import SwiftUI
 
 struct TranscludeButtonStyle: ButtonStyle {
-    private var roundedRect = RoundedRectangle(
+    private static let roundedRect = RoundedRectangle(
         cornerRadius: AppTheme.cornerRadiusLg
     )
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) var colorScheme
+    
+    var color: Color
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -20,12 +22,16 @@ struct TranscludeButtonStyle: ButtonStyle {
             .padding(.horizontal, AppTheme.unit4)
             .expandAlignedLeading()
             .background(
-                configuration.isPressed
-                   ? Color.backgroundPressed
-                   : Color.tertiarySystemGroupedBackground
+                color.opacity(colorScheme == .dark ? 0.5 : 1)
             )
-            .contentShape(roundedRect)
-            .clipShape(roundedRect)
+            .overlay(
+                Rectangle()
+                    .fill(configuration.isPressed
+                          ? Color.backgroundPressed
+                          : Color.clear)
+            )
+            .contentShape(Self.roundedRect)
+            .clipShape(Self.roundedRect)
             .animation(.default, value: configuration.isPressed)
     }
 }
@@ -38,7 +44,7 @@ struct TranscludeButtonStyle_Previews: PreviewProvider {
                 Text("Test")
             }
         ).buttonStyle(
-            TranscludeButtonStyle()
+            TranscludeButtonStyle(color: Color.secondary)
         )
     }
 }

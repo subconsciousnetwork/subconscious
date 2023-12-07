@@ -7,8 +7,19 @@ extension Hashable {
             : DeckTheme.lightCardColors
     }
     
+    private func highlightColors(colorScheme: ColorScheme) -> [Color] {
+        colorScheme == .dark
+            ? DeckTheme.darkCardHighlightColors
+            : DeckTheme.lightCardHighlightColors
+    }
+    
     func color(colorScheme: ColorScheme) -> Color {
         let colors = colors(colorScheme: colorScheme)
+        return colors[abs(self.hashValue) % colors.count]
+    }
+    
+    func highlightColor(colorScheme: ColorScheme) -> Color {
+        let colors = highlightColors(colorScheme: colorScheme)
         return colors[abs(self.hashValue) % colors.count]
     }
 }
@@ -20,9 +31,18 @@ struct CardView: View {
     var color: Color {
         switch entry.card {
         case let .entry(entry, _, _):
-            return entry.color(colorScheme: colorScheme)
+            return entry.address.color(colorScheme: colorScheme)
         default:
             return entry.card.color(colorScheme: colorScheme)
+        }
+    }
+    
+    var highlight: Color {
+        switch entry.card {
+        case let .entry(entry, _, _):
+            return entry.address.highlightColor(colorScheme: colorScheme)
+        default:
+            return entry.card.highlightColor(colorScheme: colorScheme)
         }
     }
     
@@ -39,6 +59,7 @@ struct CardView: View {
                 SubtextView(subtext: entry.excerpt)
                     // Opacity allows blendMode to show through
                     .foregroundStyle(.primary.opacity(0.8))
+                    .accentColor(highlight)
                 
                 Spacer()
                 
@@ -59,7 +80,7 @@ struct CardView: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(highlight)
             case .action(let string):
                 // TEMP
                 VStack {
@@ -73,7 +94,6 @@ struct CardView: View {
             }
             
         }
-        .blendMode(blendMode)
         .padding(DeckTheme.cardPadding)
         .allowsHitTesting(false)
         .background(color)
@@ -110,8 +130,8 @@ struct CardEffectModifier: ViewModifier {
                 Rectangle()
                     .fill(
                         colorScheme == .dark
-                        ? DeckTheme.darkFog
-                        : DeckTheme.lightFog
+                        ? DeckTheme.darkBgMid
+                        : DeckTheme.lightBgMid
                     )
                     .opacity(4.0*stackFactor)
             )
@@ -144,11 +164,11 @@ struct CardEffectModifier: ViewModifier {
             // Reduce shadow intensity with depth
             .shadow(
                 color: DeckTheme.cardShadow.opacity(
-                    0.25 * (1.0 - 5.0*stackFactor)
+                    0.2 * (1.0 - 5.0*stackFactor)
                 ),
-                radius: 4,
+                radius: 2.5,
                 x: 0,
-                y: 2
+                y: 1.5
             )
     }
 }

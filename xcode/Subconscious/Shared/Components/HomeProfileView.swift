@@ -86,15 +86,14 @@ struct HomeProfileView: View {
             .zIndex(2)
             
             VStack {
-                Spacer()
                 ToastStackView(
                     store: app.viewStore(
                         get: \.toastStack,
                         tag: ToastStackCursor.tag
                     )
                 )
+                Spacer()
             }
-            .padding()
             .zIndex(3)
         }
         .onAppear {
