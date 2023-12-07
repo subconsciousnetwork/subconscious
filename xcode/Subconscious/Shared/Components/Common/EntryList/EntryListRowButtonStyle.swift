@@ -21,9 +21,7 @@ struct EntryListRowButtonStyle: ButtonStyle {
         configuration.label
             .padding(AppTheme.unit3)
             .expandAlignedLeading()
-            .background(
-                color
-            )
+            .background(color)
             .overlay(
                 Rectangle()
                     .fill(configuration.isPressed
@@ -33,7 +31,12 @@ struct EntryListRowButtonStyle: ButtonStyle {
             .contentShape(Self.roundedRect)
             .clipShape(Self.roundedRect)
             .animation(.default, value: configuration.isPressed)
-            .shadow(color: DeckTheme.cardShadow.opacity(0.15), radius: 1.5, x: 0, y: 1.5)
+            .shadow(
+                color: DeckTheme.cardShadow.opacity(0.15),
+                radius: 1.5,
+                x: 0,
+                y: 1.5
+            )
     }
 }
 
