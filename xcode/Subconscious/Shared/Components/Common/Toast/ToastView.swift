@@ -25,7 +25,7 @@ struct ToastView: View {
         .foregroundColor(.primary)
         .cornerRadius(100)
         .shadow(
-            color: Color.brandDropShadow(colorScheme).opacity(0.25),
+            color: Color.toastDropShadow(colorScheme).opacity(0.25),
             radius: 2.5,
             x: 0,
             y: 2

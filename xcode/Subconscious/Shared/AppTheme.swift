@@ -168,6 +168,10 @@ extension Color {
     static func brandDropShadow(_ colorScheme: ColorScheme) -> Color {
         colorScheme == .dark ? Color.brandBgSlate : Color.brandMarkPurple
     }
+    
+    static func toastDropShadow(_ colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.brandMarkViolet : Color.brandMarkPurple
+    }
 }
 
 extension UIColor {
