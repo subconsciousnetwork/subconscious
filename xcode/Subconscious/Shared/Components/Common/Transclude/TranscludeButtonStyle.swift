@@ -19,7 +19,7 @@ struct TranscludeButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.vertical, AppTheme.unit3)
-            .padding(.horizontal, AppTheme.unit4)
+            .padding(.horizontal, AppTheme.unit3)
             .expandAlignedLeading()
             .background(
                 color.opacity(colorScheme == .dark ? 0.5 : 1)
