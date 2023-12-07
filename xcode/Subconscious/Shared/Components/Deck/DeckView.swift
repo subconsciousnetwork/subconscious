@@ -586,7 +586,5 @@ struct DeckModel: ModelProtocol {
         func inDeck(entry: CardModel) -> Bool {
             return state.deck.contains(where: { entry in entry == entry })
         }
-        
-        
     }
 }
