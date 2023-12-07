@@ -44,6 +44,7 @@ extension BlockEditor {
         case inlineFormatting(BlockInlineFormattingAction)
         case textEditing(BlockTextEditingAction)
         case controls(BlockControlsAction)
+        case onLink(URL)
         case transcludeList(TranscludeListAction)
     }
 }
@@ -74,6 +75,8 @@ extension BlockEditor.TextBlockAction {
             return .textEditing(.didBeginEditing(id: id))
         case .didEndEditing:
             return .textEditing(.didEndEditing(id: id))
+        case .onLink(let url):
+            return .onLink(url)
         case .upButtonPressed:
             return .controls(.upButtonPressed(id: id))
         case .downButtonPressed:

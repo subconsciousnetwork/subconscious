@@ -487,6 +487,8 @@ extension BlockEditor.Action {
             case let .dismissKeyboardButtonPressed(id):
                 return .renderBlur(id: id)
             }
+        case .onLink(let url):
+            return .onLink(url)
         case .transcludeList(let transcludeListAction):
             switch transcludeListAction {
             case let .onLink(resolvedAddress, subSlashlinkLink):

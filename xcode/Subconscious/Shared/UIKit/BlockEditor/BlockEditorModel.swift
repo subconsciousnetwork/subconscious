@@ -160,9 +160,12 @@ extension BlockEditor {
         case insertItalic(id: UUID, selection: NSRange)
         case insertCode(id: UUID, selection: NSRange)
 
+        /// Handle URL in textview
+        case onLink(URL)
         // Transclude list actions
-        /// Open transclude link
+        /// Open transclude itself
         case onViewTransclude(EntryStub)
+        /// Open link in transclude
         case onLinkTransclude(ResolvedAddress, SubSlashlinkLink)
     }
 }
@@ -462,6 +465,11 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 id: id,
                 selection: selection
+            )
+        case .onLink(_):
+            return onLink(
+                state: state,
+                environment: environment
             )
         case .onViewTransclude(_):
             return onViewTransclude(
@@ -1524,6 +1532,13 @@ extension BlockEditor.Model: ModelProtocol {
             selection: selection,
             replace: BlockEditor.SubtextEditorMarkup.wrapCode
         )
+    }
+    
+    static func onLink(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        return Update(state: state)
     }
     
     static func onViewTransclude(

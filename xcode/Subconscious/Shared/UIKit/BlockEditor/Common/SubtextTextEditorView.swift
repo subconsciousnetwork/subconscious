@@ -15,6 +15,9 @@ enum SubtextTextEditorAction: Hashable {
     case didBeginEditing
     case didEndEditing
     
+    /// Link tap in linked text
+    case onLink(URL)
+
     case upButtonPressed
     case downButtonPressed
     case boldButtonPressed(text: String, selection: NSRange)
@@ -126,5 +129,16 @@ extension SubtextTextEditorView: UITextViewDelegate {
     
     func textViewDidEndEditing(_ textView: UITextView) {
         self.send(.didEndEditing)
+    }
+    
+    /// Handle link taps
+    func textView(
+        _ textView: UITextView,
+        shouldInteractWith url: URL,
+        in characterRange: NSRange,
+        interaction: UITextItemInteraction
+    ) -> Bool {
+        self.send(.onLink(url))
+        return false
     }
 }
