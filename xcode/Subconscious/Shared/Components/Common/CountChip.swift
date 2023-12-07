@@ -25,6 +25,7 @@ struct CountChip: View, Equatable {
             .font(.caption)
             .padding(.horizontal, AppTheme.unit2)
             .padding(.vertical, AppTheme.unit)
+            // TODO: replace this with hand-chosen colours
             .background(Color.accentColor.opacity(0.1))
             .foregroundColor(Color.accentColor)
             .clipShape(Capsule())
