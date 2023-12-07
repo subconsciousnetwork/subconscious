@@ -42,5 +42,17 @@ extension BlockEditor {
             this.selection = selection
             return this
         }
+
+        func updateTranscludes(
+            index: [Slashlink: EntryStub]
+        ) -> Self {
+            var this = self
+            this.transcludes = dom.parsedSlashlinks
+                .uniquing()
+                .compactMap({ slashlink in
+                    index[slashlink]
+                })
+            return this
+        }
     }
 }

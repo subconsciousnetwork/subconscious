@@ -104,6 +104,9 @@ extension BlockEditor {
         case fetchRelated
         case succeedFetchRelated(_ related: [EntryStub])
         case failFetchRelated(_ error: String)
+        case refreshTranscludes
+        case succeedRefreshTranscludes([EntryStub])
+        case failRefreshTranscludes(error: String)
         case fetchTranscludesFor(id: UUID, slashlinks: [Slashlink])
         case succeedFetchTranscludesFor(
             id: UUID,
@@ -163,7 +166,7 @@ extension BlockEditor {
     /// Describes the state change that has happened, giving the controller
     /// the details it needs to perform that change.
     enum Change: Hashable {
-        case reconfigureCollectionItem(IndexPath)
+        case reconfigureCollectionItems([IndexPath])
         case reloadEditor
         case moveBlock(
             at: IndexPath,
@@ -280,6 +283,23 @@ extension BlockEditor.Model: ModelProtocol {
             )
         case let .failFetchRelated(error):
             return failFetchRelated(
+                state: state,
+                error: error,
+                environment: environment
+            )
+        case .refreshTranscludes:
+            return refreshTranscludes(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshTranscludes(transcludes):
+            return succeedRefreshTranscludes(
+                state: state,
+                transcludes: transcludes,
+                environment: environment
+            )
+        case let .failRefreshTranscludes(error):
+            return failRefreshTranscludes(
                 state: state,
                 error: error,
                 environment: environment
@@ -547,7 +567,11 @@ extension BlockEditor.Model: ModelProtocol {
         model.fileExtension = detail.entry.contents.fileExtension
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.blocks = BlockEditor.BlocksModel(detail.entry.contents.body)
-        return Update(state: model, change: .reloadEditor)
+
+        let fx: Fx<Action> = Just(Action.refreshTranscludes)
+            .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx, change: .reloadEditor)
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
@@ -638,6 +662,85 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
+    static func refreshTranscludes(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let owner = state.owner.map({ did in Peer.did(did) })
+        
+        let slashlinksToFetch = Set(
+            state.blocks.blocks.flatMap({ block in
+                block.dom?.parsedSlashlinks ?? []
+            })
+            // Fetch only the slashlinks that are not in the cache
+            .filter({ slashlink in
+                state.transcludes[slashlink] == nil
+            })
+        )
+        
+        logger.info("Fetching transcludes for \(slashlinksToFetch)")
+        
+        let fx: Fx<Action> = Future.detached {
+            do {
+                let transcludes = try await environment.transclude
+                    .fetchTranscludePreviews(
+                        slashlinks: slashlinksToFetch,
+                        owner: owner
+                    )
+                return Action.succeedRefreshTranscludes(
+                    Array(transcludes.values)
+                )
+            } catch {
+                return Action.failRefreshTranscludes(
+                    error: error.localizedDescription
+                )
+            }
+        }
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedRefreshTranscludes(
+        state: Self,
+        transcludes: [EntryStub],
+        environment: Environment
+    ) -> Update {
+        var model = cacheTranscludes(state: state, transcludes: transcludes)
+        
+        // Update all block transcludes and gather index paths
+        // in a single pass.
+        var blocks: [BlockEditor.BlockModel] = []
+        var indexPaths: [IndexPath] = []
+        for (i, block) in state.blocks.blocks.enumerated() {
+            let updatedBlock = block.update { textBlock in
+                textBlock.updateTranscludes(index: model.transcludes)
+            }
+            blocks.append(updatedBlock ?? block)
+
+            let indexPath = IndexPath(
+                row: i,
+                section: BlockEditor.Section.blocks.rawValue
+            )
+            indexPaths.append(indexPath)
+        }
+        model.blocks.blocks = blocks
+        
+        return Update(
+            state: model,
+            change: .reconfigureCollectionItems(indexPaths)
+        )
+    }
+
+    static func failRefreshTranscludes(
+        state: Self,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Failed to refresh transcludes. Error: \(error)")
+        return Update(state: state)
+    }
+
     static func fetchTranscludesFor(
         state: Self,
         id: UUID,
@@ -714,7 +817,6 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
 
-
     static func refreshTranscludesFor(
         state: Self,
         id: UUID,
@@ -727,30 +829,15 @@ extension BlockEditor.Model: ModelProtocol {
 
         let block = state.blocks.blocks[i]
 
-        guard let slashlinks = block.dom?.parsedSlashlinks else {
-            logger.log("block#\(id) no DOM for this block. Skipping transclude update for block.")
-            return Update(state: state)
-        }
-
-        let transcludes = slashlinks
-            .uniquing()
-            .compactMap({ slashlink in
-                state.transcludes[slashlink]
-            })
-
-        let blockWithTranscludes = block.update { textBlock in
-            var textBlock = textBlock
-            textBlock.transcludes = transcludes
-            return textBlock
-        }
-
-        guard let blockWithTranscludes = blockWithTranscludes else {
+        guard let block = block.update({ textBlock in
+            textBlock.updateTranscludes(index: state.transcludes)
+        }) else {
             Self.logger.log("block#\(id) unable to update as text block. Doing nothing.")
             return Update(state: state)
         }
-
+        
         var model = state
-        model.blocks.blocks[i] = blockWithTranscludes
+        model.blocks.blocks[i] = block
 
         let indexPath = IndexPath(
             row: i,
@@ -759,7 +846,7 @@ extension BlockEditor.Model: ModelProtocol {
 
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
 
@@ -1086,7 +1173,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
     
@@ -1128,7 +1215,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
 
@@ -1198,7 +1285,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
 
@@ -1233,7 +1320,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
 
@@ -1381,7 +1468,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
 

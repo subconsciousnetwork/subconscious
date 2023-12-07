@@ -197,8 +197,8 @@ extension BlockEditor {
             switch change {
             case .reloadEditor:
                 return reloadEditor()
-            case let .reconfigureCollectionItem(indexPath):
-                return reconfigureCollectionItem(indexPath)
+            case let .reconfigureCollectionItems(indexPaths):
+                return reconfigureCollectionItems(indexPaths)
             case let .moveBlock(at, to):
                 return moveBlock(at: at, to: to)
             case let .splitBlock(reconfigure, insert, requestEditing):
@@ -222,11 +222,11 @@ extension BlockEditor {
             }
         }
 
-        private func reconfigureCollectionItem(
-            _ indexPath: IndexPath
+        private func reconfigureCollectionItems(
+            _ indexPaths: [IndexPath]
         ) {
             UIView.performWithoutAnimation {
-                self.collectionView.reconfigureItems(at: [indexPath])
+                self.collectionView.reconfigureItems(at: indexPaths)
             }
         }
 
