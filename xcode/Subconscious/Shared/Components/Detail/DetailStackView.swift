@@ -57,7 +57,12 @@ struct DetailStackView<Root: View>: View {
                 }
             }
         }
-        .tint(store.state.details.last?.address?.highlightColor(colorScheme: colorScheme))
+        // Tint using the current detail's highlight color
+        .tint(
+            store.state.details.last?.address?.highlightColor(
+                colorScheme: colorScheme
+            )
+        )
     }
 }
 
