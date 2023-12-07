@@ -93,6 +93,14 @@ struct DeckNavigationView: View {
             .background(
                 colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
             )
+            .toolbar {
+                MainToolbar(
+                    app: app,
+                    profileAction: {
+                        store.send(.detailStack(.requestOurProfileDetail))
+                    }
+                )
+            }
         }
     }
 }
