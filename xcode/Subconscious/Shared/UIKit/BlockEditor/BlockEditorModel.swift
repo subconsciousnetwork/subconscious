@@ -159,6 +159,11 @@ extension BlockEditor {
         case insertBold(id: UUID, selection: NSRange)
         case insertItalic(id: UUID, selection: NSRange)
         case insertCode(id: UUID, selection: NSRange)
+
+        // Transclude list actions
+        /// Open transclude link
+        case onViewTransclude(EntryStub)
+        case onLinkTransclude(ResolvedAddress, SubSlashlinkLink)
     }
 }
 
@@ -219,7 +224,7 @@ extension BlockEditor.Model: ModelProtocol {
         var transaction: Transaction?
         var change: BlockEditor.Change? = nil
     }
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -458,6 +463,16 @@ extension BlockEditor.Model: ModelProtocol {
                 id: id,
                 selection: selection
             )
+        case .onViewTransclude(_):
+            return onViewTransclude(
+                state: state,
+                environment: environment
+            )
+        case .onLinkTransclude(_, _):
+            return onLinkTransclude(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -472,7 +487,7 @@ extension BlockEditor.Model: ModelProtocol {
             .eraseToAnyPublisher()
         return Update(state: state, fx: pollFx)
     }
-
+    
     static func ready(
         state: Self,
         environment: Environment
@@ -504,30 +519,30 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         var model = state
         model.address = address
-
+        
         guard let address = address else {
             return Update(state: model)
         }
-
+        
         let loadRelatedFx = Just(Action.fetchRelated)
-
+        
         let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
             address: address,
             fallback: fallback
         )
-        .map({ detail in
-            return Action.setEditorIfNeeded(
-                detail: detail,
-                autofocus: autofocus
-            )
-        })
-        .recover({ error in
-            return Action.failLoadEditor(error.localizedDescription)
-        })
-
+            .map({ detail in
+                return Action.setEditorIfNeeded(
+                    detail: detail,
+                    autofocus: autofocus
+                )
+            })
+            .recover({ error in
+                return Action.failLoadEditor(error.localizedDescription)
+            })
+        
         let fx: Fx<Action> = loadDetailFx.merge(with: loadRelatedFx)
             .eraseToAnyPublisher()
-
+        
         return Update(state: model, fx: fx)
     }
     
@@ -540,7 +555,7 @@ extension BlockEditor.Model: ModelProtocol {
         logger.warning("Failed to load detail for \(address). Error: \(error)")
         return Update(state: state)
     }
-
+    
     /// Set editor state, replacing whatever was previously there.
     /// This is a "force reload" that does not attempt to gracefully save the
     /// previous state. You typically want to use `setEditorIfNeeded`
@@ -567,10 +582,10 @@ extension BlockEditor.Model: ModelProtocol {
         model.fileExtension = detail.entry.contents.fileExtension
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.blocks = BlockEditor.BlocksModel(detail.entry.contents.body)
-
+        
         let fx: Fx<Action> = Just(Action.refreshTranscludes)
             .eraseToAnyPublisher()
-
+        
         return Update(state: model, fx: fx, change: .reloadEditor)
     }
     
@@ -584,7 +599,7 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         // Finished loading. We have the data.
         model.loadingState = .loaded
-
+        
         // Slugs don't match. Different entries.
         // Save current state and set new detail.
         guard (state.address == detail.entry.address) else {
@@ -599,9 +614,9 @@ extension BlockEditor.Model: ModelProtocol {
                 environment: environment
             )
         }
-
+        
         let modified = state.modified ?? Date.distantPast
-
+        
         // Make sure detail is newer than current editor modified state.
         // Otherwise do nothing.
         guard detail.entry.contents.modified > modified else {
@@ -629,13 +644,13 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<Action> = Future.detached {
             try await environment.data.readMemoBacklinks(address: address)
         }
-        .map { backlinks in
-            .succeedFetchRelated(backlinks)
-        }
-        .recover { error in
-            .failFetchRelated(error.localizedDescription)
-        }
-        .eraseToAnyPublisher()
+            .map { backlinks in
+                    .succeedFetchRelated(backlinks)
+            }
+            .recover { error in
+                    .failFetchRelated(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
@@ -651,7 +666,7 @@ extension BlockEditor.Model: ModelProtocol {
         model.appendix.related = related
         return Update(state: model)
     }
-
+    
     static func failFetchRelated(
         state: Self,
         error: String,
@@ -673,9 +688,9 @@ extension BlockEditor.Model: ModelProtocol {
                 block.dom?.parsedSlashlinks ?? []
             })
             // Fetch only the slashlinks that are not in the cache
-            .filter({ slashlink in
-                state.transcludes[slashlink] == nil
-            })
+                .filter({ slashlink in
+                    state.transcludes[slashlink] == nil
+                })
         )
         
         logger.info("Fetching transcludes for \(slashlinksToFetch)")
@@ -696,11 +711,11 @@ extension BlockEditor.Model: ModelProtocol {
                 )
             }
         }
-        .eraseToAnyPublisher()
-
+            .eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
-
+    
     static func succeedRefreshTranscludes(
         state: Self,
         transcludes: [EntryStub],
@@ -717,7 +732,7 @@ extension BlockEditor.Model: ModelProtocol {
                 textBlock.updateTranscludes(index: model.transcludes)
             }
             blocks.append(updatedBlock ?? block)
-
+            
             let indexPath = IndexPath(
                 row: i,
                 section: BlockEditor.Section.blocks.rawValue
@@ -731,7 +746,7 @@ extension BlockEditor.Model: ModelProtocol {
             change: .reconfigureCollectionItems(indexPaths)
         )
     }
-
+    
     static func failRefreshTranscludes(
         state: Self,
         error: String,
@@ -740,7 +755,7 @@ extension BlockEditor.Model: ModelProtocol {
         logger.warning("Failed to refresh transcludes. Error: \(error)")
         return Update(state: state)
     }
-
+    
     static func fetchTranscludesFor(
         state: Self,
         id: UUID,
@@ -748,7 +763,7 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         let owner = state.owner.map({ did in Peer.did(did) })
-
+        
         // Fetch only the slashlinks that are not in the cache
         let slashlinksToFetch = Set(
             slashlinks.filter({ slashlink in
@@ -776,11 +791,11 @@ extension BlockEditor.Model: ModelProtocol {
                 )
             }
         }
-        .eraseToAnyPublisher()
-
+            .eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
-
+    
     static func cacheTranscludes(
         state: Self,
         transcludes: [EntryStub]
@@ -792,7 +807,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
         return model
     }
-
+    
     static func succeedFetchTranscludesFor(
         state: Self,
         id: UUID,
@@ -806,7 +821,7 @@ extension BlockEditor.Model: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func failFetchTranscludesFor(
         state: Self,
         id: UUID,
@@ -816,7 +831,7 @@ extension BlockEditor.Model: ModelProtocol {
         logger.warning("block#\(id) Unable to load transcludes. Error: \(error)")
         return Update(state: state)
     }
-
+    
     static func refreshTranscludesFor(
         state: Self,
         id: UUID,
@@ -826,9 +841,9 @@ extension BlockEditor.Model: ModelProtocol {
             Self.logger.log("block#\(id) not found. Skipping transclude refresh.")
             return Update(state: state)
         }
-
+        
         let block = state.blocks.blocks[i]
-
+        
         guard let block = block.update({ textBlock in
             textBlock.updateTranscludes(index: state.transcludes)
         }) else {
@@ -838,18 +853,18 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         model.blocks.blocks[i] = block
-
+        
         let indexPath = IndexPath(
             row: i,
             section: BlockEditor.Section.blocks.rawValue
         )
-
+        
         return Update(
             state: model,
             change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     static func save(
         state: Self,
         snapshot: MemoEntry?,
@@ -867,23 +882,23 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         model.setSaveState(.saving)
         logger.log("Saving \(snapshot.address)")
-
+        
         let fx: Fx<BlockEditor.Action> = environment.data
             .writeEntryPublisher(snapshot)
             .map({
                 .succeedSave(snapshot)
             })
             .recover({ error in
-                .failSave(
-                    snapshot: snapshot,
-                    error: error.localizedDescription
-                )
+                    .failSave(
+                        snapshot: snapshot,
+                        error: error.localizedDescription
+                    )
             })
             .eraseToAnyPublisher()
-
+        
         return Update(state: model, fx: fx)
     }
-
+    
     static func succeedSave(
         state: Self,
         snapshot: MemoEntry,
@@ -934,7 +949,7 @@ extension BlockEditor.Model: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func textDidChange(
         state: Self,
         id: UUID?,
@@ -964,7 +979,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         model.blocks.blocks[i] = block
-
+        
         // Mark unsaved
         model.setSaveState(.unsaved)
         
@@ -972,7 +987,7 @@ extension BlockEditor.Model: ModelProtocol {
             logger.info("block#\(id) no DOM for this block. Skipping transclude load.")
             return Update(state: model)
         }
-
+        
         return update(
             state: model,
             action: .fetchTranscludesFor(
@@ -1038,7 +1053,7 @@ extension BlockEditor.Model: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         var blockB = BlockEditor.TextBlockModel()
         blockB.dom = Subtext(markup: textB)
         
@@ -1100,7 +1115,7 @@ extension BlockEditor.Model: ModelProtocol {
             Self.logger.log("block#\(id) cannot merge non-text block. Doing nothing.")
             return Update(state: state)
         }
-
+        
         let selectionNSRange = NSRange(
             blockUpText.endIndex..<blockUpText.endIndex,
             in: blockUpText
@@ -1127,10 +1142,10 @@ extension BlockEditor.Model: ModelProtocol {
             row: indexDown,
             section: BlockEditor.Section.blocks.rawValue
         )
-
+        
         // Mark unsaved
         model.setSaveState(.unsaved)
-
+        
         return Update(
             state: model,
             change: .mergeBlockUp(
@@ -1218,7 +1233,7 @@ extension BlockEditor.Model: ModelProtocol {
             change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func longPress(
@@ -1227,7 +1242,7 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         return Update(state: state)
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func tap(
@@ -1236,7 +1251,7 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         return Update(state: state)
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func enterBlockSelectMode(
@@ -1245,7 +1260,7 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         return Update(state: state)
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func exitBlockSelectMode(
@@ -1271,7 +1286,7 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         let block = model.blocks.blocks[i]
         let updatedBlock = block.setBlockSelected(isSelected) ?? block
-
+        
         guard block != updatedBlock else {
             Self.logger.debug("Block selection state did not change.")
             return Update(state: state)
@@ -1288,7 +1303,7 @@ extension BlockEditor.Model: ModelProtocol {
             change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     static func toggleSelectBlock(
         state: Self,
         id: UUID
@@ -1306,7 +1321,7 @@ extension BlockEditor.Model: ModelProtocol {
         let block = model.blocks.blocks[i]
         let isSelected = block.isBlockSelected
         let updatedBlock = block.setBlockSelected(!isSelected) ?? block
-
+        
         guard block != updatedBlock else {
             Self.logger.debug("Block selection state did not change.")
             return Update(state: state)
@@ -1323,7 +1338,7 @@ extension BlockEditor.Model: ModelProtocol {
             change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     static func moveBlockUp(
         state: Self,
         id: UUID
@@ -1391,7 +1406,7 @@ extension BlockEditor.Model: ModelProtocol {
             row: i,
             section: BlockEditor.Section.blocks.rawValue
         )
-
+        
         let toIndexPath = IndexPath(
             row: j,
             section: BlockEditor.Section.blocks.rawValue
@@ -1405,7 +1420,7 @@ extension BlockEditor.Model: ModelProtocol {
             change: .moveBlock(at: atIndexPath, to: toIndexPath)
         )
     }
-        
+    
     /// Insert markup at range within a block
     static func insertMarkup(
         state: Self,
@@ -1422,17 +1437,17 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         let block = state.blocks.blocks[i]
-
+        
         guard let text = block.dom?.description else {
             Self.logger.log("block#\(id) can't insert markup. Block has no text. Doing nothing.")
             return Update(state: state)
         }
-
+        
         guard let selectedRange = Range(selection, in: text) else {
             Self.logger.log("block#\(id) could not find text in range. Doing nothing.")
             return Update(state: state)
         }
-
+        
         guard let replacement = replace(
             text,
             selectedRange
@@ -1471,7 +1486,7 @@ extension BlockEditor.Model: ModelProtocol {
             change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     static func insertBold(
         state: Self,
         id: UUID,
@@ -1509,6 +1524,20 @@ extension BlockEditor.Model: ModelProtocol {
             selection: selection,
             replace: BlockEditor.SubtextEditorMarkup.wrapCode
         )
+    }
+    
+    static func onViewTransclude(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        return Update(state: state)
+    }
+    
+    static func onLinkTransclude(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        return Update(state: state)
     }
 }
 

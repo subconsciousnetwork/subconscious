@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import ObservableStore
 
 extension BlockEditor {
     class TextBlockCell:
@@ -108,8 +109,7 @@ extension BlockEditor {
             transcludeListView.update(
                 parentController: parentController,
                 entries: state.transcludes,
-                onViewTransclude: { _ in },
-                onTranscludeLink: { _, _ in }
+                send: Address.forward(send: send, tag: TextBlockAction.from)
             )
             textView.setText(
                 state.dom.description,

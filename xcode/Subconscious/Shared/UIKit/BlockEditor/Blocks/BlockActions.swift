@@ -44,6 +44,7 @@ extension BlockEditor {
         case inlineFormatting(BlockInlineFormattingAction)
         case textEditing(BlockTextEditingAction)
         case controls(BlockControlsAction)
+        case transcludeList(TranscludeListAction)
     }
 }
 
@@ -104,5 +105,11 @@ extension BlockEditor.TextBlockAction {
                 )
             )
         }
+    }
+}
+
+extension BlockEditor.TextBlockAction {
+    static func from(_ action: BlockEditor.TranscludeListAction) -> Self {
+        .transcludeList(action)
     }
 }
