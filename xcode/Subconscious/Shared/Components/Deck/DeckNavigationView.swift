@@ -24,15 +24,28 @@ struct DeckNavigationView: View {
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             VStack(alignment: .leading) {
-                HStack(alignment: .center, spacing: AppTheme.unit3) {
-                    if case let .entry(_, author, _) = store.state.topCard?.card,
-                       let name = author.toNameVariant() {
-                        ProfilePic(pfp: author.pfp, size: .large)
+                if case let .entry(_, author, _) = store.state.topCard?.card,
+                   let name = author.toNameVariant() {
+                    HStack(
+                        alignment: .center,
+                        spacing: AppTheme.unit3
+                    ) {
+                        ProfilePic(
+                            pfp: author.pfp,
+                            size: .large
+                        )
                         
                         PetnameView(
                             name: name,
                             aliases: [],
                             showMaybePrefix: false
+                        )
+                    }
+                    .onTapGesture {
+                        detailStack.send(
+                            .pushDetail(
+                                .profile(UserProfileDetailDescription(address: author.address))
+                            )
                         )
                     }
                 }
