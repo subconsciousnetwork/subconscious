@@ -24,7 +24,8 @@ struct NotebookNavigationView: View {
             VStack(spacing: 0) {
                 EntryListView(
                     entries: store.state.recent,
-                    onEntryPress: { entry in
+                    onEntryPress: {
+                        entry in
                         store.send(
                             .pushDetail(
                                 MemoEditorDetailDescription(
@@ -41,7 +42,14 @@ struct NotebookNavigationView: View {
                         app.send(.syncAll)
                     },
                     onLink: { link in
-                        store.send(.detailStack(.findAndPushLinkDetail(context: nil, link: link)))
+                        store.send(
+                            .detailStack(
+                                .findAndPushLinkDetail(
+                                    context: nil,
+                                    link: link
+                                )
+                            )
+                        )
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -83,10 +91,14 @@ struct NotebookNavigationView: View {
                 }
             }
             .background(
-                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+                colorScheme == .dark 
+                    ? DeckTheme.darkBg
+                : DeckTheme.lightBg
             )
             .toolbarBackground(
-                colorScheme == .dark ? DeckTheme.darkBgStart : DeckTheme.lightBgStart,
+                colorScheme == .dark
+                    ? DeckTheme.darkBgStart
+                    : DeckTheme.lightBgStart,
                 for: .navigationBar
             )
         }

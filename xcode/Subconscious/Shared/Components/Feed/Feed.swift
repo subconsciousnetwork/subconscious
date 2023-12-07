@@ -13,7 +13,6 @@ import os
 struct FeedNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<FeedModel>
-    @Environment (\.colorScheme) var colorScheme
     
     var detailStack: ViewStore<DetailStackModel> {
         store.viewStore(

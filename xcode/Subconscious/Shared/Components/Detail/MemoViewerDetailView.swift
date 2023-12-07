@@ -146,8 +146,6 @@ struct MemoViewerDetailLoadedView: View {
     var address: Slashlink
     var notify: (MemoViewerDetailNotification) -> Void
     
-    @Environment(\.colorScheme) var colorScheme
-    
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "MemoViewerDetailLoadedView"
