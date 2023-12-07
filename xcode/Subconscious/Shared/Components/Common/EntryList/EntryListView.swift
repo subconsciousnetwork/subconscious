@@ -13,6 +13,7 @@ struct EntryListView: View {
     var onEntryPress: (EntryStub) -> Void
     var onEntryDelete: (Slashlink) -> Void
     var onRefresh: () -> Void
+    var onLink: (SubSlashlinkLink) -> Void = { _ in }
     
     @Environment(\.colorScheme) var colorScheme
 
@@ -30,9 +31,9 @@ struct EntryListView: View {
                                 entry: entry,
                                 highlight: entry.address.highlightColor(
                                     colorScheme: colorScheme
-                                )
+                                ),
+                                onLink: onLink
                             )
-                            .equatable()
                         }
                         .buttonStyle(
                             EntryListRowButtonStyle(

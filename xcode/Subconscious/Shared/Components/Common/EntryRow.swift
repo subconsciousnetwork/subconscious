@@ -9,10 +9,11 @@ import SwiftUI
 
 /// An EntryRow suitable for use in lists.
 /// Provides a preview/excerpt of the entry.
-struct EntryRow: View, Equatable {
+struct EntryRow: View {
     var entry: EntryStub
     var emptyExcerpt = "Empty"
     var highlight: Color = .secondary
+    var onLink: (SubSlashlinkLink) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
@@ -22,6 +23,7 @@ struct EntryRow: View, Equatable {
                         return .systemAction
                     }
 
+                    onLink(subslashlink)
                     return .handled
                 })
                 .font(.callout)

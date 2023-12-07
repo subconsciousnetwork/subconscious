@@ -12,9 +12,6 @@ struct EntryListRowButtonStyle: ButtonStyle {
     private static let roundedRect = RoundedRectangle(
         cornerRadius: AppTheme.cornerRadiusLg
     )
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.colorScheme) var colorScheme
-    
     var color: Color
     
     func makeBody(configuration: Configuration) -> some View {

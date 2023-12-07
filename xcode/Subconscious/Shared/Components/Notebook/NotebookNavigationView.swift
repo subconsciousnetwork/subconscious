@@ -39,6 +39,9 @@ struct NotebookNavigationView: View {
                     },
                     onRefresh: {
                         app.send(.syncAll)
+                    },
+                    onLink: { link in
+                        store.send(.detailStack(.findAndPushLinkDetail(context: nil, link: link)))
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
