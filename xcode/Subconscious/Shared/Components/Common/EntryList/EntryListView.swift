@@ -69,7 +69,7 @@ struct EntryListView: View {
                 }
                 .padding(
                     [.leading, .trailing],
-                    AppTheme.unit2
+                    AppTheme.unit
                 )
             } else {
                 EntryListEmptyView(onRefresh: onRefresh)
