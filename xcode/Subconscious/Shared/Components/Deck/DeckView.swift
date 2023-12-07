@@ -77,6 +77,7 @@ struct DeckView: View {
 
 // MARK: Actions
 enum DeckAction: Hashable {
+    case requestDeckRoot
     case detailStack(DetailStackAction)
     
     case setSearchPresented(Bool)
@@ -115,6 +116,8 @@ extension AppAction {
 extension DeckAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
+        case .requestDeckRoot:
+            return .requestDeckRoot
         default:
             return nil
         }
@@ -262,6 +265,11 @@ struct DeckModel: ModelProtocol {
             return nextCard(state: state, environment: environment)
         case let .cardPresented(card):
             return cardPresented(state: state, card: card)
+        case .requestDeckRoot:
+            return requestDeckRoot(
+                state: state,
+                environment: environment
+            )
         }
         
         func appear(
@@ -507,6 +515,17 @@ struct DeckModel: ModelProtocol {
             
             return Update(state: model)
         }
+        
+        func requestDeckRoot(
+            state: Self,
+            environment: AppEnvironment
+        ) -> Update<Self> {
+            return DeckDetailStackCursor.update(
+                state: state,
+                action: .setDetails([]),
+                environment: environment
+            )
+        }
 
         func noCardsToDraw(state: Self) -> Update<Self> {
             logger.log("No cards to draw")
@@ -567,5 +586,7 @@ struct DeckModel: ModelProtocol {
         func inDeck(entry: CardModel) -> Bool {
             return state.deck.contains(where: { entry in entry == entry })
         }
+        
+        
     }
 }
