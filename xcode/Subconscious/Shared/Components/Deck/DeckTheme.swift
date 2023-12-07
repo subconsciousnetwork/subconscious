@@ -61,11 +61,11 @@ extension DeckTheme {
     ]
     
     static let lightCardHighlightColors: [Color] = [
-        Color(red: 0.76, green: 0.7, blue: 0.61),
-        Color(red: 0.55, green: 0.75, blue: 0.73),
-        Color(red: 0.73, green: 0.58, blue: 0.71),
-        Color(red: 0.75, green: 0.55, blue: 0.61),
-        Color(red: 0.56, green: 0.62, blue: 0.73)
+        Color(red: 0.73, green: 0.62, blue: 0.45),
+        Color(red: 0.36, green: 0.71, blue: 0.66),
+        Color(red: 0.66, green: 0.41, blue: 0.64),
+        Color(red: 0.71, green: 0.36, blue: 0.45),
+        Color(red: 0.39, green: 0.48, blue: 0.66)
     ]
     
     static let darkCardColors: [Color] = [
