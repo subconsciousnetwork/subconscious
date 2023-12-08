@@ -46,7 +46,7 @@ struct TranscludeView: View {
         )
         .buttonStyle(
             TranscludeButtonStyle(
-                color: entry.address.color(
+                color: entry.color(
                     colorScheme: colorScheme
                 )
             )

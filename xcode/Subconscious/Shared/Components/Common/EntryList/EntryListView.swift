@@ -29,7 +29,7 @@ struct EntryListView: View {
                         ) {
                             EntryRow(
                                 entry: entry,
-                                highlight: entry.address.highlightColor(
+                                highlight: entry.highlightColor(
                                     colorScheme: colorScheme
                                 ),
                                 onLink: onLink
@@ -37,7 +37,7 @@ struct EntryListView: View {
                         }
                         .buttonStyle(
                             EntryListRowButtonStyle(
-                                color: entry.address.color(
+                                color: entry.color(
                                     colorScheme: colorScheme
                                 )
                             )

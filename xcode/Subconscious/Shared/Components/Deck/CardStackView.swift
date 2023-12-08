@@ -1,29 +1,5 @@
 import SwiftUI
 
-extension Hashable {
-    private func colors(colorScheme: ColorScheme) -> [Color] {
-        colorScheme == .dark
-            ? DeckTheme.darkCardColors
-            : DeckTheme.lightCardColors
-    }
-    
-    private func highlightColors(colorScheme: ColorScheme) -> [Color] {
-        colorScheme == .dark
-            ? DeckTheme.darkCardHighlightColors
-            : DeckTheme.lightCardHighlightColors
-    }
-    
-    func color(colorScheme: ColorScheme) -> Color {
-        let colors = colors(colorScheme: colorScheme)
-        return colors[abs(self.hashValue) % colors.count]
-    }
-    
-    func highlightColor(colorScheme: ColorScheme) -> Color {
-        let colors = highlightColors(colorScheme: colorScheme)
-        return colors[abs(self.hashValue) % colors.count]
-    }
-}
-
 struct CardView: View {
     var entry: CardModel
     @Environment(\.colorScheme) var colorScheme
@@ -31,7 +7,7 @@ struct CardView: View {
     var color: Color {
         switch entry.card {
         case let .entry(entry, _, _):
-            return entry.address.color(colorScheme: colorScheme)
+            return entry.color(colorScheme: colorScheme)
         default:
             return entry.card.color(colorScheme: colorScheme)
         }
@@ -40,7 +16,7 @@ struct CardView: View {
     var highlight: Color {
         switch entry.card {
         case let .entry(entry, _, _):
-            return entry.address.highlightColor(colorScheme: colorScheme)
+            return entry.highlightColor(colorScheme: colorScheme)
         default:
             return entry.card.highlightColor(colorScheme: colorScheme)
         }
