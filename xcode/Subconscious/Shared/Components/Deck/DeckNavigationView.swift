@@ -48,6 +48,11 @@ struct DeckNavigationView: View {
                             )
                         )
                     }
+                    .transition(
+                        .push(
+                            from: .bottom
+                        )
+                    )
                 }
                 
                 if (store.state.deck.isEmpty) {

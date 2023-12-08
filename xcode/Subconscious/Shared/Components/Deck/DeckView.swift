@@ -312,7 +312,11 @@ struct DeckModel: ModelProtocol {
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return update(
+                state: state,
+                action: .setDeck([]),
+                environment: environment
+            ).mergeFx(fx)
         }
         
         func topupDeck(state: Self, environment: Environment) -> Update<Self> {
@@ -350,7 +354,11 @@ struct DeckModel: ModelProtocol {
                     action: .cardPresented(topCard),
                     environment: environment
                 )
-                .animation(.spring())
+                .animation(.spring(
+                    response: 0.5,
+                    dampingFraction: 0.8,
+                    blendDuration: 0
+                ))
             }
             
             return Update(state: model)

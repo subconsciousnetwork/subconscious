@@ -340,6 +340,17 @@ struct CardStack: View {
             Spacer()
         }
         .zIndex(Double(deck.count - index))
+        .transition(
+            .asymmetric(
+                insertion: .scale.combined(
+                    with: .push(
+                        from: .bottom
+                    )
+                    .combined(with: .offset(y: -300))
+                ),
+                removal: .scale
+            )
+        )
     }
     
     var body: some View {
