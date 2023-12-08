@@ -37,9 +37,9 @@ struct OmniboxView: View {
     }
     
     var gradient = Gradient(stops: [
-        Gradient.Stop(color: .brandMarkPurple.opacity(0), location: 0),
-        Gradient.Stop(color: .brandMarkPurple.opacity(0), location: 0.75),
-        Gradient.Stop(color: .brandMarkPurple.opacity(1), location: 1),
+        Gradient.Stop(color: .accentColor.opacity(0), location: 0),
+        Gradient.Stop(color: .accentColor.opacity(0), location: 0.75),
+        Gradient.Stop(color: .accentColor.opacity(1), location: 1),
     ])
     
     var body: some View {
