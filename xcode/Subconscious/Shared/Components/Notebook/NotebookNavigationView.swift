@@ -76,12 +76,7 @@ struct NotebookNavigationView: View {
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                MainToolbar(
-                    app: app,
-                    profileAction: {
-                        store.send(.detailStack(.requestOurProfileDetail))
-                    }
-                )
+                MainToolbar(app: app)
                 
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
@@ -93,7 +88,7 @@ struct NotebookNavigationView: View {
             .background(
                 colorScheme == .dark 
                     ? DeckTheme.darkBg
-                : DeckTheme.lightBg
+                    : DeckTheme.lightBg
             )
             .toolbarBackground(
                 colorScheme == .dark

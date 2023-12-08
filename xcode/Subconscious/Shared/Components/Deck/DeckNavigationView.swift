@@ -95,10 +95,7 @@ struct DeckNavigationView: View {
             )
             .toolbar {
                 MainToolbar(
-                    app: app,
-                    profileAction: {
-                        store.send(.detailStack(.requestOurProfileDetail))
-                    }
+                    app: app
                 )
             }
         }

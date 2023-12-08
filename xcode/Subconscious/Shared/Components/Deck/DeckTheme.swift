@@ -8,7 +8,6 @@
 import SwiftUI
 
 enum DeckTheme {}
-
 extension DeckTheme {
     static let reboundSpring: Animation = .spring(
         response: 0.25,
