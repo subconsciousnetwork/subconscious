@@ -9,7 +9,7 @@ struct CardView: View {
         case let .entry(entry, _, _):
             return entry.color(colorScheme: colorScheme)
         default:
-            return entry.card.color(colorScheme: colorScheme)
+            return .secondary
         }
     }
     
@@ -18,7 +18,7 @@ struct CardView: View {
         case let .entry(entry, _, _):
             return entry.highlightColor(colorScheme: colorScheme)
         default:
-            return entry.card.highlightColor(colorScheme: colorScheme)
+            return .secondary
         }
     }
     

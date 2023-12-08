@@ -15,7 +15,7 @@ struct TranscludeView: View {
     @Environment (\.colorScheme) var colorScheme
     
     var highlight: Color {
-        entry.address.highlightColor(
+        entry.highlightColor(
             colorScheme: colorScheme
         )
     }

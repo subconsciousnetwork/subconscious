@@ -85,7 +85,7 @@ struct MainToolbar: ToolbarContent {
     @ObservedObject var app: Store<AppModel>
     
     var body: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
+        ToolbarItem(placement: .navigationBarLeading) {
             SyncStatusView(status: app.state.lastGatewaySyncStatus)
         }
         
