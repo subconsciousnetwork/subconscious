@@ -329,8 +329,8 @@ enum AppAction: Hashable {
         .appUpgrade(.setComplete(isComplete))
     }
     
-    static func pushToast(message: String) -> AppAction {
-        return .toastStack(.pushToast(message: message))
+    static func pushToast(message: String, image: String? = nil) -> AppAction {
+        return .toastStack(.pushToast(message: message, image: image))
     }
 }
 

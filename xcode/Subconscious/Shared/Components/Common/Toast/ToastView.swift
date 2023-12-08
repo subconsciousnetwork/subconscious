@@ -13,7 +13,18 @@ struct ToastView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        HStack {
+        HStack(spacing: AppTheme.unit2) {
+            if let image = toast.image {
+                Image(systemName: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(
+                        width: 18,
+                        height: 18
+                    )
+                    .foregroundColor(.accentColor)
+            }
+            
             Text(toast.message)
         }
         .padding()
