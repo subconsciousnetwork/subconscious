@@ -84,7 +84,7 @@ extension DeckTheme {
     ]
 }
 
-extension Hashable {
+private extension Hashable {
     private func colors(colorScheme: ColorScheme) -> [Color] {
         colorScheme == .dark
             ? DeckTheme.darkCardColors
@@ -108,12 +108,23 @@ extension Hashable {
     }
 }
 
-extension EntryStub {
+extension Slashlink {
     func color(colorScheme: ColorScheme) -> Color {
-        address.description.color(colorScheme: colorScheme)
+        description.color(colorScheme: colorScheme)
     }
     
     func highlightColor(colorScheme: ColorScheme) -> Color {
-        address.description.highlightColor(colorScheme: colorScheme)
+        description.highlightColor(colorScheme: colorScheme)
+    }
+}
+
+
+extension EntryStub {
+    func color(colorScheme: ColorScheme) -> Color {
+        address.color(colorScheme: colorScheme)
+    }
+    
+    func highlightColor(colorScheme: ColorScheme) -> Color {
+        address.highlightColor(colorScheme: colorScheme)
     }
 }
