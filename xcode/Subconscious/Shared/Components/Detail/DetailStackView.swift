@@ -105,14 +105,13 @@ enum DetailStackAction: Hashable {
     /// request an editor detail.
     case findAndPushDetail(
         address: Slashlink,
-        link: SubSlashlinkLink? = nil
+        fallback: String?
     )
     
     case findAndPushLinkDetail(
-        context: ResolvedAddress,
+        context: Peer?,
         link: SubSlashlinkLink
     )
-
     /// Find a detail for content that belongs to us.
     /// Detail could exist in either local or sphere content.
     case findAndPushMemoEditorDetail(
@@ -188,12 +187,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 context: context,
                 link: link
             )
-        case let .findAndPushDetail(address, link):
+        case let .findAndPushDetail(address, fallback):
             return findAndPushDetail(
                 state: state,
                 environment: environment,
                 address: address,
-                link: link
+                fallback: fallback
             )
         case let .findAndPushMemoEditorDetail(slug, fallback):
             return findAndPushMemoEditorDetail(
@@ -287,62 +286,26 @@ struct DetailStackModel: Hashable, ModelProtocol {
         model.details = details
         return Update(state: model)
     }
-    
-    static func rebaseLinkOnAddress(
-        address: Slashlink,
-        link: SubSlashlinkLink
-    ) -> Slashlink {
-        // Stitch the base address on to the tapped link, making any
-        // bare slashlinks relative to the sphere they belong to.
-        //
-        // This is needed in the viewer but address will always based
-        // on our sphere in the editor case.
-        guard case let .petname(basePetname) = address.peer else {
-            return link.slashlink
-        }
-        return link.slashlink.rebaseIfNeeded(petname: basePetname)
-    }
+   
     
     static func findAndPushLinkDetail(
         state: Self,
         environment: Environment,
-        context: ResolvedAddress,
+        context: Peer?,
         link: SubSlashlinkLink
     ) -> Update<Self> {
-        let slashlink = rebaseLinkOnAddress(address: context.slashlink, link: link)
+        let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
         
         let fx: Fx<DetailStackAction> = Future.detached {
-            let identity = try await environment.noosphere.identity()
-            let following = await environment.addressBook.followingStatus(
-                did: context.owner,
-                expectedName: context.slashlink.petname?.leaf
+            let address = try await environment.noosphere.findBestAddressForLink(
+                context: context,
+                link: link
             )
-            
-            // Is this us? Trim off the peer
-            guard context.owner != identity else {
-                return .findAndPushDetail(
-                    address: Slashlink(slug: slashlink.slug),
-                    link: link
-                )
-            }
-            
-            switch following {
-            // Use the shortest name we know for this user
-            case .following(let name):
-                return .findAndPushDetail(
-                    address: Slashlink(
-                        petname: name.toPetname(),
-                        slug: slashlink.slug
-                    ),
-                    link: link
-                )
-            case .notFollowing:
-                return .findAndPushDetail(address: slashlink, link: link)
-            }
+            return .findAndPushDetail(address: address, fallback: link.fallback)
         }
         .recover { error in
             logger.error("Failed to resolve peer: \(error)")
-            return .findAndPushDetail(address: slashlink, link: link)
+            return .findAndPushDetail(address: slashlink, fallback: nil)
         }
         .eraseToAnyPublisher()
         
@@ -353,7 +316,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         state: Self,
         environment: Environment,
         address: Slashlink,
-        link: SubSlashlinkLink?
+        fallback: String?
     ) -> Update<Self> {
         // Intercept profile visits and use the correct view
         guard !address.slug.isProfile else {
@@ -377,7 +340,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 state: state,
                 action: .findAndPushMemoEditorDetail(
                     slug: address.toSlug(),
-                    fallback: link?.fallback ?? ""
+                    fallback: fallback ?? ""
                 ),
                 environment: environment
             )
@@ -657,6 +620,8 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
+        case let .requestFindDetail(address, fallback):
+            return .findAndPushDetail(address: address, fallback: fallback)
         case let .requestFindLinkDetail(context, link):
             return .findAndPushLinkDetail(
                 context: context,

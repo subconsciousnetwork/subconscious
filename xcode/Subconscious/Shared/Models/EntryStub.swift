@@ -37,8 +37,8 @@ struct EntryStub:
         )
     }
     
-    func toResolvedAddress() -> ResolvedAddress {
-        ResolvedAddress(owner: did, slashlink: address)
+    func toPeer() -> Peer {
+        address.petname.map(Peer.petname) ?? Peer.did(did)
     }
 }
 

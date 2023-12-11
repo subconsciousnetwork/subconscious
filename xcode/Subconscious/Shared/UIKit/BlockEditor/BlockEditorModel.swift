@@ -166,7 +166,7 @@ extension BlockEditor {
         /// Open transclude itself
         case onViewTransclude(EntryStub)
         /// Open link in transclude
-        case onLinkTransclude(ResolvedAddress, SubSlashlinkLink)
+        case onLinkTransclude(Peer, SubSlashlinkLink)
     }
 }
 

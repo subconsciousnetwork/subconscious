@@ -12,6 +12,15 @@ public enum Peer: Hashable, Codable, CustomStringConvertible {
     case did(Did)
     case petname(Petname)
     
+    public var did: Did? {
+        switch self {
+        case .did(let did):
+            return did
+        case .petname:
+            return nil
+        }
+    }
+    
     public var description: String {
         switch self {
         case .did(let did):
