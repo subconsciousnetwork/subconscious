@@ -84,12 +84,7 @@ struct MemoEditorDetailView: View {
     var body: some View {
         VStack {
             if app.state.isBlockEditorEnabled {
-                BlockEditor.Representable(
-                    store: blockEditorStore
-                )
-                .frame(
-                    minHeight: UIFont.appTextMono.lineHeight * 8
-                )
+                blockEditor()
             } else {
                 plainEditor()
             }
@@ -190,6 +185,21 @@ struct MemoEditorDetailView: View {
         }
     }
     
+    private func blockEditor() -> some View {
+        BlockEditor.Representable(
+            store: blockEditorStore
+        )
+        .frame(
+            minHeight: UIFont.appTextMono.lineHeight * 8
+        )
+        .onReceive(
+            blockEditorStore.actions.compactMap(
+                MemoEditorDetailNotification.from
+            ),
+            perform: notify
+        )
+    }
+
     /// Constructs a plain text editor for the view
     private func plainEditor() -> some View {
         GeometryReader { geometry in
@@ -319,6 +329,21 @@ extension MemoEditorDetailNotification {
             return .succeedUpdateAudience(receipt)
         case .forwardRequestDelete(let address):
             return .requestDelete(address)
+        default:
+            return nil
+        }
+    }
+}
+
+extension MemoEditorDetailNotification {
+    static func from(_ action: BlockEditor.Action) -> Self? {
+        // TODO
+        switch action {
+        case let .onLinkTransclude(resolvedAddress, subSlashlinkLink):
+            return .requestFindLinkDetail(
+                context: resolvedAddress,
+                link: subSlashlinkLink
+            )
         default:
             return nil
         }
