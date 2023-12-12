@@ -161,12 +161,12 @@ extension BlockEditor {
         case insertCode(id: UUID, selection: NSRange)
 
         /// Handle URL in textview
-        case onLink(URL)
+        case activateLink(URL)
         // Transclude list actions
         /// Open transclude itself
-        case onViewTransclude(EntryStub)
+        case requestDetail(EntryStub)
         /// Open link in transclude
-        case onLinkTransclude(Peer, SubSlashlinkLink)
+        case requestFindLinkDetail(Peer, SubSlashlinkLink)
     }
 }
 
@@ -466,18 +466,19 @@ extension BlockEditor.Model: ModelProtocol {
                 id: id,
                 selection: selection
             )
-        case .onLink(_):
-            return onLink(
+        case let .activateLink(url):
+            return activateLink(
+                state: state,
+                url: url,
+                environment: environment
+            )
+        case .requestDetail(_):
+            return requestDetail(
                 state: state,
                 environment: environment
             )
-        case .onViewTransclude(_):
-            return onViewTransclude(
-                state: state,
-                environment: environment
-            )
-        case .onLinkTransclude(_, _):
-            return onLinkTransclude(
+        case .requestFindLinkDetail(_, _):
+            return requestFindLinkDetail(
                 state: state,
                 environment: environment
             )
@@ -1534,21 +1535,38 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func onLink(
+    /// Handle links by parsing and then creating an FX for an onLinkTransclude
+    /// action.
+    static func activateLink(
+        state: Self,
+        url: URL,
+        environment: Environment
+    ) -> Update {
+        guard let link = url.toSubSlashlinkURL() else {
+            logger.info("Could not parse URL as SubSlashlinkURL \(url)")
+            return Update(state: state)
+        }
+        guard let owner = state.owner else {
+            logger.info("Owner sphere identity is unknown. Doing nothing.")
+            return Update(state: state)
+        }
+
+        let fx: Fx<Action> = Just(
+            Action.requestFindLinkDetail(Peer.did(owner), link)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+    
+    static func requestDetail(
         state: Self,
         environment: Environment
     ) -> Update {
         return Update(state: state)
     }
     
-    static func onViewTransclude(
-        state: Self,
-        environment: Environment
-    ) -> Update {
-        return Update(state: state)
-    }
-    
-    static func onLinkTransclude(
+    static func requestFindLinkDetail(
         state: Self,
         environment: Environment
     ) -> Update {

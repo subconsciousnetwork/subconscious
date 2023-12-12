@@ -488,13 +488,13 @@ extension BlockEditor.Action {
                 return .renderBlur(id: id)
             }
         case .onLink(let url):
-            return .onLink(url)
+            return .activateLink(url)
         case .transcludeList(let transcludeListAction):
             switch transcludeListAction {
             case let .onLink(resolvedAddress, subSlashlinkLink):
-                return .onLinkTransclude(resolvedAddress, subSlashlinkLink)
+                return .requestFindLinkDetail(resolvedAddress, subSlashlinkLink)
             case let .onView(entryStub):
-                return .onViewTransclude(entryStub)
+                return .requestDetail(entryStub)
             }
         }
     }

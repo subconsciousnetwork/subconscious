@@ -336,12 +336,18 @@ extension MemoEditorDetailNotification {
 
 extension MemoEditorDetailNotification {
     static func from(_ action: BlockEditor.Action) -> Self? {
-        // TODO
         switch action {
-        case let .onLinkTransclude(peer, subSlashlinkLink):
+        case let .requestFindLinkDetail(peer, subSlashlinkLink):
             return .requestFindLinkDetail(
                 context: peer,
                 link: subSlashlinkLink
+            )
+        case let .requestDetail(entryStub):
+            return .requestDetail(
+                MemoDetailDescription.from(
+                    address: entryStub.address,
+                    fallback: entryStub.excerpt.title()
+                )
             )
         default:
             return nil
