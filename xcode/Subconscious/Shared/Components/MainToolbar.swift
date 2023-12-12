@@ -42,9 +42,13 @@ struct SyncStatusView: View {
     
     var body: some View {
         HStack(spacing: AppTheme.unit2) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
+            ZStack {
+                Circle()
+                    .foregroundStyle(color)
+                Circle()
+                    .stroke(Color.separator, lineWidth: 0.5)
+            }
+            .frame(width: 8, height: 8)
         
             Text(showLabel ? label : "")
                 .font(.caption2)

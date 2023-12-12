@@ -103,6 +103,7 @@ struct DeckNavigationView: View {
                     app: app
                 )
             }
+            
         }
     }
 }

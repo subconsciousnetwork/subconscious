@@ -68,19 +68,19 @@ extension DeckTheme {
     ]
     
     static let darkCardColors: [Color] = [
-        Color(red: 0.7, green: 0.55, blue: 0.4),
-        Color(red: 0.4, green: 0.7, blue: 0.64),
-        Color(red: 0.73, green: 0.49, blue: 0.71),
-        Color(red: 0.78, green: 0.44, blue: 0.53),
-        Color(red: 0.47, green: 0.55, blue: 0.73)
+        Color(red: 0.63, green: 0.58, blue: 0.5),
+        Color(red: 0.52, green: 0.56, blue: 0.58),
+        Color(red: 0.67, green: 0.45, blue: 0.59),
+        Color(red: 0.66, green: 0.44, blue: 0.48),
+        Color(red: 0.53, green: 0.47, blue: 0.63)
     ]
     
     static let darkCardHighlightColors: [Color] = [
-        Color(red: 1, green: 0.87, blue: 0.68),
-        Color(red: 0.68, green: 1, blue: 1),
-        Color(red: 1, green: 0.79, blue: 1),
-        Color(red: 1, green: 0.74, blue: 0.85),
-        Color(red: 0.77, green: 0.88, blue: 1)
+        (Color(red: 1, green: 0.93, blue: 0.82)),
+        (Color(red: 0.88, green: 0.88, blue: 0.9)),
+        (Color(red: 1, green: 0.75, blue: 0.92)),
+        (Color(red: 1, green: 0.74, blue: 0.78)),
+        (Color(red: 0.89, green: 0.78, blue: 0.95))
     ]
 }
 
