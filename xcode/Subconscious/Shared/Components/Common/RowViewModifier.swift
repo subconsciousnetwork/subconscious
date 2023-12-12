@@ -7,12 +7,6 @@
 import SwiftUI
 
 struct RowViewModifier: ViewModifier {
-    var insets = EdgeInsets(
-        top: AppTheme.unit3,
-        leading: AppTheme.padding,
-        bottom: AppTheme.unit3,
-        trailing: AppTheme.padding
-    )
     func body(content: Content) -> some View {
         VStack(spacing: 0) {
             content
@@ -20,10 +14,10 @@ struct RowViewModifier: ViewModifier {
         }
         .listRowInsets(
             EdgeInsets(
-                top: 0,
-                leading: 0,
-                bottom: AppTheme.unit2,
-                trailing: 0
+                top: AppTheme.unit,
+                leading: AppTheme.unit2,
+                bottom: AppTheme.unit,
+                trailing: AppTheme.unit2
             )
         )
         .listRowSeparator(.hidden, edges: .all)
