@@ -100,10 +100,11 @@ struct DeckNavigationView: View {
                         store.send(.cardTapped(card))
                     }
                 )
-                .offset(x: 0, y: -AppTheme.unit * 8)
+                .offset(x: 0, y: -AppTheme.unit * 16)
             }
             .padding(AppTheme.padding)
             .frame(maxWidth: .infinity)
+            .ignoresSafeArea(.all, edges: .bottom)
             .background(
                 colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
             )
