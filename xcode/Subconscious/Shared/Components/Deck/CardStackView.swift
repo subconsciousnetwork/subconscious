@@ -193,20 +193,22 @@ struct CardGestureModifier: ViewModifier {
 }
 
 struct CardSwipeGlowEffect: View {
+    var color: Color
+    
     var body: some View {
         Rectangle()
             .frame(
                 width: DeckTheme.dragTargetSize.width,
                 height: DeckTheme.dragTargetSize.height
             )
-            .foregroundStyle(Color.brandMarkPink)
+            .foregroundStyle(color)
             .blur(radius: 16)
     }
 }
 
 struct CardStack: View {
     private static let swipeActivationThreshold = 128.0
-    private static let swipeThrowDistance = 1024.0
+    private static let swipeThrowDistance = 512.0
     
     var deck: [CardModel]
     var current: Int
@@ -368,16 +370,16 @@ struct CardStack: View {
             }
         }
         .overlay(
-            CardSwipeGlowEffect()
+            CardSwipeGlowEffect(color: Color.brandMarkCyan)
                 .offset(x: 200, y: 0)
-                .blendMode(.screen)
+                .blendMode(colorScheme == .dark ? .plusLighter : .plusDarker)
                 .opacity(swipeProgress)
         )
         .overlay(
-            CardSwipeGlowEffect()
+            CardSwipeGlowEffect(color: Color.brandMarkRed)
                 .offset(x: -200, y: 0)
-                .blendMode(.plusDarker)
-                .opacity(swipeProgress)
+                .blendMode(colorScheme == .dark ? .plusLighter : .plusDarker)
+                .opacity(-swipeProgress)
         )
     }
 }

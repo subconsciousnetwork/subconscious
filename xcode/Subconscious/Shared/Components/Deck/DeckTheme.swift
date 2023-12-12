@@ -15,7 +15,7 @@ extension DeckTheme {
         blendDuration: 0
     )
     
-    static let dragTargetSize = CGSize(width: 16, height: 400)
+    static let dragTargetSize = CGSize(width: 8, height: 400)
     
     static let cardPadding = AppTheme.unit * 5
     static let cornerRadius: CGFloat = 32.0
