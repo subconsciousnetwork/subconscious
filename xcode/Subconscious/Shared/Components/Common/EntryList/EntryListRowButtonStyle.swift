@@ -29,7 +29,7 @@ struct EntryListRowButtonStyle: ButtonStyle {
             .clipShape(Self.roundedRect)
             .animation(.default, value: configuration.isPressed)
             .shadow(
-                color: DeckTheme.cardShadow.opacity(0.15),
+                color: DeckTheme.cardShadow.opacity(0.08),
                 radius: 1.5,
                 x: 0,
                 y: 1.5
