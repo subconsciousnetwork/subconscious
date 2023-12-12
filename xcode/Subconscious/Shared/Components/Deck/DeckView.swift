@@ -102,6 +102,8 @@ enum DeckAction: Hashable {
     
     case nextCard
     case cardPresented(CardModel)
+    
+    case refreshDeck
 }
 
 extension AppAction {
@@ -241,6 +243,8 @@ struct DeckModel: ModelProtocol {
             )
         case .appear:
             return appear(state: state, environment: environment)
+        case .refreshDeck:
+            return refreshDeck(state: state, environment: environment)
         case .topupDeck:
             return topupDeck(state: state, environment: environment)
         case let .setDeck(deck):
@@ -273,6 +277,21 @@ struct DeckModel: ModelProtocol {
         }
         
         func appear(
+            state: Self,
+            environment: Environment
+        ) -> Update<Self> {
+            if state.deck.isEmpty {
+                return update(
+                    state: state,
+                    action: .refreshDeck,
+                    environment: environment
+                )
+            }
+            
+            return Update(state: state)
+        }
+        
+        func refreshDeck(
             state: Self,
             environment: Environment
         ) -> Update<Self> {
