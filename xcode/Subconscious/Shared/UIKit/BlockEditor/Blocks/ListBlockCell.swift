@@ -109,16 +109,16 @@ extension BlockEditor {
                     equalTo: listContainerGuide.bottomAnchor
                 ),
                 stackView.leadingAnchor.constraint(
-                    equalTo: leadingAnchor
+                    equalTo: contentView.leadingAnchor
                 ),
                 stackView.trailingAnchor.constraint(
-                    equalTo: trailingAnchor
+                    equalTo: contentView.trailingAnchor
                 ),
                 stackView.topAnchor.constraint(
-                    equalTo: topAnchor
+                    equalTo: contentView.topAnchor
                 ),
                 stackView.bottomAnchor.constraint(
-                    equalTo: bottomAnchor
+                    equalTo: contentView.bottomAnchor
                 )
             ])
         }
@@ -130,7 +130,7 @@ extension BlockEditor {
         private func createBulletView() -> UIView {
             let bulletSize: CGFloat = 6
             let frameWidth: CGFloat = AppTheme.unit2
-            let lineHeight: CGFloat = AppTheme.smPfpSize
+            let lineHeight: CGFloat = AppTheme.lineHeight
             
             let frameView = UIView()
             frameView.isUserInteractionEnabled = false
@@ -181,7 +181,10 @@ extension BlockEditor {
             transcludeListView.update(
                 parentController: parentController,
                 entries: state.transcludes,
-                send: Address.forward(send: send, tag: TextBlockAction.from)
+                send: Address.forward(
+                    send: send,
+                    tag: BlockEditor.TextBlockAction.from
+                )
             )
             textView.setText(
                 state.dom.description,
@@ -197,7 +200,12 @@ extension BlockEditor {
         private func send(
             _ event: SubtextTextEditorAction
         ) {
-            self.send(TextBlockAction.from(id: id, action: event))
+            self.send(
+                BlockEditor.TextBlockAction.from(
+                    id: id,
+                    action: event
+                )
+            )
         }
     }
 }
