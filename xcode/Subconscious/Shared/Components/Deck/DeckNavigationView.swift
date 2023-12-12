@@ -26,32 +26,41 @@ struct DeckNavigationView: View {
             VStack(alignment: .leading) {
                 if case let .entry(_, author, _) = store.state.topCard?.card,
                    let name = author.toNameVariant() {
-                    HStack(
-                        alignment: .center,
-                        spacing: AppTheme.unit3
-                    ) {
-                        ProfilePic(
-                            pfp: author.pfp,
-                            size: .large
-                        )
-                        
-                        PetnameView(
-                            name: name,
-                            aliases: [],
-                            showMaybePrefix: false
-                        )
-                    }
-                    .onTapGesture {
-                        detailStack.send(
-                            .pushDetail(
-                                .profile(UserProfileDetailDescription(address: author.address))
+                    Button(
+                        action: {
+                            detailStack.send(
+                                .pushDetail(
+                                    .profile(
+                                        UserProfileDetailDescription(
+                                            address: author.address
+                                        )
+                                    )
+                                )
                             )
-                        )
-                    }
-                    .transition(
-                        .push(
-                            from: .bottom
-                        )
+                            
+                        },
+                        label: {
+                            HStack(
+                                alignment: .center,
+                                spacing: AppTheme.unit3
+                            ) {
+                                ProfilePic(
+                                    pfp: author.pfp,
+                                    size: .large
+                                )
+                                
+                                PetnameView(
+                                    name: name,
+                                    aliases: [],
+                                    showMaybePrefix: false
+                                )
+                            }
+                            .transition(
+                                .push(
+                                    from: .bottom
+                                )
+                            )
+                        }
                     )
                 }
                 
