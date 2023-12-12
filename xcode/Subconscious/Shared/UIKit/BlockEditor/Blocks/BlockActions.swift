@@ -8,13 +8,10 @@
 import Foundation
 
 extension BlockEditor {
-    enum BlockInlineFormattingAction: Hashable {
+    enum TextBlockAction {
         case boldButtonPressed(id: UUID, text: String, selection: NSRange)
         case italicButtonPressed(id: UUID, text: String, selection: NSRange)
         case codeButtonPressed(id: UUID, text: String, selection: NSRange)
-    }
-    
-    enum BlockTextEditingAction: Hashable {
         case requestSplit(
             id: UUID,
             selection: NSRange,
@@ -32,20 +29,12 @@ extension BlockEditor {
         )
         case didBeginEditing(id: UUID)
         case didEndEditing(id: UUID)
-    }
-    
-    enum BlockControlsAction {
         case upButtonPressed(id: UUID)
         case downButtonPressed(id: UUID)
         case dismissKeyboardButtonPressed(id: UUID)
-    }
-    
-    enum TextBlockAction {
-        case inlineFormatting(BlockInlineFormattingAction)
-        case textEditing(BlockTextEditingAction)
-        case controls(BlockControlsAction)
-        case onLink(URL)
-        case transcludeList(TranscludeListAction)
+        case activateLink(URL)
+        case requestTransclude(EntryStub)
+        case requestLink(Peer, SubSlashlinkLink)
     }
 }
 
@@ -56,56 +45,42 @@ extension BlockEditor.TextBlockAction {
     ) -> Self {
         switch action {
         case .requestSplit(let text, let selection):
-            return .textEditing(
-                .requestSplit(id: id, selection: selection, text: text)
-            )
+            return .requestSplit(id: id, selection: selection, text: text)
         case .requestMergeUp:
-            return .textEditing(
-                .requestMergeUp(id: id)
-            )
+            return .requestMergeUp(id: id)
         case let .textDidChange(dom, selection):
-            return .textEditing(
-                .didChange(id: id, dom: dom, selection: selection)
-            )
+            return .didChange(id: id, dom: dom, selection: selection)
         case .selectionDidChange(let selection):
-            return .textEditing(
-                .didChangeSelection(id: id, selection: selection)
-            )
+            return .didChangeSelection(id: id, selection: selection)
         case .didBeginEditing:
-            return .textEditing(.didBeginEditing(id: id))
+            return .didBeginEditing(id: id)
         case .didEndEditing:
-            return .textEditing(.didEndEditing(id: id))
-        case .onLink(let url):
-            return .onLink(url)
+            return .didEndEditing(id: id)
+        case .activateLink(let url):
+            return .activateLink(url)
         case .upButtonPressed:
-            return .controls(.upButtonPressed(id: id))
+            return .upButtonPressed(id: id)
         case .downButtonPressed:
-            return .controls(.downButtonPressed(id: id))
+            return .downButtonPressed(id: id)
         case .dismissKeyboardButtonPressed:
-            return .controls(.dismissKeyboardButtonPressed(id: id))
+            return .dismissKeyboardButtonPressed(id: id)
         case .boldButtonPressed(let text, let selection):
-            return .inlineFormatting(
-                .boldButtonPressed(
-                    id: id,
-                    text: text,
-                    selection: selection
-                )
+            return .boldButtonPressed(
+                id: id,
+                text: text,
+                selection: selection
             )
         case .italicButtonPressed(let text, let selection):
-            return .inlineFormatting(
-                .italicButtonPressed(
-                    id: id,
-                    text: text,
-                    selection: selection
-                )
+            return .italicButtonPressed(
+                id: id,
+                text: text,
+                selection: selection
             )
         case .codeButtonPressed(let text, let selection):
-            return .inlineFormatting(
-                .codeButtonPressed(
-                    id: id,
-                    text: text,
-                    selection: selection
-                )
+            return .codeButtonPressed(
+                id: id,
+                text: text,
+                selection: selection
             )
         }
     }
@@ -113,6 +88,11 @@ extension BlockEditor.TextBlockAction {
 
 extension BlockEditor.TextBlockAction {
     static func from(_ action: BlockEditor.TranscludeListAction) -> Self {
-        .transcludeList(action)
+        switch action {
+        case .requestTransclude(let entryStub):
+            return .requestTransclude(entryStub)
+        case .requestLink(let peer, let subSlashlinkLink):
+            return .requestLink(peer, subSlashlinkLink)
+        }
     }
 }

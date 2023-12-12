@@ -454,48 +454,36 @@ extension BlockEditor {
 extension BlockEditor.Action {
     static func from(_ action: BlockEditor.TextBlockAction) -> Self {
         switch action {
-        case .inlineFormatting(let blockInlineFormattingAction):
-            switch blockInlineFormattingAction {
-            case let .boldButtonPressed(id, _, selection):
-                return .insertBold(id: id, selection: selection)
-            case let .italicButtonPressed(id, _, selection):
-                return .insertItalic(id: id, selection: selection)
-            case let .codeButtonPressed(id, _, selection):
-                return .insertCode(id: id, selection: selection)
-            }
-        case .textEditing(let blockTextEditingAction):
-            switch blockTextEditingAction {
-            case let .requestMergeUp(id):
-                return .mergeBlockUp(id: id)
-            case let .requestSplit(id, selection, _):
-                return .splitBlock(id: id, selection: selection)
-            case let .didChange(id, dom, selection):
-                return .textDidChange(id: id, dom: dom, selection: selection)
-            case let .didChangeSelection(id, selection):
-                return .didChangeSelection(id: id, selection: selection)
-            case let .didBeginEditing(id):
-                return .editing(id: id)
-            case let .didEndEditing(id):
-                return .blur(id: id)
-            }
-        case .controls(let blockControlsAction):
-            switch blockControlsAction {
-            case let .upButtonPressed(id):
-                return .moveBlockUp(id: id)
-            case let .downButtonPressed(id):
-                return .moveBlockDown(id: id)
-            case let .dismissKeyboardButtonPressed(id):
-                return .renderBlur(id: id)
-            }
-        case .onLink(let url):
+        case let .boldButtonPressed(id, _, selection):
+            return .insertBold(id: id, selection: selection)
+        case let .italicButtonPressed(id, _, selection):
+            return .insertItalic(id: id, selection: selection)
+        case let .codeButtonPressed(id, _, selection):
+            return .insertCode(id: id, selection: selection)
+        case let .requestMergeUp(id):
+            return .mergeBlockUp(id: id)
+        case let .requestSplit(id, selection, _):
+            return .splitBlock(id: id, selection: selection)
+        case let .didChange(id, dom, selection):
+            return .textDidChange(id: id, dom: dom, selection: selection)
+        case let .didChangeSelection(id, selection):
+            return .didChangeSelection(id: id, selection: selection)
+        case let .didBeginEditing(id):
+            return .editing(id: id)
+        case let .didEndEditing(id):
+            return .blur(id: id)
+        case let .upButtonPressed(id):
+            return .moveBlockUp(id: id)
+        case let .downButtonPressed(id):
+            return .moveBlockDown(id: id)
+        case let .dismissKeyboardButtonPressed(id):
+            return .renderBlur(id: id)
+        case .activateLink(let url):
             return .activateLink(url)
-        case .transcludeList(let transcludeListAction):
-            switch transcludeListAction {
-            case let .onLink(resolvedAddress, subSlashlinkLink):
-                return .requestFindLinkDetail(resolvedAddress, subSlashlinkLink)
-            case let .onView(entryStub):
-                return .requestDetail(entryStub)
-            }
+        case let .requestLink(resolvedAddress, subSlashlinkLink):
+            return .requestFindLinkDetail(resolvedAddress, subSlashlinkLink)
+        case let .requestTransclude(entryStub):
+            return .requestDetail(entryStub)
         }
     }
 }

@@ -16,7 +16,7 @@ enum SubtextTextEditorAction: Hashable {
     case didEndEditing
     
     /// Link tap in linked text
-    case onLink(URL)
+    case activateLink(URL)
 
     case upButtonPressed
     case downButtonPressed
@@ -69,15 +69,12 @@ class SubtextTextEditorView: UIView.SubtextTextView {
             return .downButtonPressed
         case .dismissKeyboardButtonPressed:
             return .dismissKeyboardButtonPressed
-        case .formatMenu(let formatMenuAction):
-            switch formatMenuAction {
-            case .boldButtonPressed:
-                return .boldButtonPressed(text: text, selection: selectedRange)
-            case .italicButtonPressed:
-                return .italicButtonPressed(text: text, selection: selectedRange)
-            case .codeButtonPressed:
-                return .codeButtonPressed(text: text, selection: selectedRange)
-            }
+        case .boldButtonPressed:
+            return .boldButtonPressed(text: text, selection: selectedRange)
+        case .italicButtonPressed:
+            return .italicButtonPressed(text: text, selection: selectedRange)
+        case .codeButtonPressed:
+            return .codeButtonPressed(text: text, selection: selectedRange)
         }
     }
 }
@@ -138,7 +135,7 @@ extension SubtextTextEditorView: UITextViewDelegate {
         in characterRange: NSRange,
         interaction: UITextItemInteraction
     ) -> Bool {
-        self.send(.onLink(url))
+        self.send(.activateLink(url))
         return false
     }
 }

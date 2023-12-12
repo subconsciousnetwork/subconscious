@@ -9,8 +9,8 @@ import SwiftUI
 
 extension BlockEditor {
     enum TranscludeListAction {
-        case onView(EntryStub)
-        case onLink(Peer, SubSlashlinkLink)
+        case requestTransclude(EntryStub)
+        case requestLink(Peer, SubSlashlinkLink)
     }
 }
 
@@ -26,9 +26,10 @@ extension BlockEditor {
         var body: some View {
             Subconscious.TranscludeListView(
                 entries: entries,
-                onViewTransclude: { entryStub in send(.onView(entryStub)) },
+                onViewTransclude: { entryStub in send(.requestTransclude(entryStub))
+                },
                 onTranscludeLink: { resolvedAddress, subSlashlinkLink in
-                    send(.onLink(resolvedAddress, subSlashlinkLink))
+                    send(.requestLink(resolvedAddress, subSlashlinkLink))
                 }
             )
             .padding(.vertical, AppTheme.unit2)
