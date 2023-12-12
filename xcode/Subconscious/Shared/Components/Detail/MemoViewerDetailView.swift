@@ -233,6 +233,7 @@ struct MemoViewerDetailLoadedView: View {
                         ).environment(\.openURL, OpenURLAction { url in
                             self.onLink(url: url)
                         })
+                        
                         Spacer()
                     }
                     .padding()

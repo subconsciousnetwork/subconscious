@@ -75,6 +75,7 @@ struct SubtextView: View {
                         Text(
                             Self.renderer.render(renderable.block.description)
                         )
+                        .expandAlignedLeading()
                         .fixedSize(horizontal: false, vertical: true)
                     }
                     if (!renderable.entries.isEmpty) {

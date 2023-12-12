@@ -10,6 +10,8 @@ import ObservableStore
 
 struct DetailStackView<Root: View>: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment (\.colorScheme) var colorScheme
+    
     var store: ViewStore<DetailStackModel>
     var root: () -> Root
 
@@ -55,6 +57,15 @@ struct DetailStackView<Root: View>: View {
                 }
             }
         }
+        // Tint using the current detail's highlight color.
+        // BUT only for notes.
+        .tint(
+            (store.state.details.last?.address?.isProfile ?? false)
+                ? nil
+                : store.state.details.last?.address?.highlightColor(
+                    colorScheme: colorScheme
+                )
+        )
     }
 }
 

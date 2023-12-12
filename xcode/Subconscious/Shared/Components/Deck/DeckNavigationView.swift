@@ -24,17 +24,44 @@ struct DeckNavigationView: View {
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             VStack(alignment: .leading) {
-                HStack(alignment: .center, spacing: AppTheme.unit3) {
-                    if case let .entry(_, author, _) = store.state.topCard?.card,
-                       let name = author.toNameVariant() {
-                        ProfilePic(pfp: author.pfp, size: .large)
-                        
-                        PetnameView(
-                            name: name,
-                            aliases: [],
-                            showMaybePrefix: false
-                        )
-                    }
+                if case let .entry(_, author, _) = store.state.topCard?.card,
+                   let name = author.toNameVariant() {
+                    Button(
+                        action: {
+                            detailStack.send(
+                                .pushDetail(
+                                    .profile(
+                                        UserProfileDetailDescription(
+                                            address: author.address
+                                        )
+                                    )
+                                )
+                            )
+                            
+                        },
+                        label: {
+                            HStack(
+                                alignment: .center,
+                                spacing: AppTheme.unit3
+                            ) {
+                                ProfilePic(
+                                    pfp: author.pfp,
+                                    size: .large
+                                )
+                                
+                                PetnameView(
+                                    name: name,
+                                    aliases: [],
+                                    showMaybePrefix: false
+                                )
+                            }
+                            .transition(
+                                .push(
+                                    from: .bottom
+                                )
+                            )
+                        }
+                    )
                 }
                 
                 if (store.state.deck.isEmpty) {
@@ -73,13 +100,20 @@ struct DeckNavigationView: View {
                         store.send(.cardTapped(card))
                     }
                 )
-                .offset(x: 0, y: -AppTheme.unit * 8)
+                .offset(x: 0, y: -AppTheme.unit * 16)
             }
             .padding(AppTheme.padding)
             .frame(maxWidth: .infinity)
+            .ignoresSafeArea(.all, edges: .bottom)
             .background(
                 colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
             )
+            .toolbar {
+                MainToolbar(
+                    app: app
+                )
+            }
+            
         }
     }
 }

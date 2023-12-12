@@ -12,17 +12,26 @@ struct TranscludeListView: View {
     var onViewTransclude: (EntryStub) -> Void
     var onTranscludeLink: (Peer, SubSlashlinkLink) -> Void
     
+    @Environment (\.colorScheme) var colorScheme
+    
     var body: some View {
-        VStack {
+        VStack(spacing: AppTheme.unit2) {
             ForEach(entries, id: \.self) { entry in
-                TranscludeView(
-                    entry: entry,
-                    onRequestDetail: {
-                        onViewTransclude(entry)
-                    },
-                    onLink: { link in
-                        onTranscludeLink(entry.toPeer(), link)
-                    }
+                VStack {
+                    TranscludeView(
+                        entry: entry,
+                        onRequestDetail: {
+                            onViewTransclude(entry)
+                        },
+                        onLink: { link in
+                            onTranscludeLink(entry.toPeer(), link)
+                        }
+                    )
+                }
+                .tint(
+                    entry.address.highlightColor(
+                        colorScheme: colorScheme
+                    )
                 )
             }
         }

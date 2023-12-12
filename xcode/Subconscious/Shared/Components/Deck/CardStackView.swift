@@ -4,13 +4,22 @@ struct CardView: View {
     var entry: CardModel
     @Environment(\.colorScheme) var colorScheme
     
-    var colors: [Color] {
-        colorScheme == .dark
-            ? DeckTheme.darkCardColors
-            : DeckTheme.lightCardColors
-    }
     var color: Color {
-        colors[abs(entry.hashValue) % colors.count]
+        switch entry.card {
+        case let .entry(entry, _, _):
+            return entry.color(colorScheme: colorScheme)
+        default:
+            return .secondary
+        }
+    }
+    
+    var highlight: Color {
+        switch entry.card {
+        case let .entry(entry, _, _):
+            return entry.highlightColor(colorScheme: colorScheme)
+        default:
+            return .secondary
+        }
     }
     
     var blendMode: BlendMode {
@@ -26,6 +35,7 @@ struct CardView: View {
                 SubtextView(subtext: entry.excerpt)
                     // Opacity allows blendMode to show through
                     .foregroundStyle(.primary.opacity(0.8))
+                    .accentColor(highlight)
                 
                 Spacer()
                 
@@ -46,7 +56,7 @@ struct CardView: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(highlight)
             case .action(let string):
                 // TEMP
                 VStack {
@@ -60,7 +70,6 @@ struct CardView: View {
             }
             
         }
-        .blendMode(blendMode)
         .padding(DeckTheme.cardPadding)
         .allowsHitTesting(false)
         .background(color)
@@ -97,8 +106,8 @@ struct CardEffectModifier: ViewModifier {
                 Rectangle()
                     .fill(
                         colorScheme == .dark
-                        ? DeckTheme.darkFog
-                        : DeckTheme.lightFog
+                        ? DeckTheme.darkBgMid
+                        : DeckTheme.lightBgMid
                     )
                     .opacity(4.0*stackFactor)
             )
@@ -131,11 +140,11 @@ struct CardEffectModifier: ViewModifier {
             // Reduce shadow intensity with depth
             .shadow(
                 color: DeckTheme.cardShadow.opacity(
-                    0.25 * (1.0 - 5.0*stackFactor)
+                    0.2 * (1.0 - 5.0*stackFactor)
                 ),
-                radius: 4,
+                radius: 2.5,
                 x: 0,
-                y: 2
+                y: 1.5
             )
     }
 }
@@ -184,20 +193,22 @@ struct CardGestureModifier: ViewModifier {
 }
 
 struct CardSwipeGlowEffect: View {
+    var color: Color
+    
     var body: some View {
         Rectangle()
             .frame(
                 width: DeckTheme.dragTargetSize.width,
                 height: DeckTheme.dragTargetSize.height
             )
-            .foregroundStyle(Color.brandMarkPink)
+            .foregroundStyle(color)
             .blur(radius: 16)
     }
 }
 
 struct CardStack: View {
     private static let swipeActivationThreshold = 128.0
-    private static let swipeThrowDistance = 1024.0
+    private static let swipeThrowDistance = 512.0
     
     var deck: [CardModel]
     var current: Int
@@ -331,6 +342,17 @@ struct CardStack: View {
             Spacer()
         }
         .zIndex(Double(deck.count - index))
+        .transition(
+            .asymmetric(
+                insertion: .scale.combined(
+                    with: .push(
+                        from: .bottom
+                    )
+                    .combined(with: .offset(y: -300))
+                ),
+                removal: .scale
+            )
+        )
     }
     
     var body: some View {
@@ -348,16 +370,16 @@ struct CardStack: View {
             }
         }
         .overlay(
-            CardSwipeGlowEffect()
+            CardSwipeGlowEffect(color: Color.brandMarkCyan)
                 .offset(x: 200, y: 0)
-                .blendMode(.screen)
+                .blendMode(colorScheme == .dark ? .plusLighter : .plusDarker)
                 .opacity(swipeProgress)
         )
         .overlay(
-            CardSwipeGlowEffect()
+            CardSwipeGlowEffect(color: Color.brandMarkRed)
                 .offset(x: -200, y: 0)
-                .blendMode(.plusDarker)
-                .opacity(swipeProgress)
+                .blendMode(colorScheme == .dark ? .plusLighter : .plusDarker)
+                .opacity(-swipeProgress)
         )
     }
 }

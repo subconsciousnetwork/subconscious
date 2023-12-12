@@ -23,15 +23,22 @@ struct ToastStackView: View {
 struct Toast: Equatable, Hashable {
     var id: UUID
     var message: String
+    var image: String?
     
     init(message: String) {
         self.id = UUID()
         self.message = message
     }
+    
+    init(message: String, image: String? = nil) {
+        self.id = UUID()
+        self.message = message
+        self.image = image
+    }
 }
 
 enum ToastStackAction: Hashable, Equatable {
-    case pushToast(message: String)
+    case pushToast(message: String, image: String? = nil)
     case toastPresented(_ toast: Toast)
     case toastExpired(_ toast: Toast)
 }
@@ -49,11 +56,12 @@ struct ToastStackModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
-        case .pushToast(message: let message):
+        case let .pushToast(message, image):
             return pushToast(
                 state: state,
                 environment: environment,
-                message: message
+                message: message,
+                image: image
             )
         case .toastExpired(toast: let toast):
             return toastExpired(
@@ -73,11 +81,12 @@ struct ToastStackModel: ModelProtocol {
     static func pushToast(
         state: Self,
         environment: Environment,
-        message: String
+        message: String,
+        image: String?
     ) -> Update<Self> {
         var model = state
         model.stack.append(
-            Toast(message: message)
+            Toast(message: message, image: image)
         )
         
         // If this is the only toast, immediately present it
@@ -119,7 +128,7 @@ struct ToastStackModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         let fx: Fx<ToastStackAction> = Future.detached {
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
             return .toastExpired(toast)
         }
         .eraseToAnyPublisher()

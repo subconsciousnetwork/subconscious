@@ -10,6 +10,8 @@ import ObservableStore
 struct NotebookNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<NotebookModel>
+    
+    @Environment (\.colorScheme) var colorScheme
 
     var body: some View {
         DetailStackView(
@@ -22,7 +24,8 @@ struct NotebookNavigationView: View {
             VStack(spacing: 0) {
                 EntryListView(
                     entries: store.state.recent,
-                    onEntryPress: { entry in
+                    onEntryPress: {
+                        entry in
                         store.send(
                             .pushDetail(
                                 MemoEditorDetailDescription(
@@ -37,6 +40,16 @@ struct NotebookNavigationView: View {
                     },
                     onRefresh: {
                         app.send(.syncAll)
+                    },
+                    onLink: { link in
+                        store.send(
+                            .detailStack(
+                                .findAndPushLinkDetail(
+                                    context: nil,
+                                    link: link
+                                )
+                            )
+                        )
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -63,12 +76,7 @@ struct NotebookNavigationView: View {
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                MainToolbar(
-                    app: app,
-                    profileAction: {
-                        store.send(.detailStack(.requestOurProfileDetail))
-                    }
-                )
+                MainToolbar(app: app)
                 
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
@@ -77,6 +85,17 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
+            .background(
+                colorScheme == .dark 
+                    ? DeckTheme.darkBg
+                    : DeckTheme.lightBg
+            )
+            .toolbarBackground(
+                colorScheme == .dark
+                    ? DeckTheme.darkBgStart
+                    : DeckTheme.lightBgStart,
+                for: .navigationBar
+            )
         }
     }
 }

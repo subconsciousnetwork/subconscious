@@ -27,6 +27,7 @@ struct NotebookView: View {
             category: "NotebookStore"
         )
     )
+    @Environment (\.colorScheme) var colorScheme
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.
@@ -66,15 +67,14 @@ struct NotebookView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
             VStack {
-                Spacer()
                 ToastStackView(
                     store: app.viewStore(
                         get: \.toastStack,
                         tag: ToastStackCursor.tag
                     )
                 )
+                Spacer()
             }
-            .padding()
             .zIndex(3)
         }
         .onAppear {
@@ -89,6 +89,10 @@ struct NotebookView: View {
         .onReceive(
             store.actions.compactMap(AppAction.from),
             perform: app.send
+        )
+        .toolbarBackground(
+            colorScheme == .dark ? DeckTheme.darkBgEnd : DeckTheme.lightBgEnd,
+            for: .tabBar
         )
     }
 }
