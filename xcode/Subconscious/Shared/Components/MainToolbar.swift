@@ -46,7 +46,7 @@ struct SyncStatusView: View {
                 Circle()
                     .foregroundStyle(color)
                 Circle()
-                    .stroke(Color.separator, lineWidth: 0.5)
+                    .stroke(Color.separator.opacity(0.75), lineWidth: 0.5)
             }
             .frame(width: 8, height: 8)
         
