@@ -35,9 +35,6 @@ extension BlockEditor {
             )
         }
         
-        /// Who are we? The did that identifies our sphere.
-        var owner: Did?
-
         /// Is editor in loading state?
         var loadingState = LoadingState.loading
         /// When was the last time the editor issued a fetch from source of truth?
@@ -45,6 +42,11 @@ extension BlockEditor {
         
         /// Is editor saved?
         private(set) var saveState = SaveState.saved
+
+        /// Who are we? The did that identifies our sphere.
+        var ourSphere: Did?
+        /// Who owns this document?
+        var ownerSphere: Did?
         
         var address: Slashlink? = nil
         var contentType = ContentType.subtext
@@ -82,6 +84,11 @@ extension BlockEditor {
         case ready
         /// Sent from SwiftUI land when the wrapping SwiftUI view appears.
         case appear(MemoEditorDetailDescription)
+        case setOurSphere(Did?)
+        /// Get owner Did from peer
+        case resolveOwnerSphere
+        case succeedResolveOwnerSphere(_ did: Did)
+        case failResolveOwnerSphere(error: String)
         /// Set document source location
         case loadEditor(
             address: Slashlink?,
@@ -248,6 +255,29 @@ extension BlockEditor.Model: ModelProtocol {
             return appear(
                 state: state,
                 description: description,
+                environment: environment
+            )
+        case let .setOurSphere(did):
+            return setOurSphere(
+                state: state,
+                did: did,
+                environment: environment
+            )
+        case .resolveOwnerSphere:
+            return resolveOwnerSphere(
+                state: state,
+                environment: environment
+            )
+        case let .succeedResolveOwnerSphere(owner):
+            return succeedResolveOwnerSphere(
+                state: state,
+                owner: owner,
+                environment: environment
+            )
+        case let .failResolveOwnerSphere(error):
+            return failResolveOwnerSphere(
+                state: state,
+                error: error,
                 environment: environment
             )
         case let .loadEditor(address, fallback, autofocus):
@@ -509,16 +539,80 @@ extension BlockEditor.Model: ModelProtocol {
         description: MemoEditorDetailDescription,
         environment: Environment
     ) -> Update {
-        return update(
-            state: state,
-            action: .loadEditor(
+        let fetchOurSphere: Fx<Action> = Future.detached {
+            Action.setOurSphere(try? await environment.noosphere.identity())
+        }
+        .eraseToAnyPublisher()
+
+        let loadEditor: Fx<Action> = Just(
+            Action.loadEditor(
                 address: description.address,
                 fallback: description.fallback
-            ),
-            environment: environment
+            )
         )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<Action> = fetchOurSphere
+            .merge(with: loadEditor)
+            .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
     
+    static func setOurSphere(
+        state: Self,
+        did: Did?,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.ourSphere = did
+        return Update(state: model)
+    }
+
+    static func resolveOwnerSphere(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        guard let address = state.address else {
+            logger.log("Asked to resolve owner sphere but document has no address. Doing nothing.")
+            return Update(state: state)
+        }
+        let resolveDidFx: Fx<Action> = Future.detached {
+            do {
+                let did = try await environment.noosphere.resolve(
+                    peer: address.peer
+                )
+                return Action.succeedResolveOwnerSphere(did)
+            } catch {
+                return Action.failResolveOwnerSphere(
+                    error: error.localizedDescription
+                )
+            }
+        }
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: resolveDidFx)
+    }
+
+    static func succeedResolveOwnerSphere(
+        state: Self,
+        owner: Did,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        logger.info("Document owner set to \(owner)")
+        model.ownerSphere = owner
+        return Update(state: model)
+    }
+
+    static func failResolveOwnerSphere(
+        state: Self,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        logger.log("Could not resolve owner sphere from address. Error: \(error)")
+        return Update(state: state)
+    }
+
     static func loadEditor(
         state: Self,
         address: Slashlink?,
@@ -530,6 +624,7 @@ extension BlockEditor.Model: ModelProtocol {
         model.address = address
         
         guard let address = address else {
+            logger.info("Editor loaded draft (no address)")
             return Update(state: model)
         }
         
@@ -538,18 +633,20 @@ extension BlockEditor.Model: ModelProtocol {
         let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
             address: address,
             fallback: fallback
-        )
-            .map({ detail in
-                return Action.setEditorIfNeeded(
-                    detail: detail,
-                    autofocus: autofocus
-                )
-            })
-            .recover({ error in
-                return Action.failLoadEditor(error.localizedDescription)
-            })
+        ).map({ detail in
+            return Action.setEditorIfNeeded(
+                detail: detail,
+                autofocus: autofocus
+            )
+        }).recover({ error in
+            return Action.failLoadEditor(error.localizedDescription)
+        })
         
-        let fx: Fx<Action> = loadDetailFx.merge(with: loadRelatedFx)
+        let resolveOwnerFx: Fx<Action> = Just(Action.resolveOwnerSphere)
+            .eraseToAnyPublisher()
+
+        let fx: Fx<Action> = loadDetailFx
+            .merge(with: loadRelatedFx, resolveOwnerFx)
             .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
@@ -690,16 +787,16 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
-        let owner = state.owner.map({ did in Peer.did(did) })
+        let owner = state.ownerSphere.map({ did in Peer.did(did) })
         
+        // Fetch only the slashlinks that are not in the cache
         let slashlinksToFetch = Set(
             state.blocks.blocks.flatMap({ block in
                 block.dom?.parsedSlashlinks ?? []
             })
-            // Fetch only the slashlinks that are not in the cache
-                .filter({ slashlink in
-                    state.transcludes[slashlink] == nil
-                })
+            .filter({ slashlink in
+                state.transcludes[slashlink] == nil
+            })
         )
         
         logger.info("Fetching transcludes for \(slashlinksToFetch)")
@@ -720,7 +817,7 @@ extension BlockEditor.Model: ModelProtocol {
                 )
             }
         }
-            .eraseToAnyPublisher()
+        .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
@@ -771,7 +868,7 @@ extension BlockEditor.Model: ModelProtocol {
         slashlinks: [Slashlink],
         environment: Environment
     ) -> Update {
-        let owner = state.owner.map({ did in Peer.did(did) })
+        let owner = state.ownerSphere.map({ did in Peer.did(did) })
         
         // Fetch only the slashlinks that are not in the cache
         let slashlinksToFetch = Set(
@@ -1546,7 +1643,7 @@ extension BlockEditor.Model: ModelProtocol {
             logger.info("Could not parse URL as SubSlashlinkURL \(url)")
             return Update(state: state)
         }
-        guard let owner = state.owner else {
+        guard let owner = state.ownerSphere else {
             logger.info("Owner sphere identity is unknown. Doing nothing.")
             return Update(state: state)
         }
