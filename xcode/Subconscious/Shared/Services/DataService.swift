@@ -592,6 +592,21 @@ actor DataService {
         }
     }
     
+    func assignNoteColor(
+        address: Slashlink,
+        color: NoteColor
+    ) async throws {
+        var memo = try await readMemo(address: address)
+        memo.additionalHeaders = [
+            Header(
+                name: "Color",
+                value: color.rawValue
+            )
+        ]
+        
+        try await writeMemo(address: address, memo: memo)
+    }
+    
     func writeEntry(_ entry: MemoEntry) async throws {
         try await writeMemo(address: entry.address, memo: entry.contents)
     }

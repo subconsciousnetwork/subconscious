@@ -87,6 +87,54 @@ extension DeckTheme {
     static let cardHeaderTint = Color.brandMarkPink.opacity(0.025)
 }
 
+public enum NoteColor: String, Hashable, CaseIterable {
+    case tan
+    case cyan
+    case pink
+    case orange
+    case blue
+}
+
+public extension NoteColor {
+    func toColor(colorScheme: ColorScheme) -> Color {
+        let colors = colorScheme == .dark
+            ? DeckTheme.darkCardColors
+            : DeckTheme.lightCardColors
+        
+        switch self {
+        case .tan:
+            return colors[0]
+        case .cyan:
+            return colors[1]
+        case .pink:
+            return colors[2]
+        case .orange:
+            return colors[3]
+        case .blue:
+            return colors[4]
+        }
+    }
+    
+    func toHighlightColor(colorScheme: ColorScheme) -> Color {
+        let colors = colorScheme == .dark
+            ? DeckTheme.darkCardHighlightColors
+            : DeckTheme.lightCardHighlightColors
+        
+        switch self {
+        case .tan:
+            return colors[0]
+        case .cyan:
+            return colors[1]
+        case .pink:
+            return colors[2]
+        case .orange:
+            return colors[3]
+        case .blue:
+            return colors[4]
+        }
+    }
+}
+
 private extension Hashable {
     private func colors(colorScheme: ColorScheme) -> [Color] {
         colorScheme == .dark
@@ -124,10 +172,10 @@ extension Slashlink {
 
 extension EntryStub {
     func color(colorScheme: ColorScheme) -> Color {
-        address.color(colorScheme: colorScheme)
+        self.color?.toColor(colorScheme: colorScheme) ?? .secondaryBackground
     }
     
     func highlightColor(colorScheme: ColorScheme) -> Color {
-        address.highlightColor(colorScheme: colorScheme)
+        self.color?.toHighlightColor(colorScheme: colorScheme) ?? .accentColor
     }
 }
