@@ -611,6 +611,7 @@ final class DatabaseService {
         let results = try database.execute(
             sql: """
             SELECT did, id, modified, excerpt
+            SELECT did, id, modified, excerpt, headers
             FROM memo
             WHERE did IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -636,11 +637,32 @@ final class DatabaseService {
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
             
+            var headersDict = [String: String]()
+            if let headersJSON = row.col(4)?.toString() {
+                do {
+                    let jsonData = Data(headersJSON.utf8)
+                    let headersArray = try JSONDecoder().decode([[String: String]].self, from: jsonData)
+
+                    for header in headersArray {
+                        if let name = header["name"], let value = header["value"] {
+                            headersDict[name] = value
+                        }
+                    }
+
+                    // Now headersDict contains your headers as a dictionary
+                } catch {
+                    print("Error parsing JSON: \(error)")
+                }
+            }
+            
+            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                color: color
             )
         })
     }

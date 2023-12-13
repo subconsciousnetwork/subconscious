@@ -19,6 +19,7 @@ struct EntryStub:
     let address: Slashlink
     let excerpt: Subtext
     let modified: Date
+    var color: NoteColor? = nil
 
     var id: Slashlink { address }
     var debugDescription: String {
