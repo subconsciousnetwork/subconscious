@@ -46,6 +46,13 @@ extension BlockEditor {
         
         let store: Store<Model>
 
+        /// Address to send actions to.
+        /// This gets assigned a closure during construction with a weak-bound
+        /// self, making it cycle-free.
+        private lazy var send = { [weak self] (action: Action) -> Void in
+            self?.store.send(action)
+        }
+
         /// Cancellable for store change publisher.
         /// Subscribed in `viewDidLoad`.
         private var cancelStoreChanges: AnyCancellable?
@@ -185,10 +192,6 @@ extension BlockEditor {
             default:
                 break
             }
-        }
-
-        private func send(_ action: TextBlockAction) {
-            self.store.send(.from(action))
         }
 
         /// Process a change message and perform related actions on controller.
@@ -381,9 +384,10 @@ extension BlockEditor {
                 withReuseIdentifier: TextBlockCell.identifier,
                 for: indexPath
             ) as! TextBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -397,9 +401,10 @@ extension BlockEditor {
                 withReuseIdentifier: HeadingBlockCell.identifier,
                 for: indexPath
             ) as! HeadingBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(state)
             return cell
         }
@@ -413,9 +418,10 @@ extension BlockEditor {
                 withReuseIdentifier: QuoteBlockCell.identifier,
                 for: indexPath
             ) as! QuoteBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -429,9 +435,10 @@ extension BlockEditor {
                 withReuseIdentifier: ListBlockCell.identifier,
                 for: indexPath
             ) as! ListBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -446,6 +453,10 @@ extension BlockEditor {
             ) as! RelatedCell
             let state = store.state.appendix
             cell.update(parentController: self, state: state)
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             return cell
         }
     }
@@ -478,6 +489,19 @@ extension BlockEditor.Action {
             return .moveBlockDown(id: id)
         case let .dismissKeyboardButtonPressed(id):
             return .renderBlur(id: id)
+        case .activateLink(let url):
+            return .activateLink(url)
+        case let .requestLink(resolvedAddress, subSlashlinkLink):
+            return .requestFindLinkDetail(resolvedAddress, subSlashlinkLink)
+        case let .requestTransclude(entryStub):
+            return .requestDetail(entryStub)
+        }
+    }
+}
+
+extension BlockEditor.Action {
+    static func from(_ action: BlockEditor.RelatedAction) -> Self {
+        switch action {
         case .activateLink(let url):
             return .activateLink(url)
         case let .requestLink(resolvedAddress, subSlashlinkLink):
