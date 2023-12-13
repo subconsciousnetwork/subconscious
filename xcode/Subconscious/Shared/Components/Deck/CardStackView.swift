@@ -10,6 +10,8 @@ struct CardView: View {
         switch entry.card {
         case let .entry(entry, _, _):
             return entry.color(colorScheme: colorScheme)
+        case let .prompt(_, entry, _, _):
+            return entry.color(colorScheme: colorScheme)
         default:
             return .secondary
         }
@@ -18,6 +20,8 @@ struct CardView: View {
     var highlight: Color {
         switch entry.card {
         case let .entry(entry, _, _):
+            return entry.highlightColor(colorScheme: colorScheme)
+        case let .prompt(_, entry, _, _):
             return entry.highlightColor(colorScheme: colorScheme)
         default:
             return .secondary
@@ -42,11 +46,11 @@ struct CardView: View {
                 // Opacity allows blendMode to show through
                 .foregroundStyle(.primary.opacity(0.8))
                 .accentColor(highlight)
+                .padding(DeckTheme.cardPadding)
                 
                 Spacer()
                 
                 HStack {
-                    // Consider: should the date go here?
                     Text(
                         entry.address.markup
                     )
@@ -64,7 +68,53 @@ struct CardView: View {
                 .font(.caption)
                 .foregroundStyle(highlight)
                 .padding(DeckTheme.cardPadding)
-            
+            case let .prompt(message, entry, _, backlinks):
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        Image(systemName: "sparkles")
+                        
+                        Text(message)
+                    }
+                    .padding(DeckTheme.cardPadding)
+                    .foregroundStyle(highlight)
+                    .font(.subheadline)
+                    
+                    Divider()
+                        .overlay(highlight)
+                    
+                    SubtextView(
+                        subtext: entry.excerpt,
+                        onLink: { link in
+                            onLink(link.rebaseIfNeeded(peer: entry.toPeer()))
+                        }
+                    )
+                    // Opacity allows blendMode to show through
+                    .foregroundStyle(.primary.opacity(0.8))
+                    .accentColor(highlight)
+                    .padding(DeckTheme.cardPadding)
+                    
+                    Spacer()
+                    
+                    HStack {
+                        // Consider: should the date go here?
+                        Text(
+                            entry.address.markup
+                        )
+                        .lineLimit(1)
+                        
+                        if !backlinks.isEmpty {
+                            Spacer()
+                            
+                            HStack {
+                                Image(systemName: "link")
+                                Text("\(backlinks.count)")
+                            }
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(highlight)
+                    .padding(DeckTheme.cardPadding)
+                }
             case .action(let string):
                 // TEMP
                 VStack {
@@ -78,7 +128,6 @@ struct CardView: View {
             }
             
         }
-        .padding(DeckTheme.cardPadding)
         .allowsHitTesting(false)
         .background(color)
         .cornerRadius(DeckTheme.cornerRadius)

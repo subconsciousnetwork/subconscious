@@ -461,6 +461,42 @@ struct DeckModel: ModelProtocol {
                     action: .nextCard,
                     environment: environment
                 ).mergeFx(fx)
+            case let .prompt(message, _, _, backlinks):
+                let fx: Fx<DeckAction> = Future.detached {
+                    let us = try await environment.noosphere.identity()
+                    
+                    // Filter to valid backlinks
+                    let backlinks = backlinks
+                        .filter({ backlink in !isSeen(entry: backlink) })
+                        .shuffled()
+                    
+                    if backlinks.count == 0 {
+                        return .topupDeck
+                    }
+                    
+                    var draw: [CardModel] = []
+                    for entry in backlinks.prefix(backlinksToDraw) {
+                        let card = try await toCard(
+                            entry: entry,
+                            ourIdentity: us,
+                            environment: environment
+                        )
+                        
+                        draw.append(card)
+                    }
+                    
+                    return .shuffleCardsUpNext(draw)
+                }
+                .recover({ error in
+                    return .topupDeck
+                })
+                .eraseToAnyPublisher()
+                
+                return update(
+                    state: state,
+                    action: .nextCard,
+                    environment: environment
+                ).mergeFx(fx)
             case .action(let msg):
                 logger.log("Action: \(msg)")
                 return update(
@@ -599,7 +635,14 @@ struct DeckModel: ModelProtocol {
                 context: nil
             )
             
-            return CardModel(entry: entry, user: user, backlinks: backlinks)
+            return CardModel(
+                card: .prompt(
+                    message: Prompt.connect.randomElement()!.message,
+                    entry: entry,
+                    author: user,
+                    backlinks: backlinks
+                )
+            )
         }
         
         func isTooShort(entry: EntryStub) -> Bool {
