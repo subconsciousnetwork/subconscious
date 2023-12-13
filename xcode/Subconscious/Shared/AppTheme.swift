@@ -106,7 +106,7 @@ extension Color {
         .opacity(0.5)
     static let primaryButtonBackgroundDisabled = primaryButtonBackground
         .opacity(0.3)
-    static let primaryButtonText = SwiftUI.Color.accentColor
+    static var primaryButtonText: Color { SwiftUI.Color.accentColor }
     static let primaryButtonTextPressed = primaryButtonText.opacity(0.5)
     static let primaryButtonTextDisabled = primaryButtonText.opacity(0.3)
     static let fabBackground = primaryButtonBackground

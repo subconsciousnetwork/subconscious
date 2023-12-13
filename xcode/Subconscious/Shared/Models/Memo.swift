@@ -169,6 +169,9 @@ extension MemoRecord {
         memo: Memo,
         size: Int? = nil
     ) throws {
+        var headers = memo.headers
+        headers.append(contentsOf: memo.additionalHeaders)
+        
         try self.init(
             did: did,
             petname: petname,
@@ -178,7 +181,7 @@ extension MemoRecord {
             modified: memo.modified,
             title: memo.title(),
             fileExtension: memo.fileExtension,
-            headers: memo.headers,
+            headers: headers,
             body: memo.body,
             description: memo.plain(),
             excerpt: memo.excerpt(),

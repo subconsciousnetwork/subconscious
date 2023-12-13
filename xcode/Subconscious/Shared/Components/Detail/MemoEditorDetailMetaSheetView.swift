@@ -7,9 +7,11 @@
 
 import SwiftUI
 import ObservableStore
+import Combine
 
 struct MemoEditorDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     var store: ViewStore<MemoEditorDetailMetaSheetModel>
     
     var body: some View {
@@ -67,9 +69,32 @@ struct MemoEditorDetailMetaSheetView: View {
                             )
                         }
                         .buttonStyle(RowButtonStyle())
+                        Divider()
                     }
                 }
                 .padding()
+                
+                HStack(spacing: AppTheme.padding) {
+                    let colors = NoteColor.allCases
+                    
+                    ForEach(colors, id: \.self) { color in
+                        Button(
+                            action: {
+                                store.send(.requestAssignNoteColor(color))
+                            }
+                        ) {
+                            ZStack {
+                                Circle()
+                                    .fill(color.toColor(colorScheme: colorScheme))
+                                Circle()
+                                    .stroke(Color.separator)
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(width: 32, height: 32)
+                        }
+                    }
+                }
             }
         }
         .presentationDragIndicator(.hidden)
@@ -119,6 +144,10 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     /// Should be handled by parent component.
     case requestUpdateAudience(_ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    
+    case requestAssignNoteColor(_ color: NoteColor?)
+    case failAssignNoteColor
+    case succeedAssignNoteColor
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -212,6 +241,12 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
             )
         case .requestDelete:
             return Update(state: state)
+        case .requestAssignNoteColor(let color):
+            return requestAssignNoteColor(state: state, environment: environment, color: color)
+        case .failAssignNoteColor:
+            return Update(state: state)
+        case .succeedAssignNoteColor:
+            return Update(state: state)
         }
     }
     
@@ -275,6 +310,32 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
         var model = state
         model.defaultAudience = audience
         return Update(state: model)
+    }
+    
+    static func requestAssignNoteColor(
+        state: Self,
+        environment: Environment,
+        color: NoteColor?
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            guard let address = state.address,
+                  let color = color else {
+                return .failAssignNoteColor
+            }
+            
+            try await environment.data.assignNoteColor(
+                address: address,
+                color: color
+            )
+            
+            return .succeedAssignNoteColor
+        }
+        .recover { error in
+            return .failAssignNoteColor
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
 }
 

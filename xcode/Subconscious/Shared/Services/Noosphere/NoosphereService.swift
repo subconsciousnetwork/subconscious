@@ -343,7 +343,7 @@ actor NoosphereService:
             )
         }
     }
-    
+   
     nonisolated func writePublisher(
         slug: Slug,
         contentType: String,

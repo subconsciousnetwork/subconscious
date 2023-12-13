@@ -6,15 +6,15 @@ struct CardView: View {
     
     var color: Color {
         switch entry.card {
-        case let .entry(entry, _, _):
-            return entry.color(colorScheme: colorScheme)
-        case let .prompt(_, entry, _, _):
-            return entry.color(colorScheme: colorScheme)
-        default:
-            return .secondary
+            case let .entry(entry, _, _):
+                return entry.color(colorScheme: colorScheme)
+            case let .prompt(_, entry, _, _):
+                return entry.color(colorScheme: colorScheme)
+            default:
+                return .secondaryBackground
         }
     }
-    
+        
     var highlight: Color {
         switch entry.card {
         case let .entry(entry, _, _):
@@ -22,7 +22,7 @@ struct CardView: View {
         case let .prompt(_, entry, _, _):
             return entry.highlightColor(colorScheme: colorScheme)
         default:
-            return .secondary
+            return .accentColor
         }
     }
     
@@ -39,7 +39,7 @@ struct CardView: View {
                 SubtextView(subtext: entry.excerpt)
                     // Opacity allows blendMode to show through
                     .foregroundStyle(.primary.opacity(0.8))
-                    .accentColor(highlight)
+                    .tint(highlight)
                     .padding(DeckTheme.cardPadding)
                 
                 Spacer()

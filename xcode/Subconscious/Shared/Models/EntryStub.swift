@@ -21,6 +21,7 @@ struct EntryStub:
     // Is the excerpt shorter than the full body of the entry?
     let isTruncated: Bool
     let modified: Date
+    var color: NoteColor? = nil
 
     var id: Slashlink { address }
     var debugDescription: String {
