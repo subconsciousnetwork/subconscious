@@ -15,11 +15,28 @@ enum CardType: Equatable, Hashable {
         backlinks: [EntryStub]
     )
     case action(String)
+    case prompt(
+        message: String,
+        entry: EntryStub,
+        author: UserProfile,
+        backlinks: [EntryStub]
+    )
 }
 
 struct CardModel: Identifiable, Equatable, Hashable {
     var id: UUID = UUID()
     var card: CardType
+    
+    var author: UserProfile? {
+        switch card {
+        case let .entry(_, author, _):
+            return author
+        case let .prompt(_, _, author, _):
+            return author
+        default:
+            return nil
+        }
+    }
 }
 
 extension CardModel {
@@ -38,10 +55,13 @@ extension CardModel {
     }
     
     var entry: EntryStub? {
-        guard case let .entry(entry, _, _) = card else {
+        switch card {
+        case let .entry(entry, _, _):
+            return entry
+        case let .prompt(_, entry, _, _):
+            return entry
+        default:
             return nil
         }
-        
-        return entry
     }
 }

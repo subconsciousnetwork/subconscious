@@ -24,7 +24,7 @@ struct DeckNavigationView: View {
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             VStack(alignment: .leading) {
-                if case let .entry(_, author, _) = store.state.topCard?.card,
+                if let author = store.state.topCard?.author,
                    let name = author.toNameVariant() {
                     Button(
                         action: {
