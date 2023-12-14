@@ -181,6 +181,6 @@ extension URL {
 
 extension String {
     func toSlug() -> Slug? {
-        Slug(formatting: self)
+        Slug(self)
     }
 }

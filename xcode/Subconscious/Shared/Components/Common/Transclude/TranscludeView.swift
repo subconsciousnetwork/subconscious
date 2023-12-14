@@ -11,6 +11,14 @@ struct TranscludeView: View {
     var entry: EntryStub
     var onLink: (EntryLink) -> Void
     
+    @Environment (\.colorScheme) var colorScheme
+    
+    var highlight: Color {
+        entry.highlightColor(
+            colorScheme: colorScheme
+        )
+    }
+    
     var body: some View {
         Button(
             action: {
@@ -20,7 +28,8 @@ struct TranscludeView: View {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     BylineSmView(
                         pfp: .generated(entry.did),
-                        slashlink: entry.address
+                        slashlink: entry.address,
+                        highlight: highlight
                     )
                     
                     SubtextView(
@@ -33,9 +42,16 @@ struct TranscludeView: View {
                         }
                     )
                 }
+                .tint(highlight)
             }
         )
-        .buttonStyle(TranscludeButtonStyle())
+        .buttonStyle(
+            TranscludeButtonStyle(
+                color: entry.color(
+                    colorScheme: colorScheme
+                )
+            )
+        )
     }
 }
 

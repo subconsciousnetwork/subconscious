@@ -13,26 +13,44 @@ struct ToastView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        HStack {
-            Spacer()
+        HStack(spacing: AppTheme.unit2) {
+            if let image = toast.image {
+                Image(systemName: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(
+                        width: 18,
+                        height: 18
+                    )
+                    .foregroundColor(.accentColor)
+            }
+            
             Text(toast.message)
-            Spacer()
         }
         .padding()
         .frame(
-            height: AppTheme.fabSize,
+            height: AppTheme.minTouchSize,
             alignment: .center
         )
         .background(.background)
         .foregroundColor(.primary)
-        .cornerRadius(AppTheme.cornerRadiusLg)
+        .cornerRadius(100)
         .shadow(
-            color: Color.brandDropShadow(colorScheme).opacity(0.5),
-            radius: 8,
+            color: Color.toastDropShadow(colorScheme).opacity(0.25),
+            radius: 2.5,
             x: 0,
-            y: 4
+            y: 2
         )
-        .transition(.asymmetric(insertion: .push(from: .bottom), removal: .opacity))
+        .transition(
+            .asymmetric(
+                insertion: .push(
+                    from: .top
+                ),
+                removal: .push(
+                    from: .bottom
+                )
+            )
+        )
     }
 }
 

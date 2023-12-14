@@ -55,12 +55,7 @@ struct FeedNavigationView: View {
             .navigationTitle("Feed")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                MainToolbar(
-                    app: app,
-                    profileAction: {
-                        store.send(.detailStack(.requestOurProfileDetail))
-                    }
-                )
+                MainToolbar(app: app)
                 
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
@@ -111,15 +106,14 @@ struct FeedView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
             VStack {
-                Spacer()
                 ToastStackView(
                     store: app.viewStore(
                         get: \.toastStack,
                         tag: ToastStackCursor.tag
                     )
                 )
+                Spacer()
             }
-            .padding()
             .zIndex(3)
         }
         .background(Color.background)

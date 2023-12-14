@@ -155,6 +155,7 @@ struct MemoViewerDetailLoadedView: View {
                         ).textSelection(
                             .enabled
                         )
+                        
                         Spacer()
                     }
                     .padding()

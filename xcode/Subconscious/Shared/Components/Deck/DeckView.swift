@@ -48,15 +48,14 @@ struct DeckView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
             VStack {
-                Spacer()
                 ToastStackView(
                     store: app.viewStore(
                         get: \.toastStack,
                         tag: ToastStackCursor.tag
                     )
                 )
+                Spacer()
             }
-            .padding()
             .zIndex(3)
         }
         .onAppear {
@@ -78,6 +77,7 @@ struct DeckView: View {
 
 // MARK: Actions
 enum DeckAction: Hashable {
+    case requestDeckRoot
     case detailStack(DetailStackAction)
     
     case setSearchPresented(Bool)
@@ -102,6 +102,8 @@ enum DeckAction: Hashable {
     
     case nextCard
     case cardPresented(CardModel)
+    
+    case refreshDeck
 }
 
 extension AppAction {
@@ -116,6 +118,8 @@ extension AppAction {
 extension DeckAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
+        case .requestDeckRoot:
+            return .requestDeckRoot
         default:
             return nil
         }
@@ -239,6 +243,8 @@ struct DeckModel: ModelProtocol {
             )
         case .appear:
             return appear(state: state, environment: environment)
+        case .refreshDeck:
+            return refreshDeck(state: state, environment: environment)
         case .topupDeck:
             return topupDeck(state: state, environment: environment)
         case let .setDeck(deck):
@@ -263,9 +269,29 @@ struct DeckModel: ModelProtocol {
             return nextCard(state: state, environment: environment)
         case let .cardPresented(card):
             return cardPresented(state: state, card: card)
+        case .requestDeckRoot:
+            return requestDeckRoot(
+                state: state,
+                environment: environment
+            )
         }
         
         func appear(
+            state: Self,
+            environment: Environment
+        ) -> Update<Self> {
+            if state.deck.isEmpty {
+                return update(
+                    state: state,
+                    action: .refreshDeck,
+                    environment: environment
+                )
+            }
+            
+            return Update(state: state)
+        }
+        
+        func refreshDeck(
             state: Self,
             environment: Environment
         ) -> Update<Self> {
@@ -305,7 +331,11 @@ struct DeckModel: ModelProtocol {
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return update(
+                state: state,
+                action: .setDeck([]),
+                environment: environment
+            ).mergeFx(fx)
         }
         
         func topupDeck(state: Self, environment: Environment) -> Update<Self> {
@@ -343,7 +373,11 @@ struct DeckModel: ModelProtocol {
                     action: .cardPresented(topCard),
                     environment: environment
                 )
-                .animation(.spring())
+                .animation(.spring(
+                    response: 0.5,
+                    dampingFraction: 0.8,
+                    blendDuration: 0
+                ))
             }
             
             return Update(state: model)
@@ -507,6 +541,17 @@ struct DeckModel: ModelProtocol {
             }
             
             return Update(state: model)
+        }
+        
+        func requestDeckRoot(
+            state: Self,
+            environment: AppEnvironment
+        ) -> Update<Self> {
+            return DeckDetailStackCursor.update(
+                state: state,
+                action: .setDetails([]),
+                environment: environment
+            )
         }
 
         func noCardsToDraw(state: Self) -> Update<Self> {

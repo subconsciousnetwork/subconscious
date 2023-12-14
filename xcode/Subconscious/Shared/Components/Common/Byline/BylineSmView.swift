@@ -11,12 +11,13 @@ import SwiftUI
 struct BylineSmView: View {
     var pfp: ProfilePicVariant
     var slashlink: Slashlink
+    var highlight: Color = .accentColor
     
     var body: some View {
         HStack {
             ProfilePic(pfp: pfp, size: .small)
             SlashlinkDisplayView(slashlink: slashlink)
-                .theme(slug: .secondary)
+                .theme(base: highlight, slug: .secondary)
         }
     }
 }

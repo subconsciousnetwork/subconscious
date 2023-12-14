@@ -329,8 +329,8 @@ enum AppAction: Hashable {
         .appUpgrade(.setComplete(isComplete))
     }
     
-    static func pushToast(message: String) -> AppAction {
-        return .toastStack(.pushToast(message: message))
+    static func pushToast(message: String, image: String? = nil) -> AppAction {
+        return .toastStack(.pushToast(message: message, image: image))
     }
 }
 
@@ -1973,7 +1973,7 @@ struct AppModel: ModelProtocol {
         }).catch({ error in
             Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
         }).eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
+        return Update(state: model, fx: fx).animation()
     }
     
     static func succeedSyncSphereWithGateway(
@@ -1994,13 +1994,10 @@ struct AppModel: ModelProtocol {
         return update(
             state: model,
             actions: [
-                .indexOurSphere,
-                .toastStack(
-                    .pushToast(message: "Sync complete")
-                )
+                .indexOurSphere
             ],
             environment: environment
-        )
+        ).animation()
     }
     
     static func failSyncSphereWithGateway(
@@ -2023,11 +2020,14 @@ struct AppModel: ModelProtocol {
             actions: [
                 .indexOurSphere,
                 .toastStack(
-                    .pushToast(message: "Failed to sync")
+                    .pushToast(
+                        message: "Sync failed",
+                        image: "exclamationmark.arrow.triangle.2.circlepath"
+                    )
                 )
             ],
             environment: environment
-        )
+        ).animation()
     }
 
     static func indexOurSphere(

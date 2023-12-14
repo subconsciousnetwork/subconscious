@@ -116,6 +116,9 @@ extension Color {
     static let fabTextDisabled = fabText.opacity(0.3)
     static let scrim = SwiftUI.Color(UIColor.tertiarySystemFill)
     
+    static let success = Color(red: 0.64, green: 1, blue: 0.96)
+    static let pending = Color(red: 1, green: 0.76, blue: 0.48)
+    
     // MARK: Brand colours
     // Brand Mark
     static let brandMarkPink = Color(red: 255/255, green: 163/255, blue: 186/255, opacity: 1) // #FFA3BA
@@ -166,7 +169,11 @@ extension Color {
     }
     
     static func brandDropShadow(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color.brandMarkPink : Color.brandMarkPurple
+        colorScheme == .dark ? Color.brandBgPurple : Color.brandMarkPurple
+    }
+    
+    static func toastDropShadow(_ colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.brandMarkViolet : Color.brandMarkPurple
     }
 }
 

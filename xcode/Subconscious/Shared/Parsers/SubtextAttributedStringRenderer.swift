@@ -238,9 +238,28 @@ struct SubtextAttributedStringRenderer {
             guard let url = wikilinkToURL(wikilink.description) else {
                 return
             }
-            attributedString[wikilinkRange].foregroundColor = .tertiaryLabel
-            attributedString[textRange].foregroundColor = .accentColor
+            // Apply link to the text inside brackets
             attributedString[textRange].link = url
+            
+            let firstBracket = attributedString.index(
+                afterCharacter: wikilinkRange.lowerBound
+            )
+            
+            let lastBracket = attributedString.index(
+                beforeCharacter: wikilinkRange.upperBound
+            )
+        
+            // Identify the ranges for the opening and closing brackets
+            let openingBracketRange = wikilinkRange.lowerBound..<attributedString.index(
+                afterCharacter: firstBracket
+            )
+            let closingBracketRange = attributedString.index(
+                beforeCharacter: lastBracket
+            )..<wikilinkRange.upperBound
+
+            // Apply color to the opening and closing brackets
+            attributedString[openingBracketRange].foregroundColor = .tertiaryLabel
+            attributedString[closingBracketRange].foregroundColor = .tertiaryLabel
         case .bold(let bold):
             guard let range = bold.span.range.within(
                 attributedString: attributedString

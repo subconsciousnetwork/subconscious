@@ -11,12 +11,21 @@ struct TranscludeListView: View {
     var entries: [EntryStub]
     var onLink: (EntryLink) -> Void
     
+    @Environment (\.colorScheme) var colorScheme
+    
     var body: some View {
-        VStack {
+        VStack(spacing: AppTheme.unit2) {
             ForEach(entries, id: \.self) { entry in
-                TranscludeView(
-                    entry: entry,
-                    onLink: onLink
+                VStack {
+                    TranscludeView(
+                        entry: entry,
+                        onLink: onLink
+                    )
+                }
+                .tint(
+                    entry.address.highlightColor(
+                        colorScheme: colorScheme
+                    )
                 )
             }
         }

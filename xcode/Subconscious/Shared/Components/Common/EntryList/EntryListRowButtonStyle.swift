@@ -1,25 +1,22 @@
 //
-//  TranscludeButtonStyle.swift
+//  EntryListRowButtonStyle.swift
 //  Subconscious (iOS)
 //
-//  Created by Gordon Brander on 3/16/23.
+//  Created by Ben Follington on 5/12/2023.
 //
 
+import Foundation
 import SwiftUI
 
-struct TranscludeButtonStyle: ButtonStyle {
+struct EntryListRowButtonStyle: ButtonStyle {
     private static let roundedRect = RoundedRectangle(
         cornerRadius: AppTheme.cornerRadiusLg
     )
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.colorScheme) var colorScheme
-    
     var color: Color
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.vertical, AppTheme.unit3)
-            .padding(.horizontal, AppTheme.unit3)
+            .padding(AppTheme.unit3)
             .expandAlignedLeading()
             .background(color)
             .overlay(
@@ -31,18 +28,26 @@ struct TranscludeButtonStyle: ButtonStyle {
             .contentShape(Self.roundedRect)
             .clipShape(Self.roundedRect)
             .animation(.default, value: configuration.isPressed)
+            .shadow(
+                color: DeckTheme.cardShadow.opacity(0.08),
+                radius: 1.5,
+                x: 0,
+                y: 1.5
+            )
     }
 }
 
-struct TranscludeButtonStyle_Previews: PreviewProvider {
+struct EntryListRowButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
-        Button(
-            action: {},
-            label: {
-                Text("Test")
-            }
-        ).buttonStyle(
-            TranscludeButtonStyle(color: Color.secondary)
-        )
+        VStack {
+            Button(
+                action: {},
+                label: {
+                    Text("Test")
+                }
+            ).buttonStyle(
+                EntryListRowButtonStyle(color: .secondaryBackground)
+            )
+        }
     }
 }
