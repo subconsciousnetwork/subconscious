@@ -81,11 +81,8 @@ extension BlockEditor {
                 parentController: parentController,
                 rootView: BacklinksView(
                     backlinks: state.related,
-                    onRequestDetail: { [weak self] entryStub in
-                        self?.send(.requestTransclude(entryStub))
-                    },
-                    onLink: { [weak self] context, link in
-                        self?.send(.requestLink(context, link))
+                    onLink: { [weak self] link in
+                        self?.send(.requestLink(link))
                     }
                 )
             )

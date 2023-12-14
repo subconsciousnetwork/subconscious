@@ -83,8 +83,7 @@ extension BlockEditor {
         case downButtonPressed(id: UUID)
         case dismissKeyboardButtonPressed(id: UUID)
         case activateLink(URL)
-        case requestTransclude(EntryStub)
-        case requestLink(Peer, SubSlashlinkLink)
+        case requestLink(EntryLink)
     }
 }
 
@@ -139,10 +138,8 @@ extension BlockEditor.TextBlockAction {
 extension BlockEditor.TextBlockAction {
     static func from(_ action: BlockEditor.TranscludeListAction) -> Self {
         switch action {
-        case .requestTransclude(let entryStub):
-            return .requestTransclude(entryStub)
-        case .requestLink(let peer, let subSlashlinkLink):
-            return .requestLink(peer, subSlashlinkLink)
+        case let .requestLink(link):
+            return .requestLink(link)
         }
     }
 }

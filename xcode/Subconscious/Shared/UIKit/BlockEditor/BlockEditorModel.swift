@@ -169,11 +169,8 @@ extension BlockEditor {
 
         /// Handle URL in textview
         case activateLink(URL)
-        // Transclude list actions
-        /// Open transclude itself
-        case requestDetail(EntryStub)
         /// Open link in transclude
-        case requestFindLinkDetail(Peer, SubSlashlinkLink)
+        case requestFindLinkDetail(EntryLink)
     }
 }
 
@@ -502,12 +499,7 @@ extension BlockEditor.Model: ModelProtocol {
                 url: url,
                 environment: environment
             )
-        case .requestDetail(_):
-            return requestDetail(
-                state: state,
-                environment: environment
-            )
-        case .requestFindLinkDetail(_, _):
+        case .requestFindLinkDetail(_):
             return requestFindLinkDetail(
                 state: state,
                 environment: environment
@@ -1639,7 +1631,7 @@ extension BlockEditor.Model: ModelProtocol {
         url: URL,
         environment: Environment
     ) -> Update {
-        guard let link = url.toSubSlashlinkURL() else {
+        guard let link = url.toSubSlashlinkLink()?.toEntryLink() else {
             logger.info("Could not parse URL as SubSlashlinkURL \(url)")
             return Update(state: state)
         }
@@ -1649,18 +1641,11 @@ extension BlockEditor.Model: ModelProtocol {
         }
 
         let fx: Fx<Action> = Just(
-            Action.requestFindLinkDetail(Peer.did(owner), link)
+            Action.requestFindLinkDetail(link)
         )
         .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
-    }
-    
-    static func requestDetail(
-        state: Self,
-        environment: Environment
-    ) -> Update {
-        return Update(state: state)
     }
     
     static func requestFindLinkDetail(

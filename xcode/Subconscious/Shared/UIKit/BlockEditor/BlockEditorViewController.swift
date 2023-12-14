@@ -491,10 +491,8 @@ extension BlockEditor.Action {
             return .renderBlur(id: id)
         case .activateLink(let url):
             return .activateLink(url)
-        case let .requestLink(resolvedAddress, subSlashlinkLink):
-            return .requestFindLinkDetail(resolvedAddress, subSlashlinkLink)
-        case let .requestTransclude(entryStub):
-            return .requestDetail(entryStub)
+        case let .requestLink(link):
+            return .requestFindLinkDetail(link)
         }
     }
 }
@@ -504,10 +502,8 @@ extension BlockEditor.Action {
         switch action {
         case .activateLink(let url):
             return .activateLink(url)
-        case let .requestLink(resolvedAddress, subSlashlinkLink):
-            return .requestFindLinkDetail(resolvedAddress, subSlashlinkLink)
-        case let .requestTransclude(entryStub):
-            return .requestDetail(entryStub)
+        case let .requestLink(link):
+            return .requestFindLinkDetail(link)
         }
     }
 }

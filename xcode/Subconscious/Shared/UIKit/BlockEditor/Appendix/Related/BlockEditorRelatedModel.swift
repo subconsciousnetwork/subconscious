@@ -18,7 +18,6 @@ extension BlockEditor {
 extension BlockEditor {
     enum RelatedAction {
         case activateLink(URL)
-        case requestTransclude(EntryStub)
-        case requestLink(Peer, SubSlashlinkLink)
+        case requestLink(EntryLink)
     }
 }

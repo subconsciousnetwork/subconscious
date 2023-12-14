@@ -9,12 +9,13 @@ import SwiftUI
 
 struct TranscludeView: View {
     var entry: EntryStub
-    var onRequestDetail: () -> Void
-    var onLink: (SubSlashlinkLink) -> Void
+    var onLink: (EntryLink) -> Void
     
     var body: some View {
         Button(
-            action: onRequestDetail,
+            action: {
+                onLink(EntryLink(entry))
+            },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     BylineSmView(
@@ -22,15 +23,15 @@ struct TranscludeView: View {
                         slashlink: entry.address
                     )
                     
-                    SubtextView(subtext: entry.excerpt)
-                        .environment(\.openURL, OpenURLAction { url in
-                            guard let subslashlink = url.toSubSlashlinkURL() else {
-                                return .systemAction
-                            }
-
-                            onLink(subslashlink)
-                            return .handled
-                        })
+                    SubtextView(
+                        subtext: entry.excerpt,
+                        onLink: { link in
+                            let rebasedLink = link.rebaseIfNeeded(
+                                peer: entry.toPeer()
+                            )
+                            onLink(rebasedLink)
+                        }
+                    )
                 }
             }
         )
@@ -49,7 +50,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     isTruncated: false,
                     modified: Date.now
                 ),
-                onRequestDetail: { },
                 onLink: { _ in }
             )
             TranscludeView(
@@ -62,7 +62,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     isTruncated: false,
                     modified: Date.now
                 ),
-                onRequestDetail: { },
                 onLink: { _ in }
             )
             TranscludeView(
@@ -75,7 +74,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     isTruncated: false,
                     modified: Date.now
                 ),
-                onRequestDetail: { },
                 onLink: { _ in }
             )
             TranscludeView(
@@ -91,7 +89,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     isTruncated: false,
                     modified: Date.now
                 ),
-                onRequestDetail: { },
                 onLink: { _ in }
             )
             TranscludeView(
@@ -104,7 +101,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     isTruncated: false,
                     modified: Date.now
                 ),
-                onRequestDetail: { },
                 onLink: { _ in }
             )
 

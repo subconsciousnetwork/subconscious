@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct CardView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    
     var entry: CardModel
-    @Environment(\.colorScheme) var colorScheme
+    var onLink: (EntryLink) -> Void
     
     var colors: [Color] {
         colorScheme == .dark
@@ -23,9 +25,14 @@ struct CardView: View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             switch entry.card {
             case let .entry(entry, _, backlinks):
-                SubtextView(subtext: entry.excerpt)
-                    // Opacity allows blendMode to show through
-                    .foregroundStyle(.primary.opacity(0.8))
+                SubtextView(
+                    subtext: entry.excerpt,
+                    onLink: { link in
+                        onLink(link.rebaseIfNeeded(peer: entry.toPeer()))
+                    }
+                )
+                // Opacity allows blendMode to show through
+                .foregroundStyle(.primary.opacity(0.8))
                 
                 Spacer()
                 
@@ -207,6 +214,7 @@ struct CardStack: View {
     var onSwipeStart: () -> Void
     var onSwipeAbandoned: () -> Void
     var onCardTapped: (CardModel) -> Void
+    var onLink: (EntryLink) -> Void
         
     // Use a dictionary of offsets so that we can animate two cards at once during the transition.
     // This dictionary is frequently cleared during the gesture lifecycle.
@@ -308,25 +316,28 @@ struct CardStack: View {
             Spacer()
             
             let stackFactor = stackFactor(for: index)
-            CardView(entry: card)
-                // Size card based on available space
-                .frame(
-                    width: size.width,
-                    height: size.width * 1.25
+            CardView(
+                entry: card,
+                onLink: onLink
+            )
+            // Size card based on available space
+            .frame(
+                width: size.width,
+                height: size.width * 1.25
+            )
+            .modifier(
+                effects(
+                    card: card,
+                    stackFactor: stackFactor,
+                    focused: index == current
                 )
-                .modifier(
-                    effects(
-                        card: card,
-                        stackFactor: stackFactor,
-                        focused: index == current
-                    )
-                )
-                .modifier(
-                    gestures(card: card)
-                )
-                // Fade out cards as we move past them
-                .opacity(index >= current ? 1 : 0)
-                .animation(.spring(), value: current)
+            )
+            .modifier(
+                gestures(card: card)
+            )
+            // Fade out cards as we move past them
+            .opacity(index >= current ? 1 : 0)
+            .animation(.spring(), value: current)
             
             Spacer()
         }
@@ -377,7 +388,8 @@ struct CardStack_Previews: PreviewProvider {
             onSwipeLeft: { _ in },
             onSwipeStart: { },
             onSwipeAbandoned: { },
-            onCardTapped: { _ in }
+            onCardTapped: { _ in },
+            onLink: { _ in }
         )
     }
 }

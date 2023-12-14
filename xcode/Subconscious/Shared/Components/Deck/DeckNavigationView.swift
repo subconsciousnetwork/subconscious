@@ -71,6 +71,11 @@ struct DeckNavigationView: View {
                     },
                     onCardTapped: { card in
                         store.send(.cardTapped(card))
+                    },
+                    onLink: { link in
+                        store.send(
+                            .detailStack(.findAndPushLinkDetail(link))
+                        )
                     }
                 )
                 .offset(x: 0, y: -AppTheme.unit * 8)

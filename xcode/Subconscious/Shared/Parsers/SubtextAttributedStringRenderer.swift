@@ -53,7 +53,7 @@ struct SubSlashlinkLink: Equatable, Hashable {
 
 extension URL {
     /// Convert to internal `sub://slashlink` URL.
-    func toSubSlashlinkURL() -> SubSlashlinkLink? {
+    func toSubSlashlinkLink() -> SubSlashlinkLink? {
         guard
             self.scheme == SubSlashlinkLink.schemeKey &&
             self.host == SubSlashlinkLink.hostKey
@@ -83,6 +83,12 @@ extension URL {
             slashlink: slashlink,
             text: text
         )
+    }
+}
+
+extension SubSlashlinkLink {
+    func toEntryLink() -> EntryLink {
+        EntryLink(address: slashlink, title: text)
     }
 }
 

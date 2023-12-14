@@ -43,7 +43,7 @@ final class Tests_SubtextAttributedStringRenderer: XCTestCase {
     func testSubSlashlinkFromURL() throws {
         let url = URL(string: "sub://slashlink?slashlink=@foo/bar&text=Bar")!
         
-        guard let link = url.toSubSlashlinkURL() else {
+        guard let link = url.toSubSlashlinkLink() else {
             XCTFail("Failed to construct SubSlashlinkURL from URL")
             return
         }

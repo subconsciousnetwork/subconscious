@@ -24,7 +24,7 @@ private struct StoryEntryUserDetailsView: View {
 struct StoryEntryView: View {
     var story: StoryEntry
     var onRequestDetail: (Slashlink, String) -> Void
-    var onLink: (_ context: Peer, SubSlashlinkLink) -> Void
+    var onLink: (EntryLink) -> Void
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -73,24 +73,14 @@ struct StoryEntryView: View {
                     SubtextView(
                         subtext: story.entry.excerpt,
                         transcludePreviews: [:],
-                        onViewTransclude: { slashlink in
-                            onRequestDetail(slashlink, story.entry.excerpt.description)
-                        },
-                        onTranscludeLink: { context, link in
-                            onLink(context, link)
+                        onLink: { link in
+                            let rebasedLink = link.rebaseIfNeeded(
+                                peer: story.entry.toPeer()
+                            )
+                            onLink(rebasedLink)
                         }
                     )
                     .padding([.leading, .trailing], AppTheme.padding)
-                    // Handle tapped slashlinks in the preview
-                    .environment(\.openURL, OpenURLAction { url in
-                        
-                        guard let subslashlink = url.toSubSlashlinkURL() else {
-                            return .systemAction
-                        }
-                        
-                        onLink(story.entry.toPeer(), subslashlink)
-                        return .handled
-                    })
                     
                     VStack(alignment: .leading) {
                         if story.entry.isTruncated {
@@ -160,7 +150,7 @@ struct StoryPlainView_Previews: PreviewProvider {
                 author: UserProfile.dummyData()
             ),
             onRequestDetail: { _, _ in },
-            onLink: { _, _ in }
+            onLink: { _ in }
         )
     }
 }
