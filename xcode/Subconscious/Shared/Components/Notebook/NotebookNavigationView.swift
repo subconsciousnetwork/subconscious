@@ -43,12 +43,7 @@ struct NotebookNavigationView: View {
                     },
                     onLink: { link in
                         store.send(
-                            .detailStack(
-                                .findAndPushLinkDetail(
-                                    context: nil,
-                                    link: link
-                                )
-                            )
+                            .detailStack(.findAndPushLinkDetail(link))
                         )
                     }
                 )

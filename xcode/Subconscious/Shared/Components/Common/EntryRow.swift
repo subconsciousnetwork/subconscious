@@ -13,22 +13,20 @@ struct EntryRow: View {
     var entry: EntryStub
     var emptyExcerpt = "Empty"
     var highlight: Color = .secondary
-    var onLink: (SubSlashlinkLink) -> Void = { _ in }
+    var onLink: (EntryLink) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
-            SubtextView(subtext: entry.excerpt)
-                .environment(\.openURL, OpenURLAction { url in
-                    guard let subslashlink = url.toSubSlashlinkURL() else {
-                        return .systemAction
-                    }
-
-                    onLink(subslashlink)
-                    return .handled
-                })
-                .font(.callout)
-                .multilineTextAlignment(.leading)
-                .padding(.bottom, AppTheme.unit2)
+            SubtextView(
+                subtext: entry.excerpt,
+                onLink: { link in
+                    let rebasedLink = link.rebaseIfNeeded(peer: entry.toPeer())
+                    onLink(link)
+                }
+            )
+            .font(.callout)
+            .multilineTextAlignment(.leading)
+            .padding(.bottom, AppTheme.unit2)
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
