@@ -305,8 +305,13 @@ enum AppAction: Hashable {
     case succeedDeleteMemo(Slashlink)
     
     case save(MemoEntry)
+    
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedSaveEntry(address: Slashlink, modified: Date)
     case failSaveEntry(address: Slashlink, error: String)
+    case succeedUpdateAudience(MoveReceipt)
+    
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestProfileRoot
@@ -1209,7 +1214,13 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .succeedMoveEntry(from: let from, to: let to):
+            return Update(state: state)
+        case .succeedMergeEntry(parent: let parent, child: let child):
+            return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
+            return Update(state: state)
+        case .succeedUpdateAudience(_):
             return Update(state: state)
         case let .save(entry):
             return save(
