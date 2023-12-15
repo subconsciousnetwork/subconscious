@@ -893,7 +893,9 @@ final class DatabaseService {
         // audience as current.
         let queryAddress = Func.run({
             let audience = current.toAudience()
-            return Slug(formatting: query)?.toSlashlink(audience: audience)
+            // Try literal slug first to preserve slashes
+            // If that fails, try best effort formatting
+            return (Slug(query) ?? Slug(formatting: query))?.toSlashlink(audience: audience)
         })
         
         var dids = [Did.local.description]

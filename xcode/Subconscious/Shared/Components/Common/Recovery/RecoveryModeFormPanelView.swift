@@ -32,7 +32,7 @@ struct RecoveryModeFormPanelView: View {
                 placeholder: "one two three four five six seven eight...",
                 field: store.viewStore(
                     get: \.recoveryPhraseField,
-                    tag: RecoveryModeAction.recoveryPhraseField
+                    tag: RecoveryPhraseFormFieldCursor.tag
                 ),
                 axis: .vertical
             )
@@ -60,7 +60,7 @@ struct RecoveryModeFormPanelView: View {
                         placeholder: "did:key:abc",
                         field: store.viewStore(
                             get: \.recoveryDidField,
-                            tag: RecoveryModeAction.recoveryDidField
+                            tag: RecoveryDidFormFieldCursor.tag
                         ),
                         caption: "The identity of your sphere",
                         axis: .vertical
@@ -74,7 +74,7 @@ struct RecoveryModeFormPanelView: View {
                         placeholder: "http://example.com",
                         field: store.viewStore(
                             get: \.recoveryGatewayURLField,
-                            tag: RecoveryModeAction.recoveryGatewayURLField
+                            tag: RecoveryGatewayURLFormFieldCursor.tag
                         ),
                         caption: String(localized: "The URL of your preferred Noosphere gateway"),
                         axis: .vertical

@@ -169,7 +169,7 @@ struct EditProfileSheet: View {
                             placeholder: "nickname",
                             field: store.viewStore(
                                 get: \.nicknameField,
-                                tag: EditProfileSheetAction.nicknameField
+                                tag: NicknameFieldCursor.tag
                             ),
                             caption: String(
                                 localized: "Lowercase letters, numbers and dashes only."
@@ -188,7 +188,7 @@ struct EditProfileSheet: View {
                             placeholder: "bio",
                             field: store.viewStore(
                                 get: \.bioField,
-                                tag: EditProfileSheetAction.bioField
+                                tag: BioFieldCursor.tag
                             ),
                             caption: bioCaption,
                             axis: .vertical

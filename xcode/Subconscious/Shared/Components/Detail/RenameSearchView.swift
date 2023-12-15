@@ -21,7 +21,7 @@ struct RenameSearchView: View {
                     placeholder: String(localized: "Enter link for note"),
                     field: store.viewStore(
                         get: \.queryField,
-                        tag: RenameSearchAction.queryField
+                        tag: QueryFieldCursor.tag
                     ),
                     autoFocus: true
                 )

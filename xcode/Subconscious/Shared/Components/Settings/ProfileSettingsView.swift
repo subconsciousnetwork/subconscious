@@ -18,7 +18,7 @@ struct ProfileSettingsView: View {
                     placeholder: "nickname",
                     field: app.viewStore(
                         get: \.nicknameFormField,
-                        tag: AppAction.nicknameFormField
+                        tag: NicknameFormFieldCursor.tag
                     ),
                     caption: String(localized: "Lowercase letters, numbers and dashes only.")
                 )

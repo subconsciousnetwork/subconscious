@@ -19,7 +19,7 @@ struct GatewayURLSettingsView: View {
                         placeholder: "http://example.com",
                         field: app.viewStore(
                             get: \.gatewayURLField,
-                            tag: AppAction.gatewayURLField
+                            tag: GatewayUrlFormFieldCursor.tag
                         ),
                         caption: String(localized: "The URL of your preferred Noosphere gateway")
                     )

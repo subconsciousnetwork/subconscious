@@ -52,7 +52,7 @@ struct FirstRunProfileView: View {
                     placeholder: "nickname",
                     field: app.viewStore(
                         get: \.nicknameFormField,
-                        tag: AppAction.nicknameFormField
+                        tag: NicknameFormFieldCursor.tag
                     ),
                     caption: "Lowercase letters, numbers and dashes only.",
                     autoFocus: true,
