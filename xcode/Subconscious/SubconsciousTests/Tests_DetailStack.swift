@@ -14,79 +14,6 @@ class Tests_DetailStack: XCTestCase {
     let environment = AppEnvironment()
     var cancellable: AnyCancellable?
     
-    func testFindBestLinkAddressNoContext() async throws {
-        let tmp = try TestUtilities.createTmpDir()
-        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
-        
-        let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
-        
-        try await data.noosphere.write(
-            slug: Slug(
-                "test"
-            )!,
-            contentType: "text/subtext",
-            additionalHeaders: [],
-            body: (
-                "hello"
-            ).toData(
-                encoding: .utf8
-            )!
-        )
-        try await data.noosphere.save()
-        
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        
-        let address = try await data.noosphere.findBestAddressForLink(
-            context: nil,
-            link: link
-        )
-       
-        XCTAssertEqual(address.slug, slashlink.slug)
-        XCTAssertEqual(address.peer, slashlink.peer)
-    }
-    
-    func testFindBestLinkAddressWithContext() async throws {
-        let tmp = try TestUtilities.createTmpDir()
-        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
-        
-        let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
-        
-        // Follow a user and attempt to navigate to a link based on them
-        
-        try await data.noosphere.write(
-            slug: Slug(
-                "test"
-            )!,
-            contentType: "text/subtext",
-            additionalHeaders: [],
-            body: (
-                "hello"
-            ).toData(
-                encoding: .utf8
-            )!
-        )
-        try await data.noosphere.save()
-        
-        let friend = Did.dummyData()
-        let friendName = Petname("friend")!
-        try await data.addressBook.followUser(did: friend, petname: friendName)
-        
-        let slashlink = Slashlink(slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        
-        let peer = Peer.petname(friendName)
-        let address = try await data.noosphere.findBestAddressForLink(
-            context: Peer.petname(
-                friendName
-            ),
-            link: link
-        )
-       
-        XCTAssertEqual(address.slug, slashlink.slug)
-        XCTAssertEqual(address.peer, peer)
-    }
-    
     func testFindAndPushLinkDetail() throws {
         throw XCTSkip(
           """
@@ -97,14 +24,15 @@ class Tests_DetailStack: XCTestCase {
         
         let model = DetailStackModel()
         
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        let did = Did.dummyData()
-        let context = Peer.did(did)
+        let slashlink = Slashlink(
+            petname: Petname("bob.alice")!,
+            slug: Slug("hello")!
+        )
+        let link = EntryLink(address: slashlink)
         
         let update = DetailStackModel.update(
             state: model,
-            action: .findAndPushLinkDetail(context: context, link: link),
+            action: .findAndPushLinkDetail(link),
             environment: environment
         )
         let expectation = XCTestExpectation(
@@ -117,7 +45,7 @@ class Tests_DetailStack: XCTestCase {
             receiveValue: { action in
                 switch action {
                 case let .findAndPushDetail(address: newAddress, fallback):
-                    XCTAssertEqual(link.fallback, fallback)
+                    XCTAssertEqual(link.title, fallback)
                     XCTAssertEqual(Slashlink("@bob.alice.origin/hello"), newAddress)
                     default:
                         XCTFail("Incorrect action")
@@ -129,41 +57,38 @@ class Tests_DetailStack: XCTestCase {
 
 
     func testViewerSlashlinkConstruction() throws {
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        let did = Did.dummyData()
+        let slashlink = Slashlink(
+            petname: Petname("bob.alice")!,
+            slug: Slug("hello")!
+        )
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            context: Peer.did(did),
-            link: link
+            slashlink.toEntryLink()
         )
         
         let newAction = DetailStackAction.tag(action)
         switch newAction {
-        case let .findAndPushLinkDetail(context, newLink):
-            XCTAssertEqual(did, context?.did)
-            XCTAssertEqual(link, newLink)
+        case let .findAndPushLinkDetail(link):
+            XCTAssertEqual(link.address, slashlink)
         default:
             XCTFail("Incorrect action")
         }
     }
 
     func testEditorSlashlinkConstruction() throws {
-        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
-        let did = Did.dummyData()
+        let slashlink = Slashlink(
+            petname: Petname("bob.alice")!, slug: Slug("hello")!
+        )
         
         let action = MemoEditorDetailNotification.requestFindLinkDetail(
-            context: Peer.did(did),
-            link: link
+            slashlink.toEntryLink()
         )
         
         let newAction = DetailStackAction.tag(action)
         
         switch newAction {
-        case let .findAndPushLinkDetail(context, newLink):
-            XCTAssertEqual(did, context?.did)
-            XCTAssertEqual(newLink, link)
+        case let .findAndPushLinkDetail(link):
+            XCTAssertEqual(link.address, slashlink)
         default:
             XCTFail("Incorrect action")
         }
