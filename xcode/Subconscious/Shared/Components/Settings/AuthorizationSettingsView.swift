@@ -53,7 +53,7 @@ struct AuthorizationSettingsView: View {
                         placeholder: "DID",
                         field: app.viewStore(
                             get: \.authorization.form.did,
-                            tag: { a in .authorization(.form(.didField(a))) }
+                            tag: { a in .authorization(.form(AuthorizationDidFieldCursor.tag(a))) }
                         ),
                         caption: String(
                             localized:
@@ -70,7 +70,7 @@ struct AuthorizationSettingsView: View {
                         placeholder: "name",
                         field: app.viewStore(
                             get: \.authorization.form.name,
-                            tag: { a in .authorization(.form(.nameField(a))) }
+                            tag: { a in .authorization(.form(AuthorizationNameFieldCursor.tag(a))) }
                         ),
                         caption: String(
                             localized: "The name for this authorization"
@@ -226,13 +226,13 @@ struct AuthorizationSettingsFormModel: ModelProtocol {
     ) -> Update<Self> {
         switch action {
         case .didField(let action):
-            return DidFieldCursor.update(
+            return AuthorizationDidFieldCursor.update(
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
             )
         case .nameField(let action):
-            return NameFieldCursor.update(
+            return AuthorizationNameFieldCursor.update(
                 state: state,
                 action: action,
                 environment: FormFieldEnvironment()
@@ -486,7 +486,7 @@ struct AuthorizationSettingsFormCursor: CursorProtocol {
     }
 }
 
-private struct DidFieldCursor: CursorProtocol {
+private struct AuthorizationDidFieldCursor: CursorProtocol {
     typealias Model = AuthorizationSettingsFormModel
     typealias ViewModel = FormField<String, Did>
 
@@ -505,7 +505,7 @@ private struct DidFieldCursor: CursorProtocol {
     }
 }
 
-private struct NameFieldCursor: CursorProtocol {
+private struct AuthorizationNameFieldCursor: CursorProtocol {
     typealias Model = AuthorizationSettingsFormModel
     typealias ViewModel = FormField<String, String>
 

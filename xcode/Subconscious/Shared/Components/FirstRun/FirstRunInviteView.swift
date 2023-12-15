@@ -92,7 +92,7 @@ struct FirstRunInviteView: View {
                     placeholder: "Enter your invite code",
                     field: app.viewStore(
                         get: \.inviteCodeFormField,
-                        tag: AppAction.inviteCodeFormField
+                        tag: InviteCodeFormFieldCursor.tag
                     ),
                     caption: inviteCodeCaption,
                     onFocusChanged: { focused in

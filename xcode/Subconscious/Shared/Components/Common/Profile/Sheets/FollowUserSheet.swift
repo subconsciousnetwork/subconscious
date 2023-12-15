@@ -198,7 +198,7 @@ struct FollowUserSheet: View {
                     placeholder: "petname",
                     field: store.viewStore(
                         get: \.followUserForm.petname,
-                        tag: { a in FollowUserSheetAction.followUserForm(.petnameField(a)) }
+                        tag: { a in FollowUserSheetAction.followUserForm(PetnameFieldCursor.tag(a)) }
                     ),
                     caption: caption
                 )

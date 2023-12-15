@@ -64,7 +64,7 @@ struct ValidatedInviteCodeFormField: View {
             placeholder: "Enter an invite code",
             field: app.viewStore(
                 get: \.inviteCodeFormField,
-                tag: AppAction.inviteCodeFormField
+                tag: InviteCodeFormFieldCursor.tag
             ),
             caption: caption
         )

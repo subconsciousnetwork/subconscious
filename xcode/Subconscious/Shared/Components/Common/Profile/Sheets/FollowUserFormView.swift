@@ -27,7 +27,7 @@ struct FollowUserFormView: View {
                     placeholder: "DID",
                     field: store.viewStore(
                         get: \.did,
-                        tag: FollowUserFormAction.didField
+                        tag: DidFieldCursor.tag
                     ),
                     caption: String(
                         localized: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
@@ -47,7 +47,7 @@ struct FollowUserFormView: View {
                     placeholder: "petname",
                     field: store.viewStore(
                         get: \.petname,
-                        tag: FollowUserFormAction.petnameField
+                        tag: PetnameFieldCursor.tag
                     ),
                     caption: petnameCaption
                 )
@@ -128,7 +128,7 @@ struct FollowUserFormModel: ModelProtocol {
 
 // MARK: Cursors
 
-private struct PetnameFieldCursor: CursorProtocol {
+struct PetnameFieldCursor: CursorProtocol {
     typealias Model = FollowUserFormModel
     typealias ViewModel = FormField<String, Petname.Name>
 
@@ -147,7 +147,7 @@ private struct PetnameFieldCursor: CursorProtocol {
     }
 }
 
-private struct DidFieldCursor: CursorProtocol {
+struct DidFieldCursor: CursorProtocol {
     typealias Model = FollowUserFormModel
     typealias ViewModel = FormField<String, Did>
 
