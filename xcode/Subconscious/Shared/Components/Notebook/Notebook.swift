@@ -231,8 +231,6 @@ struct NotebookDetailStackCursor: CursorProtocol {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
-        case let .succeedSaveEntry(address: address, modified: modified):
-            return .succeedSaveEntry(slug: address, modified: modified)
         case _:
             return .detailStack(action)
         }
@@ -258,6 +256,8 @@ extension NotebookAction {
             return .failDeleteMemo(error)
         case .requestNotebookRoot:
             return .requestNotebookRoot
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(slug: address, modified: modified)
         default:
             return nil
         }

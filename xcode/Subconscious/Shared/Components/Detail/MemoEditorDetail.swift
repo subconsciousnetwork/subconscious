@@ -139,6 +139,10 @@ struct MemoEditorDetailView: View {
             app.actions.compactMap(MemoEditorDetailAction.fromAppAction),
             perform: store.send
         )
+        .onReceive(
+            store.actions.compactMap(AppAction.from),
+            perform: app.send
+        )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
@@ -288,6 +292,17 @@ enum MemoEditorDetailNotification: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
+extension AppAction {
+    static func from(_ action: MemoEditorDetailAction) -> Self? {
+        switch action {
+        case let .save(entry):
+            return .save(entry)
+        default:
+            return nil
+        }
+    }
+}
+
 extension MemoEditorDetailNotification {
     static func from(_ action: MemoEditorDetailAction) -> Self? {
         switch action {
@@ -295,11 +310,8 @@ extension MemoEditorDetailNotification {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedSave(entry):
-            return .succeedSaveEntry(
-                address: entry.address,
-                modified: entry.contents.modified
-            )
+        case let .succeedSave(address, modified):
+            return .succeedSaveEntry(address: address, modified: modified)
         case .succeedUpdateAudience(let receipt):
             return .succeedUpdateAudience(receipt)
         case .forwardRequestDelete(let address):
@@ -402,8 +414,9 @@ enum MemoEditorDetailAction: Hashable {
     case assignAddress(Slashlink?)
 
     /// Save an entry at a particular snapshot value
-    case save(MemoEntry?)
-    case succeedSave(MemoEntry)
+    case requestSave(MemoEntry)
+    case save(MemoEntry)
+    case succeedSave(address: Slashlink, modified: Date)
     case failSave(
         address: Slashlink,
         message: String
@@ -820,17 +833,17 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .save(let entry):
-            return save(
+        case .requestSave(let entry):
+            return requestSave(
                 state: state,
                 environment: environment,
                 entry: entry
             )
-        case let .succeedSave(entry):
+        case let .succeedSave(address, _):
             return succeedSave(
                 state: state,
                 environment: environment,
-                entry: entry
+                address: address
             )
         case let .failSave(address, message):
             return failSave(
@@ -975,6 +988,8 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .save(_):
+            return Update(state: state)
         }
     }
     
@@ -1379,9 +1394,9 @@ struct MemoEditorDetailModel: ModelProtocol {
             return update(
                 state: model,
                 actions: [
-                    .save(snapshot),
+                    snapshot.map(MemoEditorDetailAction.requestSave),
                     .forceSetDetail(detail)
-                ],
+                ].compactMap({ $0 }),
                 environment: environment
             )
         }
@@ -1593,10 +1608,13 @@ struct MemoEditorDetailModel: ModelProtocol {
             )
         }
         
-        let entry = state.snapshotEntry()
+        guard let entry = state.snapshotEntry() else {
+            return Update(state: state)
+        }
+        
         return update(
             state: state,
-            action: .save(entry),
+            action: .requestSave(entry),
             environment: environment
         )
     }
@@ -1634,26 +1652,22 @@ struct MemoEditorDetailModel: ModelProtocol {
         return update(
             state: model,
             actions: [
-                .save(entry),
+                entry.map(MemoEditorDetailAction.requestSave),
                 .setMetaSheetAddress(address)
-            ],
+            ].compactMap({ $0 }),
             environment: environment
         )
         .animation(.default)
     }
     
     /// Save snapshot of entry
-    static func save(
+    static func requestSave(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        entry: MemoEntry?
+        entry: MemoEntry
     ) -> Update<MemoEditorDetailModel> {
         // If editor dom is already saved, noop
         guard state.saveState != .saved else {
-            return Update(state: state)
-        }
-        // If there is no entry, nothing to save
-        guard let entry = entry else {
             return Update(state: state)
         }
         
@@ -1662,18 +1676,10 @@ struct MemoEditorDetailModel: ModelProtocol {
         // Mark saving in-progress
         model.saveState = .saving
         
-        let fx: Fx<MemoEditorDetailAction> = environment.data.writeEntryPublisher(
-            entry
-        ).map({ _ in
-            MemoEditorDetailAction.succeedSave(entry)
-        }).catch({ error in
-            Just(
-                MemoEditorDetailAction.failSave(
-                    address: entry.address,
-                    message: error.localizedDescription
-                )
-            )
-        }).eraseToAnyPublisher()
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            .save(entry)
+        }
+        .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
     }
@@ -1682,10 +1688,10 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func succeedSave(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        entry: MemoEntry
+        address: Slashlink
     ) -> Update<MemoEditorDetailModel> {
         logger.debug(
-            "Saved entry: \(entry.address)"
+            "Saved entry: \(address)"
         )
         var model = state
         
@@ -1699,7 +1705,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         // 2022-02-09 Gordon Brander
         if
             model.saveState == .saving &&
-                model.stateMatches(entry: entry)
+                model.address == address
         {
             model.saveState = .saved
         }

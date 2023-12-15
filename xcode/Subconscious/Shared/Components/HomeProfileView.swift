@@ -128,6 +128,8 @@ enum HomeProfileAction: Hashable {
     case requestDeleteMemo(Slashlink?)
     case succeedDeleteMemo(Slashlink)
     case failDeleteMemo(String)
+    
+    case succeedSaveEntry(address: Slashlink, modified: Date)
 }
 
 // MARK: Cursors and tagging functions
@@ -285,6 +287,15 @@ struct HomeProfileModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 address: address
+            )
+        case .succeedSaveEntry(address: let address, modified: let modified):
+            return HomeProfileDetailStackCursor.update(
+                state: state,
+                action: .succeedSaveEntry(
+                    address: address,
+                    modified: modified
+                ),
+                environment: environment
             )
         }
     }

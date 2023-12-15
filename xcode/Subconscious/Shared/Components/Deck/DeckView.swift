@@ -104,6 +104,8 @@ enum DeckAction: Hashable {
     case cardPresented(CardModel)
     
     case refreshDeck
+    
+    case succeedSaveEntry(address: Slashlink, modified: Date)
 }
 
 extension AppAction {
@@ -120,6 +122,8 @@ extension DeckAction {
         switch action {
         case .requestDeckRoot:
             return .requestDeckRoot
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(address: address, modified: modified)
         default:
             return nil
         }
@@ -272,6 +276,15 @@ struct DeckModel: ModelProtocol {
         case .requestDeckRoot:
             return requestDeckRoot(
                 state: state,
+                environment: environment
+            )
+        case .succeedSaveEntry(address: let address, modified: let modified):
+            return DeckDetailStackCursor.update(
+                state: state,
+                action: .succeedSaveEntry(
+                    address: address,
+                    modified: modified
+                ),
                 environment: environment
             )
         }

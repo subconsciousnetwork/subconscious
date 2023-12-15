@@ -304,6 +304,9 @@ enum AppAction: Hashable {
     /// Deletion attempt succeeded
     case succeedDeleteMemo(Slashlink)
     
+    case save(MemoEntry)
+    case succeedSaveEntry(address: Slashlink, modified: Date)
+    case failSaveEntry(address: Slashlink, error: String)
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestProfileRoot
@@ -1206,6 +1209,20 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .succeedSaveEntry(address: let address, modified: let modified):
+            return Update(state: state)
+        case let .save(entry):
+            return save(
+                state: state,
+                environment: environment,
+                entry: entry
+            )
+        case .failSaveEntry(address: let address, error: let error):
+            logger.warning("""
+                Failed to save entry: \(address)
+                \(error)
+                """)
+            return Update(state: state)
         }
     }
     
@@ -2843,6 +2860,26 @@ struct AppModel: ModelProtocol {
             action: .succeedRecovery,
             environment: environment
         )
+    }
+    
+    /// Save snapshot of entry
+    static func save(
+        state: Self,
+        environment: AppEnvironment,
+        entry: MemoEntry
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = environment.data.writeEntryPublisher(
+            entry
+        ).map({ _ in
+            .succeedSaveEntry(address: entry.address, modified: entry.contents.modified)
+        }).recover({ error in
+            .failSaveEntry(
+                address: entry.address,
+                error: error.localizedDescription
+            )
+        }).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
 }
 
