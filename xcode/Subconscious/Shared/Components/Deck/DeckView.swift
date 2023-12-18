@@ -103,6 +103,7 @@ enum DeckAction: Hashable {
     case nextCard
     case cardPresented(CardModel)
     
+    case refreshEachCard
     case refreshDeck
     
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -278,13 +279,54 @@ struct DeckModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .refreshEachCard:
+            return refreshEachCard(state: state, environment: environment)
         case .succeedSaveEntry(address: let address, modified: let modified):
-            return DeckDetailStackCursor.update(
+            return update(
                 state: state,
-                action: .succeedSaveEntry(
-                    address: address,
-                    modified: modified
-                ),
+                actions: [
+                    .detailStack(.succeedSaveEntry(
+                        address: address,
+                        modified: modified
+                    )),
+                    .refreshEachCard
+                ],
+                environment: environment
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedMoveEntry(
+                            from: from,
+                            to: to
+                        )
+                    ),
+                    .refreshEachCard
+                ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedMergeEntry(parent: parent, child: child)
+                    ),
+                    .refreshEachCard
+                ],
+                environment: environment
+            )
+        case let .succeedUpdateAudience(receipt):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedUpdateAudience(receipt)
+                    ),
+                    .refreshEachCard
+                ],
                 environment: environment
             )
         }
@@ -349,6 +391,42 @@ struct DeckModel: ModelProtocol {
                 action: .setDeck([]),
                 environment: environment
             ).mergeFx(fx)
+        }
+        
+        func refreshEachCard(
+            state: Self,
+            environment: Environment
+        ) -> Update<Self> {
+            let deck = state.deck
+            
+            let fx: Fx<DeckAction> = Future.detached {
+                var updated: [CardModel] = []
+                for card in deck {
+                    guard let address = card.entry?.address,
+                          let did = card.entry?.did else {
+                        continue
+                    }
+                    
+                    guard let entry = try environment.database.readEntry(
+                        for: Slashlink(
+                            peer: .did(did),
+                            slug: address.slug
+                        )
+                    ) else {
+                        continue
+                    }
+                    
+                    updated.append(card.update(entry: entry))
+                }
+                
+                return .setDeck(updated)
+            }
+            .recover({ error in
+                .setDeck([])
+            })
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
         }
         
         func topupDeck(state: Self, environment: Environment) -> Update<Self> {
