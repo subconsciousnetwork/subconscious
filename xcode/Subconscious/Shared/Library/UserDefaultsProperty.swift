@@ -19,7 +19,7 @@ import Foundation
 /// publisher that emits any time the wrapped value changes.
 @propertyWrapper struct UserDefaultsProperty<Value: Equatable> {
     /// Create a type-safe accessor for a UserDefaults key.
-    private struct UserDefaultsKey<Value: Equatable> {
+    private struct UserDefaultsKey {
         var key: String
         var `default`: Value
         var scope = UserDefaults.standard
@@ -36,7 +36,7 @@ import Foundation
 
     /// UserDefaults key
     let key: String
-    private var store: UserDefaultsKey<Value>
+    private var store: UserDefaultsKey
     private var subject: CurrentValueSubject<Value, Never>
 
     init(
