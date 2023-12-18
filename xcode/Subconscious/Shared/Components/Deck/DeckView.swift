@@ -107,6 +107,9 @@ enum DeckAction: Hashable {
     case refreshDeck
     
     case succeedSaveEntry(address: Slashlink, modified: Date)
+    case succeedMergeEntry(_ parent: Slashlink, _ child: Slashlink)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedUpdateAudience(MoveReceipt)
 }
 
 extension AppAction {
@@ -125,6 +128,12 @@ extension DeckAction {
             return .requestDeckRoot
         case let .succeedSaveEntry(address, modified):
             return .succeedSaveEntry(address: address, modified: modified)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent, child)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
         default:
             return nil
         }

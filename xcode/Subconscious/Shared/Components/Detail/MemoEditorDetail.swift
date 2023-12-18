@@ -297,6 +297,12 @@ extension AppAction {
         switch action {
         case let .save(entry):
             return .save(entry)
+        case let .mergeEntry(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .moveEntry(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .updateAudience(address, audience):
+            return .updateAudience(address: address, audience: audience)
         default:
             return nil
         }
@@ -390,7 +396,8 @@ enum MemoEditorDetailAction: Hashable {
     case resetDetail
 
     // Change audience
-    case updateAudience(_ audience: Audience)
+    case requestUpdateAudience(_ audience: Audience)
+    case updateAudience(address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     case failUpdateAudience(_ message: String)
 
@@ -593,8 +600,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
         switch action {
         case .selectRenameSuggestion(let suggestion):
             return .selectRenameSuggestion(suggestion)
-        case .requestUpdateAudience(let audience):
-            return .updateAudience(audience)
+        case let .requestUpdateAudience(audience):
+            return .requestUpdateAudience(audience)
         case .requestDelete(let address):
             return .requestDelete(address)
         default:
@@ -891,7 +898,20 @@ struct MemoEditorDetailModel: ModelProtocol {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .updateAudience(audience):
+        case let .requestUpdateAudience(audience):
+            guard let address = state.address else {
+                return Update(state: state)
+            }
+            
+            return update(
+                state: state,
+                action: .updateAudience(
+                    address: address,
+                    audience
+                ),
+                environment: environment
+            )
+        case let .updateAudience(_, audience):
             return updateAudience(
                 state: state,
                 environment: environment,
@@ -1520,15 +1540,6 @@ struct MemoEditorDetailModel: ModelProtocol {
 
         let to = from.withAudience(audience)
 
-        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryPublisher(
-            from: from,
-            to: to
-        ).map({ receipt in
-            MemoEditorDetailAction.succeedUpdateAudience(receipt)
-        }).catch({ error in
-            Just(MemoEditorDetailAction.failUpdateAudience(error.localizedDescription))
-        }).eraseToAnyPublisher()
-
         var model = state
         model.address = to
         
@@ -1536,7 +1547,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             state: model,
             action: .metaSheet(.requestUpdateAudience(audience)),
             environment: environment
-        ).mergeFx(fx)
+        )
     }
     
     static func succeedUpdateAudience(
@@ -1872,26 +1883,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         from: Slashlink,
         to: Slashlink
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryPublisher(
-            from: from,
-            to: to
-        )
-        .map({ _ in
-            MemoEditorDetailAction.succeedMoveEntry(from: from, to: to)
-        })
-        .catch({ error in
-            Just(
-                MemoEditorDetailAction.failMoveEntry(
-                    error.localizedDescription
-                )
-            )
-        })
-        .eraseToAnyPublisher()
-        return Update(
-            state: state,
-            fx: fx
-        )
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+        return Update(state: state)
+            .animation(.easeOutCubic(duration: Duration.keyboard))
     }
     
     /// Move success lifecycle handler.
@@ -1947,17 +1940,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         parent: Slashlink,
         child: Slashlink
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.mergeEntryPublisher(
-            parent: parent,
-            child: child
-        ).map({ _ in
-            MemoEditorDetailAction.succeedMergeEntry(parent: parent, child: child)
-        }).catch({ error in
-            Just(
-                MemoEditorDetailAction.failMergeEntry(error.localizedDescription)
-            )
-        }).eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        return Update(state: state)
     }
     
     /// Merge success lifecycle handler.

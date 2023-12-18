@@ -305,12 +305,18 @@ enum AppAction: Hashable {
     case succeedDeleteMemo(Slashlink)
     
     case save(MemoEntry)
+    case mergeEntry(parent: Slashlink, child: Slashlink)
+    case moveEntry(from: Slashlink, to: Slashlink)
+    case updateAudience(address: Slashlink, audience: Audience)
     
+    case succeedSaveEntry(address: Slashlink, modified: Date)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedSaveEntry(address: Slashlink, modified: Date)
-    case failSaveEntry(address: Slashlink, error: String)
     case succeedUpdateAudience(MoveReceipt)
+    case failSaveEntry(address: Slashlink, error: String)
+    case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
+    case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
+    case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
     
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
@@ -1228,9 +1234,48 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 entry: entry
             )
+        case let .moveEntry(from, to):
+            return moveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .mergeEntry(parent, child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case let .updateAudience(address, audience):
+            return updateAudience(
+                state: state,
+                environment: environment,
+                address: address,
+                audience: audience
+            )
         case .failSaveEntry(address: let address, error: let error):
             logger.warning("""
                 Failed to save entry: \(address)
+                \(error)
+                """)
+            return Update(state: state)
+        case .failMoveEntry(from: let from, to: let to, error: let error):
+            logger.warning("""
+                Failed to move entry: \(from) -> \(to)
+                \(error)
+                """)
+            return Update(state: state)
+        case .failMergeEntry(parent: let parent, child: let child, error: let error):
+            logger.warning("""
+                Failed to merge entries: \(child) -> \(parent)
+                \(error)
+                """)
+            return Update(state: state)
+        case .failUpdateAudience(address: let address, audience: let audience, error: let error):
+            logger.warning("""
+                Failed to update audience for entry: \(address) \(audience)
                 \(error)
                 """)
             return Update(state: state)
@@ -2891,6 +2936,86 @@ struct AppModel: ModelProtocol {
         }).eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
+    }
+    
+    /// Save snapshot of entry
+    static func mergeEntry(
+        state: Self,
+        environment: AppEnvironment,
+        parent: Slashlink,
+        child: Slashlink
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = environment.data.mergeEntryPublisher(
+            parent: parent,
+            child: child
+        ).map({ _ in
+            .succeedMergeEntry(parent: parent, child: child)
+        }).recover{ error in
+            .failMergeEntry(
+                parent: parent,
+                child: child,
+                error: error.localizedDescription
+            )
+        }.eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    /// Save snapshot of entry
+    static func moveEntry(
+        state: Self,
+        environment: AppEnvironment,
+        from: Slashlink,
+        to: Slashlink
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = environment.data.moveEntryPublisher(
+            from: from,
+            to: to
+        )
+        .map({ _ in
+            .succeedMoveEntry(from: from, to: to)
+        })
+        .recover{ error in
+            .failMoveEntry(
+                from: from,
+                to: to,
+                error: error.localizedDescription
+            )
+        }.eraseToAnyPublisher()
+        
+        return Update(
+            state: state,
+            fx: fx
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+    
+    /// Save snapshot of entry
+    static func updateAudience(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink,
+        audience: Audience
+    ) -> Update<Self> {
+        let from = address
+        let to = from.withAudience(audience)
+
+        let fx: Fx<AppAction> = environment.data.moveEntryPublisher(
+            from: from,
+            to: to
+        ).map({ receipt in
+            .succeedUpdateAudience(receipt)
+        }).recover{ error in
+            .failUpdateAudience(
+                address: address,
+                audience: audience,
+                error: error.localizedDescription
+            )
+        }.eraseToAnyPublisher()
+
+        return Update(
+            state: state,
+            fx: fx
+        )
     }
 }
 
