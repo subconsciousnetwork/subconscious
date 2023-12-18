@@ -26,11 +26,13 @@ struct AdvancedSettingsView: View {
     }
 }
 
-#Preview {
-    AdvancedSettingsView(
-        app: Store(
-            state: AppModel(),
-            environment: AppEnvironment()
+struct AdvancedSettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        AdvancedSettingsView(
+            app: Store(
+                state: AppModel(),
+                environment: AppEnvironment()
+            )
         )
-    )
+    }
 }
