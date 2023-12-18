@@ -903,14 +903,14 @@ struct MemoEditorDetailModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            return update(
-                state: state,
-                action: .updateAudience(
+            let fx: Fx<MemoEditorDetailAction> = Future.detached {
+                .updateAudience(
                     address: address,
                     audience
-                ),
-                environment: environment
-            )
+                )
+            }.eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
         case let .updateAudience(_, audience):
             return updateAudience(
                 state: state,
