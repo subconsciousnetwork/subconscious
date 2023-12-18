@@ -34,7 +34,8 @@ extension BlockEditor {
                 )
             )
         }
-        
+        // Is block editor enabled?
+        var isEnabled = false
         /// Is editor in loading state?
         var loadingState = LoadingState.loading
         /// When was the last time the editor issued a fetch from source of truth?
@@ -404,12 +405,20 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
+        var model = state
+        model.isEnabled = AppDefaults.standard.isBlockEditorEnabled
+        
+        guard model.isEnabled else {
+            logger.info("Block editor disabled. Skipping block editor startup.")
+            return Update(state: model)
+        }
         /// Poll and autosave until this store is destroyed.
         let pollFx: Fx<Action> = AppEnvironment
             .poll(every: Config.default.pollingInterval)
             .map({ _ in .autosave })
             .eraseToAnyPublisher()
-        return Update(state: state, fx: pollFx)
+
+        return Update(state: model, fx: pollFx)
     }
 
     static func ready(
@@ -424,6 +433,11 @@ extension BlockEditor.Model: ModelProtocol {
         description: MemoEditorDetailDescription,
         environment: Environment
     ) -> Update {
+        guard state.isEnabled else {
+            logger.info("Editor containing view appeared, but block editor is disabled. Doing nothing.")
+            return Update(state: state)
+        }
+
         return update(
             state: state,
             action: .loadEditor(
