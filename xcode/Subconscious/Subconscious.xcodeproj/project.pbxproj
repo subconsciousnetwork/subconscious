@@ -514,6 +514,7 @@
 		B8F164252AE1B4A300A05CE7 /* Tests_StoryUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F164242AE1B4A300A05CE7 /* Tests_StoryUser.swift */; };
 		B8F27EE42970CD8F00A33E78 /* Tests_Sphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */; };
 		B8F832E329B9292C00DFDFA8 /* Tests_SubtextAttributedStringRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F832E229B9292C00DFDFA8 /* Tests_SubtextAttributedStringRenderer.swift */; };
+		B8FB38B42B309096008A329C /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FB38B32B309096008A329C /* AdvancedSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -915,6 +916,7 @@
 		B8F164242AE1B4A300A05CE7 /* Tests_StoryUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_StoryUser.swift; sourceTree = "<group>"; };
 		B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Sphere.swift; sourceTree = "<group>"; };
 		B8F832E229B9292C00DFDFA8 /* Tests_SubtextAttributedStringRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SubtextAttributedStringRenderer.swift; sourceTree = "<group>"; };
+		B8FB38B32B309096008A329C /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1293,13 +1295,14 @@
 		B88B1CDC298DE65E0062CB7F /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				B8FB38B32B309096008A329C /* AdvancedSettingsView.swift */,
 				B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */,
 				B848FDA82991836900245115 /* DeveloperSettingsView.swift */,
 				B58FD6702A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift */,
 				B88B1CE6298EEC240062CB7F /* GatewayURLSettingsView.swift */,
 				B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */,
-				B88B1CDD298DE66E0062CB7F /* SettingsView.swift */,
 				B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */,
+				B88B1CDD298DE66E0062CB7F /* SettingsView.swift */,
 				B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */,
 			);
 			path = Settings;
@@ -2116,6 +2119,7 @@
 				B86DD56A2A9FF49500E1DEA5 /* BlockEditorRelatedModel.swift in Sources */,
 				B8B4251828FDE8AA0081B8D5 /* MemoData.swift in Sources */,
 				B5C918F02A67ADEF004C6CD5 /* SphereSettingsView.swift in Sources */,
+				B8FB38B42B309096008A329C /* AdvancedSettingsView.swift in Sources */,
 				B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */,
 				B8AB08D02A9D522D00998099 /* UIViewDivider.swift in Sources */,
 				B8E6AACF2B0D41F500A3A11B /* BlocksModel.swift in Sources */,
