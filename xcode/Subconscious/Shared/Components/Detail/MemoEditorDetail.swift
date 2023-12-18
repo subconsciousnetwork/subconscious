@@ -1864,16 +1864,19 @@ struct MemoEditorDetailModel: ModelProtocol {
         environment: AppEnvironment,
         suggestion: RenameSuggestion
     ) -> Update<MemoEditorDetailModel> {
-        update(
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            MemoEditorDetailAction.from(suggestion)
+        }
+        .eraseToAnyPublisher()
+        
+        return update(
             state: state,
             actions: [
                 // Forward intercepted action down to child
                 .metaSheet(.selectRenameSuggestion(suggestion)),
-                // Additionally, act on rename suggestion
-                MemoEditorDetailAction.from(suggestion)
             ],
             environment: environment
-        )
+        ).mergeFx(fx)
     }
 
     /// Move entry

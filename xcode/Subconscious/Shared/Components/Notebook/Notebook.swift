@@ -258,6 +258,12 @@ extension NotebookAction {
             return .requestNotebookRoot
         case let .succeedSaveEntry(address, modified):
             return .succeedSaveEntry(slug: address, modified: modified)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
         default:
             return nil
         }
