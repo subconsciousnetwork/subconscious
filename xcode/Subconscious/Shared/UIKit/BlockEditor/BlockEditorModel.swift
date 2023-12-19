@@ -742,13 +742,13 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<Action> = Future.detached {
             try await environment.data.readMemoBacklinks(address: address)
         }
-            .map { backlinks in
-                    .succeedFetchRelated(backlinks)
-            }
-            .recover { error in
-                    .failFetchRelated(error.localizedDescription)
-            }
-            .eraseToAnyPublisher()
+        .map({ backlinks in
+            Action.succeedFetchRelated(backlinks)
+        })
+        .recover({ error in
+            Action.failFetchRelated(error.localizedDescription)
+        })
+        .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
@@ -984,13 +984,13 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<BlockEditor.Action> = environment.data
             .writeEntryPublisher(snapshot)
             .map({
-                .succeedSave(snapshot)
+                Action.succeedSave(snapshot)
             })
             .recover({ error in
-                    .failSave(
-                        snapshot: snapshot,
-                        error: error.localizedDescription
-                    )
+                Action.failSave(
+                    snapshot: snapshot,
+                    error: error.localizedDescription
+                )
             })
             .eraseToAnyPublisher()
         
