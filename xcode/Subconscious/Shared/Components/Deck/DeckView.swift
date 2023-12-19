@@ -85,7 +85,7 @@ enum DeckAction: Hashable {
     case search(SearchAction)
     
     case appear
-    case setDeck([CardModel])
+    case setDeck(_ cards: [CardModel], _ startIndex: Int = 0)
     
     case cardPickedUp
     case cardReleased
@@ -261,8 +261,8 @@ struct DeckModel: ModelProtocol {
             return refreshDeck(state: state, environment: environment)
         case .topupDeck:
             return topupDeck(state: state, environment: environment)
-        case let .setDeck(deck):
-            return setDeck(state: state, deck: deck, environment: environment)
+        case let .setDeck(deck, startIndex):
+            return setDeck(state: state, environment: environment, deck: deck, startIndex: startIndex)
         case .cardPickedUp:
             return cardPickedUp(state: state)
         case .cardReleased:
@@ -428,7 +428,7 @@ struct DeckModel: ModelProtocol {
                     updated.append(card.update(entry: entry))
                 }
                 
-                return .setDeck(updated)
+                return .setDeck(updated, state.pointer)
             }
             .recover({ error in
                 .setDeck([])
@@ -461,11 +461,16 @@ struct DeckModel: ModelProtocol {
             return Update(state: state, fx: fx)
         }
 
-        func setDeck(state: Self, deck: [CardModel], environment: Environment) -> Update<Self> {
+        func setDeck(
+            state: Self,
+            environment: Environment,
+            deck: [CardModel],
+            startIndex: Int
+        ) -> Update<Self> {
             var model = state
             model.deck = deck
             model.seen = Set(deck.compactMap { card in card.entry })
-            model.pointer = 0
+            model.pointer = startIndex
             
             if let topCard = deck.first {
                 return update(

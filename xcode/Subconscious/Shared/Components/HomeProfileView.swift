@@ -130,6 +130,9 @@ enum HomeProfileAction: Hashable {
     case failDeleteMemo(String)
     
     case succeedSaveEntry(address: Slashlink, modified: Date)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedUpdateAudience(MoveReceipt)
 }
 
 // MARK: Cursors and tagging functions
@@ -168,6 +171,14 @@ extension HomeProfileAction {
             return .succeedDeleteMemo(address)
         case let .failDeleteMemo(error):
             return .failDeleteMemo(error)
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(address: address, modified: modified)
+        case let .succeedMergeEntry(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from: from, to: to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
         default:
             return nil
         }
@@ -288,13 +299,40 @@ struct HomeProfileModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .succeedSaveEntry(address: let address, modified: let modified):
-            return HomeProfileDetailStackCursor.update(
+        case let .succeedUpdateAudience(receipt):
+            return update(
                 state: state,
-                action: .succeedSaveEntry(
-                    address: address,
-                    modified: modified
-                ),
+                actions: [
+                    .detailStack(.succeedUpdateAudience(receipt)),
+                    .appear
+                ],
+                environment: environment
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMoveEntry(from: from, to: to)),
+                    .appear
+                ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMergeEntry(parent: parent, child: child)),
+                    .appear
+                ],
+                environment: environment
+            )
+        case let .succeedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedSaveEntry(address: address, modified: modified)),
+                    .appear
+                ],
                 environment: environment
             )
         }
