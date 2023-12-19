@@ -29,7 +29,10 @@ actor TranscludeService {
         self.userProfile = userProfile
     }
     
-    func resolveAddresses(base: Peer?, link: Slashlink) async throws -> Transclusion {
+    func resolveAddresses(
+        base: Peer?,
+        link: Slashlink
+    ) async throws -> Transclusion {
         let address = base.map { base in
             link.rebaseIfNeeded(peer: base)
         }
@@ -44,10 +47,10 @@ actor TranscludeService {
         )
     }
     
-    func fetchTranscludePreviews(
-        slashlinks: Set<Slashlink>,
+    func fetchTranscludes(
+        slashlinks: [Slashlink],
         owner: Peer?
-    ) async throws -> [Slashlink: EntryStub] {
+    ) async -> [Slashlink: EntryStub] {
         // Cheap early exit if no slashlinks are requested
         guard slashlinks.count > 0 else {
             return [:]
@@ -56,18 +59,29 @@ actor TranscludeService {
         var dict: [Slashlink: EntryStub] = [:]
         
         for link in slashlinks {
-            let transclusion = try await resolveAddresses(
+            let transclusion = try? await resolveAddresses(
                 base: owner,
                 link: link
             )
+
+            guard let transclusion = transclusion else {
+                continue
+            }
             
-            let address = Slashlink(peer: .did(transclusion.authorDid), slug: link.slug)
-            guard let entry = try database.readEntry(for: address) else {
+            let address = Slashlink(
+                peer: .did(transclusion.authorDid),
+                slug: link.slug
+            )
+
+            guard let entry = try? database.readEntry(for: address) else {
                 continue
             }
             
             if entry.address.isLocal {
-                dict.updateValue(entry, forKey: Slashlink(slug: entry.address.slug))
+                dict.updateValue(
+                    entry,
+                    forKey: Slashlink(slug: entry.address.slug)
+                )
                 continue
             }
             
@@ -77,22 +91,22 @@ actor TranscludeService {
         return dict
     }
 
-    func fetchTranscludePreviews(
+    func fetchTranscludes(
         slashlinks: [Slashlink],
         owner: UserProfile
-    ) async throws -> [Slashlink: EntryStub] {
-        try await fetchTranscludePreviews(
-            slashlinks: Set(slashlinks),
+    ) async -> [Slashlink: EntryStub] {
+        await fetchTranscludes(
+            slashlinks: slashlinks,
             owner: owner.address.peer
         )
     }
 
-    nonisolated func fetchTranscludePreviewsPublisher(
+    nonisolated func fetchTranscludesPublisher(
         slashlinks: [Slashlink],
         owner: UserProfile
-    ) -> AnyPublisher<[Slashlink: EntryStub], Error> {
+    ) -> AnyPublisher<[Slashlink: EntryStub], Never> {
         Future.detached(priority: .utility) {
-            try await self.fetchTranscludePreviews(
+            await self.fetchTranscludes(
                 slashlinks: slashlinks,
                 owner: owner
             )

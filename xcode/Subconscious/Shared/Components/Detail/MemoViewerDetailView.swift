@@ -518,14 +518,13 @@ struct MemoViewerDetailModel: ModelProtocol {
         let links = state.dom.slashlinks
             .compactMap { value in value.toSlashlink() }
         
-        let fx: Fx<MemoViewerDetailAction> =
-            environment.transclude
-            .fetchTranscludePreviewsPublisher(slashlinks: links, owner: owner)
+        let fx: Fx<MemoViewerDetailAction> = environment.transclude
+            .fetchTranscludesPublisher(
+                slashlinks: links,
+                owner: owner
+            )
             .map { entries in
                 MemoViewerDetailAction.succeedFetchTranscludePreviews(entries)
-            }
-            .recover { error in
-                MemoViewerDetailAction.failFetchTranscludePreviews(error.localizedDescription)
             }
             .eraseToAnyPublisher()
         

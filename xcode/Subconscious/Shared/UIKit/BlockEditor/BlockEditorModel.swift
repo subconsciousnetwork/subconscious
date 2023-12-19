@@ -113,7 +113,6 @@ extension BlockEditor {
         case failFetchRelated(_ error: String)
         case refreshTranscludes
         case succeedRefreshTranscludes([EntryStub])
-        case failRefreshTranscludes(error: String)
         case fetchTranscludesFor(id: UUID, slashlinks: [Slashlink])
         case succeedFetchTranscludesFor(
             id: UUID,
@@ -331,12 +330,6 @@ extension BlockEditor.Model: ModelProtocol {
             return succeedRefreshTranscludes(
                 state: state,
                 transcludes: transcludes,
-                environment: environment
-            )
-        case let .failRefreshTranscludes(error):
-            return failRefreshTranscludes(
-                state: state,
-                error: error,
                 environment: environment
             )
         case let .fetchTranscludesFor(id, slashlinks):
@@ -782,32 +775,24 @@ extension BlockEditor.Model: ModelProtocol {
         let owner = state.ownerSphere.map({ did in Peer.did(did) })
         
         // Fetch only the slashlinks that are not in the cache
-        let slashlinksToFetch = Set(
-            state.blocks.blocks.flatMap({ block in
-                block.dom?.parsedSlashlinks ?? []
-            })
-            .filter({ slashlink in
-                state.transcludes[slashlink] == nil
-            })
-        )
+        let slashlinksToFetch = state.blocks.blocks.flatMap({ block in
+            block.dom?.parsedSlashlinks ?? []
+        })
+        .filter({ slashlink in
+            state.transcludes[slashlink] == nil
+        })
+        .uniquing()
         
         logger.info("Fetching transcludes for \(slashlinksToFetch)")
         
         let fx: Fx<Action> = Future.detached {
-            do {
-                let transcludes = try await environment.transclude
-                    .fetchTranscludePreviews(
-                        slashlinks: slashlinksToFetch,
-                        owner: owner
-                    )
-                return Action.succeedRefreshTranscludes(
-                    Array(transcludes.values)
-                )
-            } catch {
-                return Action.failRefreshTranscludes(
-                    error: error.localizedDescription
-                )
-            }
+            let transcludes = await environment.transclude.fetchTranscludes(
+                slashlinks: slashlinksToFetch,
+                owner: owner
+            )
+            return Action.succeedRefreshTranscludes(
+                Array(transcludes.values)
+            )
         }
         .eraseToAnyPublisher()
         
@@ -845,15 +830,6 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func failRefreshTranscludes(
-        state: Self,
-        error: String,
-        environment: Environment
-    ) -> Update {
-        logger.warning("Failed to refresh transcludes. Error: \(error)")
-        return Update(state: state)
-    }
-    
     static func fetchTranscludesFor(
         state: Self,
         id: UUID,
@@ -863,33 +839,26 @@ extension BlockEditor.Model: ModelProtocol {
         let owner = state.ownerSphere.map({ did in Peer.did(did) })
         
         // Fetch only the slashlinks that are not in the cache
-        let slashlinksToFetch = Set(
-            slashlinks.filter({ slashlink in
+        let slashlinksToFetch = slashlinks
+            .filter({ slashlink in
                 state.transcludes[slashlink] == nil
             })
-        )
+            .uniquing()
         
         logger.info("block#\(id) fetching transcludes for \(slashlinksToFetch)")
         
         let fx: Fx<Action> = Future.detached {
-            do {
-                let transcludes = try await environment.transclude
-                    .fetchTranscludePreviews(
-                        slashlinks: slashlinksToFetch,
-                        owner: owner
-                    )
-                return Action.succeedFetchTranscludesFor(
-                    id: id,
-                    fetched: Array(transcludes.values)
+            let transcludes = await environment.transclude
+                .fetchTranscludes(
+                    slashlinks: slashlinksToFetch,
+                    owner: owner
                 )
-            } catch {
-                return Action.failFetchTranscludesFor(
-                    id: id,
-                    error: error.localizedDescription
-                )
-            }
+            return Action.succeedFetchTranscludesFor(
+                id: id,
+                fetched: Array(transcludes.values)
+            )
         }
-            .eraseToAnyPublisher()
+        .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
