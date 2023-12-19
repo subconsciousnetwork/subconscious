@@ -34,11 +34,14 @@ extension BlockEditor {
                 )
             )
         }
-        
+        // Is block editor enabled?
+        var isEnabled = false
         /// Is editor in loading state?
         var loadingState = LoadingState.loading
         /// When was the last time the editor issued a fetch from source of truth?
         var lastLoadStarted: Date? = nil
+        /// Is polling? We use this to drive autosaves.
+        var isPolling = false
         
         /// Is editor saved?
         private(set) var saveState = SaveState.saved
@@ -76,14 +79,16 @@ extension BlockEditor {
 extension BlockEditor {
     // MARK: Actions
     enum Action {
-        /// Sent once when store is created
-        case start
         /// View is ready for updates.
         /// Sent during viewDidLoad after performing first view update for
         /// initial state and subscribing to changes.
         case ready
         /// Sent from SwiftUI land when the wrapping SwiftUI view appears.
         case appear(MemoEditorDetailDescription)
+        /// Start polling if needed
+        case startPolling
+        /// Perform a single polling step, optionally requesting another step
+        case poll
         case setOurSphere(Did?)
         /// Get owner Did from peer
         case resolveOwnerSphere
@@ -237,11 +242,6 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         switch action {
-        case .start:
-            return start(
-                state: state,
-                environment: environment
-            )
         case .ready:
             return ready(
                 state: state,
@@ -251,6 +251,16 @@ extension BlockEditor.Model: ModelProtocol {
             return appear(
                 state: state,
                 description: description,
+                environment: environment
+            )
+        case .startPolling:
+            return startPolling(
+                state: state,
+                environment: environment
+            )
+        case .poll:
+            return poll(
+                state: state,
                 environment: environment
             )
         case let .setOurSphere(did):
@@ -500,18 +510,6 @@ extension BlockEditor.Model: ModelProtocol {
         }
     }
     
-    static func start(
-        state: Self,
-        environment: Environment
-    ) -> Update {
-        /// Poll and autosave until this store is destroyed.
-        let pollFx: Fx<Action> = AppEnvironment
-            .poll(every: Config.default.pollingInterval)
-            .map({ _ in .autosave })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: pollFx)
-    }
-    
     static func ready(
         state: Self,
         environment: Environment
@@ -524,6 +522,14 @@ extension BlockEditor.Model: ModelProtocol {
         description: MemoEditorDetailDescription,
         environment: Environment
     ) -> Update {
+        var model = state
+        model.isEnabled = AppDefaults.standard.isBlockEditorEnabled
+        
+        guard model.isEnabled else {
+            logger.info("Block editor is disabled. Skipping appear.")
+            return Update(state: state)
+        }
+        
         let fetchOurSphere: Fx<Action> = Future.detached {
             Action.setOurSphere(try? await environment.noosphere.identity())
         }
@@ -537,13 +543,59 @@ extension BlockEditor.Model: ModelProtocol {
         )
         .eraseToAnyPublisher()
 
+        let startPolling: Fx<Action> = Just(
+            Action.startPolling
+        )
+        .eraseToAnyPublisher()
+
         let fx: Fx<Action> = fetchOurSphere
-            .merge(with: loadEditor)
+            .merge(with: loadEditor, startPolling)
             .eraseToAnyPublisher()
 
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
     
+    static func startPolling(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        guard state.isEnabled else {
+            logger.info("Skipping polling start. Block editor is disabled.")
+            return Update(state: state)
+        }
+        guard !state.isPolling else {
+            logger.info("Skipping polling start. Already polling.")
+            return Update(state: state)
+        }
+        var model = state
+        model.isPolling = true
+
+        let pollFx: Fx<Action> = Just(Action.poll).delay(
+            for: .seconds(Config.default.pollingInterval),
+            scheduler: DispatchQueue.main
+        ).eraseToAnyPublisher()
+
+        return Update(state: state, fx: pollFx)
+    }
+    
+    static func poll(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let pollFx: Fx<Action> = Just(Action.poll).delay(
+            for: .seconds(Config.default.pollingInterval),
+            scheduler: DispatchQueue.main
+        ).eraseToAnyPublisher()
+
+        let autosaveFx: Fx<Action> = Just(Action.autosave)
+            .eraseToAnyPublisher()
+
+        return Update(
+            state: state,
+            fx: pollFx.merge(with: autosaveFx).eraseToAnyPublisher()
+        )
+    }
+
     static func setOurSphere(
         state: Self,
         did: Did?,
