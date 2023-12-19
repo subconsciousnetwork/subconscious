@@ -95,9 +95,9 @@ final class Tests_TranscludeService: XCTestCase {
         
         let profile = UserProfile.dummyData(category: .ourself)
         
-        let transcludes = try await environment
+        let transcludes = await environment
             .transclude
-            .fetchTranscludePreviews(
+            .fetchTranscludes(
                 slashlinks: [address, address2],
                 owner: profile
             )
