@@ -66,29 +66,17 @@ struct MemoEditorDetailView: View {
     private func onLink(
         url: URL
     ) -> Bool {
-        guard let link = url.toSubSlashlinkURL(),
-              let did = app.state.sphereIdentity else {
+        guard let link = url.toSubSlashlinkLink()?.toEntryLink() else {
             return true
         }
-        
-        notify(
-            .requestFindLinkDetail(
-                context: Peer.did(did),
-                link: link
-            )
-        )
+        notify(.requestFindLinkDetail(link))
         return false
     }
     
     var body: some View {
         VStack {
             if app.state.isBlockEditorEnabled {
-                BlockEditor.Representable(
-                    store: blockEditorStore
-                )
-                .frame(
-                    minHeight: UIFont.appTextMono.lineHeight * 8
-                )
+                blockEditor()
             } else {
                 plainEditor()
             }
@@ -189,6 +177,21 @@ struct MemoEditorDetailView: View {
         }
     }
     
+    private func blockEditor() -> some View {
+        BlockEditor.Representable(
+            store: blockEditorStore
+        )
+        .frame(
+            minHeight: UIFont.appTextMono.lineHeight * 8
+        )
+        .onReceive(
+            blockEditorStore.actions.compactMap(
+                MemoEditorDetailNotification.from
+            ),
+            perform: notify
+        )
+    }
+
     /// Constructs a plain text editor for the view
     private func plainEditor() -> some View {
         GeometryReader { geometry in
@@ -217,23 +220,8 @@ struct MemoEditorDetailView: View {
                             .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
                             backlinks: store.state.backlinks,
-                            onRequestDetail: { link in
-                                notify(
-                                    .requestDetail(
-                                        MemoDetailDescription.from(
-                                            address: link.address,
-                                            fallback: link.title
-                                        )
-                                    )
-                                )
-                            },
-                            onLink: { context, link in
-                                notify(
-                                    .requestFindLinkDetail(
-                                        context: context,
-                                        link: link
-                                    )
-                                )
+                            onLink: { link in
+                                notify(.requestFindLinkDetail(link))
                             }
                         )
                     }
@@ -291,10 +279,7 @@ enum MemoEditorDetailNotification: Hashable {
     /// Request specific detail
     case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
-    case requestFindLinkDetail(
-        context: Peer,
-        link: SubSlashlinkLink
-    )
+    case requestFindLinkDetail(EntryLink)
     case requestDelete(Slashlink?)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
@@ -318,6 +303,17 @@ extension MemoEditorDetailNotification {
             return .succeedUpdateAudience(receipt)
         case .forwardRequestDelete(let address):
             return .requestDelete(address)
+        default:
+            return nil
+        }
+    }
+}
+
+extension MemoEditorDetailNotification {
+    static func from(_ action: BlockEditor.Action) -> Self? {
+        switch action {
+        case let .requestFindLinkDetail(link):
+            return .requestFindLinkDetail(link)
         default:
             return nil
         }

@@ -38,7 +38,7 @@ final class Tests_NoosphereService: XCTestCase {
         
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
         await noosphere.resetSphere(receipt.identity)
-
+        
         let bobReceipt = try await noosphere.createSphere(ownerKeyName: "bob")
         let aliceReceipt = try await noosphere.createSphere(ownerKeyName: "alice")
         
@@ -46,7 +46,7 @@ final class Tests_NoosphereService: XCTestCase {
         let bobDid = Did(bobReceipt.identity)!
         let alice = Petname("alice")!
         let aliceDid = Did(aliceReceipt.identity)!
-
+        
         // Put bob in alice's address book
         await noosphere.resetSphere(aliceReceipt.identity)
         try await noosphere.setPetname(did: bobDid, petname: bob)
@@ -68,7 +68,7 @@ final class Tests_NoosphereService: XCTestCase {
         let destinationSphere = try await noosphere
             .traverse(petname: alice)
             .traverse(petname: bob)
-
+        
         // Clear out Noosphere and Sphere instance
         await noosphere.reset()
         
@@ -81,16 +81,16 @@ final class Tests_NoosphereService: XCTestCase {
         
         let globalStorageURL = try Self.createTmpDir("\(base)/noosphere")
         let sphereStorageURL = try Self.createTmpDir("\(base)/sphere")
-
+        
         let noosphere = NoosphereService(
             globalStorageURL: globalStorageURL,
             sphereStorageURL: sphereStorageURL,
             errorLoggingService: MockErrorLoggingService()
         )
-
+        
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
         await noosphere.resetSphere(receipt.identity)
-
+        
         let versionA = try await noosphere.version()
         
         let body = try "Test content".toData().unwrap()
@@ -102,7 +102,7 @@ final class Tests_NoosphereService: XCTestCase {
         )
         let versionB = try await noosphere.save()
         XCTAssertNotEqual(versionA, versionB)
-
+        
         try await noosphere.write(
             slug: Slug("b")!,
             contentType: "text/subtext",
@@ -117,11 +117,78 @@ final class Tests_NoosphereService: XCTestCase {
         )
         let versionC = try await noosphere.save()
         XCTAssertNotEqual(versionB, versionC)
-
+        
         // Clear out Noosphere and Sphere instance
         await noosphere.reset()
-
+        
         let versionZ = try await noosphere.version()
         XCTAssertEqual(versionC, versionZ)
     }
+    
+    func testFindBestLinkAddressNoContext() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
+        
+        try await data.noosphere.write(
+            slug: Slug(
+                "test"
+            )!,
+            contentType: "text/subtext",
+            additionalHeaders: [],
+            body: (
+                "hello"
+            ).toData(
+                encoding: .utf8
+            )!
+        )
+        try await data.noosphere.save()
+        
+        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
+        let link = SubSlashlinkLink(slashlink: slashlink)
+        
+        let address = try await data.noosphere.findBestAddressForLink(
+            slashlink
+        )
+        
+        XCTAssertEqual(address.slug, slashlink.slug)
+        XCTAssertEqual(address.peer, slashlink.peer)
+    }
+    
+    func testFindBestLinkAddressWithContext() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
+        
+        // Follow a user and attempt to navigate to a link based on them
+        
+        try await data.noosphere.write(
+            slug: Slug(
+                "test"
+            )!,
+            contentType: "text/subtext",
+            additionalHeaders: [],
+            body: (
+                "hello"
+            ).toData(
+                encoding: .utf8
+            )!
+        )
+        try await data.noosphere.save()
+        
+        let friend = Did.dummyData()
+        let friendName = Petname("friend")!
+        try await data.addressBook.followUser(did: friend, petname: friendName)
+        
+        let slashlink = Slashlink(slug: Slug("hello")!)
+        
+        let address = try await data.noosphere.findBestAddressForLink(
+            slashlink
+        )
+       
+        XCTAssertEqual(address, slashlink)
+    }
+
 }

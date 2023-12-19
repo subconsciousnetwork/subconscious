@@ -13,7 +13,22 @@ extension BlockEditor {
         case upButtonPressed
         case downButtonPressed
         case dismissKeyboardButtonPressed
-        case formatMenu(BlockFormatMenuAction)
+        case boldButtonPressed
+        case italicButtonPressed
+        case codeButtonPressed
+    }
+}
+
+extension BlockEditor.BlockToolbarAction {
+    static func from(_ action: BlockEditor.BlockFormatMenuAction) -> Self {
+        switch action {
+        case .boldButtonPressed:
+            return .boldButtonPressed
+        case .italicButtonPressed:
+            return .italicButtonPressed
+        case .codeButtonPressed:
+            return .codeButtonPressed
+        }
     }
 }
 
@@ -43,7 +58,7 @@ extension UIToolbar {
         
         let formatMenu = UIMenu.blockFormatMenu(
             send: { action in
-                send(.formatMenu(action))
+                send(BlockEditor.BlockToolbarAction.from(action))
             }
         )
 

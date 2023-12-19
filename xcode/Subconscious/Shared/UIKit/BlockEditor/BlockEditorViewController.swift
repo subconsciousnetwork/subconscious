@@ -46,6 +46,13 @@ extension BlockEditor {
         
         let store: Store<Model>
 
+        /// Address to send actions to.
+        /// This gets assigned a closure during construction with a weak-bound
+        /// self, making it cycle-free.
+        private lazy var send = { [weak self] (action: Action) -> Void in
+            self?.store.send(action)
+        }
+
         /// Cancellable for store change publisher.
         /// Subscribed in `viewDidLoad`.
         private var cancelStoreChanges: AnyCancellable?
@@ -187,18 +194,14 @@ extension BlockEditor {
             }
         }
 
-        private func send(_ action: TextBlockAction) {
-            self.store.send(.from(action))
-        }
-
         /// Process a change message and perform related actions on controller.
         private func update(_ change: BlockEditor.Change) {
             Self.logger.log("Change: \(String(describing: change))")
             switch change {
             case .reloadEditor:
                 return reloadEditor()
-            case let .reconfigureCollectionItem(indexPath):
-                return reconfigureCollectionItem(indexPath)
+            case let .reconfigureCollectionItems(indexPaths):
+                return reconfigureCollectionItems(indexPaths)
             case let .moveBlock(at, to):
                 return moveBlock(at: at, to: to)
             case let .splitBlock(reconfigure, insert, requestEditing):
@@ -222,11 +225,11 @@ extension BlockEditor {
             }
         }
 
-        private func reconfigureCollectionItem(
-            _ indexPath: IndexPath
+        private func reconfigureCollectionItems(
+            _ indexPaths: [IndexPath]
         ) {
             UIView.performWithoutAnimation {
-                self.collectionView.reconfigureItems(at: [indexPath])
+                self.collectionView.reconfigureItems(at: indexPaths)
             }
         }
 
@@ -381,9 +384,10 @@ extension BlockEditor {
                 withReuseIdentifier: TextBlockCell.identifier,
                 for: indexPath
             ) as! TextBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -397,9 +401,10 @@ extension BlockEditor {
                 withReuseIdentifier: HeadingBlockCell.identifier,
                 for: indexPath
             ) as! HeadingBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(state)
             return cell
         }
@@ -413,9 +418,10 @@ extension BlockEditor {
                 withReuseIdentifier: QuoteBlockCell.identifier,
                 for: indexPath
             ) as! QuoteBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -429,9 +435,10 @@ extension BlockEditor {
                 withReuseIdentifier: ListBlockCell.identifier,
                 for: indexPath
             ) as! ListBlockCell
-            cell.send = { [weak self] action in
-                self?.send(action)
-            }
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             cell.update(parentController: self, state: state)
             return cell
         }
@@ -446,6 +453,10 @@ extension BlockEditor {
             ) as! RelatedCell
             let state = store.state.appendix
             cell.update(parentController: self, state: state)
+            cell.send = Address.forward(
+                send: send,
+                tag: BlockEditor.Action.from
+            )
             return cell
         }
     }
@@ -454,39 +465,45 @@ extension BlockEditor {
 extension BlockEditor.Action {
     static func from(_ action: BlockEditor.TextBlockAction) -> Self {
         switch action {
-        case .inlineFormatting(let blockInlineFormattingAction):
-            switch blockInlineFormattingAction {
-            case let .boldButtonPressed(id, _, selection):
-                return .insertBold(id: id, selection: selection)
-            case let .italicButtonPressed(id, _, selection):
-                return .insertItalic(id: id, selection: selection)
-            case let .codeButtonPressed(id, _, selection):
-                return .insertCode(id: id, selection: selection)
-            }
-        case .textEditing(let blockTextEditingAction):
-            switch blockTextEditingAction {
-            case let .requestMergeUp(id):
-                return .mergeBlockUp(id: id)
-            case let .requestSplit(id, selection, _):
-                return .splitBlock(id: id, selection: selection)
-            case let .didChange(id, text, selection):
-                return .textDidChange(id: id, text: text, selection: selection)
-            case let .didChangeSelection(id, selection):
-                return .didChangeSelection(id: id, selection: selection)
-            case let .didBeginEditing(id):
-                return .editing(id: id)
-            case let .didEndEditing(id):
-                return .blur(id: id)
-            }
-        case .controls(let blockControlsAction):
-            switch blockControlsAction {
-            case let .upButtonPressed(id):
-                return .moveBlockUp(id: id)
-            case let .downButtonPressed(id):
-                return .moveBlockDown(id: id)
-            case let .dismissKeyboardButtonPressed(id):
-                return .renderBlur(id: id)
-            }
+        case let .boldButtonPressed(id, _, selection):
+            return .insertBold(id: id, selection: selection)
+        case let .italicButtonPressed(id, _, selection):
+            return .insertItalic(id: id, selection: selection)
+        case let .codeButtonPressed(id, _, selection):
+            return .insertCode(id: id, selection: selection)
+        case let .requestMergeUp(id):
+            return .mergeBlockUp(id: id)
+        case let .requestSplit(id, selection, _):
+            return .splitBlock(id: id, selection: selection)
+        case let .didChange(id, dom, selection):
+            return .textDidChange(id: id, dom: dom, selection: selection)
+        case let .didChangeSelection(id, selection):
+            return .didChangeSelection(id: id, selection: selection)
+        case let .didBeginEditing(id):
+            return .editing(id: id)
+        case let .didEndEditing(id):
+            return .blur(id: id)
+        case let .upButtonPressed(id):
+            return .moveBlockUp(id: id)
+        case let .downButtonPressed(id):
+            return .moveBlockDown(id: id)
+        case let .dismissKeyboardButtonPressed(id):
+            return .renderBlur(id: id)
+        case .activateLink(let url):
+            return .activateLink(url)
+        case let .requestLink(link):
+            return .requestFindLinkDetail(link)
+        }
+    }
+}
+
+extension BlockEditor.Action {
+    static func from(_ action: BlockEditor.RelatedAction) -> Self {
+        switch action {
+        case .activateLink(let url):
+            return .activateLink(url)
+        case let .requestLink(link):
+            return .requestFindLinkDetail(link)
         }
     }
 }

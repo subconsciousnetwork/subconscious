@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import ObservableStore
 
 extension BlockEditor {
     class QuoteBlockCell:
@@ -173,15 +174,12 @@ extension BlockEditor {
             transcludeListView.update(
                 parentController: parentController,
                 entries: state.transcludes,
-                onViewTransclude: { _ in },
-                onTranscludeLink: { _, _ in }
+                send: Address.forward(send: send, tag: TextBlockAction.from)
             )
-            if textView.text != state.text {
-                textView.text = state.text
-            }
-            if textView.selectedRange != state.selection {
-                textView.selectedRange = state.selection
-            }
+            textView.setText(
+                state.dom.description,
+                selectedRange: state.selection
+            )
             textView.setFirstResponder(state.isEditing)
             // Set editability of textview
             textView.setModifiable(!state.isBlockSelectMode)
@@ -199,7 +197,7 @@ struct BlockEditorQuoteBlockCell_Previews: PreviewProvider {
             view.update(
                 parentController: controller,
                 state: BlockEditor.TextBlockModel(
-                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
                     transcludes: [
                         EntryStub(
                             did: Did("did:key:abc123")!,

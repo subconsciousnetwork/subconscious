@@ -10,11 +10,14 @@ import UIKit
 enum SubtextTextEditorAction: Hashable {
     case requestSplit(text: String, selection: NSRange)
     case requestMergeUp
-    case textDidChange(text: String, selection: NSRange)
+    case textDidChange(dom: Subtext, selection: NSRange)
     case selectionDidChange(selection: NSRange)
     case didBeginEditing
     case didEndEditing
     
+    /// Link tap in linked text
+    case activateLink(URL)
+
     case upButtonPressed
     case downButtonPressed
     case boldButtonPressed(text: String, selection: NSRange)
@@ -66,15 +69,12 @@ class SubtextTextEditorView: UIView.SubtextTextView {
             return .downButtonPressed
         case .dismissKeyboardButtonPressed:
             return .dismissKeyboardButtonPressed
-        case .formatMenu(let formatMenuAction):
-            switch formatMenuAction {
-            case .boldButtonPressed:
-                return .boldButtonPressed(text: text, selection: selectedRange)
-            case .italicButtonPressed:
-                return .italicButtonPressed(text: text, selection: selectedRange)
-            case .codeButtonPressed:
-                return .codeButtonPressed(text: text, selection: selectedRange)
-            }
+        case .boldButtonPressed:
+            return .boldButtonPressed(text: text, selection: selectedRange)
+        case .italicButtonPressed:
+            return .italicButtonPressed(text: text, selection: selectedRange)
+        case .codeButtonPressed:
+            return .codeButtonPressed(text: text, selection: selectedRange)
         }
     }
 }
@@ -108,7 +108,7 @@ extension SubtextTextEditorView: UITextViewDelegate {
             self.invalidateIntrinsicContentSize()
         }
         self.send(
-            .textDidChange(text: text, selection: selectedRange)
+            .textDidChange(dom: dom, selection: selectedRange)
         )
     }
     
@@ -126,5 +126,16 @@ extension SubtextTextEditorView: UITextViewDelegate {
     
     func textViewDidEndEditing(_ textView: UITextView) {
         self.send(.didEndEditing)
+    }
+    
+    /// Handle link taps
+    func textView(
+        _ textView: UITextView,
+        shouldInteractWith url: URL,
+        in characterRange: NSRange,
+        interaction: UITextItemInteraction
+    ) -> Bool {
+        self.send(.activateLink(url))
+        return false
     }
 }

@@ -19,6 +19,7 @@ extension UIView {
         
         var id = UUID()
         var renderer = SubtextAttributedStringRenderer()
+        private(set) var dom = Subtext.empty
 
         private let defaultTextContainerInset = UIEdgeInsets(
             top: AppTheme.unit2,
@@ -68,10 +69,25 @@ extension UIView {
           range: NSRange,
           changeInLength: Int
         ) {
-            renderer.renderAttributesOf(textStorage)
+            self.dom = renderer.renderAttributesOf(textStorage)
             Self.logger.debug(
                 "SubtextTextView#\(self.id) Rendered Subtext attributes"
             )
+        }
+    }
+}
+
+extension UITextView {
+    /// Set text and selection on textview
+    func setText(
+        _ text: String,
+        selectedRange: NSRange
+    ) {
+        if self.text != text {
+            self.text = text
+        }
+        if self.selectedRange != selectedRange {
+            self.selectedRange = selectedRange
         }
     }
 }
