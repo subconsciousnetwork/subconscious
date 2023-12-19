@@ -14,3 +14,10 @@ extension BlockEditor {
         var related: [EntryStub] = []
     }
 }
+
+extension BlockEditor {
+    enum RelatedAction {
+        case activateLink(URL)
+        case requestLink(EntryLink)
+    }
+}

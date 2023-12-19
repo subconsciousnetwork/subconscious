@@ -16,6 +16,9 @@ extension BlockEditor {
         static let identifier = "RelatedCell"
         
         var id: UUID = UUID()
+        
+        var send: (RelatedAction) -> Void = { _ in }
+        
         private var relatedHostingView = UIHostingView<BacklinksView>()
 
         override init(frame: CGRect) {
@@ -78,8 +81,9 @@ extension BlockEditor {
                 parentController: parentController,
                 rootView: BacklinksView(
                     backlinks: state.related,
-                    onRequestDetail: { _ in },
-                    onLink: { _, _ in }
+                    onLink: { [weak self] link in
+                        self?.send(.requestLink(link))
+                    }
                 )
             )
         }

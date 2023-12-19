@@ -13,7 +13,7 @@ struct EntryListView: View {
     var onEntryPress: (EntryStub) -> Void
     var onEntryDelete: (Slashlink) -> Void
     var onRefresh: () -> Void
-    var onLink: (SubSlashlinkLink) -> Void = { _ in }
+    var onLink: (EntryLink) -> Void
     
     @Environment(\.colorScheme) var colorScheme
 
@@ -106,7 +106,8 @@ struct EntryListView_Previews: PreviewProvider {
             ],
             onEntryPress: { entry in },
             onEntryDelete: { slug in },
-            onRefresh: {}
+            onRefresh: {},
+            onLink: { _ in }
         )
     }
 }

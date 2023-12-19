@@ -65,10 +65,7 @@ struct UserProfileDetailView: View {
 enum UserProfileDetailNotification: Hashable {
     case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
-    case requestFindLinkDetail(
-        context: Peer,
-        link: SubSlashlinkLink
-    )
+    case requestFindLinkDetail(EntryLink)
 }
 
 extension UserProfileDetailAction {

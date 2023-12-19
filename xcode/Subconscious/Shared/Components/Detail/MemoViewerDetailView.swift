@@ -101,17 +101,6 @@ struct MemoViewerDetailNotFoundView: View {
     var notify: (MemoViewerDetailNotification) -> Void
     var contentFrameHeight = UIFont.appTextMono.lineHeight * 8
     
-    func onBacklinkSelect(_ link: EntryLink) {
-        notify(
-            .requestDetail(
-                MemoDetailDescription.from(
-                    address: link.address,
-                    fallback: link.title
-                )
-            )
-        )
-    }
-    
     var body: some View {
         ScrollView {
             NotFoundView()
@@ -119,14 +108,8 @@ struct MemoViewerDetailNotFoundView: View {
                 .padding(.bottom, AppTheme.unit4)
             BacklinksView(
                 backlinks: backlinks,
-                onRequestDetail: onBacklinkSelect,
-                onLink: { context, link in
-                    notify(
-                        .requestFindLinkDetail(
-                            context: context,
-                            link: link
-                        )
-                    )
+                onLink: { link in
+                    notify(.requestFindLinkDetail(link))
                 }
             )
         }
@@ -151,66 +134,6 @@ struct MemoViewerDetailLoadedView: View {
         category: "MemoViewerDetailLoadedView"
     )
     
-    func onBacklinkSelect(_ link: EntryLink) {
-        notify(
-            .requestDetail(
-                MemoDetailDescription.from(
-                    address: link.address,
-                    fallback: link.title
-                )
-            )
-        )
-    }
-    
-    private func onLink(
-        url: URL
-    ) -> OpenURLAction.Result {
-        guard let link = url.toSubSlashlinkURL() else {
-            return .systemAction
-        }
-        
-        let petname = store.state.owner?.address.petname
-        
-        notify(
-            .requestFindLinkDetail(
-                context: petname.map(Peer.petname),
-                link: link
-            )
-        )
-        return .handled
-    }
-    
-    private func onLink(
-        context: Peer,
-        url: URL
-    ) -> OpenURLAction.Result {
-        guard let link = url.toSubSlashlinkURL() else {
-            return .systemAction
-        }
-        
-        notify(
-            .requestFindLinkDetail(
-                context: context,
-                link: link
-            )
-        )
-        return .handled
-    }
-    
-    private func onViewTransclude(
-        address: Slashlink
-    ) {
-        notify(
-            .requestDetail(
-                MemoDetailDescription.from(
-                    address: address,
-                    fallback: address.description
-                )
-            )
-        )
-    }
-    
-
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -219,20 +142,19 @@ struct MemoViewerDetailLoadedView: View {
                         SubtextView(
                             subtext: store.state.dom,
                             transcludePreviews: store.state.transcludePreviews,
-                            onViewTransclude: self.onViewTransclude,
-                            onTranscludeLink: { context, link in
+                            onLink: { link in
                                 notify(
                                     .requestFindLinkDetail(
-                                        context: context,
-                                        link: link
+                                        link.rebaseIfNeeded(
+                                            peer: store.state.owner?
+                                                .address.peer
+                                        )
                                     )
                                 )
                             }
                         ).textSelection(
                             .enabled
-                        ).environment(\.openURL, OpenURLAction { url in
-                            self.onLink(url: url)
-                        })
+                        )
                         
                         Spacer()
                     }
@@ -244,14 +166,8 @@ struct MemoViewerDetailLoadedView: View {
                         .padding(.bottom, AppTheme.unit4)
                     BacklinksView(
                         backlinks: store.state.backlinks,
-                        onRequestDetail: onBacklinkSelect,
-                        onLink: { context, link in
-                            notify(
-                                .requestFindLinkDetail(
-                                    context: context,
-                                    link: link
-                                )
-                            )
+                        onLink: { link in
+                            notify(.requestFindLinkDetail(link))
                         }
                     )
                 }
@@ -270,10 +186,7 @@ enum MemoViewerDetailNotification: Hashable {
         address: Slashlink,
         fallback: String?
     )
-    case requestFindLinkDetail(
-        context: Peer?,
-        link: SubSlashlinkLink
-    )
+    case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
 }
 
@@ -605,14 +518,13 @@ struct MemoViewerDetailModel: ModelProtocol {
         let links = state.dom.slashlinks
             .compactMap { value in value.toSlashlink() }
         
-        let fx: Fx<MemoViewerDetailAction> =
-            environment.transclude
-            .fetchTranscludePreviewsPublisher(slashlinks: links, owner: owner)
+        let fx: Fx<MemoViewerDetailAction> = environment.transclude
+            .fetchTranscludesPublisher(
+                slashlinks: links,
+                owner: owner
+            )
             .map { entries in
                 MemoViewerDetailAction.succeedFetchTranscludePreviews(entries)
-            }
-            .recover { error in
-                MemoViewerDetailAction.failFetchTranscludePreviews(error.localizedDescription)
             }
             .eraseToAnyPublisher()
         

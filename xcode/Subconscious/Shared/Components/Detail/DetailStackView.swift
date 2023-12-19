@@ -119,10 +119,7 @@ enum DetailStackAction: Hashable {
         fallback: String?
     )
     
-    case findAndPushLinkDetail(
-        context: Peer?,
-        link: SubSlashlinkLink
-    )
+    case findAndPushLinkDetail(EntryLink)
     /// Find a detail for content that belongs to us.
     /// Detail could exist in either local or sphere content.
     case findAndPushMemoEditorDetail(
@@ -191,11 +188,10 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 details: details
             )
-        case let .findAndPushLinkDetail(context, link):
+        case let .findAndPushLinkDetail(link):
             return findAndPushLinkDetail(
                 state: state,
                 environment: environment,
-                context: context,
                 link: link
             )
         case let .findAndPushDetail(address, fallback):
@@ -302,21 +298,22 @@ struct DetailStackModel: Hashable, ModelProtocol {
     static func findAndPushLinkDetail(
         state: Self,
         environment: Environment,
-        context: Peer?,
-        link: SubSlashlinkLink
+        link: EntryLink
     ) -> Update<Self> {
-        let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
-        
         let fx: Fx<DetailStackAction> = Future.detached {
-            let address = try await environment.noosphere.findBestAddressForLink(
-                context: context,
-                link: link
+            let address = try await environment.noosphere
+                .findBestAddressForLink(link.address)
+            return .findAndPushDetail(
+                address: address,
+                fallback: link.title
             )
-            return .findAndPushDetail(address: address, fallback: link.fallback)
         }
         .recover { error in
             logger.error("Failed to resolve peer: \(error)")
-            return .findAndPushDetail(address: slashlink, fallback: nil)
+            return .findAndPushDetail(
+                address: link.address,
+                fallback: link.title
+            )
         }
         .eraseToAnyPublisher()
         
@@ -611,11 +608,8 @@ extension DetailStackAction {
             return .requestDeleteMemo(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindLinkDetail(context, link):
-            return .findAndPushLinkDetail(
-                context: context,
-                link: link
-            )
+        case let .requestFindLinkDetail(link):
+            return .findAndPushLinkDetail(link)
         case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
@@ -633,11 +627,8 @@ extension DetailStackAction {
             return .pushDetail(detail)
         case let .requestFindDetail(address, fallback):
             return .findAndPushDetail(address: address, fallback: fallback)
-        case let .requestFindLinkDetail(context, link):
-            return .findAndPushLinkDetail(
-                context: context,
-                link: link
-            )
+        case let .requestFindLinkDetail(link):
+            return .findAndPushLinkDetail(link)
         case let .requestUserProfileDetail(address):
             return .pushDetail(
                 MemoDetailDescription.profile(
@@ -653,11 +644,8 @@ extension DetailStackAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindLinkDetail(context, link):
-            return .findAndPushLinkDetail(
-                context: context,
-                link: link
-            )
+        case let .requestFindLinkDetail(link):
+            return .findAndPushLinkDetail(link)
         case let .requestNavigateToProfile(address):
             return .pushDetail(.profile(
                 UserProfileDetailDescription(

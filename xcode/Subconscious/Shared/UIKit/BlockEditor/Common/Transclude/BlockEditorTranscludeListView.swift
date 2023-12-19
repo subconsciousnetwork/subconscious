@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+extension BlockEditor {
+    enum TranscludeListAction {
+        case requestLink(EntryLink)
+    }
+}
+
 /// A configured transclude list view suitable for embedding in block cells.
 /// UIHostingController requires a concrete type, making view decorators like
 /// padding impractical on the UIKit side. To work around this, we create a
@@ -15,14 +21,13 @@ import SwiftUI
 extension BlockEditor {
     struct TranscludeListView: View {
         var entries: [EntryStub]
-        var onViewTransclude: (EntryStub) -> Void
-        var onTranscludeLink: (Peer, SubSlashlinkLink) -> Void
-
+        var send: (TranscludeListAction) -> Void
         var body: some View {
             Subconscious.TranscludeListView(
                 entries: entries,
-                onViewTransclude: onViewTransclude,
-                onTranscludeLink: onTranscludeLink
+                onLink: { link in
+                    send(.requestLink(link))
+                }
             )
             .padding(.vertical, AppTheme.unit2)
             .padding(.horizontal, AppTheme.padding)
@@ -36,8 +41,7 @@ extension UIHostingView where Content == BlockEditor.TranscludeListView {
     func update(
         parentController: UIViewController,
         entries: [EntryStub],
-        onViewTransclude: @escaping (EntryStub) -> Void,
-        onTranscludeLink: @escaping (Peer, SubSlashlinkLink) -> Void
+        send: @escaping (BlockEditor.TranscludeListAction) -> Void
     ) {
         // Hide if empty
         self.isHidden = entries.isEmpty
@@ -45,8 +49,7 @@ extension UIHostingView where Content == BlockEditor.TranscludeListView {
             parentController: parentController,
             rootView: BlockEditor.TranscludeListView(
                 entries: entries,
-                onViewTransclude: onViewTransclude,
-                onTranscludeLink: onTranscludeLink
+                send: send
             )
         )
     }
@@ -83,8 +86,7 @@ struct BlockTranscludeListView_Previews: PreviewProvider {
                         modified: Date.now
                     ),
                 ],
-                onViewTransclude: { _ in },
-                onTranscludeLink: { _, _ in}
+                send: { action in }
             )
         }
         .background(.gray)

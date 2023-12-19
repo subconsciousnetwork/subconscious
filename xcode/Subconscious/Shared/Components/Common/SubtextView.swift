@@ -16,8 +16,7 @@ struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
     var transcludePreviews: [Slashlink: EntryStub] = [:]
-    var onViewTransclude: (Slashlink) -> Void  = { _ in }
-    var onTranscludeLink: (_ context: Peer, SubSlashlinkLink) -> Void = { _, _ in }
+    var onLink: (EntryLink) -> Void
     
     private func entries(for block: Subtext.Block) -> [EntryStub] {
         block.slashlinks
@@ -81,16 +80,20 @@ struct SubtextView: View {
                     if (!renderable.entries.isEmpty) {
                         TranscludeListView(
                             entries: renderable.entries,
-                            onViewTransclude: { entry in
-                                onViewTransclude(entry.address)
-                            },
-                            onTranscludeLink: onTranscludeLink
+                            onLink: onLink
                         )
                     }
                 }
             }
         }
         .expandAlignedLeading()
+        .environment(\.openURL, OpenURLAction { url in
+            guard let link = url.toSubSlashlinkLink()?.toEntryLink() else {
+                return .systemAction
+            }
+            onLink(link)
+            return .handled
+        })
     }
 }
 
@@ -159,10 +162,7 @@ struct SubtextView_Previews: PreviewProvider {
                             modified: Date.now
                         )
                     ],
-                    onViewTransclude: {
-                        _ in
-                    },
-                    onTranscludeLink: { address, link in }
+                    onLink: { link in }
                 )
             }
         }

@@ -9,8 +9,7 @@ import SwiftUI
 
 struct BacklinksView: View {
     var backlinks: [EntryStub]
-    var onRequestDetail: (EntryLink) -> Void
-    var onLink: (_ context: Peer, SubSlashlinkLink) -> Void
+    var onLink: (_ link: EntryLink) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
@@ -22,12 +21,7 @@ struct BacklinksView: View {
             if backlinks.count > 0 {
                 TranscludeListView(
                     entries: backlinks,
-                    onViewTransclude: { entry in
-                        onRequestDetail(EntryLink(entry))
-                    },
-                    onTranscludeLink: { context, subSlashlink in
-                        onLink(context, subSlashlink)
-                    }
+                    onLink: onLink
                 )
             } else {
                 TitleGroupView(
@@ -86,13 +80,11 @@ struct BacklinksView_Previews: PreviewProvider {
                         modified: Date.now
                     )
                 ],
-                onRequestDetail: { title in },
-                onLink: { address, link in }
+                onLink: { link in }
             )
             BacklinksView(
                 backlinks: [],
-                onRequestDetail: { title in },
-                onLink: { address, link in }
+                onLink: { link in }
             )
         }
     }

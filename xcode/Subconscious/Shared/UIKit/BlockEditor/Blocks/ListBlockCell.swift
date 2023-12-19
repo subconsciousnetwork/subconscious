@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import ObservableStore
 
 extension BlockEditor {
     class ListBlockCell:
@@ -108,16 +109,16 @@ extension BlockEditor {
                     equalTo: listContainerGuide.bottomAnchor
                 ),
                 stackView.leadingAnchor.constraint(
-                    equalTo: leadingAnchor
+                    equalTo: contentView.leadingAnchor
                 ),
                 stackView.trailingAnchor.constraint(
-                    equalTo: trailingAnchor
+                    equalTo: contentView.trailingAnchor
                 ),
                 stackView.topAnchor.constraint(
-                    equalTo: topAnchor
+                    equalTo: contentView.topAnchor
                 ),
                 stackView.bottomAnchor.constraint(
-                    equalTo: bottomAnchor
+                    equalTo: contentView.bottomAnchor
                 )
             ])
         }
@@ -129,7 +130,7 @@ extension BlockEditor {
         private func createBulletView() -> UIView {
             let bulletSize: CGFloat = 6
             let frameWidth: CGFloat = AppTheme.unit2
-            let lineHeight: CGFloat = AppTheme.smPfpSize
+            let lineHeight: CGFloat = AppTheme.lineHeight
             
             let frameView = UIView()
             frameView.isUserInteractionEnabled = false
@@ -180,15 +181,15 @@ extension BlockEditor {
             transcludeListView.update(
                 parentController: parentController,
                 entries: state.transcludes,
-                onViewTransclude: { _ in },
-                onTranscludeLink: { _, _ in }
+                send: Address.forward(
+                    send: send,
+                    tag: BlockEditor.TextBlockAction.from
+                )
             )
-            if textView.text != state.text {
-                textView.text = state.text
-            }
-            if textView.selectedRange != state.selection {
-                textView.selectedRange = state.selection
-            }
+            textView.setText(
+                state.dom.description,
+                selectedRange: state.selection
+            )
             textView.setFirstResponder(state.isEditing)
             // Set editability of textview
             textView.setModifiable(!state.isBlockSelectMode)
@@ -199,7 +200,12 @@ extension BlockEditor {
         private func send(
             _ event: SubtextTextEditorAction
         ) {
-            self.send(TextBlockAction.from(id: id, action: event))
+            self.send(
+                BlockEditor.TextBlockAction.from(
+                    id: id,
+                    action: event
+                )
+            )
         }
     }
 }
@@ -212,7 +218,7 @@ struct BlockEditorListBlockCell_Previews: PreviewProvider {
             view.update(
                 parentController: controller,
                 state: BlockEditor.TextBlockModel(
-                    text: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.",
+                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
                     transcludes: [
                         EntryStub(
                             did: Did("did:key:abc123")!,

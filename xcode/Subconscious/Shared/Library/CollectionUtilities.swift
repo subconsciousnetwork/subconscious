@@ -36,3 +36,9 @@ extension Array {
         return unique
     }
 }
+
+extension Array where Element: Hashable {
+    func uniquing() -> [Element] {
+        uniquing(with: { element in element })
+    }
+}

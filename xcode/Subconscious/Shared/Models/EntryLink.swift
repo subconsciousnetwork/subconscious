@@ -46,6 +46,12 @@ struct EntryLink:
     var id: Slashlink { address }
     var description: String { linkableTitle }
     
+    /// Rebase slashlink on peer
+    func rebaseIfNeeded(peer: Peer?) -> Self {
+        let address = address.rebaseIfNeeded(peer: peer)
+        return EntryLink(address: address, title: title)
+    }
+
     static func sanitizeTitle(_ text: String) -> String {
         text
             .trimmingCharacters(in: .whitespaces)

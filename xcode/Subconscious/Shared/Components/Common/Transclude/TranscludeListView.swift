@@ -9,8 +9,7 @@ import SwiftUI
 
 struct TranscludeListView: View {
     var entries: [EntryStub]
-    var onViewTransclude: (EntryStub) -> Void
-    var onTranscludeLink: (Peer, SubSlashlinkLink) -> Void
+    var onLink: (EntryLink) -> Void
     
     @Environment (\.colorScheme) var colorScheme
     
@@ -20,12 +19,7 @@ struct TranscludeListView: View {
                 VStack {
                     TranscludeView(
                         entry: entry,
-                        onRequestDetail: {
-                            onViewTransclude(entry)
-                        },
-                        onLink: { link in
-                            onTranscludeLink(entry.toPeer(), link)
-                        }
+                        onLink: onLink
                     )
                 }
                 .tint(
@@ -55,8 +49,7 @@ struct TranscludeListView_Previews: PreviewProvider {
                     modified: Date.now
                 ),
             ],
-            onViewTransclude: { _ in },
-            onTranscludeLink: { _, _ in }
+            onLink: { _ in }
         )
     }
 }

@@ -33,10 +33,8 @@ enum NoosphereServiceError: Error, LocalizedError {
 
 extension NoosphereService {
     public func findBestAddressForLink(
-        context: Peer?,
-        link: SubSlashlinkLink
+        _ slashlink: Slashlink
     ) async throws -> Slashlink {
-        let slashlink = link.slashlink.rebaseIfNeeded(peer: context)
         let ourIdentity = try await self.identity()
         
         // We want the find the DID of this user so we can check if we follow them.

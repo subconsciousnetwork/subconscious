@@ -45,6 +45,11 @@ extension BlockEditor {
         
         /// Is editor saved?
         private(set) var saveState = SaveState.saved
+
+        /// Who are we? The did that identifies our sphere.
+        var ourSphere: Did?
+        /// Who owns this document?
+        var ownerSphere: Did?
         
         var address: Slashlink? = nil
         var contentType = ContentType.subtext
@@ -57,6 +62,9 @@ extension BlockEditor {
         
         var blocks: BlocksModel = BlocksModel()
         var appendix = RelatedModel()
+
+        /// Cached transcludes for links in body
+        var transcludes: [Slashlink: EntryStub] = [:]
 
         mutating func setSaveState(_ state: SaveState) {
             if self.saveState == state {
@@ -81,6 +89,11 @@ extension BlockEditor {
         case startPolling
         /// Perform a single polling step, optionally requesting another step
         case poll
+        case setOurSphere(Did?)
+        /// Get owner Did from peer
+        case resolveOwnerSphere
+        case succeedResolveOwnerSphere(_ did: Did)
+        case failResolveOwnerSphere(error: String)
         /// Set document source location
         case loadEditor(
             address: Slashlink?,
@@ -100,9 +113,18 @@ extension BlockEditor {
             autofocus: Bool = false
         )
         /// Load related notes (backlinks)
-        case loadRelated
-        case succeedLoadRelated(_ related: [EntryStub])
-        case failLoadRelated(_ error: String)
+        case fetchRelated
+        case succeedFetchRelated(_ related: [EntryStub])
+        case failFetchRelated(_ error: String)
+        case refreshTranscludes
+        case succeedRefreshTranscludes([EntryStub])
+        case fetchTranscludesFor(id: UUID, slashlinks: [Slashlink])
+        case succeedFetchTranscludesFor(
+            id: UUID,
+            fetched: [EntryStub]
+        )
+        case failFetchTranscludesFor(id: UUID, error: String)
+        case refreshTranscludesFor(id: UUID)
         /// Save a snapshot
         case save(_ snapshot: MemoEntry?)
         case succeedSave(_ snapshot: MemoEntry)
@@ -113,7 +135,7 @@ extension BlockEditor {
         /// Autosave whatever is in the editor.
         /// Sent at some interval to save draft state.
         case autosave
-        case textDidChange(id: UUID?, text: String, selection: NSRange)
+        case textDidChange(id: UUID?, dom: Subtext, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
         case splitBlock(id: UUID, selection: NSRange)
         case mergeBlockUp(id: UUID)
@@ -148,6 +170,11 @@ extension BlockEditor {
         case insertBold(id: UUID, selection: NSRange)
         case insertItalic(id: UUID, selection: NSRange)
         case insertCode(id: UUID, selection: NSRange)
+
+        /// Handle URL in textview
+        case activateLink(URL)
+        /// Open link in transclude
+        case requestFindLinkDetail(EntryLink)
     }
 }
 
@@ -155,7 +182,7 @@ extension BlockEditor {
     /// Describes the state change that has happened, giving the controller
     /// the details it needs to perform that change.
     enum Change: Hashable {
-        case reconfigureCollectionItem(IndexPath)
+        case reconfigureCollectionItems([IndexPath])
         case reloadEditor
         case moveBlock(
             at: IndexPath,
@@ -208,7 +235,7 @@ extension BlockEditor.Model: ModelProtocol {
         var transaction: Transaction?
         var change: BlockEditor.Change? = nil
     }
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -234,6 +261,29 @@ extension BlockEditor.Model: ModelProtocol {
         case .poll:
             return poll(
                 state: state,
+                environment: environment
+            )
+        case let .setOurSphere(did):
+            return setOurSphere(
+                state: state,
+                did: did,
+                environment: environment
+            )
+        case .resolveOwnerSphere:
+            return resolveOwnerSphere(
+                state: state,
+                environment: environment
+            )
+        case let .succeedResolveOwnerSphere(owner):
+            return succeedResolveOwnerSphere(
+                state: state,
+                owner: owner,
+                environment: environment
+            )
+        case let .failResolveOwnerSphere(error):
+            return failResolveOwnerSphere(
+                state: state,
+                error: error,
                 environment: environment
             )
         case let .loadEditor(address, fallback, autofocus):
@@ -264,21 +314,59 @@ extension BlockEditor.Model: ModelProtocol {
                 autofocus: autofocus,
                 environment: environment
             )
-        case .loadRelated:
-            return loadRelated(
+        case .fetchRelated:
+            return fetchRelated(
                 state: state,
                 environment: environment
             )
-        case let .succeedLoadRelated(related):
-            return succeedLoadRelated(
+        case let .succeedFetchRelated(related):
+            return succeedFetchRelated(
                 state: state,
                 related: related,
                 environment: environment
             )
-        case let .failLoadRelated(error):
-            return failLoadRelated(
+        case let .failFetchRelated(error):
+            return failFetchRelated(
                 state: state,
                 error: error,
+                environment: environment
+            )
+        case .refreshTranscludes:
+            return refreshTranscludes(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshTranscludes(transcludes):
+            return succeedRefreshTranscludes(
+                state: state,
+                transcludes: transcludes,
+                environment: environment
+            )
+        case let .fetchTranscludesFor(id, slashlinks):
+            return fetchTranscludesFor(
+                state: state,
+                id: id,
+                slashlinks: slashlinks,
+                environment: environment
+            )
+        case let .succeedFetchTranscludesFor(id, fetched):
+            return succeedFetchTranscludesFor(
+                state: state,
+                id: id,
+                fetched: fetched,
+                environment: environment
+            )
+        case let .failFetchTranscludesFor(id, error):
+            return failFetchTranscludesFor(
+                state: state,
+                id: id,
+                error: error,
+                environment: environment
+            )
+        case let .refreshTranscludesFor(id):
+            return refreshTranscludesFor(
+                state: state,
+                id: id,
                 environment: environment
             )
         case let .save(snapshot):
@@ -305,12 +393,13 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .textDidChange(id, text, selection):
+        case let .textDidChange(id, dom, selection):
             return textDidChange(
                 state: state,
                 id: id,
-                text: text,
-                selection: selection
+                dom: dom,
+                selection: selection,
+                environment: environment
             )
         case let .didChangeSelection(id, selection):
             return didChangeSelection(
@@ -407,6 +496,17 @@ extension BlockEditor.Model: ModelProtocol {
                 id: id,
                 selection: selection
             )
+        case let .activateLink(url):
+            return activateLink(
+                state: state,
+                url: url,
+                environment: environment
+            )
+        case .requestFindLinkDetail(_):
+            return requestFindLinkDetail(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -430,17 +530,29 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         
-        return update(
-            state: model,
-            actions: [
-                .loadEditor(
-                    address: description.address,
-                    fallback: description.fallback
-                ),
-                .startPolling
-            ],
-            environment: environment
+        let fetchOurSphere: Fx<Action> = Future.detached {
+            Action.setOurSphere(try? await environment.noosphere.identity())
+        }
+        .eraseToAnyPublisher()
+
+        let loadEditor: Fx<Action> = Just(
+            Action.loadEditor(
+                address: description.address,
+                fallback: description.fallback
+            )
         )
+        .eraseToAnyPublisher()
+
+        let startPolling: Fx<Action> = Just(
+            Action.startPolling
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<Action> = fetchOurSphere
+            .merge(with: loadEditor, startPolling)
+            .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
     }
     
     static func startPolling(
@@ -484,6 +596,60 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
 
+    static func setOurSphere(
+        state: Self,
+        did: Did?,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.ourSphere = did
+        return Update(state: model)
+    }
+
+    static func resolveOwnerSphere(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        guard let address = state.address else {
+            logger.log("Asked to resolve owner sphere but document has no address. Doing nothing.")
+            return Update(state: state)
+        }
+        let resolveDidFx: Fx<Action> = Future.detached {
+            do {
+                let did = try await environment.noosphere.resolve(
+                    peer: address.peer
+                )
+                return Action.succeedResolveOwnerSphere(did)
+            } catch {
+                return Action.failResolveOwnerSphere(
+                    error: error.localizedDescription
+                )
+            }
+        }
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: resolveDidFx)
+    }
+
+    static func succeedResolveOwnerSphere(
+        state: Self,
+        owner: Did,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        logger.info("Document owner set to \(owner)")
+        model.ownerSphere = owner
+        return Update(state: model)
+    }
+
+    static func failResolveOwnerSphere(
+        state: Self,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        logger.log("Could not resolve owner sphere from address. Error: \(error)")
+        return Update(state: state)
+    }
+
     static func loadEditor(
         state: Self,
         address: Slashlink?,
@@ -493,30 +659,33 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         var model = state
         model.address = address
-
+        
         guard let address = address else {
+            logger.info("Editor loaded draft (no address)")
             return Update(state: model)
         }
-
-        let loadRelatedFx = Just(Action.loadRelated)
-
+        
+        let loadRelatedFx = Just(Action.fetchRelated)
+        
         let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
             address: address,
             fallback: fallback
-        )
-        .map({ detail in
+        ).map({ detail in
             return Action.setEditorIfNeeded(
                 detail: detail,
                 autofocus: autofocus
             )
-        })
-        .recover({ error in
+        }).recover({ error in
             return Action.failLoadEditor(error.localizedDescription)
         })
-
-        let fx: Fx<Action> = loadDetailFx.merge(with: loadRelatedFx)
+        
+        let resolveOwnerFx: Fx<Action> = Just(Action.resolveOwnerSphere)
             .eraseToAnyPublisher()
 
+        let fx: Fx<Action> = loadDetailFx
+            .merge(with: loadRelatedFx, resolveOwnerFx)
+            .eraseToAnyPublisher()
+        
         return Update(state: model, fx: fx)
     }
     
@@ -529,7 +698,7 @@ extension BlockEditor.Model: ModelProtocol {
         logger.warning("Failed to load detail for \(address). Error: \(error)")
         return Update(state: state)
     }
-
+    
     /// Set editor state, replacing whatever was previously there.
     /// This is a "force reload" that does not attempt to gracefully save the
     /// previous state. You typically want to use `setEditorIfNeeded`
@@ -556,7 +725,11 @@ extension BlockEditor.Model: ModelProtocol {
         model.fileExtension = detail.entry.contents.fileExtension
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.blocks = BlockEditor.BlocksModel(detail.entry.contents.body)
-        return Update(state: model, change: .reloadEditor)
+        
+        let fx: Fx<Action> = Just(Action.refreshTranscludes)
+            .eraseToAnyPublisher()
+        
+        return Update(state: model, fx: fx, change: .reloadEditor)
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
@@ -569,7 +742,7 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         // Finished loading. We have the data.
         model.loadingState = .loaded
-
+        
         // Slugs don't match. Different entries.
         // Save current state and set new detail.
         guard (state.address == detail.entry.address) else {
@@ -584,9 +757,9 @@ extension BlockEditor.Model: ModelProtocol {
                 environment: environment
             )
         }
-
+        
         let modified = state.modified ?? Date.distantPast
-
+        
         // Make sure detail is newer than current editor modified state.
         // Otherwise do nothing.
         guard detail.entry.contents.modified > modified else {
@@ -602,7 +775,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func loadRelated(
+    static func fetchRelated(
         state: Self,
         environment: Environment
     ) -> Update {
@@ -614,18 +787,18 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<Action> = Future.detached {
             try await environment.data.readMemoBacklinks(address: address)
         }
-        .map { backlinks in
-            .succeedLoadRelated(backlinks)
-        }
-        .recover { error in
-            .failLoadRelated(error.localizedDescription)
-        }
+        .map({ backlinks in
+            Action.succeedFetchRelated(backlinks)
+        })
+        .recover({ error in
+            Action.failFetchRelated(error.localizedDescription)
+        })
         .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
     
-    static func succeedLoadRelated(
+    static func succeedFetchRelated(
         state: Self,
         related: [EntryStub],
         environment: Environment
@@ -636,8 +809,8 @@ extension BlockEditor.Model: ModelProtocol {
         model.appendix.related = related
         return Update(state: model)
     }
-
-    static func failLoadRelated(
+    
+    static func failFetchRelated(
         state: Self,
         error: String,
         environment: Environment
@@ -645,6 +818,170 @@ extension BlockEditor.Model: ModelProtocol {
         let address = state.address?.description ?? "nil"
         logger.warning("Unable to load related notes for \(address). Error: \(error)")
         return Update(state: state)
+    }
+    
+    static func refreshTranscludes(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let owner = state.ownerSphere.map({ did in Peer.did(did) })
+        
+        // Fetch only the slashlinks that are not in the cache
+        let slashlinksToFetch = state.blocks.blocks.flatMap({ block in
+            block.dom?.parsedSlashlinks ?? []
+        })
+        .filter({ slashlink in
+            state.transcludes[slashlink] == nil
+        })
+        .uniquing()
+        
+        logger.info("Fetching transcludes for \(slashlinksToFetch)")
+        
+        let fx: Fx<Action> = Future.detached {
+            let transcludes = await environment.transclude.fetchTranscludes(
+                slashlinks: slashlinksToFetch,
+                owner: owner
+            )
+            return Action.succeedRefreshTranscludes(
+                Array(transcludes.values)
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshTranscludes(
+        state: Self,
+        transcludes: [EntryStub],
+        environment: Environment
+    ) -> Update {
+        var model = cacheTranscludes(state: state, transcludes: transcludes)
+        
+        // Update all block transcludes and gather index paths
+        // in a single pass.
+        var blocks: [BlockEditor.BlockModel] = []
+        var indexPaths: [IndexPath] = []
+        for (i, block) in state.blocks.blocks.enumerated() {
+            let updatedBlock = block.update { textBlock in
+                textBlock.updateTranscludes(index: model.transcludes)
+            }
+            blocks.append(updatedBlock ?? block)
+            
+            let indexPath = IndexPath(
+                row: i,
+                section: BlockEditor.Section.blocks.rawValue
+            )
+            indexPaths.append(indexPath)
+        }
+        model.blocks.blocks = blocks
+        
+        return Update(
+            state: model,
+            change: .reconfigureCollectionItems(indexPaths)
+        )
+    }
+    
+    static func fetchTranscludesFor(
+        state: Self,
+        id: UUID,
+        slashlinks: [Slashlink],
+        environment: Environment
+    ) -> Update {
+        let owner = state.ownerSphere.map({ did in Peer.did(did) })
+        
+        // Fetch only the slashlinks that are not in the cache
+        let slashlinksToFetch = slashlinks
+            .filter({ slashlink in
+                state.transcludes[slashlink] == nil
+            })
+            .uniquing()
+        
+        logger.info("block#\(id) fetching transcludes for \(slashlinksToFetch)")
+        
+        let fx: Fx<Action> = Future.detached {
+            let transcludes = await environment.transclude
+                .fetchTranscludes(
+                    slashlinks: slashlinksToFetch,
+                    owner: owner
+                )
+            return Action.succeedFetchTranscludesFor(
+                id: id,
+                fetched: Array(transcludes.values)
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func cacheTranscludes(
+        state: Self,
+        transcludes: [EntryStub]
+    ) -> Self {
+        var model = state
+        for transclude in transcludes {
+            logger.info("Updated cached transclude for \(transclude.address)")
+            model.transcludes[transclude.address] = transclude
+        }
+        return model
+    }
+    
+    static func succeedFetchTranscludesFor(
+        state: Self,
+        id: UUID,
+        fetched: [EntryStub],
+        environment: Environment
+    ) -> Update {
+        let model = cacheTranscludes(state: state, transcludes: fetched)
+        return update(
+            state: model,
+            action: .refreshTranscludesFor(id: id),
+            environment: environment
+        )
+    }
+    
+    static func failFetchTranscludesFor(
+        state: Self,
+        id: UUID,
+        error: String,
+        environment: Environment
+    ) -> Update {
+        logger.warning("block#\(id) Unable to load transcludes. Error: \(error)")
+        return Update(state: state)
+    }
+    
+    static func refreshTranscludesFor(
+        state: Self,
+        id: UUID,
+        environment: Environment
+    ) -> Update {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
+            Self.logger.log("block#\(id) not found. Skipping transclude refresh.")
+            return Update(state: state)
+        }
+        
+        let block = state.blocks.blocks[i]
+        
+        guard let block = block.update({ textBlock in
+            textBlock.updateTranscludes(index: state.transcludes)
+        }) else {
+            Self.logger.log("block#\(id) unable to update as text block. Doing nothing.")
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.blocks.blocks[i] = block
+        
+        let indexPath = IndexPath(
+            row: i,
+            section: BlockEditor.Section.blocks.rawValue
+        )
+        
+        return Update(
+            state: model,
+            change: .reconfigureCollectionItems([indexPath])
+        )
     }
     
     static func save(
@@ -664,23 +1001,23 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         model.setSaveState(.saving)
         logger.log("Saving \(snapshot.address)")
-
+        
         let fx: Fx<BlockEditor.Action> = environment.data
             .writeEntryPublisher(snapshot)
             .map({
-                .succeedSave(snapshot)
+                Action.succeedSave(snapshot)
             })
             .recover({ error in
-                .failSave(
+                Action.failSave(
                     snapshot: snapshot,
                     error: error.localizedDescription
                 )
             })
             .eraseToAnyPublisher()
-
+        
         return Update(state: model, fx: fx)
     }
-
+    
     static func succeedSave(
         state: Self,
         snapshot: MemoEntry,
@@ -731,12 +1068,13 @@ extension BlockEditor.Model: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func textDidChange(
         state: Self,
         id: UUID?,
-        text: String,
-        selection: NSRange
+        dom: Subtext,
+        selection: NSRange,
+        environment: Environment
     ) -> Update {
         guard let id = id else {
             Self.logger.log("No block id. Doing nothing.")
@@ -750,7 +1088,7 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         
         let block = state.blocks.blocks[i].setText(
-            text: text,
+            dom: dom,
             selection: selection
         )
         
@@ -760,11 +1098,23 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         model.blocks.blocks[i] = block
-
+        
         // Mark unsaved
         model.setSaveState(.unsaved)
         
-        return Update(state: model)
+        guard let dom = block.dom else {
+            logger.info("block#\(id) no DOM for this block. Skipping transclude load.")
+            return Update(state: model)
+        }
+        
+        return update(
+            state: model,
+            action: .fetchTranscludesFor(
+                id: id,
+                slashlinks: dom.parsedSlashlinks
+            ),
+            environment: environment
+        )
     }
     
     static func didChangeSelection(
@@ -801,7 +1151,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         let blockA = state.blocks.blocks[indexA]
         
-        guard let blockTextA = blockA.text else {
+        guard let blockTextA = blockA.dom?.description else {
             Self.logger.log("block#\(id) cannot split block without text. Doing nothing.")
             return Update(state: state)
         }
@@ -814,7 +1164,7 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         guard let blockA = blockA.setText(
-            text: textA,
+            dom: Subtext(markup: textA),
             selection: NSRange(location: nsRange.location, length: 0)
         ) else {
             Self.logger.log(
@@ -822,9 +1172,9 @@ extension BlockEditor.Model: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         var blockB = BlockEditor.TextBlockModel()
-        blockB.text = textB
+        blockB.dom = Subtext(markup: textB)
         
         let indexB = state.blocks.blocks.index(after: indexA)
         var model = state
@@ -874,24 +1224,24 @@ extension BlockEditor.Model: ModelProtocol {
         let indexUp = state.blocks.blocks.index(before: indexDown)
         let blockUp = state.blocks.blocks[indexUp]
         
-        guard let blockUpText = blockUp.text else {
+        guard let blockUpText = blockUp.dom?.description else {
             Self.logger.log("block#\(id) cannot merge up into block without text. Doing nothing.")
             return Update(state: state)
         }
         
         let blockDown = state.blocks.blocks[indexDown]
-        guard let blockDownText = blockDown.text else {
+        guard let blockDownText = blockDown.dom?.description else {
             Self.logger.log("block#\(id) cannot merge non-text block. Doing nothing.")
             return Update(state: state)
         }
-
+        
         let selectionNSRange = NSRange(
             blockUpText.endIndex..<blockUpText.endIndex,
             in: blockUpText
         )
         
         guard let blockUp = blockUp.setText(
-            text: blockUpText + blockDownText,
+            dom: Subtext(markup: blockUpText + blockDownText),
             selection: selectionNSRange
         ) else {
             Self.logger.log("block#\(id) could not merge text. Doing nothing.")
@@ -911,10 +1261,10 @@ extension BlockEditor.Model: ModelProtocol {
             row: indexDown,
             section: BlockEditor.Section.blocks.rawValue
         )
-
+        
         // Mark unsaved
         model.setSaveState(.unsaved)
-
+        
         return Update(
             state: model,
             change: .mergeBlockUp(
@@ -957,7 +1307,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
     
@@ -999,10 +1349,10 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func longPress(
@@ -1011,7 +1361,7 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         return Update(state: state)
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func tap(
@@ -1020,7 +1370,7 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         return Update(state: state)
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func enterBlockSelectMode(
@@ -1029,7 +1379,7 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         return Update(state: state)
     }
-
+    
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func exitBlockSelectMode(
@@ -1055,7 +1405,7 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         let block = model.blocks.blocks[i]
         let updatedBlock = block.setBlockSelected(isSelected) ?? block
-
+        
         guard block != updatedBlock else {
             Self.logger.debug("Block selection state did not change.")
             return Update(state: state)
@@ -1069,10 +1419,10 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     static func toggleSelectBlock(
         state: Self,
         id: UUID
@@ -1090,7 +1440,7 @@ extension BlockEditor.Model: ModelProtocol {
         let block = model.blocks.blocks[i]
         let isSelected = block.isBlockSelected
         let updatedBlock = block.setBlockSelected(!isSelected) ?? block
-
+        
         guard block != updatedBlock else {
             Self.logger.debug("Block selection state did not change.")
             return Update(state: state)
@@ -1104,10 +1454,10 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     static func moveBlockUp(
         state: Self,
         id: UUID
@@ -1175,7 +1525,7 @@ extension BlockEditor.Model: ModelProtocol {
             row: i,
             section: BlockEditor.Section.blocks.rawValue
         )
-
+        
         let toIndexPath = IndexPath(
             row: j,
             section: BlockEditor.Section.blocks.rawValue
@@ -1189,7 +1539,7 @@ extension BlockEditor.Model: ModelProtocol {
             change: .moveBlock(at: atIndexPath, to: toIndexPath)
         )
     }
-        
+    
     /// Insert markup at range within a block
     static func insertMarkup(
         state: Self,
@@ -1206,17 +1556,17 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         let block = state.blocks.blocks[i]
-
-        guard let text = block.text else {
+        
+        guard let text = block.dom?.description else {
             Self.logger.log("block#\(id) can't insert markup. Block has no text. Doing nothing.")
             return Update(state: state)
         }
-
+        
         guard let selectedRange = Range(selection, in: text) else {
             Self.logger.log("block#\(id) could not find text in range. Doing nothing.")
             return Update(state: state)
         }
-
+        
         guard let replacement = replace(
             text,
             selectedRange
@@ -1232,7 +1582,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
         
         guard let block = block.setText(
-            text: replacement.string,
+            dom: Subtext(markup: replacement.string),
             selection: cursorNSRange
         ) else {
             Self.logger.log("block#\(id) could not set text. Doing nothing.")
@@ -1252,10 +1602,10 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItem(indexPath)
+            change: .reconfigureCollectionItems([indexPath])
         )
     }
-
+    
     static func insertBold(
         state: Self,
         id: UUID,
@@ -1293,6 +1643,37 @@ extension BlockEditor.Model: ModelProtocol {
             selection: selection,
             replace: BlockEditor.SubtextEditorMarkup.wrapCode
         )
+    }
+    
+    /// Handle links by parsing and then creating an FX for an onLinkTransclude
+    /// action.
+    static func activateLink(
+        state: Self,
+        url: URL,
+        environment: Environment
+    ) -> Update {
+        guard let link = url.toSubSlashlinkLink()?.toEntryLink() else {
+            logger.info("Could not parse URL as SubSlashlinkURL \(url)")
+            return Update(state: state)
+        }
+        guard let owner = state.ownerSphere else {
+            logger.info("Owner sphere identity is unknown. Doing nothing.")
+            return Update(state: state)
+        }
+
+        let fx: Fx<Action> = Just(
+            Action.requestFindLinkDetail(link)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+    
+    static func requestFindLinkDetail(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        return Update(state: state)
     }
 }
 

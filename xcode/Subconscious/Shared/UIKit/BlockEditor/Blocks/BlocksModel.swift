@@ -13,7 +13,7 @@ extension BlockEditor {
         var description: String {
             // TODO: serialize to nice Subtext whitespace
             // https://github.com/subconsciousnetwork/subconscious/issues/1009
-            blocks.compactMap(\.text).joined(separator: "\n\n")
+            blocks.compactMap(\.dom?.description).joined(separator: "\n\n")
         }
         var isBlockSelectMode = false
         var blocks: [BlockModel] = []
@@ -33,25 +33,25 @@ extension BlockEditor.BlocksModel: LosslessStringConvertible {
                 case let .text(span, _):
                     return .text(
                         BlockEditor.TextBlockModel(
-                            text: span.description
+                            dom: Subtext(markup: span.description)
                         )
                     )
                 case let .heading(span):
                     return .heading(
                         BlockEditor.TextBlockModel(
-                            text: span.description
+                            dom: Subtext(markup: span.description)
                         )
                     )
                 case let .list(span, _):
                     return .list(
                         BlockEditor.TextBlockModel(
-                            text: span.description
+                            dom: Subtext(markup: span.description)
                         )
                     )
                 case let .quote(span, _):
                     return .quote(
                         BlockEditor.TextBlockModel(
-                            text: span.description
+                            dom: Subtext(markup: span.description)
                         )
                     )
                 }
