@@ -21,7 +21,7 @@ struct EntryRow: View {
                 subtext: entry.excerpt,
                 onLink: { link in
                     let rebasedLink = link.rebaseIfNeeded(peer: entry.toPeer())
-                    onLink(link)
+                    onLink(rebasedLink)
                 }
             )
             .font(.callout)
