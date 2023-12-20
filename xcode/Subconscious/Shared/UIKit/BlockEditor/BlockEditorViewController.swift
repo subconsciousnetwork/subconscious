@@ -152,6 +152,8 @@ extension BlockEditor {
         }
         
         private func setupViews() {
+            // View starts out hidden and is not shown until ready
+            view.alpha = 0
             view.addSubview(collectionView)
         }
 
@@ -198,6 +200,8 @@ extension BlockEditor {
         private func update(_ change: BlockEditor.Change) {
             Self.logger.log("Change: \(String(describing: change))")
             switch change {
+            case .ready:
+                return ready()
             case .reloadEditor:
                 return reloadEditor()
             case let .reconfigureCollectionItems(indexPaths):
@@ -216,6 +220,12 @@ extension BlockEditor {
                     delete: delete,
                     requestEditing: requestEditing
                 )
+            }
+        }
+
+        private func ready() {
+            UIView.animate(withDuration: 1) {
+                self.view.alpha = 1
             }
         }
 

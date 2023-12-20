@@ -182,6 +182,8 @@ extension BlockEditor {
     /// Describes the state change that has happened, giving the controller
     /// the details it needs to perform that change.
     enum Change: Hashable {
+        /// Set the controller to ready state
+        case ready
         case reconfigureCollectionItems([IndexPath])
         case reloadEditor
         case moveBlock(
@@ -514,7 +516,7 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
-        return Update(state: state)
+        return Update(state: state, change: .ready)
     }
     
     static func appear(
