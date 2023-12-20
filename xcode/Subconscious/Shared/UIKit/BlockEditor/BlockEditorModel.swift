@@ -124,6 +124,7 @@ extension BlockEditor {
             fetched: [EntryStub]
         )
         case failFetchTranscludesFor(id: UUID, error: String)
+        /// Refresh the rendered transcludes
         case refreshTranscludesFor(id: UUID)
         /// Save a snapshot
         case save(_ snapshot: MemoEntry?)
@@ -183,7 +184,7 @@ extension BlockEditor {
     /// the details it needs to perform that change.
     enum Change: Hashable {
         /// Set the controller to ready state
-        case ready
+        case present
         case reconfigureCollectionItems([IndexPath])
         case reloadEditor
         case moveBlock(
@@ -516,7 +517,7 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
-        return Update(state: state, change: .ready)
+        return Update(state: state)
     }
     
     static func appear(
@@ -667,8 +668,6 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: model)
         }
         
-        let loadRelatedFx = Just(Action.fetchRelated)
-        
         let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
             address: address,
             fallback: fallback
@@ -685,7 +684,7 @@ extension BlockEditor.Model: ModelProtocol {
             .eraseToAnyPublisher()
 
         let fx: Fx<Action> = loadDetailFx
-            .merge(with: loadRelatedFx, resolveOwnerFx)
+            .merge(with: resolveOwnerFx)
             .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
@@ -728,9 +727,14 @@ extension BlockEditor.Model: ModelProtocol {
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.blocks = BlockEditor.BlocksModel(detail.entry.contents.body)
         
-        let fx: Fx<Action> = Just(Action.refreshTranscludes)
+        let refreshTranscludesFx: Just<Action> = Just(
+            Action.refreshTranscludes
+        )
+        let loadRelatedFx: Just<Action> = Just(Action.fetchRelated)
+
+        let fx: Fx<Action> = refreshTranscludesFx.merge(with: loadRelatedFx)
             .eraseToAnyPublisher()
-        
+
         return Update(state: model, fx: fx, change: .reloadEditor)
     }
     

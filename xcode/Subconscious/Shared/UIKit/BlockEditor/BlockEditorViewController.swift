@@ -200,8 +200,8 @@ extension BlockEditor {
         private func update(_ change: BlockEditor.Change) {
             Self.logger.log("Change: \(String(describing: change))")
             switch change {
-            case .ready:
-                return ready()
+            case .present:
+                return present()
             case .reloadEditor:
                 return reloadEditor()
             case let .reconfigureCollectionItems(indexPaths):
@@ -223,7 +223,7 @@ extension BlockEditor {
             }
         }
 
-        private func ready() {
+        private func present() {
             UIView.animate(withDuration: 1) {
                 self.view.alpha = 1
             }
