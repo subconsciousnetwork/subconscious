@@ -79,6 +79,8 @@ extension BlockEditor {
 extension BlockEditor {
     // MARK: Actions
     enum Action {
+        /// Handle app backgrounding, etec
+        case scenePhaseChange(ScenePhase)
         /// View is ready for updates.
         /// Sent during viewDidLoad after performing first view update for
         /// initial state and subscribing to changes.
@@ -242,6 +244,11 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         switch action {
+        case .scenePhaseChange:
+            return scenePhaseChange(
+                state: state,
+                environment: environment
+            )
         case .ready:
             return ready(
                 state: state,
@@ -508,6 +515,17 @@ extension BlockEditor.Model: ModelProtocol {
                 environment: environment
             )
         }
+    }
+
+    static func scenePhaseChange(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        return update(
+            state: state,
+            action: .autosave,
+            environment: environment
+        )
     }
     
     static func ready(

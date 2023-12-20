@@ -106,7 +106,8 @@ struct MemoEditorDetailView: View {
         // See https://developer.apple.com/documentation/swiftui/scenephase
         // 2022-02-08 Gordon Brander
         .onChange(of: self.scenePhase) { phase in
-            store.send(MemoEditorDetailAction.scenePhaseChange(phase))
+            store.send(.scenePhaseChange(phase))
+            blockEditorStore.send(.scenePhaseChange(phase))
         }
         // Save when back button pressed.
         // Note that .onDisappear is too late, because by the time the save
@@ -117,6 +118,7 @@ struct MemoEditorDetailView: View {
         .onChange(of: self.isPresented) { isPresented in
             if !isPresented {
                 store.send(.autosave)
+                blockEditorStore.send(.autosave)
             }
         }
         /// Catch link taps and handle them here
