@@ -20,6 +20,7 @@ extension NoosphereLogProxy {
     
     /// Redirect STDOUT to a logger to capture it in production
     public static func connect() -> Void {
+        // Adapted from https://stackoverflow.com/a/54124239
         setvbuf(stdout, nil, _IONBF, 0)
         dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
         
