@@ -38,34 +38,11 @@ extension SentryIntegration: ErrorLoggingServiceProtocol {
 }
 
 extension SentryIntegration {
-    public static let pipe = Pipe()
-    
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "StdOut"
-    )
-    
-    /// Redirect STDOUT to a logger to capture it in production
-    public static func openConsolePipe () {
-        setvbuf(stdout, nil, _IONBF, 0)
-        dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
-        
-        pipe.fileHandleForReading.readabilityHandler = { handle in
-            let data = handle.availableData
-            let str = String(data: data, encoding: .ascii) ?? "<Non-ascii data of size\(data.count)>\n"
-            DispatchQueue.main.async {
-                logger.log("\(str, privacy: .public)")
-            }
-        }
-    }
-    
     public static func start() {
         // If we're in test mode we skip sentry initialization altogether
         if ProcessInfo.processInfo.environment["TEST"] != nil {
             return
         }
-      
-        openConsolePipe()
        
         SentrySDK.start { options in
             // per https://docs.sentry.io/product/sentry-basics/dsn-explainer/#dsn-utilization this is fine to be public, unless it's abused (e.g. someone sending us /extra/ errors.

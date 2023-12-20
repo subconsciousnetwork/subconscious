@@ -107,6 +107,8 @@
 		B58FD6752A4E4C8200826548 /* ResourceSyncBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */; };
 		B5908BEB29DAB05B00225B1A /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5908BEA29DAB05B00225B1A /* TestUtilities.swift */; };
 		B597C7372B4E34DB003F4342 /* ActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B597C7362B4E34DA003F4342 /* ActivityEvent.swift */; };
+		B59850B52B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
+		B59850B62B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
 		B59D556329BBFF56007915E2 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59D556229BBFF56007915E2 /* FormField.swift */; };
 		B59E4E572B3BA781000A2B49 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E562B3BA781000A2B49 /* CardView.swift */; };
 		B59E4E592B3BA8E7000A2B49 /* EntryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */; };
@@ -631,6 +633,7 @@
 		B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceSyncBadge.swift; sourceTree = "<group>"; };
 		B5908BEA29DAB05B00225B1A /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		B597C7362B4E34DA003F4342 /* ActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEvent.swift; sourceTree = "<group>"; };
+		B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoosphereLogProxy.swift; sourceTree = "<group>"; };
 		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B59E4E562B3BA781000A2B49 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCardView.swift; sourceTree = "<group>"; };
@@ -1677,6 +1680,9 @@
 				B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
+				B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */,
+				B56B80932B05AEA800AABF08 /* MathUtilities.swift */,
+				B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -2255,6 +2261,7 @@
 				B59D556329BBFF56007915E2 /* FormField.swift in Sources */,
 				B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */,
 				B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */,
+				B59850B52B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */,
 				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,
@@ -2467,6 +2474,7 @@
 				B5D71D1A2A32B2AF000E058A /* NotFoundView.swift in Sources */,
 				B528CB3C2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */,
 				B8B6BCB629CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
+				B59850B62B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */,
 				B58862C929F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
 				B8B4251328FDE7780081B8D5 /* Mapping.swift in Sources */,
