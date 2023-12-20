@@ -313,6 +313,11 @@ extension MemoEditorDetailNotification {
 extension MemoEditorDetailNotification {
     static func from(_ action: BlockEditor.Action) -> Self? {
         switch action {
+        case let .succeedSave(entry):
+            return .succeedSaveEntry(
+                address: entry.address,
+                modified: entry.contents.modified
+            )
         case let .requestFindLinkDetail(link):
             return .requestFindLinkDetail(link)
         default:
