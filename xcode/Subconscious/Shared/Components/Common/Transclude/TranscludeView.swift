@@ -33,13 +33,9 @@ struct TranscludeView: View {
                     )
                     
                     SubtextView(
+                        peer: entry.toPeer(),
                         subtext: entry.excerpt,
-                        onLink: { link in
-                            let rebasedLink = link.rebaseIfNeeded(
-                                peer: entry.toPeer()
-                            )
-                            onLink(rebasedLink)
-                        }
+                        onLink: onLink
                     )
                 }
                 .tint(highlight)

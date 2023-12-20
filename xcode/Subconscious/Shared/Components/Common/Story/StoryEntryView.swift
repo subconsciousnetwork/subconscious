@@ -71,14 +71,10 @@ struct StoryEntryView: View {
                     
                     // MARK: excerpt
                     SubtextView(
+                        peer: story.entry.toPeer(),
                         subtext: story.entry.excerpt,
                         transcludePreviews: [:],
-                        onLink: { link in
-                            let rebasedLink = link.rebaseIfNeeded(
-                                peer: story.entry.toPeer()
-                            )
-                            onLink(rebasedLink)
-                        }
+                        onLink: onLink
                     )
                     .padding([.leading, .trailing], AppTheme.padding)
                     
