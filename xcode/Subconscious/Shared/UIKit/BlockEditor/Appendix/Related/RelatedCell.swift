@@ -15,8 +15,6 @@ extension BlockEditor {
     {
         static let identifier = "RelatedCell"
         
-        var id: UUID = UUID()
-        
         var send: (RelatedAction) -> Void = { _ in }
         
         private var relatedHostingView = UIHostingView<BacklinksView>()
@@ -76,7 +74,6 @@ extension BlockEditor {
             parentController: UIViewController,
             state: BlockEditor.RelatedModel
         ) {
-            self.id = state.id
             relatedHostingView.update(
                 parentController: parentController,
                 rootView: BacklinksView(

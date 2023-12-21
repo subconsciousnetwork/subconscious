@@ -89,7 +89,7 @@ extension BlockEditor {
 
             // Subscribe to store changes and perform them.
             self.cancelStoreChanges = store.updates
-                .compactMap(\.change)
+                .map(\.changes)
                 .receive(on: DispatchQueue.main)
                 .sink(receiveValue: { [weak self] change in
                     self?.update(change)
@@ -196,6 +196,12 @@ extension BlockEditor {
             }
         }
 
+        private func update(_ changes: [BlockEditor.Change]) {
+            for change in changes {
+                update(change)
+            }
+        }
+
         /// Process a change message and perform related actions on controller.
         private func update(_ change: BlockEditor.Change) {
             Self.logger.log("Change: \(String(describing: change))")
@@ -224,7 +230,7 @@ extension BlockEditor {
         }
 
         private func present() {
-            UIView.animate(withDuration: 1) {
+            UIView.animate(withDuration: Duration.fast) {
                 self.view.alpha = 1
             }
         }

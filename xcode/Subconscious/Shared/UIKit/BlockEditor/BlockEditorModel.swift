@@ -100,6 +100,12 @@ extension BlockEditor {
             fallback: String,
             autofocus: Bool = false
         )
+        case succeedLoadEditor(
+            owner: Did,
+            detail: MemoEditorDetailResponse,
+            related: [EntryStub],
+            transcludes: [EntryStub]
+        )
         case failLoadEditor(_ error: String)
         /// Reload the editor state with a new document
         case setEditor(
@@ -210,36 +216,7 @@ extension BlockEditor {
 extension BlockEditor.Model: ModelProtocol {
     typealias Action = BlockEditor.Action
     typealias Environment = AppEnvironment
-    
-    struct Update: UpdateProtocol {
-        init(
-            state: BlockEditor.Model,
-            fx: ObservableStore.Fx<BlockEditor.Action>,
-            transaction: Transaction?
-        ) {
-            self.state = state
-            self.fx = fx
-            self.transaction = transaction
-        }
-        
-        init(
-            state: BlockEditor.Model,
-            fx: Fx<BlockEditor.Action> = Empty(completeImmediately: true)
-                .eraseToAnyPublisher(),
-            transaction: Transaction? = nil,
-            change: BlockEditor.Change? = nil
-        ) {
-            self.state = state
-            self.fx = fx
-            self.transaction = transaction
-            self.change = change
-        }
-        
-        var state: BlockEditor.Model
-        var fx: Fx<Action>
-        var transaction: Transaction?
-        var change: BlockEditor.Change? = nil
-    }
+    typealias UpdateType = BlockEditor.Model.Update
     
     static func update(
         state: Self,
@@ -297,6 +274,20 @@ extension BlockEditor.Model: ModelProtocol {
                 address: address,
                 fallback: fallback,
                 autofocus: autofocus,
+                environment: environment
+            )
+        case let .succeedLoadEditor(
+            owner,
+            detail,
+            related,
+            transcludes
+        ):
+            return succeedLoadEditor(
+                state: state,
+                owner: owner,
+                detail: detail,
+                related: related,
+                transcludes: transcludes,
                 environment: environment
             )
         case let .failLoadEditor(error):
@@ -663,33 +654,70 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         var model = state
+        model.loadingState = .loading
         model.address = address
         
         guard let address = address else {
             logger.info("Editor loaded draft (no address)")
             return Update(state: model)
         }
-        
-        let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
-            address: address,
-            fallback: fallback
-        ).map({ detail in
-            return Action.setEditorIfNeeded(
-                detail: detail,
-                autofocus: autofocus
-            )
-        }).recover({ error in
-            return Action.failLoadEditor(error.localizedDescription)
-        })
-        
-        let resolveOwnerFx: Fx<Action> = Just(Action.resolveOwnerSphere)
-            .eraseToAnyPublisher()
 
-        let fx: Fx<Action> = loadDetailFx
-            .merge(with: resolveOwnerFx)
-            .eraseToAnyPublisher()
-        
-        return Update(state: model, fx: fx)
+        // Load editor document, transcludes, and related all in one go.
+        let loadFx: Fx<Action> = Future.detached {
+            do {
+                let owner = try await environment.noosphere.resolve(
+                    peer: address.peer
+                )
+                let detail = try await environment.data.readMemoEditorDetail(
+                    address: address,
+                    fallback: fallback
+                )
+                let related = try await environment.data.readMemoBacklinks(
+                    address: address
+                )
+                let slashlinksToFetch = detail.entry.contents
+                    .dom()
+                    .parsedSlashlinks
+                let transcludes = await environment.transclude.fetchTranscludes(
+                    slashlinks: slashlinksToFetch,
+                    owner: .did(owner)
+                )
+                return Action.succeedLoadEditor(
+                    owner: owner,
+                    detail: detail,
+                    related: related,
+                    transcludes: Array(transcludes.values)
+                )
+            } catch {
+                return Action.failLoadEditor(error.localizedDescription)
+            }
+        }
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: loadFx)
+    }
+    
+    static func succeedLoadEditor(
+        state: Self,
+        owner: Did,
+        detail: MemoEditorDetailResponse,
+        related: [EntryStub],
+        transcludes: [EntryStub],
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.loadingState = .loaded
+        return update(
+            state: state,
+            actions: [
+                .succeedResolveOwnerSphere(owner),
+                .setEditorIfNeeded(detail: detail, autofocus: false),
+                .succeedLoadRelated(related),
+                .succeedLoadTranscludes(transcludes)
+            ],
+            environment: environment
+        )
+        .appendingChanges([.present])
     }
     
     static func failLoadEditor(
@@ -737,7 +765,7 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<Action> = refreshTranscludesFx.merge(with: loadRelatedFx)
             .eraseToAnyPublisher()
 
-        return Update(state: model, fx: fx, change: .reloadEditor)
+        return Update(state: model, fx: fx, changes: [.reloadEditor])
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
@@ -886,7 +914,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems(indexPaths)
+            changes: [.reconfigureCollectionItems(indexPaths)]
         )
     }
     
@@ -988,7 +1016,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1207,11 +1235,13 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .splitBlock(
-                reconfigure: indexPathA,
-                insert: indexPathB,
-                requestEditing: blockB.id
-            )
+            changes: [
+                .splitBlock(
+                    reconfigure: indexPathA,
+                    insert: indexPathB,
+                    requestEditing: blockB.id
+                )
+            ]
         )
     }
     
@@ -1275,11 +1305,13 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .mergeBlockUp(
-                reconfigure: indexPathUp,
-                delete: indexPathDown,
-                requestEditing: blockUp.id
-            )
+            changes: [
+                .mergeBlockUp(
+                    reconfigure: indexPathUp,
+                    delete: indexPathDown,
+                    requestEditing: blockUp.id
+                )
+            ]
         )
     }
     
@@ -1315,7 +1347,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1357,7 +1389,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1427,7 +1459,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1462,7 +1494,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1502,7 +1534,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .moveBlock(at: atIndexPath, to: toIndexPath)
+            changes: [.moveBlock(at: atIndexPath, to: toIndexPath)]
         )
     }
     
@@ -1544,7 +1576,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .moveBlock(at: atIndexPath, to: toIndexPath)
+            changes: [.moveBlock(at: atIndexPath, to: toIndexPath)]
         )
     }
     
@@ -1610,7 +1642,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
