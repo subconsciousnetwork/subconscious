@@ -14,6 +14,7 @@ extension BlockEditor {
         case becomeHeadingBlock
         case becomeListBlock
         case becomeQuoteBlock
+        case delete
     }
 }
 
@@ -54,7 +55,7 @@ extension BlockEditor {
                                         Text("Heading")
                                     },
                                     icon: {
-                                        Image(systemName: "textformat.size.larger")
+                                        Image(systemName: "number")
                                     }
                                 )
                             }
@@ -92,7 +93,7 @@ extension BlockEditor {
                         Button(
                             role: .destructive,
                             action: {
-                                send(.becomeQuoteBlock)
+                                send(.delete)
                             },
                             label: {
                                 Label(

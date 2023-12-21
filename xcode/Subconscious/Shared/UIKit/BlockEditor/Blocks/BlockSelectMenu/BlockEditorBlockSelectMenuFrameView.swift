@@ -41,6 +41,7 @@ extension BlockEditor {
                         })
                 )
             }
+            .padding(AppTheme.padding)
         }
     }
 }
