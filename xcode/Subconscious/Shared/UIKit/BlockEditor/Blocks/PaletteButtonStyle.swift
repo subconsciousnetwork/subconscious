@@ -19,7 +19,16 @@ struct PaletteButtonStyle: ButtonStyle {
             width: size,
             height: size
         )
-        .background(Color.secondaryBackground)
+        .foregroundColor(
+            configuration.role == .destructive ?
+            Color.brandMarkRed :
+            Color.buttonText
+        )
+        .background(
+            configuration.role == .destructive ?
+            Color.brandMarkRed.opacity(0.1) :
+            Color.secondaryBackground
+        )
         .cornerRadius(AppTheme.cornerRadius)
     }
 }
@@ -39,15 +48,28 @@ struct PaletteLabelStyle: LabelStyle {
 
 struct PaletteButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
-        Button(
-            action: {},
-            label: {
-                Label(
-                    title: { Text("Label") },
-                    icon: { Image(systemName: "doc.on.doc") }
-                )
-            }
-        )
-        .buttonStyle(PaletteButtonStyle())
+        HStack {
+            Button(
+                action: {},
+                label: {
+                    Label(
+                        title: { Text("Label") },
+                        icon: { Image(systemName: "doc.on.doc") }
+                    )
+                }
+            )
+            .buttonStyle(PaletteButtonStyle())
+            Button(
+                role: .destructive,
+                action: {},
+                label: {
+                    Label(
+                        title: { Text("Label") },
+                        icon: { Image(systemName: "trash") }
+                    )
+                }
+            )
+            .buttonStyle(PaletteButtonStyle())
+        }
     }
 }

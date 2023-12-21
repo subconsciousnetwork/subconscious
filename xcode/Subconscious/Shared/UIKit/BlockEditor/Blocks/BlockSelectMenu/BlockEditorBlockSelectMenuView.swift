@@ -89,10 +89,27 @@ extension BlockEditor {
                                 )
                             }
                         )
+                        Button(
+                            role: .destructive,
+                            action: {
+                                send(.becomeQuoteBlock)
+                            },
+                            label: {
+                                Label(
+                                    title: {
+                                        Text("Delete")
+                                    },
+                                    icon: {
+                                        Image(systemName: "trash")
+                                    }
+                                )
+                            }
+                        )
                     }
                     .buttonStyle(PaletteButtonStyle())
                     .padding(AppTheme.unit2)
                 }
+                .scrollIndicators(.hidden)
                 .frame(
                     maxWidth: .infinity
                 )
