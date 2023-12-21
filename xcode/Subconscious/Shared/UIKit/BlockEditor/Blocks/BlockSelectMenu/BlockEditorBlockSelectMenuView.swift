@@ -25,77 +25,79 @@ extension BlockEditor {
         var send: (BlockSelectMenuAction) -> Void
 
         var body: some View {
-            VStack(alignment: .center, spacing: AppTheme.unit2) {
+            VStack(alignment: .center, spacing: 0) {
                 DragHandleView()
-                HStack(spacing: AppTheme.unit2) {
-                    Button(
-                        action: {
-                            send(.becomeTextBlock)
-                        },
-                        label: {
-                            Label(
-                                title: {
-                                    Text("Body")
-                                },
-                                icon: {
-                                    Image(systemName: "text.alignleft")
-                                }
-                            )
-                        }
-                    )
-                    Button(
-                        action: {
-                            send(.becomeHeadingBlock)
-                        },
-                        label: {
-                            Label(
-                                title: {
-                                    Text("Heading")
-                                },
-                                icon: {
-                                    Image(systemName: "textformat.size.larger")
-                                }
-                            )
-                        }
-                    )
-                    Button(
-                        action: {
-                            send(.becomeListBlock)
-                        },
-                        label: {
-                            Label(
-                                title: {
-                                    Text("List")
-                                },
-                                icon: {
-                                    Image(systemName: "list.bullet")
-                                }
-                            )
-                        }
-                    )
-                    Button(
-                        action: {
-                            send(.becomeQuoteBlock)
-                        },
-                        label: {
-                            Label(
-                                title: {
-                                    Text("Quote")
-                                },
-                                icon: {
-                                    Image(systemName: "quote.opening")
-                                }
-                            )
-                        }
-                    )
-                    Spacer()
+                ScrollView(.horizontal) {
+                    HStack(spacing: AppTheme.unit2) {
+                        Button(
+                            action: {
+                                send(.becomeTextBlock)
+                            },
+                            label: {
+                                Label(
+                                    title: {
+                                        Text("Body")
+                                    },
+                                    icon: {
+                                        Image(systemName: "text.alignleft")
+                                    }
+                                )
+                            }
+                        )
+                        Button(
+                            action: {
+                                send(.becomeHeadingBlock)
+                            },
+                            label: {
+                                Label(
+                                    title: {
+                                        Text("Heading")
+                                    },
+                                    icon: {
+                                        Image(systemName: "textformat.size.larger")
+                                    }
+                                )
+                            }
+                        )
+                        Button(
+                            action: {
+                                send(.becomeListBlock)
+                            },
+                            label: {
+                                Label(
+                                    title: {
+                                        Text("List")
+                                    },
+                                    icon: {
+                                        Image(systemName: "list.bullet")
+                                    }
+                                )
+                            }
+                        )
+                        Button(
+                            action: {
+                                send(.becomeQuoteBlock)
+                            },
+                            label: {
+                                Label(
+                                    title: {
+                                        Text("Quote")
+                                    },
+                                    icon: {
+                                        Image(systemName: "quote.opening")
+                                    }
+                                )
+                            }
+                        )
+                    }
+                    .buttonStyle(PaletteButtonStyle())
+                    .padding(AppTheme.unit2)
                 }
-                .buttonStyle(PaletteButtonStyle())
                 .frame(
                     maxWidth: .infinity
                 )
             }
-            .padding(AppTheme.unit2)
+            .padding(.top, AppTheme.unit2)
             .background(.background)
             .cornerRadius(AppTheme.cornerRadiusLg)
             .shadow(style: .brandShadowLg(colorScheme))
