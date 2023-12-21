@@ -18,11 +18,9 @@ struct EntryRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             SubtextView(
+                peer: entry.toPeer(),
                 subtext: entry.excerpt,
-                onLink: { link in
-                    let rebasedLink = link.rebaseIfNeeded(peer: entry.toPeer())
-                    onLink(rebasedLink)
-                }
+                onLink: onLink
             )
             .font(.callout)
             .multilineTextAlignment(.leading)

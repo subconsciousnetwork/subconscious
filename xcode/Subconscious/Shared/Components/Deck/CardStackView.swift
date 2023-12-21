@@ -35,10 +35,9 @@ struct CardView: View {
             switch entry.card {
             case let .entry(entry, _, backlinks):
                 SubtextView(
+                    peer: entry.toPeer(),
                     subtext: entry.excerpt,
-                    onLink: { link in
-                        onLink(link.rebaseIfNeeded(peer: entry.toPeer()))
-                    }
+                    onLink: onLink
                 )
                 // Opacity allows blendMode to show through
                 .foregroundStyle(.primary.opacity(0.8))
@@ -64,6 +63,8 @@ struct CardView: View {
                 }
                 .font(.caption)
                 .foregroundStyle(highlight)
+                .padding(DeckTheme.cardPadding)
+            
             case .action(let string):
                 // TEMP
                 VStack {

@@ -14,6 +14,7 @@ struct RenderableBlock: Hashable {
 
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
+    var peer: Peer? = nil
     var subtext: Subtext
     var transcludePreviews: [Slashlink: EntryStub] = [:]
     var onLink: (EntryLink) -> Void
@@ -91,7 +92,8 @@ struct SubtextView: View {
             guard let link = url.toSubSlashlinkLink()?.toEntryLink() else {
                 return .systemAction
             }
-            onLink(link)
+            
+            onLink(link.rebaseIfNeeded(peer: peer))
             return .handled
         })
     }

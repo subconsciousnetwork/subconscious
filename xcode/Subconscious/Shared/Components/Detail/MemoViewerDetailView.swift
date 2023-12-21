@@ -140,17 +140,11 @@ struct MemoViewerDetailLoadedView: View {
                 VStack {
                     VStack {
                         SubtextView(
+                            peer: store.state.owner?.address.peer,
                             subtext: store.state.dom,
                             transcludePreviews: store.state.transcludePreviews,
                             onLink: { link in
-                                notify(
-                                    .requestFindLinkDetail(
-                                        link.rebaseIfNeeded(
-                                            peer: store.state.owner?
-                                                .address.peer
-                                        )
-                                    )
-                                )
+                                notify(.requestFindLinkDetail(link))
                             }
                         ).textSelection(
                             .enabled
