@@ -10,8 +10,6 @@ import Foundation
 extension BlockEditor {
     /// A collection of related notes
     struct RelatedModel: Hashable {
-        /// Is related loading?
-        var loadingState = LoadingState.loading
         var related: [EntryStub] = []
     }
 }
