@@ -185,3 +185,16 @@ extension UIColor {
         UIColor(Color.accentColor)
     }
 }
+
+extension ShadowStyle {
+    static func brandShadowLg(
+        _ colorScheme: ColorScheme
+    ) -> ShadowStyle {
+        ShadowStyle(
+            color: Color.brandDropShadow(colorScheme).opacity(0.5),
+            radius: 8,
+            x: 0,
+            y: 4
+        )
+    }
+}
