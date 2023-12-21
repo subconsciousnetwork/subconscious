@@ -102,6 +102,12 @@ extension BlockEditor {
             fallback: String,
             autofocus: Bool = false
         )
+        case succeedLoadEditor(
+            owner: Did,
+            detail: MemoEditorDetailResponse,
+            related: [EntryStub],
+            transcludes: [EntryStub]
+        )
         case failLoadEditor(_ error: String)
         /// Reload the editor state with a new document
         case setEditor(
@@ -115,17 +121,20 @@ extension BlockEditor {
             autofocus: Bool = false
         )
         /// Load related notes (backlinks)
-        case fetchRelated
-        case succeedFetchRelated(_ related: [EntryStub])
-        case failFetchRelated(_ error: String)
-        case refreshTranscludes
-        case succeedRefreshTranscludes([EntryStub])
-        case fetchTranscludesFor(id: UUID, slashlinks: [Slashlink])
-        case succeedFetchTranscludesFor(
+        case loadRelated
+        case succeedLoadRelated(_ related: [EntryStub])
+        case failLoadRelated(_ error: String)
+        /// Load transcludes into cache for entire document
+        case loadTranscludes
+        case succeedLoadTranscludes([EntryStub])
+        case loadTranscludesFor(id: UUID, slashlinks: [Slashlink])
+        case succeedLoadTranscludesFor(
             id: UUID,
-            fetched: [EntryStub]
+            transcludes: [EntryStub]
         )
-        case failFetchTranscludesFor(id: UUID, error: String)
+        case failLoadTranscludesFor(id: UUID, error: String)
+        /// Refresh the rendered transcludes in a cell cell using whatever we
+        /// have in cache.
         case refreshTranscludesFor(id: UUID)
         /// Save a snapshot
         case save(_ snapshot: MemoEntry?)
@@ -184,6 +193,8 @@ extension BlockEditor {
     /// Describes the state change that has happened, giving the controller
     /// the details it needs to perform that change.
     enum Change: Hashable {
+        /// Set the controller to ready state
+        case present
         case reconfigureCollectionItems([IndexPath])
         case reloadEditor
         case moveBlock(
@@ -207,36 +218,7 @@ extension BlockEditor {
 extension BlockEditor.Model: ModelProtocol {
     typealias Action = BlockEditor.Action
     typealias Environment = AppEnvironment
-    
-    struct Update: UpdateProtocol {
-        init(
-            state: BlockEditor.Model,
-            fx: ObservableStore.Fx<BlockEditor.Action>,
-            transaction: Transaction?
-        ) {
-            self.state = state
-            self.fx = fx
-            self.transaction = transaction
-        }
-        
-        init(
-            state: BlockEditor.Model,
-            fx: Fx<BlockEditor.Action> = Empty(completeImmediately: true)
-                .eraseToAnyPublisher(),
-            transaction: Transaction? = nil,
-            change: BlockEditor.Change? = nil
-        ) {
-            self.state = state
-            self.fx = fx
-            self.transaction = transaction
-            self.change = change
-        }
-        
-        var state: BlockEditor.Model
-        var fx: Fx<Action>
-        var transaction: Transaction?
-        var change: BlockEditor.Change? = nil
-    }
+    typealias UpdateType = BlockEditor.Model.Update
     
     static func update(
         state: Self,
@@ -301,6 +283,20 @@ extension BlockEditor.Model: ModelProtocol {
                 autofocus: autofocus,
                 environment: environment
             )
+        case let .succeedLoadEditor(
+            owner,
+            detail,
+            related,
+            transcludes
+        ):
+            return succeedLoadEditor(
+                state: state,
+                owner: owner,
+                detail: detail,
+                related: related,
+                transcludes: transcludes,
+                environment: environment
+            )
         case let .failLoadEditor(error):
             return failLoadEditor(
                 state: state,
@@ -321,50 +317,50 @@ extension BlockEditor.Model: ModelProtocol {
                 autofocus: autofocus,
                 environment: environment
             )
-        case .fetchRelated:
-            return fetchRelated(
+        case .loadRelated:
+            return loadRelated(
                 state: state,
                 environment: environment
             )
-        case let .succeedFetchRelated(related):
-            return succeedFetchRelated(
+        case let .succeedLoadRelated(related):
+            return succeedLoadRelated(
                 state: state,
                 related: related,
                 environment: environment
             )
-        case let .failFetchRelated(error):
-            return failFetchRelated(
+        case let .failLoadRelated(error):
+            return failLoadRelated(
                 state: state,
                 error: error,
                 environment: environment
             )
-        case .refreshTranscludes:
-            return refreshTranscludes(
+        case .loadTranscludes:
+            return loadTranscludes(
                 state: state,
                 environment: environment
             )
-        case let .succeedRefreshTranscludes(transcludes):
-            return succeedRefreshTranscludes(
+        case let .succeedLoadTranscludes(transcludes):
+            return succeedLoadTranscludes(
                 state: state,
                 transcludes: transcludes,
                 environment: environment
             )
-        case let .fetchTranscludesFor(id, slashlinks):
-            return fetchTranscludesFor(
+        case let .loadTranscludesFor(id, slashlinks):
+            return loadTranscludesFor(
                 state: state,
                 id: id,
                 slashlinks: slashlinks,
                 environment: environment
             )
-        case let .succeedFetchTranscludesFor(id, fetched):
-            return succeedFetchTranscludesFor(
+        case let .succeedLoadTranscludesFor(id, transcludes):
+            return succeedLoadTranscludesFor(
                 state: state,
                 id: id,
-                fetched: fetched,
+                transcludes: transcludes,
                 environment: environment
             )
-        case let .failFetchTranscludesFor(id, error):
-            return failFetchTranscludesFor(
+        case let .failLoadTranscludesFor(id, error):
+            return failLoadTranscludesFor(
                 state: state,
                 id: id,
                 error: error,
@@ -676,35 +672,70 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         var model = state
+        model.loadingState = .loading
         model.address = address
         
         guard let address = address else {
             logger.info("Editor loaded draft (no address)")
             return Update(state: model)
         }
-        
-        let loadRelatedFx = Just(Action.fetchRelated)
-        
-        let loadDetailFx = environment.data.readMemoEditorDetailPublisher(
-            address: address,
-            fallback: fallback
-        ).map({ detail in
-            return Action.setEditorIfNeeded(
-                detail: detail,
-                autofocus: autofocus
-            )
-        }).recover({ error in
-            return Action.failLoadEditor(error.localizedDescription)
-        })
-        
-        let resolveOwnerFx: Fx<Action> = Just(Action.resolveOwnerSphere)
-            .eraseToAnyPublisher()
 
-        let fx: Fx<Action> = loadDetailFx
-            .merge(with: loadRelatedFx, resolveOwnerFx)
-            .eraseToAnyPublisher()
-        
-        return Update(state: model, fx: fx)
+        // Load editor document, transcludes, and related all in one go.
+        let loadFx: Fx<Action> = Future.detached {
+            do {
+                let owner = try await environment.noosphere.resolve(
+                    peer: address.peer
+                )
+                let detail = try await environment.data.readMemoEditorDetail(
+                    address: address,
+                    fallback: fallback
+                )
+                let related = try await environment.data.readMemoBacklinks(
+                    address: address
+                )
+                let slashlinksToFetch = detail.entry.contents
+                    .dom()
+                    .parsedSlashlinks
+                let transcludes = await environment.transclude.fetchTranscludes(
+                    slashlinks: slashlinksToFetch,
+                    owner: .did(owner)
+                )
+                return Action.succeedLoadEditor(
+                    owner: owner,
+                    detail: detail,
+                    related: related,
+                    transcludes: Array(transcludes.values)
+                )
+            } catch {
+                return Action.failLoadEditor(error.localizedDescription)
+            }
+        }
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: loadFx)
+    }
+    
+    static func succeedLoadEditor(
+        state: Self,
+        owner: Did,
+        detail: MemoEditorDetailResponse,
+        related: [EntryStub],
+        transcludes: [EntryStub],
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.loadingState = .loaded
+        return update(
+            state: state,
+            actions: [
+                .succeedResolveOwnerSphere(owner),
+                .setEditorIfNeeded(detail: detail, autofocus: false),
+                .succeedLoadRelated(related),
+                .succeedLoadTranscludes(transcludes)
+            ],
+            environment: environment
+        )
+        .appendingChanges([.present])
     }
     
     static func failLoadEditor(
@@ -744,10 +775,15 @@ extension BlockEditor.Model: ModelProtocol {
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.blocks = BlockEditor.BlocksModel(detail.entry.contents.body)
         
-        let fx: Fx<Action> = Just(Action.refreshTranscludes)
+        let refreshTranscludesFx: Just<Action> = Just(
+            Action.loadTranscludes
+        )
+        let loadRelatedFx: Just<Action> = Just(Action.loadRelated)
+
+        let fx: Fx<Action> = refreshTranscludesFx.merge(with: loadRelatedFx)
             .eraseToAnyPublisher()
-        
-        return Update(state: model, fx: fx, change: .reloadEditor)
+
+        return Update(state: model, fx: fx, changes: [.reloadEditor])
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
@@ -793,7 +829,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func fetchRelated(
+    static func loadRelated(
         state: Self,
         environment: Environment
     ) -> Update {
@@ -806,17 +842,17 @@ extension BlockEditor.Model: ModelProtocol {
             try await environment.data.readMemoBacklinks(address: address)
         }
         .map({ backlinks in
-            Action.succeedFetchRelated(backlinks)
+            Action.succeedLoadRelated(backlinks)
         })
         .recover({ error in
-            Action.failFetchRelated(error.localizedDescription)
+            Action.failLoadRelated(error.localizedDescription)
         })
         .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
     
-    static func succeedFetchRelated(
+    static func succeedLoadRelated(
         state: Self,
         related: [EntryStub],
         environment: Environment
@@ -828,7 +864,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model)
     }
     
-    static func failFetchRelated(
+    static func failLoadRelated(
         state: Self,
         error: String,
         environment: Environment
@@ -838,7 +874,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
-    static func refreshTranscludes(
+    static func loadTranscludes(
         state: Self,
         environment: Environment
     ) -> Update {
@@ -860,7 +896,7 @@ extension BlockEditor.Model: ModelProtocol {
                 slashlinks: slashlinksToFetch,
                 owner: owner
             )
-            return Action.succeedRefreshTranscludes(
+            return Action.succeedLoadTranscludes(
                 Array(transcludes.values)
             )
         }
@@ -869,7 +905,7 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    static func succeedRefreshTranscludes(
+    static func succeedLoadTranscludes(
         state: Self,
         transcludes: [EntryStub],
         environment: Environment
@@ -896,11 +932,11 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems(indexPaths)
+            changes: [.reconfigureCollectionItems(indexPaths)]
         )
     }
     
-    static func fetchTranscludesFor(
+    static func loadTranscludesFor(
         state: Self,
         id: UUID,
         slashlinks: [Slashlink],
@@ -923,9 +959,9 @@ extension BlockEditor.Model: ModelProtocol {
                     slashlinks: slashlinksToFetch,
                     owner: owner
                 )
-            return Action.succeedFetchTranscludesFor(
+            return Action.succeedLoadTranscludesFor(
                 id: id,
-                fetched: Array(transcludes.values)
+                transcludes: Array(transcludes.values)
             )
         }
         .eraseToAnyPublisher()
@@ -945,13 +981,13 @@ extension BlockEditor.Model: ModelProtocol {
         return model
     }
     
-    static func succeedFetchTranscludesFor(
+    static func succeedLoadTranscludesFor(
         state: Self,
         id: UUID,
-        fetched: [EntryStub],
+        transcludes: [EntryStub],
         environment: Environment
     ) -> Update {
-        let model = cacheTranscludes(state: state, transcludes: fetched)
+        let model = cacheTranscludes(state: state, transcludes: transcludes)
         return update(
             state: model,
             action: .refreshTranscludesFor(id: id),
@@ -959,7 +995,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func failFetchTranscludesFor(
+    static func failLoadTranscludesFor(
         state: Self,
         id: UUID,
         error: String,
@@ -998,7 +1034,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1127,7 +1163,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return update(
             state: model,
-            action: .fetchTranscludesFor(
+            action: .loadTranscludesFor(
                 id: id,
                 slashlinks: dom.parsedSlashlinks
             ),
@@ -1217,11 +1253,13 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .splitBlock(
-                reconfigure: indexPathA,
-                insert: indexPathB,
-                requestEditing: blockB.id
-            )
+            changes: [
+                .splitBlock(
+                    reconfigure: indexPathA,
+                    insert: indexPathB,
+                    requestEditing: blockB.id
+                )
+            ]
         )
     }
     
@@ -1285,11 +1323,13 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .mergeBlockUp(
-                reconfigure: indexPathUp,
-                delete: indexPathDown,
-                requestEditing: blockUp.id
-            )
+            changes: [
+                .mergeBlockUp(
+                    reconfigure: indexPathUp,
+                    delete: indexPathDown,
+                    requestEditing: blockUp.id
+                )
+            ]
         )
     }
     
@@ -1325,7 +1365,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1367,7 +1407,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1437,7 +1477,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1472,7 +1512,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     
@@ -1512,7 +1552,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .moveBlock(at: atIndexPath, to: toIndexPath)
+            changes: [.moveBlock(at: atIndexPath, to: toIndexPath)]
         )
     }
     
@@ -1554,7 +1594,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .moveBlock(at: atIndexPath, to: toIndexPath)
+            changes: [.moveBlock(at: atIndexPath, to: toIndexPath)]
         )
     }
     
@@ -1620,7 +1660,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            change: .reconfigureCollectionItems([indexPath])
+            changes: [.reconfigureCollectionItems([indexPath])]
         )
     }
     

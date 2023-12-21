@@ -89,7 +89,7 @@ extension BlockEditor {
 
             // Subscribe to store changes and perform them.
             self.cancelStoreChanges = store.updates
-                .compactMap(\.change)
+                .map(\.changes)
                 .receive(on: DispatchQueue.main)
                 .sink(receiveValue: { [weak self] change in
                     self?.update(change)
@@ -152,6 +152,8 @@ extension BlockEditor {
         }
         
         private func setupViews() {
+            // View starts out hidden and is not shown until ready
+            view.alpha = 0
             view.addSubview(collectionView)
         }
 
@@ -194,10 +196,18 @@ extension BlockEditor {
             }
         }
 
+        private func update(_ changes: [BlockEditor.Change]) {
+            for change in changes {
+                update(change)
+            }
+        }
+
         /// Process a change message and perform related actions on controller.
         private func update(_ change: BlockEditor.Change) {
             Self.logger.log("Change: \(String(describing: change))")
             switch change {
+            case .present:
+                return present()
             case .reloadEditor:
                 return reloadEditor()
             case let .reconfigureCollectionItems(indexPaths):
@@ -216,6 +226,12 @@ extension BlockEditor {
                     delete: delete,
                     requestEditing: requestEditing
                 )
+            }
+        }
+
+        private func present() {
+            UIView.animate(withDuration: Duration.fast) {
+                self.view.alpha = 1
             }
         }
 

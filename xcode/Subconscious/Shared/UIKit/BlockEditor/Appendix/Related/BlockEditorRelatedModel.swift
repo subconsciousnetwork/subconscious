@@ -9,8 +9,9 @@ import Foundation
 
 extension BlockEditor {
     /// A collection of related notes
-    struct RelatedModel: Hashable, Identifiable {
-        var id = UUID()
+    struct RelatedModel: Hashable {
+        /// Is related loading?
+        var loadingState = LoadingState.loading
         var related: [EntryStub] = []
     }
 }

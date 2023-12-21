@@ -429,6 +429,7 @@
 		B8B6BCBB29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */; };
 		B8B6BCBC29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */; };
 		B8C0A1B4297C938000D59532 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C0A1B3297C938000D59532 /* Error.swift */; };
+		B8C3AA922B33B5DA00E7B44D /* BlockEditorModelUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C3AA912B33B5DA00E7B44D /* BlockEditorModelUpdate.swift */; };
 		B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BD2809F19500E439DC /* Markup.swift */; };
 		B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */; };
 		B8C80F0129FC201000BAC84D /* Peer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C80F0029FC201000BAC84D /* Peer.swift */; };
@@ -850,6 +851,7 @@
 		B8B6BCB429CCDDF6000DB410 /* ResourceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceStatus.swift; sourceTree = "<group>"; };
 		B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressTorusView.swift; sourceTree = "<group>"; };
 		B8C0A1B3297C938000D59532 /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
+		B8C3AA912B33B5DA00E7B44D /* BlockEditorModelUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorModelUpdate.swift; sourceTree = "<group>"; };
 		B8C7E8BD2809F19500E439DC /* Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Markup.swift; sourceTree = "<group>"; };
 		B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test_Markup.swift; sourceTree = "<group>"; };
 		B8C80F0029FC201000BAC84D /* Peer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Peer.swift; sourceTree = "<group>"; };
@@ -1184,6 +1186,7 @@
 				B8E0BBA42AAB90AD00FBCB57 /* Appendix */,
 				B8AB08AB2A9D4F8D00998099 /* BlockEditor.swift */,
 				B8AB08AD2A9D4FA800998099 /* BlockEditorModel.swift */,
+				B8C3AA912B33B5DA00E7B44D /* BlockEditorModelUpdate.swift */,
 				B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */,
 				B8AB08C22A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift */,
 				B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */,
@@ -2086,6 +2089,7 @@
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */,
 				B8C80F0129FC201000BAC84D /* Peer.swift in Sources */,
+				B8C3AA922B33B5DA00E7B44D /* BlockEditorModelUpdate.swift in Sources */,
 				B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */,
 				B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */,
 				B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */,
