@@ -22,6 +22,9 @@ extension BlockEditor {
     /// interact with blocks.
     struct BlockSelectMenuView: View {
         @Environment(\.colorScheme) private var colorScheme
+        @State private var dragOffsetY: CGFloat = 0
+        @GestureState private var dragGesture: CGFloat = 0
+        var dragThreshold: CGFloat = 100
         var send: (BlockSelectMenuAction) -> Void
 
         var body: some View {
@@ -99,6 +102,26 @@ extension BlockEditor {
             .background(.background)
             .cornerRadius(AppTheme.cornerRadiusLg)
             .shadow(style: .brandShadowLg(colorScheme))
+            .animation(.interactiveSpring(), value: dragGesture)
+            .offset(y: dragOffsetY + dragGesture)
+            .gesture(
+                DragGesture()
+                    .updating(
+                        $dragGesture,
+                        body: { gesture, state, transaction in
+                            state = gesture.translation.height
+                        }
+                    )
+                    .onEnded({ gesture in
+                        if gesture.predictedEndTranslation.height >
+                            dragThreshold
+                        {
+                            self.dragOffsetY = 300
+                        } else {
+                            self.dragOffsetY = 0
+                        }
+                    })
+            )
         }
     }
 
