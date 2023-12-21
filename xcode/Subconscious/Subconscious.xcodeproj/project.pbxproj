@@ -239,6 +239,7 @@
 		B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85652212975F16B00B7FCA0 /* BylineView.swift */; };
 		B856EF212B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF202B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift */; };
 		B856EF252B34C23A00C87BD3 /* PaletteButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */; };
+		B856EF282B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF272B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift */; };
 		B85A8059296E31860007F957 /* AudienceMenuButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */; };
 		B85A805E296F08720007F957 /* AudienceMenuButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */; };
 		B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
@@ -716,6 +717,7 @@
 		B85652212975F16B00B7FCA0 /* BylineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BylineView.swift; sourceTree = "<group>"; };
 		B856EF202B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorBlockSelectMenuView.swift; sourceTree = "<group>"; };
 		B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteButtonStyle.swift; sourceTree = "<group>"; };
+		B856EF272B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorBlockSelectMenuFrameView.swift; sourceTree = "<group>"; };
 		B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceMenuButtonView.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
@@ -1212,6 +1214,15 @@
 			path = Story;
 			sourceTree = "<group>";
 		};
+		B856EF262B34D2B000C87BD3 /* BlockSelectMenu */ = {
+			isa = PBXGroup;
+			children = (
+				B856EF272B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift */,
+				B856EF202B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift */,
+			);
+			path = BlockSelectMenu;
+			sourceTree = "<group>";
+		};
 		B85DF78A29B65F0A0042D725 /* Suggestion */ = {
 			isa = PBXGroup;
 			children = (
@@ -1495,19 +1506,19 @@
 		B8E0BBA62AAB913A00FBCB57 /* Blocks */ = {
 			isa = PBXGroup;
 			children = (
-				B856EF202B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift */,
 				B834C0422AB4D40200705F2F /* BlockEditorBlockSelectView.swift */,
 				B8AB08C62A9D50E700998099 /* BlockFormatMenu.swift */,
 				B8AB08B02A9D4FC300998099 /* BlockModel.swift */,
+				B856EF262B34D2B000C87BD3 /* BlockSelectMenu */,
 				B8E6AACE2B0D41F500A3A11B /* BlocksModel.swift */,
 				B8AB08C42A9D50AB00998099 /* BlockToolbar.swift */,
 				B86DD56B2A9FF77600E1DEA5 /* ErrorCell.swift */,
 				B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */,
 				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
+				B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */,
 				B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */,
 				B8AB08B82A9D501600998099 /* TextBlockCell.swift */,
 				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
-				B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */,
 			);
 			path = Blocks;
 			sourceTree = "<group>";
@@ -2158,6 +2169,7 @@
 				B8AB08BF2A9D506300998099 /* BlockEditorRepresentable.swift in Sources */,
 				B58CC8E12B0DCEB2004CFFEA /* DeckTheme.swift in Sources */,
 				B8AB08D22A9D523600998099 /* UIViewIconButton.swift in Sources */,
+				B856EF282B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
