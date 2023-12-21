@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PaletteButtonStyle: ButtonStyle {
-    var size: CGFloat = 72
+    var size: CGFloat = AppTheme.unit * 18
 
     func makeBody(configuration: Configuration) -> some View {
         VStack {
