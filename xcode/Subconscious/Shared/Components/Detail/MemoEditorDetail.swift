@@ -179,7 +179,7 @@ struct MemoEditorDetailView: View {
     }
     
     private func blockEditor() -> some View {
-        BlockEditor.Representable(
+        BlockEditor.BlockEditorView(
             store: blockEditorStore
         )
         .frame(

@@ -12,7 +12,7 @@ import ObservableStore
 
 extension BlockEditor {
     // MARK: View Representable
-    struct Representable: UIViewControllerRepresentable {
+    struct BlockEditorRepresentable: UIViewControllerRepresentable {
         @ObservedObject var store: Store<BlockEditor.Model>
         
         func makeCoordinator() -> Coordinator {
@@ -68,7 +68,7 @@ struct BlockStackEditorViewControllerRepresentable_Previews: PreviewProvider {
         )
 
         var body: some View {
-            BlockEditor.Representable(
+            BlockEditor.BlockEditorRepresentable(
                 store: store
             )
         }
