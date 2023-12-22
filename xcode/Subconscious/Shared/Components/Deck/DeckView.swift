@@ -420,83 +420,53 @@ struct DeckModel: ModelProtocol {
             
             return Update(state: state)
         }
+        
+        func shuffleInBacklinks(_ backlinks: [EntryStub]) -> Update<Self> {
+            let fx: Fx<DeckAction> = Future.detached {
+                let us = try await environment.noosphere.identity()
+                
+                // Filter to valid backlinks
+                let backlinks = backlinks
+                    .filter({ backlink in !isSeen(entry: backlink) })
+                    .shuffled()
+                
+                if backlinks.count == 0 {
+                    return .topupDeck
+                }
+                
+                var draw: [CardModel] = []
+                for entry in backlinks.prefix(backlinksToDraw) {
+                    let card = try await toCard(
+                        entry: entry,
+                        ourIdentity: us,
+                        environment: environment
+                    )
+                    
+                    draw.append(card)
+                }
+                
+                return .shuffleCardsUpNext(draw)
+            }
+            .recover({ error in
+                return .topupDeck
+            })
+            .eraseToAnyPublisher()
+            
+            return update(
+                state: state,
+                action: .nextCard,
+                environment: environment
+            ).mergeFx(fx)
+        }
 
         func chooseCard(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.impactOccurred()
             
             switch card.card {
             case let .entry(_, _, backlinks):
-                let fx: Fx<DeckAction> = Future.detached {
-                    let us = try await environment.noosphere.identity()
-                    
-                    // Filter to valid backlinks
-                    let backlinks = backlinks
-                        .filter({ backlink in !isSeen(entry: backlink) })
-                        .shuffled()
-                    
-                    if backlinks.count == 0 {
-                        return .topupDeck
-                    }
-                    
-                    var draw: [CardModel] = []
-                    for entry in backlinks.prefix(backlinksToDraw) {
-                        let card = try await toCard(
-                            entry: entry,
-                            ourIdentity: us,
-                            environment: environment
-                        )
-                        
-                        draw.append(card)
-                    }
-                    
-                    return .shuffleCardsUpNext(draw)
-                }
-                .recover({ error in
-                    return .topupDeck
-                })
-                .eraseToAnyPublisher()
-                
-                return update(
-                    state: state,
-                    action: .nextCard,
-                    environment: environment
-                ).mergeFx(fx)
-            case let .prompt(message, _, _, backlinks):
-                let fx: Fx<DeckAction> = Future.detached {
-                    let us = try await environment.noosphere.identity()
-                    
-                    // Filter to valid backlinks
-                    let backlinks = backlinks
-                        .filter({ backlink in !isSeen(entry: backlink) })
-                        .shuffled()
-                    
-                    if backlinks.count == 0 {
-                        return .topupDeck
-                    }
-                    
-                    var draw: [CardModel] = []
-                    for entry in backlinks.prefix(backlinksToDraw) {
-                        let card = try await toCard(
-                            entry: entry,
-                            ourIdentity: us,
-                            environment: environment
-                        )
-                        
-                        draw.append(card)
-                    }
-                    
-                    return .shuffleCardsUpNext(draw)
-                }
-                .recover({ error in
-                    return .topupDeck
-                })
-                .eraseToAnyPublisher()
-                
-                return update(
-                    state: state,
-                    action: .nextCard,
-                    environment: environment
-                ).mergeFx(fx)
+               return shuffleInBacklinks(backlinks)
+            case let .prompt(_, _, _, backlinks):
+               return shuffleInBacklinks(backlinks)
             case .action(let msg):
                 logger.log("Action: \(msg)")
                 return update(
