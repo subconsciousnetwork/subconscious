@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension BlockEditor {
-    struct BlockEditorBlockSelectMenuFrameView: View {
+    struct BlockSelectMenuFrameView: View {
         @State private var dragOffsetY: CGFloat = 0
         @GestureState private var dragGesture: CGFloat = 0
         var dragThreshold: CGFloat = 100
@@ -48,7 +48,7 @@ extension BlockEditor {
 
 struct BlockEditorBlockSelectMenuFrameView_Previews: PreviewProvider {
     static var previews: some View {
-        BlockEditor.BlockEditorBlockSelectMenuFrameView(
+        BlockEditor.BlockSelectMenuFrameView(
             send: { action in }
         )
     }
