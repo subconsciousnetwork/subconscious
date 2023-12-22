@@ -1,5 +1,50 @@
 import SwiftUI
 
+struct CardContentView: View {
+    @Environment (\.colorScheme) var colorScheme
+    var entry: EntryStub
+    var backlinks: [EntryStub]
+    var onLink: (EntryLink) -> Void
+    
+    var highlight: Color {
+        entry.highlightColor(colorScheme: colorScheme)
+    }
+    
+    
+    var body: some View {
+        SubtextView(
+            peer: entry.toPeer(),
+            subtext: entry.excerpt,
+            onLink: onLink
+        )
+        // Opacity allows blendMode to show through
+        .foregroundStyle(.primary.opacity(0.8))
+        .accentColor(highlight)
+        .padding(DeckTheme.cardPadding)
+        
+        Spacer()
+        
+        HStack {
+            Text(
+                entry.address.markup
+            )
+            .lineLimit(1)
+            
+            if !backlinks.isEmpty {
+                Spacer()
+                
+                HStack {
+                    Image(systemName: "link")
+                    Text("\(backlinks.count)")
+                }
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(highlight)
+        .padding(DeckTheme.cardPadding)
+    }
+}
+
 struct CardView: View {
     @Environment(\.colorScheme) private var colorScheme
     
@@ -38,36 +83,11 @@ struct CardView: View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             switch entry.card {
             case let .entry(entry, _, backlinks):
-                SubtextView(
-                    peer: entry.toPeer(),
-                    subtext: entry.excerpt,
+                CardContentView(
+                    entry: entry,
+                    backlinks: backlinks,
                     onLink: onLink
                 )
-                // Opacity allows blendMode to show through
-                .foregroundStyle(.primary.opacity(0.8))
-                .accentColor(highlight)
-                .padding(DeckTheme.cardPadding)
-                
-                Spacer()
-                
-                HStack {
-                    Text(
-                        entry.address.markup
-                    )
-                    .lineLimit(1)
-                    
-                    if !backlinks.isEmpty {
-                        Spacer()
-                        
-                        HStack {
-                            Image(systemName: "link")
-                            Text("\(backlinks.count)")
-                        }
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(highlight)
-                .padding(DeckTheme.cardPadding)
             case let .prompt(message, entry, _, backlinks):
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
@@ -82,38 +102,11 @@ struct CardView: View {
                     Divider()
                         .overlay(highlight)
                     
-                    SubtextView(
-                        subtext: entry.excerpt,
-                        onLink: { link in
-                            onLink(link.rebaseIfNeeded(peer: entry.toPeer()))
-                        }
+                    CardContentView(
+                        entry: entry,
+                        backlinks: backlinks,
+                        onLink: onLink
                     )
-                    // Opacity allows blendMode to show through
-                    .foregroundStyle(.primary.opacity(0.8))
-                    .accentColor(highlight)
-                    .padding(DeckTheme.cardPadding)
-                    
-                    Spacer()
-                    
-                    HStack {
-                        // Consider: should the date go here?
-                        Text(
-                            entry.address.markup
-                        )
-                        .lineLimit(1)
-                        
-                        if !backlinks.isEmpty {
-                            Spacer()
-                            
-                            HStack {
-                                Image(systemName: "link")
-                                Text("\(backlinks.count)")
-                            }
-                        }
-                    }
-                    .font(.caption)
-                    .foregroundStyle(highlight)
-                    .padding(DeckTheme.cardPadding)
                 }
             case .action(let string):
                 // TEMP
