@@ -6,19 +6,20 @@
 //
 
 import SwiftUI
+import ObservableStore
 
 extension BlockEditor {
     struct BlockSelectMenuFrameView: View {
         @State private var dragOffsetY: CGFloat = 0
         @GestureState private var dragGesture: CGFloat = 0
+        @ObservedObject var store: Store<BlockEditor.Model>
         var dragThreshold: CGFloat = 100
-        var send: (BlockSelectMenuAction) -> Void
 
         var body: some View {
             VStack {
                 Spacer()
                 BlockEditor.BlockSelectMenuView(
-                    send: send
+                    store: store
                 )
                 .animation(.interactiveSpring(), value: dragGesture)
                 .offset(y: dragOffsetY + dragGesture)
@@ -49,7 +50,10 @@ extension BlockEditor {
 struct BlockEditorBlockSelectMenuFrameView_Previews: PreviewProvider {
     static var previews: some View {
         BlockEditor.BlockSelectMenuFrameView(
-            send: { action in }
+            store: Store(
+                state: BlockEditor.Model(),
+                environment: AppEnvironment()
+            )
         )
     }
 }

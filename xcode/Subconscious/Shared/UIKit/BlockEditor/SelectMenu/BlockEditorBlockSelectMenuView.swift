@@ -9,23 +9,12 @@ import SwiftUI
 import ObservableStore
 
 extension BlockEditor {
-    /// Actions for block select menu
-    enum BlockSelectMenuAction {
-        case becomeTextBlock
-        case becomeHeadingBlock
-        case becomeListBlock
-        case becomeQuoteBlock
-        case delete
-    }
-}
-
-extension BlockEditor {
     /// Block select mode menu containing controls to change type and otherwise
     /// interact with blocks.
     struct BlockSelectMenuView: View {
         @Environment(\.colorScheme) private var colorScheme
-        var send: (BlockSelectMenuAction) -> Void
-
+        @ObservedObject var store: Store<BlockEditor.Model>
+        
         var body: some View {
             VStack(alignment: .center, spacing: 0) {
                 DragHandleView()
@@ -33,7 +22,7 @@ extension BlockEditor {
                     HStack(spacing: AppTheme.unit2) {
                         Button(
                             action: {
-                                send(.becomeTextBlock)
+                                store.send(.becomeTextBlock)
                             },
                             label: {
                                 Label(
@@ -48,7 +37,7 @@ extension BlockEditor {
                         )
                         Button(
                             action: {
-                                send(.becomeHeadingBlock)
+                                store.send(.becomeHeadingBlock)
                             },
                             label: {
                                 Label(
@@ -63,7 +52,7 @@ extension BlockEditor {
                         )
                         Button(
                             action: {
-                                send(.becomeListBlock)
+                                store.send(.becomeListBlock)
                             },
                             label: {
                                 Label(
@@ -78,7 +67,7 @@ extension BlockEditor {
                         )
                         Button(
                             action: {
-                                send(.becomeQuoteBlock)
+                                store.send(.becomeQuoteBlock)
                             },
                             label: {
                                 Label(
@@ -94,7 +83,7 @@ extension BlockEditor {
                         Button(
                             role: .destructive,
                             action: {
-                                send(.delete)
+                                store.send(.deleteBlock)
                             },
                             label: {
                                 Label(
@@ -128,7 +117,10 @@ extension BlockEditor {
 struct BlockEditorBlockSelectMenuView_Previews: PreviewProvider {
     static var previews: some View {
         BlockEditor.BlockSelectMenuView(
-            send: { action in }
+            store: Store(
+                state: BlockEditor.Model(),
+                environment: AppEnvironment()
+            )
         )
     }
 }

@@ -64,7 +64,7 @@ struct BlockStackEditorViewControllerRepresentable_Previews: PreviewProvider {
                     ]
                 )
             ),
-            environment: AppEnvironment.default
+            environment: AppEnvironment()
         )
 
         var body: some View {

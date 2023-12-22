@@ -20,10 +20,8 @@ extension BlockEditor {
             ZStack {
                 BlockEditor.BlockEditorRepresentable(store: store)
                     .zIndex(0)
-                BlockEditor.BlockSelectMenuFrameView(
-                    send: { action in }
-                )
-                .zIndex(1)
+                BlockEditor.BlockSelectMenuFrameView(store: store)
+                    .zIndex(1)
             }
         }
     }

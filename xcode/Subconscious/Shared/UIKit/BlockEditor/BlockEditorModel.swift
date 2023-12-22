@@ -186,6 +186,12 @@ extension BlockEditor {
         case activateLink(URL)
         /// Open link in transclude
         case requestFindLinkDetail(EntryLink)
+
+        case becomeTextBlock
+        case becomeHeadingBlock
+        case becomeListBlock
+        case becomeQuoteBlock
+        case deleteBlock
     }
 }
 
@@ -510,9 +516,34 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .becomeTextBlock:
+            return becomeTextBlock(
+                state: state,
+                environment: environment
+            )
+        case .becomeHeadingBlock:
+            return becomeHeadingBlock(
+                state: state,
+                environment: environment
+            )
+        case .becomeListBlock:
+            return becomeListBlock(
+                state: state,
+                environment: environment
+            )
+        case .becomeQuoteBlock:
+            return becomeQuoteBlock(
+                state: state,
+                environment: environment
+            )
+        case .deleteBlock:
+            return deleteBlock(
+                state: state,
+                environment: environment
+            )
         }
     }
-
+    
     static func scenePhaseChange(
         state: Self,
         environment: Environment
@@ -848,7 +879,7 @@ extension BlockEditor.Model: ModelProtocol {
             Action.failLoadRelated(error.localizedDescription)
         })
         .eraseToAnyPublisher()
-        
+
         return Update(state: state, fx: fx)
     }
     
@@ -881,16 +912,17 @@ extension BlockEditor.Model: ModelProtocol {
         let owner = state.ownerSphere.map({ did in Peer.did(did) })
         
         // Fetch only the slashlinks that are not in the cache
-        let slashlinksToFetch = state.blocks.blocks.flatMap({ block in
-            block.dom?.parsedSlashlinks ?? []
-        })
-        .filter({ slashlink in
-            state.transcludes[slashlink] == nil
-        })
-        .uniquing()
-        
+        let slashlinksToFetch = state.blocks.blocks
+            .flatMap({ block in
+                block.dom?.parsedSlashlinks ?? []
+            })
+            .filter({ slashlink in
+                state.transcludes[slashlink] == nil
+            })
+            .uniquing()
+
         logger.info("Fetching transcludes for \(slashlinksToFetch)")
-        
+
         let fx: Fx<Action> = Future.detached {
             let transcludes = await environment.transclude.fetchTranscludes(
                 slashlinks: slashlinksToFetch,
@@ -901,7 +933,7 @@ extension BlockEditor.Model: ModelProtocol {
             )
         }
         .eraseToAnyPublisher()
-        
+
         return Update(state: state, fx: fx)
     }
     
@@ -965,7 +997,7 @@ extension BlockEditor.Model: ModelProtocol {
             )
         }
         .eraseToAnyPublisher()
-        
+
         return Update(state: state, fx: fx)
     }
     
@@ -1731,6 +1763,46 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
+        return Update(state: state)
+    }
+
+    static func becomeTextBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Not implemented")
+        return Update(state: state)
+    }
+
+    static func becomeHeadingBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Not implemented")
+        return Update(state: state)
+    }
+
+    static func becomeListBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Not implemented")
+        return Update(state: state)
+    }
+
+    static func becomeQuoteBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Not implemented")
+        return Update(state: state)
+    }
+
+    static func deleteBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Not implemented")
         return Update(state: state)
     }
 }
