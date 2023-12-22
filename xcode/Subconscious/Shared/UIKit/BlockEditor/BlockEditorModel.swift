@@ -745,7 +745,9 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         let address = state.address?.description ?? "nil"
         logger.warning("Failed to load detail for \(address). Error: \(error)")
-        return Update(state: state)
+        var model = state
+        model.loadingState = .notFound
+        return Update(state: model)
     }
     
     /// Set editor state, replacing whatever was previously there.
@@ -759,8 +761,6 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         var model = state
-        // Finished loading. We have the data.
-        model.loadingState = .loaded
         model.setSaveState(detail.saveState)
         model.address = detail.entry.address
         model.created = detail.entry.contents.created
