@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ObservableStore
 
 extension BlockEditor {
     /// Actions for block select menu

@@ -218,7 +218,7 @@ extension BlockEditor {
 extension BlockEditor.Model: ModelProtocol {
     typealias Action = BlockEditor.Action
     typealias Environment = AppEnvironment
-    typealias UpdateType = BlockEditor.Model.Update
+    typealias Update = BlockEditor.Update
     
     static func update(
         state: Self,
