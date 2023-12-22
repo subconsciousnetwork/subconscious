@@ -605,9 +605,11 @@ struct DeckModel: ModelProtocol {
                 context: nil
             )
             
+            let prompt = Prompt.connect.randomElement()!.message
+            
             return CardModel(
                 card: .prompt(
-                    message: Prompt.connect.randomElement()!.message,
+                    message: prompt,
                     entry: entry,
                     author: user,
                     backlinks: backlinks
