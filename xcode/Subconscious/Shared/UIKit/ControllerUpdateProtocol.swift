@@ -9,16 +9,12 @@ import Foundation
 import ObservableStore
 import Combine
 
-protocol ControllerModelProtocol: ModelProtocol
-where UpdateType: ControllerUpdateProtocol {
-}
-
 protocol ControllerUpdateProtocol: UpdateProtocol {
     associatedtype ChangeType
     var changes: [ChangeType] { get set }
 }
 
-extension ControllerModelProtocol {
+extension ModelProtocol {
     /// Update state through a sequence of actions, merging fx.
     /// - State updates happen immediately
     /// - Fx are merged
@@ -30,7 +26,7 @@ extension ControllerModelProtocol {
         state: Self,
         actions: [Action],
         environment: Environment
-    ) -> UpdateType {
+    ) -> UpdateType where UpdateType: ControllerUpdateProtocol {
         var result = UpdateType(state: state)
         for action in actions {
             let next = update(

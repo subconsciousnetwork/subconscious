@@ -241,7 +241,7 @@
 		B856EF252B34C23A00C87BD3 /* PaletteButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */; };
 		B856EF282B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF272B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift */; };
 		B856EF2A2B360DEE00C87BD3 /* BlockEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF292B360DEE00C87BD3 /* BlockEditorView.swift */; };
-		B856EF2D2B36264E00C87BD3 /* ControllerModelProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF2C2B36264E00C87BD3 /* ControllerModelProtocol.swift */; };
+		B856EF2D2B36264E00C87BD3 /* ControllerUpdateProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF2C2B36264E00C87BD3 /* ControllerUpdateProtocol.swift */; };
 		B85A8059296E31860007F957 /* AudienceMenuButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */; };
 		B85A805E296F08720007F957 /* AudienceMenuButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */; };
 		B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
@@ -721,7 +721,7 @@
 		B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteButtonStyle.swift; sourceTree = "<group>"; };
 		B856EF272B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockSelectMenuFrameView.swift; sourceTree = "<group>"; };
 		B856EF292B360DEE00C87BD3 /* BlockEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorView.swift; sourceTree = "<group>"; };
-		B856EF2C2B36264E00C87BD3 /* ControllerModelProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerModelProtocol.swift; sourceTree = "<group>"; };
+		B856EF2C2B36264E00C87BD3 /* ControllerUpdateProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerUpdateProtocol.swift; sourceTree = "<group>"; };
 		B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceMenuButtonView.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
@@ -1369,7 +1369,7 @@
 			isa = PBXGroup;
 			children = (
 				B83E0E282A9D13CE009F18AE /* BlockEditor */,
-				B856EF2C2B36264E00C87BD3 /* ControllerModelProtocol.swift */,
+				B856EF2C2B36264E00C87BD3 /* ControllerUpdateProtocol.swift */,
 				B8AB08C92A9D518800998099 /* UIBarButtonItemUtilities.swift */,
 				B8CAF2102A9E89A30057D5DE /* UIFontHelpers.swift */,
 				B89DBDDF2AF440C6003D2CE3 /* UIHostingView.swift */,
@@ -2159,7 +2159,7 @@
 				B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */,
-				B856EF2D2B36264E00C87BD3 /* ControllerModelProtocol.swift in Sources */,
+				B856EF2D2B36264E00C87BD3 /* ControllerUpdateProtocol.swift in Sources */,
 				B57C0AE929D2782C00D352E3 /* PetnameView.swift in Sources */,
 				B542EF772AF495F200BE29F1 /* FollowNewUserSheetModifier.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
