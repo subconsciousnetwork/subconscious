@@ -12,6 +12,7 @@ extension Color {
     struct Theme: Hashable {
         var foreground: Color
         var background: Color
+        var border: Color = .clear
     }
 }
 
