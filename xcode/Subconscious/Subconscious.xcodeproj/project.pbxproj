@@ -239,7 +239,7 @@
 		B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85652212975F16B00B7FCA0 /* BylineView.swift */; };
 		B856EF212B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF202B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift */; };
 		B856EF252B34C23A00C87BD3 /* PaletteButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */; };
-		B856EF282B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF272B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift */; };
+		B856EF282B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF272B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift */; };
 		B856EF2A2B360DEE00C87BD3 /* BlockEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF292B360DEE00C87BD3 /* BlockEditorView.swift */; };
 		B856EF2D2B36264E00C87BD3 /* ControllerUpdateProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856EF2C2B36264E00C87BD3 /* ControllerUpdateProtocol.swift */; };
 		B85A8059296E31860007F957 /* AudienceMenuButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */; };
@@ -719,7 +719,7 @@
 		B85652212975F16B00B7FCA0 /* BylineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BylineView.swift; sourceTree = "<group>"; };
 		B856EF202B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorBlockSelectMenuView.swift; sourceTree = "<group>"; };
 		B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteButtonStyle.swift; sourceTree = "<group>"; };
-		B856EF272B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockSelectMenuFrameView.swift; sourceTree = "<group>"; };
+		B856EF272B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorBlockSelectMenuFrameView.swift; sourceTree = "<group>"; };
 		B856EF292B360DEE00C87BD3 /* BlockEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorView.swift; sourceTree = "<group>"; };
 		B856EF2C2B36264E00C87BD3 /* ControllerUpdateProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerUpdateProtocol.swift; sourceTree = "<group>"; };
 		B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceMenuButtonView.swift; sourceTree = "<group>"; };
@@ -1223,8 +1223,8 @@
 		B856EF2B2B360F8800C87BD3 /* SelectMenu */ = {
 			isa = PBXGroup;
 			children = (
+				B856EF272B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift */,
 				B856EF202B34B3BE00C87BD3 /* BlockEditorBlockSelectMenuView.swift */,
-				B856EF272B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift */,
 				B856EF242B34C23A00C87BD3 /* PaletteButtonStyle.swift */,
 			);
 			path = SelectMenu;
@@ -2177,7 +2177,7 @@
 				B8AB08BF2A9D506300998099 /* BlockEditorRepresentable.swift in Sources */,
 				B58CC8E12B0DCEB2004CFFEA /* DeckTheme.swift in Sources */,
 				B8AB08D22A9D523600998099 /* UIViewIconButton.swift in Sources */,
-				B856EF282B34D2CA00C87BD3 /* BlockSelectMenuFrameView.swift in Sources */,
+				B856EF282B34D2CA00C87BD3 /* BlockEditorBlockSelectMenuFrameView.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,

@@ -66,6 +66,9 @@ extension BlockEditor {
         /// Cached transcludes for links in body
         var transcludes: [Slashlink: EntryStub] = [:]
 
+        /// Is block select menu being presented?
+        var isBlockSelectMenuPresented = false
+
         mutating func setSaveState(_ state: SaveState) {
             if self.saveState == state {
                 return
@@ -187,6 +190,7 @@ extension BlockEditor {
         /// Open link in transclude
         case requestFindLinkDetail(EntryLink)
 
+        case setBlockSelectMenuPresented(_ isPresented: Bool)
         case becomeTextBlock
         case becomeHeadingBlock
         case becomeListBlock
@@ -514,6 +518,12 @@ extension BlockEditor.Model: ModelProtocol {
         case .requestFindLinkDetail(_):
             return requestFindLinkDetail(
                 state: state,
+                environment: environment
+            )
+        case let .setBlockSelectMenuPresented(isPresented):
+            return setBlockSelectMenuPresented(
+                state: state,
+                isPresented: isPresented,
                 environment: environment
             )
         case .becomeTextBlock:
@@ -1764,6 +1774,16 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         return Update(state: state)
+    }
+
+    static func setBlockSelectMenuPresented(
+        state: Self,
+        isPresented: Bool,
+        environment: Environment
+    ) -> Update {
+        var model = state
+        model.isBlockSelectMenuPresented = isPresented
+        return Update(state: model)
     }
 
     static func becomeTextBlock(
