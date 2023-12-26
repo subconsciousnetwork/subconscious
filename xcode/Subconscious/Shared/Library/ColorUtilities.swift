@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension Color {
-    /// A color theme describes a foreground and background
+    /// A color theme describes a foreground, background, and border
     struct Theme: Hashable {
         var foreground: Color
         var background: Color
@@ -19,10 +19,12 @@ extension View {
     /// Apply a theme to this view
     func theme(_ theme: Color.Theme) -> some View {
         self
-            .backgroundStyle(theme.background)
             .foregroundStyle(theme.foreground)
+            .background(theme.background)
     }
 }
+
+
 
 extension Color {
     /// Describe themes for all states of a button
@@ -76,8 +78,7 @@ extension View {
         let theme = buttonTheme.choose(state)
         return self
             .animation(.default, value: state)
-            .background(theme.background)
-            .foregroundStyle(theme.foreground)
+            .theme(theme)
     }
     
     /// Apply a button theme to this view depending on whether it is
@@ -127,6 +128,29 @@ extension Color {
             } else {
                 return normal
             }
+        }
+    }
+}
+
+struct ColorUtilities_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            Text("Hello world")
+                .padding()
+                .theme(
+                    .init(
+                        foreground: .blue,
+                        background: .secondaryBackground
+                    )
+                )
+            Text("Hello world")
+                .padding()
+                .theme(
+                    .init(
+                        foreground: .red,
+                        background: .secondaryBackground
+                    )
+                )
         }
     }
 }

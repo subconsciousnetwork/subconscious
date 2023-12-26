@@ -67,7 +67,7 @@ extension BlockEditor {
         var transcludes: [Slashlink: EntryStub] = [:]
 
         /// Is block select menu being presented?
-        var isBlockSelectMenuPresented = false
+        var isBlockSelectMenuPresented = true
 
         mutating func setSaveState(_ state: SaveState) {
             if self.saveState == state {

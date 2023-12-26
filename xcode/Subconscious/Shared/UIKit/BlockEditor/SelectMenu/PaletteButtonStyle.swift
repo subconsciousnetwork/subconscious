@@ -9,7 +9,9 @@ import SwiftUI
 
 struct PaletteButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
+    var isSelected = false
     var size: CGFloat = AppTheme.unit * 18
+
     var theme = Color.ButtonRoleTheme(
         normal: Color.ButtonTheme(
             normal: Color.Theme(
@@ -41,6 +43,8 @@ struct PaletteButtonStyle: ButtonStyle {
         )
     )
 
+    var selectedColor = Color.accentColor
+
     func makeBody(configuration: Configuration) -> some View {
         VStack {
             configuration.label
@@ -50,11 +54,22 @@ struct PaletteButtonStyle: ButtonStyle {
             width: size,
             height: size
         )
+        .clipShape(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+        )
         .theme(
             theme.forRole(configuration.role),
             isPressed: configuration.isPressed,
             isEnabled: isEnabled
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(
+                    isSelected ? selectedColor : .clear,
+                    lineWidth: 2
+                )
+        )
+        .animation(.default, value: theme.forRole(configuration.role))
         .cornerRadius(AppTheme.cornerRadius)
     }
 }
@@ -85,6 +100,16 @@ struct PaletteButtonStyle_Previews: PreviewProvider {
                 }
             )
             .buttonStyle(PaletteButtonStyle())
+            Button(
+                action: {},
+                label: {
+                    Label(
+                        title: { Text("Label") },
+                        icon: { Image(systemName: "doc.on.doc") }
+                    )
+                }
+            )
+            .buttonStyle(PaletteButtonStyle(isSelected: true))
             Button(
                 role: .destructive,
                 action: {},
