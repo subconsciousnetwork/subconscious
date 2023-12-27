@@ -1,90 +1,5 @@
 import SwiftUI
 
-struct CardView: View {
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var entry: CardModel
-    var onLink: (EntryLink) -> Void
-    
-    var color: Color {
-        switch entry.card {
-        case let .entry(entry, _, _):
-            return entry.color(colorScheme: colorScheme)
-        default:
-            return .secondary
-        }
-    }
-    
-    var highlight: Color {
-        switch entry.card {
-        case let .entry(entry, _, _):
-            return entry.highlightColor(colorScheme: colorScheme)
-        default:
-            return .secondary
-        }
-    }
-    
-    var blendMode: BlendMode {
-        colorScheme == .dark
-           ? .plusLighter
-           : .plusDarker
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit2) {
-            switch entry.card {
-            case let .entry(entry, _, backlinks):
-                SubtextView(
-                    peer: entry.toPeer(),
-                    subtext: entry.excerpt,
-                    onLink: onLink
-                )
-                // Opacity allows blendMode to show through
-                .foregroundStyle(.primary.opacity(0.8))
-                .accentColor(highlight)
-                
-                Spacer()
-                
-                HStack {
-                    // Consider: should the date go here?
-                    Text(
-                        entry.address.markup
-                    )
-                    .lineLimit(1)
-                    
-                    if !backlinks.isEmpty {
-                        Spacer()
-                        
-                        HStack {
-                            Image(systemName: "link")
-                            Text("\(backlinks.count)")
-                        }
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(highlight)
-                .padding(DeckTheme.cardPadding)
-            
-            case .action(let string):
-                // TEMP
-                VStack {
-                    Image(systemName: "scribble.variable")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 64, height: 64)
-                    Text(string)
-                }
-                .foregroundStyle(.secondary)
-            }
-            
-        }
-        .padding(DeckTheme.cardPadding)
-        .allowsHitTesting(false)
-        .background(color)
-        .cornerRadius(DeckTheme.cornerRadius)
-    }
-}
-
 enum CardDragGestureProgress {
     case inactive
     case started
@@ -148,7 +63,7 @@ struct CardEffectModifier: ViewModifier {
             // Reduce shadow intensity with depth
             .shadow(
                 color: DeckTheme.cardShadow.opacity(
-                    0.2 * (1.0 - 5.0*stackFactor)
+                    0.15 * (1.0 - 5.0*stackFactor)
                 ),
                 radius: 2.5,
                 x: 0,
