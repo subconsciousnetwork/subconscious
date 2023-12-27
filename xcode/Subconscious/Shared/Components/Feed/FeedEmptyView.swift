@@ -58,9 +58,9 @@ struct FeedEmptyView: View {
     }
 }
 
-struct EntryListEmptyView_Previews: PreviewProvider {
+struct FeedEmptyView_Previews: PreviewProvider {
     static var previews: some View {
-        EntryListEmptyView(
+        FeedEmptyView(
             onRefresh: {}
         )
     }
