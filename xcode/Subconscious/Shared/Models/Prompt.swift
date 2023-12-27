@@ -30,14 +30,20 @@ extension Prompt {
         Prompt(message: "Can you draw a diagram?"),
         Prompt(message: "Will this matter in a decade?"),
         Prompt(message: "What if you reversed the roles?"),
-        Prompt(message: "Does this resonate for you personally?"),
+        Prompt(message: "Does this resonate with you personally?"),
         Prompt(message: "What would a child think?"),
         Prompt(message: "How can this be misinterpreted?"),
         Prompt(message: "What if the main assumption is wrong?"),
         Prompt(message: "What if time was not a factor?"),
         Prompt(message: "Can it be scaled up?"),
         Prompt(message: "What if you zoom out?"),
-        Prompt(message: "What if you changed a key component?")
+        Prompt(message: "What if you changed a key component?"),
+        Prompt(message: "Who would disagree?"),
+        Prompt(message: "Would it make sense in 100 years?"),
+        Prompt(message: "What if you start from scratch?"),
+        Prompt(message: "What would your hero think?"),
+        Prompt(message: "What are the incentives?"),
+        Prompt(message: "What does success look like?")
     ]
     
     static let reflect: [Prompt] = [
