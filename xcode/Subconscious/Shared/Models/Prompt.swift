@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Prompt {
+public struct Prompt {
     public var message: String
 }
 
@@ -24,7 +24,20 @@ extension Prompt {
         Prompt(message: "What are the ethical implications?"),
         Prompt(message: "What happens if you change the context?"),
         Prompt(message: "What are the unintended effects?"),
-        Prompt(message: "What would be a counter-argument?")
+        Prompt(message: "What would be a counter-argument?"),
+        Prompt(message: "Does this resemble a historical event?"),
+        Prompt(message: "Does nature provide an example?"),
+        Prompt(message: "Can you draw a diagram?"),
+        Prompt(message: "Will this matter in a decade?"),
+        Prompt(message: "What if you reversed the roles?"),
+        Prompt(message: "Does this resonate for you personally?"),
+        Prompt(message: "What would a child think?"),
+        Prompt(message: "How can this be misinterpreted?"),
+        Prompt(message: "What if the main assumption is wrong?"),
+        Prompt(message: "What if time was not a factor?"),
+        Prompt(message: "Can it be scaled up?"),
+        Prompt(message: "What if you zoom out?"),
+        Prompt(message: "What if you changed a key component?")
     ]
     
     static let reflect: [Prompt] = [
