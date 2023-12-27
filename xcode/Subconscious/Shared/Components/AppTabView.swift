@@ -35,13 +35,11 @@ struct AppTabView: View {
                     .tag(AppTab.feed)
             }
             
-            if AppDefaults.standard.isDeckTabEnabled {
-                DeckView(app: store)
-                    .tabItem {
-                        Label("Deck", systemImage: "square.stack.3d.up.fill")
-                    }
-                    .tag(AppTab.deck)
-            }
+            DeckView(app: store)
+                .tabItem {
+                    Label("Deck", systemImage: "square.stack.3d.up.fill")
+                }
+                .tag(AppTab.deck)
             
             NotebookView(app: store)
                 .tabItem {

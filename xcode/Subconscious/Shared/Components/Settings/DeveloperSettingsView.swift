@@ -62,15 +62,6 @@ struct DeveloperSettingsView: View {
                         Text("Enable Feed Tab")
                     }
                 )
-                Toggle(
-                    isOn: app.binding(
-                        get: \.isDeckTabEnabled,
-                        tag: AppAction.persistDeckTabEnabled
-                    ),
-                    label: {
-                        Text("Enable Deck Tab")
-                    }
-                )
             }
         }
         .navigationTitle("Developer")
