@@ -18,7 +18,7 @@
 		B51359262AC113F9004385A7 /* RecoveryModeFormPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */; };
 		B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359272AC11570004385A7 /* ErrorDetailView.swift */; };
 		B513592A2AC2723E004385A7 /* GatewayURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51359292AC2723E004385A7 /* GatewayURL.swift */; };
-		B513FFCA2AD9035300492A73 /* FeedPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B513FFC92AD9035300492A73 /* FeedPlaceholderView.swift */; };
+		B513FFCA2AD9035300492A73 /* StoryListPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B513FFC92AD9035300492A73 /* StoryListPlaceholderView.swift */; };
 		B515E9D72ACA8DD20067A329 /* FirstRunInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9D62ACA8DD20067A329 /* FirstRunInviteView.swift */; };
 		B515E9D92ACA93D00067A329 /* FirstRunOrbitEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9D82ACA93D00067A329 /* FirstRunOrbitEffectView.swift */; };
 		B515E9DB2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9DA2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift */; };
@@ -555,7 +555,7 @@
 		B51359252AC113F9004385A7 /* RecoveryModeFormPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryModeFormPanelView.swift; sourceTree = "<group>"; };
 		B51359272AC11570004385A7 /* ErrorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDetailView.swift; sourceTree = "<group>"; };
 		B51359292AC2723E004385A7 /* GatewayURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayURL.swift; sourceTree = "<group>"; };
-		B513FFC92AD9035300492A73 /* FeedPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedPlaceholderView.swift; sourceTree = "<group>"; };
+		B513FFC92AD9035300492A73 /* StoryListPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListPlaceholderView.swift; sourceTree = "<group>"; };
 		B515E9D62ACA8DD20067A329 /* FirstRunInviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunInviteView.swift; sourceTree = "<group>"; };
 		B515E9D82ACA93D00067A329 /* FirstRunOrbitEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunOrbitEffectView.swift; sourceTree = "<group>"; };
 		B515E9DA2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleCroppedTopRightCorner.swift; sourceTree = "<group>"; };
@@ -983,14 +983,6 @@
 			path = Recovery;
 			sourceTree = "<group>";
 		};
-		B513FFC62AD9023D00492A73 /* Feed */ = {
-			isa = PBXGroup;
-			children = (
-				B513FFC92AD9035300492A73 /* FeedPlaceholderView.swift */,
-			);
-			path = Feed;
-			sourceTree = "<group>";
-		};
 		B532F8C129B1750F00CE9256 /* Transclude */ = {
 			isa = PBXGroup;
 			children = (
@@ -1306,9 +1298,10 @@
 		B88A919F2A4C9BED00422ABF /* EntryList */ = {
 			isa = PBXGroup;
 			children = (
-				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
 				B88A91A02A4C9C0100422ABF /* EntryListEmptyView.swift */,
 				B56139A02B1EF9FE005F1A32 /* EntryListRowButtonStyle.swift */,
+				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
+				B513FFC92AD9035300492A73 /* StoryListPlaceholderView.swift */,
 			);
 			path = EntryList;
 			sourceTree = "<group>";
@@ -1614,7 +1607,6 @@
 				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
-				B513FFC62AD9023D00492A73 /* Feed */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
 				B87288E2299C02E200EF7E07 /* Detail */,
 				B8B3EE712979DEDF00779B7F /* FirstRun */,
@@ -2247,7 +2239,7 @@
 				B88B1CE5298EB10D0062CB7F /* RecoveryPhraseView.swift in Sources */,
 				B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */,
 				B58A46BA29D4004B00491E43 /* UserProfileDetailMetaSheet.swift in Sources */,
-				B513FFCA2AD9035300492A73 /* FeedPlaceholderView.swift in Sources */,
+				B513FFCA2AD9035300492A73 /* StoryListPlaceholderView.swift in Sources */,
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B542EF712AF4949B00BE29F1 /* EditProfileSheetModifier.swift in Sources */,

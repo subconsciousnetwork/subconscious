@@ -129,10 +129,10 @@ struct UserProfileView: View {
         await store.refresh()
     }
     
-    func columnLoading(label: String) -> TabbedColumnItem<FeedPlaceholderView> {
+    func columnLoading(label: String) -> TabbedColumnItem<StoryListPlaceholderView> {
         TabbedColumnItem(
             label: label,
-            view: FeedPlaceholderView()
+            view: StoryListPlaceholderView()
         )
     }
     
