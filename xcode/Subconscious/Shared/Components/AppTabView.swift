@@ -10,7 +10,6 @@ import ObservableStore
 import Combine
 
 enum AppTab: String, Hashable {
-    case feed
     case deck
     case notebook
     case profile
@@ -27,14 +26,7 @@ struct AppTabView: View {
                 tag: AppAction.setSelectedAppTab
             )
         ) {
-            if AppDefaults.standard.isFeedTabEnabled {
-                FeedView(app: store)
-                    .tabItem {
-                        Label("Feed", systemImage: "newspaper")
-                    }
-                    .tag(AppTab.feed)
-            }
-            
+
             DeckView(app: store)
                 .tabItem {
                     Label("Deck", systemImage: "square.stack.3d.up.fill")

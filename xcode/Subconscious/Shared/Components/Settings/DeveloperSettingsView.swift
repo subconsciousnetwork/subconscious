@@ -51,18 +51,6 @@ struct DeveloperSettingsView: View {
                     }
                 )
             }
-            
-            Section(footer: Text("Enable and disable experimental tabs")) {
-                Toggle(
-                    isOn: app.binding(
-                        get: \.isFeedTabEnabled,
-                        tag: AppAction.persistFeedTabEnabled
-                    ),
-                    label: {
-                        Text("Enable Feed Tab")
-                    }
-                )
-            }
         }
         .navigationTitle("Developer")
     }
