@@ -14,7 +14,7 @@ enum CardType: Equatable, Hashable {
         author: UserProfile,
         backlinks: [EntryStub]
     )
-    case action(String)
+    case action(_ message: String)
     case prompt(
         message: String,
         entry: EntryStub,
