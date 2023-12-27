@@ -29,12 +29,6 @@ struct AppDefaults {
     @UserDefaultsProperty(forKey: "blockEditor")
     var isBlockEditorEnabled: Bool = false
     
-    @UserDefaultsProperty(forKey: "feedTab")
-    var isFeedTabEnabled: Bool = true
-    
-    @UserDefaultsProperty(forKey: "deckTab")
-    var isDeckTabEnabled: Bool = false
-
     @UserDefaultsProperty(forKey: "selectedAppTab")
     // default to the notebook on first run because there will be nothing in the feed
     // enums must be serialized when stored as AppDefaults:

@@ -161,8 +161,6 @@ enum AppAction: Hashable {
 
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
-    case persistFeedTabEnabled(Bool)
-    case persistDeckTabEnabled(Bool)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -308,7 +306,6 @@ enum AppAction: Hashable {
     
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
-    case requestFeedRoot
     case requestProfileRoot
     case requestDeckRoot
     
@@ -543,8 +540,6 @@ struct AppModel: ModelProtocol {
     
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
-    var isFeedTabEnabled = false
-    var isDeckTabEnabled = false
 
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
@@ -875,18 +870,6 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isBlockEditorEnabled: isBlockEditorEnabled
             )
-        case let .persistFeedTabEnabled(isFeedTabEnabled):
-            return persistFeedTabEnabled(
-                state: state,
-                environment: environment,
-                isFeedTabEnabled: isFeedTabEnabled
-            )
-        case let .persistDeckTabEnabled(isDeckTabEnabled):
-            return persistDeckTabEnabled(
-                state: state,
-                environment: environment,
-                isDeckTabEnabled: isDeckTabEnabled
-            )
         case .resetNoosphereService:
             return resetNoosphereService(
                 state: state,
@@ -1197,8 +1180,6 @@ struct AppModel: ModelProtocol {
             )
         case .requestNotebookRoot:
             return Update(state: state)
-        case .requestFeedRoot:
-            return Update(state: state)
         case .requestProfileRoot:
             return Update(state: state)
         case .requestDeckRoot:
@@ -1249,8 +1230,6 @@ struct AppModel: ModelProtocol {
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
         model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
         model.isBlockEditorEnabled = AppDefaults.standard.isBlockEditorEnabled
-        model.isFeedTabEnabled = AppDefaults.standard.isFeedTabEnabled
-        model.isDeckTabEnabled = AppDefaults.standard.isDeckTabEnabled
         
         // Update model from app defaults
         return update(
@@ -1631,30 +1610,6 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func persistFeedTabEnabled(
-        state: AppModel,
-        environment: AppEnvironment,
-        isFeedTabEnabled: Bool
-    ) -> Update<AppModel> {
-        // Persist value
-        AppDefaults.standard.isFeedTabEnabled = isFeedTabEnabled
-        var model = state
-        model.isFeedTabEnabled = isFeedTabEnabled
-        return Update(state: model)
-    }
-    
-    static func persistDeckTabEnabled(
-        state: AppModel,
-        environment: AppEnvironment,
-        isDeckTabEnabled: Bool
-    ) -> Update<AppModel> {
-        // Persist value
-        AppDefaults.standard.isDeckTabEnabled = isDeckTabEnabled
-        var model = state
-        model.isDeckTabEnabled = isDeckTabEnabled
-        return Update(state: model)
-    }
-
     static func requestOfflineMode(
         state: AppModel,
         environment: AppEnvironment
@@ -2780,8 +2735,6 @@ struct AppModel: ModelProtocol {
         if tab == state.selectedAppTab {
             let action = Func.run {
                 switch (tab) {
-                case .feed:
-                    return AppAction.requestFeedRoot
                 case .deck:
                     return AppAction.requestDeckRoot
                 case .notebook:
