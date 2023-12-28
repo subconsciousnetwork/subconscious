@@ -54,11 +54,22 @@ extension BlockEditor {
                 })
             return this
         }
+
+        func setBlockSelectMode(
+            isBlockSelectMode: Bool,
+            isBlockSelected: Bool
+        ) -> Self {
+            var this = self
+            this.isBlockSelectMode = isBlockSelectMode
+            this.isBlockSelected = isBlockSelectMode && isBlockSelected
+            return this
+        }
     }
 }
 
 extension BlockEditor {
     enum TextBlockAction {
+        case selectModePressed(id: UUID)
         case boldButtonPressed(id: UUID, text: String, selection: NSRange)
         case italicButtonPressed(id: UUID, text: String, selection: NSRange)
         case codeButtonPressed(id: UUID, text: String, selection: NSRange)
@@ -107,6 +118,8 @@ extension BlockEditor.TextBlockAction {
             return .didEndEditing(id: id)
         case .activateLink(let url):
             return .activateLink(url)
+        case .selectModePressed:
+            return .selectModePressed(id: id)
         case .upButtonPressed:
             return .upButtonPressed(id: id)
         case .downButtonPressed:

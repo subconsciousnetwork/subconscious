@@ -111,23 +111,48 @@ extension BlockEditor {
         }
 
         func setBlockSelectMode(
-            _ isBlockSelectMode: Bool
-        ) -> Self? {
-            update { block in
-                var block = block
-                block.isBlockSelectMode = isBlockSelectMode
-                return block
+            isBlockSelectMode: Bool,
+            isBlockSelected: Bool
+        ) -> Self {
+            switch self {
+            case .text(let textBlockModel):
+                return .text(
+                    textBlockModel.setBlockSelectMode(
+                        isBlockSelectMode: isBlockSelectMode,
+                        isBlockSelected: isBlockSelected
+                    )
+                )
+            case .heading(let textBlockModel):
+                return .heading(
+                    textBlockModel.setBlockSelectMode(
+                        isBlockSelectMode: isBlockSelectMode,
+                        isBlockSelected: isBlockSelected
+                    )
+                )
+            case .quote(let textBlockModel):
+                return .quote(
+                    textBlockModel.setBlockSelectMode(
+                        isBlockSelectMode: isBlockSelectMode,
+                        isBlockSelected: isBlockSelected
+                    )
+                )
+            case .list(let textBlockModel):
+                return .list(
+                    textBlockModel.setBlockSelectMode(
+                        isBlockSelectMode: isBlockSelectMode,
+                        isBlockSelected: isBlockSelected
+                    )
+                )
             }
         }
-        
+
         func setBlockSelected(
             _ isBlockSelected: Bool
-        ) -> Self? {
-            update { block in
-                var block = block
-                block.isBlockSelected = isBlockSelected
-                return block
-            }
+        ) -> Self {
+            setBlockSelectMode(
+                isBlockSelectMode: isBlockSelectedMode,
+                isBlockSelected: isBlockSelected
+            )
         }
     }
 }

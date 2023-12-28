@@ -17,6 +17,21 @@ extension BlockEditor {
         }
         var isBlockSelectMode = false
         var blocks: [BlockModel] = []
+
+        func setBlockSelectMode(
+            isSelected: Bool,
+            selecting: Set<UUID>
+        ) -> Self {
+            var this = self
+            this.isBlockSelectMode = true
+            this.blocks = blocks.map({ block in
+                block.setBlockSelectMode(
+                    isBlockSelectMode: true,
+                    isBlockSelected: selecting.contains(block.id)
+                )
+            })
+            return this
+        }
     }
 }
 

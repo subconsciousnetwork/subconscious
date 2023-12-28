@@ -175,6 +175,7 @@ extension BlockEditor {
         /// Select a block
         case selectBlock(id: UUID, isSelected: Bool = true)
         case toggleSelectBlock(id: UUID)
+        case selectModePressed(id: UUID)
         /// Move the block up one position in the stack.
         /// If block is first block, this does nothing.
         case moveBlockUp(id: UUID)
@@ -206,7 +207,7 @@ extension BlockEditor {
         /// Set the controller to ready state
         case present
         case reconfigureCollectionItems([IndexPath])
-        case reloadEditor
+        case reloadCollectionView
         case moveBlock(
             at: IndexPath,
             to: IndexPath
@@ -478,6 +479,11 @@ extension BlockEditor.Model: ModelProtocol {
             )
         case let .toggleSelectBlock(id: id):
             return toggleSelectBlock(
+                state: state,
+                id: id
+            )
+        case let .selectModePressed(id):
+            return selectModePressed(
                 state: state,
                 id: id
             )
@@ -824,7 +830,7 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<Action> = refreshTranscludesFx.merge(with: loadRelatedFx)
             .eraseToAnyPublisher()
 
-        return Update(state: model, fx: fx, changes: [.reloadEditor])
+        return Update(state: model, fx: fx, changes: [.reloadCollectionView])
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
@@ -1504,7 +1510,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         let block = model.blocks.blocks[i]
-        let updatedBlock = block.setBlockSelected(isSelected) ?? block
+        let updatedBlock = block.setBlockSelected(isSelected)
         
         guard block != updatedBlock else {
             Self.logger.debug("Block selection state did not change.")
@@ -1539,8 +1545,8 @@ extension BlockEditor.Model: ModelProtocol {
         var model = state
         let block = model.blocks.blocks[i]
         let isSelected = block.isBlockSelected
-        let updatedBlock = block.setBlockSelected(!isSelected) ?? block
-        
+        let updatedBlock = block.setBlockSelected(!isSelected)
+
         guard block != updatedBlock else {
             Self.logger.debug("Block selection state did not change.")
             return Update(state: state)
@@ -1558,6 +1564,29 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
+    static func selectModePressed(
+        state: Self,
+        id: UUID
+    ) -> Update {
+        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
+            Self.logger.log("block#\(id) not found. Doing nothing.")
+            return Update(state: state)
+        }
+        var model = state
+        model.blocks = state.blocks.setBlockSelectMode(
+            isSelected: true,
+            selecting: Set([id])
+        )
+        let indexPath = IndexPath(
+            row: i,
+            section: BlockEditor.Section.blocks.rawValue
+        )
+        return Update(
+            state: model,
+            changes: [.reloadCollectionView]
+        )
+    }
+
     static func moveBlockUp(
         state: Self,
         id: UUID

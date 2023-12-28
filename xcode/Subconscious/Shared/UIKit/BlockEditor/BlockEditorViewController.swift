@@ -208,8 +208,8 @@ extension BlockEditor {
             switch change {
             case .present:
                 return present()
-            case .reloadEditor:
-                return reloadEditor()
+            case .reloadCollectionView:
+                return reloadCollectionView()
             case let .reconfigureCollectionItems(indexPaths):
                 return reconfigureCollectionItems(indexPaths)
             case let .moveBlock(at, to):
@@ -235,7 +235,7 @@ extension BlockEditor {
             }
         }
 
-        private func reloadEditor() {
+        private func reloadCollectionView() {
             UIView.performWithoutAnimation {
                 collectionView.reloadData()
             }
@@ -481,6 +481,8 @@ extension BlockEditor {
 extension BlockEditor.Action {
     static func from(_ action: BlockEditor.TextBlockAction) -> Self {
         switch action {
+        case let .selectModePressed(id):
+            return .selectModePressed(id: id)
         case let .boldButtonPressed(id, _, selection):
             return .insertBold(id: id, selection: selection)
         case let .italicButtonPressed(id, _, selection):
