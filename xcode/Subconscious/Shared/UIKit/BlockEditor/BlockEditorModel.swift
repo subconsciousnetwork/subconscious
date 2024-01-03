@@ -67,7 +67,7 @@ extension BlockEditor {
         var transcludes: [Slashlink: EntryStub] = [:]
 
         /// Is block select menu being presented?
-        var isBlockSelectMenuPresented = true
+        var isBlockSelectMenuPresented = false
 
         mutating func setSaveState(_ state: SaveState) {
             if self.saveState == state {
@@ -1568,19 +1568,9 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         id: UUID
     ) -> Update {
-        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
-            Self.logger.log("block#\(id) not found. Doing nothing.")
-            return Update(state: state)
-        }
         var model = state
-        model.blocks = state.blocks.setBlockSelectMode(
-            isSelected: true,
-            selecting: Set([id])
-        )
-        let indexPath = IndexPath(
-            row: i,
-            section: BlockEditor.Section.blocks.rawValue
-        )
+        model.blocks.enterBlockSelectMode(selecting: Set([id]))
+        model.isBlockSelectMenuPresented = true
         return Update(
             state: model,
             changes: [.reloadCollectionView]

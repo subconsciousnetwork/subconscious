@@ -15,23 +15,31 @@ extension BlockEditor {
             // https://github.com/subconsciousnetwork/subconscious/issues/1009
             blocks.compactMap(\.dom?.description).joined(separator: "\n\n")
         }
-        var isBlockSelectMode = false
+        private(set) var isBlockSelectMode = false
         var blocks: [BlockModel] = []
 
-        func setBlockSelectMode(
-            isSelected: Bool,
+        mutating func enterBlockSelectMode(
             selecting: Set<UUID>
-        ) -> Self {
-            var this = self
-            this.isBlockSelectMode = true
-            this.blocks = blocks.map({ block in
+        ) {
+            self.isBlockSelectMode = true
+            self.blocks = blocks.map({ block in
                 block.setBlockSelectMode(
                     isBlockSelectMode: true,
                     isBlockSelected: selecting.contains(block.id)
                 )
             })
-            return this
         }
+
+        mutating func exitBlockSelectMode() {
+            self.isBlockSelectMode = false
+            self.blocks = blocks.map({ block in
+                block.setBlockSelectMode(
+                    isBlockSelectMode: false,
+                    isBlockSelected: false
+                )
+            })
+        }
+
     }
 }
 

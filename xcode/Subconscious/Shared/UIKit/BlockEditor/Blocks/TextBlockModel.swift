@@ -18,9 +18,9 @@ extension BlockEditor {
         /// Is select mode enabled in the editor?
         /// Our collection view is data-driven, so we set this flag for every
         /// block.
-        var isBlockSelectMode = false
+        private(set) var isBlockSelectMode = false
         /// Is this particular block selected?
-        var isBlockSelected = false
+        private(set) var isBlockSelected = false
         var transcludes: [EntryStub] = []
         
         /// Set text, updating selection
