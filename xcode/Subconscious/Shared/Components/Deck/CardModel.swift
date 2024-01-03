@@ -59,7 +59,22 @@ extension CardModel {
         case .action(_):
             return self
         case let .entry(_, author, backlinks):
-            return .init(entry: entry, user: author, backlinks: backlinks)
+            return .init(
+                card: .entry(
+                    entry: entry,
+                    author: author,
+                    backlinks: backlinks
+                )
+            )
+        case .prompt(message: let message, entry: let entry, author: let author, backlinks: let backlinks):
+            return .init(
+                card: .prompt(
+                    message: message,
+                    entry: entry,
+                    author: author,
+                    backlinks: backlinks
+                )
+            )
         }
     }
     
