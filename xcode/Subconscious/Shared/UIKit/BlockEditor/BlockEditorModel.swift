@@ -169,7 +169,7 @@ extension BlockEditor {
         /// this will toggle block selection.
         case tap(CGPoint)
         /// Enter edit mode, optionally selecting a block
-        case enterBlockSelectMode(selecting: UUID?)
+        case enterBlockSelectMode(selecting: Set<UUID> = Set())
         /// Exit edit mode. Also de-selects all blocks
         case exitBlockSelectMode
         /// Select a block
@@ -1481,9 +1481,11 @@ extension BlockEditor.Model: ModelProtocol {
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func enterBlockSelectMode(
         state: Self,
-        selecting id: UUID?
+        selecting ids: Set<UUID>
     ) -> Update {
-        return Update(state: state)
+        var model = state
+        model.blocks.enterBlockSelectMode(selecting: ids)
+        return Update(state: model, changes: [.reloadCollectionView])
     }
     
     // TODO: Reimplement
@@ -1491,7 +1493,9 @@ extension BlockEditor.Model: ModelProtocol {
     static func exitBlockSelectMode(
         state: Self
     ) -> Update {
-        return Update(state: state)
+        var model = state
+        model.blocks.exitBlockSelectMode()
+        return Update(state: model, changes: [.reloadCollectionView])
     }
     
     static func selectBlock(
@@ -1802,7 +1806,14 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         var model = state
         model.isBlockSelectMenuPresented = isPresented
-        return Update(state: model)
+        guard !isPresented else {
+            return Update(state: model)
+        }
+        return update(
+            state: model,
+            action: .exitBlockSelectMode,
+            environment: environment
+        )
     }
 
     static func becomeTextBlock(
