@@ -184,6 +184,21 @@ extension EntryStub: DummyData {
     }
 }
 
+extension Memo: DummyData {
+    static func dummyData() -> Memo {
+        Memo(
+            contentType: "text/subtext",
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: "subtext",
+            additionalHeaders: Headers(),
+            body: String.dummyDataMedium()
+        )
+    }
+    
+    
+}
+
 extension UserProfile: DummyData {
     static func dummyData() -> UserProfile {
         let nickname = Petname.Name.dummyData()

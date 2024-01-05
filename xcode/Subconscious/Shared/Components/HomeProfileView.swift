@@ -197,7 +197,7 @@ extension AppAction {
     static func from(_ action: HomeProfileAction) -> Self? {
         switch action {
         case let .requestDeleteEntry(entry):
-            return .deleteMemo(entry)
+            return .deleteEntry(entry)
         case let .requestSaveEntry(entry):
             return .saveEntry(entry)
         case let .requestMoveEntry(from, to):

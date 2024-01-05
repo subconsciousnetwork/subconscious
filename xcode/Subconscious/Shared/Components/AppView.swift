@@ -298,7 +298,7 @@ enum AppAction: Hashable {
     //  store. The component subscribes to the app store's actions publisher
     //  and responds to "succeed" actions.
     /// Attempt to delete a memo
-    case deleteMemo(Slashlink?)
+    case deleteEntry(Slashlink?)
     /// Deletion attempt failed
     case failDeleteMemo(String)
     /// Deletion attempt succeeded
@@ -1168,7 +1168,7 @@ struct AppModel: ModelProtocol {
                 petname: petname
             )
         // MARK: Note management
-        case let .deleteMemo(address):
+        case let .deleteEntry(address):
             return deleteMemo(
                 state: state,
                 environment: environment,

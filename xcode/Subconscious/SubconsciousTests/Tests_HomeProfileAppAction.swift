@@ -12,10 +12,10 @@ import XCTest
 final class Tests_HomeProfile_AppAction: XCTestCase {
     func testFromRequestDeleteMemo() throws {
         let action = AppAction.from(
-            HomeProfileAction.requestDeleteMemo(
+            HomeProfileAction.requestDeleteEntry(
                 Slashlink("/bob")!
             )
         )
-        XCTAssertEqual(action, .deleteMemo(Slashlink("/bob")!))
+        XCTAssertEqual(action, .deleteEntry(Slashlink("/bob")!))
     }
 }

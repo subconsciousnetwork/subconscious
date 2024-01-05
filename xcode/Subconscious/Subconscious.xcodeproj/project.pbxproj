@@ -28,6 +28,8 @@
 		B5293B892A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B5293B8A2A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
+		B53B600E2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B600D2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift */; };
+		B53B60102B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B600F2B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift */; };
 		B540F8BA2A0C748C00876256 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = B540F8B92A0C748C00876256 /* Line.swift */; };
 		B54187B829EF5CA00056E4A9 /* FollowUserFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54187B729EF5CA00056E4A9 /* FollowUserFormView.swift */; };
 		B542EF672AF48F2100BE29F1 /* StoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */; };
@@ -561,6 +563,8 @@
 		B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FabSpacerView.swift; sourceTree = "<group>"; };
 		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
+		B53B600D2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DeckDetailStackCursor.swift; sourceTree = "<group>"; };
+		B53B600F2B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_HomeProfileDetailStackCursor.swift; sourceTree = "<group>"; };
 		B540F8B92A0C748C00876256 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		B54187B729EF5CA00056E4A9 /* FollowUserFormView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserFormView.swift; sourceTree = "<group>"; };
 		B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreUtilities.swift; sourceTree = "<group>"; };
@@ -1157,6 +1161,8 @@
 				B5E07B312B0337A100F302EA /* Tests_UserProfileDetailModel.swift */,
 				B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */,
 				B5908BEA29DAB05B00225B1A /* TestUtilities.swift */,
+				B53B600D2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift */,
+				B53B600F2B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -1977,6 +1983,7 @@
 				B80CC807299D4DF000C4D7C0 /* Tests_SQLite3Database.swift in Sources */,
 				B83B19A52A015D93007657D9 /* Tests_Did.swift in Sources */,
 				B58CC8E52B0DE863004CFFEA /* Tests_MathUtilities.swift in Sources */,
+				B53B600E2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift in Sources */,
 				B86DD5762AA0D3DF00E1DEA5 /* Tests_UIStackViewHelpers.swift in Sources */,
 				B836605A2AE3239A00BA1864 /* Tests_NotebookAction.swift in Sources */,
 				B8CAA6CD2A02FF9B00F4A0F6 /* Tests_Link.swift in Sources */,
@@ -2037,6 +2044,7 @@
 				B8682DCB2804BF04001CD8DD /* Tests_Subtext.swift in Sources */,
 				B88CC956284FCF8C00994928 /* Tests_DatabaseService.swift in Sources */,
 				B8D328BA29A69D2D00850A37 /* Tests_URLUtilities.swift in Sources */,
+				B53B60102B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift in Sources */,
 				B8F164252AE1B4A300A05CE7 /* Tests_StoryUser.swift in Sources */,
 				B831BDB72824DA9700C4CE92 /* Tests_Tape.swift in Sources */,
 				B5E07B322B0337A100F302EA /* Tests_UserProfileDetailModel.swift in Sources */,
