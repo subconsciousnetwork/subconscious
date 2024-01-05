@@ -103,7 +103,7 @@ enum DeckAction: Hashable {
     case nextCard
     case cardPresented(CardModel)
     
-    case refreshEachCard
+    case refreshUpcomingCards
     case refreshDeck
     
     /// Note lifecycle events.
@@ -324,14 +324,14 @@ struct DeckModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .refreshEachCard:
+        case .refreshUpcomingCards:
             return refreshEachCard(state: state, environment: environment)
         case let .succeedSaveEntry(address, modified):
             return update(
                 state: state,
                 actions: [
                     .detailStack(.succeedSaveEntry(address, modified)),
-                    .refreshEachCard
+                    .refreshUpcomingCards
                 ],
                 environment: environment
             )
@@ -342,7 +342,7 @@ struct DeckModel: ModelProtocol {
                     .detailStack(
                         .succeedDeleteEntry(address)
                     ),
-                    .refreshEachCard
+                    .refreshUpcomingCards
                 ],
                 environment: environment
             )
@@ -356,7 +356,7 @@ struct DeckModel: ModelProtocol {
                             to: to
                         )
                     ),
-                    .refreshEachCard
+                    .refreshUpcomingCards
                 ],
                 environment: environment
             )
@@ -367,7 +367,7 @@ struct DeckModel: ModelProtocol {
                     .detailStack(
                         .succeedMergeEntry(parent: parent, child: child)
                     ),
-                    .refreshEachCard
+                    .refreshUpcomingCards
                 ],
                 environment: environment
             )
@@ -378,7 +378,7 @@ struct DeckModel: ModelProtocol {
                     .detailStack(
                         .succeedUpdateAudience(receipt)
                     ),
-                    .refreshEachCard
+                    .refreshUpcomingCards
                 ],
                 environment: environment
             )
