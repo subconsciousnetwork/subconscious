@@ -223,7 +223,7 @@ struct NotebookDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
         switch action {
-        case let .requestDeleteMemo(slashlink):
+        case let .requestDeleteEntry(slashlink):
             return .requestDeleteMemo(slashlink)
         case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
@@ -724,7 +724,7 @@ struct NotebookModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .detailStack(.requestDeleteMemo(address)),
+            action: .detailStack(.requestDeleteEntry(address)),
             environment: environment
         )
     }
@@ -782,7 +782,7 @@ struct NotebookModel: ModelProtocol {
             state: state,
             actions: [
                 .refreshLists,
-                .detailStack(.succeedSaveEntry(address: address, modified: modified))
+                .detailStack(.succeedSaveEntry(address, modified))
             ],
             environment: environment
         )

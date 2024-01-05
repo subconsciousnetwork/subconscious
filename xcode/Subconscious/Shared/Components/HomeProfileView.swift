@@ -152,7 +152,7 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
-        case let .requestDeleteMemo(slashlink):
+        case let .requestDeleteEntry(slashlink):
             return .requestDeleteMemo(slashlink)
         default:
             return .detailStack(action)
@@ -330,7 +330,7 @@ struct HomeProfileModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .detailStack(.succeedSaveEntry(address: address, modified: modified)),
+                    .detailStack(.succeedSaveEntry(address, modified)),
                     .appear
                 ],
                 environment: environment
@@ -396,7 +396,7 @@ struct HomeProfileModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .detailStack(.requestDeleteMemo(address)),
+            action: .detailStack(.requestDeleteEntry(address)),
             environment: environment
         )
     }

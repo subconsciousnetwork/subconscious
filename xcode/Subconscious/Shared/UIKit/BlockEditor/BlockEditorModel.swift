@@ -137,12 +137,9 @@ extension BlockEditor {
         /// have in cache.
         case refreshTranscludesFor(id: UUID)
         /// Save a snapshot
-        case save(_ snapshot: MemoEntry?)
+        case requestSave(_ snapshot: MemoEntry?)
+        case forwardRequestSave(_ snapshot: MemoEntry)
         case succeedSave(_ snapshot: MemoEntry)
-        case failSave(
-            snapshot: MemoEntry,
-            error: String
-        )
         /// Autosave whatever is in the editor.
         /// Sent at some interval to save draft state.
         case autosave
@@ -372,8 +369,8 @@ extension BlockEditor.Model: ModelProtocol {
                 id: id,
                 environment: environment
             )
-        case let .save(snapshot):
-            return save(
+        case let .requestSave(snapshot):
+            return requestSave(
                 state: state,
                 snapshot: snapshot,
                 environment: environment
@@ -382,13 +379,6 @@ extension BlockEditor.Model: ModelProtocol {
             return succeedSave(
                 state: state,
                 snapshot: snapshot,
-                environment: environment
-            )
-        case let .failSave(snapshot, error):
-            return failSave(
-                state: state,
-                snapshot: snapshot,
-                error: error,
                 environment: environment
             )
         case .autosave:
@@ -510,6 +500,8 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .forwardRequestSave(_):
+            return Update(state: state)
         }
     }
 
@@ -805,7 +797,7 @@ extension BlockEditor.Model: ModelProtocol {
             return update(
                 state: model,
                 actions: [
-                    .save(snapshot),
+                    .requestSave(snapshot),
                     .setEditor(detail: detail, autofocus: autofocus)
                 ],
                 environment: environment
@@ -1038,7 +1030,7 @@ extension BlockEditor.Model: ModelProtocol {
         )
     }
     
-    static func save(
+    static func requestSave(
         state: Self,
         snapshot: MemoEntry?,
         environment: Environment
@@ -1056,18 +1048,11 @@ extension BlockEditor.Model: ModelProtocol {
         model.setSaveState(.saving)
         logger.log("Saving \(snapshot.address)")
         
-        let fx: Fx<BlockEditor.Action> = environment.data
-            .writeEntryPublisher(snapshot)
-            .map({
-                Action.succeedSave(snapshot)
-            })
-            .recover({ error in
-                Action.failSave(
-                    snapshot: snapshot,
-                    error: error.localizedDescription
-                )
-            })
-            .eraseToAnyPublisher()
+        let fx: Fx<BlockEditor.Action> = Just(
+            .forwardRequestSave(
+                snapshot
+            )
+        ).eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
     }
@@ -1099,24 +1084,12 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: model)
     }
     
-    static func failSave(
-        state: Self,
-        snapshot: MemoEntry,
-        error: String,
-        environment: Environment
-    ) -> Update {
-        var model = state
-        model.setSaveState(.unsaved)
-        logger.warning("Could not save \(snapshot.address). Error: \(error)")
-        return Update(state: model)
-    }
-    
     static func autosave(
         state: Self,
         environment: Environment
     ) -> Update {
         let snapshot = MemoEntry(state)
-        return save(
+        return requestSave(
             state: state,
             snapshot: snapshot,
             environment: environment

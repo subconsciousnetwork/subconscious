@@ -11,7 +11,7 @@ import XCTest
 final class Tests_NotebookDetailStackCursor: XCTestCase {
     func testTagRequestDeleteMemo() throws {
         let action = NotebookDetailStackCursor.tag(
-            .requestDeleteMemo(Slashlink("@bob/foo")!)
+            .requestDeleteEntry(Slashlink("@bob/foo")!)
         )
         XCTAssertEqual(
             action,

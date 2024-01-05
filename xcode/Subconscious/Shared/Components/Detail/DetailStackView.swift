@@ -138,16 +138,20 @@ enum DetailStackAction: Hashable {
 
     /// Request delete memo.
     /// Gets forwarded up to parent for handling.
-    case requestDeleteMemo(Slashlink?)
+    case requestDeleteEntry(Slashlink?)
     /// Deletion attempt failed. Forwarded down from parent.
     case failDeleteMemo(String)
     /// Deletion attempt succeeded. Forwarded down from parent.
     case succeedDeleteMemo(Slashlink)
 
+    case requestSaveEntry(_ entry: MemoEntry)
+    case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedSaveEntry(address: Slashlink, modified: Date)
-    case succeedUpdateAudience(MoveReceipt)
+    case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
 
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
@@ -237,12 +241,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .requestDeleteMemo(address):
-            return requestDeleteMemo(
-                state: state,
-                environment: environment,
-                address: address
-            )
+        case .requestDeleteEntry:
+            return noOp(state: state)
         case let .succeedDeleteMemo(address):
             return succeedDeleteMemo(
                 state: state,
@@ -256,6 +256,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 error: error
             )
         // These act as notifications for parent models to react to
+        case .requestMoveEntry:
+            return noOp(state: state)
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
                 state: state,
@@ -263,6 +265,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 from: from,
                 to: to
             )
+        case .requestMergeEntry:
+            return noOp(state: state)
         case let .succeedMergeEntry(parent, child):
             return succeedMergeEntry(
                 state: state,
@@ -270,8 +274,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 parent: parent,
                 child: child
             )
+        case .requestSaveEntry:
+            return noOp(state: state)
         case .succeedSaveEntry:
-            return Update(state: state)
+            return noOp(state: state)
+        case .requestUpdateAudience:
+            return noOp(state: state)
         case let.succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
@@ -279,6 +287,10 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 receipt: receipt
             )
         }
+    }
+    
+    static func noOp(state: Self) -> Update<Self> {
+        return Update(state: state)
     }
 
     static func setDetails(
@@ -464,16 +476,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             environment: environment
         )
     }
-
-    static func requestDeleteMemo(
-        state: Self,
-        environment: Environment,
-        address: Slashlink?
-    ) -> Update<Self> {
-        // No-op. Should be handled by parent.
-        return Update(state: state)
-    }
-
+    
     static func succeedDeleteMemo(
         state: Self,
         environment: Environment,
@@ -604,8 +607,17 @@ struct DetailStackModel: Hashable, ModelProtocol {
 extension DetailStackAction {
     static func tag(_ action: MemoEditorDetailNotification) -> Self {
         switch action {
-        case .requestDelete(let address):
-            return .requestDeleteMemo(address)
+        case let .requestDelete(address):
+            return .requestDeleteEntry(address)
+        case let .requestSaveEntry(entry):
+            return .requestSaveEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .requestMoveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .requestMergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address, audience)
+            
         case let .requestDetail(detail):
             return .pushDetail(detail)
         case let .requestFindLinkDetail(link):
@@ -615,7 +627,7 @@ extension DetailStackAction {
         case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedSaveEntry(address, modified):
-            return .succeedSaveEntry(address: address, modified: modified)
+            return .succeedSaveEntry(address, modified)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
         }

@@ -304,7 +304,7 @@ enum AppAction: Hashable {
     /// Deletion attempt succeeded
     case succeedDeleteMemo(Slashlink)
     
-    case save(MemoEntry)
+    case saveEntry(MemoEntry)
     case mergeEntry(parent: Slashlink, child: Slashlink)
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
@@ -1228,8 +1228,8 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         case .succeedUpdateAudience(_):
             return Update(state: state)
-        case let .save(entry):
-            return save(
+        case let .saveEntry(entry):
+            return saveEntry(
                 state: state,
                 environment: environment,
                 entry: entry
@@ -2919,7 +2919,7 @@ struct AppModel: ModelProtocol {
     }
     
     /// Save snapshot of entry
-    static func save(
+    static func saveEntry(
         state: Self,
         environment: AppEnvironment,
         entry: MemoEntry
