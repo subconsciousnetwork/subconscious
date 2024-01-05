@@ -136,14 +136,11 @@ enum DetailStackAction: Hashable {
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
 
-    /// Request delete memo.
-    /// Gets forwarded up to parent for handling.
+    /// Note lifecycle events.
+    /// `request`s are passed up to the app root
+    /// `succeed`s are passed down from the app root
     case requestDeleteEntry(Slashlink?)
-    /// Deletion attempt failed. Forwarded down from parent.
-    case failDeleteMemo(String)
-    /// Deletion attempt succeeded. Forwarded down from parent.
     case succeedDeleteEntry(Slashlink)
-
     case requestSaveEntry(_ entry: MemoEntry)
     case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
     case requestMoveEntry(from: Slashlink, to: Slashlink)
@@ -241,23 +238,19 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .requestDeleteEntry:
-            return Update(state: state)
+        case let .succeedSaveEntry(address, modified):
+            return succeedSaveEntry(
+                state: state,
+                environment: environment,
+                address: address,
+                modified: modified
+            )
         case let .succeedDeleteEntry(address):
             return succeedDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
             )
-        case let .failDeleteMemo(error):
-            return failDeleteMemo(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        // These act as notifications for parent models to react to
-        case .requestMoveEntry:
-            return Update(state: state)
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
                 state: state,
@@ -265,8 +258,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 from: from,
                 to: to
             )
-        case .requestMergeEntry:
-            return Update(state: state)
         case let .succeedMergeEntry(parent, child):
             return succeedMergeEntry(
                 state: state,
@@ -274,18 +265,15 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 parent: parent,
                 child: child
             )
-        case .requestSaveEntry:
-            return Update(state: state)
-        case .succeedSaveEntry:
-            return Update(state: state)
-        case .requestUpdateAudience:
-            return Update(state: state)
         case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
                 environment: environment,
                 receipt: receipt
             )
+        case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
+                .requestMergeEntry, .requestUpdateAudience:
+            return Update(state: state)
         }
     }
     
@@ -473,6 +461,15 @@ struct DetailStackModel: Hashable, ModelProtocol {
         )
     }
     
+    static func succeedSaveEntry(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        modified: Date
+    ) -> Update<Self> {
+        return Update(state: state)
+    }
+    
     static func succeedDeleteEntry(
         state: Self,
         environment: Environment,
@@ -490,14 +487,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
         })
         model.details = details
         return Update(state: model)
-    }
-
-    static func failDeleteMemo(
-        state: Self,
-        environment: Environment,
-        error: String
-    ) -> Update<Self> {
-        return Update(state: state)
     }
     
     /// Move success lifecycle handler.

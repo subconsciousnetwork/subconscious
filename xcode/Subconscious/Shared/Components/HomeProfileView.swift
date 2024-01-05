@@ -428,23 +428,4 @@ struct HomeProfileModel: ModelProtocol {
             environment: environment
         )
     }
-
-    /// Entry delete failed
-    static func failDeleteMemo(
-        state: Self,
-        environment: Environment,
-        error: String
-    ) -> Update<Self> {
-        logger.log(
-            "Failed to delete memo",
-            metadata: [
-                "error": error
-            ]
-        )
-        return update(
-            state: state,
-            action: .detailStack(.failDeleteMemo(error)),
-            environment: environment
-        )
-    }
 }
