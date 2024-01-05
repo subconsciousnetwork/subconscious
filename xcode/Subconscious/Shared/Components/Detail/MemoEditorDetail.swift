@@ -1824,9 +1824,16 @@ struct MemoEditorDetailModel: ModelProtocol {
         from: Slashlink,
         to: Slashlink
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = Just(
+        let moveFx: Fx<MemoEditorDetailAction> = Just(
             MemoEditorDetailAction.forwardRequestMoveEntry(from: from, to: to)
         ).eraseToAnyPublisher()
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        // Save before updating audience
+        let fx = saveFx.merge(with: moveFx).eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
             .animation(.easeOutCubic(duration: Duration.keyboard))
@@ -1872,9 +1879,16 @@ struct MemoEditorDetailModel: ModelProtocol {
         parent: Slashlink,
         child: Slashlink
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = Just(
-                   MemoEditorDetailAction.forwardRequestMergeEntry(parent: parent, child: child)
-               ).eraseToAnyPublisher()
+        let mergeFx: Fx<MemoEditorDetailAction> = Just(
+            .forwardRequestMergeEntry(parent: parent, child: child)
+        ).eraseToAnyPublisher()
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        // Save before updating audience
+        let fx = saveFx.merge(with: mergeFx).eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
@@ -1909,12 +1923,19 @@ struct MemoEditorDetailModel: ModelProtocol {
             return Update(state: state)
         }
         
-        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        let audienceFx: Fx<MemoEditorDetailAction> = Just(
             .forwardRequestUpdateAudience(
                 address: address,
                 audience
             )
-        }.eraseToAnyPublisher()
+        ).eraseToAnyPublisher()
+        
+        // Save before updating audience
+        let fx = saveFx.merge(with: audienceFx).eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
