@@ -33,6 +33,7 @@ struct CardEffectModifier: ViewModifier {
                         : DeckTheme.lightBgMid
                     )
                     .opacity(4.0*stackFactor)
+                    .blendMode(.sourceAtop)
             )
             .scaleEffect(max(0,min(1, 1-stackFactor + 0.03)))
             .rotation3DEffect(

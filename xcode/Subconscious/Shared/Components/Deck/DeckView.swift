@@ -235,6 +235,8 @@ struct DeckModel: ModelProtocol {
     
     var detailStack = DetailStackModel()
     
+    var loadingStatus: LoadingState = .loading
+    
     /// Search HUD
     var isSearchPresented = false
     var search = SearchModel(
@@ -406,6 +408,9 @@ struct DeckModel: ModelProtocol {
             state: Self,
             environment: Environment
         ) -> Update<Self> {
+            var model = state
+            model.loadingStatus = .loading
+            
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 let recent = try environment.database.listFeed(owner: us)
@@ -442,11 +447,7 @@ struct DeckModel: ModelProtocol {
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
             
-            return update(
-                state: state,
-                action: .setDeck([]),
-                environment: environment
-            ).mergeFx(fx)
+            return Update(state: model, fx: fx)
         }
         
         func refreshUpcomingCards(
@@ -525,6 +526,7 @@ struct DeckModel: ModelProtocol {
             model.deck = deck
             model.seen = Set(deck.compactMap { card in card.entry })
             model.pointer = startIndex.clamp(min: 0, max: deck.count - 1)
+            model.loadingStatus = deck.count == 0 ? .notFound : .loaded
             
             if let topCard = deck.first {
                 return update(
