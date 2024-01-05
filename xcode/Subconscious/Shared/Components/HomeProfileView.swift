@@ -124,15 +124,17 @@ enum HomeProfileAction: Hashable {
     case setSearchPresented(Bool)
     case requestProfileRoot
     
-    /// DetailStack-related actions
-    case requestDeleteMemo(Slashlink?)
-    case succeedDeleteMemo(Slashlink)
-    case failDeleteMemo(String)
-    
-    case succeedSaveEntry(address: Slashlink, modified: Date)
+    /// Key lifecycle events
+    case requestDeleteEntry(Slashlink?)
+    case succeedDeleteEntry(Slashlink)
+    case requestSaveEntry(_ entry: MemoEntry)
+    case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedUpdateAudience(MoveReceipt)
+    case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
 // MARK: Cursors and tagging functions
@@ -152,8 +154,16 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
-        case let .requestDeleteEntry(slashlink):
-            return .requestDeleteMemo(slashlink)
+        case let .requestSaveEntry(entry):
+            return .requestSaveEntry(entry)
+        case let .requestDeleteEntry(entry):
+            return .requestDeleteEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .requestMoveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .requestMergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address, audience)
         default:
             return .detailStack(action)
         }
@@ -167,15 +177,13 @@ extension HomeProfileAction {
             return .ready
         case .requestProfileRoot:
             return .requestProfileRoot
-        case let .succeedDeleteMemo(address):
-            return .succeedDeleteMemo(address)
-        case let .failDeleteMemo(error):
-            return .failDeleteMemo(error)
+        case let .succeedDeleteEntry(entry):
+            return .succeedDeleteEntry(entry)
         case let .succeedSaveEntry(address, modified):
-            return .succeedSaveEntry(address: address, modified: modified)
-        case let .succeedMergeEntry(parent: parent, child: child):
+            return .succeedSaveEntry(address, modified)
+        case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedMoveEntry(from: from, to: to):
+        case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
@@ -188,8 +196,16 @@ extension HomeProfileAction {
 extension AppAction {
     static func from(_ action: HomeProfileAction) -> Self? {
         switch action {
-        case let .requestDeleteMemo(slashlink):
-            return .deleteMemo(slashlink)
+        case let .requestDeleteEntry(entry):
+            return .deleteMemo(entry)
+        case let .requestSaveEntry(entry):
+            return .saveEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .updateAudience(address: address, audience: audience)
         default:
             return nil
         }
@@ -281,20 +297,17 @@ struct HomeProfileModel: ModelProtocol {
                 action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
-        case .requestDeleteMemo(let address):
-            return requestDeleteMemo(
+        case let .succeedSaveEntry(address, modified):
+            return update(
                 state: state,
-                environment: environment,
-                address: address
+                actions: [
+                    .detailStack(.succeedSaveEntry(address, modified)),
+                    .appear
+                ],
+                environment: environment
             )
-        case .failDeleteMemo(let error):
-            return failDeleteMemo(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case .succeedDeleteMemo(let address):
-            return succeedDeleteMemo(
+        case .succeedDeleteEntry(let address):
+            return succeedDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
@@ -326,15 +339,9 @@ struct HomeProfileModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case let .succeedSaveEntry(address, modified):
-            return update(
-                state: state,
-                actions: [
-                    .detailStack(.succeedSaveEntry(address, modified)),
-                    .appear
-                ],
-                environment: environment
-            )
+        case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
+                .requestMergeEntry, .requestUpdateAudience:
+            return Update(state: state)
         }
     }
     
@@ -402,7 +409,7 @@ struct HomeProfileModel: ModelProtocol {
     }
     
     /// Entry delete succeeded
-    static func succeedDeleteMemo(
+    static func succeedDeleteEntry(
         state: Self,
         environment: Environment,
         address: Slashlink
@@ -415,7 +422,7 @@ struct HomeProfileModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .detailStack(.succeedDeleteMemo(address)),
+            action: .detailStack(.succeedDeleteEntry(address)),
             environment: environment
         )
     }

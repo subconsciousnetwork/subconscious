@@ -220,14 +220,16 @@ struct NotebookDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> NotebookModel.Action {
         switch action {
-        case let .requestDeleteEntry(slashlink):
-            return .requestDeleteEntry(slashlink)
-        case let .succeedMergeEntry(parent: parent, child: child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedMoveEntry(from: from, to: to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedUpdateAudience(receipt):
-            return .succeedUpdateAudience(receipt)
+        case let .requestSaveEntry(entry):
+            return .requestSaveEntry(entry)
+        case let .requestDeleteEntry(entry):
+            return .requestDeleteEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .requestMoveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .requestMergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address, audience)
         case _:
             return .detailStack(action)
         }
@@ -250,7 +252,7 @@ extension NotebookAction {
         case .requestNotebookRoot:
             return .requestNotebookRoot
             
-        case let .succeedDeleteMemo(entry):
+        case let .succeedDeleteEntry(entry):
             return .succeedDeleteEntry(entry)
         case let .succeedSaveEntry(address, modified):
             return .succeedSaveEntry(address, modified)
@@ -447,18 +449,18 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .succeedDeleteEntry(let address):
-            return succeedDeleteEntry(
-                state: state,
-                environment: environment,
-                address: address
-            )
         case let .succeedSaveEntry(address, modified):
             return succeedSaveEntry(
                 state: state,
                 environment: environment,
                 address: address,
                 modified: modified
+            )
+        case .succeedDeleteEntry(let address):
+            return succeedDeleteEntry(
+                state: state,
+                environment: environment,
+                address: address
             )
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
@@ -719,7 +721,7 @@ struct NotebookModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .detailStack(.succeedDeleteMemo(address)),
+                .detailStack(.succeedDeleteEntry(address)),
                 .refreshLists
             ],
             environment: environment

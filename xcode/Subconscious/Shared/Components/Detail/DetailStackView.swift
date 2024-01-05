@@ -142,7 +142,7 @@ enum DetailStackAction: Hashable {
     /// Deletion attempt failed. Forwarded down from parent.
     case failDeleteMemo(String)
     /// Deletion attempt succeeded. Forwarded down from parent.
-    case succeedDeleteMemo(Slashlink)
+    case succeedDeleteEntry(Slashlink)
 
     case requestSaveEntry(_ entry: MemoEntry)
     case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
@@ -243,8 +243,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
             )
         case .requestDeleteEntry:
             return Update(state: state)
-        case let .succeedDeleteMemo(address):
-            return succeedDeleteMemo(
+        case let .succeedDeleteEntry(address):
+            return succeedDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
@@ -473,7 +473,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         )
     }
     
-    static func succeedDeleteMemo(
+    static func succeedDeleteEntry(
         state: Self,
         environment: Environment,
         address: Slashlink

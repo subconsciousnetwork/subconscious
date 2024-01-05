@@ -302,7 +302,7 @@ enum AppAction: Hashable {
     /// Deletion attempt failed
     case failDeleteMemo(String)
     /// Deletion attempt succeeded
-    case succeedDeleteMemo(Slashlink)
+    case succeedDeleteEntry(Slashlink)
     
     case saveEntry(MemoEntry)
     case mergeEntry(parent: Slashlink, child: Slashlink)
@@ -1180,8 +1180,8 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case let .succeedDeleteMemo(address):
-            return succeedDeleteMemo(
+        case let .succeedDeleteEntry(address):
+            return succeedDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
@@ -2759,7 +2759,7 @@ struct AppModel: ModelProtocol {
         let fx: Fx<Action> = environment.data
             .deleteMemoPublisher(address)
             .map({ _ in
-                Action.succeedDeleteMemo(address)
+                Action.succeedDeleteEntry(address)
             })
             .recover({ error in
                 Action.failDeleteMemo(error.localizedDescription)
@@ -2784,7 +2784,7 @@ struct AppModel: ModelProtocol {
     }
 
     /// Entry delete succeeded
-    static func succeedDeleteMemo(
+    static func succeedDeleteEntry(
         state: Self,
         environment: Environment,
         address: Slashlink

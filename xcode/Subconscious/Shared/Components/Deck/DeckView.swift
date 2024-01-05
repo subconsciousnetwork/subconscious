@@ -108,7 +108,7 @@ enum DeckAction: Hashable {
     
     /// Key lifecycle events
     case requestDeleteEntry(Slashlink?)
-    case succeedDeleteMemo(Slashlink)
+    case succeedDeleteEntry(Slashlink)
     case requestSaveEntry(_ entry: MemoEntry)
     case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
     case requestMoveEntry(from: Slashlink, to: Slashlink)
@@ -145,8 +145,8 @@ extension DeckAction {
             return .requestDeckRoot
         case let .succeedSaveEntry(address, modified):
             return .succeedSaveEntry(address, modified)
-        case let .succeedDeleteMemo(entry):
-            return .succeedDeleteMemo(entry)
+        case let .succeedDeleteEntry(entry):
+            return .succeedDeleteEntry(entry)
         case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedMoveEntry(from, to):
@@ -213,10 +213,6 @@ struct DeckDetailStackCursor: CursorProtocol {
             return .requestMergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .requestUpdateAudience(address, audience)
-        case let .succeedSaveEntry(address, modified):
-            return .succeedSaveEntry(address, modified)
-        case let .succeedDeleteMemo(entry):
-            return .succeedDeleteMemo(entry)
         case _:
             return .detailStack(action)
         }
@@ -295,7 +291,12 @@ struct DeckModel: ModelProtocol {
         case .topupDeck:
             return topupDeck(state: state, environment: environment)
         case let .setDeck(deck, startIndex):
-            return setDeck(state: state, environment: environment, deck: deck, startIndex: startIndex)
+            return setDeck(
+                state: state,
+                environment: environment,
+                deck: deck,
+                startIndex: startIndex
+            )
         case .cardPickedUp:
             return cardPickedUp(state: state)
         case .cardReleased:
@@ -328,6 +329,17 @@ struct DeckModel: ModelProtocol {
                 state: state,
                 actions: [
                     .detailStack(.succeedSaveEntry(address, modified)),
+                    .refreshEachCard
+                ],
+                environment: environment
+            )
+        case let .succeedDeleteEntry(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedDeleteEntry(address)
+                    ),
                     .refreshEachCard
                 ],
                 environment: environment
@@ -368,8 +380,8 @@ struct DeckModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case .requestDeleteEntry, .succeedDeleteMemo, .requestSaveEntry, 
-                .requestMoveEntry, .requestMergeEntry, .requestUpdateAudience:
+        case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
+                .requestMergeEntry, .requestUpdateAudience:
             return Update(state: state)
         }
         

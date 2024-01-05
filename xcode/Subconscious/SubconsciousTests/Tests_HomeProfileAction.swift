@@ -23,18 +23,11 @@ final class Tests_HomeProfileAction: XCTestCase {
         XCTAssertEqual(action, .ready)
     }
     
-    func testFromSucceedDeleteMemo() throws {
+    func testFromSucceedDeleteEntry() throws {
         let action = Action.from(
-            .succeedDeleteMemo(Slashlink("/foo")!)
+            .succeedDeleteEntry(Slashlink("/foo")!)
         )
-        XCTAssertEqual(action, .succeedDeleteMemo(Slashlink("/foo")!))
-    }
-    
-    func testFromFailDeleteMemo() throws {
-        let action = Action.from(
-            .failDeleteMemo("")
-        )
-        XCTAssertEqual(action, .failDeleteMemo(""))
+        XCTAssertEqual(action, .succeedDeleteEntry(Slashlink("/foo")!))
     }
     
     func testFromRequestFeedRoot() throws {
