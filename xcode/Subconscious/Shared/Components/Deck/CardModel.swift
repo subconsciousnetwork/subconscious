@@ -54,20 +54,26 @@ extension CardModel {
         )
     }
     
+    // TODO: add test
     func update(entry: EntryStub) -> Self {
         switch card {
         case .action(_):
             return self
         case let .entry(_, author, backlinks):
-            return .init(
+            return CardModel(
                 card: .entry(
                     entry: entry,
                     author: author,
                     backlinks: backlinks
                 )
             )
-        case .prompt(message: let message, entry: let entry, author: let author, backlinks: let backlinks):
-            return .init(
+        case .prompt(
+            message: let message,
+            entry: _,
+            author: let author,
+            backlinks: let backlinks
+        ):
+            return CardModel(
                 card: .prompt(
                     message: message,
                     entry: entry,
