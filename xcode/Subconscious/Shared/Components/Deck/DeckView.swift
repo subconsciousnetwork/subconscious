@@ -454,9 +454,14 @@ struct DeckModel: ModelProtocol {
             let deck = state.deck
             
             let fx: Fx<DeckAction> = Future.detached {
-                var updated: [CardModel] = []
-                // TODO: only refresh future cards, pointer and beyond
-                for card in deck {
+                // Create the first slice of the deck (unchanged)
+                let firstSlice = deck.prefix(upTo: state.pointer)
+
+                // Initialize an array for the updated cards
+                var updated: [CardModel] = Array(firstSlice)
+
+                // Update only the second slice of the deck (from state.pointer onwards)
+                for card in deck[state.pointer...] {
                     guard let address = card.entry?.address,
                           let did = card.entry?.did else {
                         continue
@@ -473,11 +478,12 @@ struct DeckModel: ModelProtocol {
                     
                     updated.append(card.update(entry: entry))
                 }
-                
+
+                // Set the combined deck and return
                 return .setDeck(updated, state.pointer)
             }
             .recover({ error in
-                .setDeck([])
+                .noCardsToDraw
             })
             .eraseToAnyPublisher()
             
@@ -524,11 +530,16 @@ struct DeckModel: ModelProtocol {
                     action: .cardPresented(topCard),
                     environment: environment
                 )
-                .animation(.spring(
-                    response: 0.5,
-                    dampingFraction: 0.8,
-                    blendDuration: 0
-                ))
+                .animation(
+                    // Only spring in from empty state
+                    state.deck.count == 0
+                       ? .spring(
+                            response: 0.5,
+                            dampingFraction: 0.8,
+                            blendDuration: 0
+                        )
+                    : nil
+                )
             }
             
             return Update(state: model)
@@ -713,7 +724,7 @@ struct DeckModel: ModelProtocol {
 
         func noCardsToDraw(state: Self) -> Update<Self> {
             logger.log("No cards to draw")
-            return Update(state: state)
+            return update(state: state, action: .setDeck([], 0), environment: environment)
         }
 
         func nextCard(state: Self, environment: Environment) -> Update<Self> {
