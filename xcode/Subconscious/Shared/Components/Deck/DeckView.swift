@@ -106,7 +106,9 @@ enum DeckAction: Hashable {
     case refreshEachCard
     case refreshDeck
     
-    /// Key lifecycle events
+    /// Note lifecycle events.
+    /// `request`s are passed up to the app root
+    /// `succeed`s are passed down from the app root
     case requestDeleteEntry(Slashlink?)
     case succeedDeleteEntry(Slashlink)
     case requestSaveEntry(_ entry: MemoEntry)
