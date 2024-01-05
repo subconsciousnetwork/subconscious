@@ -106,6 +106,7 @@ enum DeckAction: Hashable {
     case refreshEachCard
     case refreshDeck
     
+    /// Key lifecycle events
     case requestDeleteEntry(Slashlink?)
     case succeedDeleteMemo(Slashlink)
     case requestSaveEntry(_ entry: MemoEntry)
@@ -144,6 +145,8 @@ extension DeckAction {
             return .requestDeckRoot
         case let .succeedSaveEntry(address, modified):
             return .succeedSaveEntry(address, modified)
+        case let .succeedDeleteMemo(entry):
+            return .succeedDeleteMemo(entry)
         case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedMoveEntry(from, to):
@@ -210,6 +213,10 @@ struct DeckDetailStackCursor: CursorProtocol {
             return .requestMergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .requestUpdateAudience(address, audience)
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(address, modified)
+        case let .succeedDeleteMemo(entry):
+            return .succeedDeleteMemo(entry)
         case _:
             return .detailStack(action)
         }
@@ -361,21 +368,8 @@ struct DeckModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case .requestDeleteEntry:
-            return noOp(state: state)
-        case .succeedDeleteMemo:
-            return noOp(state: state)
-        case .requestSaveEntry:
-            return noOp(state: state)
-        case .requestMoveEntry:
-            return noOp(state: state)
-        case .requestMergeEntry:
-            return noOp(state: state)
-        case .requestUpdateAudience:
-            return noOp(state: state)
-        }
-        
-        func noOp(state: Self) -> Update<Self> {
+        case .requestDeleteEntry, .succeedDeleteMemo, .requestSaveEntry, 
+                .requestMoveEntry, .requestMergeEntry, .requestUpdateAudience:
             return Update(state: state)
         }
         

@@ -44,7 +44,7 @@ final class Tests_NotebookAction: XCTestCase {
         let action = NotebookAction.from(
             .succeedDeleteMemo(Slashlink("/foo")!)
         )
-        XCTAssertEqual(action, .succeedDeleteMemo(Slashlink("/foo")!))
+        XCTAssertEqual(action, .succeedDeleteEntry(Slashlink("/foo")!))
     }
     
     func testFromFailDeleteMemo() throws {

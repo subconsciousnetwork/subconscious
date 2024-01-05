@@ -242,7 +242,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment
             )
         case .requestDeleteEntry:
-            return noOp(state: state)
+            return Update(state: state)
         case let .succeedDeleteMemo(address):
             return succeedDeleteMemo(
                 state: state,
@@ -257,7 +257,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             )
         // These act as notifications for parent models to react to
         case .requestMoveEntry:
-            return noOp(state: state)
+            return Update(state: state)
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
                 state: state,
@@ -266,7 +266,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 to: to
             )
         case .requestMergeEntry:
-            return noOp(state: state)
+            return Update(state: state)
         case let .succeedMergeEntry(parent, child):
             return succeedMergeEntry(
                 state: state,
@@ -275,11 +275,11 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 child: child
             )
         case .requestSaveEntry:
-            return noOp(state: state)
+            return Update(state: state)
         case .succeedSaveEntry:
-            return noOp(state: state)
+            return Update(state: state)
         case .requestUpdateAudience:
-            return noOp(state: state)
+            return Update(state: state)
         case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
@@ -289,10 +289,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
         }
     }
     
-    static func noOp(state: Self) -> Update<Self> {
-        return Update(state: state)
-    }
-
     static func setDetails(
         state: Self,
         environment: Environment,
