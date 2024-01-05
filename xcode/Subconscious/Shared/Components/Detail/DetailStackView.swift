@@ -280,7 +280,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             return noOp(state: state)
         case .requestUpdateAudience:
             return noOp(state: state)
-        case let.succeedUpdateAudience(receipt):
+        case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
                 environment: environment,

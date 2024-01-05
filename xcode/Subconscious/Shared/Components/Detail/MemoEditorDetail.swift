@@ -331,6 +331,8 @@ extension MemoEditorDetailNotification {
             return .requestMoveEntry(from: from, to: to)
         case let .forwardRequestMergeEntry(parent, child):
             return .requestMergeEntry(parent: parent, child: child)
+        case let .forwardRequestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address: address, audience: audience)
         default:
             return nil
         }
@@ -530,6 +532,15 @@ extension MemoEditorDetailAction {
         action: AppAction
     ) -> MemoEditorDetailAction? {
         switch (action) {
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSave(address: address, modified: modified)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+            
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
             return .refreshBacklinks

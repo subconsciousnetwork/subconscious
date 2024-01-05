@@ -208,6 +208,8 @@ struct DeckDetailStackCursor: CursorProtocol {
             return .requestMoveEntry(from: from, to: to)
         case let .requestMergeEntry(parent, child):
             return .requestMergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address, audience)
         case _:
             return .detailStack(action)
         }
