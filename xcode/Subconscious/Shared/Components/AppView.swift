@@ -2940,7 +2940,6 @@ struct AppModel: ModelProtocol {
         )
     }
     
-    /// Save snapshot of entry
     static func saveEntry(
         state: Self,
         environment: AppEnvironment,
@@ -2963,7 +2962,6 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    /// Save snapshot of entry
     static func mergeEntry(
         state: Self,
         environment: AppEnvironment,
@@ -2985,7 +2983,6 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    /// Save snapshot of entry
     static func moveEntry(
         state: Self,
         environment: AppEnvironment,
@@ -3014,7 +3011,6 @@ struct AppModel: ModelProtocol {
         .animation(.easeOutCubic(duration: Duration.keyboard))
     }
     
-    /// Save snapshot of entry
     static func updateAudience(
         state: Self,
         environment: AppEnvironment,

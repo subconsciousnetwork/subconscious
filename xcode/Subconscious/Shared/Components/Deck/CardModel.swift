@@ -54,7 +54,6 @@ extension CardModel {
         )
     }
     
-    // TODO: add test
     func update(entry: EntryStub) -> Self {
         switch card {
         case .action(_):
