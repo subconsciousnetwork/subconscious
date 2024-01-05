@@ -139,10 +139,6 @@ struct MemoEditorDetailView: View {
             app.actions.compactMap(MemoEditorDetailAction.fromAppAction),
             perform: store.send
         )
-//        .onReceive(
-//            store.actions.compactMap(AppAction.from),
-//            perform: app.send
-//        )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
@@ -287,7 +283,6 @@ enum MemoEditorDetailNotification: Hashable {
     case requestFindLinkDetail(EntryLink)
     
     case requestDelete(Slashlink?)
-    // succeedDelete?
     
     case requestMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
@@ -300,24 +295,6 @@ enum MemoEditorDetailNotification: Hashable {
     
     case requestUpdateAudience(address: Slashlink, audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
-}
-
-extension AppAction {
-    // TODO: remove
-//    static func from(_ action: MemoEditorDetailAction) -> Self? {
-//        switch action {
-//        case let .requestSaveEntry(entry):
-//            return .saveEntry(entry)
-//        case let .mergeEntry(parent, child):
-//            return .mergeEntry(parent: parent, child: child)
-//        case let .moveEntry(from, to):
-//            return .moveEntry(from: from, to: to)
-//        case let .updateAudience(address, audience):
-//            return .updateAudience(address: address, audience: audience)
-//        default:
-//            return nil
-//        }
-//    }
 }
 
 extension MemoEditorDetailNotification {
@@ -431,32 +408,24 @@ enum MemoEditorDetailAction: Hashable {
     /// Intercepted rename action
     case selectRenameSuggestion(RenameSuggestion)
     
-    /// Save entry
+    /// Note lifecycle events.
+    /// `request`s are handled here and dispatch `forward`s
+    /// `forward`s are passed up to the app root
+    /// `succeed`s are passed down from the app root
     case requestSaveEntry(MemoEntry) // prepare our state for saving
     case forwardRequestSaveEntry(MemoEntry) // request save at app level
     case succeedSave(address: Slashlink, modified: Date) // respond to save success
-    
-    /// Request delete.
-    /// Forwards down meta sheet requestDelete, which hides sheet.
-    /// Then, after a delay for the bottom sheet animation, sends a
-    /// forwardRequestDelete, which is relayed to DetailOuterAction.
     case requestDelete(_ address: Slashlink?)
     case forwardRequestDelete(_ address: Slashlink?)
-
-    // Change audience
-    case requestUpdateAudience(_ audience: Audience)
-    case forwardRequestUpdateAudience(address: Slashlink, _ audience: Audience)
-    case succeedUpdateAudience(_ receipt: MoveReceipt)
-  
-    /// Move entry
     case requestMoveEntry(from: Slashlink, to: Slashlink)
     case forwardRequestMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
-    
-    /// Merge entries
     case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case forwardRequestMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case requestUpdateAudience(_ audience: Audience)
+    case forwardRequestUpdateAudience(address: Slashlink, _ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
 
     // Editor
     /// Update editor dom and mark if this state is saved or not
@@ -827,8 +796,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .forwardRequestDelete:
-            return Update(state: state)
         case .doneEditing:
             return doneEditing(
                 state: state,
@@ -981,13 +948,8 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .forwardRequestUpdateAudience:
-            return Update(state: state)
-        case .forwardRequestSaveEntry:
-            return Update(state: state)
-        case .forwardRequestMoveEntry:
-            return Update(state: state)
-        case .forwardRequestMergeEntry:
+        case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
+                .forwardRequestMergeEntry, .forwardRequestUpdateAudience:
             return Update(state: state)
         }
     }
@@ -1395,7 +1357,7 @@ struct MemoEditorDetailModel: ModelProtocol {
                 actions: [
                     snapshot.map(MemoEditorDetailAction.requestSaveEntry),
                     .forceSetDetail(detail)
-                ].compactMap({ $0 }),
+                ].compactMap({ v in v }),
                 environment: environment
             )
         }
@@ -1620,7 +1582,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             actions: [
                 entry.map(MemoEditorDetailAction.requestSaveEntry),
                 .setMetaSheetAddress(address)
-            ].compactMap({ $0 }),
+            ].compactMap({ v in v }),
             environment: environment
         )
         .animation(.default)
@@ -1832,7 +1794,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             .autosave
         ).eraseToAnyPublisher()
         
-        // Save before updating audience
+        // Save before moving
         let fx = saveFx.merge(with: moveFx).eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
@@ -1887,7 +1849,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             .autosave
         ).eraseToAnyPublisher()
         
-        // Save before updating audience
+        // Save before merging
         let fx = saveFx.merge(with: mergeFx).eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)

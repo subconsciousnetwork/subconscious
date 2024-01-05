@@ -95,7 +95,9 @@ extension UserProfileDetailAction {
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
         case let .succeedSaveEntry(address, modified):
-            return .succeedSaveEntry(slug: address, modified: modified)
+            return .succeedSaveEntry(address, modified)
+        case let .succeedDeleteEntry(address):
+            return .succeedDeleteEntry(address)
         case let .succeedMergeEntry(parent: parent, child: child):
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedMoveEntry(from: from, to: to):
@@ -184,10 +186,11 @@ enum UserProfileDetailAction: Equatable {
     
     case completeIndexPeers(_ results: [PeerIndexResult])
     
-    case succeedSaveEntry(slug: Slashlink, modified: Date)
+    case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
+    case succeedDeleteEntry(_ address: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedUpdateAudience(MoveReceipt)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -578,49 +581,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 results: results
             )
         // Notifications to app level
-        case .attemptFollow:
+        case .attemptFollow, .attemptRename, .attemptUnfollow:
             return Update(state: state)
-        case .attemptRename:
-            return Update(state: state)
-        case .attemptUnfollow:
-            return Update(state: state)
-        case .succeedSaveEntry(slug: let slug, modified: let modified):
-            if (state.address?.isOurs ?? false) {
-                return update(
-                    state: state,
-                    action: .refresh(
-                        forceSync: false
-                    ),
-                    environment: environment
-                )
-            }
-            
-            return Update(state: state)
-        case .succeedMoveEntry(from: let from, to: let to):
-            if (state.address?.isOurs ?? false) {
-                return update(
-                    state: state,
-                    action: .refresh(
-                        forceSync: false
-                    ),
-                    environment: environment
-                )
-            }
-            
-            return Update(state: state)
-        case .succeedMergeEntry(parent: let parent, child: let child):
-            if (state.address?.isOurs ?? false) {
-                return update(
-                    state: state,
-                    action: .refresh(
-                        forceSync: false
-                    ),
-                    environment: environment
-                )
-            }
-            
-            return Update(state: state)
-        case .succeedUpdateAudience(_):
+        case .succeedSaveEntry, .succeedDeleteEntry, .succeedMoveEntry,
+                .succeedMergeEntry, .succeedUpdateAudience:
             if (state.address?.isOurs ?? false) {
                 return update(
                     state: state,
