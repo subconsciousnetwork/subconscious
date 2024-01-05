@@ -297,23 +297,20 @@ enum AppAction: Hashable {
     //  own store, and then replay these as equivalent actions on the app
     //  store. The component subscribes to the app store's actions publisher
     //  and responds to "succeed" actions.
-    /// Attempt to delete a memo
-    case deleteEntry(Slashlink?)
-    /// Deletion attempt failed
-    case failDeleteMemo(String)
-    /// Deletion attempt succeeded
-    case succeedDeleteEntry(Slashlink)
-    
     case saveEntry(MemoEntry)
+    case deleteEntry(Slashlink?)
     case mergeEntry(parent: Slashlink, child: Slashlink)
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
     
+    // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)
+    case succeedDeleteEntry(Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(MoveReceipt)
     case failSaveEntry(address: Slashlink, error: String)
+    case failDeleteMemo(String)
     case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
     case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
@@ -1260,25 +1257,50 @@ struct AppModel: ModelProtocol {
                 Failed to save entry: \(address)
                 \(error)
                 """)
-            return Update(state: state)
+            
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not save note"
+                ),
+                environment: environment
+            )
         case .failMoveEntry(from: let from, to: let to, error: let error):
             logger.warning("""
                 Failed to move entry: \(from) -> \(to)
                 \(error)
                 """)
-            return Update(state: state)
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not move note"
+                ),
+                environment: environment
+            )
         case .failMergeEntry(parent: let parent, child: let child, error: let error):
             logger.warning("""
                 Failed to merge entries: \(child) -> \(parent)
                 \(error)
                 """)
-            return Update(state: state)
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not merge notes"
+                ),
+                environment: environment
+            )
         case .failUpdateAudience(address: let address, audience: let audience, error: let error):
             logger.warning("""
                 Failed to update audience for entry: \(address) \(audience)
                 \(error)
                 """)
-            return Update(state: state)
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not change audience"
+                ),
+                environment: environment
+            )
         }
     }
     
@@ -2927,7 +2949,10 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = environment.data.writeEntryPublisher(
             entry
         ).map({ _ in
-            .succeedSaveEntry(address: entry.address, modified: entry.contents.modified)
+            .failSaveEntry(
+                address: entry.address,
+                error: "Success"
+            )
         }).recover({ error in
             .failSaveEntry(
                 address: entry.address,
