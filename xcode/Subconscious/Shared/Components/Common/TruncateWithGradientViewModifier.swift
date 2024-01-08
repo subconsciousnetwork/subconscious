@@ -63,8 +63,7 @@ struct TruncateWithGradientViewModifier: ViewModifier {
 }
 
 extension View {
-    /// Modify a view so that it expands to fill the whole available
-    /// horizontal space, with content aligned leading.
+    /// Truncate a view at a max height with a gradient overlay
     func truncateWithGradient(color: Color, maxHeight: CGFloat) -> some View {
         self.modifier(TruncateWithGradientViewModifier(color: color, maxHeight: maxHeight))
     }
