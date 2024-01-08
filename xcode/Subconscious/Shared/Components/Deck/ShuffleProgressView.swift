@@ -14,34 +14,33 @@ struct CardShuffleView: View {
     @State private var offset: CGFloat = 0
     @State private var behind: Bool = false
     
-    public static let duration = 0.3
+    private static let duration = 0.3
+    private static let pause = 0.2
+    private static let size = CGSize(width: 64, height: 96)
 
-    private func shuffleCards() {
+    private func shuffleCards() async {
         withAnimation(Animation.easeInOut(duration: 0.2)) {
             // Move the front card up and out
-            offset = -96
+            offset = -Self.size.height
         }
+        
+        try? await Task.sleep(for: .seconds(0.2))
 
-        // Reset and move the front card to back after the animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            withAnimation(Animation.easeInOut(duration: 0.2)) {
-                offset = 0
-            }
+        // Move card back down BEHIND the stack
+        withAnimation(Animation.easeInOut(duration: 0.2)) {
+            offset = 0
         }
         
-        // Reset and move the front card to back after the animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            withAnimation(Animation.easeInOut(duration: 0.3)) {
-                behind = true
-            }
+        withAnimation(Animation.easeInOut(duration: 0.3)) {
+            behind = true
         }
         
-        // Reset and move the front card to back after the animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.duration) {
-            withAnimation(DeckTheme.reboundSpring) {
-                cards.append(cards.removeFirst())
-                behind = false
-            }
+        try? await Task.sleep(for: .seconds(Self.duration - 0.2))
+        
+        // Place the card at the back and show the next card
+        withAnimation(DeckTheme.reboundSpring) {
+            cards.append(cards.removeFirst())
+            behind = false
         }
     }
 
@@ -52,16 +51,16 @@ struct CardShuffleView: View {
                 
                 RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
                     .fill(self.colorForCard(card: card))
-                    .frame(width: 64, height: 96)
+                    .frame(width: Self.size.width, height: Self.size.height)
                     .offset(y: card == cards.first ? offset : 0)
                     .zIndex(card == cards.first && behind ? 0 : zIndex)
                     .scaleEffect(0.5 + zIndex / 10.0)
                     .rotation3DEffect(.degrees(2), axis: (1, 0, 0))
                     .shadow(
                         color: DeckTheme.cardShadow.opacity(
-                            0.035 * zIndex
+                            0.025 * zIndex
                         ),
-                        radius: 2.5,
+                        radius: 1.5,
                         x: 0,
                         y: 1.5
                     )
@@ -70,10 +69,12 @@ struct CardShuffleView: View {
         .onAppear {
             // Start the shuffle animation
             Timer.scheduledTimer(
-                withTimeInterval: CardShuffleView.duration + 0.2,
+                withTimeInterval: Self.duration + Self.pause,
                 repeats: true
             ) { _ in
-                shuffleCards()
+                Task {
+                    await shuffleCards()
+                }
             }
         }
     }
@@ -87,7 +88,7 @@ struct CardShuffleView: View {
     }
 
     private func zIndexForCard(card: Int) -> Double {
-        return 5.0 - Double((cards.firstIndex(of: card) ?? 0))
+        return Double(cards.count) - Double((cards.firstIndex(of: card) ?? 0))
     }
 }
 
