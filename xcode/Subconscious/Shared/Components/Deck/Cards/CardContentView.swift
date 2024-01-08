@@ -12,7 +12,7 @@ struct CardContentView: View {
     @Environment (\.colorScheme) var colorScheme
     
     var entry: EntryStub
-    var backlinks: [EntryStub]
+    var related: Set<EntryStub>
     var onLink: (EntryLink) -> Void
     
     var highlight: Color {
@@ -44,12 +44,12 @@ struct CardContentView: View {
             )
             .lineLimit(1)
             
-            if !backlinks.isEmpty {
+            if !related.isEmpty {
                 Spacer()
                 
                 HStack {
                     Image(systemName: "link")
-                    Text("\(backlinks.count)")
+                    Text("\(related.count)")
                 }
             }
         }

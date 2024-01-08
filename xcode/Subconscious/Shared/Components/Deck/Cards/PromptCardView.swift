@@ -13,7 +13,7 @@ struct PromptCardView: View {
     
     var message: String
     var entry: EntryStub
-    var backlinks: [EntryStub]
+    var related: Set<EntryStub>
     var onLink: (EntryLink) -> Void
     
     var background: Color {
@@ -42,7 +42,7 @@ struct PromptCardView: View {
             
             CardContentView(
                 entry: entry,
-                backlinks: backlinks,
+                related: related,
                 onLink: onLink
             )
         }

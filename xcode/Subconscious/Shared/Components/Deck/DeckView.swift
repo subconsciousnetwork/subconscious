@@ -587,7 +587,7 @@ struct DeckModel: ModelProtocol {
             return Update(state: state)
         }
         
-        func shuffleInBacklinks(_ backlinks: [EntryStub]) -> Update<Self> {
+        func shuffleInBacklinks(_ backlinks: Set<EntryStub>) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 
@@ -629,10 +629,10 @@ struct DeckModel: ModelProtocol {
             state.feedback.impactOccurred()
             
             switch card.card {
-            case let .entry(_, _, backlinks):
-               return shuffleInBacklinks(backlinks)
-            case let .prompt(_, _, _, backlinks):
-               return shuffleInBacklinks(backlinks)
+            case let .entry(_, _, related):
+               return shuffleInBacklinks(related)
+            case let .prompt(_, _, _, related):
+               return shuffleInBacklinks(related)
             case .action(let msg):
                 logger.log("Action: \(msg)")
                 return update(
@@ -786,7 +786,7 @@ struct DeckModel: ModelProtocol {
             identity: Did,
             environment: DeckEnvironment,
             replaceStubs: Bool = true
-        ) throws -> [EntryStub] {
+        ) throws -> Set<EntryStub> {
             let backlinks = try environment.database.readEntryBacklinks(
                 owner: identity,
                 did: entry.did,
@@ -803,37 +803,7 @@ struct DeckModel: ModelProtocol {
             var combinedSet = Set(backlinks)
             combinedSet.formUnion(bodyLinks)
             
-            // Step 2: Iterate through the combined set and handle "too short" links.
-            var combined: [EntryStub] = []
-            for link in combinedSet {
-                if isTooShort(entry: link) {
-                    // Only allow one level of recursion
-                    guard replaceStubs else {
-                        continue
-                    }
-                    
-                    // Fetch more links for this entry to find a replacement.
-                    let additionalLinks = try readLinks(
-                        entry: entry,
-                        identity: identity,
-                        environment: environment,
-                        replaceStubs: false
-                    )
-                    // Find a replacement that is not too short and use it instead.
-                    if let replacementLink = additionalLinks.first(where: {
-                        link in !isTooShort(
-                            entry: link
-                        ) && link != entry
-                    }) {
-                        combined.append(replacementLink)
-                    }
-                } else {
-                    // If the link is not too short, add it to the combined array.
-                    combined.append(link)
-                }
-            }
-            
-            return combined
+            return combinedSet
         }
 
         

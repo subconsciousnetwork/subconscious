@@ -45,17 +45,17 @@ struct CardView: View {
     var body: some View {
         VStack {
             switch entry.card {
-            case let .entry(entry, _, backlinks):
+            case let .entry(entry, _, related):
                 EntryCardView(
                     entry: entry,
-                    backlinks: backlinks,
+                    related: related,
                     onLink: onLink
                 )
-            case let .prompt(message, entry, _, backlinks):
+            case let .prompt(message, entry, _, related):
                 PromptCardView(
                     message: message,
                     entry: entry,
-                    backlinks: backlinks,
+                    related: related,
                     onLink: onLink
                 )
                 

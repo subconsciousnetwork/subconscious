@@ -12,14 +12,14 @@ enum CardType: Equatable, Hashable {
     case entry(
         entry: EntryStub,
         author: UserProfile,
-        related: [EntryStub]
+        related: Set<EntryStub>
     )
     case action(_ message: String)
     case prompt(
         message: String,
         entry: EntryStub,
         author: UserProfile,
-        related: [EntryStub]
+        related: Set<EntryStub>
     )
 }
 
@@ -43,7 +43,7 @@ extension CardModel {
     init(
         entry: EntryStub,
         user: UserProfile,
-        related: [EntryStub]
+        related: Set<EntryStub>
     ) {
         self.init(
             card: .entry(
