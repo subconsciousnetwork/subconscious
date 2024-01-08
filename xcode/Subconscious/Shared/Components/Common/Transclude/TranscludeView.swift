@@ -45,37 +45,7 @@ struct TranscludeView: View {
                     )
                 }
                 .tint(highlight)
-                .frame(maxHeight: AppTheme.maxTranscludeHeight, alignment: .topLeading)
-                .clipped()
-                .overlay(
-                    GeometryReader { geo in
-                        if (geo.size.height >= AppTheme.maxTranscludeHeight) {
-                            Rectangle()
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(
-                                            stops: [
-                                                Gradient.Stop(
-                                                    color: color.opacity(0),
-                                                    location: 0.1
-                                                ),
-                                                Gradient.Stop(
-                                                    color: color,
-                                                    location: 0.95
-                                                )
-                                            ]
-                                        ),
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
-                                .frame(height: AppTheme.maxTranscludeHeight / 2, alignment: .bottom)
-                                .offset(y: geo.size.height - (AppTheme.maxTranscludeHeight / 2))
-                        }
-                    }
-                    ,
-                    alignment: .bottom
-                )
+                .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
             }
         )
         .buttonStyle(

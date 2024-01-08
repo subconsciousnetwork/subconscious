@@ -30,36 +30,7 @@ struct EntryRow: View {
             .font(.callout)
             .multilineTextAlignment(.leading)
             .padding(.bottom, AppTheme.unit2)
-            .frame(maxHeight: AppTheme.maxEntryListRowHeight, alignment: .topLeading)
-            .clipped()
-            .overlay(
-                GeometryReader { geo in
-                    if (geo.size.height >= AppTheme.maxEntryListRowHeight) {
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(
-                                        stops: [
-                                            Gradient.Stop(
-                                                color: color.opacity(0),
-                                                location: 0.1
-                                            ),
-                                            Gradient.Stop(
-                                                color: color,
-                                                location: 0.9
-                                            )
-                                        ]
-                                    ),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(height: AppTheme.maxEntryListRowHeight / 2, alignment: .bottom)
-                            .offset(y: geo.size.height - (AppTheme.maxEntryListRowHeight / 2))
-                    }
-                },
-                alignment: .bottom
-            )
+            .truncateWithGradient(color: color, maxHeight: AppTheme.maxEntryListRowHeight)
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())

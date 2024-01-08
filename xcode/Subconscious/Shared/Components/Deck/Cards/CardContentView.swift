@@ -33,36 +33,8 @@ struct CardContentView: View {
         .foregroundStyle(.primary.opacity(0.8))
         .accentColor(highlight)
         .frame(height: DeckTheme.cardContentSize.height, alignment: .topLeading)
+        .truncateWithGradient(color: color, maxHeight: DeckTheme.cardContentSize.height)
         .padding(DeckTheme.cardPadding)
-        .clipped()
-        .overlay(
-            GeometryReader { geo in
-                if (geo.size.height >= DeckTheme.cardContentSize.height) {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(
-                                    stops: [
-                                        Gradient.Stop(
-                                            color: color.opacity(0),
-                                            location: 0
-                                        ),
-                                        Gradient.Stop(
-                                            color: color,
-                                            location: 0.8
-                                        )
-                                    ]
-                                ),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(height: 64, alignment: .bottom)
-                        .offset(y: geo.size.height - 64)
-                }
-            },
-            alignment: .bottom
-        )
        
         Spacer()
         

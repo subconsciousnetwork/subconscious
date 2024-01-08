@@ -23,11 +23,14 @@
 		B515E9D92ACA93D00067A329 /* FirstRunOrbitEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9D82ACA93D00067A329 /* FirstRunOrbitEffectView.swift */; };
 		B515E9DB2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B515E9DA2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
+		B522B4142B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B522B4132B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift */; };
+		B522B4152B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B522B4132B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift */; };
 		B528CB3B2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
 		B528CB3C2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */; };
 		B5293B892A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B5293B8A2A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
+		B53B600C2B47CA9B007BF747 /* ShuffleProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B600B2B47CA9B007BF747 /* ShuffleProgressView.swift */; };
 		B53B600E2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B600D2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift */; };
 		B53B60102B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B600F2B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift */; };
 		B53B60122B47ED99007BF747 /* Tests_Deck_NotificationActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B60112B47ED99007BF747 /* Tests_Deck_NotificationActions.swift */; };
@@ -35,7 +38,6 @@
 		B53B60162B47EF77007BF747 /* Tests_HomeProfile_NotificationActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B60152B47EF77007BF747 /* Tests_HomeProfile_NotificationActions.swift */; };
 		B53B60182B47F51E007BF747 /* Tests_CardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B60172B47F51E007BF747 /* Tests_CardModel.swift */; };
 		B53B601A2B47FD1C007BF747 /* Tests_MemoEditorDetailNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B60192B47FD1C007BF747 /* Tests_MemoEditorDetailNotification.swift */; };
-		B53B600C2B47CA9B007BF747 /* ShuffleProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53B600B2B47CA9B007BF747 /* ShuffleProgressView.swift */; };
 		B540F8BA2A0C748C00876256 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = B540F8B92A0C748C00876256 /* Line.swift */; };
 		B54187B829EF5CA00056E4A9 /* FollowUserFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54187B729EF5CA00056E4A9 /* FollowUserFormView.swift */; };
 		B542EF672AF48F2100BE29F1 /* StoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */; };
@@ -564,9 +566,11 @@
 		B515E9D82ACA93D00067A329 /* FirstRunOrbitEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunOrbitEffectView.swift; sourceTree = "<group>"; };
 		B515E9DA2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleCroppedTopRightCorner.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
+		B522B4132B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TruncateWithGradientViewModifier.swift; sourceTree = "<group>"; };
 		B528CB3A2A5BB8C0001E3B8F /* FabSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FabSpacerView.swift; sourceTree = "<group>"; };
 		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
+		B53B600B2B47CA9B007BF747 /* ShuffleProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShuffleProgressView.swift; sourceTree = "<group>"; };
 		B53B600D2B47DBAC007BF747 /* Tests_DeckDetailStackCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DeckDetailStackCursor.swift; sourceTree = "<group>"; };
 		B53B600F2B47DBDE007BF747 /* Tests_HomeProfileDetailStackCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_HomeProfileDetailStackCursor.swift; sourceTree = "<group>"; };
 		B53B60112B47ED99007BF747 /* Tests_Deck_NotificationActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Deck_NotificationActions.swift; sourceTree = "<group>"; };
@@ -574,7 +578,6 @@
 		B53B60152B47EF77007BF747 /* Tests_HomeProfile_NotificationActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_HomeProfile_NotificationActions.swift; sourceTree = "<group>"; };
 		B53B60172B47F51E007BF747 /* Tests_CardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_CardModel.swift; sourceTree = "<group>"; };
 		B53B60192B47FD1C007BF747 /* Tests_MemoEditorDetailNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MemoEditorDetailNotification.swift; sourceTree = "<group>"; };
-		B53B600B2B47CA9B007BF747 /* ShuffleProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShuffleProgressView.swift; sourceTree = "<group>"; };
 		B540F8B92A0C748C00876256 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		B54187B729EF5CA00056E4A9 /* FollowUserFormView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserFormView.swift; sourceTree = "<group>"; };
 		B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreUtilities.swift; sourceTree = "<group>"; };
@@ -1725,6 +1728,7 @@
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B532F8C129B1750F00CE9256 /* Transclude */,
+				B522B4132B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
 			);
 			path = Common;
@@ -2342,6 +2346,7 @@
 				B550E04029AF219100050F19 /* Did.swift in Sources */,
 				B82D145429EF157B009E21FF /* SubtextView.swift in Sources */,
 				B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */,
+				B522B4142B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift in Sources */,
 				B58C1FBA2A12F8DE0085A1FE /* ProfilePicFrameViewModifier.swift in Sources */,
 				B8AB08B52A9D4FF000998099 /* HeadingBlockCell.swift in Sources */,
 				B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */,
@@ -2442,6 +2447,7 @@
 				B88A76D529E09B51005F3422 /* PasteboardService.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
 				B8545F0B296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
+				B522B4152B4BB3B3004E1001 /* TruncateWithGradientViewModifier.swift in Sources */,
 				B8AC648D278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8A41D522811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */,
