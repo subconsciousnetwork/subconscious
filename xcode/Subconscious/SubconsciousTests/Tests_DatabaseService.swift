@@ -725,6 +725,133 @@ class Tests_DatabaseService: XCTestCase {
         )
         XCTAssertEqual(slugs.count, 1, "Hidden file is not returned")
     }
+    
+    func testReadBodyLinks() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo /test /hello-world"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did("did:key:abc123")!,
+                petname: Petname("abc")!,
+                slug: Slug("foo")!,
+                memo: foo
+            )
+        )
+        
+        // Contains link, should show up in results
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar /foo should appear in results"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("bar")!,
+                memo: bar,
+                size: bar.toHeaderSubtext().size()!
+            )
+        )
+        
+        // Contains link, should show up in results
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz /foo should appear in results"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did("did:key:abc123")!,
+                petname: Petname("abc")!,
+                slug: Slug("baz")!,
+                memo: baz
+            )
+        )
+        
+        // Does not contain link, should not show up in results
+        let bing = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bing"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did("did:key:abc123")!,
+                petname: Petname("abc")!,
+                slug: Slug("bing")!,
+                memo: bing
+            )
+        )
+        
+        // Hidden, should not show up in results
+        let hidden = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bing"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did("did:key:abc123")!,
+                petname: Petname("abc")!,
+                slug: Slug(hidden: "hidden")!,
+                memo: hidden
+            )
+        )
+
+        let stubs = try service.readEntryBodyLinks(
+            owner: Did("did:key:abc123")!,
+            did: Did("did:key:abc123")!,
+            slug: Slug("foo")!
+        )
+        
+        let slashlinks = Set(
+            stubs.map({ stub in stub.address })
+        )
+        
+        XCTAssertEqual(slashlinks.count, 2)
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(Did.local),
+                    slug: Slug("bar")!
+                )
+            ),
+            "Has link, appears in results"
+        )
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    slug: Slug("baz")!
+                )
+            ),
+            "Has link, appears in results, with slashlink correctly relativized"
+        )
+    }
 
     func testReadBacklinks() throws {
         let service = try createDatabaseService()

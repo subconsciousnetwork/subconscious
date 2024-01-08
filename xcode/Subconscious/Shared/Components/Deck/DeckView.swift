@@ -757,12 +757,10 @@ struct DeckModel: ModelProtocol {
             ourIdentity: Did,
             environment: DeckEnvironment
         ) async throws -> CardModel {
-            // TODO: also list the slashlinks in the body of the card as possible connections
-            // these aren't "backlinks" so we should expand the name to "related"
-            let backlinks = try environment.database.readEntryBacklinks(
-                owner: ourIdentity,
-                did: entry.did,
-                slug: entry.address.slug
+            let links = try readLinks(
+                entry: entry,
+                identity: entry.did,
+                environment: environment
             )
            
             let user = try await environment.userProfile.identifyUser(
@@ -778,10 +776,66 @@ struct DeckModel: ModelProtocol {
                     message: prompt,
                     entry: entry,
                     author: user,
-                    backlinks: backlinks
+                    related: links
                 )
             )
         }
+        
+        func readLinks(
+            entry: EntryStub,
+            identity: Did,
+            environment: DeckEnvironment,
+            replaceStubs: Bool = true
+        ) throws -> [EntryStub] {
+            let backlinks = try environment.database.readEntryBacklinks(
+                owner: identity,
+                did: entry.did,
+                slug: entry.address.slug
+            )
+            
+            let bodyLinks = try environment.database.readEntryBodyLinks(
+                owner: identity,
+                did: entry.did,
+                slug: entry.address.slug
+            )
+            
+            // Step 1: Combine all links into one set to remove duplicates.
+            var combinedSet = Set(backlinks)
+            combinedSet.formUnion(bodyLinks)
+            
+            // Step 2: Iterate through the combined set and handle "too short" links.
+            var combined: [EntryStub] = []
+            for link in combinedSet {
+                if isTooShort(entry: link) {
+                    // Only allow one level of recursion
+                    guard replaceStubs else {
+                        continue
+                    }
+                    
+                    // Fetch more links for this entry to find a replacement.
+                    let additionalLinks = try readLinks(
+                        entry: entry,
+                        identity: identity,
+                        environment: environment,
+                        replaceStubs: false
+                    )
+                    // Find a replacement that is not too short and use it instead.
+                    if let replacementLink = additionalLinks.first(where: {
+                        link in !isTooShort(
+                            entry: link
+                        ) && link != entry
+                    }) {
+                        combined.append(replacementLink)
+                    }
+                } else {
+                    // If the link is not too short, add it to the combined array.
+                    combined.append(link)
+                }
+            }
+            
+            return combined
+        }
+
         
         func isTooShort(entry: EntryStub) -> Bool {
             return entry.excerpt.base.count < 64

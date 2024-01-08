@@ -316,14 +316,36 @@ struct CardStack_Previews: PreviewProvider {
     static var previews: some View {
         CardStack(
             deck: [
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
             ],
             current: 0,
-            onSwipeRight: { _ in },
+            onSwipeRight: {
+                _ in
+            },
             onSwipeLeft: { _ in },
             onSwipeStart: { },
             onSwipeAbandoned: { },

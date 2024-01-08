@@ -12,14 +12,14 @@ enum CardType: Equatable, Hashable {
     case entry(
         entry: EntryStub,
         author: UserProfile,
-        backlinks: [EntryStub]
+        related: [EntryStub]
     )
     case action(_ message: String)
     case prompt(
         message: String,
         entry: EntryStub,
         author: UserProfile,
-        backlinks: [EntryStub]
+        related: [EntryStub]
     )
 }
 
@@ -43,13 +43,13 @@ extension CardModel {
     init(
         entry: EntryStub,
         user: UserProfile,
-        backlinks: [EntryStub]
+        related: [EntryStub]
     ) {
         self.init(
             card: .entry(
                 entry: entry,
                 author: user,
-                backlinks: backlinks
+                related: related
             )
         )
     }
@@ -58,26 +58,26 @@ extension CardModel {
         switch card {
         case .action(_):
             return self
-        case let .entry(_, author, backlinks):
+        case let .entry(_, author, related):
             return CardModel(
                 card: .entry(
                     entry: entry,
                     author: author,
-                    backlinks: backlinks
+                    related: related
                 )
             )
         case .prompt(
             message: let message,
             entry: _,
             author: let author,
-            backlinks: let backlinks
+            related: let related
         ):
             return CardModel(
                 card: .prompt(
                     message: message,
                     entry: entry,
                     author: author,
-                    backlinks: backlinks
+                    related: related
                 )
             )
         }

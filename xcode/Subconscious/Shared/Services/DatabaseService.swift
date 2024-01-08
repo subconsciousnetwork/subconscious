@@ -1053,6 +1053,57 @@ final class DatabaseService {
         return query
     }
     
+    func readEntryBodyLinks(
+        owner: Did?,
+        did: Did,
+        slug: Slug
+    ) throws -> [EntryStub] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        
+        // Get links from body.
+        // Use content indexed in database, even though it might be stale.
+        return try database.execute(
+            sql: """
+            WITH JSONSlugs AS (
+              SELECT value->>'description' AS slug
+              FROM json_each((SELECT links FROM memo WHERE slug = ? AND did = ?))
+            )
+            SELECT m.did,
+                m.slashlink,
+                m.modified,
+                length(m.body) > length(m.excerpt),
+                m.excerpt
+            FROM memo m
+            JOIN JSONSlugs js ON m.slug = js.slug;
+            LIMIT 200
+            """,
+            parameters: [
+                .text(slug.description),
+                .text(did.description)
+            ]
+        )
+        .compactMap({ row in
+            guard let did = row.col(0)?.toString()?.toDid(),
+                  let slashlink = row.col(1)?.toString()?.toSlashlink(),
+                  let modified = row.col(2)?.toDate(),
+                  let isLong = row.col(3)?.toBool() else {
+                return nil
+            }
+            
+            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            
+            return EntryStub(
+                did: did,
+                address: slashlink,
+                excerpt: excerpt,
+                isTruncated: !isLong,
+                modified: modified
+            )
+        })
+    }
+
     func readEntryBacklinks(
         owner: Did?,
         did: Did,
@@ -1184,7 +1235,7 @@ final class DatabaseService {
             SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
             FROM memo
             WHERE substr(memo.slug, 1, 1) != '_'
-            AND length(excerpt) > 100
+            AND length(excerpt) > 64
             AND slashlink NOT IN (SELECT value FROM json_each(?))
             ORDER BY RANDOM()
             LIMIT 1
