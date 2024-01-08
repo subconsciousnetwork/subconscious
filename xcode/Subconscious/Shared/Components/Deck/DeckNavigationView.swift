@@ -105,6 +105,8 @@ struct DeckNavigationView: View {
                             )
                         }
                     )
+                    .offset(y: -AppTheme.unit * 8)
+                    
                 case .notFound:
                     HStack {
                         Spacer()

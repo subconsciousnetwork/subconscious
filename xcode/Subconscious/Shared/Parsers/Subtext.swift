@@ -640,8 +640,8 @@ extension Subtext {
 }
 
 extension Subtext {
-    private static let maxExcerptSize = 280
-    private static let maxExcerptBlocks = 2
+    private static let maxExcerptSize = 320
+    private static let maxExcerptBlocks = 3
     private static let maxGeneratedSlugSize = 128
     
     /// Derive an excerpt

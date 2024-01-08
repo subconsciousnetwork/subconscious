@@ -30,10 +30,13 @@ struct PromptCardView: View {
                 Image(systemName: "sparkles")
                 
                 Text(message)
+                
+                Spacer()
             }
             .padding(DeckTheme.cardPadding)
             .foregroundStyle(highlight)
             .font(.subheadline)
+            .background(Color.brandMarkPink.opacity(0.025).blendMode(.plusLighter))
             
             Divider()
             

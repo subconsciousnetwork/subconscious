@@ -146,6 +146,12 @@ extension String {
         
         return excerpts.randomElement()!
     }
+    
+    static func dummyDataLong() -> String {
+        return """
+               In a vast, labyrinthine mind, a young, vibrant idea named Lumo was born. Eager to be noticed, Lumo darted through the maze of thoughts, but soon found itself lost among ancient memories and towering concepts. Desperate, Lumo sought guidance from the wise old notions that resided in the quieter corners. They taught Lumo the art of patience and resilience. Days turned into weeks, yet Lumo's glow did not dim. Instead, it learned from each encounter, growing brighter and stronger. Finally, during a moment of serene clarity, Lumo emerged at the forefront of the thinker's mind, radiant and ready to change the world.
+               """
+    }
 }
 
 extension EntryStub: DummyData {
@@ -156,7 +162,7 @@ extension EntryStub: DummyData {
     static func dummyData(petname: Petname) -> EntryStub {
         let slashlink = Slashlink("@\(petname)/entry-\(Int.random(in: 0..<99))")!
         let address = slashlink
-        let excerpt = Subtext(markup: String.dummyDataMedium())
+        let excerpt = Subtext(markup: String.dummyDataLong())
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(
@@ -171,7 +177,7 @@ extension EntryStub: DummyData {
     static func dummyData(petname: Petname, slug: Slug) -> EntryStub {
         let slashlink = Slashlink(petname: petname, slug: slug)
         let address = slashlink
-        let excerpt = Subtext(markup: String.dummyDataMedium())
+        let excerpt = Subtext(markup: String.dummyDataLong())
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(

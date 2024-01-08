@@ -19,16 +19,32 @@ struct CardContentView: View {
         entry.highlightColor(colorScheme: colorScheme)
     }
     
+    var color: Color {
+        entry.color(colorScheme: colorScheme)
+    }
+    
     var body: some View {
-        SubtextView(
-            peer: entry.toPeer(),
-            subtext: entry.excerpt,
-            onLink: onLink
-        )
+        VStack {
+            SubtextView(
+                peer: entry.toPeer(),
+                subtext: entry.excerpt,
+                onLink: onLink
+            )
+            Spacer()
+        }
         // Opacity allows blendMode to show through
         .foregroundStyle(.primary.opacity(0.8))
         .accentColor(highlight)
         .padding(DeckTheme.cardPadding)
+        .frame(maxHeight: DeckTheme.cardSize.height, alignment: .leading)
+        .overlay(
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(LinearGradient(gradient: Gradient(colors: [Color.clear, color]), startPoint: .top, endPoint: .bottom))
+                    .frame(height: 64)
+                    .offset(y: geometry.size.height - 64) // Adjusting the y offset to position at the bottom
+            }
+        )
         
         Spacer()
         

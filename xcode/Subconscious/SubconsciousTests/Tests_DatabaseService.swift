@@ -739,16 +739,15 @@ class Tests_DatabaseService: XCTestCase {
             modified: now,
             fileExtension: "subtext",
             additionalHeaders: [],
-            body: "Foo /test /hello-world"
+            body: "Foo /bar /baz"
         )
-        try service.writeMemo(
-            MemoRecord(
-                did: Did("did:key:abc123")!,
-                petname: Petname("abc")!,
-                slug: Slug("foo")!,
-                memo: foo
-            )
+        let record = try MemoRecord(
+            did: Did("did:key:abc123")!,
+            petname: Petname("abc")!,
+            slug: Slug("foo")!,
+            memo: foo
         )
+        try service.writeMemo(record)
         
         // Contains link, should show up in results
         let bar = Memo(

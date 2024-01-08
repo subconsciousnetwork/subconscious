@@ -62,3 +62,19 @@ struct CardView: View {
         }
     }
 }
+
+struct CardView_Previews: PreviewProvider {
+    static var previews: some View {
+        CardView(entry: CardModel(
+            card: .prompt(
+                message: "Hello",
+                entry: EntryStub.dummyData(),
+                author: UserProfile.dummyData(),
+                related: []
+            )
+        ),
+                 onLink: {
+            _ in
+        })
+    }
+}

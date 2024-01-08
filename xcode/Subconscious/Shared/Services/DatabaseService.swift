@@ -1071,11 +1071,13 @@ final class DatabaseService {
               FROM json_each((SELECT links FROM memo WHERE slug = ? AND did = ?))
             )
             SELECT m.did,
-                m.slashlink,
+                peer.petname,
+                m.slug,
                 m.modified,
                 length(m.body) > length(m.excerpt),
                 m.excerpt
             FROM memo m
+            LEFT JOIN peer ON m.did = peer.did
             JOIN JSONSlugs js ON m.slug = js.slug;
             LIMIT 200
             """,
@@ -1085,23 +1087,47 @@ final class DatabaseService {
             ]
         )
         .compactMap({ row in
-            guard let did = row.col(0)?.toString()?.toDid(),
-                  let slashlink = row.col(1)?.toString()?.toSlashlink(),
-                  let modified = row.col(2)?.toDate(),
-                  let isLong = row.col(3)?.toBool() else {
-                return nil
-            }
-            
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
-            
+           return xxx(owner: owner, row: row)
+        })
+    }
+    
+    private func xxx(owner: Did?, row: SQLite3Database.Row) -> EntryStub? {
+        guard let did = row.col(0)?.toString()?.toDid() else {
+            return nil
+        }
+        
+        let petname = row.col(1)?.toString()?.toPetname()
+        let slug = row.col(2)?.toString()?.toSlug()
+        let modified = row.col(3)?.toDate()
+        let isTruncated = row.col(4)?.toBool() ?? false
+        let excerpt = Subtext(markup: row.col(5)?.toString() ?? "")
+        switch (petname, slug, modified) {
+        case let (.some(petname), .some(slug), .some(modified)):
             return EntryStub(
                 did: did,
-                address: slashlink,
+                address: Slashlink(
+                    peer: Peer.petname(petname),
+                    slug: slug
+                ),
                 excerpt: excerpt,
-                isTruncated: !isLong,
+                isTruncated: isTruncated,
                 modified: modified
             )
-        })
+        case let (.none, .some(slug), .some(modified)):
+            let address = Slashlink(
+                peer: Peer.did(did),
+                slug: slug
+            ).relativizeIfNeeded(did: owner)
+            return EntryStub(
+                did: did,
+                address: address,
+                excerpt: excerpt,
+                isTruncated: isTruncated,
+                modified: modified
+            )
+        default:
+            return nil
+        }
     }
 
     func readEntryBacklinks(
@@ -1136,43 +1162,8 @@ final class DatabaseService {
                 .queryFTS5(link.slug.description),
                 .text(link.id)
             ]
-        ).compactMap({ row -> EntryStub? in
-            guard let did = row.col(0)?.toString()?.toDid() else {
-                return nil
-            }
-            
-            let petname = row.col(1)?.toString()?.toPetname()
-            let slug = row.col(2)?.toString()?.toSlug()
-            let modified = row.col(3)?.toDate()
-            let isTruncated = row.col(4)?.toBool() ?? false
-            let excerpt = Subtext(markup: row.col(5)?.toString() ?? "")
-            switch (petname, slug, modified) {
-            case let (.some(petname), .some(slug), .some(modified)):
-                return EntryStub(
-                    did: did,
-                    address: Slashlink(
-                        peer: Peer.petname(petname),
-                        slug: slug
-                    ),
-                    excerpt: excerpt,
-                    isTruncated: isTruncated,
-                    modified: modified
-                )
-            case let (.none, .some(slug), .some(modified)):
-                let address = Slashlink(
-                    peer: Peer.did(did),
-                    slug: slug
-                ).relativizeIfNeeded(did: owner)
-                return EntryStub(
-                    did: did,
-                    address: address,
-                    excerpt: excerpt,
-                    isTruncated: isTruncated,
-                    modified: modified
-                )
-            default:
-                return nil
-            }
+        ).compactMap({ row in
+            return xxx(owner: owner, row: row)
         })
     }
     
