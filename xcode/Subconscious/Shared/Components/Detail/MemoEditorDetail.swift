@@ -210,9 +210,9 @@ struct MemoEditorDetailView: View {
                         .insets(
                             EdgeInsets(
                                 top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
+                                leading: DeckTheme.cardPadding,
+                                bottom: DeckTheme.cardPadding,
+                                trailing: DeckTheme.cardPadding
                             )
                         )
                         .frame(
@@ -221,10 +221,19 @@ struct MemoEditorDetailView: View {
                         .background(store.state.color?.toColor(colorScheme: colorScheme))
                         .foregroundStyle(.primary.opacity(0.8))
                         .accentColor(store.state.color?.toHighlightColor(colorScheme: colorScheme))
+                        .cornerRadius(DeckTheme.cornerRadius, corners: [.bottomLeft, .bottomRight])
+                        .padding(
+                            EdgeInsets(
+                                top: 0,
+                                leading: 0,
+                                bottom: AppTheme.padding,
+                                trailing: 0
+                            )
+                        )
                         
                         
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
+//                        ThickDividerView()
+//                            .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onLink: { link in
