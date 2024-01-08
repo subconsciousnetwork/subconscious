@@ -280,7 +280,6 @@ actor UserProfileService {
                         slug: slug
                     ),
                     excerpt: excerpt,
-                    isTruncated: excerpt.description.count < memo.body.count,
                     modified: memo.modified
                 )
             )

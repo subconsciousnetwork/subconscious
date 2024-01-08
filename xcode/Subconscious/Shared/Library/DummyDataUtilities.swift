@@ -169,7 +169,6 @@ extension EntryStub: DummyData {
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            isTruncated: false,
             modified: modified
         )
     }
@@ -184,7 +183,6 @@ extension EntryStub: DummyData {
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            isTruncated: false,
             modified: modified
         )
     }
