@@ -249,10 +249,6 @@ struct CardStack: View {
                 onLink: onLink
             )
             // Size card based on available space
-            .frame(
-                width: size.width,
-                height: size.width * 1.25
-            )
             .modifier(
                 effects(
                     card: card,
@@ -266,6 +262,9 @@ struct CardStack: View {
             // Fade out cards as we move past them
             .opacity(index >= current ? 1 : 0)
             .animation(.spring(), value: current)
+            .frame(
+                maxHeight: DeckTheme.cardSize.height
+            )
             
             Spacer()
         }

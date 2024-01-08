@@ -10,10 +10,15 @@ import SwiftUI
 /// An EntryRow suitable for use in lists.
 /// Provides a preview/excerpt of the entry.
 struct EntryRow: View {
+    @Environment (\.colorScheme) var colorScheme
     var entry: EntryStub
     var emptyExcerpt = "Empty"
     var highlight: Color = .secondary
     var onLink: (EntryLink) -> Void = { _ in }
+    
+    var color: Color {
+        entry.color(colorScheme: colorScheme)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
@@ -25,6 +30,34 @@ struct EntryRow: View {
             .font(.callout)
             .multilineTextAlignment(.leading)
             .padding(.bottom, AppTheme.unit2)
+            .frame(maxHeight: 128, alignment: .topLeading)
+            .clipped()
+            .overlay(
+                GeometryReader { geo in
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(
+                                    stops: [
+                                        Gradient.Stop(
+                                            color: color.opacity(0),
+                                            location: 0
+                                        ),
+                                        Gradient.Stop(
+                                            color: color,
+                                            location: 0.8
+                                        )
+                                    ]
+                                ),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(height: 44, alignment: .bottom)
+                        .opacity(geo.size.height >= 128 ? 1 : 0)
+                },
+                alignment: .bottom
+            )
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
@@ -47,6 +80,7 @@ struct EntryRow: View {
             .lineLimit(1)
             .foregroundColor(highlight)
             .multilineTextAlignment(.leading)
+            
         }
         .tint(highlight)
     }

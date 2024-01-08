@@ -43,23 +43,27 @@ struct CardView: View {
     }
     
     var body: some View {
-        switch entry.card {
-        case let .entry(entry, _, backlinks):
-            EntryCardView(
-                entry: entry,
-                backlinks: backlinks,
-                onLink: onLink
-            )
-        case let .prompt(message, entry, _, backlinks):
-            PromptCardView(
-                message: message,
-                entry: entry,
-                backlinks: backlinks,
-                onLink: onLink
-            )
-        case let .action(message):
-            ActionCardView(message: message)
+        VStack {
+            switch entry.card {
+            case let .entry(entry, _, backlinks):
+                EntryCardView(
+                    entry: entry,
+                    backlinks: backlinks,
+                    onLink: onLink
+                )
+            case let .prompt(message, entry, _, backlinks):
+                PromptCardView(
+                    message: message,
+                    entry: entry,
+                    backlinks: backlinks,
+                    onLink: onLink
+                )
+                
+            case let .action(message):
+                ActionCardView(message: message)
+            }
         }
+        
     }
 }
 

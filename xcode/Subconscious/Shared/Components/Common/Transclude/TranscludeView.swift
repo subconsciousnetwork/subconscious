@@ -19,6 +19,12 @@ struct TranscludeView: View {
         )
     }
     
+    var color: Color {
+        entry.color(
+            colorScheme: colorScheme
+        )
+    }
+    
     var body: some View {
         Button(
             action: {
@@ -39,13 +45,36 @@ struct TranscludeView: View {
                     )
                 }
                 .tint(highlight)
+                .frame(maxHeight: 160, alignment: .topLeading)
+                .clipped()
+                .overlay(
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(
+                                    stops: [
+                                        Gradient.Stop(
+                                            color: color.opacity(0),
+                                            location: 0
+                                        ),
+                                        Gradient.Stop(
+                                            color: color,
+                                            location: 0.8
+                                        )
+                                    ]
+                                ),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(height: 24, alignment: .bottom),
+                    alignment: .bottom
+                )
             }
         )
         .buttonStyle(
             TranscludeButtonStyle(
-                color: entry.color(
-                    colorScheme: colorScheme
-                )
+                color: color
             )
         )
     }

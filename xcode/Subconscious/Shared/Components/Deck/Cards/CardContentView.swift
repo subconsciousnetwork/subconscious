@@ -24,26 +24,39 @@ struct CardContentView: View {
     }
     
     var body: some View {
-        VStack {
-            SubtextView(
-                peer: entry.toPeer(),
-                subtext: entry.excerpt,
-                onLink: onLink
-            )
-            Spacer()
-        }
+        SubtextView(
+            peer: entry.toPeer(),
+            subtext: entry.excerpt,
+            onLink: onLink
+        )
         // Opacity allows blendMode to show through
         .foregroundStyle(.primary.opacity(0.8))
         .accentColor(highlight)
+        .frame(height: DeckTheme.cardContentSize.height, alignment: .topLeading)
         .padding(DeckTheme.cardPadding)
-        .frame(maxHeight: DeckTheme.cardSize.height, alignment: .leading)
+        .clipped()
         .overlay(
-            GeometryReader { geometry in
-                Rectangle()
-                    .fill(LinearGradient(gradient: Gradient(colors: [Color.clear, color]), startPoint: .top, endPoint: .bottom))
-                    .frame(height: 64)
-                    .offset(y: geometry.size.height - 64) // Adjusting the y offset to position at the bottom
-            }
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(
+                            stops: [
+                                Gradient.Stop(
+                                    color: color.opacity(0),
+                                    location: 0
+                                ),
+                                Gradient.Stop(
+                                    color: color,
+                                    location: 0.8
+                                )
+                            ]
+                        ),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(height: 44, alignment: .bottom),
+            alignment: .bottom
         )
         
         Spacer()
