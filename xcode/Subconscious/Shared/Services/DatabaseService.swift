@@ -1047,44 +1047,8 @@ final class DatabaseService {
         return query
     }
     
-    func readEntryBodyLinks(
-        owner: Did?,
-        did: Did,
-        slug: Slug
-    ) throws -> [EntryStub] {
-        guard self.state == .ready else {
-            throw DatabaseServiceError.notReady
-        }
-        
-        // Get links from body.
-        // Use content indexed in database, even though it might be stale.
-        return try database.execute(
-            sql: """
-            WITH JSONSlugs AS (
-              SELECT value->>'description' AS slug
-              FROM json_each((SELECT links FROM memo WHERE slug = ? AND did = ?))
-            )
-            SELECT m.did,
-                peer.petname,
-                m.slug,
-                m.modified,
-                m.excerpt
-            FROM memo m
-            LEFT JOIN peer ON m.did = peer.did
-            JOIN JSONSlugs js ON m.slug = js.slug;
-            LIMIT 200
-            """,
-            parameters: [
-                .text(slug.description),
-                .text(did.description)
-            ]
-        )
-        .compactMap({ row in
-           return xxx(owner: owner, row: row)
-        })
-    }
-    
-    private func xxx(owner: Did?, row: SQLite3Database.Row) -> EntryStub? {
+    // Transform a database result into a well-formed EntryStub
+    private func hydrateEntryStub(owner: Did?, row: SQLite3Database.Row) -> EntryStub? {
         guard let did = row.col(0)?.toString()?.toDid() else {
             return nil
         }
@@ -1120,6 +1084,44 @@ final class DatabaseService {
         }
     }
 
+    
+    func readEntryBodyLinks(
+        owner: Did?,
+        did: Did,
+        slug: Slug
+    ) throws -> [EntryStub] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        
+        // Get links from body.
+        // Use content indexed in database, even though it might be stale.
+        return try database.execute(
+            sql: """
+            WITH JSONSlugs AS (
+              SELECT value->>'description' AS slug
+              FROM json_each((SELECT links FROM memo WHERE slug = ? AND did = ?))
+            )
+            SELECT m.did,
+                peer.petname,
+                m.slug,
+                m.modified,
+                m.excerpt
+            FROM memo m
+            LEFT JOIN peer ON m.did = peer.did
+            JOIN JSONSlugs js ON m.slug = js.slug;
+            LIMIT 200
+            """,
+            parameters: [
+                .text(slug.description),
+                .text(did.description)
+            ]
+        )
+        .compactMap({ row in
+           return hydrateEntryStub(owner: owner, row: row)
+        })
+    }
+    
     func readEntryBacklinks(
         owner: Did?,
         did: Did,
@@ -1152,7 +1154,7 @@ final class DatabaseService {
                 .text(link.id)
             ]
         ).compactMap({ row in
-            return xxx(owner: owner, row: row)
+            return hydrateEntryStub(owner: owner, row: row)
         })
     }
     
