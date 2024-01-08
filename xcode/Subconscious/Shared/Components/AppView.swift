@@ -2948,10 +2948,7 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = environment.data.writeEntryPublisher(
             entry
         ).map({ _ in
-            .failSaveEntry(
-                address: entry.address,
-                error: "Success"
-            )
+            .succeedSaveEntry(address: entry.address, modified: entry.contents.modified)
         }).recover({ error in
             .failSaveEntry(
                 address: entry.address,
