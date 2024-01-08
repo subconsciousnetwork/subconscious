@@ -48,6 +48,10 @@ struct SubtextView: View {
     }
     
     func shouldReplaceBlockWithTransclude(block: Subtext.Block) -> Bool {
+        if transcludePreviews.count == 0 {
+            return false
+        }
+        
         var count = 0
         for inline in block.inline {
             switch (inline) {

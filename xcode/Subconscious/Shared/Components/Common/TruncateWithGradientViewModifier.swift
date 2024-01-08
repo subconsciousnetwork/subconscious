@@ -54,6 +54,7 @@ struct TruncateWithGradientViewModifier: ViewModifier {
                                     Self.maxGradientHeight
                                 )
                             )
+                            .allowsHitTesting(false)
                     }
                 },
                 alignment: .bottom
