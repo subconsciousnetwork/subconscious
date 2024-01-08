@@ -12,12 +12,12 @@ final class Tests_BlockEditorBlockModel: XCTestCase {
     func testUpdate() throws {
         let modelA = BlockEditor.TextBlockModel()
         var modelB = modelA
-        modelB.isBlockSelectMode = true
+        modelB.isEditing = true
 
         let textBlock = BlockEditor.BlockModel.text(modelA)
         let textBlockUpdate = textBlock.update { block in
             var block = block
-            block.isBlockSelectMode = true
+            block.isEditing = true
             return block
         }
         XCTAssertEqual(textBlockUpdate, .text(modelB))
@@ -25,7 +25,7 @@ final class Tests_BlockEditorBlockModel: XCTestCase {
         let headingBlock = BlockEditor.BlockModel.heading(modelA)
         let headingBlockUpdate = headingBlock.update { block in
             var block = block
-            block.isBlockSelectMode = true
+            block.isEditing = true
             return block
         }
         XCTAssertEqual(headingBlockUpdate, .heading(modelB))
@@ -33,7 +33,7 @@ final class Tests_BlockEditorBlockModel: XCTestCase {
         let quoteBlock = BlockEditor.BlockModel.quote(modelA)
         let quoteBlockUpdate = quoteBlock.update { block in
             var block = block
-            block.isBlockSelectMode = true
+            block.isEditing = true
             return block
         }
         XCTAssertEqual(quoteBlockUpdate, .quote(modelB))
@@ -41,7 +41,7 @@ final class Tests_BlockEditorBlockModel: XCTestCase {
         let listBlock = BlockEditor.BlockModel.list(modelA)
         let listBlockUpdate = listBlock.update { block in
             var block = block
-            block.isBlockSelectMode = true
+            block.isEditing = true
             return block
         }
         XCTAssertEqual(listBlockUpdate, .list(modelB))
