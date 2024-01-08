@@ -206,7 +206,13 @@ extension BlockEditor {
     enum Change: Hashable {
         /// Set the controller to ready state
         case present
-        case reconfigureCollectionItems([IndexPath])
+        /// Reconfigure specific collection items.
+        /// You can set the animation duration. The default duration of
+        /// 0 means "no animation".
+        case reconfigureCollectionItems(
+            _ indexPaths: [IndexPath],
+            animationDuration: TimeInterval = 0
+        )
         case reloadCollectionView
         case moveBlock(
             at: IndexPath,
@@ -1546,7 +1552,12 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            changes: [.reconfigureCollectionItems([indexPath])]
+            changes: [
+                .reconfigureCollectionItems(
+                    [indexPath],
+                    animationDuration: Duration.fast
+                )
+            ]
         )
     }
     

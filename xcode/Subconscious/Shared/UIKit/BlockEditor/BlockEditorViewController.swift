@@ -37,7 +37,7 @@ extension BlockEditor {
         )
 
         /// Gesture used to select blocks in selection mode
-        private lazy var tapGesture = UILongPressGestureRecognizer(
+        private lazy var tapGesture = UITapGestureRecognizer(
             target: self,
             action: #selector(onTap)
         )
@@ -213,8 +213,11 @@ extension BlockEditor {
                 return present()
             case .reloadCollectionView:
                 return reloadCollectionView()
-            case let .reconfigureCollectionItems(indexPaths):
-                return reconfigureCollectionItems(indexPaths)
+            case let .reconfigureCollectionItems(indexPaths, animationDuration):
+                return reconfigureCollectionItems(
+                    indexPaths: indexPaths,
+                    animationDuration: animationDuration
+                )
             case let .moveBlock(at, to):
                 return moveBlock(at: at, to: to)
             case let .splitBlock(reconfigure, insert, requestEditing):
@@ -245,10 +248,17 @@ extension BlockEditor {
         }
 
         private func reconfigureCollectionItems(
-            _ indexPaths: [IndexPath]
+            indexPaths: [IndexPath],
+            animationDuration: TimeInterval
         ) {
-            UIView.performWithoutAnimation {
-                self.collectionView.reconfigureItems(at: indexPaths)
+            if animationDuration == 0 {
+                UIView.performWithoutAnimation {
+                    self.collectionView.reconfigureItems(at: indexPaths)
+                }
+            } else {
+                UIView.animate(withDuration: animationDuration) {
+                    self.collectionView.reconfigureItems(at: indexPaths)
+                }
             }
         }
 

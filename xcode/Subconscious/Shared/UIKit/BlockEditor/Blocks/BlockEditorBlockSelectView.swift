@@ -24,5 +24,9 @@ extension BlockEditor {
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
+
+        func setSelectedState(_ isSelected: Bool) {
+            layer.opacity = isSelected ? 1 : 0
+        }
     }
 }
