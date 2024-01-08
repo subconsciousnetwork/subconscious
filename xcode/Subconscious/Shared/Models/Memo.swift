@@ -155,7 +155,7 @@ extension MemoData {
             created: headers.created,
             modified: headers.modified,
             fileExtension: headers.fileExtension,
-            additionalHeaders: [],
+            additionalHeaders: self.additionalHeaders,
             body: body
         )
     }
