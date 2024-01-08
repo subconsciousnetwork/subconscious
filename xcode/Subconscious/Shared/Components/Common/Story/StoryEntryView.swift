@@ -76,6 +76,36 @@ struct StoryEntryView: View {
                         transcludePreviews: [:],
                         onLink: onLink
                     )
+                    .frame(maxHeight: AppTheme.maxEntryListRowHeight, alignment: .topLeading)
+                    .clipped()
+                    .overlay(
+                        GeometryReader { geo in
+                            if (geo.size.height >= AppTheme.maxEntryListRowHeight) {
+                                Rectangle()
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(
+                                                stops: [
+                                                    Gradient.Stop(
+                                                        color: .white.opacity(0),
+                                                        location: 0.1
+                                                    ),
+                                                    Gradient.Stop(
+                                                        color: .white,
+                                                        location: 0.9
+                                                    )
+                                                ]
+                                            ),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .frame(height: AppTheme.maxEntryListRowHeight / 2, alignment: .bottom)
+                                    .offset(y: geo.size.height - (AppTheme.maxEntryListRowHeight / 2))
+                            }
+                        },
+                        alignment: .bottom
+                    )
                     .padding([.leading, .trailing], AppTheme.padding)
                     
                     VStack(alignment: .leading) {

@@ -59,8 +59,6 @@ struct CardEffectModifier: ViewModifier {
                 // Background cards rotate for decoration
                 : .degrees(rotation(stackFactor))
             )
-            // Prevent any gestures on background cards
-            .disabled(!focused)
             // Reduce shadow intensity with depth
             .shadow(
                 color: DeckTheme.cardShadow.opacity(
@@ -265,6 +263,8 @@ struct CardStack: View {
             .frame(
                 maxHeight: DeckTheme.cardSize.height
             )
+            // Prevent any gestures on background cards
+            .disabled(index != current)
             
             Spacer()
         }

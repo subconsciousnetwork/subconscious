@@ -45,29 +45,35 @@ struct TranscludeView: View {
                     )
                 }
                 .tint(highlight)
-                .frame(maxHeight: 160, alignment: .topLeading)
+                .frame(maxHeight: AppTheme.maxTranscludeHeight, alignment: .topLeading)
                 .clipped()
                 .overlay(
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(
-                                    stops: [
-                                        Gradient.Stop(
-                                            color: color.opacity(0),
-                                            location: 0
+                    GeometryReader { geo in
+                        if (geo.size.height >= AppTheme.maxTranscludeHeight) {
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(
+                                            stops: [
+                                                Gradient.Stop(
+                                                    color: color.opacity(0),
+                                                    location: 0.1
+                                                ),
+                                                Gradient.Stop(
+                                                    color: color,
+                                                    location: 0.95
+                                                )
+                                            ]
                                         ),
-                                        Gradient.Stop(
-                                            color: color,
-                                            location: 0.8
-                                        )
-                                    ]
-                                ),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(height: 24, alignment: .bottom),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .frame(height: AppTheme.maxTranscludeHeight / 2, alignment: .bottom)
+                                .offset(y: geo.size.height - (AppTheme.maxTranscludeHeight / 2))
+                        }
+                    }
+                    ,
                     alignment: .bottom
                 )
             }
