@@ -799,7 +799,6 @@ struct DeckModel: ModelProtocol {
                 slug: entry.address.slug
             )
             
-            // Step 1: Combine all links into one set to remove duplicates.
             var combinedSet = Set(backlinks)
             combinedSet.formUnion(bodyLinks)
             
