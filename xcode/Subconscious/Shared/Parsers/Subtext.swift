@@ -647,11 +647,6 @@ extension Subtext {
     func excerpt(fallback: String = "") -> Subtext {
         let length = Self.maxExcerptSize
         
-        // Fast path: we're already the right length
-        if self.description.count < length {
-            return self
-        }
-        
         // Otherwise we need to truncate the string
         let truncated = self.description.truncateAtWordBoundary(
             maxChars: length
