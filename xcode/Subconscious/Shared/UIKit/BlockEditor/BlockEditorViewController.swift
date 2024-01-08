@@ -189,8 +189,11 @@ extension BlockEditor {
         @objc private func onTap(_ gesture: UIGestureRecognizer) {
             switch gesture.state {
             case .ended:
+                // Get gesture point
                 let point = gesture.location(in: self.collectionView)
-                store.send(.tap(point))
+                // Get cell index path for point (if any)
+                let indexPath = self.collectionView.indexPathForItem(at: point)
+                store.send(.tapCell(indexPath))
             default:
                 break
             }

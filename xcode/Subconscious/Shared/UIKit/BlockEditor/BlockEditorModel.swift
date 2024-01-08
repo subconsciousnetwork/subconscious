@@ -167,7 +167,7 @@ extension BlockEditor {
         /// Issues a tap event at a point.
         /// If the point matches a block, and the editor is in selection mode,
         /// this will toggle block selection.
-        case tap(CGPoint)
+        case tapCell(IndexPath?)
         /// Enter edit mode, optionally selecting a block
         case enterBlockSelectMode(selecting: Set<UUID> = Set())
         /// Exit edit mode. Also de-selects all blocks
@@ -457,10 +457,11 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 point: point
             )
-        case let .tap(point):
-            return tap(
+        case let .tapCell(indexPath):
+            return tapCell(
                 state: state,
-                point: point
+                indexPath: indexPath,
+                environment: environment
             )
         case let .enterBlockSelectMode(selecting):
             return enterBlockSelectMode(
@@ -1468,13 +1469,29 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
-    // TODO: Reimplement
-    // https://github.com/subconsciousnetwork/subconscious/issues/982
-    static func tap(
+    static func tapCell(
         state: Self,
-        point: CGPoint
+        indexPath: IndexPath?,
+        environment: Environment
     ) -> Update {
-        return Update(state: state)
+        guard let indexPath = indexPath else {
+            logger.debug("No index path for tap")
+            return Update(state: state)
+        }
+
+        guard let block = state.blocks.blocks.get(indexPath.row) else {
+            logger.warning("Tap given index path \(indexPath), but no block exists at this index path. Doing nothing.")
+            return Update(state: state)
+        }
+
+        return update(
+            state: state,
+            action: .selectBlock(
+                id: block.id,
+                isSelected: !block.isBlockSelected
+            ),
+            environment: environment
+        )
     }
     
     // TODO: Reimplement
