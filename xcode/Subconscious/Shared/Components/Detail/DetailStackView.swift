@@ -59,13 +59,13 @@ struct DetailStackView<Root: View>: View {
         }
         // Tint using the current detail's highlight color.
         // BUT only for notes.
-        .tint(
-            (store.state.details.last?.address?.isProfile ?? false)
-                ? nil
-                : store.state.details.last?.address?.highlightColor(
-                    colorScheme: colorScheme
-                )
-        )
+//        .tint(
+//            (store.state.details.last?.address?.isProfile ?? false)
+//                ? nil
+//                : store.state.details.last?.address?.highlightColor(
+//                    colorScheme: colorScheme
+//                )
+//        )
     }
 }
 

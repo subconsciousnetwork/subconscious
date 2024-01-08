@@ -148,34 +148,26 @@ private extension Hashable {
             : DeckTheme.lightCardHighlightColors
     }
     
-    func color(colorScheme: ColorScheme) -> Color {
-        let colors = colors(colorScheme: colorScheme)
-        return colors[abs(self.hashValue) % colors.count]
-    }
-    
-    func highlightColor(colorScheme: ColorScheme) -> Color {
-        let colors = highlightColors(colorScheme: colorScheme)
+    var noteColor: NoteColor {
+        let colors = NoteColor.allCases
         return colors[abs(self.hashValue) % colors.count]
     }
 }
 
 extension Slashlink {
-    func color(colorScheme: ColorScheme) -> Color {
-        description.color(colorScheme: colorScheme)
-    }
-    
-    func highlightColor(colorScheme: ColorScheme) -> Color {
-        description.highlightColor(colorScheme: colorScheme)
+    var noteColor: NoteColor {
+        description.noteColor
     }
 }
 
-
 extension EntryStub {
     func color(colorScheme: ColorScheme) -> Color {
-        self.color?.toColor(colorScheme: colorScheme) ?? .secondaryBackground
+        self.color?.toColor(colorScheme: colorScheme) 
+            ?? self.address.noteColor.toColor(colorScheme: colorScheme)
     }
     
     func highlightColor(colorScheme: ColorScheme) -> Color {
-        self.color?.toHighlightColor(colorScheme: colorScheme) ?? .accentColor
+        self.color?.toHighlightColor(colorScheme: colorScheme)
+            ?? self.address.noteColor.toHighlightColor(colorScheme: colorScheme)
     }
 }

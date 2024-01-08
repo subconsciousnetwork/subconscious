@@ -48,6 +48,7 @@ struct MemoEditorDetailView: View {
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
     /// Initialization state passed down from parent
     var description: MemoEditorDetailDescription
@@ -217,6 +218,11 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
+                        .background(store.state.color?.toColor(colorScheme: colorScheme))
+                        .foregroundStyle(.primary.opacity(0.8))
+                        .accentColor(store.state.color?.toHighlightColor(colorScheme: colorScheme))
+                        
+                        
                         ThickDividerView()
                             .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
@@ -612,6 +618,11 @@ struct MemoEditorDetailModel: ModelProtocol {
     )
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
+    var color: NoteColor? {
+        NoteColor(rawValue: additionalHeaders.get(first: "Color") ?? "")
+            ?? address?.noteColor
+    }
+                            
     var backlinks: [EntryStub] = []
     
     /// Is editor saved?
