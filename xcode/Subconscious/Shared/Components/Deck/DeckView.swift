@@ -325,7 +325,7 @@ struct DeckModel: ModelProtocol {
                 environment: environment
             )
         case .refreshUpcomingCards:
-            return refreshEachCard(state: state, environment: environment)
+            return refreshUpcomingCards(state: state, environment: environment)
         case let .succeedSaveEntry(address, modified):
             return update(
                 state: state,
@@ -449,7 +449,7 @@ struct DeckModel: ModelProtocol {
             ).mergeFx(fx)
         }
         
-        func refreshEachCard(
+        func refreshUpcomingCards(
             state: Self,
             environment: Environment
         ) -> Update<Self> {
