@@ -49,7 +49,6 @@ struct BacklinksView_Previews: PreviewProvider {
                         did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
                         excerpt: Subtext(markup: "Short"),
-                        modified: Date.now,
                         headers: WellKnownHeaders.emptySubtext
                     ),
                     EntryStub(
@@ -58,7 +57,6 @@ struct BacklinksView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        modified: Date.now,
                         headers: WellKnownHeaders.emptySubtext
                     ),
                     EntryStub(
@@ -67,7 +65,6 @@ struct BacklinksView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        modified: Date.now,
                         headers: WellKnownHeaders.emptySubtext
                     ),
                     EntryStub(
@@ -76,7 +73,6 @@ struct BacklinksView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        modified: Date.now,
                         headers: WellKnownHeaders.emptySubtext
                     )
                 ],

@@ -163,13 +163,11 @@ extension EntryStub: DummyData {
         let slashlink = Slashlink("@\(petname)/entry-\(Int.random(in: 0..<99))")!
         let address = slashlink
         let excerpt = Subtext(markup: String.dummyDataLong())
-        let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            modified: modified,
             headers: .emptySubtext
         )
     }
@@ -184,7 +182,6 @@ extension EntryStub: DummyData {
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            modified: modified,
             headers: .emptySubtext
         )
     }

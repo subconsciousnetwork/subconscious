@@ -522,7 +522,6 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
                 headers: headers
             )
         })
@@ -595,7 +594,6 @@ final class DatabaseService {
                 did: did,
                 address: slashlink,
                 excerpt: excerpt,
-                modified: modified,
                 headers: headers
             )
         })
@@ -672,7 +670,6 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
                 headers: headers
             )
         })
@@ -1234,7 +1231,6 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
                 headers: headers
             )
         })
@@ -1276,7 +1272,6 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
                 headers: headers
             )
         })
@@ -1316,7 +1311,6 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
                 headers: headers
             )
         })
@@ -1365,7 +1359,6 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified,
                 headers: headers
             )
         })

@@ -97,7 +97,7 @@ struct StoryEntryView: View {
                             
                             Text(
                                 NiceDateFormatter.shared.string(
-                                    from: story.entry.modified,
+                                    from: story.entry.headers.modified,
                                     relativeTo: Date.now
                                 )
                             )

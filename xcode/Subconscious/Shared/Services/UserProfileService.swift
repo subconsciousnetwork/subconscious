@@ -280,8 +280,7 @@ actor UserProfileService {
                         slug: slug
                     ),
                     excerpt: excerpt,
-                    modified: memo.modified,
-                    headers: WellKnownHeaders.emptySubtext
+                    headers: memo.wellKnownHeaders()
                 )
             )
         }
@@ -293,7 +292,7 @@ actor UserProfileService {
     private func sortEntriesByModified(entries: [EntryStub]) -> [EntryStub] {
         var recentEntries = entries
         recentEntries.sort(by: { a, b in
-            a.modified > b.modified
+            a.headers.modified > b.headers.modified
         })
         
         return recentEntries
