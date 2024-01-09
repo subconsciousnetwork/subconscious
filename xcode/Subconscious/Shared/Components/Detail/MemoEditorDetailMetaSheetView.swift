@@ -149,9 +149,8 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     
     case setDefaultNoteColor(_ color: NoteColor?)
-    case requestAssignNoteColor(_ color: NoteColor?)
-    case failAssignNoteColor
-    case succeedAssignNoteColor
+    case requestAssignNoteColor(_ color: NoteColor)
+    case succeedAssignNoteColor(_ color: NoteColor)
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -252,12 +251,13 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 color: color
             )
-        case .requestAssignNoteColor(let color):
-            return requestAssignNoteColor(state: state, environment: environment, color: color)
-        case .failAssignNoteColor:
+        case .requestAssignNoteColor:
             return Update(state: state)
-        case .succeedAssignNoteColor:
-            return Update(state: state)
+        case let .succeedAssignNoteColor(color):
+            var model = state
+            model.defaultColor = color
+            
+            return Update(state: model)
         }
     }
     
@@ -332,32 +332,6 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
         model.defaultColor = color
         
         return Update(state: model)
-    }
-    
-    static func requestAssignNoteColor(
-        state: Self,
-        environment: Environment,
-        color: NoteColor?
-    ) -> Update<Self> {
-        let fx: Fx<Action> = Future.detached {
-            guard let address = state.address,
-                  let color = color else {
-                return .failAssignNoteColor
-            }
-            
-            try await environment.data.assignNoteColor(
-                address: address,
-                color: color
-            )
-            
-            return .succeedAssignNoteColor
-        }
-        .recover { error in
-            return .failAssignNoteColor
-        }
-        .eraseToAnyPublisher()
-        
-        return Update(state: state, fx: fx)
     }
 }
 
