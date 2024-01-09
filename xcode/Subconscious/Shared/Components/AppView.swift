@@ -1289,7 +1289,7 @@ struct AppModel: ModelProtocol {
                 ),
                 environment: environment
             )
-        case .failUpdateAudience(address: let address, audience: let audience, error: let error):
+        case let .failUpdateAudience(address, audience, error):
             logger.warning("""
                 Failed to update audience for entry: \(address) \(audience)
                 \(error)
