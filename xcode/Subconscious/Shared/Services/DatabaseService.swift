@@ -1078,7 +1078,7 @@ final class DatabaseService {
     }
     
     // Transform a database result into a well-formed EntryStub
-    private func hydrateEntryStub(owner: Did?, row: SQLite3Database.Row) -> EntryStub? {
+    private func hydrateEntryStub(owner: Did?, row: SQLite3Database.Row) throws  -> EntryStub? {
         guard let did = row.col(0)?.toString()?.toDid() else {
             return nil
         }
@@ -1087,8 +1087,9 @@ final class DatabaseService {
         let slug = row.col(2)?.toString()?.toSlug()
         let modified = row.col(3)?.toDate()
         let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
-        switch (petname, slug, modified) {
-        case let (.some(petname), .some(slug), .some(modified)):
+        let headers = try parseHeadersJson(json: row.col(5)?.toString() ?? "")
+        switch (petname, slug) {
+        case let (.some(petname), .some(slug)):
             return EntryStub(
                 did: did,
                 address: Slashlink(
@@ -1096,9 +1097,9 @@ final class DatabaseService {
                     slug: slug
                 ),
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
-        case let (.none, .some(slug), .some(modified)):
+        case let (.none, .some(slug)):
             let address = Slashlink(
                 peer: Peer.did(did),
                 slug: slug
@@ -1107,7 +1108,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         default:
             return nil
@@ -1136,7 +1137,8 @@ final class DatabaseService {
                 peer.petname,
                 m.slug,
                 m.modified,
-                m.excerpt
+                m.excerpt,
+                m.headers
             FROM memo m
             LEFT JOIN peer ON m.did = peer.did
             JOIN json_slugs js ON m.slug = js.slug;
@@ -1148,7 +1150,7 @@ final class DatabaseService {
             ]
         )
         .compactMap({ row in
-           return hydrateEntryStub(owner: owner, row: row)
+           return try hydrateEntryStub(owner: owner, row: row)
         })
     }
     
@@ -1185,7 +1187,7 @@ final class DatabaseService {
                 .text(link.id)
             ]
         ).compactMap({ row in
-            return hydrateEntryStub(owner: owner, row: row)
+            return try hydrateEntryStub(owner: owner, row: row)
         })
     }
     
