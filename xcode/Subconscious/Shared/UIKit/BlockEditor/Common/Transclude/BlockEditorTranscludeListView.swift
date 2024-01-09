@@ -64,8 +64,7 @@ struct BlockTranscludeListView_Previews: PreviewProvider {
                         did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
                         excerpt: Subtext(markup: "Short"),
-                        modified: Date.now,
-                        headers: WellKnownHeaders.emptySubtext
+                        headers: .emptySubtext
                     ),
                     EntryStub(
                         did: Did.dummyData(),
@@ -73,8 +72,7 @@ struct BlockTranscludeListView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        modified: Date.now,
-                        headers: WellKnownHeaders.emptySubtext
+                        headers: .emptySubtext
                     ),
                     EntryStub(
                         did: Did.dummyData(),
@@ -82,8 +80,7 @@ struct BlockTranscludeListView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        modified: Date.now,
-                        headers: WellKnownHeaders.emptySubtext
+                        headers: .emptySubtext
                     ),
                 ],
                 send: { action in }

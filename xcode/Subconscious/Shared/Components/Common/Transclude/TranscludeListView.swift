@@ -45,7 +45,6 @@ struct TranscludeListView_Previews: PreviewProvider {
                               Some years ago- never mind how long precisely
                               """
                     ),
-                    modified: Date.now,
                     headers: .emptySubtext
                 ),
             ],
