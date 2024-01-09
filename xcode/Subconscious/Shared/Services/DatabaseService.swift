@@ -489,7 +489,7 @@ final class DatabaseService {
 
         let results = try database.execute(
             sql: """
-            SELECT slashlink, modified, excerpt
+            SELECT slashlink, modified, excerpt, headers
             FROM memo
             WHERE did = ?
                 AND slug = ?
@@ -502,7 +502,7 @@ final class DatabaseService {
             ]
         )
 
-        return results.compactMap({ row in
+        return try results.compactMap({ row in
             guard
                 let address = row.col(0)?
                     .toString()?
@@ -514,11 +514,15 @@ final class DatabaseService {
             
             let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
             
+            let headersDict = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
+            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                color: color
             )
         })
         .first
@@ -560,7 +564,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, slashlink, modified, excerpt
+            SELECT did, slashlink, modified, excerpt, headers
             FROM memo
             WHERE did NOT IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -571,7 +575,7 @@ final class DatabaseService {
                 .json(ignoredDids, or: "[]")
             ]
         )
-        return results.compactMap({ row in
+        return try results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
                 let slashlink = row.col(1)?
@@ -585,11 +589,15 @@ final class DatabaseService {
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
             
+            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
+            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            
             return EntryStub(
                 did: did,
                 address: slashlink,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                color: color
             )
         })
     }
@@ -1163,7 +1171,8 @@ final class DatabaseService {
                 peer.petname,
                 memo_search.slug,
                 memo_search.modified,
-                memo_search.excerpt
+                memo_search.excerpt,
+                memo_search.headers
             FROM memo_search
             LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search.description MATCH ?
@@ -1192,7 +1201,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, modified, excerpt, headers
             FROM memo_search
             WHERE memo_search.modified BETWEEN ? AND ?
                 AND substr(memo_search.slug, 1, 1) != '_'
@@ -1218,11 +1227,15 @@ final class DatabaseService {
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
             
+            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
+            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                color: color
             )
         })
         .first
@@ -1235,7 +1248,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, slashlink, modified, excerpt
+            SELECT did, slashlink, modified, excerpt, headers
             FROM memo
             WHERE substr(memo.slug, 1, 1) != '_'
             AND length(excerpt) > 64
@@ -1258,11 +1271,15 @@ final class DatabaseService {
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
             
+            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
+            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                color: color
             )
         })
         .first
@@ -1276,7 +1293,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, slashlink, modified, excerpt
+            SELECT did, slashlink, modified, excerpt, headers
             FROM memo
             WHERE substr(memo.slug, 1, 1) != '_'
             ORDER BY RANDOM()
@@ -1296,11 +1313,15 @@ final class DatabaseService {
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
             
+            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
+            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                color: color
             )
         })
         .first
@@ -1317,7 +1338,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, modified, excerpt, headers
             FROM memo_search
             WHERE description MATCH ?
                 AND substr(slug, 1, 1) != '_'
@@ -1341,13 +1362,17 @@ final class DatabaseService {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            
+            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
+            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                color: color
             )
         })
         .first
