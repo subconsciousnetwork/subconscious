@@ -153,9 +153,19 @@ struct MemoViewerDetailLoadedView: View {
                         Spacer()
                     }
                     .padding()
-                    .frame(
-                        minHeight: UIFont.appTextMono.lineHeight * 8
+                    .background(store.state.color?.toColor(colorScheme: colorScheme))
+                    .foregroundStyle(.primary.opacity(0.8))
+                    .tint(store.state.color?.toHighlightColor(colorScheme: colorScheme))
+                    .cornerRadius(DeckTheme.cornerRadius, corners: [.bottomLeft, .bottomRight])
+                    .padding(
+                        EdgeInsets(
+                            top: 0,
+                            leading: 0,
+                            bottom: AppTheme.padding,
+                            trailing: 0
+                        )
                     )
+                    
                     ThickDividerView()
                         .padding(.bottom, AppTheme.unit4)
                     BacklinksView(

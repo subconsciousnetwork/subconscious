@@ -193,12 +193,6 @@ struct MemoEditorDetailView: View {
             perform: notify
         )
     }
-    
-    var highlight: Color? {
-        store.state.color?.toHighlightColor(
-            colorScheme: colorScheme
-        )
-    }
 
     /// Constructs a plain text editor for the view
     private func plainEditor() -> some View {
@@ -224,10 +218,19 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
-                        .tint(highlight)
+                        .background(store.state.color?.toColor(colorScheme: colorScheme))
+                        .foregroundStyle(.primary.opacity(0.8))
+                        .tint(store.state.color?.toHighlightColor(colorScheme: colorScheme))
+                        .cornerRadius(DeckTheme.cornerRadius, corners: [.bottomLeft, .bottomRight])
+                        .padding(
+                            EdgeInsets(
+                                top: 0,
+                                leading: 0,
+                                bottom: AppTheme.padding,
+                                trailing: 0
+                            )
+                        )
                         
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onLink: { link in
