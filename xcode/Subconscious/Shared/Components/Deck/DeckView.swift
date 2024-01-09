@@ -235,6 +235,8 @@ struct DeckModel: ModelProtocol {
     
     var detailStack = DetailStackModel()
     
+    var loadingStatus: LoadingState = .loading
+    
     /// Search HUD
     var isSearchPresented = false
     var search = SearchModel(
@@ -406,6 +408,9 @@ struct DeckModel: ModelProtocol {
             state: Self,
             environment: Environment
         ) -> Update<Self> {
+            var model = state
+            model.loadingStatus = .loading
+            
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 let recent = try environment.database.listFeed(owner: us)
@@ -442,11 +447,7 @@ struct DeckModel: ModelProtocol {
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
             
-            return update(
-                state: state,
-                action: .setDeck([]),
-                environment: environment
-            ).mergeFx(fx)
+            return Update(state: model, fx: fx)
         }
         
         func refreshUpcomingCards(
@@ -525,6 +526,7 @@ struct DeckModel: ModelProtocol {
             model.deck = deck
             model.seen = Set(deck.compactMap { card in card.entry })
             model.pointer = startIndex.clamp(min: 0, max: deck.count - 1)
+            model.loadingStatus = deck.count == 0 ? .notFound : .loaded
             
             if let topCard = deck.first {
                 return update(
@@ -585,7 +587,7 @@ struct DeckModel: ModelProtocol {
             return Update(state: state)
         }
         
-        func shuffleInBacklinks(_ backlinks: [EntryStub]) -> Update<Self> {
+        func shuffleInBacklinks(_ backlinks: Set<EntryStub>) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 
@@ -627,10 +629,10 @@ struct DeckModel: ModelProtocol {
             state.feedback.impactOccurred()
             
             switch card.card {
-            case let .entry(_, _, backlinks):
-               return shuffleInBacklinks(backlinks)
-            case let .prompt(_, _, _, backlinks):
-               return shuffleInBacklinks(backlinks)
+            case let .entry(_, _, related):
+               return shuffleInBacklinks(related)
+            case let .prompt(_, _, _, related):
+               return shuffleInBacklinks(related)
             case .action(let msg):
                 logger.log("Action: \(msg)")
                 return update(
@@ -755,12 +757,10 @@ struct DeckModel: ModelProtocol {
             ourIdentity: Did,
             environment: DeckEnvironment
         ) async throws -> CardModel {
-            // TODO: also list the slashlinks in the body of the card as possible connections
-            // these aren't "backlinks" so we should expand the name to "related"
-            let backlinks = try environment.database.readEntryBacklinks(
-                owner: ourIdentity,
-                did: entry.did,
-                slug: entry.address.slug
+            let links = try readLinks(
+                entry: entry,
+                identity: entry.did,
+                environment: environment
             )
            
             let user = try await environment.userProfile.identifyUser(
@@ -776,10 +776,35 @@ struct DeckModel: ModelProtocol {
                     message: prompt,
                     entry: entry,
                     author: user,
-                    backlinks: backlinks
+                    related: links
                 )
             )
         }
+        
+        func readLinks(
+            entry: EntryStub,
+            identity: Did,
+            environment: DeckEnvironment,
+            replaceStubs: Bool = true
+        ) throws -> Set<EntryStub> {
+            let backlinks = try environment.database.readEntryBacklinks(
+                owner: identity,
+                did: entry.did,
+                slug: entry.address.slug
+            )
+            
+            let bodyLinks = try environment.database.readEntryBodyLinks(
+                owner: identity,
+                did: entry.did,
+                slug: entry.address.slug
+            )
+            
+            var combinedSet = Set(backlinks)
+            combinedSet.formUnion(bodyLinks)
+            
+            return combinedSet
+        }
+
         
         func isTooShort(entry: EntryStub) -> Bool {
             return entry.excerpt.base.count < 64

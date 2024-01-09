@@ -48,6 +48,10 @@ struct SubtextView: View {
     }
     
     func shouldReplaceBlockWithTransclude(block: Subtext.Block) -> Bool {
+        if transcludePreviews.count == 0 {
+            return false
+        }
+        
         var count = 0
         for inline in block.inline {
             switch (inline) {
@@ -142,7 +146,6 @@ struct SubtextView_Previews: PreviewProvider {
                                 "/wanderer-your-footsteps-are-the-road"
                             )!,
                             excerpt: Subtext(markup: "hello"),
-                            isTruncated: false,
                             modified: Date.now
                         ),
                         Slashlink("/voice")!: EntryStub(
@@ -151,7 +154,6 @@ struct SubtextView_Previews: PreviewProvider {
                                 "/voice"
                             )!,
                             excerpt: Subtext(markup: "hello"),
-                            isTruncated: false,
                             modified: Date.now
                         ),
                         Slashlink("/memory")!: EntryStub(
@@ -160,7 +162,6 @@ struct SubtextView_Previews: PreviewProvider {
                                 "/memory"
                             )!,
                             excerpt: Subtext(markup: "hello world"),
-                            isTruncated: false,
                             modified: Date.now
                         )
                     ],

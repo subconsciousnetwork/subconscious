@@ -40,6 +40,9 @@ extension AppTheme {
     static let mdPfpSize: CGFloat = 32
     static let lgPfpSize: CGFloat = 48
     
+    static let maxEntryListRowHeight: CGFloat = unit * 28
+    static let maxTranscludeHeight: CGFloat = unit * 32
+    
     static let brandMark = Image("sub_logo")
     
     static let onboarding = OnboardingTheme()

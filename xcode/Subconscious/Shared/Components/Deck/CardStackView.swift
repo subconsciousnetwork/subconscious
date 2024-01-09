@@ -33,6 +33,7 @@ struct CardEffectModifier: ViewModifier {
                         : DeckTheme.lightBgMid
                     )
                     .opacity(4.0*stackFactor)
+                    .blendMode(.sourceAtop)
             )
             .scaleEffect(max(0,min(1, 1-stackFactor + 0.03)))
             .rotation3DEffect(
@@ -58,8 +59,6 @@ struct CardEffectModifier: ViewModifier {
                 // Background cards rotate for decoration
                 : .degrees(rotation(stackFactor))
             )
-            // Prevent any gestures on background cards
-            .disabled(!focused)
             // Reduce shadow intensity with depth
             .shadow(
                 color: DeckTheme.cardShadow.opacity(
@@ -248,10 +247,6 @@ struct CardStack: View {
                 onLink: onLink
             )
             // Size card based on available space
-            .frame(
-                width: size.width,
-                height: size.width * 1.25
-            )
             .modifier(
                 effects(
                     card: card,
@@ -265,6 +260,11 @@ struct CardStack: View {
             // Fade out cards as we move past them
             .opacity(index >= current ? 1 : 0)
             .animation(.spring(), value: current)
+            .frame(
+                maxHeight: DeckTheme.cardSize.height
+            )
+            // Prevent any gestures on background cards
+            .disabled(index != current)
             
             Spacer()
         }
@@ -315,14 +315,36 @@ struct CardStack_Previews: PreviewProvider {
     static var previews: some View {
         CardStack(
             deck: [
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
             ],
             current: 0,
-            onSwipeRight: { _ in },
+            onSwipeRight: {
+                _ in
+            },
             onSwipeLeft: { _ in },
             onSwipeStart: { },
             onSwipeAbandoned: { },

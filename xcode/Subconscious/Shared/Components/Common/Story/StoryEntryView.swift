@@ -76,15 +76,10 @@ struct StoryEntryView: View {
                         transcludePreviews: [:],
                         onLink: onLink
                     )
+                    .truncateWithGradient(color: .white, maxHeight: AppTheme.maxEntryListRowHeight)
                     .padding([.leading, .trailing], AppTheme.padding)
                     
                     VStack(alignment: .leading) {
-                        if story.entry.isTruncated {
-                            Text("Show more…")
-                                .foregroundColor(.accentColor)
-                                .font(.callout)
-                        }
-                        
                         // MARK: footer
                         HStack(alignment: .center, spacing: AppTheme.unit) {
                             Image(audience: .public)

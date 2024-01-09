@@ -43,22 +43,42 @@ struct CardView: View {
     }
     
     var body: some View {
-        switch entry.card {
-        case let .entry(entry, _, backlinks):
-            EntryCardView(
-                entry: entry,
-                backlinks: backlinks,
-                onLink: onLink
-            )
-        case let .prompt(message, entry, _, backlinks):
-            PromptCardView(
-                message: message,
-                entry: entry,
-                backlinks: backlinks,
-                onLink: onLink
-            )
-        case let .action(message):
-            ActionCardView(message: message)
+        VStack {
+            switch entry.card {
+            case let .entry(entry, _, related):
+                EntryCardView(
+                    entry: entry,
+                    related: related,
+                    onLink: onLink
+                )
+            case let .prompt(message, entry, _, related):
+                PromptCardView(
+                    message: message,
+                    entry: entry,
+                    related: related,
+                    onLink: onLink
+                )
+                
+            case let .action(message):
+                ActionCardView(message: message)
+            }
         }
+        
+    }
+}
+
+struct CardView_Previews: PreviewProvider {
+    static var previews: some View {
+        CardView(entry: CardModel(
+            card: .prompt(
+                message: "Hello",
+                entry: EntryStub.dummyData(),
+                author: UserProfile.dummyData(),
+                related: []
+            )
+        ),
+                 onLink: {
+            _ in
+        })
     }
 }

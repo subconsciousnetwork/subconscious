@@ -19,6 +19,12 @@ struct TranscludeView: View {
         )
     }
     
+    var color: Color {
+        entry.color(
+            colorScheme: colorScheme
+        )
+    }
+    
     var body: some View {
         Button(
             action: {
@@ -39,13 +45,12 @@ struct TranscludeView: View {
                     )
                 }
                 .tint(highlight)
+                .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
             }
         )
         .buttonStyle(
             TranscludeButtonStyle(
-                color: entry.color(
-                    colorScheme: colorScheme
-                )
+                color: color
             )
         )
     }
@@ -59,7 +64,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     did: Did.dummyData(),
                     address: Slashlink("/short")!,
                     excerpt: Subtext(markup: "Short."),
-                    isTruncated: false,
                     modified: Date.now
                 ),
                 onLink: { _ in }
@@ -71,7 +75,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
                     ),
-                    isTruncated: false,
                     modified: Date.now
                 ),
                 onLink: { _ in }
@@ -83,7 +86,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Call me Ishmael. Some years ago- never mind how long precisely"
                     ),
-                    isTruncated: false,
                     modified: Date.now
                 ),
                 onLink: { _ in }
@@ -98,7 +100,6 @@ struct TranscludeView_Previews: PreviewProvider {
                               Some years ago- never mind how long precisely
                               """
                     ),
-                    isTruncated: false,
                     modified: Date.now
                 ),
                 onLink: { _ in }
@@ -110,7 +111,6 @@ struct TranscludeView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Call me Ishmael. Some years ago- never mind how long precisely"
                     ),
-                    isTruncated: false,
                     modified: Date.now
                 ),
                 onLink: { _ in }

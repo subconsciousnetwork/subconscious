@@ -12,11 +12,15 @@ struct CardContentView: View {
     @Environment (\.colorScheme) var colorScheme
     
     var entry: EntryStub
-    var backlinks: [EntryStub]
+    var related: Set<EntryStub>
     var onLink: (EntryLink) -> Void
     
     var highlight: Color {
         entry.highlightColor(colorScheme: colorScheme)
+    }
+    
+    var color: Color {
+        entry.color(colorScheme: colorScheme)
     }
     
     var body: some View {
@@ -28,8 +32,10 @@ struct CardContentView: View {
         // Opacity allows blendMode to show through
         .foregroundStyle(.primary.opacity(0.8))
         .accentColor(highlight)
+        .frame(height: DeckTheme.cardContentSize.height, alignment: .topLeading)
+        .truncateWithGradient(color: color, maxHeight: DeckTheme.cardContentSize.height)
         .padding(DeckTheme.cardPadding)
-        
+       
         Spacer()
         
         HStack {
@@ -38,12 +44,12 @@ struct CardContentView: View {
             )
             .lineLimit(1)
             
-            if !backlinks.isEmpty {
+            if !related.isEmpty {
                 Spacer()
                 
                 HStack {
                     Image(systemName: "link")
-                    Text("\(backlinks.count)")
+                    Text("\(related.count)")
                 }
             }
         }

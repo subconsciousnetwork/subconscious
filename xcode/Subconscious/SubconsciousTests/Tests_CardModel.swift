@@ -15,7 +15,7 @@ final class Tests_CardModel: XCTestCase {
             card: .entry(
                 entry: first,
                 author: UserProfile.dummyData(),
-                backlinks: []
+                related: []
             )
         )
         
@@ -32,7 +32,7 @@ final class Tests_CardModel: XCTestCase {
                 message: "lol",
                 entry: first,
                 author: UserProfile.dummyData(),
-                backlinks: []
+                related: []
             )
         )
         

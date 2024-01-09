@@ -13,7 +13,7 @@ struct PromptCardView: View {
     
     var message: String
     var entry: EntryStub
-    var backlinks: [EntryStub]
+    var related: Set<EntryStub>
     var onLink: (EntryLink) -> Void
     
     var background: Color {
@@ -30,16 +30,23 @@ struct PromptCardView: View {
                 Image(systemName: "sparkles")
                 
                 Text(message)
+                
+                Spacer()
             }
             .padding(DeckTheme.cardPadding)
             .foregroundStyle(highlight)
             .font(.subheadline)
+            .background(
+                DeckTheme.cardHeaderTint.blendMode(
+                    .plusLighter
+                )
+            )
             
             Divider()
             
             CardContentView(
                 entry: entry,
-                backlinks: backlinks,
+                related: related,
                 onLink: onLink
             )
         }

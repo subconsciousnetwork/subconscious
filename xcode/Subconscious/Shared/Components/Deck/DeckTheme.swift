@@ -15,11 +15,12 @@ extension DeckTheme {
         blendDuration: 0
     )
     
-    static let dragTargetSize = CGSize(width: 8, height: 400)
+    static let dragTargetSize = CGSize(width: 16, height: 400)
     
     static let cardPadding = AppTheme.unit * 5
     static let cornerRadius: CGFloat = 32.0
     static let cardSize = CGSize(width: 374, height: 420)
+    static let cardContentSize = CGSize(width: 374, height: AppTheme.unit * 80)
     
     static let cardShadow = Color(red: 0.19, green: 0.09, blue: 0.33)
     
@@ -82,6 +83,8 @@ extension DeckTheme {
         (Color(red: 1, green: 0.74, blue: 0.78)),
         (Color(red: 0.89, green: 0.78, blue: 0.95))
     ]
+    
+    static let cardHeaderTint = Color.brandMarkPink.opacity(0.025)
 }
 
 private extension Hashable {
