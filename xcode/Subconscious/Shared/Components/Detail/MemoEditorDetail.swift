@@ -48,6 +48,7 @@ struct MemoEditorDetailView: View {
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
     /// Initialization state passed down from parent
     var description: MemoEditorDetailDescription
@@ -192,6 +193,12 @@ struct MemoEditorDetailView: View {
             perform: notify
         )
     }
+    
+    var highlight: Color? {
+        store.state.color?.toHighlightColor(
+            colorScheme: colorScheme
+        )
+    }
 
     /// Constructs a plain text editor for the view
     private func plainEditor() -> some View {
@@ -217,6 +224,8 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
+                        .tint(highlight)
+                        
                         ThickDividerView()
                             .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
@@ -617,9 +626,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         modified: Date.distantPast,
         fileExtension: ContentType.subtext.fileExtension
     )
-    var color: NoteColor? {
-        headers.color
-    }
+    var color: NoteColor? = nil
+    
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
                             
@@ -1305,6 +1313,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.address = detail.entry.address
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
+        model.color = model.headers.color
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.saveState = detail.saveState
         
@@ -1966,9 +1975,12 @@ struct MemoEditorDetailModel: ModelProtocol {
         guard state.address == address else {
             return Update(state: state)
         }
+        
+        var model = state
+        model.color = color
             
         return update(
-            state: state,
+            state: model,
             // Forward success down to meta sheet
             action: .metaSheet(.succeedAssignNoteColor(color)),
             environment: environment
