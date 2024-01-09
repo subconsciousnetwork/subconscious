@@ -524,7 +524,7 @@ struct DeckModel: ModelProtocol {
             var model = state
             model.deck = deck
             model.seen = Set(deck.compactMap { card in card.entry })
-            model.pointer = startIndex
+            model.pointer = startIndex.clamp(min: 0, max: deck.count - 1)
             
             if let topCard = deck.first {
                 return update(
