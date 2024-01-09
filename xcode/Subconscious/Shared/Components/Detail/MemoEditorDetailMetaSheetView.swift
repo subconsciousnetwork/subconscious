@@ -88,8 +88,10 @@ struct MemoEditorDetailMetaSheetView: View {
                                     .fill(color.toColor(colorScheme: colorScheme))
                                 Circle()
                                     .stroke(Color.separator)
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.secondary)
+                                if color == store.state.defaultColor {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.secondary)
+                                }
                             }
                             .frame(width: 32, height: 32)
                         }
@@ -140,11 +142,13 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: Slashlink?)
     case setDefaultAudience(_ audience: Audience)
+    
     /// Requests that audience be updated.
     /// Should be handled by parent component.
     case requestUpdateAudience(_ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     
+    case setDefaultNoteColor(_ color: NoteColor?)
     case requestAssignNoteColor(_ color: NoteColor?)
     case failAssignNoteColor
     case succeedAssignNoteColor
@@ -170,6 +174,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: Slashlink?
+    var defaultColor: NoteColor?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -241,6 +246,12 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
             )
         case .requestDelete:
             return Update(state: state)
+        case let .setDefaultNoteColor(color):
+            return setDefaultNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
         case .requestAssignNoteColor(let color):
             return requestAssignNoteColor(state: state, environment: environment, color: color)
         case .failAssignNoteColor:
@@ -309,6 +320,17 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.defaultAudience = audience
+        return Update(state: model)
+    }
+    
+    static func setDefaultNoteColor(
+        state: Self,
+        environment: Environment,
+        color: NoteColor?
+    ) -> Update<Self> {
+        var model = state
+        model.defaultColor = color
+        
         return Update(state: model)
     }
     
