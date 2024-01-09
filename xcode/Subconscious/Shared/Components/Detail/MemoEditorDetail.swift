@@ -283,19 +283,12 @@ enum MemoEditorDetailNotification: Hashable {
     /// Request detail from any audience scope
     case requestFindLinkDetail(EntryLink)
     
-    case requestDelete(Slashlink?)
-    
-    case requestMoveEntry(from: Slashlink, to: Slashlink)
-    case succeedMoveEntry(from: Slashlink, to: Slashlink)
-    
-    case requestMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    
     case requestSaveEntry(MemoEntry)
-    case succeedSaveEntry(address: Slashlink, modified: Date)
-    
+    case requestDelete(Slashlink?)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(address: Slashlink, audience: Audience)
-    case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
 }
 
 extension MemoEditorDetailNotification {
@@ -311,6 +304,8 @@ extension MemoEditorDetailNotification {
             return .requestMergeEntry(parent: parent, child: child)
         case let .forwardRequestUpdateAudience(address, audience):
             return .requestUpdateAudience(address: address, audience: audience)
+        case let .forwardRequestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
         default:
             return nil
         }
@@ -427,6 +422,10 @@ enum MemoEditorDetailAction: Hashable {
     case requestUpdateAudience(_ audience: Audience)
     case forwardRequestUpdateAudience(address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ color: NoteColor)
+    case forwardRequestAssignNoteColor(address: Slashlink, _ color: NoteColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    
 
     // Editor
     /// Update editor dom and mark if this state is saved or not
@@ -514,6 +513,8 @@ extension MemoEditorDetailAction {
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
+        case let .succeedAssignNoteColor(address, color):
+            return .succeedAssignNoteColor(address, color)
             
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
@@ -586,6 +587,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
             return .selectRenameSuggestion(suggestion)
         case let .requestUpdateAudience(audience):
             return .requestUpdateAudience(audience)
+        case let .requestAssignNoteColor(color):
+            return .requestAssignNoteColor(color)
         case .requestDelete(let address):
             return .requestDelete(address)
         default:
@@ -884,12 +887,24 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 audience: audience
             )
-            
         case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
                 environment: environment,
                 receipt: receipt
+            )
+        case let .requestAssignNoteColor(color):
+            return requestAssignNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
+        case let .succeedAssignNoteColor(address, color):
+            return succeedAssignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
             )
         case let .selectRenameSuggestion(suggestion):
             return selectRenameSuggestion(
@@ -959,7 +974,7 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment
             )
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
-                .forwardRequestMergeEntry, .forwardRequestUpdateAudience:
+                .forwardRequestMergeEntry, .forwardRequestUpdateAudience, .forwardRequestAssignNoteColor:
             return Update(state: state)
         }
     }
@@ -1911,6 +1926,54 @@ struct MemoEditorDetailModel: ModelProtocol {
         let fx = saveFx.merge(with: audienceFx).eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
+    }
+    
+    static func requestAssignNoteColor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        color: NoteColor
+    ) -> Update<MemoEditorDetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        let audienceFx: Fx<MemoEditorDetailAction> = Just(
+            .forwardRequestAssignNoteColor(
+                address: address,
+                color
+            )
+        ).eraseToAnyPublisher()
+        
+        // Save before updating color
+        let fx = saveFx.merge(with: audienceFx).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedAssignNoteColor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        color: NoteColor
+    ) -> Update<MemoEditorDetailModel> {
+        guard state.address != nil else {
+            return Update(state: state)
+        }
+        
+        guard state.address == address else {
+            return Update(state: state)
+        }
+            
+        return update(
+            state: state,
+            // Forward success down to meta sheet
+            action: .metaSheet(.succeedAssignNoteColor(color)),
+            environment: environment
+        )
     }
     
     /// Insert wikilink markup into editor, begining at previous range

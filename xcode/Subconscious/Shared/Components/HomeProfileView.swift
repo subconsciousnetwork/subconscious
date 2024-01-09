@@ -150,6 +150,8 @@ enum HomeProfileAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
 }
 
 // MARK: Cursors and tagging functions
@@ -179,6 +181,8 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
             return .requestMergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .requestUpdateAudience(address, audience)
+        case let .requestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
         default:
             return .detailStack(action)
         }
@@ -202,6 +206,8 @@ extension HomeProfileAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
+        case let .succeedAssignNoteColor(address, color):
+            return .succeedAssignNoteColor(address, color)
         default:
             return nil
         }
@@ -221,6 +227,8 @@ extension AppAction {
             return .mergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .updateAudience(address: address, audience: audience)
+        case let .requestAssignNoteColor(address, color):
+            return .assignColor(addess: address, color: color)
         default:
             return nil
         }
@@ -354,8 +362,18 @@ struct HomeProfileModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case let .succeedAssignNoteColor(address, color):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedAssignNoteColor(address, color)),
+                    .appear
+                ],
+                environment: environment
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop:
+                .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
+                .requestAssignNoteColor:
             return Update(state: state)
         }
     }

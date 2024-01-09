@@ -120,6 +120,8 @@ enum DeckAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
 }
 
 extension AppAction {
@@ -135,6 +137,8 @@ extension AppAction {
             return .mergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .updateAudience(address: address, audience: audience)
+        case let .requestAssignNoteColor(address, color):
+            return .assignColor(addess: address, color: color)
         default:
             return nil
         }
@@ -156,6 +160,8 @@ extension DeckAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
+        case let .succeedAssignNoteColor(address, color):
+            return .succeedAssignNoteColor(address, color)
         default:
             return nil
         }
@@ -216,6 +222,8 @@ struct DeckDetailStackCursor: CursorProtocol {
             return .requestMergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .requestUpdateAudience(address, audience)
+        case let .requestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
         case _:
             return .detailStack(action)
         }
@@ -385,8 +393,19 @@ struct DeckModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case let .succeedAssignNoteColor(address, color):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedAssignNoteColor(address, color)
+                    ),
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience:
+                .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor:
             return Update(state: state)
         }
         
@@ -528,7 +547,7 @@ struct DeckModel: ModelProtocol {
             var model = state
             model.deck = deck
             model.seen = Set(deck.compactMap { card in card.entry })
-            model.pointer = startIndex.clamp(min: 0, max: deck.count - 1)
+            model.pointer = startIndex.clamp(min: 0, max: max(0, deck.count - 1))
             model.loadingStatus = deck.count == 0 ? .notFound : .loaded
             
             if let topCard = deck.first {
