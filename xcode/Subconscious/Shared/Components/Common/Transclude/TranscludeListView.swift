@@ -23,7 +23,7 @@ struct TranscludeListView: View {
                     )
                 }
                 .tint(
-                    entry.address.noteColor.toHighlightColor(
+                    entry.headers.color.toHighlightColor(
                         colorScheme: colorScheme
                     )
                 )
