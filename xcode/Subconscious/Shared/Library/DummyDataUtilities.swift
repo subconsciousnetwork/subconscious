@@ -195,8 +195,6 @@ extension Memo: DummyData {
             body: String.dummyDataMedium()
         )
     }
-    
-    
 }
 
 extension UserProfile: DummyData {
