@@ -50,6 +50,14 @@ final class Tests_Deck_NotificationActions: XCTestCase {
         )
     }
     
+    func testRequestAssignNoteColor() throws {
+        let action = AppAction.from(DeckAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .tan))
+        XCTAssertEqual(
+            action,
+            AppAction.assignColor(addess: Slashlink("@bob/foo")!, color: .tan)
+        )
+    }
+    
     func testSucceedSaveEntry() throws {
         let time = Date.now
         let action = DeckAction.from(.succeedSaveEntry(address: Slashlink("@bob/foo")!, modified: time))
@@ -100,6 +108,22 @@ final class Tests_Deck_NotificationActions: XCTestCase {
         XCTAssertEqual(
             action,
             DeckAction.succeedUpdateAudience(receipt)
+        )
+    }
+    
+    func testSucceedAssignNoteColor() throws {
+        let action = DeckAction.from(
+            .succeedAssignNoteColor(
+                address: Slashlink("@bob/foo")!,
+                color: .tan
+            )
+        )
+        XCTAssertEqual(
+            action,
+            DeckAction.succeedAssignNoteColor(
+                Slashlink("@bob/foo")!,
+                .tan
+            )
         )
     }
 }
