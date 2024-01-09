@@ -50,6 +50,14 @@ final class Tests_HomeProfile_NotificationActions: XCTestCase {
         )
     }
     
+    func testRequestAssignNoteColor() throws {
+        let action = AppAction.from(HomeProfileAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .tan))
+        XCTAssertEqual(
+            action,
+            AppAction.assignColor(addess: Slashlink("@bob/foo")!, color: .tan)
+        )
+    }
+    
     func testSucceedSaveEntry() throws {
         let time = Date.now
         let action = HomeProfileAction.from(.succeedSaveEntry(address: Slashlink("@bob/foo")!, modified: time))
@@ -100,6 +108,22 @@ final class Tests_HomeProfile_NotificationActions: XCTestCase {
         XCTAssertEqual(
             action,
             HomeProfileAction.succeedUpdateAudience(receipt)
+        )
+    }
+    
+    func testSucceedAssignNoteColor() throws {
+        let action = HomeProfileAction.from(
+            .succeedAssignNoteColor(
+                address: Slashlink("@bob/foo")!,
+                color: .tan
+            )
+        )
+        XCTAssertEqual(
+            action,
+            HomeProfileAction.succeedAssignNoteColor(
+                Slashlink("@bob/foo")!,
+                .tan
+            )
         )
     }
 }
