@@ -106,37 +106,36 @@ struct AuthorizationSettingsView: View {
             
             Section(
                 content: {
-                    List {
-                        ForEach(state.authorizations, id: \.self) { auth in
-                            HStack {
-                                Text(auth)
-                                    .font(.callout.monospaced())
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.leading)
-                                
-                                Menu(
-                                    content: {
-                                        Button(
-                                            action: {
-                                                app.send(.authorization(.requestRevoke(auth)))
-                                            },
-                                            label: {
-                                                Label(
-                                                    title: {
-                                                        Text("Revoke")
-                                                    },
-                                                    icon: {
-                                                        Image(systemName: "exclamationmark.octagon.fill")
-                                                    }
-                                                )
-                                            }
-                                        )
-                                    },
-                                    label: {
-                                        EllipsisLabelView()
-                                    }
-                                )
-                            }
+                    ForEach(state.authorizations, id: \.self) { auth in
+                        VStack(alignment: .leading, spacing: AppTheme.unit) {
+                            Text(auth.name)
+                                .foregroundColor(.primary)
+                            Text(auth.authorization)
+                                .font(.caption.monospaced())
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        .padding(.vertical, AppTheme.unit)
+                        .contextMenu {
+                            Button(
+                                action: {
+                                    app.send(.authorization(.requestRevoke(auth)))
+                                },
+                                label: {
+                                    Label(
+                                        title: {
+                                            Text("Revoke")
+                                        },
+                                        icon: {
+                                            Image(systemName: "exclamationmark.octagon.fill")
+                                        }
+                                    )
+                                }
+                            )
+                            .tint(.red)
+                            
+                            ShareLink(item: auth.authorization)
                         }
                     }
                 },
@@ -254,7 +253,7 @@ struct AuthorizationSettingsFormModel: ModelProtocol {
 enum AuthorizationSettingsAction: Hashable {
     case appear
     case listAuthorizations
-    case succeedListAuthorizations([Authorization])
+    case succeedListAuthorizations([NamedAuthorization])
     case failListAuthorizations(_ error: String)
     
     case form(AuthorizationSettingsFormAction)
@@ -266,7 +265,7 @@ enum AuthorizationSettingsAction: Hashable {
     case qrCodeScanned(scannedContent: String)
     case qrCodeScanError(error: String)
     
-    case requestRevoke(Authorization)
+    case requestRevoke(NamedAuthorization)
     case confirmRevoke
     case cancelRevoke
     case succeedRevoke
@@ -291,12 +290,12 @@ struct AuthorizationSettingsModel: ModelProtocol {
     var isConfirmRevokePresented = false
     
     var form: AuthorizationSettingsFormModel = AuthorizationSettingsFormModel()
-    var authorizations: [Authorization] = ["Test"]
+    var authorizations: [NamedAuthorization] = []
     
     var errorMessage: String? = nil
     var lastAuthorization: Authorization? = nil
     
-    var revokeCandidate: Authorization? = nil
+    var revokeCandidate: NamedAuthorization? = nil
     
     static func update(
         state: Self,
@@ -416,7 +415,7 @@ struct AuthorizationSettingsModel: ModelProtocol {
             
             let fx: Fx<AuthorizationSettingsAction> = Future.detached {
                 do {
-                    try await environment.noosphere.revoke(authorization: candidate)
+                    try await environment.noosphere.revoke(authorization: candidate.authorization)
                     let _ = try await environment.noosphere.save()
                     return .succeedRevoke
                 } catch {
