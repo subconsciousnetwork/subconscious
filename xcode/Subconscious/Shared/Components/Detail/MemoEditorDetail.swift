@@ -493,6 +493,10 @@ enum MemoEditorDetailAction: Hashable {
     static func setMetaSheetAddress(_ address: Slashlink?) -> Self {
         .metaSheet(.setAddress(address))
     }
+    
+    static func setMetaSheetDefaultColor(_ color: NoteColor?) -> Self {
+        .metaSheet(.setDefaultNoteColor(color))
+    }
 
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
         .metaSheet(.setDefaultAudience(audience))
@@ -1312,6 +1316,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .setMetaSheetAddress(model.address),
+                .setMetaSheetDefaultColor(model.color),
                 .setEditor(
                     text: text,
                     saveState: detail.saveState,
