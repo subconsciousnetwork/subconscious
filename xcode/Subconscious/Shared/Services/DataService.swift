@@ -597,12 +597,7 @@ actor DataService {
         color: NoteColor
     ) async throws {
         var memo = try await readMemo(address: address)
-        memo.additionalHeaders = [
-            Header(
-                name: "Color",
-                value: color.rawValue
-            )
-        ]
+        memo.color = color
         
         try await writeMemo(address: address, memo: memo)
     }

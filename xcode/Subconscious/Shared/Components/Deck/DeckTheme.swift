@@ -162,12 +162,12 @@ extension Slashlink {
 
 extension EntryStub {
     func color(colorScheme: ColorScheme) -> Color {
-        self.color?.toColor(colorScheme: colorScheme) 
+        self.headers.color?.toColor(colorScheme: colorScheme)
             ?? self.address.noteColor.toColor(colorScheme: colorScheme)
     }
     
     func highlightColor(colorScheme: ColorScheme) -> Color {
-        self.color?.toHighlightColor(colorScheme: colorScheme)
+        self.headers.color?.toHighlightColor(colorScheme: colorScheme)
             ?? self.address.noteColor.toHighlightColor(colorScheme: colorScheme)
     }
 }

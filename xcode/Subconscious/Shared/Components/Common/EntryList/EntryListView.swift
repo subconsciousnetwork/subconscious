@@ -95,7 +95,8 @@ struct EntryListView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
-                    modified: Date.now
+                    modified: Date.now,
+                    headers: WellKnownHeaders.emptySubtext
                 ),
                 EntryStub(
                     did: Did.dummyData(),
@@ -105,7 +106,8 @@ struct EntryListView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
-                    modified: Date.now
+                    modified: Date.now,
+                    headers: WellKnownHeaders.emptySubtext
                 )
             ],
             onEntryPress: { entry in },

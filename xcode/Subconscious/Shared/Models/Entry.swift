@@ -36,5 +36,6 @@ extension EntryStub {
         self.excerpt = Subtext(markup: entry.contents.excerpt())
         self.modified = entry.contents.modified
         self.did = did
+        self.headers = entry.contents.wellKnownHeaders()
     }
 }

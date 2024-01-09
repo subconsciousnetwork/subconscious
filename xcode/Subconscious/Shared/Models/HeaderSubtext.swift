@@ -56,6 +56,7 @@ extension HeaderSubtext {
             created: wellKnownHeaders.created,
             modified: wellKnownHeaders.modified,
             fileExtension: wellKnownHeaders.fileExtension,
+            color: wellKnownHeaders.color,
             additionalHeaders: headers,
             body: body
         )

@@ -169,7 +169,8 @@ extension EntryStub: DummyData {
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            modified: modified
+            modified: modified,
+            headers: .emptySubtext
         )
     }
     
@@ -183,7 +184,8 @@ extension EntryStub: DummyData {
             did: Did.dummyData(),
             address: address,
             excerpt: excerpt,
-            modified: modified
+            modified: modified,
+            headers: .emptySubtext
         )
     }
 }
@@ -195,6 +197,7 @@ extension Memo: DummyData {
             created: Date.now,
             modified: Date.now,
             fileExtension: "subtext",
+            color: NoteColor.allCases.randomElement(),
             additionalHeaders: Headers(),
             body: String.dummyDataMedium()
         )

@@ -19,7 +19,7 @@ struct EntryStub:
     let address: Slashlink
     let excerpt: Subtext
     let modified: Date
-    var color: NoteColor? = nil
+    let headers: WellKnownHeaders
 
     var id: Slashlink { address }
     var debugDescription: String {
@@ -31,7 +31,8 @@ struct EntryStub:
             did: did,
             address: address,
             excerpt: excerpt,
-            modified: modified
+            modified: modified,
+            headers: headers
         )
     }
     

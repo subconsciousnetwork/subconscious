@@ -617,12 +617,11 @@ struct MemoEditorDetailModel: ModelProtocol {
         modified: Date.distantPast,
         fileExtension: ContentType.subtext.fileExtension
     )
+    var color: NoteColor? {
+        headers.color
+    }
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
-    var color: NoteColor? {
-        NoteColor(rawValue: additionalHeaders.get(first: "Color") ?? "")
-            ?? address?.noteColor
-    }
                             
     var backlinks: [EntryStub] = []
     
@@ -2096,6 +2095,7 @@ extension MemoEntry {
             created: detail.headers.created,
             modified: detail.headers.modified,
             fileExtension: detail.headers.fileExtension,
+            color: detail.headers.color,
             additionalHeaders: detail.additionalHeaders,
             body: detail.editor.text
         )
