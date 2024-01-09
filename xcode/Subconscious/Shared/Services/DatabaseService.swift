@@ -594,6 +594,24 @@ final class DatabaseService {
         })
     }
     
+    func parseHeadersJson(json: String) throws -> [String: String] {
+        var headersDict: [String: String] = [:]
+        let jsonData = Data(json.utf8)
+        let headersArray = try JSONDecoder().decode(
+            [[String: String]].self,
+            from: jsonData
+        )
+
+        for header in headersArray {
+            if let name = header["name"],
+               let value = header["value"] {
+                headersDict[name] = value
+            }
+        }
+        
+        return headersDict
+    }
+    
     /// List recent entries
     func listRecentMemos(owner: Did?, includeDrafts: Bool = false) throws -> [EntryStub] {
         guard self.state == .ready else {
@@ -622,7 +640,7 @@ final class DatabaseService {
                 .json(dids, or: "[]")
             ]
         )
-        return results.compactMap({ row in
+        return try results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
@@ -637,24 +655,7 @@ final class DatabaseService {
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
             
-            var headersDict = [String: String]()
-            if let headersJSON = row.col(4)?.toString() {
-                do {
-                    let jsonData = Data(headersJSON.utf8)
-                    let headersArray = try JSONDecoder().decode([[String: String]].self, from: jsonData)
-
-                    for header in headersArray {
-                        if let name = header["name"], let value = header["value"] {
-                            headersDict[name] = value
-                        }
-                    }
-
-                    // Now headersDict contains your headers as a dictionary
-                } catch {
-                    print("Error parsing JSON: \(error)")
-                }
-            }
-            
+            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             let color = NoteColor(rawValue: headersDict["Color"] ?? "")
             
             return EntryStub(
