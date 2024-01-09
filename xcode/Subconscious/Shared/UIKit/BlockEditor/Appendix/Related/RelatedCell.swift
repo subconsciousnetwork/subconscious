@@ -100,19 +100,19 @@ struct BlockEditorRelatedCell_Previews: PreviewProvider {
                             did: Did("did:key:abc123")!,
                             address: Slashlink("@example/foo")!,
                             excerpt: Subtext(markup: "An [[autopoietic system]] is a network of processes that recursively depend on each other for their own generation and realization."),
-                            headers: WellKnownHeaders.emptySubtext
+                            headers: .emptySubtext
                         ),
                         EntryStub(
                             did: Did("did:key:abc123")!,
                             address: Slashlink("@example/bar")!,
                             excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                            headers: WellKnownHeaders.emptySubtext
+                            headers: .emptySubtext
                         ),
                         EntryStub(
                             did: Did("did:key:abc123")!,
                             address: Slashlink("@example/baz")!,
                             excerpt: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
-                            headers: WellKnownHeaders.emptySubtext
+                            headers: .emptySubtext
                         )
                     ]
                 )
