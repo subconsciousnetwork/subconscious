@@ -83,6 +83,8 @@ extension DeckTheme {
         (Color(red: 1, green: 0.74, blue: 0.78)),
         (Color(red: 0.89, green: 0.78, blue: 0.95))
     ]
+    
+    static let cardHeaderTint = Color.brandMarkPink.opacity(0.025)
 }
 
 private extension Hashable {

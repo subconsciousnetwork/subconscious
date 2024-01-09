@@ -36,7 +36,11 @@ struct PromptCardView: View {
             .padding(DeckTheme.cardPadding)
             .foregroundStyle(highlight)
             .font(.subheadline)
-            .background(Color.brandMarkPink.opacity(0.025).blendMode(.plusLighter))
+            .background(
+                DeckTheme.cardHeaderTint.blendMode(
+                    .plusLighter
+                )
+            )
             
             Divider()
             
