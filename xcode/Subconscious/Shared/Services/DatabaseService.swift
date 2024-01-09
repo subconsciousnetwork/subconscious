@@ -1098,7 +1098,7 @@ final class DatabaseService {
         // Use content indexed in database, even though it might be stale.
         return try database.execute(
             sql: """
-            WITH JSONSlugs AS (
+            WITH json_slugs AS (
               SELECT value->>'description' AS slug
               FROM json_each((SELECT links FROM memo WHERE slug = ? AND did = ?))
             )
@@ -1109,7 +1109,7 @@ final class DatabaseService {
                 m.excerpt
             FROM memo m
             LEFT JOIN peer ON m.did = peer.did
-            JOIN JSONSlugs js ON m.slug = js.slug;
+            JOIN json_slugs js ON m.slug = js.slug;
             LIMIT 200
             """,
             parameters: [
