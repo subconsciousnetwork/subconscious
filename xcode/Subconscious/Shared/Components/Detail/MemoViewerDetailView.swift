@@ -125,6 +125,7 @@ struct MemoViewerDetailLoadingView: View {
 }
 
 struct MemoViewerDetailLoadedView: View {
+    @Environment(\.colorScheme) var colorScheme
     @ObservedObject var store: Store<MemoViewerDetailModel>
     var address: Slashlink
     var notify: (MemoViewerDetailNotification) -> Void
@@ -152,12 +153,30 @@ struct MemoViewerDetailLoadedView: View {
                         
                         Spacer()
                     }
-                    .padding()
+                    .padding(
+                        EdgeInsets(
+                            top: AppTheme.padding,
+                            leading: DeckTheme.cardPadding,
+                            bottom: DeckTheme.cardPadding,
+                            trailing: DeckTheme.cardPadding
+                        )
+                    )
                     .frame(
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
-                    ThickDividerView()
-                        .padding(.bottom, AppTheme.unit4)
+                    .background(store.state.color?.toColor(colorScheme: colorScheme))
+                    .foregroundStyle(.primary.opacity(0.8))
+                    .accentColor(store.state.color?.toHighlightColor(colorScheme: colorScheme))
+                    .cornerRadius(DeckTheme.cornerRadius, corners: [.bottomLeft, .bottomRight])
+                    .padding(
+                        EdgeInsets(
+                            top: 0,
+                            leading: 0,
+                            bottom: AppTheme.padding,
+                            trailing: 0
+                        )
+                    )
+                    
                     BacklinksView(
                         backlinks: store.state.backlinks,
                         onLink: { link in
@@ -267,6 +286,12 @@ struct MemoViewerDetailModel: ModelProtocol {
     var address: Slashlink?
     var defaultAudience = Audience.local
     var title = ""
+    /// Additional headers that are not well-known headers.
+    var additionalHeaders: Headers = []
+    var color: NoteColor? {
+        NoteColor(rawValue: additionalHeaders.get(first: "Color") ?? "")
+            ?? address?.noteColor
+    }
     var dom: Subtext = Subtext.empty
     var backlinks: [EntryStub] = []
     
@@ -450,6 +475,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         let memo = entry.contents
         model.address = entry.address
         model.title = memo.title()
+        model.additionalHeaders = memo.additionalHeaders
         
         let dom = memo.dom()
         
