@@ -15,7 +15,7 @@ struct Memo: Hashable, CustomStringConvertible {
     var created: Date
     var modified: Date
     var fileExtension: String
-    // TODO: lift color to here?
+    var color: NoteColor?
     var additionalHeaders: Headers
     var body: String
     
@@ -27,7 +27,8 @@ struct Memo: Hashable, CustomStringConvertible {
             contentType: contentType,
             created: created,
             modified: modified,
-            fileExtension: fileExtension
+            fileExtension: fileExtension,
+            color: color
         )
         .getAdditionalHeaders()
         .merge(additionalHeaders)
@@ -95,7 +96,8 @@ struct Memo: Hashable, CustomStringConvertible {
             contentType: contentType,
             created: created,
             modified: modified,
-            fileExtension: fileExtension
+            fileExtension: fileExtension,
+            color: color
         )
     }
     
@@ -156,6 +158,7 @@ extension MemoData {
             created: headers.created,
             modified: headers.modified,
             fileExtension: headers.fileExtension,
+            color: headers.color,
             additionalHeaders: self.additionalHeaders,
             body: body
         )
@@ -170,9 +173,6 @@ extension MemoRecord {
         memo: Memo,
         size: Int? = nil
     ) throws {
-        var headers = memo.headers
-        headers.append(contentsOf: memo.additionalHeaders)
-        
         try self.init(
             did: did,
             petname: petname,
@@ -182,7 +182,7 @@ extension MemoRecord {
             modified: memo.modified,
             title: memo.title(),
             fileExtension: memo.fileExtension,
-            headers: headers,
+            headers: memo.headers,
             body: memo.body,
             description: memo.plain(),
             excerpt: memo.excerpt(),

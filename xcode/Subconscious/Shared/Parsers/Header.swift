@@ -14,6 +14,7 @@ enum HeaderName: String {
     case created = "Created"
     case modified = "Modified"
     case fileExtension = "File-Extension"
+    case color = "Color"
 }
 
 /// A struct containing well-known headers
@@ -22,6 +23,14 @@ struct WellKnownHeaders: Hashable {
     var created: Date
     var modified: Date
     var fileExtension: String
+    var color: NoteColor?
+    
+    static let emptySubtext = WellKnownHeaders(
+        contentType: ContentType.subtext.rawValue,
+        created: Date(),
+        modified: Date(),
+        fileExtension: ContentType.subtext.fileExtension
+    )
 }
 
 extension WellKnownHeaders {
@@ -55,13 +64,22 @@ extension WellKnownHeaders {
             this.modified = modified
         }
         
+        if
+            let colorString = additionalHeaders.get(
+                first: HeaderName.color.rawValue
+            ),
+            let color = NoteColor(rawValue: colorString)
+        {
+            this.color = color
+        }
+        
         return this
     }
     
     /// Get "additional" headers as an array.
     /// Does not include `Content-Type`.
     func getAdditionalHeaders() -> [Header] {
-        [
+        var headers = [
             Header(
                 name: HeaderName.fileExtension.rawValue,
                 value: fileExtension
@@ -75,6 +93,17 @@ extension WellKnownHeaders {
                 value: modified.ISO8601Format()
             )
         ]
+        
+        if let color = color {
+            headers.append(
+                Header(
+                    name: HeaderName.color.rawValue,
+                    value: color.rawValue
+                )
+            )
+        }
+        
+        return headers
     }
 }
 

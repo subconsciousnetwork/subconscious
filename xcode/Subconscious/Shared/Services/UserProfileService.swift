@@ -280,7 +280,8 @@ actor UserProfileService {
                         slug: slug
                     ),
                     excerpt: excerpt,
-                    modified: memo.modified
+                    modified: memo.modified,
+                    headers: WellKnownHeaders.emptySubtext
                 )
             )
         }

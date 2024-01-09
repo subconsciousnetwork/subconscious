@@ -502,7 +502,8 @@ final class DatabaseService {
             ]
         )
 
-        return try results.compactMap({ row in
+        return try results.compactMap({
+            row in
             guard
                 let address = row.col(0)?
                     .toString()?
@@ -513,16 +514,14 @@ final class DatabaseService {
             }
             
             let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
-            
-            let headersDict = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
-            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
-                color: color
+                headers: headers
             )
         })
         .first
@@ -588,36 +587,39 @@ final class DatabaseService {
             }
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
-            
-            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
-            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: slashlink,
                 excerpt: excerpt,
                 modified: modified,
-                color: color
+                headers: headers
             )
         })
     }
     
-    func parseHeadersJson(json: String) throws -> [String: String] {
-        var headersDict: [String: String] = [:]
+    func parseHeadersJson(json: String) throws -> WellKnownHeaders {
+        var headers: [Header] = []
         let jsonData = Data(json.utf8)
         let headersArray = try JSONDecoder().decode(
             [[String: String]].self,
             from: jsonData
         )
-
+        
         for header in headersArray {
             if let name = header["name"],
                let value = header["value"] {
-                headersDict[name] = value
+                headers.append(Header(name: name, value: value))
             }
         }
         
-        return headersDict
+        return WellKnownHeaders(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension
+        ).updating(headers)
     }
     
     /// List recent entries
@@ -662,16 +664,14 @@ final class DatabaseService {
             }
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
-            
-            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
-            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
-                color: color
+                headers: headers
             )
         })
     }
@@ -1226,16 +1226,14 @@ final class DatabaseService {
             }
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
-            
-            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
-            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
-                color: color
+                headers: headers
             )
         })
         .first
@@ -1270,16 +1268,14 @@ final class DatabaseService {
             }
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
-            
-            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
-            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
-                color: color
+                headers: headers
             )
         })
         .first
@@ -1312,16 +1308,14 @@ final class DatabaseService {
             }
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
-            
-            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
-            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
-                color: color
+                headers: headers
             )
         })
         .first
@@ -1363,16 +1357,14 @@ final class DatabaseService {
             }
             
             let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
-            
-            let headersDict = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
-            let color = NoteColor(rawValue: headersDict["Color"] ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
                 modified: modified,
-                color: color
+                headers: headers
             )
         })
         .first
