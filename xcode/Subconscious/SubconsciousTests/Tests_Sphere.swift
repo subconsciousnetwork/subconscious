@@ -546,7 +546,11 @@ final class Tests_Sphere: XCTestCase {
         
         let authorizations = try await sphere.listAuthorizations()
         XCTAssertEqual(authorizations.count, 2)
-        XCTAssertTrue(authorizations.contains(where: { auth in auth == authorization }))
+        XCTAssertTrue(
+            authorizations.contains(where: {
+                auth in auth.authorization == authorization && auth.name == "ben"
+            })
+        )
         
         let verified = try await sphere.verify(authorization: authorization)
         XCTAssertTrue(verified)
@@ -560,7 +564,7 @@ final class Tests_Sphere: XCTestCase {
         
         let authorizations2 = try await sphere.listAuthorizations()
         XCTAssertEqual(authorizations2.count, 1)
-        XCTAssertFalse(authorizations2.contains(where: { auth in auth == authorization }))
+        XCTAssertFalse(authorizations2.contains(where: { auth in auth.authorization == authorization }))
         
     }
 }
