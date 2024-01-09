@@ -159,7 +159,7 @@ extension MemoData {
             modified: headers.modified,
             fileExtension: headers.fileExtension,
             color: headers.color,
-            additionalHeaders: self.additionalHeaders,
+            additionalHeaders: [],
             body: body
         )
     }
