@@ -478,7 +478,7 @@ enum MemoEditorDetailAction: Hashable {
         .metaSheet(.setAddress(address))
     }
     
-    static func setMetaSheetDefaultColor(_ color: NoteColor?) -> Self {
+    static func setMetaSheetColor(_ color: NoteColor?) -> Self {
         .metaSheet(.setNoteColor(color))
     }
 
@@ -1316,7 +1316,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .setMetaSheetAddress(model.address),
-                .setMetaSheetDefaultColor(model.color),
+                .setMetaSheetColor(model.color),
                 .setEditor(
                     text: text,
                     saveState: detail.saveState,
@@ -1963,6 +1963,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             return Update(state: state)
         }
         
+        // Only forward the event if the address matches
         guard state.address == address else {
             return Update(state: state)
         }

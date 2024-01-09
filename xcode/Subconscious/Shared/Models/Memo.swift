@@ -15,6 +15,7 @@ struct Memo: Hashable, CustomStringConvertible {
     var created: Date
     var modified: Date
     var fileExtension: String
+    // TODO: lift color to here?
     var additionalHeaders: Headers
     var body: String
     

@@ -125,7 +125,6 @@ struct MemoViewerDetailLoadingView: View {
 }
 
 struct MemoViewerDetailLoadedView: View {
-    @Environment(\.colorScheme) var colorScheme
     @ObservedObject var store: Store<MemoViewerDetailModel>
     var address: Slashlink
     var notify: (MemoViewerDetailNotification) -> Void
