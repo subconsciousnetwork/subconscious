@@ -88,7 +88,7 @@ struct MemoEditorDetailMetaSheetView: View {
                                     .fill(color.toColor(colorScheme: colorScheme))
                                 Circle()
                                     .stroke(Color.separator)
-                                if color == store.state.defaultColor {
+                                if color == store.state.color {
                                     Image(systemName: "checkmark")
                                         .foregroundColor(.secondary)
                                 }
@@ -148,7 +148,7 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case requestUpdateAudience(_ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     
-    case setDefaultNoteColor(_ color: NoteColor?)
+    case setNoteColor(_ color: NoteColor?)
     case requestAssignNoteColor(_ color: NoteColor)
     case succeedAssignNoteColor(_ color: NoteColor)
     
@@ -173,7 +173,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: Slashlink?
-    var defaultColor: NoteColor?
+    var color: NoteColor?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -245,19 +245,23 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
             )
         case .requestDelete:
             return Update(state: state)
-        case let .setDefaultNoteColor(color):
-            return setDefaultNoteColor(
+        
+        // Editor passes us the current color when the sheet is opened
+        case let .setNoteColor(color):
+            return setNoteColor(
                 state: state,
                 environment: environment,
                 color: color
             )
         case .requestAssignNoteColor:
             return Update(state: state)
+        // Update internal color to match the updated value
         case let .succeedAssignNoteColor(color):
-            var model = state
-            model.defaultColor = color
-            
-            return Update(state: model)
+            return setNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
         }
     }
     
@@ -323,13 +327,13 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func setDefaultNoteColor(
+    static func setNoteColor(
         state: Self,
         environment: Environment,
         color: NoteColor?
     ) -> Update<Self> {
         var model = state
-        model.defaultColor = color
+        model.color = color
         
         return Update(state: model)
     }

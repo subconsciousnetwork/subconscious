@@ -480,7 +480,7 @@ enum MemoEditorDetailAction: Hashable {
     }
     
     static func setMetaSheetDefaultColor(_ color: NoteColor?) -> Self {
-        .metaSheet(.setDefaultNoteColor(color))
+        .metaSheet(.setNoteColor(color))
     }
 
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
