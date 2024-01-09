@@ -94,7 +94,7 @@ class Tests_DetailStack: XCTestCase {
         }
     }
     
-    func testSucceedDeleteMemo() throws {
+    func testSucceedDeleteEntry() throws {
         let address = Slashlink("/test")!
         
         let state = DetailStackModel(details: [
@@ -105,7 +105,7 @@ class Tests_DetailStack: XCTestCase {
 
         let update = DetailStackModel.update(
             state: state,
-            action: .succeedDeleteMemo(address),
+            action: .succeedDeleteEntry(address),
             environment: environment
         )
         XCTAssertEqual(

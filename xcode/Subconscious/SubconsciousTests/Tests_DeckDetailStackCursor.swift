@@ -1,62 +1,63 @@
 //
-//  Tests_NotebookDetailStackCursor.swift
+//  Tests_DeckDetailStackCursor.swift
 //  SubconsciousTests
 //
-//  Created by Gordon Brander on 10/20/23.
+//  Created by Ben Follington on 5/1/2024.
 //
 
 import XCTest
 @testable import Subconscious
 
-final class Tests_NotebookDetailStackCursor: XCTestCase {
+final class Tests_DeckDetailStackCursor: XCTestCase {
     func testTagRequestSaveEntry() throws {
         let memo = MemoEntry(address: Slashlink("@bob/foo")!, contents: Memo.dummyData())
-        let action = NotebookDetailStackCursor.tag(
+        let action = DeckDetailStackCursor.tag(
             .requestSaveEntry(memo)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.requestSaveEntry(memo)
+            DeckAction.requestSaveEntry(memo)
         )
     }
     
     func testTagRequestDeleteEntry() throws {
-        let action = NotebookDetailStackCursor.tag(
+        let action = DeckDetailStackCursor.tag(
             .requestDeleteEntry(Slashlink("@bob/foo")!)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.requestDeleteEntry(Slashlink("@bob/foo")!)
+            DeckAction.requestDeleteEntry(Slashlink("@bob/foo")!)
         )
     }
     
     func testTagRequestMoveEntry() throws {
-        let action = NotebookDetailStackCursor.tag(
+        let action = DeckDetailStackCursor.tag(
             .requestMoveEntry(from: Slashlink("@bob/foo")!, to: Slashlink("@bob/bar")!)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.requestMoveEntry(from: Slashlink("@bob/foo")!, to: Slashlink("@bob/bar")!)
+            DeckAction.requestMoveEntry(from: Slashlink("@bob/foo")!, to: Slashlink("@bob/bar")!)
         )
     }
     
     func testTagRequestMergeEntry() throws {
-        let action = NotebookDetailStackCursor.tag(
+        let action = DeckDetailStackCursor.tag(
             .requestMergeEntry(parent: Slashlink("@bob/foo")!, child: Slashlink("@bob/bar")!)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.requestMergeEntry(parent: Slashlink("@bob/foo")!, child: Slashlink("@bob/bar")!)
+            DeckAction.requestMergeEntry(parent: Slashlink("@bob/foo")!, child: Slashlink("@bob/bar")!)
         )
     }
     
     func testTagRequestUpdateAudience() throws {
-        let action = NotebookDetailStackCursor.tag(
+        let action = DeckDetailStackCursor.tag(
             .requestUpdateAudience(Slashlink("@bob/foo")!, .public)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.requestUpdateAudience(Slashlink("@bob/foo")!, .public)
+            DeckAction.requestUpdateAudience(Slashlink("@bob/foo")!, .public)
         )
     }
 }
+

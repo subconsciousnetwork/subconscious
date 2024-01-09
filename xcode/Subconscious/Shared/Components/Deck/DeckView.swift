@@ -85,7 +85,7 @@ enum DeckAction: Hashable {
     case search(SearchAction)
     
     case appear
-    case setDeck([CardModel])
+    case setDeck(_ cards: [CardModel], _ startIndex: Int = 0)
     
     case cardPickedUp
     case cardReleased
@@ -103,12 +103,37 @@ enum DeckAction: Hashable {
     case nextCard
     case cardPresented(CardModel)
     
+    case refreshUpcomingCards
     case refreshDeck
+    
+    /// Note lifecycle events.
+    /// `request`s are passed up to the app root
+    /// `succeed`s are passed down from the app root
+    case requestDeleteEntry(Slashlink?)
+    case succeedDeleteEntry(Slashlink)
+    case requestSaveEntry(_ entry: MemoEntry)
+    case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
 extension AppAction {
     static func from(_ action: DeckAction) -> Self? {
         switch action {
+        case let .requestDeleteEntry(entry):
+            return .deleteEntry(entry)
+        case let .requestSaveEntry(entry):
+            return .saveEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .updateAudience(address: address, audience: audience)
         default:
             return nil
         }
@@ -120,6 +145,16 @@ extension DeckAction {
         switch action {
         case .requestDeckRoot:
             return .requestDeckRoot
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(address, modified)
+        case let .succeedDeleteEntry(entry):
+            return .succeedDeleteEntry(entry)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
         default:
             return nil
         }
@@ -170,6 +205,16 @@ struct DeckDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
+        case let .requestSaveEntry(entry):
+            return .requestSaveEntry(entry)
+        case let .requestDeleteEntry(entry):
+            return .requestDeleteEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .requestMoveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .requestMergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address, audience)
         case _:
             return .detailStack(action)
         }
@@ -247,8 +292,13 @@ struct DeckModel: ModelProtocol {
             return refreshDeck(state: state, environment: environment)
         case .topupDeck:
             return topupDeck(state: state, environment: environment)
-        case let .setDeck(deck):
-            return setDeck(state: state, deck: deck, environment: environment)
+        case let .setDeck(deck, startIndex):
+            return setDeck(
+                state: state,
+                environment: environment,
+                deck: deck,
+                startIndex: startIndex
+            )
         case .cardPickedUp:
             return cardPickedUp(state: state)
         case .cardReleased:
@@ -274,6 +324,67 @@ struct DeckModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .refreshUpcomingCards:
+            return refreshUpcomingCards(state: state, environment: environment)
+        case let .succeedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedSaveEntry(address, modified)),
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
+        case let .succeedDeleteEntry(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedDeleteEntry(address)
+                    ),
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedMoveEntry(
+                            from: from,
+                            to: to
+                        )
+                    ),
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedMergeEntry(parent: parent, child: child)
+                    ),
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
+        case let .succeedUpdateAudience(receipt):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedUpdateAudience(receipt)
+                    ),
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
+        case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
+                .requestMergeEntry, .requestUpdateAudience:
+            return Update(state: state)
         }
         
         func appear(
@@ -338,6 +449,49 @@ struct DeckModel: ModelProtocol {
             ).mergeFx(fx)
         }
         
+        func refreshUpcomingCards(
+            state: Self,
+            environment: Environment
+        ) -> Update<Self> {
+            let deck = state.deck
+            
+            let fx: Fx<DeckAction> = Future.detached {
+                // Create the first slice of the deck (unchanged)
+                let firstSlice = deck.prefix(upTo: state.pointer)
+
+                // Initialize an array for the updated cards
+                var updated: [CardModel] = Array(firstSlice)
+
+                // Update only the second slice of the deck (from state.pointer onwards)
+                for card in deck[state.pointer...] {
+                    guard let address = card.entry?.address,
+                          let did = card.entry?.did else {
+                        continue
+                    }
+                    
+                    guard let entry = try environment.database.readEntry(
+                        for: Slashlink(
+                            peer: .did(did),
+                            slug: address.slug
+                        )
+                    ) else {
+                        continue
+                    }
+                    
+                    updated.append(card.update(entry: entry))
+                }
+
+                // Set the combined deck and return
+                return .setDeck(updated, state.pointer)
+            }
+            .recover({ error in
+                .noCardsToDraw
+            })
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        }
+        
         func topupDeck(state: Self, environment: Environment) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
@@ -361,11 +515,16 @@ struct DeckModel: ModelProtocol {
             return Update(state: state, fx: fx)
         }
 
-        func setDeck(state: Self, deck: [CardModel], environment: Environment) -> Update<Self> {
+        func setDeck(
+            state: Self,
+            environment: Environment,
+            deck: [CardModel],
+            startIndex: Int
+        ) -> Update<Self> {
             var model = state
             model.deck = deck
             model.seen = Set(deck.compactMap { card in card.entry })
-            model.pointer = 0
+            model.pointer = startIndex.clamp(min: 0, max: deck.count - 1)
             
             if let topCard = deck.first {
                 return update(
@@ -373,11 +532,16 @@ struct DeckModel: ModelProtocol {
                     action: .cardPresented(topCard),
                     environment: environment
                 )
-                .animation(.spring(
-                    response: 0.5,
-                    dampingFraction: 0.8,
-                    blendDuration: 0
-                ))
+                .animation(
+                    // Only spring in from empty state
+                    state.deck.count == 0
+                       ? .spring(
+                            response: 0.5,
+                            dampingFraction: 0.8,
+                            blendDuration: 0
+                        )
+                    : nil
+                )
             }
             
             return Update(state: model)
@@ -562,7 +726,7 @@ struct DeckModel: ModelProtocol {
 
         func noCardsToDraw(state: Self) -> Update<Self> {
             logger.log("No cards to draw")
-            return Update(state: state)
+            return update(state: state, action: .setDeck([], 0), environment: environment)
         }
 
         func nextCard(state: Self, environment: Environment) -> Update<Self> {

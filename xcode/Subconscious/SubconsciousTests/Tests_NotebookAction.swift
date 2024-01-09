@@ -40,18 +40,11 @@ final class Tests_NotebookAction: XCTestCase {
         XCTAssertEqual(action, .refreshLists)
     }
     
-    func testFromSucceedDeleteMemo() throws {
+    func testFromSucceedDeleteEntry() throws {
         let action = NotebookAction.from(
-            .succeedDeleteMemo(Slashlink("/foo")!)
+            .succeedDeleteEntry(Slashlink("/foo")!)
         )
-        XCTAssertEqual(action, .succeedDeleteMemo(Slashlink("/foo")!))
-    }
-    
-    func testFromFailDeleteMemo() throws {
-        let action = NotebookAction.from(
-            .failDeleteMemo("")
-        )
-        XCTAssertEqual(action, .failDeleteMemo(""))
+        XCTAssertEqual(action, .succeedDeleteEntry(Slashlink("/foo")!))
     }
     
     func testFromRequestNotebookRoot() throws {

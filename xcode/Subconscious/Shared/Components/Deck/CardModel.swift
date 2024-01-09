@@ -54,6 +54,35 @@ extension CardModel {
         )
     }
     
+    func update(entry: EntryStub) -> Self {
+        switch card {
+        case .action(_):
+            return self
+        case let .entry(_, author, backlinks):
+            return CardModel(
+                card: .entry(
+                    entry: entry,
+                    author: author,
+                    backlinks: backlinks
+                )
+            )
+        case .prompt(
+            message: let message,
+            entry: _,
+            author: let author,
+            backlinks: let backlinks
+        ):
+            return CardModel(
+                card: .prompt(
+                    message: message,
+                    entry: entry,
+                    author: author,
+                    backlinks: backlinks
+                )
+            )
+        }
+    }
+    
     var entry: EntryStub? {
         switch card {
         case let .entry(entry, _, _):
