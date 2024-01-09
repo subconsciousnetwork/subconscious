@@ -1253,10 +1253,12 @@ struct AppModel: ModelProtocol {
                 audience: audience
             )
         case .failSaveEntry(address: let address, error: let error):
-            logger.warning("""
+            logger.warning(
+                """
                 Failed to save entry: \(address)
                 \(error)
-                """)
+                """
+            )
             
             return update(
                 state: state,
@@ -1266,10 +1268,12 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case .failMoveEntry(from: let from, to: let to, error: let error):
-            logger.warning("""
+            logger.warning(
+                """
                 Failed to move entry: \(from) -> \(to)
                 \(error)
-                """)
+                """
+            )
             return update(
                 state: state,
                 action: .pushToast(
@@ -1278,10 +1282,12 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case .failMergeEntry(parent: let parent, child: let child, error: let error):
-            logger.warning("""
+            logger.warning(
+                """
                 Failed to merge entries: \(child) -> \(parent)
                 \(error)
-                """)
+                """
+            )
             return update(
                 state: state,
                 action: .pushToast(
@@ -1290,10 +1296,12 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case let .failUpdateAudience(address, audience, error):
-            logger.warning("""
+            logger.warning(
+                """
                 Failed to update audience for entry: \(address) \(audience)
                 \(error)
-                """)
+                """
+            )
             return update(
                 state: state,
                 action: .pushToast(
