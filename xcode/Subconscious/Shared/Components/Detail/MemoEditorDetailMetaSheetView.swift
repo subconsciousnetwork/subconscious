@@ -10,7 +10,6 @@ import ObservableStore
 
 struct MemoEditorDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
     var store: ViewStore<MemoEditorDetailMetaSheetModel>
     
     var body: some View {
@@ -87,7 +86,7 @@ struct MemoEditorDetailMetaSheetView: View {
                                     .fill(themeColor.toColor())
                                 Circle()
                                     .stroke(Color.separator)
-                                if themeColor == store.state.color {
+                                if themeColor == store.state.themeColor {
                                     Image(systemName: "checkmark")
                                         .foregroundColor(.secondary)
                                 }
@@ -172,7 +171,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: Slashlink?
-    var color: ThemeColor?
+    var themeColor: ThemeColor?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -332,7 +331,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
         color: ThemeColor?
     ) -> Update<Self> {
         var model = state
-        model.color = color
+        model.themeColor = color
         
         return Update(state: model)
     }

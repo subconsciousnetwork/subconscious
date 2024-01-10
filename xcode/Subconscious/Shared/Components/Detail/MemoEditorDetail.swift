@@ -48,7 +48,6 @@ struct MemoEditorDetailView: View {
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
-    @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
     /// Initialization state passed down from parent
     var description: MemoEditorDetailDescription
@@ -195,7 +194,7 @@ struct MemoEditorDetailView: View {
     }
     
     var highlight: Color? {
-        store.state.color?.toHighlightColor()
+        store.state.themeColor?.toHighlightColor()
     }
 
     /// Constructs a plain text editor for the view
@@ -624,11 +623,10 @@ struct MemoEditorDetailModel: ModelProtocol {
         modified: Date.distantPast,
         fileExtension: ContentType.subtext.fileExtension
     )
-    var color: ThemeColor? = nil
+    var themeColor: ThemeColor? = nil
     
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
-                            
     var backlinks: [EntryStub] = []
     
     /// Is editor saved?
@@ -1311,7 +1309,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.address = detail.entry.address
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
-        model.color = model.headers.themeColor
+        model.themeColor = model.headers.themeColor
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.saveState = detail.saveState
         
@@ -1322,7 +1320,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .setMetaSheetAddress(model.address),
-                .setMetaSheetColor(model.color),
+                .setMetaSheetColor(model.themeColor),
                 .setEditor(
                     text: text,
                     saveState: detail.saveState,
@@ -1975,7 +1973,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         }
         
         var model = state
-        model.color = color
+        model.themeColor = color
             
         return update(
             state: model,
