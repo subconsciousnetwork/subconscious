@@ -2084,23 +2084,6 @@ struct AppModel: ModelProtocol {
         var model = state
         model.lastGatewaySyncStatus = .failed(error)
         
-        let fx: Fx<AppAction> = Future.detached {
-            try environment.database.writeActivity(
-                event: ActivityEvent(
-                    category: .system,
-                    event: "sync_failed",
-                    message: error,
-                    metadata: ""
-                )
-            )
-            
-            return .succeedLogActivity
-        }
-        .recover { error in
-            .failLogActivity(error.localizedDescription)
-        }
-        .eraseToAnyPublisher()
-        
         return update(
             state: model,
             actions: [
@@ -2113,9 +2096,7 @@ struct AppModel: ModelProtocol {
                 )
             ],
             environment: environment
-        )
-        .animation()
-        .mergeFx(fx)
+        ).animation()
     }
 
     static func indexOurSphere(
