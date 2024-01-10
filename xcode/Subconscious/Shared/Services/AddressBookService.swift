@@ -344,6 +344,23 @@ actor AddressBookService {
         
         try await noosphere.setPetname(did: did, petname: petname)
         let _ = try await noosphere.save()
+        
+        try database.writeActivity(
+            event: ActivityEvent(
+                category: .peer,
+                event: "follow_peer",
+                message: "",
+                metadata: FollowPeerActivityEvent(
+                    did: did.did.description,
+                    petname: petname.description
+                )
+            )
+        )
+    }
+    
+    struct FollowPeerActivityEvent: Codable {
+        let did: String
+        let petname: String
     }
     
     func resolutionStatus(petname: Petname) async throws -> ResolutionStatus {
@@ -422,6 +439,19 @@ actor AddressBookService {
         let did = try await self.noosphere.getPetname(petname: petname)
         try await self.addressBook.unsetPetname(petname: petname)
         let _ = try await self.noosphere.save()
+        
+        try database.writeActivity(
+            event: ActivityEvent(
+                category: .peer,
+                event: "unfollow_peer",
+                message: "",
+                metadata: FollowPeerActivityEvent(
+                    did: did.description,
+                    petname: petname.description
+                )
+            )
+        )
+        
         return did
     }
     

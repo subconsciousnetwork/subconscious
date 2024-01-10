@@ -1338,7 +1338,8 @@ final class DatabaseService {
         
         let dids = [
             Did.local.description,
-            owner.description]
+            owner.description
+        ]
         
         return try? database.execute(
             sql: """
@@ -1371,8 +1372,59 @@ final class DatabaseService {
         })
         .first
     }
+    
+    func writeActivity<Data: Codable>(event: ActivityEvent<Data>) throws {
+        guard self.state == .ready else {
+            return
+        }
+        
+        try database.execute(
+            sql: """
+            INSERT INTO activity (category, event, message, metadata)
+            VALUES (?, ?, ?, ?)
+            """,
+            parameters: [
+                .text(event.category.rawValue),
+                .text(event.event),
+                .text(event.message),
+                .json(event.metadata, or: "{}")
+            ]
+        )
+    }
+    
+    func writeActivity(category: String, event: String, message: String, metadata: String?) throws {
+        guard self.state == .ready else {
+            return
+        }
+        
+        try database.execute(
+            sql: """
+            INSERT INTO activity (category, event, message, metadata)
+            VALUES (?, ?, ?, ?)
+            """,
+            parameters: [
+                .text(category),
+                .text(event),
+                .text(message),
+                .text(metadata)
+            ]
+        )
+    }
 }
 
+struct ActivityEvent<Data: Codable>: Codable {
+    let category: ActivityEventCategory
+    let event: String
+    let message: String
+    let metadata: Data?
+}
+
+enum ActivityEventCategory: String, Codable {
+    case system = "system"
+    case deck = "deck"
+    case note = "note"
+    case peer = "peer"
+}
 
 // MARK: Migrations
 extension Config {
