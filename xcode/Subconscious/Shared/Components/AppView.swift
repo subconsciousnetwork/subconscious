@@ -531,6 +531,10 @@ enum FirstRunStep: Hashable {
     case done
 }
 
+enum SystemActivityEventType: String {
+    case succeedIndexPeer = "succeed_index_peer"
+}
+
 // MARK: Model
 struct AppModel: ModelProtocol {
     /// Has first run completed?

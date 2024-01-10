@@ -1423,7 +1423,7 @@ enum ActivityEventCategory: String, Codable {
     case system = "system"
     case deck = "deck"
     case note = "note"
-    case peer = "peer"
+    case addressBook = "addressBook"
 }
 
 // MARK: Migrations

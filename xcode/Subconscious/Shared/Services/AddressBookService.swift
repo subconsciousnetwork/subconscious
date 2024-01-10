@@ -29,6 +29,11 @@ enum AddressBookError: Error {
     case other(String)
 }
 
+enum AddressBookActivityEventType: String {
+    case followUser = "follow_user"
+    case unfollowUser = "unfollow_user"
+}
+
 extension AddressBookError: LocalizedError {
     var errorDescription: String? {
         switch self {
@@ -347,10 +352,10 @@ actor AddressBookService {
         
         try database.writeActivity(
             event: ActivityEvent(
-                category: .peer,
-                event: "follow_peer",
+                category: .addressBook,
+                event: AddressBookActivityEventType.followUser.rawValue,
                 message: "",
-                metadata: FollowPeerActivityEvent(
+                metadata: AddressBookActivityEventMetadata(
                     did: did.did.description,
                     petname: petname.description
                 )
@@ -358,7 +363,7 @@ actor AddressBookService {
         )
     }
     
-    struct FollowPeerActivityEvent: Codable {
+    struct AddressBookActivityEventMetadata: Codable {
         let did: String
         let petname: String
     }
@@ -442,10 +447,10 @@ actor AddressBookService {
         
         try database.writeActivity(
             event: ActivityEvent(
-                category: .peer,
-                event: "unfollow_peer",
+                category: .addressBook,
+                event: AddressBookActivityEventType.unfollowUser.rawValue,
                 message: "",
-                metadata: FollowPeerActivityEvent(
+                metadata: AddressBookActivityEventMetadata(
                     did: did.description,
                     petname: petname.description
                 )

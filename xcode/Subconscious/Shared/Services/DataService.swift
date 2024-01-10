@@ -249,9 +249,9 @@ actor DataService {
                 
                 try database.writeActivity(
                     event: ActivityEvent(
-                        category: .peer,
-                        event: "index_peer",
-                        message: "",
+                        category: .system,
+                        event: SystemActivityEventType.succeedIndexPeer.rawValue,
+                        message: "Found \(changeCount) updates from \(petname.markup)",
                         metadata: PeerIndexActivityEvent(
                             did: peer.identity.description,
                             petname: petname.description,
