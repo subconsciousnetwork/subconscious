@@ -62,11 +62,11 @@ final class Tests_HomeProfileDetailStackCursor: XCTestCase {
     
     func testTagRequestAssignNoteColor() throws {
         let action = HomeProfileDetailStackCursor.tag(
-            .requestAssignNoteColor(Slashlink("@bob/foo")!, .tan)
+            .requestAssignNoteColor(Slashlink("@bob/foo")!, .e)
         )
         XCTAssertEqual(
             action,
-            HomeProfileAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .tan)
+            HomeProfileAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .e)
         )
     }
 }

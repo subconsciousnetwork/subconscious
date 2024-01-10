@@ -62,11 +62,11 @@ final class Tests_DeckDetailStackCursor: XCTestCase {
     
     func testTagRequestAssignNoteColor() throws {
         let action = DeckDetailStackCursor.tag(
-            .requestAssignNoteColor(Slashlink("@bob/foo")!, .tan)
+            .requestAssignNoteColor(Slashlink("@bob/foo")!, .b)
         )
         XCTAssertEqual(
             action,
-            DeckAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .tan)
+            DeckAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .b)
         )
     }
 }

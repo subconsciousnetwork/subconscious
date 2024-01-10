@@ -51,10 +51,10 @@ final class Tests_Notebook_NotificationActions: XCTestCase {
     }
     
     func testRequestAssignNoteColor() throws {
-        let action = AppAction.from(NotebookAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .tan))
+        let action = AppAction.from(NotebookAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .a))
         XCTAssertEqual(
             action,
-            AppAction.assignColor(address: Slashlink("@bob/foo")!, color: .tan)
+            AppAction.assignColor(address: Slashlink("@bob/foo")!, color: .a)
         )
     }
     
@@ -115,14 +115,14 @@ final class Tests_Notebook_NotificationActions: XCTestCase {
         let action = NotebookAction.from(
             .succeedAssignNoteColor(
                 address: Slashlink("@bob/foo")!,
-                color: .tan
+                color: .a
             )
         )
         XCTAssertEqual(
             action,
             NotebookAction.succeedAssignNoteColor(
                 Slashlink("@bob/foo")!,
-                .tan
+                .a
             )
         )
     }
