@@ -1555,6 +1555,20 @@ extension Config {
                 );
             END;
             """
+        ),
+        SQLMigration(
+            version: Int.from(iso8601String: "2024-01-10T11:59:00")!,
+            sql: """
+            CREATE TABLE activity
+            (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                category TEXT                           NOT NULL,
+                event    TEXT                           NOT NULL,
+                message  TEXT DEFAULT ''                NOT NULL,
+                metadata TEXT DEFAULT '{}'              NOT NULL,
+                created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+            );
+            """
         )
     ])
 }
