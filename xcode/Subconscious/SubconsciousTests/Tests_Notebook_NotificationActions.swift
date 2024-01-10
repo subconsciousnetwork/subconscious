@@ -54,7 +54,7 @@ final class Tests_Notebook_NotificationActions: XCTestCase {
         let action = AppAction.from(NotebookAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .tan))
         XCTAssertEqual(
             action,
-            AppAction.assignColor(addess: Slashlink("@bob/foo")!, color: .tan)
+            AppAction.assignColor(address: Slashlink("@bob/foo")!, color: .tan)
         )
     }
     

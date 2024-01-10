@@ -302,7 +302,7 @@ enum AppAction: Hashable {
     case mergeEntry(parent: Slashlink, child: Slashlink)
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
-    case assignColor(addess: Slashlink, color: ThemeColor)
+    case assignColor(address: Slashlink, color: ThemeColor)
     
     // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)

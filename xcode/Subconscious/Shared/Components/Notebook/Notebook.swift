@@ -291,7 +291,7 @@ extension AppAction {
         case let .requestUpdateAudience(address, audience):
             return .updateAudience(address: address, audience: audience)
         case let .requestAssignNoteColor(address, color):
-            return .assignColor(addess: address, color: color)
+            return .assignColor(address: address, color: color)
         default:
             return nil
         }
