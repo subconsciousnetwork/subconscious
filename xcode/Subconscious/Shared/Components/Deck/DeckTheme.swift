@@ -63,34 +63,68 @@ public enum ThemeColor: String, Hashable, CaseIterable {
     case e
 }
 
+public extension Color {
+    static var cardThemeColorA: Color {
+        Color("CardThemeColorA")
+    }
+    static var cardThemeColorB: Color {
+        Color("CardThemeColorB")
+    }
+    static var cardThemeColorC: Color {
+        Color("CardThemeColorC")
+    }
+    static var cardThemeColorD: Color {
+        Color("CardThemeColorD")
+    }
+    static var cardThemeColorE: Color {
+        Color("CardThemeColorE")
+    }
+    
+    static var cardThemeHighlightColorA: Color {
+        Color("CardThemeHighlightColorA")
+    }
+    static var cardThemeHighlightColorB: Color {
+        Color("CardThemeHighlightColorB")
+    }
+    static var cardThemeHighlightColorC: Color {
+        Color("CardThemeHighlightColorC")
+    }
+    static var cardThemeHighlightColorD: Color {
+        Color("CardThemeHighlightColorD")
+    }
+    static var cardThemeHighlightColorE: Color {
+        Color("CardThemeHighlightColorE")
+    }
+}
+
 public extension ThemeColor {
     func toColor() -> Color {
         switch self {
         case .a:
-            return Color(.cardThemeColorA)
+            return .cardThemeColorA
         case .b:
-            return Color(.cardThemeColorB)
+            return .cardThemeColorB
         case .c:
-            return Color(.cardThemeColorC)
+            return .cardThemeColorC
         case .d:
-            return Color(.cardThemeColorD)
+            return .cardThemeColorD
         case .e:
-            return Color(.cardThemeColorE)
+            return .cardThemeColorE
         }
     }
     
     func toHighlightColor() -> Color {
         switch self {
         case .a:
-            return Color(.cardThemeHighlightColorA)
+            return .cardThemeHighlightColorA
         case .b:
-            return Color(.cardThemeHighlightColorB)
+            return .cardThemeHighlightColorB
         case .c:
-            return Color(.cardThemeHighlightColorC)
+            return .cardThemeHighlightColorC
         case .d:
-            return Color(.cardThemeHighlightColorD)
+            return .cardThemeHighlightColorD
         case .e:
-            return Color(.cardThemeHighlightColorE)
+            return .cardThemeHighlightColorE
         }
     }
 }
