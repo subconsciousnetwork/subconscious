@@ -1391,39 +1391,6 @@ final class DatabaseService {
             ]
         )
     }
-    
-    func writeActivity(category: String, event: String, message: String, metadata: String?) throws {
-        guard self.state == .ready else {
-            return
-        }
-        
-        try database.execute(
-            sql: """
-            INSERT INTO activity (category, event, message, metadata)
-            VALUES (?, ?, ?, ?)
-            """,
-            parameters: [
-                .text(category),
-                .text(event),
-                .text(message),
-                .text(metadata)
-            ]
-        )
-    }
-}
-
-struct ActivityEvent<Data: Codable>: Codable {
-    let category: ActivityEventCategory
-    let event: String
-    let message: String
-    let metadata: Data?
-}
-
-enum ActivityEventCategory: String, Codable {
-    case system = "system"
-    case deck = "deck"
-    case note = "note"
-    case addressBook = "addressBook"
 }
 
 // MARK: Migrations
@@ -1611,6 +1578,7 @@ extension Config {
         SQLMigration(
             version: Int.from(iso8601String: "2024-01-10T11:59:00")!,
             sql: """
+            /* Tracks `ActivityEvent`s in a queryable stream */
             CREATE TABLE activity
             (
                 id       INTEGER PRIMARY KEY AUTOINCREMENT,

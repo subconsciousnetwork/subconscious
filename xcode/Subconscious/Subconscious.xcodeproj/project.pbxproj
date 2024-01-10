@@ -106,6 +106,7 @@
 		B58FD6732A4E4C0E00826548 /* InviteCodeSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */; };
 		B58FD6752A4E4C8200826548 /* ResourceSyncBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */; };
 		B5908BEB29DAB05B00225B1A /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5908BEA29DAB05B00225B1A /* TestUtilities.swift */; };
+		B597C7372B4E34DB003F4342 /* ActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B597C7362B4E34DA003F4342 /* ActivityEvent.swift */; };
 		B59D556329BBFF56007915E2 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59D556229BBFF56007915E2 /* FormField.swift */; };
 		B59E4E572B3BA781000A2B49 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E562B3BA781000A2B49 /* CardView.swift */; };
 		B59E4E592B3BA8E7000A2B49 /* EntryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */; };
@@ -629,6 +630,7 @@
 		B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeSettingsSection.swift; sourceTree = "<group>"; };
 		B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceSyncBadge.swift; sourceTree = "<group>"; };
 		B5908BEA29DAB05B00225B1A /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
+		B597C7362B4E34DA003F4342 /* ActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEvent.swift; sourceTree = "<group>"; };
 		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B59E4E562B3BA781000A2B49 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCardView.swift; sourceTree = "<group>"; };
@@ -1441,6 +1443,7 @@
 				B5E816B82AB0458E00C61500 /* RecoveryPhrase.swift */,
 				B51359292AC2723E004385A7 /* GatewayURL.swift */,
 				B5EC3A4E2B297DBA00FDF728 /* Prompt.swift */,
+				B597C7362B4E34DA003F4342 /* ActivityEvent.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -2167,6 +2170,7 @@
 				B542EF772AF495F200BE29F1 /* FollowNewUserSheetModifier.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
+				B597C7372B4E34DB003F4342 /* ActivityEvent.swift in Sources */,
 				B5F68F602A09F7E200CE4DD7 /* StackedGlowingImage.swift in Sources */,
 				B58862C829F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B828F0A32AFFF05800FDE4AE /* TranscludeListView.swift in Sources */,

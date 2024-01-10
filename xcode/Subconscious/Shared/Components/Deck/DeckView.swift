@@ -588,8 +588,10 @@ struct DeckModel: ModelProtocol {
         }
        
         
-        enum DeckEventType: String {
-            case chooseCard = "choose_card"
+        struct ChooseCardActivityEvent: Codable {
+            public static let event: String = "choose_card"
+            
+            let address: String
         }
         
         func shuffleInBacklinks(message: String, address: Slashlink, backlinks: Set<EntryStub>) -> Update<Self> {
@@ -599,9 +601,9 @@ struct DeckModel: ModelProtocol {
                 try environment.database.writeActivity(
                     event: ActivityEvent(
                         category: .deck,
-                        event: DeckEventType.chooseCard.rawValue,
+                        event: ChooseCardActivityEvent.event,
                         message: message,
-                        metadata: DeckActivityEvent(
+                        metadata: ChooseCardActivityEvent(
                             address: address.description
                         )
                     )
@@ -834,8 +836,4 @@ struct DeckModel: ModelProtocol {
             return state.deck.contains(where: { entry in entry == entry })
         }
     }
-}
-
-struct DeckActivityEvent: Codable {
-    public let address: String
 }
