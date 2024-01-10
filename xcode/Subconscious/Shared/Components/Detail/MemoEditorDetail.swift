@@ -195,9 +195,7 @@ struct MemoEditorDetailView: View {
     }
     
     var highlight: Color? {
-        store.state.color?.toHighlightColor(
-            colorScheme: colorScheme
-        )
+        store.state.color?.toHighlightColor()
     }
 
     /// Constructs a plain text editor for the view
@@ -296,7 +294,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestMoveEntry(from: Slashlink, to: Slashlink)
     case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(address: Slashlink, audience: Audience)
-    case requestAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
 }
 
 extension MemoEditorDetailNotification {
@@ -430,9 +428,9 @@ enum MemoEditorDetailAction: Hashable {
     case requestUpdateAudience(_ audience: Audience)
     case forwardRequestUpdateAudience(address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
-    case requestAssignNoteColor(_ color: NoteColor)
-    case forwardRequestAssignNoteColor(address: Slashlink, _ color: NoteColor)
-    case succeedAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    case requestAssignNoteColor(_ color: ThemeColor)
+    case forwardRequestAssignNoteColor(address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     
 
     // Editor
@@ -487,7 +485,7 @@ enum MemoEditorDetailAction: Hashable {
         .metaSheet(.setAddress(address))
     }
     
-    static func setMetaSheetColor(_ color: NoteColor?) -> Self {
+    static func setMetaSheetColor(_ color: ThemeColor?) -> Self {
         .metaSheet(.setNoteColor(color))
     }
 
@@ -626,7 +624,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         modified: Date.distantPast,
         fileExtension: ContentType.subtext.fileExtension
     )
-    var color: NoteColor? = nil
+    var color: ThemeColor? = nil
     
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
@@ -1313,7 +1311,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.address = detail.entry.address
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
-        model.color = model.headers.color
+        model.color = model.headers.themeColor
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.saveState = detail.saveState
         
@@ -1938,7 +1936,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func requestAssignNoteColor(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        color: NoteColor
+        color: ThemeColor
     ) -> Update<MemoEditorDetailModel> {
         guard let address = state.address else {
             return Update(state: state)
@@ -1965,7 +1963,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
         address: Slashlink,
-        color: NoteColor
+        color: ThemeColor
     ) -> Update<MemoEditorDetailModel> {
         guard state.address != nil else {
             return Update(state: state)
@@ -2107,7 +2105,7 @@ extension MemoEntry {
             created: detail.headers.created,
             modified: detail.headers.modified,
             fileExtension: detail.headers.fileExtension,
-            color: detail.headers.color,
+            themeColor: detail.headers.themeColor,
             additionalHeaders: detail.additionalHeaders,
             body: detail.editor.text
         )

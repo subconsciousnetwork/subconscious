@@ -155,8 +155,8 @@ enum NotebookAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
-    case requestAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
-    case succeedAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -816,7 +816,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment,
         address: Slashlink,
-        color: NoteColor
+        color: ThemeColor
     ) -> Update<NotebookModel> {
         return update(
             state: state,

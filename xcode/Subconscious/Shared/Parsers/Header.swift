@@ -23,7 +23,7 @@ struct WellKnownHeaders: Hashable {
     var created: Date
     var modified: Date
     var fileExtension: String
-    var themeColor: NoteColor?
+    var themeColor: ThemeColor?
     
     static let emptySubtext = WellKnownHeaders(
         contentType: ContentType.subtext.rawValue,
@@ -68,7 +68,7 @@ extension WellKnownHeaders {
             let colorString = additionalHeaders.get(
                 first: HeaderName.themeColor.rawValue
             ),
-            let color = NoteColor(rawValue: colorString)
+            let color = ThemeColor(rawValue: colorString)
         {
             this.themeColor = color
         }

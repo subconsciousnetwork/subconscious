@@ -120,8 +120,8 @@ enum DeckAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
-    case requestAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
-    case succeedAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
 }
 
 extension AppAction {

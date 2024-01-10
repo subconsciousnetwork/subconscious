@@ -74,20 +74,20 @@ struct MemoEditorDetailMetaSheetView: View {
                 .padding()
                 
                 HStack(spacing: AppTheme.padding) {
-                    let colors = NoteColor.allCases
+                    let themeColors = ThemeColor.allCases
                     
-                    ForEach(colors, id: \.self) { color in
+                    ForEach(themeColors, id: \.self) { themeColor in
                         Button(
                             action: {
-                                store.send(.requestAssignNoteColor(color))
+                                store.send(.requestAssignNoteColor(themeColor))
                             }
                         ) {
                             ZStack {
                                 Circle()
-                                    .fill(color.toColor(colorScheme: colorScheme))
+                                    .fill(themeColor.toColor())
                                 Circle()
                                     .stroke(Color.separator)
-                                if color == store.state.color {
+                                if themeColor == store.state.color {
                                     Image(systemName: "checkmark")
                                         .foregroundColor(.secondary)
                                 }
@@ -147,9 +147,9 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case requestUpdateAudience(_ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     
-    case setNoteColor(_ color: NoteColor?)
-    case requestAssignNoteColor(_ color: NoteColor)
-    case succeedAssignNoteColor(_ color: NoteColor)
+    case setNoteColor(_ color: ThemeColor?)
+    case requestAssignNoteColor(_ color: ThemeColor)
+    case succeedAssignNoteColor(_ color: ThemeColor)
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -172,7 +172,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: Slashlink?
-    var color: NoteColor?
+    var color: ThemeColor?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -329,7 +329,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     static func setNoteColor(
         state: Self,
         environment: Environment,
-        color: NoteColor?
+        color: ThemeColor?
     ) -> Update<Self> {
         var model = state
         model.color = color

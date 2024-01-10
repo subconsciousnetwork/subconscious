@@ -194,7 +194,7 @@ extension Memo: DummyData {
             created: Date.now,
             modified: Date.now,
             fileExtension: "subtext",
-            color: NoteColor.allCases.randomElement(),
+            themeColor: ThemeColor.allCases.randomElement(),
             additionalHeaders: Headers(),
             body: String.dummyDataMedium()
         )

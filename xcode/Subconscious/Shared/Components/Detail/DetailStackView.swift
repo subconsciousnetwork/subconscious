@@ -140,8 +140,8 @@ enum DetailStackAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
-    case requestAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
-    case succeedAssignNoteColor(_ address: Slashlink, _ color: NoteColor)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
 
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
@@ -591,7 +591,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         state: Self,
         environment: Environment,
         address: Slashlink,
-        color: NoteColor
+        color: ThemeColor
     ) -> Update<Self> {
         return Update(state: state)
     }

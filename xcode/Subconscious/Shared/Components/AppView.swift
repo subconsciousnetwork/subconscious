@@ -302,7 +302,7 @@ enum AppAction: Hashable {
     case mergeEntry(parent: Slashlink, child: Slashlink)
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
-    case assignColor(addess: Slashlink, color: NoteColor)
+    case assignColor(addess: Slashlink, color: ThemeColor)
     
     // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -310,7 +310,7 @@ enum AppAction: Hashable {
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(MoveReceipt)
-    case succeedAssignNoteColor(address: Slashlink, color: NoteColor)
+    case succeedAssignNoteColor(address: Slashlink, color: ThemeColor)
     case failSaveEntry(address: Slashlink, error: String)
     case failDeleteMemo(String)
     case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
@@ -3121,7 +3121,7 @@ struct AppModel: ModelProtocol {
         state: Self,
         environment: Environment,
         address: Slashlink,
-        color: NoteColor
+        color: ThemeColor
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
             try await environment.data.assignNoteColor(

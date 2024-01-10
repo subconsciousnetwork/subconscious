@@ -15,7 +15,7 @@ struct Memo: Hashable, CustomStringConvertible {
     var created: Date
     var modified: Date
     var fileExtension: String
-    var color: NoteColor?
+    var themeColor: ThemeColor?
     var additionalHeaders: Headers
     var body: String
     
@@ -28,7 +28,7 @@ struct Memo: Hashable, CustomStringConvertible {
             created: created,
             modified: modified,
             fileExtension: fileExtension,
-            color: color
+            themeColor: themeColor
         )
         .getAdditionalHeaders()
         .merge(additionalHeaders)
@@ -97,7 +97,7 @@ struct Memo: Hashable, CustomStringConvertible {
             created: created,
             modified: modified,
             fileExtension: fileExtension,
-            color: color
+            themeColor: themeColor
         )
     }
     
@@ -158,7 +158,7 @@ extension MemoData {
             created: headers.created,
             modified: headers.modified,
             fileExtension: headers.fileExtension,
-            color: headers.color,
+            themeColor: headers.themeColor,
             additionalHeaders: [],
             body: body
         )

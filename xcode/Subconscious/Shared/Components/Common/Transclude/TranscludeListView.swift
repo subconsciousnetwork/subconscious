@@ -23,9 +23,7 @@ struct TranscludeListView: View {
                     )
                 }
                 .tint(
-                    entry.headers.color?.toHighlightColor(
-                        colorScheme: colorScheme
-                    )
+                    entry.headers.themeColor?.toHighlightColor()
                 )
             }
         }

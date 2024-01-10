@@ -52,122 +52,70 @@ extension DeckTheme {
         endPoint: UnitPoint(x: 0.5, y: 1)
     )
     
-    static let lightCardColors: [Color] = [
-        Color(red: 0.98, green: 0.96, blue: 0.94),
-        Color(red: 0.92, green: 0.98, blue: 0.97),
-        Color(red: 0.97, green: 0.93, blue: 0.97),
-        Color(red: 0.98, green: 0.92, blue: 0.94),
-        Color(red: 0.93, green: 0.94, blue: 0.97)
-    ]
-    
-    static let lightCardHighlightColors: [Color] = [
-        Color(red: 0.73, green: 0.62, blue: 0.45),
-        Color(red: 0.36, green: 0.71, blue: 0.66),
-        Color(red: 0.66, green: 0.41, blue: 0.64),
-        Color(red: 0.71, green: 0.36, blue: 0.45),
-        Color(red: 0.39, green: 0.48, blue: 0.66)
-    ]
-    
-    static let darkCardColors: [Color] = [
-        Color(red: 0.63, green: 0.58, blue: 0.5),
-        Color(red: 0.52, green: 0.56, blue: 0.58),
-        Color(red: 0.67, green: 0.45, blue: 0.59),
-        Color(red: 0.66, green: 0.44, blue: 0.48),
-        Color(red: 0.53, green: 0.47, blue: 0.63)
-    ]
-    
-    static let darkCardHighlightColors: [Color] = [
-        (Color(red: 1, green: 0.93, blue: 0.82)),
-        (Color(red: 0.88, green: 0.88, blue: 0.9)),
-        (Color(red: 1, green: 0.75, blue: 0.92)),
-        (Color(red: 1, green: 0.74, blue: 0.78)),
-        (Color(red: 0.89, green: 0.78, blue: 0.95))
-    ]
-    
     static let cardHeaderTint = Color.brandMarkPink.opacity(0.025)
 }
 
-public enum NoteColor: String, Hashable, CaseIterable {
-    case tan
-    case cyan
-    case pink
-    case orange
-    case blue
+public enum ThemeColor: String, Hashable, CaseIterable {
+    case a
+    case b
+    case c
+    case d
+    case e
 }
 
-public extension NoteColor {
-    func toColor(colorScheme: ColorScheme) -> Color {
-        let colors = colorScheme == .dark
-            ? DeckTheme.darkCardColors
-            : DeckTheme.lightCardColors
-        
+public extension ThemeColor {
+    func toColor() -> Color {
         switch self {
-        case .tan:
-            return colors[0]
-        case .cyan:
-            return colors[1]
-        case .pink:
-            return colors[2]
-        case .orange:
-            return colors[3]
-        case .blue:
-            return colors[4]
+        case .a:
+            return Color(.cardThemeColorA)
+        case .b:
+            return Color(.cardThemeColorB)
+        case .c:
+            return Color(.cardThemeColorC)
+        case .d:
+            return Color(.cardThemeColorD)
+        case .e:
+            return Color(.cardThemeColorE)
         }
     }
     
-    func toHighlightColor(colorScheme: ColorScheme) -> Color {
-        let colors = colorScheme == .dark
-            ? DeckTheme.darkCardHighlightColors
-            : DeckTheme.lightCardHighlightColors
-        
+    func toHighlightColor() -> Color {
         switch self {
-        case .tan:
-            return colors[0]
-        case .cyan:
-            return colors[1]
-        case .pink:
-            return colors[2]
-        case .orange:
-            return colors[3]
-        case .blue:
-            return colors[4]
+        case .a:
+            return Color(.cardThemeHighlightColorA)
+        case .b:
+            return Color(.cardThemeHighlightColorB)
+        case .c:
+            return Color(.cardThemeHighlightColorC)
+        case .d:
+            return Color(.cardThemeHighlightColorD)
+        case .e:
+            return Color(.cardThemeHighlightColorE)
         }
     }
 }
 
 private extension Hashable {
-    private func colors(colorScheme: ColorScheme) -> [Color] {
-        colorScheme == .dark
-            ? DeckTheme.darkCardColors
-            : DeckTheme.lightCardColors
-    }
-    
-    private func highlightColors(colorScheme: ColorScheme) -> [Color] {
-        colorScheme == .dark
-            ? DeckTheme.darkCardHighlightColors
-            : DeckTheme.lightCardHighlightColors
-    }
-    
-    var noteColor: NoteColor {
-        let colors = NoteColor.allCases
+    var themeColor: ThemeColor {
+        let colors = ThemeColor.allCases
         return colors[abs(self.hashValue) % colors.count]
     }
 }
 
 extension Slashlink {
-    var noteColor: NoteColor {
-        description.noteColor
+    var themeColor: ThemeColor {
+        description.themeColor
     }
 }
 
 extension EntryStub {
     func color(colorScheme: ColorScheme) -> Color {
-        self.headers.color?.toColor(colorScheme: colorScheme)
-            ?? self.address.noteColor.toColor(colorScheme: colorScheme)
+        self.headers.themeColor?.toColor()
+            ?? self.address.themeColor.toColor()
     }
     
     func highlightColor(colorScheme: ColorScheme) -> Color {
-        self.headers.color?.toHighlightColor(colorScheme: colorScheme)
-            ?? self.address.noteColor.toHighlightColor(colorScheme: colorScheme)
+        self.headers.themeColor?.toHighlightColor()
+            ?? self.address.themeColor.toHighlightColor()
     }
 }
