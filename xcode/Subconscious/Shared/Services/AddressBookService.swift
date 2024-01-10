@@ -29,11 +29,6 @@ enum AddressBookError: Error {
     case other(String)
 }
 
-enum AddressBookActivityEventType: String {
-    case followUser = "follow_user"
-    case unfollowUser = "unfollow_user"
-}
-
 extension AddressBookError: LocalizedError {
     var errorDescription: String? {
         switch self {
@@ -330,6 +325,13 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    struct FollowUserActivityEvent: Codable {
+        public static let event: String = "follow_user"
+        
+        let did: String
+        let petname: String
+    }
+    
     /// Associates the passed DID with the passed petname within the sphere,
     /// saves the changes and updates the database.
     func followUser(
@@ -353,9 +355,9 @@ actor AddressBookService {
         try database.writeActivity(
             event: ActivityEvent(
                 category: .addressBook,
-                event: AddressBookActivityEventType.followUser.rawValue,
-                message: "",
-                metadata: AddressBookActivityEventMetadata(
+                event: FollowUserActivityEvent.event,
+                message: "Followed \(petname.markup)",
+                metadata: FollowUserActivityEvent(
                     did: did.did.description,
                     petname: petname.description
                 )
@@ -438,6 +440,13 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    struct UnfollowUserActivityEvent: Codable {
+        public static let event: String = "unfollow_user"
+        
+        let did: String
+        let petname: String
+    }
+    
     /// Disassociates the passed Petname from any DID within the sphere,
     /// saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws -> Did {
@@ -448,9 +457,9 @@ actor AddressBookService {
         try database.writeActivity(
             event: ActivityEvent(
                 category: .addressBook,
-                event: AddressBookActivityEventType.unfollowUser.rawValue,
-                message: "",
-                metadata: AddressBookActivityEventMetadata(
+                event: UnfollowUserActivityEvent.event,
+                message: "Unfollowed \(petname.markup)",
+                metadata: UnfollowUserActivityEvent(
                     did: did.description,
                     petname: petname.description
                 )

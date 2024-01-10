@@ -531,10 +531,6 @@ enum FirstRunStep: Hashable {
     case done
 }
 
-enum SystemActivityEventType: String {
-    case succeedIndexPeer = "succeed_index_peer"
-}
-
 // MARK: Model
 struct AppModel: ModelProtocol {
     /// Has first run completed?
@@ -3001,6 +2997,11 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
+    struct SucceedSaveEntryActivityEvent: Codable {
+        public static let event = "save_entry"
+        public let address: String
+    }
+    
     static func succeedSaveEntry(
         state: Self,
         environment: AppEnvironment,
@@ -3010,12 +3011,10 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = Future.detached {
             try environment.database.writeActivity(
                 event: ActivityEvent(
-                    category: .note,
-                    event: "save_note",
+                    category: .system,
+                    event: SucceedSaveEntryActivityEvent.event,
                     message: "",
-                    metadata: DeckActivityEvent(
-                        address: address.description
-                    )
+                    metadata: SucceedSaveEntryActivityEvent(address: address.description)
                 )
             )
             

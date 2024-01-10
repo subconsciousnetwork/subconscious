@@ -223,7 +223,8 @@ actor DataService {
         )
     }
     
-    struct PeerIndexActivityEvent: Codable {
+    struct SucceedIndexPeerActivityEvent: Codable {
+        public static let event = "succeed_index_peer"
         let did: String
         let petname: String
         let changes: Int
@@ -250,9 +251,9 @@ actor DataService {
                 try database.writeActivity(
                     event: ActivityEvent(
                         category: .system,
-                        event: SystemActivityEventType.succeedIndexPeer.rawValue,
+                        event: SucceedIndexPeerActivityEvent.event,
                         message: "Found \(changeCount) updates from \(petname.markup)",
-                        metadata: PeerIndexActivityEvent(
+                        metadata: SucceedIndexPeerActivityEvent(
                             did: peer.identity.description,
                             petname: petname.description,
                             changes: changeCount
