@@ -80,7 +80,7 @@ struct SettingsView: View {
                                 .lineLimit(1)
                             }
                         )
-
+                        
                         LabeledContent(
                             "Version",
                             value: app.state.sphereVersion ?? unknown
@@ -88,18 +88,35 @@ struct SettingsView: View {
                         .lineLimit(1)
                         .textSelection(.enabled)
                         
+                        let syncFailed: Bool = Func.run {
+                            switch app.state.lastGatewaySyncStatus {
+                            case .failed:
+                                return true
+                            default:
+                                return false
+                            }
+                        }
+                        
                         NavigationLink(
                             destination: {
                                 GatewayURLSettingsView(app: app)
                             },
                             label: {
-                                LabeledContent(
-                                    "Gateway",
-                                    value: app.state.gatewayURL
-                                )
-                                .lineLimit(1)
+                                HStack {
+                                    if (syncFailed) {
+                                        Image(
+                                            systemName: "exclamationmark.arrow.triangle.2.circlepath"
+                                        )
+                                    }
+                                    LabeledContent(
+                                        "Gateway",
+                                        value: app.state.gatewayURL
+                                    )
+                                    .lineLimit(1)
+                                }
                             }
                         )
+                        .foregroundColor(syncFailed ? .red : nil)
                     },
                     header: {
                         Text("Noosphere")
