@@ -1327,4 +1327,45 @@ class Tests_DatabaseService: XCTestCase {
             XCTFail("expected public merge result third")
         }
     }
+    
+    struct TestMetadata: Codable, Equatable {
+        let foo: String
+    }
+    
+    func testWriteActivity() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        try service.writeActivity(
+            event: ActivityEvent(
+                category: .system,
+                event: "test_event",
+                message: "test_message",
+                metadata: TestMetadata(
+                    foo: "bar"
+                )
+            )
+        )
+        
+        try service.writeActivity(
+            event: ActivityEvent(
+                category: .system,
+                event: "test_event",
+                message: "test_message 2",
+                metadata: TestMetadata(
+                    foo: "bar 2"
+                )
+            )
+        )
+        
+        let activities: [ActivityEvent<TestMetadata>] = try service.listActivityEventType(eventType: "test_event")
+        
+        XCTAssertEqual(activities.count, 2)
+        let lastActivity = activities.first!
+        
+        XCTAssertEqual(lastActivity.category, .system)
+        XCTAssertEqual(lastActivity.event, "test_event")
+        XCTAssertEqual(lastActivity.message, "test_message 2")
+        XCTAssertEqual(lastActivity.metadata, TestMetadata(foo: "bar 2"))
+    }
 }
