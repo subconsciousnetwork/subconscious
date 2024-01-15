@@ -11,6 +11,7 @@ import ObservableStore
 
 struct SyncStatusView: View {
     var status: ResourceStatus
+    var action: () -> Void
     
     var color: Color {
         switch status {
@@ -41,23 +42,28 @@ struct SyncStatusView: View {
     @State var showLabel = true
     
     var body: some View {
-        HStack(spacing: AppTheme.unit2) {
-            ZStack {
-                Circle()
-                    .foregroundStyle(color)
-                Circle()
-                    .stroke(Color.separator.opacity(0.75), lineWidth: 0.5)
+        Button(
+            action: action,
+            label: {
+                HStack(spacing: AppTheme.unit2) {
+                    ZStack {
+                        Circle()
+                            .foregroundStyle(color)
+                        Circle()
+                            .stroke(Color.separator.opacity(0.75), lineWidth: 0.5)
+                    }
+                    .frame(width: 8, height: 8)
+                
+                    Text(showLabel ? label : "")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .transition(.opacity)
+                        .id("sync-status-label")
+                        .frame(width: 128, height: 16, alignment: .leading)
+                        .fixedSize(horizontal: true, vertical: true)
+                }
             }
-            .frame(width: 8, height: 8)
-        
-            Text(showLabel ? label : "")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .transition(.opacity)
-                .id("sync-status-label")
-                .frame(width: 128, height: 16, alignment: .leading)
-                .fixedSize(horizontal: true, vertical: true)
-        }
+        )
         .onAppear {
             switch status {
             case .succeeded:
@@ -90,7 +96,12 @@ struct MainToolbar: ToolbarContent {
     
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            SyncStatusView(status: app.state.lastGatewaySyncStatus)
+            SyncStatusView(
+                status: app.state.lastGatewaySyncStatus,
+                action: {
+                    app.send(.presentSettingsSheet(true))
+                }
+            )
         }
         
         ToolbarItem(placement: .primaryAction) {
