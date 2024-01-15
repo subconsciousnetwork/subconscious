@@ -552,6 +552,9 @@ final class Tests_Sphere: XCTestCase {
             })
         )
         
+        let name = try await sphere.authorizationName(authorization: authorization)
+        XCTAssertEqual(name, "ben")
+        
         let verified = try await sphere.verify(authorization: authorization)
         XCTAssertTrue(verified)
         
