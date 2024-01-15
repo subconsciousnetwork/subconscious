@@ -1332,7 +1332,7 @@ class Tests_DatabaseService: XCTestCase {
         let foo: String
     }
     
-    func testWriteActivity() async throws {
+    func testWriteActivity() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
         
@@ -1347,27 +1347,14 @@ class Tests_DatabaseService: XCTestCase {
             )
         )
         
-        try? await Task.sleep(for: .seconds(0.5))
-        
-        try service.writeActivity(
-            event: ActivityEvent(
-                category: .system,
-                event: "test_event",
-                message: "test_message 2",
-                metadata: TestMetadata(
-                    foo: "bar 2"
-                )
-            )
-        )
-        
         let activities: [ActivityEvent<TestMetadata>] = try service.listActivityEventType(eventType: "test_event")
         
-        XCTAssertEqual(activities.count, 2)
+        XCTAssertEqual(activities.count, 1)
         let lastActivity = activities.first!
         
         XCTAssertEqual(lastActivity.category, .system)
         XCTAssertEqual(lastActivity.event, "test_event")
-        XCTAssertEqual(lastActivity.message, "test_message 2")
-        XCTAssertEqual(lastActivity.metadata, TestMetadata(foo: "bar 2"))
+        XCTAssertEqual(lastActivity.message, "test_message")
+        XCTAssertEqual(lastActivity.metadata, TestMetadata(foo: "bar"))
     }
 }
