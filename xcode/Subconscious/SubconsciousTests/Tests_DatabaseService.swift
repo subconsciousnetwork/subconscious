@@ -1332,7 +1332,7 @@ class Tests_DatabaseService: XCTestCase {
         let foo: String
     }
     
-    func testWriteActivity() throws {
+    func testWriteActivity() async throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
         
@@ -1346,6 +1346,8 @@ class Tests_DatabaseService: XCTestCase {
                 )
             )
         )
+        
+        try? await Task.sleep(for: .seconds(0.5))
         
         try service.writeActivity(
             event: ActivityEvent(
