@@ -165,6 +165,7 @@ enum NotebookAction: Hashable {
     case activatedSuggestion(Suggestion)
     
     case requestNotebookRoot
+    case requestScrollToTop
     
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
@@ -502,7 +503,7 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience:
+                .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop:
             return Update(state: state)
         }
     }
@@ -844,6 +845,12 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
+        if state.details.isEmpty {
+            let fx: Fx<NotebookAction> = Just(.requestScrollToTop).eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        }
+        
         return NotebookDetailStackCursor.update(
             state: state,
             action: .setDetails([]),

@@ -21,7 +21,9 @@ struct EntryListView: View {
         if let entries = entries {
             if entries.count > 0 {
                 List {
-                    ForEach(entries) { entry in
+                    ForEach(entries.indices, id: \.self) { idx in
+                        let entry = entries[idx]
+                        
                         Button(
                             action: {
                                 onEntryPress(entry)
@@ -35,6 +37,7 @@ struct EntryListView: View {
                                 onLink: onLink
                             )
                         }
+                        .id(idx)
                         .buttonStyle(
                             EntryListRowButtonStyle(
                                 color: entry.color(
