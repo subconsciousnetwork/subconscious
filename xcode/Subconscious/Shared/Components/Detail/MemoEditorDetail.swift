@@ -1447,7 +1447,9 @@ struct MemoEditorDetailModel: ModelProtocol {
                     text: fallback,
                     saveState: .unsaved,
                     modified: Date.now
-                )
+                ),
+                .setEditorSelectionAtEnd,
+                .requestEditorFocus(true)
             ],
             environment: environment
         )

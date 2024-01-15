@@ -47,6 +47,23 @@ struct MemoViewerDetailMetaSheetView: View {
                         
                         Divider()
                         
+                        if let address = store.state.address {
+                            Button(
+                                action: {
+                                    store.send(.requestQuoteInNewNote(address))
+                                },
+                                label: {
+                                    Label(
+                                        "Quote in new note",
+                                        systemImage: "quote.opening"
+                                    )
+                                }
+                            )
+                            .buttonStyle(RowButtonStyle())
+                        }
+                        
+                        Divider()
+                        
                         if let author = store.state.author {
                             Button(
                                 action: {
@@ -76,6 +93,7 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
     case setAuthor(_ author: UserProfile)
     case requestDismiss
     case requestAuthorDetail(_ author: UserProfile)
+    case requestQuoteInNewNote(_ address: Slashlink)
 }
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
@@ -121,6 +139,8 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         case .requestDismiss:
             return Update(state: state)
         case .requestAuthorDetail:
+            return Update(state: state)
+        case .requestQuoteInNewNote:
             return Update(state: state)
         }
     }

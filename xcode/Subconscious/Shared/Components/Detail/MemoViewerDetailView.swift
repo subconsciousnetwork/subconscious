@@ -182,6 +182,7 @@ enum MemoViewerDetailNotification: Hashable {
     )
     case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
+    case requestQuoteInNewDetail(_ address: Slashlink)
 }
 
 extension MemoViewerDetailNotification {
@@ -189,6 +190,8 @@ extension MemoViewerDetailNotification {
         switch action {
         case let .requestAuthorDetail(user):
             return .requestUserProfileDetail(user.address)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewDetail(address)
         default:
             return nil
         }
@@ -225,6 +228,7 @@ enum MemoViewerDetailAction: Hashable {
     
     case succeedIndexBackgroundSphere
     case requestAuthorDetail(_ author: UserProfile)
+    case requestQuoteInNewNote(_ address: Slashlink)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
@@ -374,6 +378,12 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment
             )
         case .requestAuthorDetail:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case .requestQuoteInNewNote:
             return update(
                 state: state,
                 action: .presentMetaSheet(false),
@@ -608,6 +618,8 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
             return .presentMetaSheet(false)
         case let .requestAuthorDetail(user):
             return .requestAuthorDetail(user)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewNote(address)
         default:
             return .metaSheet(action)
         }

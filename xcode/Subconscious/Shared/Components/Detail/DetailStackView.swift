@@ -636,6 +636,8 @@ extension DetailStackAction {
                     )
                 )
             )
+        case let .requestQuoteInNewDetail(address):
+            return .pushDetail(.editor(MemoEditorDetailDescription(fallback: "\(address.markup)\n\n")))
         }
     }
 
