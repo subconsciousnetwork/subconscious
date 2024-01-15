@@ -92,7 +92,7 @@ struct NotebookNavigationView: View {
                     : DeckTheme.lightBgStart,
                     for: .navigationBar
                 )
-                .onReceive(store.actions, perform: { action in
+                .onReceive(store.actions) { action in
                     switch action {
                     case .requestScrollToTop:
                         withAnimation(.easeInOut(duration: Duration.normal)) {
@@ -101,7 +101,7 @@ struct NotebookNavigationView: View {
                     default:
                         return
                     }
-                })
+                }
             }
         }
     }

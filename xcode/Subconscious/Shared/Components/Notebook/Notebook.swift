@@ -847,7 +847,6 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         if state.details.isEmpty {
             let fx: Fx<NotebookAction> = Just(.requestScrollToTop).eraseToAnyPublisher()
-            
             return Update(state: state, fx: fx)
         }
         

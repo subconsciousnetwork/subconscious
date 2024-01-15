@@ -29,15 +29,27 @@ struct HomeProfileNavigationView: View {
             app: app,
             store: detailStack
         ) {
-            VStack(spacing: 0) {
-                UserProfileDetailView(
-                    app: app,
-                    description: UserProfileDetailDescription(address: Slashlink.ourProfile),
-                    notify: Address.forward(
-                        send: store.send,
-                        tag: HomeProfileNavigationView.tag
+            ScrollViewReader { proxy in
+                VStack(spacing: 0) {
+                    UserProfileDetailView(
+                        app: app,
+                        description: UserProfileDetailDescription(address: Slashlink.ourProfile),
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: HomeProfileNavigationView.tag
+                        )
                     )
-                )
+                }
+                .onReceive(store.actions) { action in
+                    switch action {
+                    case .requestScrollToTop:
+                        withAnimation(.easeInOut(duration: Duration.normal)) {
+                            proxy.scrollTo(0, anchor: .top)
+                        }
+                    default:
+                        return
+                    }
+                }
             }
         }
     }
@@ -123,6 +135,7 @@ enum HomeProfileAction: Hashable {
     
     case setSearchPresented(Bool)
     case requestProfileRoot
+    case requestScrollToTop
     
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
@@ -342,7 +355,7 @@ struct HomeProfileModel: ModelProtocol {
                 environment: environment
             )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience:
+                .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop:
             return Update(state: state)
         }
     }
@@ -373,6 +386,11 @@ struct HomeProfileModel: ModelProtocol {
         state: Self,
         environment: AppEnvironment
     ) -> Update<Self> {
+        if state.details.isEmpty {
+            let fx: Fx<HomeProfileAction> = Just(.requestScrollToTop).eraseToAnyPublisher()
+            return Update(state: state, fx: fx)
+        }
+        
         return HomeProfileDetailStackCursor.update(
             state: state,
             action: .setDetails([]),

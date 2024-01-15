@@ -176,6 +176,7 @@ struct UserProfileView: View {
                                 )
                             }
                         )
+                        .id(0)
                         .disabled(state.loadingState != .loaded)
                         .padding(
                             .init([.top, .horizontal]),
