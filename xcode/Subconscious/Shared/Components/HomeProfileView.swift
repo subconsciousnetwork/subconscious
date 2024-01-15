@@ -43,7 +43,7 @@ struct HomeProfileNavigationView: View {
                 .onReceive(store.actions) { action in
                     switch action {
                     case .requestScrollToTop:
-                        withAnimation(.easeInOut(duration: Duration.normal)) {
+                        withAnimation(.resetScroll) {
                             proxy.scrollTo(0, anchor: .top)
                         }
                     default:
