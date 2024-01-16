@@ -68,7 +68,7 @@ extension WellKnownHeaders {
             let colorString = additionalHeaders.get(
                 first: HeaderName.subconsciousTheme.rawValue
             ),
-            let color = ThemeColor(rawValue: colorString)
+            let color = Int(colorString).map({ v in ThemeColor(rawValue: v)})
         {
             this.themeColor = color
         }
@@ -98,7 +98,7 @@ extension WellKnownHeaders {
             headers.append(
                 Header(
                     name: HeaderName.subconsciousTheme.rawValue,
-                    value: color.rawValue
+                    value: String(color.rawValue)
                 )
             )
         }

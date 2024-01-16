@@ -55,12 +55,12 @@ extension DeckTheme {
     static let cardHeaderTint = Color.brandMarkPink.opacity(0.025)
 }
 
-public enum ThemeColor: String, Hashable, CaseIterable {
-    case a
-    case b
-    case c
-    case d
-    case e
+public enum ThemeColor: Int, Hashable, CaseIterable {
+    case a = 0
+    case b = 1
+    case c = 2
+    case d = 3
+    case e = 4
 }
 
 public extension Color {
