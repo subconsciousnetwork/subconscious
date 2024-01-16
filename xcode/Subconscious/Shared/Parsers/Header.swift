@@ -14,7 +14,7 @@ enum HeaderName: String {
     case created = "Created"
     case modified = "Modified"
     case fileExtension = "File-Extension"
-    case themeColor = "Theme-Color"
+    case subconsciousTheme = "Subconscious-Theme"
 }
 
 /// A struct containing well-known headers
@@ -66,7 +66,7 @@ extension WellKnownHeaders {
         
         if
             let colorString = additionalHeaders.get(
-                first: HeaderName.themeColor.rawValue
+                first: HeaderName.subconsciousTheme.rawValue
             ),
             let color = ThemeColor(rawValue: colorString)
         {
@@ -97,7 +97,7 @@ extension WellKnownHeaders {
         if let color = themeColor {
             headers.append(
                 Header(
-                    name: HeaderName.themeColor.rawValue,
+                    name: HeaderName.subconsciousTheme.rawValue,
                     value: color.rawValue
                 )
             )
