@@ -96,7 +96,7 @@ struct NotebookNavigationView: View {
                     switch action {
                     case .requestScrollToTop:
                         withAnimation(.resetScroll) {
-                            proxy.scrollTo(0, anchor: .top)
+                            proxy.scrollTo(EntryListView.resetScrollTargetId, anchor: .top)
                         }
                     default:
                         return
