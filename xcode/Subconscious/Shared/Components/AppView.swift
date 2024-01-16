@@ -161,6 +161,7 @@ enum AppAction: Hashable {
 
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
+    case persistNoosphereLogLevel(Noosphere.NoosphereLogLevel)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -554,6 +555,7 @@ struct AppModel: ModelProtocol {
     
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
+    var noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic
 
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
@@ -883,6 +885,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isBlockEditorEnabled: isBlockEditorEnabled
+            )
+        case let .persistNoosphereLogLevel(level):
+            return persistNoosphereLogLevel(
+                state: state,
+                environment: environment,
+                level: level
             )
         case .resetNoosphereService:
             return resetNoosphereService(
@@ -1343,6 +1351,7 @@ struct AppModel: ModelProtocol {
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
         model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
+        model.noosphereLogLevel = Noosphere.NoosphereLogLevel(description: AppDefaults.standard.noosphereLogLevel)
         model.isBlockEditorEnabled = AppDefaults.standard.isBlockEditorEnabled
         
         // Update model from app defaults
@@ -1724,6 +1733,18 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
+    static func persistNoosphereLogLevel(
+        state: AppModel,
+        environment: AppEnvironment,
+        level: Noosphere.NoosphereLogLevel
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.noosphereLogLevel = level.description
+        var model = state
+        model.noosphereLogLevel = level
+        return Update(state: model)
+    }
+
     static func requestOfflineMode(
         state: AppModel,
         environment: AppEnvironment
@@ -3151,6 +3172,7 @@ struct AppEnvironment {
         )
         let defaultGateway = GatewayURL(AppDefaults.standard.gatewayURL)
         let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
+        let defaultLogLevel = Noosphere.NoosphereLogLevel(description: AppDefaults.standard.noosphereLogLevel)
         
         let sentry = SentryIntegration()
 
@@ -3158,7 +3180,7 @@ struct AppEnvironment {
         let noosphereLogLevel: Noosphere.NoosphereLogLevel = (
             Config.default.debug ?
                 .academic :
-                .basic
+                defaultLogLevel
         )
 
         let noosphere = NoosphereService(

@@ -51,6 +51,17 @@ struct DeveloperSettingsView: View {
                     }
                 )
             }
+            Section {
+                Picker("Noosphere log detail", selection: app.binding(
+                    get: \.noosphereLogLevel,
+                    tag: AppAction.persistNoosphereLogLevel
+                )) {
+                    ForEach(Noosphere.NoosphereLogLevel.allCases, id: \.self) { level in
+                        Text(level.description).tag(level)
+                    }
+                }
+                .pickerStyle(DefaultPickerStyle())
+            }
         }
         .navigationTitle("Developer")
     }
