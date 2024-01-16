@@ -586,10 +586,28 @@ struct DeckModel: ModelProtocol {
             
             return Update(state: state)
         }
+       
         
-        func shuffleInBacklinks(_ backlinks: Set<EntryStub>) -> Update<Self> {
+        struct ChooseCardActivityEvent: Codable {
+            public static let event: String = "choose_card"
+            
+            let address: String
+        }
+        
+        func shuffleInBacklinks(message: String, address: Slashlink, backlinks: Set<EntryStub>) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
+                
+                try environment.database.writeActivity(
+                    event: ActivityEvent(
+                        category: .deck,
+                        event: ChooseCardActivityEvent.event,
+                        message: message,
+                        metadata: ChooseCardActivityEvent(
+                            address: address.description
+                        )
+                    )
+                )
                 
                 // Filter to valid backlinks
                 let backlinks = backlinks
@@ -629,10 +647,10 @@ struct DeckModel: ModelProtocol {
             state.feedback.impactOccurred()
             
             switch card.card {
-            case let .entry(_, _, related):
-               return shuffleInBacklinks(related)
-            case let .prompt(_, _, _, related):
-               return shuffleInBacklinks(related)
+            case let .entry(entry, _, related):
+                return shuffleInBacklinks(message: "", address: entry.address, backlinks: related)
+            case let .prompt(message, entry, _, related):
+                return shuffleInBacklinks(message: message, address: entry.address, backlinks: related)
             case .action(let msg):
                 logger.log("Action: \(msg)")
                 return update(

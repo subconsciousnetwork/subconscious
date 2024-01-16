@@ -66,6 +66,8 @@ final class DatabaseService {
         category: "DatabaseService"
     )
     
+    private static let jsonDecoder = JSONDecoder()
+    
     init(
         database: SQLite3Database,
         migrations: Migrations
@@ -1338,7 +1340,8 @@ final class DatabaseService {
         
         let dids = [
             Did.local.description,
-            owner.description]
+            owner.description
+        ]
         
         return try? database.execute(
             sql: """
@@ -1371,8 +1374,62 @@ final class DatabaseService {
         })
         .first
     }
+    
+    /// Record a user or system activity for later reference
+    func writeActivity<Data: Codable>(event: ActivityEvent<Data>) throws {
+        guard self.state == .ready else {
+            return
+        }
+        
+        try database.execute(
+            sql: """
+            INSERT INTO activity (category, event, message, metadata)
+            VALUES (?, ?, ?, ?)
+            """,
+            parameters: [
+                .text(event.category.rawValue),
+                .text(event.event),
+                .text(event.message),
+                .json(event.metadata, or: "{}")
+            ]
+        )
+    }
+    
+    /// List activity events of a certain type, in reverse chronological order
+    func listActivityEventType<Data: Codable>(eventType: String) throws -> [ActivityEvent<Data>] {
+        let results = try database.execute(
+            sql: """
+                 SELECT category, event, message, metadata
+                 FROM activity
+                 WHERE event = ?
+                 ORDER BY created DESC
+                 LIMIT 1000
+                 """,
+            parameters: [.text(
+                eventType
+            )]
+         )
+                         
+         return results.compactMap { row -> ActivityEvent<Data>? in
+             guard let category = row.col(0)?.toString(),
+                   let category = ActivityEventCategory(rawValue: category),
+                   let event = row.col(1)?.toString(),
+                   let message = row.col(2)?.toString(),
+                   let metadata = row.col(3)?.toString()?.data(using: .utf8),
+                   let metadata = try? JSONDecoder().decode(Data.self, from: metadata)
+             else {
+                 return nil
+             }
+             
+             return ActivityEvent<Data>(
+                category: category,
+                event: event,
+                message: message,
+                metadata: metadata
+             )
+         }
+    }
 }
-
 
 // MARK: Migrations
 extension Config {
@@ -1554,6 +1611,21 @@ extension Config {
                     new.size
                 );
             END;
+            """
+        ),
+        SQLMigration(
+            version: Int.from(iso8601String: "2024-01-10T11:59:00")!,
+            sql: """
+            /* Tracks `ActivityEvent`s in a queryable stream */
+            CREATE TABLE activity
+            (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                category TEXT                           NOT NULL,
+                event    TEXT                           NOT NULL,
+                message  TEXT DEFAULT ''                NOT NULL,
+                metadata TEXT DEFAULT '{}'              NOT NULL,
+                created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+            );
             """
         )
     ])

@@ -9,6 +9,13 @@ import XCTest
 @testable import Subconscious
 
 final class Tests_Migrations: XCTestCase {
+    func testAppMigrations() throws {
+        let migrations = Config.migrations
+        let db = SQLite3Database(path: ":memory:")
+        let version = try migrations.migrate(db)
+        XCTAssertEqual(version, migrations.migrations.last?.version)
+    }
+    
     func testMigrationMigrate() throws {
         let v1 = SQLMigration(
             version: 1,

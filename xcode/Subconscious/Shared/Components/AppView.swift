@@ -315,6 +315,9 @@ enum AppAction: Hashable {
     case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
     
+    case succeedLogActivity
+    case failLogActivity(_ error: String)
+    
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestProfileRoot
@@ -1217,14 +1220,15 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedMoveEntry(from: let from, to: let to):
-            return Update(state: state)
-        case .succeedMergeEntry(parent: let parent, child: let child):
+        case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
-            return Update(state: state)
-        case .succeedUpdateAudience(_):
-            return Update(state: state)
+            return succeedSaveEntry(
+                state: state,
+                environment: environment,
+                address: address,
+                modified: modified
+            )
         case let .saveEntry(entry):
             return saveEntry(
                 state: state,
@@ -1309,6 +1313,13 @@ struct AppModel: ModelProtocol {
                 ),
                 environment: environment
             )
+        case let .failLogActivity(error):
+            logger.warning(
+                """
+                Failed to log activity: \(error)
+                """
+            )
+            return Update(state: state)
         }
     }
     
@@ -2964,6 +2975,43 @@ struct AppModel: ModelProtocol {
             )
         }).eraseToAnyPublisher()
         
+        return Update(state: state, fx: fx)
+    }
+    
+    struct SucceedSaveEntryActivityEvent: Codable {
+        public static let event = "save_entry"
+        public let address: String
+    }
+    
+    static func succeedSaveEntry(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink,
+        modified: Date
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = Future.detached {
+            try environment.database.writeActivity(
+                event: ActivityEvent(
+                    category: .system,
+                    event: SucceedSaveEntryActivityEvent.event,
+                    message: "",
+                    metadata: SucceedSaveEntryActivityEvent(address: address.description)
+                )
+            )
+            
+            return .succeedLogActivity
+        }
+        .recover { error in 
+            .failLogActivity(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        logger.log(
+            "Saved entry",
+            metadata: [
+                "address": address.description
+            ]
+        )
         return Update(state: state, fx: fx)
     }
     

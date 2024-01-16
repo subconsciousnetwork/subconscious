@@ -118,7 +118,7 @@ actor DataService {
     /// - If sphere has not been indexed, we get everything, and update
     func indexPeer(
         petname: Petname
-    ) async throws -> PeerRecord {
+    ) async throws -> (Int, PeerRecord) {
         let sphere = try await noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
         logger.log(
@@ -147,6 +147,7 @@ actor DataService {
         
         let savepoint = "index_peer"
         try database.savepoint(savepoint)
+        
         do {
             for change in changes {
                 let slashlink = Slashlink(slug: change)
@@ -212,11 +213,21 @@ actor DataService {
             )
             throw error
         }
-        return PeerRecord(
-            petname: petname,
-            identity: identity,
-            since: version
+        return (
+            changes.count,
+            PeerRecord(
+                petname: petname,
+                identity: identity,
+                since: version
+            )
         )
+    }
+    
+    struct SucceedIndexPeerActivityEvent: Codable {
+        public static let event = "succeed_index_peer"
+        let did: String
+        let petname: String
+        let changes: Int
     }
     
     func indexPeers(petnames: [Petname]) async -> [PeerIndexResult] {
@@ -231,11 +242,25 @@ actor DataService {
             )
             
             do {
-                let peer = try await self.indexPeer(
+                let (changeCount, peer) = try await self.indexPeer(
                     petname: petname
                 )
                 
                 results.append(.success(peer))
+                
+                try database.writeActivity(
+                    event: ActivityEvent(
+                        category: .system,
+                        event: SucceedIndexPeerActivityEvent.event,
+                        message: "Found \(changeCount) updates from \(petname.markup)",
+                        metadata: SucceedIndexPeerActivityEvent(
+                            did: peer.identity.description,
+                            petname: petname.description,
+                            changes: changeCount
+                        )
+                    )
+                )
+                
                 // Give other tasks a chance to use noosphere, indexing many peers
                 // can take a long time and potentially block user actions
                 await Task.yield()
