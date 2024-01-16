@@ -524,9 +524,15 @@ actor NoosphereService:
         }
     }
     
-    func listAuthorizations() async throws -> [Authorization] {
+    func listAuthorizations() async throws -> [NamedAuthorization] {
         try await errorLoggingService.capturing {
             try await sphere().listAuthorizations()
+        }
+    }
+    
+    func authorizationName(authorization: Authorization) async throws -> String {
+        try await errorLoggingService.capturing {
+            try await sphere().authorizationName(authorization: authorization)
         }
     }
     

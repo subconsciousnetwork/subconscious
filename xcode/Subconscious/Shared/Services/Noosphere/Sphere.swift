@@ -12,6 +12,10 @@ import os
 
 public typealias Cid = String
 public typealias Authorization = String
+public struct NamedAuthorization: Equatable, Hashable {
+    public let name: String
+    public let authorization: Authorization
+}
 
 /// Describes a Sphere.
 /// See `Sphere` for a concrete implementation.
@@ -68,7 +72,8 @@ public protocol SphereProtocol {
     func escalateAuthority(mnemonic: String) async throws -> Sphere
     func authorize(name: String, did: Did) async throws -> Authorization
     func revoke(authorization: Authorization) async throws -> Void
-    func listAuthorizations() async throws -> [Authorization]
+    func listAuthorizations() async throws -> [NamedAuthorization]
+    func authorizationName(authorization: Authorization) async throws -> String
     func verify(authorization: Authorization) async throws -> Bool
 }
 
@@ -921,7 +926,21 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
     }
     
-    public func listAuthorizations() async throws -> [Authorization] {
+    public func listAuthorizations() async throws -> [NamedAuthorization] {
+        let values = try await listAuthorizationValues()
+        var authorizations: [NamedAuthorization] = []
+        
+        for value in values {
+            let name = try await authorizationName(authorization: value)
+            authorizations.append(
+                NamedAuthorization(name: name, authorization: value)
+            )
+        }
+        
+        return authorizations
+    }
+    
+    private func listAuthorizationValues() async throws -> [Authorization] {
         try await withCheckedThrowingContinuation { continuation in
             nsSphereAuthorityAuthorizationsList(
                 noosphere.noosphere,
@@ -944,6 +963,34 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
                 }
                 
                 continuation.resume(returning: authorizations.toStringArray())
+                return
+            }
+        }
+    }
+    
+    public func authorizationName(authorization: Authorization) async throws -> String {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereAuthorityAuthorizationName(
+                noosphere.noosphere,
+                self.sphere,
+                authorization
+            ) { error, name in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                
+                guard let name = name else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                defer {
+                    ns_string_free(name)
+                }
+                
+                continuation.resume(returning: String(cString: name))
                 return
             }
         }
