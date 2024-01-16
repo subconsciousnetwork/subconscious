@@ -207,10 +207,6 @@ struct CardStack: View {
         }
     }
     
-    var enumeratedDeck: [EnumeratedSequence<[CardModel]>.Element] {
-        Array(deck.enumerated())
-    }
-    
     func effects(card: CardModel, stackFactor: CGFloat, focused: Bool) -> CardEffectModifier {
         CardEffectModifier(
             stackFactor: stackFactor,
@@ -287,8 +283,9 @@ struct CardStack: View {
             Spacer()
             GeometryReader { geo in
                 ZStack {
-                    ForEach(enumeratedDeck, id: \.element.id) {
-                        index, card in
+                    ForEach(deck.indices, id: \.self) { index in
+                        let card = deck[index]
+                        
                         if (index >= current - 1 && index < current + 4) {
                             innerCard(size: geo.size, index: index, card: card)
                         }

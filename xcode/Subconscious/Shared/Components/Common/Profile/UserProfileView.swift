@@ -115,6 +115,8 @@ struct UserProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<UserProfileDetailModel>
     
+    static let resetScrollTargetId: Int = 0
+    
     private var state: UserProfileDetailModel {
         store.state
     }
@@ -176,6 +178,7 @@ struct UserProfileView: View {
                                 )
                             }
                         )
+                        .id(Self.resetScrollTargetId)
                         .disabled(state.loadingState != .loaded)
                         .padding(
                             .init([.top, .horizontal]),

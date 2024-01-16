@@ -78,6 +78,7 @@ struct DeckView: View {
 // MARK: Actions
 enum DeckAction: Hashable {
     case requestDeckRoot
+    case requestDiscardDeck
     case detailStack(DetailStackAction)
     
     case setSearchPresented(Bool)
@@ -290,8 +291,8 @@ struct DeckModel: ModelProtocol {
             )
         case .appear:
             return appear(state: state, environment: environment)
-        case .refreshDeck:
-            return refreshDeck(state: state, environment: environment)
+        case .refreshDeck, .requestDiscardDeck:
+            return discardAndRedrawDeck(state: state, environment: environment)
         case .topupDeck:
             return topupDeck(state: state, environment: environment)
         case let .setDeck(deck, startIndex):
@@ -404,7 +405,7 @@ struct DeckModel: ModelProtocol {
             return Update(state: state)
         }
         
-        func refreshDeck(
+        func discardAndRedrawDeck(
             state: Self,
             environment: Environment
         ) -> Update<Self> {
@@ -412,6 +413,8 @@ struct DeckModel: ModelProtocol {
             model.loadingStatus = .loading
             
             let fx: Fx<DeckAction> = Future.detached {
+                try? await Task.sleep(for: .seconds(Duration.loading))
+                
                 let us = try await environment.noosphere.identity()
                 let recent = try environment.database.listFeed(owner: us)
                 
@@ -447,7 +450,7 @@ struct DeckModel: ModelProtocol {
             .recover({ error in .setDeck([]) })
             .eraseToAnyPublisher()
             
-            return Update(state: model, fx: fx)
+            return Update(state: model, fx: fx).animation(.easeOutCubic())
         }
         
         func refreshUpcomingCards(
@@ -737,6 +740,11 @@ struct DeckModel: ModelProtocol {
             state: Self,
             environment: AppEnvironment
         ) -> Update<Self> {
+            if state.detailStack.details.isEmpty {
+                let fx: Fx<DeckAction> = Just(.requestDiscardDeck).eraseToAnyPublisher()
+                return Update(state: state, fx: fx)
+            }
+            
             return DeckDetailStackCursor.update(
                 state: state,
                 action: .setDetails([]),

@@ -16,12 +16,18 @@ struct EntryListView: View {
     var onLink: (EntryLink) -> Void
     
     @Environment(\.colorScheme) var colorScheme
+    static let resetScrollTargetId: Int = 0
 
     var body: some View {
         if let entries = entries {
             if entries.count > 0 {
                 List {
-                    ForEach(entries) { entry in
+                    // invisible marker to scroll back to
+                    EmptyView().id(Self.resetScrollTargetId)
+                    
+                    ForEach(entries.indices, id: \.self) { idx in
+                        let entry = entries[idx]
+                        
                         Button(
                             action: {
                                 onEntryPress(entry)
