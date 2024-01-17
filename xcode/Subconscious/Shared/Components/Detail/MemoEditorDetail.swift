@@ -192,6 +192,10 @@ struct MemoEditorDetailView: View {
             perform: notify
         )
     }
+    
+    var highlight: Color? {
+        store.state.themeColor?.toHighlightColor()
+    }
 
     /// Constructs a plain text editor for the view
     private func plainEditor() -> some View {
@@ -217,6 +221,8 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
+                        .tint(highlight)
+                        
                         ThickDividerView()
                             .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
@@ -282,19 +288,12 @@ enum MemoEditorDetailNotification: Hashable {
     /// Request detail from any audience scope
     case requestFindLinkDetail(EntryLink)
     
-    case requestDelete(Slashlink?)
-    
-    case requestMoveEntry(from: Slashlink, to: Slashlink)
-    case succeedMoveEntry(from: Slashlink, to: Slashlink)
-    
-    case requestMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    
     case requestSaveEntry(MemoEntry)
-    case succeedSaveEntry(address: Slashlink, modified: Date)
-    
+    case requestDelete(Slashlink?)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(address: Slashlink, audience: Audience)
-    case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
 }
 
 extension MemoEditorDetailNotification {
@@ -310,6 +309,8 @@ extension MemoEditorDetailNotification {
             return .requestMergeEntry(parent: parent, child: child)
         case let .forwardRequestUpdateAudience(address, audience):
             return .requestUpdateAudience(address: address, audience: audience)
+        case let .forwardRequestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
         default:
             return nil
         }
@@ -426,6 +427,10 @@ enum MemoEditorDetailAction: Hashable {
     case requestUpdateAudience(_ audience: Audience)
     case forwardRequestUpdateAudience(address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ color: ThemeColor)
+    case forwardRequestAssignNoteColor(address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    
 
     // Editor
     /// Update editor dom and mark if this state is saved or not
@@ -478,6 +483,10 @@ enum MemoEditorDetailAction: Hashable {
     static func setMetaSheetAddress(_ address: Slashlink?) -> Self {
         .metaSheet(.setAddress(address))
     }
+    
+    static func setMetaSheetColor(_ color: ThemeColor?) -> Self {
+        .metaSheet(.setNoteColor(color))
+    }
 
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
         .metaSheet(.setDefaultAudience(audience))
@@ -509,6 +518,8 @@ extension MemoEditorDetailAction {
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
+        case let .succeedAssignNoteColor(address, color):
+            return .succeedAssignNoteColor(address, color)
             
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
@@ -581,6 +592,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
             return .selectRenameSuggestion(suggestion)
         case let .requestUpdateAudience(audience):
             return .requestUpdateAudience(audience)
+        case let .requestAssignNoteColor(color):
+            return .requestAssignNoteColor(color)
         case .requestDelete(let address):
             return .requestDelete(address)
         default:
@@ -610,6 +623,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         modified: Date.distantPast,
         fileExtension: ContentType.subtext.fileExtension
     )
+    var themeColor: ThemeColor? = nil
+    
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
     var backlinks: [EntryStub] = []
@@ -874,12 +889,24 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 audience: audience
             )
-            
         case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
                 environment: environment,
                 receipt: receipt
+            )
+        case let .requestAssignNoteColor(color):
+            return requestAssignNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
+        case let .succeedAssignNoteColor(address, color):
+            return succeedAssignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
             )
         case let .selectRenameSuggestion(suggestion):
             return selectRenameSuggestion(
@@ -949,7 +976,7 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment
             )
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
-                .forwardRequestMergeEntry, .forwardRequestUpdateAudience:
+                .forwardRequestMergeEntry, .forwardRequestUpdateAudience, .forwardRequestAssignNoteColor:
             return Update(state: state)
         }
     }
@@ -1282,6 +1309,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.address = detail.entry.address
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
+        model.themeColor = model.headers.themeColor
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.saveState = detail.saveState
         
@@ -1292,6 +1320,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .setMetaSheetAddress(model.address),
+                .setMetaSheetColor(model.themeColor),
                 .setEditor(
                     text: text,
                     saveState: detail.saveState,
@@ -1902,6 +1931,58 @@ struct MemoEditorDetailModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
+    static func requestAssignNoteColor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        color: ThemeColor
+    ) -> Update<MemoEditorDetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        let audienceFx: Fx<MemoEditorDetailAction> = Just(
+            .forwardRequestAssignNoteColor(
+                address: address,
+                color
+            )
+        ).eraseToAnyPublisher()
+        
+        // Save before updating color
+        let fx = saveFx.merge(with: audienceFx).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedAssignNoteColor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        color: ThemeColor
+    ) -> Update<MemoEditorDetailModel> {
+        guard state.address != nil else {
+            return Update(state: state)
+        }
+        
+        // Only forward the event if the address matches
+        guard state.address == address else {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.themeColor = color
+            
+        return update(
+            state: model,
+            // Forward success down to meta sheet
+            action: .metaSheet(.succeedAssignNoteColor(color)),
+            environment: environment
+        )
+    }
+    
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
     static func insertTaggedMarkup<T>(
@@ -2022,6 +2103,7 @@ extension MemoEntry {
             created: detail.headers.created,
             modified: detail.headers.modified,
             fileExtension: detail.headers.fileExtension,
+            themeColor: detail.headers.themeColor,
             additionalHeaders: detail.additionalHeaders,
             body: detail.editor.text
         )

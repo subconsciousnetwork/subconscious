@@ -18,7 +18,7 @@ struct EntryStub:
     let did: Did
     let address: Slashlink
     let excerpt: Subtext
-    let modified: Date
+    let headers: WellKnownHeaders
 
     var id: Slashlink { address }
     var debugDescription: String {
@@ -30,7 +30,7 @@ struct EntryStub:
             did: did,
             address: address,
             excerpt: excerpt,
-            modified: modified
+            headers: headers
         )
     }
     

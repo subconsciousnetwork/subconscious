@@ -59,5 +59,15 @@ final class Tests_DeckDetailStackCursor: XCTestCase {
             DeckAction.requestUpdateAudience(Slashlink("@bob/foo")!, .public)
         )
     }
+    
+    func testTagRequestAssignNoteColor() throws {
+        let action = DeckDetailStackCursor.tag(
+            .requestAssignNoteColor(Slashlink("@bob/foo")!, .b)
+        )
+        XCTAssertEqual(
+            action,
+            DeckAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .b)
+        )
+    }
 }
 

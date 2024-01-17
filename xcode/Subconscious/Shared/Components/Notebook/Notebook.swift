@@ -155,6 +155,8 @@ enum NotebookAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -233,6 +235,8 @@ struct NotebookDetailStackCursor: CursorProtocol {
             return .requestMergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .requestUpdateAudience(address, audience)
+        case let .requestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
         case _:
             return .detailStack(action)
         }
@@ -265,6 +269,8 @@ extension NotebookAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
+        case let .succeedAssignNoteColor(address, color):
+            return .succeedAssignNoteColor(address, color)
         default:
             return nil
         }
@@ -284,6 +290,8 @@ extension AppAction {
             return .mergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .updateAudience(address: address, audience: audience)
+        case let .requestAssignNoteColor(address, color):
+            return .assignColor(address: address, color: color)
         default:
             return nil
         }
@@ -485,6 +493,13 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 receipt: receipt
             )
+        case let .succeedAssignNoteColor(address, color):
+            return succeedAssignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
+            )
         case .submitSearch(let query):
             return submitSearch(
                 state: state,
@@ -503,7 +518,8 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop:
+                .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
+                .requestAssignNoteColor:
             return Update(state: state)
         }
     }
@@ -781,8 +797,6 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
-    /// Retitle success lifecycle handler.
-    /// Updates UI in response.
     static func succeedUpdateAudience(
         state: NotebookModel,
         environment: AppEnvironment,
@@ -792,6 +806,22 @@ struct NotebookModel: ModelProtocol {
             state: state,
             actions: [
                 .detailStack(.succeedUpdateAudience(receipt)),
+                .refreshLists
+            ],
+            environment: environment
+        )
+    }
+    
+    static func succeedAssignNoteColor(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        color: ThemeColor
+    ) -> Update<NotebookModel> {
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedAssignNoteColor(address, color)),
                 .refreshLists
             ],
             environment: environment

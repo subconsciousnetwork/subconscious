@@ -491,7 +491,7 @@ final class DatabaseService {
 
         let results = try database.execute(
             sql: """
-            SELECT slashlink, modified, excerpt
+            SELECT slashlink, excerpt, headers
             FROM memo
             WHERE did = ?
                 AND slug = ?
@@ -504,23 +504,24 @@ final class DatabaseService {
             ]
         )
 
-        return results.compactMap({ row in
+        return try results.compactMap({
+            row in
             guard
                 let address = row.col(0)?
                     .toString()?
-                    .toSlashlink(),
-                let modified = row.col(1)?.toDate()
+                    .toSlashlink()
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(1)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(2)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -562,7 +563,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, slashlink, modified, excerpt
+            SELECT did, slashlink, excerpt, headers
             FROM memo
             WHERE did NOT IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -573,27 +574,50 @@ final class DatabaseService {
                 .json(ignoredDids, or: "[]")
             ]
         )
-        return results.compactMap({ row in
+        return try results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
                 let slashlink = row.col(1)?
                     .toString()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: slashlink,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         })
+    }
+    
+    func parseHeadersJson(json: String) throws -> WellKnownHeaders {
+        var headers: [Header] = []
+        let jsonData = Data(json.utf8)
+        let headersArray = try JSONDecoder().decode(
+            [[String: String]].self,
+            from: jsonData
+        )
+        
+        for header in headersArray {
+            if let name = header["name"],
+               let value = header["value"] {
+                headers.append(Header(name: name, value: value))
+            }
+        }
+        
+        return WellKnownHeaders(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension
+        ).updating(headers)
     }
     
     /// List recent entries
@@ -612,7 +636,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, excerpt, headers
             FROM memo
             WHERE did IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -623,26 +647,26 @@ final class DatabaseService {
                 .json(dids, or: "[]")
             ]
         )
-        return results.compactMap({ row in
+        return try results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         })
     }
@@ -1050,17 +1074,17 @@ final class DatabaseService {
     }
     
     // Transform a database result into a well-formed EntryStub
-    private func hydrateEntryStub(owner: Did?, row: SQLite3Database.Row) -> EntryStub? {
+    private func hydrateEntryStub(owner: Did?, row: SQLite3Database.Row) throws  -> EntryStub? {
         guard let did = row.col(0)?.toString()?.toDid() else {
             return nil
         }
         
         let petname = row.col(1)?.toString()?.toPetname()
         let slug = row.col(2)?.toString()?.toSlug()
-        let modified = row.col(3)?.toDate()
-        let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
-        switch (petname, slug, modified) {
-        case let (.some(petname), .some(slug), .some(modified)):
+        let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+        let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
+        switch (petname, slug) {
+        case let (.some(petname), .some(slug)):
             return EntryStub(
                 did: did,
                 address: Slashlink(
@@ -1068,9 +1092,9 @@ final class DatabaseService {
                     slug: slug
                 ),
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
-        case let (.none, .some(slug), .some(modified)):
+        case let (.none, .some(slug)):
             let address = Slashlink(
                 peer: Peer.did(did),
                 slug: slug
@@ -1079,7 +1103,7 @@ final class DatabaseService {
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         default:
             return nil
@@ -1107,8 +1131,8 @@ final class DatabaseService {
             SELECT m.did,
                 peer.petname,
                 m.slug,
-                m.modified,
-                m.excerpt
+                m.excerpt,
+                m.headers
             FROM memo m
             LEFT JOIN peer ON m.did = peer.did
             JOIN json_slugs js ON m.slug = js.slug;
@@ -1120,7 +1144,7 @@ final class DatabaseService {
             ]
         )
         .compactMap({ row in
-           return hydrateEntryStub(owner: owner, row: row)
+           return try hydrateEntryStub(owner: owner, row: row)
         })
     }
     
@@ -1141,8 +1165,8 @@ final class DatabaseService {
                 memo_search.did,
                 peer.petname,
                 memo_search.slug,
-                memo_search.modified,
-                memo_search.excerpt
+                memo_search.excerpt,
+                memo_search.headers
             FROM memo_search
             LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search.description MATCH ?
@@ -1156,7 +1180,7 @@ final class DatabaseService {
                 .text(link.id)
             ]
         ).compactMap({ row in
-            return hydrateEntryStub(owner: owner, row: row)
+            return try hydrateEntryStub(owner: owner, row: row)
         })
     }
     
@@ -1171,7 +1195,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, excerpt, headers
             FROM memo_search
             WHERE memo_search.modified BETWEEN ? AND ?
                 AND substr(memo_search.slug, 1, 1) != '_'
@@ -1189,19 +1213,19 @@ final class DatabaseService {
                 let address = row.col(1)?
                     .toString()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -1214,7 +1238,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, slashlink, modified, excerpt
+            SELECT did, slashlink, excerpt, headers
             FROM memo
             WHERE substr(memo.slug, 1, 1) != '_'
             AND length(excerpt) > 64
@@ -1229,19 +1253,19 @@ final class DatabaseService {
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
-                    .toSlashlink(),
-                let modified = row.col(2)?.toDate()
+                    .toSlashlink()
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -1255,7 +1279,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, slashlink, modified, excerpt
+            SELECT did, slashlink, excerpt, headers
             FROM memo
             WHERE substr(memo.slug, 1, 1) != '_'
             ORDER BY RANDOM()
@@ -1267,19 +1291,19 @@ final class DatabaseService {
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
-                    .toSlashlink(),
-                let modified = row.col(2)?.toDate()
+                    .toSlashlink()
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -1296,7 +1320,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, excerpt
+            SELECT did, id, excerpt, headers
             FROM memo_search
             WHERE description MATCH ?
                 AND substr(slug, 1, 1) != '_'
@@ -1314,19 +1338,19 @@ final class DatabaseService {
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                modified: modified
+                headers: headers
             )
         })
         .first

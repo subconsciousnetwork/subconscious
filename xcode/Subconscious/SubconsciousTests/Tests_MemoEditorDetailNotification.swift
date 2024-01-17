@@ -39,4 +39,10 @@ final class Tests_MemoEditorDetailNotification: XCTestCase {
         let action = DetailStackAction.tag(notification)
         XCTAssertEqual(action, .requestUpdateAudience(Slashlink("/foo")!, .public))
     }
+    
+    func testForwardRequestAssignNoteColor() throws {
+        let notification = MemoEditorDetailNotification.from(.forwardRequestAssignNoteColor(address: Slashlink("/foo")!, .a))!
+        let action = DetailStackAction.tag(notification)
+        XCTAssertEqual(action, .requestAssignNoteColor(Slashlink("/foo")!, .a))
+    }
 }

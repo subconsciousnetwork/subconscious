@@ -67,9 +67,34 @@ struct MemoEditorDetailMetaSheetView: View {
                             )
                         }
                         .buttonStyle(RowButtonStyle())
+                        Divider()
                     }
                 }
                 .padding()
+                
+                HStack(spacing: AppTheme.padding) {
+                    let themeColors = ThemeColor.allCases
+                    
+                    ForEach(themeColors, id: \.self) { themeColor in
+                        Button(
+                            action: {
+                                store.send(.requestAssignNoteColor(themeColor))
+                            }
+                        ) {
+                            ZStack {
+                                Circle()
+                                    .fill(themeColor.toColor())
+                                Circle()
+                                    .stroke(Color.separator)
+                                if themeColor == store.state.themeColor {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .frame(width: 32, height: 32)
+                        }
+                    }
+                }
             }
         }
         .presentationDragIndicator(.hidden)
@@ -115,10 +140,15 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: Slashlink?)
     case setDefaultAudience(_ audience: Audience)
+    
     /// Requests that audience be updated.
     /// Should be handled by parent component.
     case requestUpdateAudience(_ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    
+    case setNoteColor(_ color: ThemeColor?)
+    case requestAssignNoteColor(_ color: ThemeColor)
+    case succeedAssignNoteColor(_ color: ThemeColor)
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -141,6 +171,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: Slashlink?
+    var themeColor: ThemeColor?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -212,6 +243,23 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
             )
         case .requestDelete:
             return Update(state: state)
+        
+        // Editor passes us the current color when the sheet is opened
+        case let .setNoteColor(color):
+            return setNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
+        case .requestAssignNoteColor:
+            return Update(state: state)
+        // Update internal color to match the updated value
+        case let .succeedAssignNoteColor(color):
+            return setNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
         }
     }
     
@@ -274,6 +322,17 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.defaultAudience = audience
+        return Update(state: model)
+    }
+    
+    static func setNoteColor(
+        state: Self,
+        environment: Environment,
+        color: ThemeColor?
+    ) -> Update<Self> {
+        var model = state
+        model.themeColor = color
+        
         return Update(state: model)
     }
 }

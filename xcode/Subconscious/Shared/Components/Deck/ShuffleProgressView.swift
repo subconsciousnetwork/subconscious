@@ -10,7 +10,7 @@ import SwiftUI
 
 struct CardShuffleView: View {
     @Environment (\.colorScheme) var colorScheme
-    @State private var cards = [0, 1, 2, 3, 4]
+    @State private var cards: [ThemeColor] = ThemeColor.allCases
     @State private var offset: CGFloat = 0
     @State private var behind: Bool = false
     
@@ -79,16 +79,12 @@ struct CardShuffleView: View {
         }
     }
 
-    private func colorForCard(card: Int) -> Color {
-        let colors = colorScheme == .dark
-            ? DeckTheme.darkCardColors
-            : DeckTheme.lightCardColors
-        
-        return colors[card]
+    private func colorForCard(card: ThemeColor) -> Color {
+        card.toColor()
     }
 
-    private func zIndexForCard(card: Int) -> Double {
-        return Double(cards.count) - Double((cards.firstIndex(of: card) ?? 0))
+    private func zIndexForCard(card: ThemeColor) -> Double {
+        Double(cards.count) - Double((cards.firstIndex(of: card) ?? 0))
     }
 }
 

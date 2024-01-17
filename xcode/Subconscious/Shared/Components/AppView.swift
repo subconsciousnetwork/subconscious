@@ -303,6 +303,7 @@ enum AppAction: Hashable {
     case mergeEntry(parent: Slashlink, child: Slashlink)
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
+    case assignColor(address: Slashlink, color: ThemeColor)
     
     // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -310,11 +311,13 @@ enum AppAction: Hashable {
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(MoveReceipt)
+    case succeedAssignNoteColor(address: Slashlink, color: ThemeColor)
     case failSaveEntry(address: Slashlink, error: String)
     case failDeleteMemo(String)
     case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
     case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
+    case failAssignNoteColor(address: Slashlink, error: String)
     
     case succeedLogActivity
     case failLogActivity(_ error: String)
@@ -1228,7 +1231,8 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience:
+        case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
+                .succeedAssignNoteColor:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
             return succeedSaveEntry(
@@ -1263,6 +1267,13 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 address: address,
                 audience: audience
+            )
+        case let .assignColor(address, color):
+            return assignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
             )
         case .failSaveEntry(address: let address, error: let error):
             logger.warning(
@@ -1328,6 +1339,20 @@ struct AppModel: ModelProtocol {
                 """
             )
             return Update(state: state)
+        case let .failAssignNoteColor(address, error):
+            logger.warning(
+                """
+                Failed to assign color for entry: \(address)
+                \(error)
+                """
+            )
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not set color"
+                ),
+                environment: environment
+            )
         }
     }
     
@@ -3111,6 +3136,34 @@ struct AppModel: ModelProtocol {
             state: state,
             fx: fx
         )
+    }
+    
+    static func assignNoteColor(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        color: ThemeColor
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            try await environment.data.assignNoteColor(
+                address: address,
+                color: color
+            )
+            
+            return .succeedAssignNoteColor(
+                address: address,
+                color: color
+            )
+        }
+        .recover { error in
+            return .failAssignNoteColor(
+                address: address,
+                error: error.localizedDescription
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
 }
 

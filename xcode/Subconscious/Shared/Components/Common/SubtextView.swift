@@ -146,7 +146,7 @@ struct SubtextView_Previews: PreviewProvider {
                                 "/wanderer-your-footsteps-are-the-road"
                             )!,
                             excerpt: Subtext(markup: "hello"),
-                            modified: Date.now
+                            headers: .emptySubtext
                         ),
                         Slashlink("/voice")!: EntryStub(
                             did: Did.dummyData(),
@@ -154,7 +154,7 @@ struct SubtextView_Previews: PreviewProvider {
                                 "/voice"
                             )!,
                             excerpt: Subtext(markup: "hello"),
-                            modified: Date.now
+                            headers: .emptySubtext
                         ),
                         Slashlink("/memory")!: EntryStub(
                             did: Did.dummyData(),
@@ -162,7 +162,7 @@ struct SubtextView_Previews: PreviewProvider {
                                 "/memory"
                             )!,
                             excerpt: Subtext(markup: "hello world"),
-                            modified: Date.now
+                            headers: .emptySubtext
                         )
                     ],
                     onLink: { link in }

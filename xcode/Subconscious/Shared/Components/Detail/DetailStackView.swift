@@ -57,15 +57,6 @@ struct DetailStackView<Root: View>: View {
                 }
             }
         }
-        // Tint using the current detail's highlight color.
-        // BUT only for notes.
-        .tint(
-            (store.state.details.last?.address?.isProfile ?? false)
-                ? nil
-                : store.state.details.last?.address?.highlightColor(
-                    colorScheme: colorScheme
-                )
-        )
     }
 }
 
@@ -149,6 +140,8 @@ enum DetailStackAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
 
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
@@ -271,8 +264,15 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 receipt: receipt
             )
+        case let .succeedAssignNoteColor(address, color):
+            return succeedAssignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience:
+                .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor:
             return Update(state: state)
         }
     }
@@ -587,6 +587,14 @@ struct DetailStackModel: Hashable, ModelProtocol {
         )
     }
 
+    static func succeedAssignNoteColor(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        color: ThemeColor
+    ) -> Update<Self> {
+        return Update(state: state)
+    }
 }
 
 extension DetailStackAction {
@@ -602,19 +610,13 @@ extension DetailStackAction {
             return .requestMergeEntry(parent: parent, child: child)
         case let .requestUpdateAudience(address, audience):
             return .requestUpdateAudience(address, audience)
+        case let .requestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
             
         case let .requestDetail(detail):
             return .pushDetail(detail)
         case let .requestFindLinkDetail(link):
             return .findAndPushLinkDetail(link)
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedSaveEntry(address, modified):
-            return .succeedSaveEntry(address, modified)
-        case let .succeedUpdateAudience(receipt):
-            return .succeedUpdateAudience(receipt)
         }
     }
 
