@@ -60,9 +60,9 @@ struct MemoViewerDetailMetaSheetView: View {
                                 }
                             )
                             .buttonStyle(RowButtonStyle())
+                            
+                            Divider()
                         }
-                        
-                        Divider()
                         
                         if let author = store.state.author {
                             Button(
@@ -136,11 +136,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 author: author
             )
-        case .requestDismiss:
-            return Update(state: state)
-        case .requestAuthorDetail:
-            return Update(state: state)
-        case .requestQuoteInNewNote:
+        case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote:
             return Update(state: state)
         }
     }

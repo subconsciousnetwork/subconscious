@@ -294,6 +294,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(address: Slashlink, audience: Audience)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestQuoteInNewDetail(_ address: Slashlink)
 }
 
 extension MemoEditorDetailNotification {
@@ -311,6 +312,8 @@ extension MemoEditorDetailNotification {
             return .requestUpdateAudience(address: address, audience: audience)
         case let .forwardRequestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewDetail(address)
         default:
             return nil
         }
@@ -461,6 +464,8 @@ enum MemoEditorDetailAction: Hashable {
 
     /// Refresh after save
     case refreshLists
+    
+    case requestQuoteInNewNote(_ address: Slashlink)
 
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
@@ -596,6 +601,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
             return .requestAssignNoteColor(color)
         case .requestDelete(let address):
             return .requestDelete(address)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewNote(address)
         default:
             return .metaSheet(action)
         }
@@ -975,8 +982,15 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestQuoteInNewNote:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
-                .forwardRequestMergeEntry, .forwardRequestUpdateAudience, .forwardRequestAssignNoteColor:
+                .forwardRequestMergeEntry, .forwardRequestUpdateAudience,
+                .forwardRequestAssignNoteColor:
             return Update(state: state)
         }
     }
