@@ -76,7 +76,7 @@ struct StoryEntryView: View {
                         transcludePreviews: [:],
                         onLink: onLink
                     )
-                    .truncateWithGradient(color: .white, maxHeight: AppTheme.maxEntryListRowHeight)
+                    .truncateWithGradient(color: .background, maxHeight: AppTheme.maxEntryListRowHeight)
                     .padding([.leading, .trailing], AppTheme.padding)
                     
                     VStack(alignment: .leading) {
