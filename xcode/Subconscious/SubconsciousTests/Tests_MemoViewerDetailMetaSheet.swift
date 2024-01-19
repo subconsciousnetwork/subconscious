@@ -20,7 +20,7 @@ final class Tests_MemoViewerDetailMetaSheet: XCTestCase {
         let update = MemoViewerDetailMetaSheetModel.update(
             state: state,
             action: .setAddress(address),
-            environment: ()
+            environment: AppEnvironment()
         )
         
         XCTAssertEqual(update.state.address, address)
@@ -35,7 +35,7 @@ final class Tests_MemoViewerDetailMetaSheet: XCTestCase {
         let update = MemoViewerDetailMetaSheetModel.update(
             state: state,
             action: .setAuthor(author),
-            environment: ()
+            environment: AppEnvironment()
         )
         
         XCTAssertEqual(update.state.author, author)

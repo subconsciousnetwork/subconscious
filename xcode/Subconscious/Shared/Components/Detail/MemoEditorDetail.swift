@@ -380,7 +380,7 @@ enum MemoEditorDetailAction: Hashable {
     case setDetail(
         detail: MemoEditorDetailResponse,
         autofocus: Bool,
-        append: String
+        append: String = ""
     )
     case setDraftDetail(
         defaultAudience: Audience,
