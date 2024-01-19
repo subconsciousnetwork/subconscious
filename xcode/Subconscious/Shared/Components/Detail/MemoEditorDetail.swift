@@ -356,7 +356,8 @@ enum MemoEditorDetailAction: Hashable {
     case loadDetail(
         address: Slashlink,
         fallback: String,
-        autofocus: Bool
+        autofocus: Bool,
+        append: String
     )
     /// Reload detail from source of truth
     case refreshDetail
@@ -376,7 +377,11 @@ enum MemoEditorDetailAction: Hashable {
     /// more recently than DetailModel.
     case setDetailLastWriteWins(MemoEditorDetailResponse)
     /// Set detail
-    case setDetail(detail: MemoEditorDetailResponse, autofocus: Bool)
+    case setDetail(
+        detail: MemoEditorDetailResponse,
+        autofocus: Bool,
+        append: String
+    )
     case setDraftDetail(
         defaultAudience: Audience,
         fallback: String
@@ -450,6 +455,7 @@ enum MemoEditorDetailAction: Hashable {
 
     /// Set selected range in editor
     case setEditorSelection(range: NSRange, text: String)
+    case appendEditorText(text: String)
     /// Insert text into editor, replacing range
     case insertEditorText(
         text: String,
@@ -740,6 +746,12 @@ struct MemoEditorDetailModel: ModelProtocol {
                 range: range,
                 text: text
             )
+        case let .appendEditorText(text):
+            return appendEditorText(
+                state: state,
+                environment: environment,
+                text: text
+            )
         case let .insertEditorText(text, range):
             return insertEditorText(
                 state: state,
@@ -747,13 +759,14 @@ struct MemoEditorDetailModel: ModelProtocol {
                 text: text,
                 range: range
             )
-        case let .loadDetail(address, fallback, autofocus):
+        case let .loadDetail(address, fallback, autofocus, append):
             return loadDetail(
                 state: state,
                 environment: environment,
                 address: address,
                 fallback: fallback,
-                autofocus: autofocus
+                autofocus: autofocus,
+                append: append
             )
         case .refreshDetail:
             return refreshDetail(
@@ -777,12 +790,13 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 detail: detail
             )
-        case let .setDetail(detail, autofocus):
+        case let .setDetail(detail, autofocus, append):
             return setDetail(
                 state: state,
                 environment: environment,
                 detail: detail,
-                autofocus: autofocus
+                autofocus: autofocus,
+                append: append
             )
         case .setDetailLastWriteWins(let detail):
             return setDetailLastWriteWins(
@@ -1081,7 +1095,8 @@ struct MemoEditorDetailModel: ModelProtocol {
             action: .loadDetail(
                 address: address,
                 fallback: info.fallback,
-                autofocus: false
+                autofocus: false,
+                append: info.append
             ),
             environment: environment
         )
@@ -1163,6 +1178,26 @@ struct MemoEditorDetailModel: ModelProtocol {
         )
     }
     
+    static func appendEditorText(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<MemoEditorDetailModel> {
+        let newText = state.editor.text + text
+        return update(
+            state: state,
+            actions: [
+                .setEditor(
+                    text: newText,
+                    saveState: .unsaved,
+                    modified: Date.now
+                ),
+                .autosave
+            ],
+            environment: environment
+        )
+    }
+    
     /// Insert text in editor at range
     static func insertEditorText(
         state: MemoEditorDetailModel,
@@ -1229,7 +1264,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         environment: AppEnvironment,
         address: Slashlink,
         fallback: String,
-        autofocus: Bool
+        autofocus: Bool,
+        append: String
     ) -> Update<MemoEditorDetailModel> {
         let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailPublisher(
             address: address,
@@ -1237,7 +1273,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         ).map({ detail in
             MemoEditorDetailAction.setDetail(
                 detail: detail,
-                autofocus: autofocus
+                autofocus: autofocus,
+                append: append
             )
         }).catch({ error in
             Just(MemoEditorDetailAction.failLoadDetail(error.localizedDescription))
@@ -1421,28 +1458,30 @@ struct MemoEditorDetailModel: ModelProtocol {
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
         detail: MemoEditorDetailResponse,
-        autofocus: Bool
+        autofocus: Bool,
+        append: String
     ) -> Update<MemoEditorDetailModel> {
-        guard autofocus else {
-            // If autofocus is false, request blur if needed
-            return update(
-                state: state,
-                actions: [
-                    .setDetailLastWriteWins(detail),
-                    .requestEditorFocus(false)
-                ],
-                environment: environment
+        var actions: [MemoEditorDetailAction] = []
+        actions.append(.setDetailLastWriteWins(detail))
+        
+        if append.count > 0 {
+            actions.append(
+                .setEditor(
+                    text: detail.entry.contents.body + append,
+                    saveState: .unsaved,
+                    modified: Date.now
+                )
             )
         }
+        
+        actions.append(.requestEditorFocus(autofocus || append.count > 0))
+        actions.append(.setEditorSelectionAtEnd)
+        
         // If autofocus is true, request focus, and also set selection to end
         // of editor text.
         return update(
             state: state,
-            actions: [
-                .setDetailLastWriteWins(detail),
-                .requestEditorFocus(true),
-                .setEditorSelectionAtEnd
-            ],
+            actions: actions,
             environment: environment
         )
     }
@@ -2101,6 +2140,7 @@ struct MemoEditorDetailModel: ModelProtocol {
 struct MemoEditorDetailDescription: Hashable {
     var address: Slashlink?
     var fallback: String = ""
+    var append: String = ""
     /// Default audience to use when deriving a memo address
     var defaultAudience = Audience.local
 }

@@ -966,32 +966,19 @@ final class DatabaseService {
     /// - Returns an array of RenameSuggestion
     static func collateAppendLinkSuggestions(
         current: Slashlink,
-        query: Slashlink?,
         results: [Slashlink]
     ) -> [AppendLinkSuggestion] {
         var suggestions: OrderedDictionary<Slug, AppendLinkSuggestion> = [:]
-        // First append result for literal query
-        if let query = query {
-            if query.slug != current.slug {
-                suggestions.updateValue(
-                    .append(
-                        address: current,
-                        target: query
-                    ),
-                    forKey: query.slug
-                )
-            }
-        }
-
+        
         // Then append results from existing entries, potentially overwriting
         // result for literal query if identical.
         for result in results {
             /// If slug changed, this is a move
-            if result.slug != current.slug {
+            if result.peer == nil {
                 suggestions.updateValue(
                     .append(
-                        address: result,
-                        target: current
+                        address: current,
+                        target: result
                     ),
                     forKey: result.slug
                 )
@@ -1010,15 +997,6 @@ final class DatabaseService {
         guard self.state == .ready else {
             return []
         }
-        
-        // Create a suggestion for the literal query that has same
-        // audience as current.
-        let queryAddress = Func.run({
-            let audience = current.toAudience()
-            // Try literal slug first to preserve slashes
-            // If that fails, try best effort formatting
-            return (Slug(query) ?? Slug(formatting: query))?.toSlashlink(audience: audience)
-        })
         
         var dids = [Did.local.description]
         if let owner = owner {
@@ -1051,7 +1029,6 @@ final class DatabaseService {
         
         return Self.collateAppendLinkSuggestions(
             current: current,
-            query: queryAddress,
             results: results
         )
     }

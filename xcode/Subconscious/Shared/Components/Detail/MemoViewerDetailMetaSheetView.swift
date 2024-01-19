@@ -289,7 +289,16 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         model.isAppendLinkSearchPresented = false
         return update(
             state: model,
-            action: .appendLinkSearch(.selectSuggestion(suggestion)),
+            actions: [
+                .appendLinkSearch(
+                    .selectSuggestion(
+                        suggestion
+                    )
+                ),
+                .presentAppendLinkSearchSheet(
+                    false
+                )
+            ],
             environment: environment
         )
     }

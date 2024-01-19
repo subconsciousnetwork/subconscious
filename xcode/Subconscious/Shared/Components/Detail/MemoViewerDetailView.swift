@@ -192,6 +192,18 @@ extension MemoViewerDetailNotification {
             return .requestUserProfileDetail(user.address)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            switch suggestion {
+            case let .append(address, target):
+                return .requestDetail(
+                    .editor(
+                        MemoEditorDetailDescription(
+                            address: target,
+                            append: "\n\(address.markup)"
+                        )
+                    )
+                )
+            }
         default:
             return nil
         }
@@ -229,6 +241,8 @@ enum MemoViewerDetailAction: Hashable {
     case succeedIndexBackgroundSphere
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
+    
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
@@ -387,6 +401,15 @@ struct MemoViewerDetailModel: ModelProtocol {
             return update(
                 state: state,
                 action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return update(
+                state: state,
+                actions: [
+                    .metaSheet(.selectAppendLinkSearchSuggestion(suggestion)),
+                    .presentMetaSheet(false)
+                ],
                 environment: environment
             )
         }
@@ -620,6 +643,8 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
             return .requestAuthorDetail(user)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewNote(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return .metaSheet(action)
         }
