@@ -30,13 +30,13 @@ struct AppendLinkSearchView: View {
                 .padding(.bottom, AppTheme.padding)
                 .padding(.horizontal, AppTheme.padding)
                 
-                List(store.state.renameSuggestions) { suggestion in
+                List(store.state.suggestions) { suggestion in
                     Button(
                         action: {
                             store.send(.selectSuggestion(suggestion))
                         },
                         label: {
-                            RenameSuggestionLabelView(suggestion: suggestion)
+                            AppendLinkSuggestionLabelView(suggestion: suggestion)
                         }
                     )
                     .modifier(SuggestionViewModifier())
@@ -63,16 +63,16 @@ enum AppendLinkSearchAction: Hashable {
     case setQuery(_ query: String)
     case queryField(FormFieldAction<String>)
     case refreshSuggestions
-    case setSuggestions([RenameSuggestion])
+    case setSuggestions([AppendLinkSuggestion])
     case failSuggestions(String)
-    case selectSuggestion(RenameSuggestion)
+    case selectSuggestion(AppendLinkSuggestion)
 }
 
 struct AppendLinkSearchModel: ModelProtocol {
     var subject: Slashlink? = nil
     var queryField: FormField<String, String> = FormField(value: "", validate: { s in s })
     /// Suggestions for renaming note.
-    var renameSuggestions: [RenameSuggestion] = []
+    var suggestions: [AppendLinkSuggestion] = []
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -110,7 +110,7 @@ struct AppendLinkSearchModel: ModelProtocol {
                 environment: environment
             )
         case .setSuggestions(let suggestions):
-            return setRenameSuggestions(
+            return setSuggestions(
                 state: state,
                 suggestions: suggestions
             )
@@ -133,13 +133,7 @@ struct AppendLinkSearchModel: ModelProtocol {
         var model = state
         model.subject = subject
 
-        let query = subject?.toSlug().description ?? ""
-
-        return update(
-            state: model,
-            action: .setQuery(query),
-            environment: environment
-        )
+        return Update(state: model)
     }
     
     /// Set text of slug field
@@ -179,12 +173,12 @@ struct AppendLinkSearchModel: ModelProtocol {
     }
     
     /// Set rename suggestions
-    static func setRenameSuggestions(
+    static func setSuggestions(
         state: Self,
-        suggestions: [RenameSuggestion]
+        suggestions: [AppendLinkSuggestion]
     ) -> Update<Self> {
         var model = state
-        model.renameSuggestions = suggestions
+        model.suggestions = suggestions
         return Update(state: model)
     }
 
@@ -219,21 +213,13 @@ struct AppendLinkSearchView_Previews: PreviewProvider {
                                 "/loomings"
                             )!
                         ),
-                        renameSuggestions: [
-                            .move(
-                                from: Slashlink(
+                        suggestions: [
+                            .append(
+                                address: Slashlink(
                                     "@here/loomings"
                                 )!,
-                                to: Slashlink(
+                                target: Slashlink(
                                     "@here/the-lee-shore"
-                                )!
-                            ),
-                            .merge(
-                                parent: Slashlink(
-                                    "@here/breakfast"
-                                )!,
-                                child: Slashlink(
-                                    "@here/the-street"
                                 )!
                             )
                         ]

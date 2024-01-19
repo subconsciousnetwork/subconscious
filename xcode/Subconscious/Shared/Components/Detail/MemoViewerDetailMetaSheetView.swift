@@ -127,7 +127,7 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
     case appendLinkSearch(AppendLinkSearchAction)
     case presentAppendLinkSearchSheet(_ isPresented: Bool)
     case presentAppendLinkSearchSheetFor(_ address: Slashlink?)
-    case selectAppendLinkSearchSuggestion(RenameSuggestion)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
     static func setRenameSearchSubject(_ address: Slashlink?) -> Self {
         .appendLinkSearch(.setSubject(address))
@@ -232,7 +232,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
                 environment: environment
             )
         case .selectAppendLinkSearchSuggestion(let suggestion):
-            return selectRenameSuggestion(
+            return selectSuggestion(
                 state: state,
                 environment: environment,
                 suggestion: suggestion
@@ -280,10 +280,10 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         )
     }
     
-    static func selectRenameSuggestion(
+    static func selectSuggestion(
         state: Self,
         environment: Environment,
-        suggestion: RenameSuggestion
+        suggestion: AppendLinkSuggestion
     ) -> Update<Self> {
         var model = state
         model.isAppendLinkSearchPresented = false

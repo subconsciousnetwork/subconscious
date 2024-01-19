@@ -132,6 +132,8 @@
 		B5CA448929D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */; };
 		B5CA448A29D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */; };
 		B5CA6F3F2B5A4E5D00877B0D /* AppendLinkSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA6F3E2B5A4E5D00877B0D /* AppendLinkSearchView.swift */; };
+		B5CA6F412B5A5D5000877B0D /* AppendLinkSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA6F402B5A5D5000877B0D /* AppendLinkSuggestion.swift */; };
+		B5CA6F432B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA6F422B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift */; };
 		B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
 		B5CFC7FF29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
 		B5D71D192A32B2AF000E058A /* NotFoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D71D182A32B2AF000E058A /* NotFoundView.swift */; };
@@ -658,6 +660,8 @@
 		B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayProvisioningService.swift; sourceTree = "<group>"; };
 		B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyDataUtilities.swift; sourceTree = "<group>"; };
 		B5CA6F3E2B5A4E5D00877B0D /* AppendLinkSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppendLinkSearchView.swift; sourceTree = "<group>"; };
+		B5CA6F402B5A5D5000877B0D /* AppendLinkSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppendLinkSuggestion.swift; sourceTree = "<group>"; };
+		B5CA6F422B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppendLinkSuggestionLabelView.swift; sourceTree = "<group>"; };
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
 		B5D71D182A32B2AF000E058A /* NotFoundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotFoundView.swift; sourceTree = "<group>"; };
 		B5D769CA29F770440015385A /* GenerativeProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerativeProfilePic.swift; sourceTree = "<group>"; };
@@ -1444,6 +1448,7 @@
 				B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */,
 				B8E2B02829AD0E23004A78B3 /* Petname.swift */,
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
+				B5CA6F402B5A5D5000877B0D /* AppendLinkSuggestion.swift */,
 				B579FA912A1AE4D1008A4D2F /* ResolutionStatus.swift */,
 				B8B6BCB429CCDDF6000DB410 /* ResourceStatus.swift */,
 				B826B27427B5D95F003D3C03 /* SaveState.swift */,
@@ -1729,6 +1734,7 @@
 				B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */,
 				B51359222AC113C1004385A7 /* Recovery */,
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
+				B5CA6F422B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift */,
 				B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 				B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */,
@@ -2100,6 +2106,7 @@
 				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
 				B88A76D429E09B51005F3422 /* PasteboardService.swift in Sources */,
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
+				B5CA6F432B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B856521C2975B2CF00B7FCA0 /* StoryAudienceView.swift in Sources */,
 				B515E9DB2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift in Sources */,
@@ -2122,6 +2129,7 @@
 				B8B6BCBB29CE1FCF000DB410 /* ProgressTorusView.swift in Sources */,
 				B8AB08C52A9D50AB00998099 /* BlockToolbar.swift in Sources */,
 				B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */,
+				B5CA6F412B5A5D5000877B0D /* AppendLinkSuggestion.swift in Sources */,
 				B508957029E79BE70048106B /* UserProfileService.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
 				B86F1AB728C77E8C00DA264E /* Search.swift in Sources */,

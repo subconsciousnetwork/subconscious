@@ -832,7 +832,7 @@ actor DataService {
     func searchAppendLink(
         query: String,
         current: Slashlink
-    ) async throws -> [RenameSuggestion] {
+    ) async throws -> [AppendLinkSuggestion] {
         let identity = try? await self.noosphere.identity()
         return try self.database.searchAppendLink(
             owner: identity,

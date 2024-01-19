@@ -968,15 +968,15 @@ final class DatabaseService {
         current: Slashlink,
         query: Slashlink?,
         results: [Slashlink]
-    ) -> [RenameSuggestion] {
-        var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
+    ) -> [AppendLinkSuggestion] {
+        var suggestions: OrderedDictionary<Slug, AppendLinkSuggestion> = [:]
         // First append result for literal query
         if let query = query {
             if query.slug != current.slug {
                 suggestions.updateValue(
-                    .move(
-                        from: current,
-                        to: query
+                    .append(
+                        address: current,
+                        target: query
                     ),
                     forKey: query.slug
                 )
@@ -989,9 +989,9 @@ final class DatabaseService {
             /// If slug changed, this is a move
             if result.slug != current.slug {
                 suggestions.updateValue(
-                    .merge(
-                        parent: result,
-                        child: current
+                    .append(
+                        address: result,
+                        target: current
                     ),
                     forKey: result.slug
                 )
@@ -1006,7 +1006,7 @@ final class DatabaseService {
         owner: Did?,
         query: String,
         current: Slashlink
-    ) throws -> [RenameSuggestion] {
+    ) throws -> [AppendLinkSuggestion] {
         guard self.state == .ready else {
             return []
         }
