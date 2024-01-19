@@ -829,6 +829,18 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
+    func searchAppendLink(
+        query: String,
+        current: Slashlink
+    ) async throws -> [RenameSuggestion] {
+        let identity = try? await self.noosphere.identity()
+        return try self.database.searchAppendLink(
+            owner: identity,
+            query: query,
+            current: current
+        )
+    }
+    
     /// Log a search query in search history db
     nonisolated func createSearchHistoryItemPublisher(
         query: String

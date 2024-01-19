@@ -64,6 +64,21 @@ struct MemoViewerDetailMetaSheetView: View {
                             Divider()
                         }
                         
+                        Button(
+                            action: {
+                                store.send(.presentAppendLinkSearchSheet(true))
+                            },
+                            label: {
+                                Label(
+                                    "Append to note",
+                                    systemImage: "link.badge.plus"
+                                )
+                            }
+                        )
+                        .buttonStyle(RowButtonStyle())
+                        
+                        Divider()
+                        
                         if let author = store.state.author {
                             Button(
                                 action: {
@@ -85,6 +100,19 @@ struct MemoViewerDetailMetaSheetView: View {
         }
         .presentationDragIndicator(.hidden)
         .presentationDetents([.medium, .large])
+        .sheet(
+            isPresented: store.binding(
+                get: \.isAppendLinkSearchPresented,
+                tag: MemoViewerDetailMetaSheetAction.presentAppendLinkSearchSheet
+            )
+        ) {
+            AppendLinkSearchView(
+                store: store.viewStore(
+                    get: \.appendLinkSearch,
+                    tag: MemoViewerDetailMetaSheetAppendLinkSearchCursor.tag
+                )
+            )
+        }
     }
 }
 
@@ -94,11 +122,50 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
     case requestDismiss
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
+    
+    /// Tagged actions for rename search sheet
+    case appendLinkSearch(AppendLinkSearchAction)
+    case presentAppendLinkSearchSheet(_ isPresented: Bool)
+    case presentAppendLinkSearchSheetFor(_ address: Slashlink?)
+    case selectAppendLinkSearchSuggestion(RenameSuggestion)
+    
+    static func setRenameSearchSubject(_ address: Slashlink?) -> Self {
+        .appendLinkSearch(.setSubject(address))
+    }
 }
+
+// MARK: RenameSearchCursor
+struct MemoViewerDetailMetaSheetAppendLinkSearchCursor: CursorProtocol {
+    typealias Model = MemoViewerDetailMetaSheetModel
+    typealias ViewModel = AppendLinkSearchModel
+
+    static func get(state: Model) -> ViewModel {
+        state.appendLinkSearch
+    }
+    
+    static func set(
+        state: Model,
+        inner: ViewModel
+    ) -> Model {
+        var model = state
+        model.appendLinkSearch = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case .selectSuggestion(let suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
+        default:
+            return .appendLinkSearch(action)
+        }
+    }
+}
+
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     typealias Action = MemoViewerDetailMetaSheetAction
-    typealias Environment = ()
+    typealias Environment = AppEnvironment
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -117,6 +184,9 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         }
         return address.markup
     }
+    
+    var isAppendLinkSearchPresented = false
+    var appendLinkSearch = AppendLinkSearchModel()
     
     static func update(
         state: Self,
@@ -138,6 +208,35 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
             )
         case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote:
             return Update(state: state)
+            
+        // Rename
+        case .appendLinkSearch(let action):
+            return MemoViewerDetailMetaSheetAppendLinkSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .presentAppendLinkSearchSheet(let isPresented):
+            return presentRenameSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .presentAppendLinkSearchSheetFor(let address):
+            return update(
+                state: state,
+                actions: [
+                    .setRenameSearchSubject(address),
+                    .presentAppendLinkSearchSheet(true)
+                ],
+                environment: environment
+            )
+        case .selectAppendLinkSearchSuggestion(let suggestion):
+            return selectRenameSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
         }
     }
     
@@ -159,6 +258,40 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         var model = state
         model.author = author
         return Update(state: model)
+    }
+    
+    static func presentRenameSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.isAppendLinkSearchPresented = isPresented
+        return update(
+            state: model,
+            action: .appendLinkSearch(
+                .setSubject(address)
+            ),
+            environment: environment
+        )
+    }
+    
+    static func selectRenameSuggestion(
+        state: Self,
+        environment: Environment,
+        suggestion: RenameSuggestion
+    ) -> Update<Self> {
+        var model = state
+        model.isAppendLinkSearchPresented = false
+        return update(
+            state: model,
+            action: .appendLinkSearch(.selectSuggestion(suggestion)),
+            environment: environment
+        )
     }
 }
 

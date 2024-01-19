@@ -290,7 +290,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             return MemoViewerDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: environment
             )
         case .appear(let description):
             return appear(

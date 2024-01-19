@@ -953,6 +953,108 @@ final class DatabaseService {
             results: results
         )
     }
+    
+    /// Given
+    /// - An entry link representing the current link for the file
+    /// - An entry link representing the search query
+    /// - And some results for existing entries
+    /// ...Return an array of unique RenameSuggestions,
+    /// sorted for presentation.
+    ///
+    /// We factor out this collation code to make it easier to test.
+    ///
+    /// - Returns an array of RenameSuggestion
+    static func collateAppendLinkSuggestions(
+        current: Slashlink,
+        query: Slashlink?,
+        results: [Slashlink]
+    ) -> [RenameSuggestion] {
+        var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
+        // First append result for literal query
+        if let query = query {
+            if query.slug != current.slug {
+                suggestions.updateValue(
+                    .move(
+                        from: current,
+                        to: query
+                    ),
+                    forKey: query.slug
+                )
+            }
+        }
+
+        // Then append results from existing entries, potentially overwriting
+        // result for literal query if identical.
+        for result in results {
+            /// If slug changed, this is a move
+            if result.slug != current.slug {
+                suggestions.updateValue(
+                    .merge(
+                        parent: result,
+                        child: current
+                    ),
+                    forKey: result.slug
+                )
+            }
+        }
+        return Array(suggestions.values)
+    }
+    
+    /// Given a query and a `current` slug, produce an array of suggestions
+    /// for renaming the note.
+    func searchAppendLink(
+        owner: Did?,
+        query: String,
+        current: Slashlink
+    ) throws -> [RenameSuggestion] {
+        guard self.state == .ready else {
+            return []
+        }
+        
+        // Create a suggestion for the literal query that has same
+        // audience as current.
+        let queryAddress = Func.run({
+            let audience = current.toAudience()
+            // Try literal slug first to preserve slashes
+            // If that fails, try best effort formatting
+            return (Slug(query) ?? Slug(formatting: query))?.toSlashlink(audience: audience)
+        })
+        
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+
+        let results: [Slashlink] = try database
+            .execute(
+                sql: """
+                SELECT id
+                FROM memo_search
+                WHERE memo_search MATCH ?
+                    AND did IN (SELECT value FROM json_each(?))
+                    AND substr(memo_search.slug, 1, 1) != '_'
+                ORDER BY rank
+                LIMIT 25
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query),
+                    .json(dids, or: "[]")
+                ]
+            )
+            .compactMap({ row in
+                row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner)
+            })
+        
+        return Self.collateAppendLinkSuggestions(
+            current: current,
+            query: queryAddress,
+            results: results
+        )
+    }
 
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
