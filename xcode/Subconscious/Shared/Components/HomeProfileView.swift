@@ -13,6 +13,7 @@ import Combine
 struct HomeProfileNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<HomeProfileModel>
+    @Environment(\.colorScheme) var colorScheme
     var detailStack: ViewStore<DetailStackModel> {
         store.viewStore(
             get: HomeProfileDetailStackCursor.get,

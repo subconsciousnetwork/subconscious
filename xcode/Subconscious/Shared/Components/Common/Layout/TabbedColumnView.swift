@@ -13,6 +13,7 @@ struct TabbedColumnItem<Content: View> {
 }
 
 struct TabbedTwoColumnView<A: View, B: View>: View {
+    @Environment(\.colorScheme) var colorScheme
     var columnA: TabbedColumnItem<A>
     var columnB: TabbedColumnItem<B>
     
@@ -48,6 +49,11 @@ struct TabbedTwoColumnView<A: View, B: View>: View {
             Spacer()
         }
         .frame(maxHeight: .infinity)
+        .background(
+            colorScheme == .dark
+            ? DeckTheme.darkBgEnd
+            : DeckTheme.lightBgEnd
+        )
     }
 }
 
@@ -98,6 +104,5 @@ struct TabbedThreeColumnView<A: View, B: View, C: View>: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
         }
-        .background(Color.secondaryBackground)
     }
 }
