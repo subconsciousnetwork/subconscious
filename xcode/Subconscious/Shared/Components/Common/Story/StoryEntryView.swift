@@ -78,46 +78,7 @@ struct StoryEntryView: View {
                         }
                         .tint(highlight)
                         .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
-                    
-//                    // MARK: excerpt
-//                    SubtextView(
-//                        peer: story.entry.toPeer(),
-//                        subtext: story.entry.excerpt,
-//                        transcludePreviews: [:],
-//                        onLink: onLink
-//                    )
-//                    .truncateWithGradient(color: .white, maxHeight: AppTheme.maxEntryListRowHeight)
-//                    .padding([.leading, .trailing], AppTheme.padding)
-                    
-//                    VStack(alignment: .leading) {
-//                        // MARK: footer
-//                        HStack(alignment: .center, spacing: AppTheme.unit) {
-//                            Image(audience: .public)
-//                                .resizable()
-//                                .aspectRatio(contentMode: .fit)
-//                                .frame(width: AppTheme.unit3, height: AppTheme.unit3)
-//                            
-//                            SlashlinkDisplayView(slashlink: Slashlink(
-//                                peer: author.address.peer,
-//                                slug: story.entry.address.slug
-//                            ))
-//                            .theme(base: .secondary, slug: .secondary)
-//                            
-//                            Spacer()
-//                            
-//                            Text(
-//                                NiceDateFormatter.shared.string(
-//                                    from: story.entry.headers.modified,
-//                                    relativeTo: Date.now
-//                                )
-//                            )
-//                        }
-//                        .foregroundColor(.secondary)
-//                        .font(.caption)
-//                    }
-//                    .padding([.leading, .trailing, .bottom], AppTheme.padding)
                 }
-//                .background(Color.background)
                 .contentShape(Rectangle())
             }
         )

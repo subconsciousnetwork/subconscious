@@ -49,11 +49,6 @@ struct TabbedTwoColumnView<A: View, B: View>: View {
             Spacer()
         }
         .frame(maxHeight: .infinity)
-//        .background(
-//            colorScheme == .dark
-//            ? DeckTheme.darkBg
-//            : DeckTheme.lightBg
-//        )
     }
 }
 

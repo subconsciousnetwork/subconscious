@@ -66,56 +66,7 @@ struct StoryUserView: View {
                         }
                     }
                     .disabled(!story.entry.status.isReady)
-                    
-//                    Spacer()
-//                    
-//                    Menu(
-//                        content: {
-//                            if story.user.isFollowedByUs {
-//                                Button(
-//                                    action: {
-//                                        profileAction(story.user, .requestUnfollow)
-//                                    },
-//                                    label: {
-//                                        Label(
-//                                            title: { Text("Unfollow") },
-//                                            icon: { Image(systemName: "person.fill.xmark") }
-//                                        )
-//                                    }
-//                                )
-//                                Button(
-//                                    action: {
-//                                        profileAction(story.user, .requestRename)
-//                                    },
-//                                    label: {
-//                                        Label(
-//                                            title: { Text("Rename") },
-//                                            icon: { Image(systemName: "pencil") }
-//                                        )
-//                                    }
-//                                )
-//                            } else {
-//                                Button(
-//                                    action: {
-//                                        profileAction(story.user, .requestFollow)
-//                                    },
-//                                    label: {
-//                                        Label(
-//                                            title: { Text("Follow") },
-//                                            icon: { Image(systemName: "person.badge.plus") }
-//                                        )
-//                                    }
-//                                )
-//                            }
-//                        },
-//                        label: {
-//                            EllipsisLabelView()
-//                        }
-//                    ).disabled(story.user.category == .ourself)
-//                        .buttonStyle(.plain)
                 }
-                // Omit trailing padding to allow ... hit target to move to top right corner
-//                .padding([.leading], AppTheme.padding)
                 
                 if let bio = story.user.bio,
                    bio.hasVisibleContent {
