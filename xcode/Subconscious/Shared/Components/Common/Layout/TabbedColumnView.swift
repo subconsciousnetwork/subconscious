@@ -13,7 +13,6 @@ struct TabbedColumnItem<Content: View> {
 }
 
 struct TabbedTwoColumnView<A: View, B: View>: View {
-    @Environment(\.colorScheme) var colorScheme
     var columnA: TabbedColumnItem<A>
     var columnB: TabbedColumnItem<B>
     
