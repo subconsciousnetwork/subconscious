@@ -52,6 +52,15 @@ struct HomeProfileNavigationView: View {
                     }
                 }
             }
+            .background(
+                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+            )
+            .toolbarBackground(
+                colorScheme == .dark
+                ? DeckTheme.darkBgStart
+                : DeckTheme.lightBgStart,
+                for: .navigationBar
+            )
         }
     }
 }

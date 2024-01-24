@@ -116,6 +116,7 @@ struct FollowTabView: View {
 struct UserProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<UserProfileDetailModel>
+    @Environment(\.colorScheme) var colorScheme
     
     static let resetScrollTargetId: Int = 0
     
@@ -258,6 +259,10 @@ struct UserProfileView: View {
                 )
             }
         })
+        .toolbarBackground(
+            colorScheme == .dark ? DeckTheme.darkBgEnd : DeckTheme.lightBgEnd,
+            for: .tabBar
+        )
         .metaSheet(store: store)
         .follow(store: store)
         .unfollow(store: store)

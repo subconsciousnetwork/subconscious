@@ -38,6 +38,15 @@ extension DeckTheme {
         endPoint: UnitPoint(x: 0.5, y: 1)
     )
     
+    static let lightBgB = LinearGradient(
+        stops: [
+            Gradient.Stop(color: lightBgStart, location: 0.00),
+            Gradient.Stop(color: lightBgMid, location: 1.00),
+        ],
+        startPoint: UnitPoint(x: 0.5, y: 0),
+        endPoint: UnitPoint(x: 0.5, y: 1)
+    )
+    
     static let darkBgStart = Color(red: 0.13, green: 0.14, blue: 0.2)
     static let darkBgMid = Color(red: 0.2, green: 0.14, blue: 0.26)
     static let darkBgEnd = Color(red: 0.1, green: 0.04, blue: 0.11)

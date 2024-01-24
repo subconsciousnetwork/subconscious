@@ -41,7 +41,7 @@ struct AliasView: View {
         HStack(spacing: AppTheme.unit) {
             ZStack {
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSm)
-                    .foregroundColor(.secondaryBackground)
+                    .foregroundColor(.secondary.opacity(0.15))
                 Text("AKA")
                     .foregroundColor(.secondary)
                     .font(.system(size: 10))

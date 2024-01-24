@@ -13,10 +13,11 @@ struct EntryListRowButtonStyle: ButtonStyle {
         cornerRadius: AppTheme.cornerRadiusLg
     )
     var color: Color
+    var padding: CGFloat = AppTheme.unit3
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(AppTheme.unit3)
+            .padding(padding)
             .expandAlignedLeading()
             .background(color)
             .overlay(

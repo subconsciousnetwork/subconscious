@@ -126,7 +126,7 @@ struct StoryUserView: View {
         })
         .buttonStyle(
             EntryListRowButtonStyle(
-                color: .background
+                color: .secondaryBackground
             )
         )
         .contextMenu {

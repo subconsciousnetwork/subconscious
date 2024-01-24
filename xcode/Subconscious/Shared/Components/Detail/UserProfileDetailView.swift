@@ -13,6 +13,7 @@ import Combine
 /// Display a user profile detail view.
 /// Used to browse users entries and list of petnames.
 struct UserProfileDetailView: View {
+    @Environment(\.colorScheme) var colorScheme
     @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: UserProfileDetailModel(),
@@ -56,6 +57,9 @@ struct UserProfileDetailView: View {
         .onReceive(
             app.actions.compactMap(UserProfileDetailAction.from),
             perform: store.send
+        )
+        .background(
+            colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
         )
     }
 }
