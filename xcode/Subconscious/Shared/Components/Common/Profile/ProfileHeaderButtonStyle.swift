@@ -21,7 +21,7 @@ struct ProfileHeaderButtonStyle: ButtonStyle {
     
     private var defaultBackgroundColor: Color {
         variant == .primary
-            ? Color.primaryButtonBackground
+            ? Color.primaryButtonBackground.opacity(0.5)
             : Color.secondaryBackground
     }
     

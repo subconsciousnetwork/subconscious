@@ -39,9 +39,9 @@ struct ProfileHeaderPlaceholderView: View {
                     .foregroundColor(Self.color)
                     .frame(maxWidth: 200 * bioWidthFactor, maxHeight: 14)
             }
-            .padding(AppTheme.tightPadding)
+            .padding(AppTheme.padding)
         }
-        .background(Color.background)
+        .background(Color.clear)
         .contentShape(Rectangle())
         .opacity(opacity)
         .animation(
@@ -94,9 +94,9 @@ struct StoryPlaceholderView: View {
                             .foregroundColor(Self.color)
                             .frame(maxWidth: 200 * bioWidthFactor, maxHeight: 14)
                     }
-                    .padding(AppTheme.tightPadding)
+                    .padding(AppTheme.padding)
                 }
-                .background(Color.background)
+                .background(Color.clear)
                 .contentShape(Rectangle())
             }
         )

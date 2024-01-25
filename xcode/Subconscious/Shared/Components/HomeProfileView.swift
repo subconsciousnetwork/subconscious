@@ -13,6 +13,7 @@ import Combine
 struct HomeProfileNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<HomeProfileModel>
+    @Environment(\.colorScheme) var colorScheme
     var detailStack: ViewStore<DetailStackModel> {
         store.viewStore(
             get: HomeProfileDetailStackCursor.get,
@@ -51,6 +52,15 @@ struct HomeProfileNavigationView: View {
                     }
                 }
             }
+            .background(
+                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+            )
+            .toolbarBackground(
+                colorScheme == .dark
+                ? DeckTheme.darkBgStart
+                : DeckTheme.lightBgStart,
+                for: .navigationBar
+            )
         }
     }
 }

@@ -98,6 +98,5 @@ struct TabbedThreeColumnView<A: View, B: View, C: View>: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
         }
-        .background(Color.secondaryBackground)
     }
 }

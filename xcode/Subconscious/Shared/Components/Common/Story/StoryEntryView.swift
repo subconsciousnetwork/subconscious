@@ -22,6 +22,8 @@ private struct StoryEntryUserDetailsView: View {
 
 /// Show an excerpt of an entry in a feed
 struct StoryEntryView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     var story: StoryEntry
     var onRequestDetail: (Slashlink, String) -> Void
     var onLink: (EntryLink) -> Void
@@ -37,6 +39,18 @@ struct StoryEntryView: View {
         story.author
     }
     
+    var highlight: Color {
+        story.entry.highlightColor(
+            colorScheme: colorScheme
+        )
+    }
+    
+    var color: Color {
+        story.entry.color(
+            colorScheme: colorScheme
+        )
+    }
+    
     var body: some View {
         Button(
             action: {
@@ -47,72 +61,36 @@ struct StoryEntryView: View {
             },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
-                    // MARK: header
-                    HStack(alignment: .top) {
-                        // Pad the top of the text to create the expected whitespace
-                        // BUT keep the EllipsisLabelView() below aligned to the top of the container
-                        // This is important for hitmasking and consistency between story views
-                        StoryEntryUserDetailsView(user: author)
-                            .padding([.top], AppTheme.padding)
-                        
-                        Spacer()
-                        
-                        Menu(
-                            content: {
-                                ShareLink(item: sharedNote)
-                            },
-                            label: {
-                                EllipsisLabelView()
-                            }
-                        )
-                    }
-                    // Omit trailing padding to allow ... hit target to move to top right corner
-                    .padding([.leading], AppTheme.padding)
-                    
-                    // MARK: excerpt
-                    SubtextView(
-                        peer: story.entry.toPeer(),
-                        subtext: story.entry.excerpt,
-                        transcludePreviews: [:],
-                        onLink: onLink
-                    )
-                    .truncateWithGradient(color: .background, maxHeight: AppTheme.maxEntryListRowHeight)
-                    .padding([.leading, .trailing], AppTheme.padding)
-                    
-                    VStack(alignment: .leading) {
-                        // MARK: footer
-                        HStack(alignment: .center, spacing: AppTheme.unit) {
-                            Image(audience: .public)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: AppTheme.unit3, height: AppTheme.unit3)
-                            
-                            SlashlinkDisplayView(slashlink: Slashlink(
-                                peer: author.address.peer,
-                                slug: story.entry.address.slug
-                            ))
-                            .theme(base: .secondary, slug: .secondary)
-                            
-                            Spacer()
-                            
-                            Text(
-                                NiceDateFormatter.shared.string(
-                                    from: story.entry.headers.modified,
-                                    relativeTo: Date.now
-                                )
+                        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                            BylineSmView(
+                                pfp: .generated(story.entry.did),
+                                slashlink: story.entry.address,
+                                highlight: highlight
                             )
+                            
+                            SubtextView(
+                                peer: story.entry.toPeer(),
+                                subtext: story.entry.excerpt,
+                                onLink: onLink
+                            )
+                            .multilineTextAlignment(.leading)
+                            .foregroundColor(.primary)
                         }
-                        .foregroundColor(.secondary)
-                        .font(.caption)
-                    }
-                    .padding([.leading, .trailing, .bottom], AppTheme.padding)
+                        .tint(highlight)
+                        .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
                 }
-                .background(Color.background)
                 .contentShape(Rectangle())
             }
         )
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
-        .buttonStyle(.plain)
+        .buttonStyle(
+            EntryListRowButtonStyle(
+                color: story.entry.color(colorScheme: colorScheme)
+            )
+        )
+        .contextMenu {
+            ShareLink(item: sharedNote)
+        }
     }
 }
 
