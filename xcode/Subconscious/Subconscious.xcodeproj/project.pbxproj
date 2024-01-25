@@ -1663,6 +1663,7 @@
 				B8B4251128FDE7780081B8D5 /* Mapping.swift */,
 				B56B80932B05AEA800AABF08 /* MathUtilities.swift */,
 				B89E30762911B51A00A4721F /* Migration.swift */,
+				B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */,
 				B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */,
 				B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */,
 				B88CC957284FF59900994928 /* OrderedCollectionUtilities.swift */,
@@ -1680,9 +1681,6 @@
 				B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
-				B542EF662AF48F2100BE29F1 /* StoreUtilities.swift */,
-				B56B80932B05AEA800AABF08 /* MathUtilities.swift */,
-				B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -2736,7 +2734,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.15;
+				MARKETING_VERSION = 0.0.16;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
@@ -2778,7 +2776,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.15;
+				MARKETING_VERSION = 0.0.16;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
