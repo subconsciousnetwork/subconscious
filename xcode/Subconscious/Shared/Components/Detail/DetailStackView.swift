@@ -616,7 +616,7 @@ extension DetailStackAction {
             return .pushDetail(
                 .editor(
                     MemoEditorDetailDescription(
-                        fallback: "\(address.markup)\n\n"
+                        fallback: "\n\n\(address.markup)"
                     )
                 )
             )
@@ -648,7 +648,7 @@ extension DetailStackAction {
             return .pushDetail(
                 .editor(
                     MemoEditorDetailDescription(
-                        fallback: "\(address.markup)\n\n"
+                        fallback: "\n\n\(address.markup)"
                     )
                 )
             )

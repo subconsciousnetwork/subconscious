@@ -475,6 +475,10 @@ enum MemoEditorDetailAction: Hashable {
     static var setEditorSelectionAtEnd: Self {
         .editor(.setSelectionAtEnd)
     }
+    
+    static var setEditorSelectionAtStart: Self {
+        .editor(.setSelectionAtStart)
+    }
 
     /// Select a link completion
     static func selectLinkCompletion(_ link: EntryLink) -> Self {
@@ -1450,9 +1454,17 @@ struct MemoEditorDetailModel: ModelProtocol {
         fallback: String
     ) -> Update<MemoEditorDetailModel> {
         var model = state
-
+        
         model.defaultAudience = defaultAudience
-
+        
+        // if fallback starts with newlines, cursor at start
+        // otherwise, cursor at end
+        var selection = MemoEditorDetailAction.setEditorSelectionAtEnd
+        if let first = fallback.first,
+           first.isNewline {
+            selection = .setEditorSelectionAtStart
+        }
+        
         return update(
             state: model,
             actions: [
@@ -1462,7 +1474,7 @@ struct MemoEditorDetailModel: ModelProtocol {
                     saveState: .unsaved,
                     modified: Date.now
                 ),
-                .setEditorSelectionAtEnd,
+                selection,
                 .requestEditorFocus(true)
             ],
             environment: environment
