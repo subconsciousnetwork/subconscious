@@ -149,7 +149,7 @@ struct MemoEditorDetailView: View {
             MemoEditorDetailMetaSheetView(
                 store: store.viewStore(
                     get: \.metaSheet,
-                    tag: DetailMetaSheetCursor.tag
+                    tag: MemoEditorDetailMetaSheetCursor.tag
                 )
             )
         }
@@ -314,6 +314,18 @@ extension MemoEditorDetailNotification {
             return .requestAssignNoteColor(address, color)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            switch suggestion {
+            case let .append(address, target):
+                return .requestDetail(
+                    .editor(
+                        MemoEditorDetailDescription(
+                            address: target,
+                            append: "\n\(address.markup)"
+                        )
+                    )
+                )
+            }
         default:
             return nil
         }
@@ -472,6 +484,7 @@ enum MemoEditorDetailAction: Hashable {
     case refreshLists
     
     case requestQuoteInNewNote(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
@@ -584,7 +597,7 @@ struct MemoEditorDetailSubtextTextCursor: CursorProtocol {
     }
 }
 
-struct DetailMetaSheetCursor: CursorProtocol {
+struct MemoEditorDetailMetaSheetCursor: CursorProtocol {
     typealias Model = MemoEditorDetailModel
     typealias ViewModel = MemoEditorDetailMetaSheetModel
 
@@ -613,6 +626,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
             return .requestDelete(address)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewNote(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return .metaSheet(action)
         }
@@ -697,7 +712,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     ) -> Update<MemoEditorDetailModel> {
         switch action {
         case .metaSheet(let action):
-            return DetailMetaSheetCursor.update(
+            return MemoEditorDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -1004,6 +1019,15 @@ struct MemoEditorDetailModel: ModelProtocol {
             return update(
                 state: state,
                 action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return update(
+                state: state,
+                actions: [
+                    .metaSheet(.selectAppendLinkSearchSuggestion(suggestion)),
+                    .presentMetaSheet(false)
+                ],
                 environment: environment
             )
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
@@ -1464,7 +1488,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         var actions: [MemoEditorDetailAction] = []
         actions.append(.setDetailLastWriteWins(detail))
         
-        if append.count > 0 {
+        if append.count > 0 && state.saveState == .saved {
             actions.append(
                 .setEditor(
                     text: detail.entry.contents.body + append,
@@ -2140,6 +2164,8 @@ struct MemoEditorDetailModel: ModelProtocol {
 struct MemoEditorDetailDescription: Hashable {
     var address: Slashlink?
     var fallback: String = ""
+    
+    var expectedVersion: Cid? = nil
     var append: String = ""
     /// Default audience to use when deriving a memo address
     var defaultAudience = Audience.local

@@ -57,7 +57,7 @@ struct AppendLinkSearchView: View {
 }
 
 enum AppendLinkSearchAction: Hashable {
-    /// Set the memo for which this rename sheet is being invoked.
+    /// Set the address which we will append to the selected note
     case setSubject(_ address: Slashlink?)
     /// Set the query string for the search input field
     case setQuery(_ query: String)
@@ -71,12 +71,12 @@ enum AppendLinkSearchAction: Hashable {
 struct AppendLinkSearchModel: ModelProtocol {
     var subject: Slashlink? = nil
     var queryField: FormField<String, String> = FormField(value: "", validate: { s in s })
-    /// Suggestions for renaming note.
+    /// Suggestions for appending to a note
     var suggestions: [AppendLinkSuggestion] = []
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
-        category: "RenameSearch"
+        category: "AppendLinkSearch"
     )
     
     static func update(
@@ -115,7 +115,7 @@ struct AppendLinkSearchModel: ModelProtocol {
                 suggestions: suggestions
             )
         case .failSuggestions(let error):
-            return failRenameSuggestions(
+            return failSuggestions(
                 state: state,
                 environment: environment,
                 error: error
@@ -143,7 +143,7 @@ struct AppendLinkSearchModel: ModelProtocol {
         query: String
     ) -> Update<Self> {
         guard let current = state.subject else {
-            logger.log("Rename query updated, but no subject set. Doing nothing.")
+            logger.log("Append link query updated, but no subject set. Doing nothing.")
             return Update(state: state)
         }
         let fx: Fx<Self.Action> = Future.detached {
@@ -172,7 +172,6 @@ struct AppendLinkSearchModel: ModelProtocol {
         ).mergeFx(fx)
     }
     
-    /// Set rename suggestions
     static func setSuggestions(
         state: Self,
         suggestions: [AppendLinkSuggestion]
@@ -182,9 +181,7 @@ struct AppendLinkSearchModel: ModelProtocol {
         return Update(state: model)
     }
 
-    /// Handle rename suggestions error.
-    /// This case can happen e.g. if the database fails to respond.
-    static func failRenameSuggestions(
+    static func failSuggestions(
         state: Self,
         environment: AppEnvironment,
         error: String

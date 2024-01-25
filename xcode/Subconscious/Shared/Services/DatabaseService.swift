@@ -954,41 +954,21 @@ final class DatabaseService {
         )
     }
     
-    /// Given
-    /// - An entry link representing the current link for the file
-    /// - An entry link representing the search query
-    /// - And some results for existing entries
-    /// ...Return an array of unique RenameSuggestions,
-    /// sorted for presentation.
-    ///
-    /// We factor out this collation code to make it easier to test.
-    ///
-    /// - Returns an array of RenameSuggestion
+    /// Map "Append Link" results into suggested actions
     static func collateAppendLinkSuggestions(
         current: Slashlink,
         results: [Slashlink]
     ) -> [AppendLinkSuggestion] {
-        var suggestions: OrderedDictionary<Slug, AppendLinkSuggestion> = [:]
-        
-        // Then append results from existing entries, potentially overwriting
-        // result for literal query if identical.
-        for result in results {
-            /// If slug changed, this is a move
-            if result.peer == nil {
-                suggestions.updateValue(
-                    .append(
-                        address: current,
-                        target: result
-                    ),
-                    forKey: result.slug
-                )
-            }
+        return results.map { result in
+            .append(
+                address: current,
+                target: result
+            )
         }
-        return Array(suggestions.values)
     }
     
     /// Given a query and a `current` slug, produce an array of suggestions
-    /// for renaming the note.
+    /// for notes to append a link to.
     func searchAppendLink(
         owner: Did?,
         query: String,

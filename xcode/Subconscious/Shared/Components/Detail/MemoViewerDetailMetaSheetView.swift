@@ -123,18 +123,17 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
     
-    /// Tagged actions for rename search sheet
+    /// Tagged actions for append link search sheet
     case appendLinkSearch(AppendLinkSearchAction)
     case presentAppendLinkSearchSheet(_ isPresented: Bool)
-    case presentAppendLinkSearchSheetFor(_ address: Slashlink?)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
-    static func setRenameSearchSubject(_ address: Slashlink?) -> Self {
+    static func setAppendLinkSearchSubject(_ address: Slashlink?) -> Self {
         .appendLinkSearch(.setSubject(address))
     }
 }
 
-// MARK: RenameSearchCursor
+// MARK: AppendLinkSearchCursor
 struct MemoViewerDetailMetaSheetAppendLinkSearchCursor: CursorProtocol {
     typealias Model = MemoViewerDetailMetaSheetModel
     typealias ViewModel = AppendLinkSearchModel
@@ -209,7 +208,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote:
             return Update(state: state)
             
-        // Rename
+        // Append link
         case .appendLinkSearch(let action):
             return MemoViewerDetailMetaSheetAppendLinkSearchCursor.update(
                 state: state,
@@ -217,22 +216,13 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
                 environment: environment
             )
         case .presentAppendLinkSearchSheet(let isPresented):
-            return presentRenameSheet(
+            return presentAppendLinkSearchSheet(
                 state: state,
                 environment: environment,
                 isPresented: isPresented
             )
-        case .presentAppendLinkSearchSheetFor(let address):
-            return update(
-                state: state,
-                actions: [
-                    .setRenameSearchSubject(address),
-                    .presentAppendLinkSearchSheet(true)
-                ],
-                environment: environment
-            )
         case .selectAppendLinkSearchSuggestion(let suggestion):
-            return selectSuggestion(
+            return selectAppendLinkSuggestion(
                 state: state,
                 environment: environment,
                 suggestion: suggestion
@@ -260,7 +250,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func presentRenameSheet(
+    static func presentAppendLinkSearchSheet(
         state: Self,
         environment: Environment,
         isPresented: Bool
@@ -273,14 +263,12 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         model.isAppendLinkSearchPresented = isPresented
         return update(
             state: model,
-            action: .appendLinkSearch(
-                .setSubject(address)
-            ),
+            action: .setAppendLinkSearchSubject(address),
             environment: environment
         )
     }
     
-    static func selectSuggestion(
+    static func selectAppendLinkSuggestion(
         state: Self,
         environment: Environment,
         suggestion: AppendLinkSuggestion
@@ -290,14 +278,8 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         return update(
             state: model,
             actions: [
-                .appendLinkSearch(
-                    .selectSuggestion(
-                        suggestion
-                    )
-                ),
-                .presentAppendLinkSearchSheet(
-                    false
-                )
+                .appendLinkSearch(.selectSuggestion(suggestion)),
+                .presentAppendLinkSearchSheet(false)
             ],
             environment: environment
         )
