@@ -54,7 +54,26 @@ struct MemoEditorDetailMetaSheetView: View {
                             )
                         }
                         .buttonStyle(RowButtonStyle())
+                        
                         Divider()
+                        
+                        if let address = store.state.address {
+                            Button(
+                                action: {
+                                    store.send(.requestQuoteInNewNote(address))
+                                },
+                                label: {
+                                    Label(
+                                        "Quote in new note",
+                                        systemImage: "quote.opening"
+                                    )
+                                }
+                            )
+                            .buttonStyle(RowButtonStyle())
+                            
+                            Divider()
+                        }
+                        
                         Button(
                             role: .destructive,
                             action: {
@@ -156,6 +175,7 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     /// Request this address be deleted.
     /// Should be handled by parent component.
     case requestDelete(Slashlink?)
+    case requestQuoteInNewNote(_ address: Slashlink)
 
     static var refreshRenameSuggestions: Self {
         .renameSearch(.refreshRenameSuggestions)
@@ -233,17 +253,12 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 audience: audience
             )
-        case .requestUpdateAudience:
-            return Update(state: state)
         case .succeedUpdateAudience(let receipt):
             return update(
                 state: state,
                 action: .setAddress(receipt.to),
                 environment: environment
             )
-        case .requestDelete:
-            return Update(state: state)
-        
         // Editor passes us the current color when the sheet is opened
         case let .setNoteColor(color):
             return setNoteColor(
@@ -251,8 +266,6 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 color: color
             )
-        case .requestAssignNoteColor:
-            return Update(state: state)
         // Update internal color to match the updated value
         case let .succeedAssignNoteColor(color):
             return setNoteColor(
@@ -260,6 +273,9 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 color: color
             )
+        case .requestUpdateAudience, .requestDelete, .requestAssignNoteColor,
+                .requestQuoteInNewNote:
+            return Update(state: state)
         }
     }
     

@@ -612,6 +612,14 @@ extension DetailStackAction {
             return .requestUpdateAudience(address, audience)
         case let .requestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
+        case let .requestQuoteInNewDetail(address):
+            return .pushDetail(
+                .editor(
+                    MemoEditorDetailDescription(
+                        fallback: "\n\n\(address.markup)"
+                    )
+                )
+            )
             
         case let .requestDetail(detail):
             return .pushDetail(detail)
@@ -633,6 +641,14 @@ extension DetailStackAction {
                 MemoDetailDescription.profile(
                     UserProfileDetailDescription(
                         address: address
+                    )
+                )
+            )
+        case let .requestQuoteInNewDetail(address):
+            return .pushDetail(
+                .editor(
+                    MemoEditorDetailDescription(
+                        fallback: "\n\n\(address.markup)"
                     )
                 )
             )
