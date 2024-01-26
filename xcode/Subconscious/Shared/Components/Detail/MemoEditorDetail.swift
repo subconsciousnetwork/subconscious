@@ -2108,8 +2108,6 @@ struct MemoEditorDetailModel: ModelProtocol {
 struct MemoEditorDetailDescription: Hashable {
     var address: Slashlink?
     var fallback: String = ""
-    
-    var expectedVersion: Cid? = nil
     /// Default audience to use when deriving a memo address
     var defaultAudience = Audience.local
 }
