@@ -456,7 +456,6 @@ enum MemoEditorDetailAction: Hashable {
 
     /// Set selected range in editor
     case setEditorSelection(range: NSRange, text: String)
-    case appendEditorText(text: String)
     /// Insert text into editor, replacing range
     case insertEditorText(
         text: String,
@@ -748,12 +747,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 range: range,
-                text: text
-            )
-        case let .appendEditorText(text):
-            return appendEditorText(
-                state: state,
-                environment: environment,
                 text: text
             )
         case let .insertEditorText(text, range):
@@ -1183,26 +1176,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                     )
                 ),
                 MemoEditorDetailAction.setLinkSearch(linkSearchText)
-            ],
-            environment: environment
-        )
-    }
-    
-    static func appendEditorText(
-        state: MemoEditorDetailModel,
-        environment: AppEnvironment,
-        text: String
-    ) -> Update<MemoEditorDetailModel> {
-        let newText = state.editor.text + text
-        return update(
-            state: state,
-            actions: [
-                .setEditor(
-                    text: newText,
-                    saveState: .unsaved,
-                    modified: Date.now
-                ),
-                .autosave
             ],
             environment: environment
         )
