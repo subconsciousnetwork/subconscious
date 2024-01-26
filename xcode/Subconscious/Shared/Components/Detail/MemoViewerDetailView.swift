@@ -183,6 +183,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
     case requestQuoteInNewDetail(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
 extension MemoViewerDetailNotification {
@@ -193,17 +194,7 @@ extension MemoViewerDetailNotification {
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewDetail(address)
         case let .selectAppendLinkSearchSuggestion(suggestion):
-            switch suggestion {
-            case let .append(address, target):
-                return .requestDetail(
-                    .editor(
-                        MemoEditorDetailDescription(
-                            address: target,
-                            append: "\n\(address.markup)"
-                        )
-                    )
-                )
-            }
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return nil
         }

@@ -144,6 +144,9 @@ enum DetailStackAction: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
+    case requestAppendToEntry(_ address: Slashlink, _ append: String)
+    case succeedAppendToEntry(_ address: Slashlink)
 
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
@@ -279,8 +282,31 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 address: address,
                 color: color
             )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            switch suggestion {
+            case let .append(address, target):
+                let fx = Just(
+                    DetailStackAction.requestAppendToEntry(target, "\n\(address.markup)")
+                ).eraseToAnyPublisher()
+                
+                return Update(state: state, fx: fx)
+            }
+        // Consider, do we actually want to open the note we appended to?
+        case let .succeedAppendToEntry(address):
+            return update(
+                state: state,
+                action: .pushDetail(
+                    .editor(
+                        MemoEditorDetailDescription(
+                            address: address
+                        )
+                    )
+                ),
+                environment: environment
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor:
+                .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
+                .requestAppendToEntry:
             return Update(state: state)
         }
     }
@@ -639,6 +665,8 @@ extension DetailStackAction {
             return .requestAssignNoteColor(address, color)
         case let .requestQuoteInNewDetail(address):
             return .pushQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         case let .requestDetail(detail):
             return .pushDetail(detail)
         case let .requestFindLinkDetail(link):
@@ -664,6 +692,8 @@ extension DetailStackAction {
             )
         case let .requestQuoteInNewDetail(address):
             return .pushQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         }
     }
 
