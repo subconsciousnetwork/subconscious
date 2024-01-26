@@ -19,6 +19,7 @@ struct OmniboxView: View {
     var address: Slashlink?
     var defaultAudience: Audience
     var status: LoadingState = .loaded
+    var color: Color = .accentColor
 
     private func icon() -> Image {
         guard let address = address else {
@@ -36,11 +37,13 @@ struct OmniboxView: View {
         return Image(audience: .public)
     }
     
-    var gradient = Gradient(stops: [
-        Gradient.Stop(color: .accentColor.opacity(0), location: 0),
-        Gradient.Stop(color: .accentColor.opacity(0), location: 0.75),
-        Gradient.Stop(color: .accentColor.opacity(1), location: 1),
-    ])
+    var gradient: Gradient {
+        Gradient(stops: [
+            Gradient.Stop(color: color.opacity(0), location: 0),
+            Gradient.Stop(color: color.opacity(0), location: 0.75),
+            Gradient.Stop(color: color.opacity(1), location: 1),
+        ])
+    }
     
     var body: some View {
         HStack(spacing: 8) {
@@ -61,7 +64,7 @@ struct OmniboxView: View {
             Spacer(minLength: AppTheme.unit)
         }
         .transition(.opacity)
-        .foregroundColor(.accentColor)
+        .foregroundColor(color)
         .font(.callout)
         .padding(.leading, 8)
         .padding(.trailing, 12)

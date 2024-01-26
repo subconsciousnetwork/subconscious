@@ -37,7 +37,7 @@ struct MemoViewerDetailView: View {
     var navigationTitle: String {
         store.state.address?.markup ?? store.state.title
     }
-
+    
     var body: some View {
         VStack {
             switch store.state.loadingState {
@@ -58,10 +58,14 @@ struct MemoViewerDetailView: View {
                 )
             }
         }
+        .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible)
-        .toolbarBackground(Color.background, for: .navigationBar)
+        .toolbarBackground(
+            store.state.themeColor?.toColor() ?? Color.background,
+            for: .navigationBar
+        )
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -69,7 +73,8 @@ struct MemoViewerDetailView: View {
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
                 },
-                status: store.state.loadingState
+                status: store.state.loadingState,
+                themeColor: store.state.themeColor
             )
         })
         .onAppear {
@@ -137,7 +142,7 @@ struct MemoViewerDetailLoadedView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack {
+                VStack(spacing: 0) {
                     VStack {
                         SubtextView(
                             peer: store.state.owner?.address.peer,
@@ -156,7 +161,8 @@ struct MemoViewerDetailLoadedView: View {
                     .frame(
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
-                    ThickDividerView()
+                    .background(store.state.themeColor?.toColor())
+                    Divider()
                         .padding(.bottom, AppTheme.unit4)
                     BacklinksView(
                         backlinks: store.state.backlinks,
@@ -278,6 +284,10 @@ struct MemoViewerDetailModel: ModelProtocol {
     var title = ""
     var dom: Subtext = Subtext.empty
     var backlinks: [EntryStub] = []
+    var headers: WellKnownHeaders? = nil
+    var themeColor: ThemeColor? {
+        headers?.themeColor ?? address?.themeColor
+    }
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -474,6 +484,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         let memo = entry.contents
         model.address = entry.address
         model.title = memo.title()
+        model.headers = memo.wellKnownHeaders()
         
         let dom = memo.dom()
         
