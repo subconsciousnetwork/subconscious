@@ -167,7 +167,8 @@ final class Tests_NoosphereService: XCTestCase {
             slashlink
         )
        
-        XCTAssertEqual(address, Slashlink(slug: Slug("hello")!))
+        // Should preserve Did.local
+        XCTAssertEqual(address, slashlink)
     }
     
     func testFindBestLinkAddressWithOwnNote() async throws {
@@ -182,6 +183,7 @@ final class Tests_NoosphereService: XCTestCase {
             slashlink
         )
        
+        // Should drop our DID
         XCTAssertEqual(address, Slashlink(slug: Slug("hello")!))
     }
 }
