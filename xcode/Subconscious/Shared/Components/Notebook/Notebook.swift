@@ -157,6 +157,8 @@ enum NotebookAction: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestAppendToEntry(_ address: Slashlink, _ append: String)
+    case succeedAppendToEntry(_ address: Slashlink)
     
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -237,6 +239,8 @@ struct NotebookDetailStackCursor: CursorProtocol {
             return .requestUpdateAudience(address, audience)
         case let .requestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
+        case let .requestAppendToEntry(address, append):
+            return .requestAppendToEntry(address, append)
         case _:
             return .detailStack(action)
         }
@@ -517,9 +521,11 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case let .succeedAppendToEntry(address):
+            return succeedAppendToEntry(state: state, environment: environment, address: address)
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
-                .requestAssignNoteColor:
+                .requestAssignNoteColor, .requestAppendToEntry:
             return Update(state: state)
         }
     }
@@ -822,6 +828,21 @@ struct NotebookModel: ModelProtocol {
             state: state,
             actions: [
                 .detailStack(.succeedAssignNoteColor(address, color)),
+                .refreshLists
+            ],
+            environment: environment
+        )
+    }
+    
+    static func succeedAppendToEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: Slashlink
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedAppendToEntry(address)),
                 .refreshLists
             ],
             environment: environment

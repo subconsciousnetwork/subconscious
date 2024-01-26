@@ -606,6 +606,12 @@ actor DataService {
         try await writeMemo(address: entry.address, memo: entry.contents)
     }
     
+    func appendToEntry(address: Slashlink, append: String) async throws {
+        var memo = try await readMemo(address: address)
+        memo.body.append(append)
+        return try await writeMemo(address: address, memo: memo)
+    }
+    
     nonisolated func writeEntryPublisher(
         _ entry: MemoEntry
     ) -> AnyPublisher<Void, Error> {

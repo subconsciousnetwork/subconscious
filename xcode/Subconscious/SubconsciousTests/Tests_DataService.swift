@@ -42,6 +42,34 @@ final class Tests_DataService: XCTestCase {
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
+    func testWriteThenAppendThenReadMemo() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
+        
+        let address = Slashlink("/test")!
+        let memoIn = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Test content"
+        )
+        
+        try await environment.data.writeMemo(
+            address: address,
+            memo: memoIn
+        )
+        
+        try await environment.data.appendToEntry(address: address, append: "\nmore text")
+        
+        let memoOut = try await environment.data.readMemo(address: address)
+        
+        XCTAssertEqual(memoOut.body, "Test content\nmore text")
+    }
+    
     func testReadMemoBeforeWrite() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let environment = try await TestUtilities.createDataServiceEnvironment(

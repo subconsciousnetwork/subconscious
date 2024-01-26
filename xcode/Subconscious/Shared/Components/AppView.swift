@@ -3053,10 +3053,7 @@ struct AppModel: ModelProtocol {
         append: String
     ) -> Update<Self> {
         let fx: Fx<AppAction> = Future.detached {
-            var entry = try await environment.data.readMemo(address: address)
-            entry.body.append(append)
-            try await environment.data.writeEntry(MemoEntry(address: address, contents: entry))
-            
+            try await environment.data.appendToEntry(address: address, append: append)
             return .succeedAppendToEntry(address: address)
         }
         .recover { error in
