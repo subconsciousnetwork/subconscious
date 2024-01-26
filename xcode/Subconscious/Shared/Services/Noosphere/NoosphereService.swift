@@ -62,8 +62,13 @@ extension NoosphereService {
             return slashlink
         }
         
+        // Preserve local DID
+        guard !did.isLocal else {
+            return slashlink
+        }
+        
         // Is this address ours? Trim off the peer
-        if did == ourIdentity || did.isLocal {
+        if did == ourIdentity {
             return Slashlink(slug: slashlink.slug)
         }
     

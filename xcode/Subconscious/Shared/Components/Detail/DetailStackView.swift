@@ -339,7 +339,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
 
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
-        guard address.peer != nil else {
+        guard address.peer != nil && !address.isLocal else {
             return update(
                 state: state,
                 action: .findAndPushMemoEditorDetail(
