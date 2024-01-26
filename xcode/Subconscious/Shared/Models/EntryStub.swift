@@ -25,6 +25,14 @@ struct EntryStub:
         "Subconscious.EntryStub(\(address))"
     }
     
+    var sharedText: String {
+        """
+        \(excerpt)
+        
+        \(address)
+        """
+    }
+    
     func withAddress(_ address: Slashlink) -> Self {
         return Self(
             did: did,

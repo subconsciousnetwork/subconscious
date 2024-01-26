@@ -128,6 +128,16 @@ struct CardSwipeGlowEffect: View {
     }
 }
 
+enum CardNotification {
+    case swipeRight(CardModel)
+    case swipeLeft(CardModel)
+    case swipeStarted
+    case swipeAbandoned
+    case cardTapped(CardModel)
+    case linkTapped(EntryLink)
+    case quoteCard(Slashlink)
+}
+
 struct CardStack: View {
     private static let swipeActivationThreshold = 128.0
     private static let swipeThrowDistance = 512.0
@@ -135,12 +145,7 @@ struct CardStack: View {
     var deck: [CardModel]
     var current: Int
     
-    var onSwipeRight: (CardModel) -> Void
-    var onSwipeLeft: (CardModel) -> Void
-    var onSwipeStart: () -> Void
-    var onSwipeAbandoned: () -> Void
-    var onCardTapped: (CardModel) -> Void
-    var onLink: (EntryLink) -> Void
+    var notify: (CardNotification) -> Void
         
     // Use a dictionary of offsets so that we can animate two cards at once during the transition.
     // This dictionary is frequently cleared during the gesture lifecycle.
@@ -195,14 +200,14 @@ struct CardStack: View {
                         : -Self.swipeThrowDistance
                 
                 if (offset > 0) {
-                    onSwipeRight(card)
+                    notify(.swipeRight(card))
                 } else {
-                    onSwipeLeft(card)
+                    notify(.swipeLeft(card))
                 }
             } else {
                 // Reset the card position
                 offsets[card] = CGSize.zero
-                onSwipeAbandoned()
+                notify(.swipeAbandoned)
             }
         }
     }
@@ -222,8 +227,8 @@ struct CardStack: View {
     func gestures(card: CardModel) -> CardGestureModifier {
         CardGestureModifier(
             offsets: $offsets,
-            onTapped: { onCardTapped(card) },
-            onSwipeStart: onSwipeStart,
+            onTapped: { notify(.cardTapped(card)) },
+            onSwipeStart: { notify(.swipeStarted) },
             onSwipeChanged: { translation in
                 dragChanged(card: card, translation: translation)
             },
@@ -240,7 +245,8 @@ struct CardStack: View {
             let stackFactor = stackFactor(for: index)
             CardView(
                 entry: card,
-                onLink: onLink
+                onLink: { entry in notify(.linkTapped(entry)) },
+                onQuote: { address in notify(.quoteCard(address)) }
             )
             // Size card based on available space
             .modifier(
@@ -339,14 +345,7 @@ struct CardStack_Previews: PreviewProvider {
                 ),
             ],
             current: 0,
-            onSwipeRight: {
-                _ in
-            },
-            onSwipeLeft: { _ in },
-            onSwipeStart: { },
-            onSwipeAbandoned: { },
-            onCardTapped: { _ in },
-            onLink: { _ in }
+            notify: { _ in }
         )
     }
 }

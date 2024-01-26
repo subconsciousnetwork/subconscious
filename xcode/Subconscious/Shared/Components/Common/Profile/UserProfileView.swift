@@ -51,6 +51,9 @@ struct RecentTabView: View {
                         },
                         onLink: { link in
                             notify(.requestFindLinkDetail(link))
+                        },
+                        onQuote: { address in
+                            notify(.requestQuoteInNewNote(address))
                         }
                     )
                 }

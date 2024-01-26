@@ -14,6 +14,7 @@ struct EntryListView: View {
     var onEntryDelete: (Slashlink) -> Void
     var onRefresh: () -> Void
     var onLink: (EntryLink) -> Void
+    var onQuote: (Slashlink) -> Void
     
     @Environment(\.colorScheme) var colorScheme
     static let resetScrollTargetId: Int = 0
@@ -61,6 +62,35 @@ struct EntryListView: View {
                                 Text("Delete")
                             }
                             .tint(.red)
+                        }
+                        .contextMenu {
+                            ShareLink(item: entry.sharedText)
+                            
+                            Button(
+                                action: {
+                                    onQuote(entry.address)
+                                },
+                                label: {
+                                    Label(
+                                        "Quote in new note",
+                                        systemImage: "quote.opening"
+                                    )
+                                }
+                            )
+                            
+                            Divider()
+                            
+                            Button(
+                                role: .destructive,
+                                action: {
+                                    onEntryDelete(entry.address)
+                                }
+                            ) {
+                                Label(
+                                    "Delete",
+                                    systemImage: "trash"
+                                )
+                            }
                         }
                     }
                     
@@ -111,7 +141,8 @@ struct EntryListView_Previews: PreviewProvider {
             onEntryPress: { entry in },
             onEntryDelete: { slug in },
             onRefresh: {},
-            onLink: { _ in }
+            onLink: { _ in },
+            onQuote: { _ in }
         )
     }
 }

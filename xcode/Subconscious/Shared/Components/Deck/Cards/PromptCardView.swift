@@ -15,6 +15,7 @@ struct PromptCardView: View {
     var entry: EntryStub
     var related: Set<EntryStub>
     var onLink: (EntryLink) -> Void
+    var onQuote: (Slashlink) -> Void
     
     var background: Color {
         entry.color(colorScheme: colorScheme)
@@ -53,6 +54,21 @@ struct PromptCardView: View {
         .allowsHitTesting(false)
         .background(background)
         .cornerRadius(DeckTheme.cornerRadius)
+        .contextMenu {
+            ShareLink(item: entry.sharedText)
+            
+            Button(
+                action: {
+                    onQuote(entry.address)
+                },
+                label: {
+                    Label(
+                        "Quote in new note",
+                        systemImage: "quote.opening"
+                    )
+                }
+            )
+        }
     }
 }
 
