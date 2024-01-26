@@ -21,6 +21,27 @@ struct DeckNavigationView: View {
         )
     }
     
+    func notify(notification: CardNotification) {
+        switch notification {
+        case let .swipeLeft(card):
+            store.send(.skipCard(card))
+        case let .swipeRight(card):
+            store.send(.chooseCard(card))
+        case .swipeStarted:
+            store.send(.cardPickedUp)
+        case .swipeAbandoned:
+            store.send(.cardReleased)
+        case let .cardTapped(card):
+            store.send(.cardTapped(card))
+        case let .linkTapped(link):
+            store.send(
+                .detailStack(.findAndPushLinkDetail(link))
+            )
+        case let .quoteCard(address):
+            store.send(.detailStack(.pushQuoteInNewDetail(address)))
+        }
+    }
+    
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             VStack(alignment: .leading) {
@@ -76,34 +97,7 @@ struct DeckNavigationView: View {
                     CardStack(
                         deck: store.state.deck,
                         current: store.state.pointer,
-                        onSwipeRight: { card in
-                            store.send(
-                                .chooseCard(
-                                    card
-                                )
-                            )
-                        },
-                        onSwipeLeft: { card in
-                            store.send(
-                                .skipCard(
-                                    card
-                                )
-                            )
-                        },
-                        onSwipeStart: {
-                            store.send(.cardPickedUp)
-                        },
-                        onSwipeAbandoned: {
-                            store.send(.cardReleased)
-                        },
-                        onCardTapped: { card in
-                            store.send(.cardTapped(card))
-                        },
-                        onLink: { link in
-                            store.send(
-                                .detailStack(.findAndPushLinkDetail(link))
-                            )
-                        }
+                        notify: notify
                     )
                     .offset(y: -AppTheme.unit * 8)
                     

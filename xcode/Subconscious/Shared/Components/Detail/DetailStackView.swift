@@ -126,6 +126,8 @@ enum DetailStackAction: Hashable {
 
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
+    
+    case pushQuoteInNewDetail(Slashlink)
 
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
@@ -161,15 +163,15 @@ enum DetailStackAction: Hashable {
 struct DetailStackModel: Hashable, ModelProtocol {
     typealias Action = DetailStackAction
     typealias Environment = AppEnvironment
-
+    
     var details: [MemoDetailDescription] = []
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "DetailStackModel"
     )
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -219,6 +221,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 state: state,
                 environment: environment,
                 autofocus: autofocus
+            )
+        case let .pushQuoteInNewDetail(address):
+            return pushQuoteInNewDetail(
+                state: state,
+                environment: environment,
+                address: address
             )
         case let .failPushRandomDetail(error):
             return failPushRandomDetail(
@@ -289,7 +297,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         model.details = details
         return Update(state: model)
     }
-   
+    
     
     static func findAndPushLinkDetail(
         state: Self,
@@ -304,18 +312,18 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 fallback: link.title
             )
         }
-        .recover { error in
-            logger.error("Failed to resolve peer: \(error)")
-            return .findAndPushDetail(
-                address: link.address,
-                fallback: link.title
-            )
-        }
-        .eraseToAnyPublisher()
+            .recover { error in
+                logger.error("Failed to resolve peer: \(error)")
+                return .findAndPushDetail(
+                    address: link.address,
+                    fallback: link.title
+                )
+            }
+            .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
-
+    
     static func findAndPushDetail(
         state: Self,
         environment: Environment,
@@ -336,7 +344,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment
             )
         }
-
+        
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
         guard address.peer != nil else {
@@ -349,7 +357,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment
             )
         }
-
+        
         // If slashlink pointing to other sphere, dispatch action
         // for viewer.
         return update(
@@ -364,7 +372,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Find and push a specific detail for slug
     static func findAndPushMemoEditorDetail(
         state: Self,
@@ -386,7 +394,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
+    
     /// Push a detail view onto the stack
     static func pushDetail(
         state: Self,
@@ -397,8 +405,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
         model.details.append(detail)
         return Update(state: model)
     }
-
-
+    
+    
     /// Push a detail view onto the stack
     static func failPushDetail(
         state: Self,
@@ -408,7 +416,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         logger.log("Attempt to push invalid detail: \(error)")
         return Update(state: state)
     }
-
+    
     /// Request detail for a random entry
     static func pushRandomDetail(
         state: Self,
@@ -430,8 +438,25 @@ struct DetailStackModel: Hashable, ModelProtocol {
                     )
                 )
             }).eraseToAnyPublisher()
-
+        
         return Update(state: state, fx: fx)
+    }
+    
+    static func pushQuoteInNewDetail(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            action: .pushDetail(
+                .editor(
+                    MemoEditorDetailDescription(
+                        fallback: "\n\n\(address.markup)"
+                    )
+                )
+            ),
+            environment: environment)
     }
 
     static func failPushRandomDetail(
@@ -613,14 +638,7 @@ extension DetailStackAction {
         case let .requestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
         case let .requestQuoteInNewDetail(address):
-            return .pushDetail(
-                .editor(
-                    MemoEditorDetailDescription(
-                        fallback: "\n\n\(address.markup)"
-                    )
-                )
-            )
-            
+            return .pushQuoteInNewDetail(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
         case let .requestFindLinkDetail(link):
@@ -645,13 +663,7 @@ extension DetailStackAction {
                 )
             )
         case let .requestQuoteInNewDetail(address):
-            return .pushDetail(
-                .editor(
-                    MemoEditorDetailDescription(
-                        fallback: "\n\n\(address.markup)"
-                    )
-                )
-            )
+            return .pushQuoteInNewDetail(address)
         }
     }
 
@@ -667,6 +679,8 @@ extension DetailStackAction {
                     address: address
                 )
             ))
+        case let .requestQuoteInNewNote(address):
+            return .pushQuoteInNewDetail(address)
         }
     }
 }

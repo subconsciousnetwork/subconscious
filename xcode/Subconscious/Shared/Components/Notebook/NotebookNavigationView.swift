@@ -46,6 +46,9 @@ struct NotebookNavigationView: View {
                             store.send(
                                 .detailStack(.findAndPushLinkDetail(link))
                             )
+                        },
+                        onQuote: { address in
+                            store.send(.detailStack(.pushQuoteInNewDetail(address)))
                         }
                     )
                     .ignoresSafeArea(.keyboard, edges: .bottom)

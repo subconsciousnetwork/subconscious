@@ -13,6 +13,7 @@ struct CardView: View {
     
     var entry: CardModel
     var onLink: (EntryLink) -> Void
+    var onQuote: (Slashlink) -> Void
     
     var color: Color {
         switch entry.card {
@@ -56,29 +57,29 @@ struct CardView: View {
                     message: message,
                     entry: entry,
                     related: related,
-                    onLink: onLink
+                    onLink: onLink,
+                    onQuote: onQuote
                 )
-                
             case let .action(message):
                 ActionCardView(message: message)
             }
         }
-        
     }
 }
 
 struct CardView_Previews: PreviewProvider {
     static var previews: some View {
-        CardView(entry: CardModel(
-            card: .prompt(
-                message: "Hello",
-                entry: EntryStub.dummyData(),
-                author: UserProfile.dummyData(),
-                related: []
-            )
-        ),
-                 onLink: {
-            _ in
-        })
+        CardView(
+            entry: CardModel(
+                card: .prompt(
+                    message: "Hello",
+                    entry: EntryStub.dummyData(),
+                    author: UserProfile.dummyData(),
+                    related: []
+                )
+            ),
+            onLink: { _ in },
+            onQuote: { _ in }
+        )
     }
 }

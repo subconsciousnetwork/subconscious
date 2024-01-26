@@ -27,6 +27,7 @@ struct StoryEntryView: View {
     var story: StoryEntry
     var onRequestDetail: (Slashlink, String) -> Void
     var onLink: (EntryLink) -> Void
+    var onQuote: (Slashlink) -> Void
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -90,6 +91,18 @@ struct StoryEntryView: View {
         )
         .contextMenu {
             ShareLink(item: sharedNote)
+            
+            Button(
+                action: {
+                    onQuote(story.entry.address)
+                },
+                label: {
+                    Label(
+                        "Quote in new note",
+                        systemImage: "quote.opening"
+                    )
+                }
+            )
         }
     }
 }
@@ -119,7 +132,8 @@ struct StoryPlainView_Previews: PreviewProvider {
                 author: UserProfile.dummyData()
             ),
             onRequestDetail: { _, _ in },
-            onLink: { _ in }
+            onLink: { _ in },
+            onQuote: { _ in }
         )
     }
 }
