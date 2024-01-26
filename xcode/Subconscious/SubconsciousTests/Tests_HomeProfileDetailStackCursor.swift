@@ -70,7 +70,6 @@ final class Tests_HomeProfileDetailStackCursor: XCTestCase {
         )
     }
     
-    
     func testTagRequestAppendToEntry() throws {
         let action = HomeProfileDetailStackCursor.tag(
             .requestAppendToEntry(Slashlink("@bob/foo")!, "test")

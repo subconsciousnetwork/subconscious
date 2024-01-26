@@ -70,7 +70,6 @@ final class Tests_NotebookDetailStackCursor: XCTestCase {
         )
     }
     
-    
     func testTagRequestAppendToEntry() throws {
         let action = NotebookDetailStackCursor.tag(
             .requestAppendToEntry(Slashlink("@bob/foo")!, "test")
