@@ -49,7 +49,7 @@ extension NoosphereService {
         
         // We _could_ also choose to simply bail out and navigate to the address without
         // traversing, at the expense of the clever redirect.
-        var did: Did? = nil
+        var did = slashlink.toDid()
         if let petname = slashlink.petname {
             did = try? await Func.run {
                 let sphere = try await self.traverse(petname: petname)
@@ -63,7 +63,7 @@ extension NoosphereService {
         }
         
         // Is this address ours? Trim off the peer
-        guard did != ourIdentity else {
+        if did == ourIdentity || did.isLocal {
             return Slashlink(slug: slashlink.slug)
         }
     
