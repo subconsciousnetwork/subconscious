@@ -23,13 +23,7 @@ extension BlockEditor {
         var send: (TextBlockAction) -> Void = { _ in }
 
         private lazy var selectView = BlockEditor.BlockSelectView()
-        private lazy var stackView = UIStackView()
-        private var listContainerMargins = NSDirectionalEdgeInsets(
-            top: 0,
-            leading: AppTheme.unit4,
-            bottom: 0,
-            trailing: 0
-        )
+        private lazy var stackView = UIStackView().vStack()
         private lazy var listContainer = UIView()
         private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
@@ -42,85 +36,35 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
 
-            contentView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.axis = .vertical
-            stackView.spacing = 0
-            stackView.distribution = .fill
-            stackView.alignment = .leading
-            stackView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            contentView.addSubview(stackView)
-            
-            listContainer.directionalLayoutMargins = listContainerMargins
-            stackView.addArrangedSubview(listContainer)
-            
-            textView.isScrollEnabled = false
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            listContainer.addSubview(textView)
-            
-            listContainer.addSubview(bulletView)
-            
-            stackView.addArrangedSubview(transcludeListView)
-            
-            selectView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(selectView)
+            contentView
+                .layoutBlock()
+                .addingSubview(stackView) { stackView in
+                    stackView.layoutBlock()
+                }
+                .addingSubview(selectView) { selectView in
+                    selectView.defaultLayout()
+                }
 
-            let listContainerGuide = listContainer.layoutMarginsGuide
-            NSLayoutConstraint.activate([
-                selectView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit
-                ),
-                selectView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -1 * AppTheme.unit
-                ),
-                selectView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                selectView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                ),
-                bulletView.leadingAnchor.constraint(
-                    equalTo: listContainer.leadingAnchor,
-                    constant: AppTheme.unit4
-                ),
-                bulletView.topAnchor.constraint(
-                    equalTo: listContainer.topAnchor,
-                    constant: AppTheme.unit2
-                ),
-                textView.leadingAnchor.constraint(
-                    equalTo: listContainerGuide.leadingAnchor
-                ),
-                textView.trailingAnchor.constraint(
-                    equalTo: listContainerGuide.trailingAnchor
-                ),
-                textView.topAnchor.constraint(
-                    equalTo: listContainerGuide.topAnchor
-                ),
-                textView.bottomAnchor.constraint(
-                    equalTo: listContainerGuide.bottomAnchor
-                ),
-                stackView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
-                ),
-                stackView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
-                ),
-                stackView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                stackView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                )
-            ])
+            stackView
+                .addingArrangedSubview(listContainer)
+                .addingArrangedSubview(transcludeListView)
+
+            listContainer
+                .addingSubview(textView) { textView in
+                    textView.layoutBlock(
+                        edges: UIEdgeInsets(
+                            top: 0,
+                            left: AppTheme.unit4,
+                            bottom: 0,
+                            right: 0
+                        )
+                    )
+                }
+                .addingSubview(bulletView) { bulletView in
+                    bulletView
+                        .anchorLeading(constant: AppTheme.unit4)
+                        .anchorTop(constant: AppTheme.unit2)
+                }
         }
         
         required init?(coder: NSCoder) {
@@ -133,43 +77,21 @@ extension BlockEditor {
             let lineHeight: CGFloat = AppTheme.lineHeight
             
             let frameView = UIView()
-            frameView.isUserInteractionEnabled = false
-            frameView.translatesAutoresizingMaskIntoConstraints = false
-            frameView.setContentCompressionResistancePriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            frameView.setContentCompressionResistancePriority(
-                .defaultHigh,
-                for: .horizontal
-            )
-            
-            let bulletView = UIView()
-            bulletView.backgroundColor = .secondaryLabel
-            bulletView.translatesAutoresizingMaskIntoConstraints = false
-            bulletView.layer.cornerRadius = bulletSize / 2
-            frameView.addSubview(bulletView)
+                .setting(\.isUserInteractionEnabled, value: false)
+                .contentCompressionResistance(for: .vertical)
+                .contentCompressionResistance(for: .horizontal)
+                .anchorWidth(constant: frameWidth)
+                .anchorHeight(constant: lineHeight)
+                .addingSubview(UIView()) { bulletView in
+                    bulletView.backgroundColor = .secondaryLabel
+                    bulletView.layer.cornerRadius = bulletSize / 2
+                    bulletView
+                        .anchorCenterX()
+                        .anchorCenterY()
+                        .anchorWidth(constant: bulletSize)
+                        .anchorHeight(constant: bulletSize)
+                }
 
-            NSLayoutConstraint.activate([
-                frameView.widthAnchor.constraint(
-                    equalToConstant: frameWidth
-                ),
-                frameView.heightAnchor.constraint(
-                    equalToConstant: lineHeight
-                ),
-                bulletView.widthAnchor.constraint(
-                    equalToConstant: bulletSize
-                ),
-                bulletView.heightAnchor.constraint(
-                    equalToConstant: bulletSize
-                ),
-                bulletView.centerXAnchor.constraint(
-                    equalTo: frameView.centerXAnchor
-                ),
-                bulletView.centerYAnchor.constraint(
-                    equalTo: frameView.centerYAnchor
-                )
-            ])
             return frameView
         }
 

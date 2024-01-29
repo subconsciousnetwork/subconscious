@@ -8,6 +8,22 @@
 import UIKit
 
 extension UIStackView {
+    @discardableResult
+    func vStack() -> Self {
+        self.translatesAutoresizingMaskIntoConstraints = false
+        self.axis = .vertical
+        self.alignment = .fill
+        self.distribution = .fill
+        self.spacing = 0
+        self.setContentHuggingPriority(
+            .defaultHigh,
+            for: .vertical
+        )
+        return self
+    }
+}
+
+extension UIStackView {
     /// Remove a view from a UIViewStack completely.
     ///
     /// `.removeArrangedSubview()` removes view from arranged views,

@@ -20,105 +20,52 @@ extension BlockEditor {
 
         var id: UUID = UUID()
         
-        var send: (TextBlockAction) -> Void = { _ in }
-        
+        var send: (BlockEditor.TextBlockAction) -> Void = { _ in }
+
         private lazy var selectView = BlockEditor.BlockSelectView()
-        private lazy var stackView = UIStackView()
+        private lazy var stackView = UIStackView().vStack()
         private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
                 self?.send(action)
             }
         )
-        private var quoteContainerMargins = NSDirectionalEdgeInsets(
-            top: 0,
-            leading: AppTheme.unit4,
-            bottom: 0,
-            trailing: 0
-        )
         private lazy var quoteContainer = UIView()
+            .contentHugging(for: .vertical)
+            .contentCompressionResistance(for: .vertical)
         private lazy var quoteBar = createQuoteBar()
         private var transcludeListView = UIHostingView<TranscludeListView>()
 
         override init(frame: CGRect) {
             super.init(frame: frame)
             
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.axis = .vertical
-            contentView.addSubview(stackView)
-            
-            quoteContainer.directionalLayoutMargins = quoteContainerMargins
-            quoteContainer.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            quoteContainer.setContentCompressionResistancePriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            stackView.addArrangedSubview(quoteContainer)
-            
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            textView.isScrollEnabled = false
-            quoteContainer.addSubview(textView)
-            
-            quoteContainer.addSubview(quoteBar)
-            
-            stackView.addArrangedSubview(transcludeListView)
-            
-            selectView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(selectView)
+            quoteContainer
+                .addingSubview(textView) { textView in
+                    textView.layoutBlock(
+                        edges: UIEdgeInsets(
+                            top: 0,
+                            left: AppTheme.unit4,
+                            bottom: 0,
+                            right: 0
+                        )
+                    )
+                }
+                .addingSubview(quoteBar) { quoteBar in
+                    quoteBar
+                        .anchorLeading(constant: AppTheme.unit4)
+                        .anchorTop()
+                        .anchorBottom()
+                }
 
-            let quoteContainerGuide = quoteContainer.layoutMarginsGuide
-            NSLayoutConstraint.activate([
-                selectView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit
-                ),
-                selectView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -1 * AppTheme.unit
-                ),
-                selectView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                selectView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                ),
-                textView.leadingAnchor.constraint(
-                    equalTo: quoteContainerGuide.leadingAnchor
-                ),
-                textView.trailingAnchor.constraint(
-                    equalTo: quoteContainerGuide.trailingAnchor
-                ),
-                textView.topAnchor.constraint(
-                    equalTo: quoteContainerGuide.topAnchor
-                ),
-                textView.bottomAnchor.constraint(
-                    equalTo: quoteContainerGuide.bottomAnchor
-                ),
-                quoteBar.leadingAnchor.constraint(
-                    equalTo: quoteContainer.leadingAnchor,
-                    constant: AppTheme.unit4
-                ),
-                quoteBar.topAnchor.constraint(
-                    equalTo: quoteContainerGuide.topAnchor
-                ),
-                quoteBar.bottomAnchor.constraint(
-                    equalTo: quoteContainerGuide.bottomAnchor
-                ),
-                stackView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
-                ),
-                stackView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
-                ),
-                stackView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                stackView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                )
-            ])
+            contentView
+                .addingSubview(stackView) { stackView in
+                    stackView
+                        .layoutBlock()
+                        .addingArrangedSubview(quoteContainer)
+                        .addingArrangedSubview(transcludeListView)
+                }
+                .addingSubview(selectView) { selectView in
+                    selectView.defaultLayout()
+                }
         }
         
         required init?(coder: NSCoder) {
@@ -126,44 +73,22 @@ extension BlockEditor {
         }
         
         private func createQuoteBar() -> UIView {
-            let quoteFrameView = UIView()
-            quoteFrameView.translatesAutoresizingMaskIntoConstraints = false
-
-            let quoteView = UIView()
-            quoteView.translatesAutoresizingMaskIntoConstraints = false
-            quoteView.backgroundColor = .accent
-            quoteView.setContentHuggingPriority(
-                .fittingSizeLevel,
-                for: .vertical
-            )
-            quoteFrameView.addSubview(quoteView)
-            
-            NSLayoutConstraint.activate([
-                quoteFrameView.widthAnchor.constraint(
-                    equalToConstant: AppTheme.unit2
-                ),
-                quoteView.widthAnchor.constraint(
-                    equalToConstant: 2
-                ),
-                quoteView.centerXAnchor.constraint(
-                    equalTo: quoteFrameView.centerXAnchor
-                ),
-                quoteView.topAnchor.constraint(
-                    equalTo: quoteFrameView.topAnchor,
-                    constant: AppTheme.unit2
-                ),
-                quoteView.bottomAnchor.constraint(
-                    equalTo: quoteFrameView.bottomAnchor,
-                    constant: -1 * AppTheme.unit2
-                )
-            ])
-            return quoteFrameView
+            UIView()
+                .anchorWidth(constant: AppTheme.unit2)
+                .addingSubview(UIView()) { quoteView in
+                    quoteView
+                        .setting(\.backgroundColor, value: .accent)
+                        .contentHugging(.fittingSizeLevel, for: .vertical)
+                        .anchorTop(constant: AppTheme.unit2)
+                        .anchorBottom(constant: AppTheme.unit2)
+                        .anchorWidth(constant:2)
+                }
         }
 
         private func send(
             _ event: SubtextTextEditorAction
         ) {
-            self.send(TextBlockAction.from(id: id, action: event))
+            self.send(BlockEditor.TextBlockAction.from(id: id, action: event))
         }
 
         func update(
@@ -174,7 +99,9 @@ extension BlockEditor {
             transcludeListView.update(
                 parentController: parentController,
                 entries: state.transcludes,
-                send: Address.forward(send: send, tag: TextBlockAction.from)
+                send: Address.forward(
+                    send: send, tag: BlockEditor.TextBlockAction.from
+                )
             )
             textView.setText(
                 state.dom.description,

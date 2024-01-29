@@ -286,6 +286,7 @@
 		B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DB299AB01800EF7E07 /* Noosphere.swift */; };
 		B87288DE299AB02400EF7E07 /* Sphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* Sphere.swift */; };
 		B87288E0299B05B500EF7E07 /* Tests_DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DF299B05B500EF7E07 /* Tests_DataService.swift */; };
+		B87F4DB12B64643200C91471 /* FluentUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87F4DB02B64643200C91471 /* FluentUIView.swift */; };
 		B884565329D2102D00DBCD39 /* Tests_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B884565229D2102D00DBCD39 /* Tests_App.swift */; };
 		B8879EA026F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
@@ -755,6 +756,7 @@
 		B87288DB299AB01800EF7E07 /* Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Noosphere.swift; sourceTree = "<group>"; };
 		B87288DD299AB02400EF7E07 /* Sphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sphere.swift; sourceTree = "<group>"; };
 		B87288DF299B05B500EF7E07 /* Tests_DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DataService.swift; sourceTree = "<group>"; };
+		B87F4DB02B64643200C91471 /* FluentUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluentUIView.swift; sourceTree = "<group>"; };
 		B884565229D2102D00DBCD39 /* Tests_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_App.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
@@ -1380,6 +1382,7 @@
 				B8AB08D12A9D523600998099 /* UIViewIconButton.swift */,
 				B85319E92AAA3D890085044A /* UIViewPreviewRepresentable.swift */,
 				B8AB08D32A9D524300998099 /* UIViewSpacer.swift */,
+				B87F4DB02B64643200C91471 /* FluentUIView.swift */,
 			);
 			path = UIKit;
 			sourceTree = "<group>";
@@ -2265,6 +2268,7 @@
 				B542EF712AF4949B00BE29F1 /* EditProfileSheetModifier.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */,
+				B87F4DB12B64643200C91471 /* FluentUIView.swift in Sources */,
 				B8D328B729A671DA00850A37 /* TranscludeView.swift in Sources */,
 				B81A1A6F29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift in Sources */,
 				B8AB08D82A9D52D700998099 /* UIViewHelpers.swift in Sources */,

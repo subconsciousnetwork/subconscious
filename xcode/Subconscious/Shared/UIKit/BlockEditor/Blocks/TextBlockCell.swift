@@ -23,72 +23,31 @@ extension BlockEditor {
         var send: (TextBlockAction) -> Void = { _ in }
         
         private lazy var selectView = BlockEditor.BlockSelectView()
-        private lazy var stackView = UIStackView()
+        private lazy var stackView = UIStackView().vStack()
         private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
                 self?.send(action)
             }
         )
         private var transcludeListView = UIHostingView<TranscludeListView>()
-        
+        private lazy var dividerView = UIView.divider()
+
         override init(frame: CGRect) {
             super.init(frame: frame)
             
-            contentView.backgroundColor = .systemBackground
-            contentView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.axis = .vertical
-            stackView.spacing = AppTheme.unit
-            stackView.alignment = .fill
-            stackView.distribution = .fill
-            stackView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            contentView.addSubview(stackView)
-            
-            textView.isEditable = true
-            textView.isScrollEnabled = false
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.addArrangedSubview(textView)
-
-            stackView.addArrangedSubview(transcludeListView)
-            
-            selectView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(selectView)
-            
-            NSLayoutConstraint.activate([
-                selectView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit
-                ),
-                selectView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -1 * AppTheme.unit
-                ),
-                selectView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                selectView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                ),
-                stackView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
-                ),
-                stackView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
-                ),
-                stackView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                stackView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                )
-            ])
+            contentView
+                .setting(\.backgroundColor, value: .systemBackground)
+                .layoutBlock()
+                .addingSubview(stackView) { stackView in
+                    stackView
+                        .layoutBlock()
+                        .addingArrangedSubview(self.dividerView)
+                        .addingArrangedSubview(self.textView)
+                        .addingArrangedSubview(self.transcludeListView)
+                }
+                .addingSubview(selectView) { selectView in
+                    selectView.defaultLayout()
+                }
         }
         
         required init?(coder: NSCoder) {
@@ -98,7 +57,7 @@ extension BlockEditor {
         private func send(
             _ event: SubtextTextEditorAction
         ) {
-            self.send(TextBlockAction.from(id: id, action: event))
+            self.send(BlockEditor.TextBlockAction.from(id: id, action: event))
         }
         
         func update(
@@ -109,7 +68,10 @@ extension BlockEditor {
             transcludeListView.update(
                 parentController: parentController,
                 entries: state.transcludes,
-                send: Address.forward(send: send, tag: TextBlockAction.from)
+                send: Address.forward(
+                    send: send,
+                    tag: BlockEditor.TextBlockAction.from
+                )
             )
             textView.setText(
                 state.dom.description,

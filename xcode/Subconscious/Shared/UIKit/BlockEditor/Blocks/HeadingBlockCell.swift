@@ -19,67 +19,41 @@ extension BlockEditor {
         
         var send: (TextBlockAction) -> Void = { _ in }
 
+        private lazy var stackView = UIStackView().vStack()
         private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
                 self?.send(action)
             }
         )
-        
+        private lazy var dividerView = UIView.divider()
+
         override init(frame: CGRect) {
             super.init(frame: frame)
             self.backgroundColor = .systemBackground
             
-            // Automatically adjust font size based on system font size
-            textView.isScrollEnabled = false
-            textView.font = .preferredFont(forTextStyle: .headline)
-            textView.adjustsFontForContentSizeCategory = true
-            textView.textContainerInset = UIEdgeInsets(
-                top: AppTheme.unit2,
-                left: AppTheme.padding,
-                bottom: AppTheme.unit2,
-                right: AppTheme.padding
-            )
-            textView.textContainer.lineFragmentPadding = 0
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            
-            contentView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            contentView.addSubview(textView)
-
-            selectView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(selectView)
-
-            NSLayoutConstraint.activate([
-                selectView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit
-                ),
-                selectView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -1 * AppTheme.unit
-                ),
-                selectView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                selectView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                ),
-                textView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
-                ),
-                textView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
-                ),
-                textView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                textView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
+            textView.modifier({ textView in
+                textView.font = .preferredFont(forTextStyle: .headline)
+                textView.textContainerInset = UIEdgeInsets(
+                    top: AppTheme.unit2,
+                    left: AppTheme.padding,
+                    bottom: AppTheme.unit2,
+                    right: AppTheme.padding
                 )
-            ])
+                textView.textContainer.lineFragmentPadding = 0
+            })
+
+            contentView
+                .layoutBlock()
+                .addingSubview(stackView) { stackView in
+                    stackView
+                        .layoutBlock()
+                        .addingArrangedSubview(self.dividerView)
+                        .addingArrangedSubview(self.textView)
+                }
+                .addingSubview(selectView) { selectView in
+                    selectView.defaultLayout()
+                }
         }
         
         required init?(coder: NSCoder) {
@@ -102,7 +76,7 @@ extension BlockEditor {
         private func send(
             _ event: SubtextTextEditorAction
         ) {
-            self.send(TextBlockAction.from(id: id, action: event))
+            self.send(BlockEditor.TextBlockAction.from(id: id, action: event))
         }
     }
 }

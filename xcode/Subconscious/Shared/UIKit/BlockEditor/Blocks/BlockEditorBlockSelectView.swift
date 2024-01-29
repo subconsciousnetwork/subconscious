@@ -25,8 +25,22 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
 
-        func setSelectedState(_ isSelected: Bool) {
+        @discardableResult
+        func setSelectedState(_ isSelected: Bool) -> Self {
             layer.opacity = isSelected ? 1 : 0
+            return self
+        }
+
+        @discardableResult
+        func defaultLayout() -> Self {
+            self.layoutBlock(
+                edges: UIEdgeInsets(
+                    top: 0,
+                    left: AppTheme.unit,
+                    bottom: 0,
+                    right: AppTheme.unit
+                )
+            )
         }
     }
 }

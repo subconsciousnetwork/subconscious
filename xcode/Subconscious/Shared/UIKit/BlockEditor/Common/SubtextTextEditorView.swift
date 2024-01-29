@@ -48,6 +48,10 @@ class SubtextTextEditorView: UIView.SubtextTextView {
         super.init(frame: frame, textContainer: textContainer)
         self.delegate = self
         self.inputAccessoryView = toolbar
+        self.isEditable = true
+        // Grow vertically
+        self.isScrollEnabled = false
+        self.adjustsFontForContentSizeCategory = true
     }
     
     required init?(coder: NSCoder) {
