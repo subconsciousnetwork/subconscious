@@ -106,6 +106,7 @@
 		B58FD6732A4E4C0E00826548 /* InviteCodeSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6722A4E4C0E00826548 /* InviteCodeSettingsSection.swift */; };
 		B58FD6752A4E4C8200826548 /* ResourceSyncBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FD6742A4E4C8200826548 /* ResourceSyncBadge.swift */; };
 		B5908BEB29DAB05B00225B1A /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5908BEA29DAB05B00225B1A /* TestUtilities.swift */; };
+		B596B34C2B68B160001C3EB6 /* SentrySwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = B596B34B2B68B160001C3EB6 /* SentrySwiftUI */; };
 		B597C7372B4E34DB003F4342 /* ActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B597C7362B4E34DA003F4342 /* ActivityEvent.swift */; };
 		B59850B52B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
 		B59850B62B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
@@ -957,6 +958,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */,
+				B596B34C2B68B160001C3EB6 /* SentrySwiftUI in Frameworks */,
 				B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */,
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				8804D2552A4242E300D45E83 /* Sentry in Frameworks */,
@@ -1090,6 +1092,13 @@
 				B53B600B2B47CA9B007BF747 /* ShuffleProgressView.swift */,
 			);
 			path = Deck;
+			sourceTree = "<group>";
+		};
+		B596B34A2B68B160001C3EB6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		B59E4E552B3BA76E000A2B49 /* Cards */ = {
@@ -1547,6 +1556,7 @@
 				B80057E927DC355E002C0129 /* SubconsciousTests */,
 				B8EB2A0E26F27797006E97C3 /* Tests iOS */,
 				B8EB2A1A26F27797006E97C3 /* Tests macOS */,
+				B596B34A2B68B160001C3EB6 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1786,6 +1796,7 @@
 				B8E1BB78296DECE700B86E0E /* SwiftNoosphere */,
 				B57D63BF29B574C3008BBB62 /* CodeScanner */,
 				8804D2542A4242E300D45E83 /* Sentry */,
+				B596B34B2B68B160001C3EB6 /* SentrySwiftUI */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -3067,6 +3078,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */;
 			productName = CodeScanner;
+		};
+		B596B34B2B68B160001C3EB6 /* SentrySwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = SentrySwiftUI;
 		};
 		B822F18A27C9615600943C6B /* ObservableStore */ = {
 			isa = XCSwiftPackageProductDependency;

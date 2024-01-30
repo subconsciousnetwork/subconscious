@@ -9,6 +9,7 @@ import SwiftUI
 import ObservableStore
 import os
 import Combine
+import SentrySwiftUI
 
 /// Top-level view for app
 struct AppView: View {
@@ -85,6 +86,7 @@ struct AppView: View {
         .onChange(of: self.scenePhase) { phase in
             store.send(.scenePhaseChange(phase))
         }
+        .sentryTrace("AppView")
     }
 }
 
