@@ -1775,6 +1775,7 @@
 			buildConfigurationList = B8EB2A2926F27797006E97C3 /* Build configuration list for PBXNativeTarget "Subconscious (iOS)" */;
 			buildPhases = (
 				B8EB29F726F27797006E97C3 /* Sources */,
+				B593FEB22B69BFC7002ABB97 /* ShellScript */,
 				B8EB29F826F27797006E97C3 /* Frameworks */,
 				B8EB29F926F27797006E97C3 /* Resources */,
 				8804D2562A424FD900D45E83 /* Run Script */,
@@ -1997,6 +1998,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if which sentry-cli >/dev/null; then\n    export SENTRY_ORG=subconscious\n    export SENTRY_PROJECT=apple-ios\n    if [ \"$SENTRY_AUTH_TOKEN\" -eq \"\" ]; then\n      echo \"error: sentry auth token isn't set. Cannot upload debug symbols.\"\n      exit 1\n    else\n      ERROR=$(sentry-cli debug-files upload \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n      if [ ! $? -eq 0 ]; then\n        echo \"warning: sentry-cli - $ERROR\"\n      fi\n    fi\nelse\n  echo \"warning: sentry-cli not installed. download from https://github.com/getsentry/sentry-cli/releases\"\nfi\n";
+		};
+		B593FEB22B69BFC7002ABB97 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [[ \"$(uname -m)\" == arm64 ]]; then\n    export PATH=\"/opt/homebrew/bin:$PATH\"\nfi\n\nif which swiftlint > /dev/null; then\n  swiftlint lint --config ../../.swiftlint.yml\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
