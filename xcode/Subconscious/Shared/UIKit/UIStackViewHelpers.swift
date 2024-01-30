@@ -21,6 +21,20 @@ extension UIStackView {
         )
         return self
     }
+
+    @discardableResult
+    func hStack() -> Self {
+        self.translatesAutoresizingMaskIntoConstraints = false
+        self.axis = .horizontal
+        self.alignment = .fill
+        self.distribution = .fill
+        self.spacing = 0
+        self.setContentHuggingPriority(
+            .defaultHigh,
+            for: .vertical
+        )
+        return self
+    }
 }
 
 extension UIStackView {
