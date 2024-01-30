@@ -5,7 +5,7 @@
 //  Created by Gordon Brander on 1/30/24.
 //
 
-import Foundation
+import SwiftUI
 
 actor PromptService {
     private let tracery = Tracery()
@@ -82,7 +82,35 @@ extension PromptService {
             "What does this build upon?",
             "Can you say it in one sentence?",
             "In what ways might this be true?",
-            "What does this contradict?"
+            "What does this contradict?",
+            "What does this support?",
+            "Can you combine this with another idea to make something new?",
+            "What questions does this trigger?",
+            "How does this change my understanding?",
+            "Can you make a connection to #domains#?",
+            "Can you make an analogy to #domains#?"
+        ],
+        "domains": [
+            "nature",
+            "ecosystems",
+            "science",
+            "art",
+            "economics",
+            "physics",
+            "music",
+            "history",
+            "dance",
+            "theater",
+            "literature",
+            "architecture",
+            "psychology",
+            "philosophy",
+            "engineering",
+            "fashion",
+            "cooking",
+            "mythology",
+            "folklore",
+            "magic"
         ],
         "reflect": [
             "What was the best part of your day?",
@@ -125,4 +153,65 @@ extension PromptService {
     ]
 
     static let `default` = PromptService(grammar: prompts)
+}
+
+struct PromptService_Previews: PreviewProvider {
+    struct PromptPreviewView: View {
+        let prompt = PromptService.default
+        @State private var prompts: [String] = []
+
+        private func regeneratePrompts() async {
+            var prompts: [String] = []
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate())
+            self.prompts = prompts
+        }
+
+        var body: some View {
+            VStack(alignment: .leading) {
+                ForEach(prompts, id: \.self) { prompt in
+                    HStack {
+                        Text(prompt)
+                        Spacer()
+                    }
+                }
+                Button(
+                    action: {
+                        Task {
+                            await regeneratePrompts()
+                        }
+                    },
+                    label: {
+                        Text("Generate")
+                    }
+                )
+                .buttonStyle(.borderedProminent)
+            }
+            .padding()
+            .task {
+                await regeneratePrompts()
+            }
+        }
+    }
+
+    static var previews: some View {
+        PromptPreviewView()
+    }
 }
