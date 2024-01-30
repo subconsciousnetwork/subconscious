@@ -3189,7 +3189,10 @@ struct AppEnvironment {
     var gatewayProvisioningService: GatewayProvisioningService
     
     var pasteboard = UIPasteboard.general
-    
+
+    /// Service for generating creative prompts and oblique strategies
+    var prompt = PromptService.default
+
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
         Timer.publish(
