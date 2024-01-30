@@ -343,6 +343,7 @@
 		B89E30782911B51A00A4721F /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E30762911B51A00A4721F /* Migration.swift */; };
 		B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E307C2911D7F900A4721F /* IntUtilities.swift */; };
 		B89E307E2911D7F900A4721F /* IntUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E307C2911D7F900A4721F /* IntUtilities.swift */; };
+		B8A0A8782B682ED300776521 /* SelectRadioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A0A8772B682ED300776521 /* SelectRadioView.swift */; };
 		B8A1621429B2AB3A008322EB /* CloseButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A1621329B2AB3A008322EB /* CloseButtonView.swift */; };
 		B8A1621829B39337008322EB /* ExpandAlignedLeadingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A1621729B39337008322EB /* ExpandAlignedLeadingViewModifier.swift */; };
 		B8A1621929B39337008322EB /* ExpandAlignedLeadingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A1621729B39337008322EB /* ExpandAlignedLeadingViewModifier.swift */; };
@@ -793,6 +794,7 @@
 		B89DBDDF2AF440C6003D2CE3 /* UIHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHostingView.swift; sourceTree = "<group>"; };
 		B89E30762911B51A00A4721F /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		B89E307C2911D7F900A4721F /* IntUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntUtilities.swift; sourceTree = "<group>"; };
+		B8A0A8772B682ED300776521 /* SelectRadioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectRadioView.swift; sourceTree = "<group>"; };
 		B8A1621329B2AB3A008322EB /* CloseButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseButtonView.swift; sourceTree = "<group>"; };
 		B8A1621729B39337008322EB /* ExpandAlignedLeadingViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandAlignedLeadingViewModifier.swift; sourceTree = "<group>"; };
 		B8A408A828F61BA000A5651D /* project.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = project.json; sourceTree = "<group>"; };
@@ -1510,6 +1512,7 @@
 				B8E6AAD42B0EA8C100A3A11B /* SubtextTextEditorView.swift */,
 				B8CAF20E2A9E7C8C0057D5DE /* SubtextTextView.swift */,
 				B828F0AC2B029F6F00FDE4AE /* Transclude */,
+				B8A0A8772B682ED300776521 /* SelectRadioView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -2154,6 +2157,7 @@
 				B8FB38B42B309096008A329C /* AdvancedSettingsView.swift in Sources */,
 				B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */,
 				B8AB08D02A9D522D00998099 /* UIViewDivider.swift in Sources */,
+				B8A0A8782B682ED300776521 /* SelectRadioView.swift in Sources */,
 				B8E6AACF2B0D41F500A3A11B /* BlocksModel.swift in Sources */,
 				B57701962A650C92001F874F /* ProfileHeaderButtonStyle.swift in Sources */,
 				B8AB08CA2A9D518800998099 /* UIBarButtonItemUtilities.swift in Sources */,
