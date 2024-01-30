@@ -7,6 +7,38 @@
 
 import SwiftUI
 
+extension UIColor {
+    convenience init(
+        light lightModeColor: UIColor,
+        dark darkModeColor: UIColor
+     ) {
+        self.init { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .light:
+                return lightModeColor
+            case .dark:
+                return darkModeColor
+            default:
+                return lightModeColor
+            }
+        }
+    }
+}
+
+extension Color {
+    init(
+        light lightModeColor: Color,
+        dark darkModeColor: Color
+     ) {
+         self.init(
+            UIColor(
+                light: UIColor(lightModeColor),
+                dark: UIColor(darkModeColor)
+            )
+         )
+    }
+}
+
 extension Color {
     /// A color theme describes a foreground, background, and border
     struct Theme: Hashable {
