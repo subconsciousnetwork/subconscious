@@ -57,6 +57,7 @@ extension BlockEditor {
                 }
 
             contentView
+                .setting(\.backgroundColor, value: .systemBackground)
                 .addingSubview(stackView) { stackView in
                     stackView
                         .layoutBlock()

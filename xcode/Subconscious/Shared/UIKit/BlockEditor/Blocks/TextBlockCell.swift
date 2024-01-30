@@ -30,18 +30,16 @@ extension BlockEditor {
             }
         )
         private var transcludeListView = UIHostingView<TranscludeListView>()
-        private lazy var dividerView = UIView.divider()
 
         override init(frame: CGRect) {
             super.init(frame: frame)
             
             contentView
-                .setting(\.backgroundColor, value: .systemBackground)
                 .layoutBlock()
+                .setting(\.backgroundColor, value: .systemBackground)
                 .addingSubview(stackView) { stackView in
                     stackView
                         .layoutBlock()
-                        .addingArrangedSubview(self.dividerView)
                         .addingArrangedSubview(self.textView)
                         .addingArrangedSubview(self.transcludeListView)
                 }

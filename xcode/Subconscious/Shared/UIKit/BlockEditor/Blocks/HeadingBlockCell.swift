@@ -26,11 +26,9 @@ extension BlockEditor {
                 self?.send(action)
             }
         )
-        private lazy var dividerView = UIView.divider()
 
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .systemBackground
             
             textView.modifier({ textView in
                 textView.font = .preferredFont(forTextStyle: .headline)
@@ -45,10 +43,10 @@ extension BlockEditor {
 
             contentView
                 .layoutBlock()
+                .setting(\.backgroundColor, value: .systemBackground)
                 .addingSubview(stackView) { stackView in
                     stackView
                         .layoutBlock()
-                        .addingArrangedSubview(self.dividerView)
                         .addingArrangedSubview(self.textView)
                 }
                 .addingSubview(selectView) { selectView in

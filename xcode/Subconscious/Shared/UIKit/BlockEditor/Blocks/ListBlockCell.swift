@@ -38,32 +38,32 @@ extension BlockEditor {
 
             contentView
                 .layoutBlock()
+                .setting(\.backgroundColor, value: .systemBackground)
                 .addingSubview(stackView) { stackView in
-                    stackView.layoutBlock()
+                    listContainer
+                        .addingSubview(textView) { textView in
+                            textView.layoutBlock(
+                                edges: UIEdgeInsets(
+                                    top: 0,
+                                    left: AppTheme.unit4,
+                                    bottom: 0,
+                                    right: 0
+                                )
+                            )
+                        }
+                        .addingSubview(bulletView) { bulletView in
+                            bulletView
+                                .anchorLeading(constant: AppTheme.unit4)
+                                .anchorTop(constant: AppTheme.unit2)
+                        }
+
+                    stackView
+                        .layoutBlock()
+                        .addingArrangedSubview(listContainer)
+                        .addingArrangedSubview(transcludeListView)
                 }
                 .addingSubview(selectView) { selectView in
                     selectView.defaultLayout()
-                }
-
-            stackView
-                .addingArrangedSubview(listContainer)
-                .addingArrangedSubview(transcludeListView)
-
-            listContainer
-                .addingSubview(textView) { textView in
-                    textView.layoutBlock(
-                        edges: UIEdgeInsets(
-                            top: 0,
-                            left: AppTheme.unit4,
-                            bottom: 0,
-                            right: 0
-                        )
-                    )
-                }
-                .addingSubview(bulletView) { bulletView in
-                    bulletView
-                        .anchorLeading(constant: AppTheme.unit4)
-                        .anchorTop(constant: AppTheme.unit2)
                 }
         }
         
