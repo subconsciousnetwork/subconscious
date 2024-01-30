@@ -22,9 +22,9 @@ extension UIView {
         private(set) var dom = Subtext.empty
 
         private let defaultTextContainerInset = UIEdgeInsets(
-            top: AppTheme.unit2,
+            top: AppTheme.unit,
             left: AppTheme.padding,
-            bottom: AppTheme.unit2,
+            bottom: AppTheme.unit,
             right: AppTheme.padding
         )
         
