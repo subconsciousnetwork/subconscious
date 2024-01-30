@@ -85,7 +85,7 @@ extension Color {
     static let icon = SwiftUI.Color.accentColor
     static let secondaryIcon = SwiftUI.Color.secondary
     static let tertiaryIcon = SwiftUI.Color(
-        uiColor: UIColor.tertiarySystemFill
+        uiColor: UIColor.tertiaryLabel
     )
     static let buttonText = SwiftUI.Color.accentColor
     /// Fill for pressed-state overlays
