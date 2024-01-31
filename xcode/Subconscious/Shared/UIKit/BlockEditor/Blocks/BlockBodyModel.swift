@@ -1,5 +1,5 @@
 //
-//  TextBlockModel.swift
+//  BlockBodyModel.swift
 //  BlockEditor
 //
 //  Created by Gordon Brander on 7/17/23.
@@ -8,61 +8,105 @@
 import Foundation
 
 extension BlockEditor {
-    struct TextBlockModel: Hashable, Identifiable {
-        var id = UUID()
-        var dom = Subtext.empty
-        /// The selection/text cursor position
-        var selection: NSRange = NSMakeRange(0, 0)
-        /// Is the text editor focused?
-        var isEditing = false
+    /// Represents the various possible select states
+    struct BlockSelectionModel: Hashable {
+        static let normal = BlockSelectionModel()
+
+        /// Is the text editor focused and editing?
+        private(set) var isEditing: Bool
         /// Is select mode enabled in the editor?
         /// Our collection view is data-driven, so we set this flag for every
         /// block.
-        private(set) var isBlockSelectMode = false
+        private(set) var isBlockSelectMode: Bool
         /// Is this particular block selected?
-        private(set) var isBlockSelected = false
+        private(set) var isBlockSelected: Bool
+
+        init(
+            isBlockSelectMode: Bool = false,
+            isEditing: Bool = false,
+            isBlockSelected: Bool = false
+        ) {
+            if !isBlockSelectMode {
+                // Not in block select mode
+                self.isBlockSelectMode = false
+                self.isEditing = isEditing
+                self.isBlockSelected = false
+                return
+            }
+            // In block select mode
+            self.isBlockSelectMode = true
+            self.isEditing = false
+            self.isBlockSelected = isBlockSelected
+        }
+
+        mutating func setEditing(_ isEditing: Bool) {
+            if self.isBlockSelectMode {
+                self.isEditing = false
+                return
+            }
+            self.isEditing = isEditing
+            return
+        }
+
+        mutating func setBlockSelectMode(
+            isBlockSelectMode: Bool,
+            isBlockSelected: Bool = false
+        ) {
+            if !isBlockSelectMode {
+                // Not in block select mode
+                self.isBlockSelectMode = false
+                self.isBlockSelected = false
+                return
+            }
+            self.isBlockSelectMode = true
+            self.isEditing = false
+            self.isBlockSelected = isBlockSelected
+            return
+        }
+
+        mutating func setBlockSelected(
+            _ isBlockSelected: Bool
+        ) {
+            setBlockSelectMode(
+                isBlockSelectMode: isBlockSelectMode,
+                isBlockSelected: isBlockSelected
+            )
+        }
+    }
+
+    struct BlockBodyModel: Hashable {
+        /// The text portion of the block. For some blocks this may not be
+        /// rendered.
+        private(set) var dom = Subtext.empty
+        /// The text selection/text cursor position
+        private(set) var textSelection: NSRange = NSMakeRange(0, 0)
+        var blockSelection = BlockSelectionModel()
         var transcludes: [EntryStub] = []
         
         /// Set text, updating selection
-        func setText(
+        mutating func setText(
             dom: Subtext,
-            selection: NSRange
-        ) -> Self {
-            var this = self
-            this.dom = dom
-            this.selection = selection
-            return this
+            textSelection: NSRange
+        ) {
+            self.dom = dom
+            self.textSelection = textSelection
         }
         
         /// Set text, updating selection
-        func setSelection(
-            selection: NSRange
-        ) -> Self {
-            var this = self
-            this.selection = selection
-            return this
+        mutating func setTextSelection(
+            _ textSelection: NSRange
+        ) {
+            self.textSelection = textSelection
         }
 
-        func updateTranscludes(
+        mutating func updateTranscludes(
             index: [Slashlink: EntryStub]
-        ) -> Self {
-            var this = self
-            this.transcludes = dom.parsedSlashlinks
+        ) {
+            self.transcludes = dom.parsedSlashlinks
                 .uniquing()
                 .compactMap({ slashlink in
                     index[slashlink]
                 })
-            return this
-        }
-
-        func setBlockSelectMode(
-            isBlockSelectMode: Bool,
-            isBlockSelected: Bool
-        ) -> Self {
-            var this = self
-            this.isBlockSelectMode = isBlockSelectMode
-            this.isBlockSelected = isBlockSelectMode && isBlockSelected
-            return this
         }
     }
 }

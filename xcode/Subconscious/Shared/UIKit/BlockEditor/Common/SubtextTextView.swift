@@ -31,6 +31,7 @@ extension UIView {
         override init(frame: CGRect, textContainer: NSTextContainer?) {
             super.init(frame: frame, textContainer: textContainer)
             // Automatically adjust font size based on system font size
+            self.backgroundColor = .clear
             adjustsFontForContentSizeCategory = true
             font = .preferredFont(forTextStyle: .body)
             textContainerInset = defaultTextContainerInset

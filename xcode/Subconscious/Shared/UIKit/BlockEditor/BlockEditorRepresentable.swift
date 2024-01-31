@@ -51,13 +51,15 @@ struct BlockStackEditorViewControllerRepresentable_Previews: PreviewProvider {
             state: BlockEditor.Model(
                 blocks: BlockEditor.BlocksModel(
                     blocks:[
-                        BlockEditor.BlockModel.heading(
-                            BlockEditor.TextBlockModel(
+                        BlockEditor.BlockModel(
+                            blockType: .heading,
+                            body: BlockEditor.BlockBodyModel(
                                 dom: Subtext(markup: "Foo")
                             )
                         ),
-                        BlockEditor.BlockModel.text(
-                            BlockEditor.TextBlockModel(
+                        BlockEditor.BlockModel(
+                            blockType: .text,
+                            body: BlockEditor.BlockBodyModel(
                                 dom: Subtext(markup: "Bar")
                             )
                         )

@@ -29,7 +29,10 @@ extension BlockEditor {
             Model(
                 blocks: BlocksModel(
                     blocks: [
-                        BlockModel.heading(TextBlockModel())
+                        BlockModel(
+                            blockType: .heading,
+                            body: BlockBodyModel()
+                        )
                     ]
                 )
             )
@@ -211,7 +214,7 @@ extension BlockEditor {
         /// 0 means "no animation".
         case reconfigureCollectionItems(
             _ indexPaths: [IndexPath],
-            animationDuration: TimeInterval = 0
+            animationDuration: TimeInterval? = nil
         )
         case reloadCollectionView
         case moveBlock(
@@ -937,7 +940,7 @@ extension BlockEditor.Model: ModelProtocol {
         // Fetch only the slashlinks that are not in the cache
         let slashlinksToFetch = state.blocks.blocks
             .flatMap({ block in
-                block.dom?.parsedSlashlinks ?? []
+                block.body.dom.parsedSlashlinks
             })
             .filter({ slashlink in
                 state.transcludes[slashlink] == nil
@@ -972,10 +975,9 @@ extension BlockEditor.Model: ModelProtocol {
         var blocks: [BlockEditor.BlockModel] = []
         var indexPaths: [IndexPath] = []
         for (i, block) in state.blocks.blocks.enumerated() {
-            let updatedBlock = block.update { textBlock in
-                textBlock.updateTranscludes(index: model.transcludes)
-            }
-            blocks.append(updatedBlock ?? block)
+            var block = block
+            block.body.updateTranscludes(index: model.transcludes)
+            blocks.append(block)
             
             let indexPath = IndexPath(
                 row: i,
@@ -1070,15 +1072,9 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         
-        let block = state.blocks.blocks[i]
-        
-        guard let block = block.update({ textBlock in
-            textBlock.updateTranscludes(index: state.transcludes)
-        }) else {
-            Self.logger.log("block#\(id) unable to update as text block. Doing nothing.")
-            return Update(state: state)
-        }
-        
+        var block = state.blocks.blocks[i]
+        block.body.updateTranscludes(index: state.transcludes)
+
         var model = state
         model.blocks.blocks[i] = block
         
@@ -1196,25 +1192,16 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         
-        let block = state.blocks.blocks[i].setText(
+        var block = state.blocks.blocks[i]
+        block.body.setText(
             dom: dom,
-            selection: selection
+            textSelection: selection
         )
-        
-        guard let block = block else {
-            Self.logger.log("block#\(id) could not update block text. Doing nothing.")
-            return Update(state: state)
-        }
-        
+
         model.blocks.blocks[i] = block
         
         // Mark unsaved
         model.setSaveState(.unsaved)
-        
-        guard let dom = block.dom else {
-            logger.info("block#\(id) no DOM for this block. Skipping transclude load.")
-            return Update(state: model)
-        }
         
         return update(
             state: model,
@@ -1236,12 +1223,8 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         var model = state
-        guard let block = state.blocks.blocks[i].setSelection(
-            selection: selection
-        ) else {
-            Self.logger.log("block#\(id) could not update block selection. Doing nothing.")
-            return Update(state: state)
-        }
+        var block = state.blocks.blocks[i]
+        block.body.setTextSelection(selection)
         model.blocks.blocks[i] = block
         return Update(state: model)
     }
@@ -1258,13 +1241,9 @@ extension BlockEditor.Model: ModelProtocol {
         
         Self.logger.log("block#\(id) splitting at \(nsRange.location)")
         
-        let blockA = state.blocks.blocks[indexA]
-        
-        guard let blockTextA = blockA.dom?.description else {
-            Self.logger.log("block#\(id) cannot split block without text. Doing nothing.")
-            return Update(state: state)
-        }
-        
+        var blockA = state.blocks.blocks[indexA]
+        let blockTextA = blockA.body.dom.description
+
         guard let (textA, textB) = blockTextA.splitAtRange(nsRange) else {
             Self.logger.log(
                 "block#\(id) could not split text at range. Doing nothing."
@@ -1272,24 +1251,23 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         
-        guard let blockA = blockA.setText(
+        blockA.body.setText(
             dom: Subtext(markup: textA),
-            selection: NSRange(location: nsRange.location, length: 0)
-        ) else {
-            Self.logger.log(
-                "block#\(id) could set text. Doing nothing."
+            textSelection: NSRange(location: nsRange.location, length: 0)
+        )
+        
+        var blockB = BlockEditor.BlockModel(
+            blockType: .text,
+            body: BlockEditor.BlockBodyModel(
+                dom: Subtext(markup: textB)
             )
-            return Update(state: state)
-        }
-        
-        var blockB = BlockEditor.TextBlockModel()
-        blockB.dom = Subtext(markup: textB)
-        
+        )
+
         let indexB = state.blocks.blocks.index(after: indexA)
         var model = state
         model.blocks.blocks[indexA] = blockA
         model.blocks.blocks.insert(
-            .text(blockB),
+            blockB,
             at: indexB
         )
         
@@ -1333,31 +1311,22 @@ extension BlockEditor.Model: ModelProtocol {
         Self.logger.log("block#\(id) merging up")
         
         let indexUp = state.blocks.blocks.index(before: indexDown)
-        let blockUp = state.blocks.blocks[indexUp]
-        
-        guard let blockUpText = blockUp.dom?.description else {
-            Self.logger.log("block#\(id) cannot merge up into block without text. Doing nothing.")
-            return Update(state: state)
-        }
+        var blockUp = state.blocks.blocks[indexUp]
+
+        let blockUpText = blockUp.body.dom.description
         
         let blockDown = state.blocks.blocks[indexDown]
-        guard let blockDownText = blockDown.dom?.description else {
-            Self.logger.log("block#\(id) cannot merge non-text block. Doing nothing.")
-            return Update(state: state)
-        }
+        let blockDownText = blockDown.body.dom.description
         
         let selectionNSRange = NSRange(
             blockUpText.endIndex..<blockUpText.endIndex,
             in: blockUpText
         )
         
-        guard let blockUp = blockUp.setText(
+        blockUp.body.setText(
             dom: Subtext(markup: blockUpText + blockDownText),
-            selection: selectionNSRange
-        ) else {
-            Self.logger.log("block#\(id) could not merge text. Doing nothing.")
-            return Update(state: state)
-        }
+            textSelection: selectionNSRange
+        )
         
         var model = state
         model.blocks.blocks[indexUp] = blockUp
@@ -1394,7 +1363,9 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
-            block.setEditing(block.id == id) ?? block
+            var block = block
+            block.body.blockSelection.setEditing(block.id == id)
+            return block
         })
         return Update(state: model)
     }
@@ -1415,7 +1386,9 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
-            block.setEditing(block.id == id) ?? block
+            var block = block
+            block.body.blockSelection.setEditing(block.id == id)
+            return block
         })
         
         return Update(
@@ -1430,8 +1403,9 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
+            var block = block
             if block.id == id {
-                return block.setEditing(false) ?? block
+                block.body.blockSelection.setEditing(false)
             }
             return block
         })
@@ -1454,8 +1428,9 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
+            var block = block
             if block.id == id {
-                return block.setEditing(false) ?? block
+                block.body.blockSelection.setEditing(false)
             }
             return block
         })
@@ -1494,7 +1469,7 @@ extension BlockEditor.Model: ModelProtocol {
             state: state,
             action: .selectBlock(
                 id: block.id,
-                isSelected: !block.isBlockSelected
+                isSelected: !block.body.blockSelection.isBlockSelected
             ),
             environment: environment
         )
@@ -1536,15 +1511,11 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         var model = state
-        let block = model.blocks.blocks[i]
-        let updatedBlock = block.setBlockSelected(isSelected)
-        
-        guard block != updatedBlock else {
-            Self.logger.debug("Block selection state did not change.")
-            return Update(state: state)
-        }
-        model.blocks.blocks[i] = updatedBlock
-        
+        var block = model.blocks.blocks[i]
+
+        block.body.blockSelection.setBlockSelected(isSelected)
+        model.blocks.blocks[i] = block
+
         let indexPath = IndexPath(
             row: i,
             section: BlockEditor.Section.blocks.rawValue
@@ -1575,16 +1546,12 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         var model = state
-        let block = model.blocks.blocks[i]
-        let isSelected = block.isBlockSelected
-        let updatedBlock = block.setBlockSelected(!isSelected)
+        var block = model.blocks.blocks[i]
+        let isSelected = block.body.blockSelection.isBlockSelected
 
-        guard block != updatedBlock else {
-            Self.logger.debug("Block selection state did not change.")
-            return Update(state: state)
-        }
-        model.blocks.blocks[i] = updatedBlock
-        
+        block.body.blockSelection.setBlockSelected(!isSelected)
+        model.blocks.blocks[i] = block
+
         let indexPath = IndexPath(
             row: i,
             section: BlockEditor.Section.blocks.rawValue
@@ -1706,12 +1673,8 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         
-        let block = state.blocks.blocks[i]
-        
-        guard let text = block.dom?.description else {
-            Self.logger.log("block#\(id) can't insert markup. Block has no text. Doing nothing.")
-            return Update(state: state)
-        }
+        var block = state.blocks.blocks[i]
+        let text = block.body.dom.description
         
         guard let selectedRange = Range(selection, in: text) else {
             Self.logger.log("block#\(id) could not find text in range. Doing nothing.")
@@ -1732,13 +1695,10 @@ extension BlockEditor.Model: ModelProtocol {
             in: replacement.string
         )
         
-        guard let block = block.setText(
+        block.body.setText(
             dom: Subtext(markup: replacement.string),
-            selection: cursorNSRange
-        ) else {
-            Self.logger.log("block#\(id) could not set text. Doing nothing.")
-            return Update(state: state)
-        }
+            textSelection: cursorNSRange
+        )
         
         var model = state
         model.blocks.blocks[i] = block

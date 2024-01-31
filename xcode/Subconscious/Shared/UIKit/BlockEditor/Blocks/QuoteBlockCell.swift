@@ -65,7 +65,7 @@ extension BlockEditor {
                         .addingArrangedSubview(transcludeListView)
                 }
                 .addingSubview(selectView) { selectView in
-                    selectView.defaultLayout()
+                    selectView.layoutDefault()
                 }
         }
         
@@ -94,25 +94,25 @@ extension BlockEditor {
 
         func update(
             parentController: UIViewController,
-            state: BlockEditor.TextBlockModel
+            state: BlockEditor.BlockModel
         ) {
             self.id = state.id
             transcludeListView.update(
                 parentController: parentController,
-                entries: state.transcludes,
+                entries: state.body.transcludes,
                 send: Address.forward(
                     send: send, tag: BlockEditor.TextBlockAction.from
                 )
             )
             textView.setText(
-                state.dom.description,
-                selectedRange: state.selection
+                state.body.dom.description,
+                selectedRange: state.body.textSelection
             )
-            textView.setFirstResponder(state.isEditing)
+            textView.setFirstResponder(state.body.blockSelection.isEditing)
             // Set editability of textview
-            textView.setModifiable(!state.isBlockSelectMode)
+            textView.setModifiable(!state.body.blockSelection.isBlockSelectMode)
             // Handle block select mode
-            selectView.setSelectedState(state.isBlockSelected)
+            selectView.update(state.body.blockSelection)
         }
     }
 }
@@ -124,24 +124,26 @@ struct BlockEditorQuoteBlockCell_Previews: PreviewProvider {
             let controller = UIViewController()
             view.update(
                 parentController: controller,
-                state: BlockEditor.TextBlockModel(
-                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
-                    transcludes: [
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/foo")!,
-                            excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                            isTruncated: true,
-                            modified: Date.now
-                        ),
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/bar")!,
-                            excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                            isTruncated: false,
-                            modified: Date.now
-                        ),
-                    ]
+                state: BlockEditor.BlockModel(
+                    body: BlockEditor.BlockBodyModel(
+                        dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
+                        transcludes: [
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/foo")!,
+                                excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
+                                isTruncated: true,
+                                modified: Date.now
+                            ),
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/bar")!,
+                                excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
+                                isTruncated: false,
+                                modified: Date.now
+                            ),
+                        ]
+                    )
                 )
             )
             return view

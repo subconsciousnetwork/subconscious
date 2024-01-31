@@ -13,7 +13,7 @@ extension BlockEditor {
         var description: String {
             // TODO: serialize to nice Subtext whitespace
             // https://github.com/subconsciousnetwork/subconscious/issues/1009
-            blocks.compactMap(\.dom?.description).joined(separator: "\n\n")
+            blocks.map(\.body.dom.description).joined(separator: "\n\n")
         }
         private(set) var isBlockSelectMode = false
         var blocks: [BlockModel] = []
@@ -23,20 +23,24 @@ extension BlockEditor {
         ) {
             self.isBlockSelectMode = true
             self.blocks = blocks.map({ block in
-                block.setBlockSelectMode(
+                var block = block
+                block.body.blockSelection.setBlockSelectMode(
                     isBlockSelectMode: true,
                     isBlockSelected: selecting.contains(block.id)
                 )
+                return block
             })
         }
 
         mutating func exitBlockSelectMode() {
             self.isBlockSelectMode = false
             self.blocks = blocks.map({ block in
-                block.setBlockSelectMode(
+                var block = block
+                block.body.blockSelection.setBlockSelectMode(
                     isBlockSelectMode: false,
                     isBlockSelected: false
                 )
+                return block
             })
         }
 
@@ -54,26 +58,30 @@ extension BlockEditor.BlocksModel: LosslessStringConvertible {
                     // https://github.com/subconsciousnetwork/subconscious/issues/1009
                     return nil
                 case let .text(span, _):
-                    return .text(
-                        BlockEditor.TextBlockModel(
+                    return BlockEditor.BlockModel(
+                        blockType: .text,
+                        body: BlockEditor.BlockBodyModel(
                             dom: Subtext(markup: span.description)
                         )
                     )
                 case let .heading(span):
-                    return .heading(
-                        BlockEditor.TextBlockModel(
+                    return BlockEditor.BlockModel(
+                        blockType: .heading,
+                        body: BlockEditor.BlockBodyModel(
                             dom: Subtext(markup: span.description)
                         )
                     )
                 case let .list(span, _):
-                    return .list(
-                        BlockEditor.TextBlockModel(
+                    return BlockEditor.BlockModel(
+                        blockType: .list,
+                        body: BlockEditor.BlockBodyModel(
                             dom: Subtext(markup: span.description)
                         )
                     )
                 case let .quote(span, _):
-                    return .quote(
-                        BlockEditor.TextBlockModel(
+                    return BlockEditor.BlockModel(
+                        blockType: .quote,
+                        body: BlockEditor.BlockBodyModel(
                             dom: Subtext(markup: span.description)
                         )
                     )

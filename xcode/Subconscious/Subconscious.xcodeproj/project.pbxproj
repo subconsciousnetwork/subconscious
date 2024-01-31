@@ -363,7 +363,7 @@
 		B8AB08B52A9D4FF000998099 /* HeadingBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */; };
 		B8AB08B72A9D500C00998099 /* QuoteBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */; };
 		B8AB08B92A9D501600998099 /* TextBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08B82A9D501600998099 /* TextBlockCell.swift */; };
-		B8AB08BB2A9D502300998099 /* TextBlockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08BA2A9D502300998099 /* TextBlockModel.swift */; };
+		B8AB08BB2A9D502300998099 /* BlockBodyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08BA2A9D502300998099 /* BlockBodyModel.swift */; };
 		B8AB08BD2A9D502C00998099 /* ListBlockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */; };
 		B8AB08BF2A9D506300998099 /* BlockEditorRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */; };
 		B8AB08C12A9D508500998099 /* BlockEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */; };
@@ -810,7 +810,7 @@
 		B8AB08B42A9D4FF000998099 /* HeadingBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingBlockCell.swift; sourceTree = "<group>"; };
 		B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteBlockCell.swift; sourceTree = "<group>"; };
 		B8AB08B82A9D501600998099 /* TextBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextBlockCell.swift; sourceTree = "<group>"; };
-		B8AB08BA2A9D502300998099 /* TextBlockModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextBlockModel.swift; sourceTree = "<group>"; };
+		B8AB08BA2A9D502300998099 /* BlockBodyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockBodyModel.swift; sourceTree = "<group>"; };
 		B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListBlockCell.swift; sourceTree = "<group>"; };
 		B8AB08BE2A9D506300998099 /* BlockEditorRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorRepresentable.swift; sourceTree = "<group>"; };
 		B8AB08C02A9D508500998099 /* BlockEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockEditorViewController.swift; sourceTree = "<group>"; };
@@ -1530,7 +1530,7 @@
 				B8AB08BC2A9D502C00998099 /* ListBlockCell.swift */,
 				B8AB08B62A9D500C00998099 /* QuoteBlockCell.swift */,
 				B8AB08B82A9D501600998099 /* TextBlockCell.swift */,
-				B8AB08BA2A9D502300998099 /* TextBlockModel.swift */,
+				B8AB08BA2A9D502300998099 /* BlockBodyModel.swift */,
 			);
 			path = Blocks;
 			sourceTree = "<group>";
@@ -2095,7 +2095,7 @@
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
-				B8AB08BB2A9D502300998099 /* TextBlockModel.swift in Sources */,
+				B8AB08BB2A9D502300998099 /* BlockBodyModel.swift in Sources */,
 				B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */,
 				B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,

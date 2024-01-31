@@ -249,16 +249,14 @@ extension BlockEditor {
 
         private func reconfigureCollectionItems(
             indexPaths: [IndexPath],
-            animationDuration: TimeInterval
+            animationDuration: TimeInterval? = nil
         ) {
-            if animationDuration == 0 {
-                UIView.performWithoutAnimation {
-                    self.collectionView.reconfigureItems(at: indexPaths)
-                }
-            } else {
+            if let animationDuration {
                 UIView.animate(withDuration: animationDuration) {
                     self.collectionView.reconfigureItems(at: indexPaths)
                 }
+            } else {
+                self.collectionView.reconfigureItems(at: indexPaths)
             }
         }
 
@@ -376,30 +374,30 @@ extension BlockEditor {
             forItemAt indexPath: IndexPath
         ) -> UICollectionViewCell {
             let block = store.state.blocks.blocks[indexPath.row]
-            switch block {
-            case let .heading(state):
+            switch block.blockType {
+            case .heading:
                 return headingCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
-            case let .text(state):
+            case .text:
                 return textCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
-            case let .quote(state):
+            case .quote:
                 return quoteCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
-            case let .list(state):
+            case .list:
                 return listCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
             }
         }
@@ -407,7 +405,7 @@ extension BlockEditor {
         private func textCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TextBlockCell.identifier,
@@ -424,7 +422,7 @@ extension BlockEditor {
         private func headingCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: HeadingBlockCell.identifier,
@@ -441,7 +439,7 @@ extension BlockEditor {
         private func quoteCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: QuoteBlockCell.identifier,
@@ -458,7 +456,7 @@ extension BlockEditor {
         private func listCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: ListBlockCell.identifier,
@@ -511,9 +509,9 @@ extension BlockEditor.Action {
         case let .didChangeSelection(id, selection):
             return .didChangeSelection(id: id, selection: selection)
         case let .didBeginEditing(id):
-            return .editing(id: id)
+            return .renderEditing(id: id)
         case let .didEndEditing(id):
-            return .blur(id: id)
+            return .renderBlur(id: id)
         case let .upButtonPressed(id):
             return .moveBlockUp(id: id)
         case let .downButtonPressed(id):

@@ -50,7 +50,7 @@ extension BlockEditor {
                         .addingArrangedSubview(self.textView)
                 }
                 .addingSubview(selectView) { selectView in
-                    selectView.defaultLayout()
+                    selectView.layoutDefault()
                 }
         }
         
@@ -58,17 +58,17 @@ extension BlockEditor {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(_ state: BlockEditor.TextBlockModel) {
+        func update(_ state: BlockEditor.BlockModel) {
             self.id = state.id
             textView.setText(
-                state.dom.description,
-                selectedRange: state.selection
+                state.body.dom.description,
+                selectedRange: state.body.textSelection
             )
-            textView.setFirstResponder(state.isEditing)
+            textView.setFirstResponder(state.body.blockSelection.isEditing)
             // Set editability of textview
-            textView.setModifiable(!state.isBlockSelectMode)
+            textView.setModifiable(!state.body.blockSelection.isBlockSelectMode)
             // Handle block select mode
-            selectView.setSelectedState(state.isBlockSelected)
+            selectView.update(state.body.blockSelection)
         }
 
         private func send(
@@ -84,8 +84,10 @@ struct BlockEditorHeadingBlockCell_Previews: PreviewProvider {
         UIViewPreviewRepresentable {
             let view = BlockEditor.HeadingBlockCell()
             view.update(
-                BlockEditor.TextBlockModel(
-                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.")
+                BlockEditor.BlockModel(
+                    body: BlockEditor.BlockBodyModel(
+                        dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.")
+                    )
                 )
             )
             return view

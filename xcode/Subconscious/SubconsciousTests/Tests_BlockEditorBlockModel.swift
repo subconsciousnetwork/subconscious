@@ -10,7 +10,7 @@ import XCTest
 
 final class Tests_BlockEditorBlockModel: XCTestCase {
     func testUpdate() throws {
-        let modelA = BlockEditor.TextBlockModel()
+        let modelA = BlockEditor.BlockBodyModel()
         var modelB = modelA
         modelB.isEditing = true
 
