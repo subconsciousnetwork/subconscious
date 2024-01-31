@@ -5,15 +5,13 @@
 //  Created by Gordon Brander on 1/29/24.
 //
 
-import Foundation
-
-public typealias Grammar = Dictionary<String, Array<String>>
+public typealias Grammar = [String: [String]]
 
 /// Create a Tracery with an optional registry of modifiers
 public struct Tracery {
     private static let token = /#(\w+)(\.(\w+))?#/
 
-    private var modifiers: Dictionary<String, (String) -> String>
+    private var modifiers: [String: (String) -> String]
     private let maxDepth = 500
 
     /// Create a Tracery parser
@@ -21,7 +19,7 @@ public struct Tracery {
     ///   - modifiers: a dictionary of named functions that can be used to
     ///     post-process Tracery tokens.
     public init(
-        modifiers: Dictionary<String, (String) -> String> = Dictionary()
+        modifiers: [String: (String) -> String] = [:]
     ) {
         self.modifiers = modifiers
     }
