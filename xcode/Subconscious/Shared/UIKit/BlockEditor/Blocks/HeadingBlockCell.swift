@@ -11,7 +11,8 @@ import SwiftUI
 extension BlockEditor {
     class HeadingBlockCell:
         UICollectionViewCell,
-        UITextViewDelegate
+        UITextViewDelegate,
+        BlockCellProtocol
     {
         static let identifier = "HeadingBlockCell"
         
@@ -30,6 +31,8 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
             
+            self.themeDefault()
+
             textView.modifier({ textView in
                 textView.font = .preferredFont(forTextStyle: .headline)
                 textView.textContainerInset = UIEdgeInsets(
@@ -43,7 +46,6 @@ extension BlockEditor {
 
             contentView
                 .layoutBlock()
-                .setting(\.backgroundColor, value: .systemBackground)
                 .addingSubview(selectView) { selectView in
                     selectView.layoutDefault()
                 }

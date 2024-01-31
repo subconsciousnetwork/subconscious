@@ -12,7 +12,8 @@ import ObservableStore
 extension BlockEditor {
     class QuoteBlockCell:
         UICollectionViewCell,
-        UITextViewDelegate
+        UITextViewDelegate,
+        BlockCellProtocol
     {
         static let identifier = "QuoteBlockCell"
         
@@ -38,6 +39,8 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
             
+            self.themeDefault()
+
             quoteContainer
                 .addingSubview(textView) { textView in
                     textView.layoutBlock(
@@ -57,7 +60,6 @@ extension BlockEditor {
                 }
 
             contentView
-                .setting(\.backgroundColor, value: .systemBackground)
                 .addingSubview(selectView) { selectView in
                     selectView.layoutDefault()
                 }

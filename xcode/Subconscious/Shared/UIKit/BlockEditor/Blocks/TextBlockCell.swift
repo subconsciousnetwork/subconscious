@@ -12,7 +12,8 @@ import ObservableStore
 extension BlockEditor {
     class TextBlockCell:
         UICollectionViewCell,
-        UITextViewDelegate
+        UITextViewDelegate,
+        BlockCellProtocol
     {
         static let identifier = "TextBlockCell"
         
@@ -34,9 +35,10 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
             
+            self.themeDefault()
+
             contentView
                 .layoutBlock()
-                .setting(\.backgroundColor, value: .systemBackground)
                 .addingSubview(selectView) { selectView in
                     selectView.layoutDefault()
                 }

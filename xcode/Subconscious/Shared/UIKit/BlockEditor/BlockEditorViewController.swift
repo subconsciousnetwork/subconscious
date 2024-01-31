@@ -104,6 +104,7 @@ extension BlockEditor {
                 appearance: .plain
             )
             config.showsSeparators = false
+
             let layout = UICollectionViewCompositionalLayout.list(
                 using: config
             )
@@ -147,6 +148,8 @@ extension BlockEditor {
             collectionView.autoresizingMask = [.flexibleHeight]
             collectionView.delegate = self
             collectionView.dataSource = self
+
+            collectionView.backgroundColor = .accent.withAlphaComponent(0.1)
 
             return collectionView
         }
