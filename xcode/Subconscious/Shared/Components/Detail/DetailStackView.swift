@@ -15,10 +15,6 @@ struct DetailStackView<Root: View>: View {
     var store: ViewStore<DetailStackModel>
     var root: () -> Root
     
-    var themeColor: ThemeColor? {
-        store.state.details.last?.address?.themeColor
-    }
-
     var body: some View {
         NavigationStack(
             path: Binding(
@@ -61,7 +57,6 @@ struct DetailStackView<Root: View>: View {
                 }
             }
         }
-        .tint(themeColor?.toHighlightColor())
     }
 }
 

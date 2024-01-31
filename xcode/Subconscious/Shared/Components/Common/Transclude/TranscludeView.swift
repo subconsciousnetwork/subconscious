@@ -7,22 +7,34 @@
 
 import SwiftUI
 
+enum TranscludeBackgroundMode {
+    case colored
+    case plain
+}
+
 struct TranscludeView: View {
     var entry: EntryStub
     var onLink: (EntryLink) -> Void
+    var backgroundMode: TranscludeBackgroundMode = .colored
     
     @Environment (\.colorScheme) var colorScheme
     
     var highlight: Color {
-        entry.highlightColor(
+        if backgroundMode == .plain {
+            return .accentColor
+        }
+        return entry.highlightColor(
             colorScheme: colorScheme
         )
     }
     
     var color: Color {
-        entry.color(
-            colorScheme: colorScheme
-        )
+        backgroundMode == .colored 
+            ? entry.color(
+                colorScheme: colorScheme
+            ) 
+            : .secondaryBackground.opacity(0.1)
+        
     }
     
     var body: some View {
@@ -44,7 +56,7 @@ struct TranscludeView: View {
                         onLink: onLink
                     )
                 }
-                .tint(highlight)
+                .tint(backgroundMode == .colored ? highlight : nil)
                 .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
             }
         )

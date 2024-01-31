@@ -85,7 +85,8 @@ struct SubtextView: View {
                     if (!renderable.entries.isEmpty) {
                         TranscludeListView(
                             entries: renderable.entries,
-                            onLink: onLink
+                            onLink: onLink,
+                            backgroundMode: .plain
                         )
                     }
                 }

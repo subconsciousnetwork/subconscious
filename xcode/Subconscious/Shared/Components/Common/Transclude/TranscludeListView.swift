@@ -10,6 +10,7 @@ import SwiftUI
 struct TranscludeListView: View {
     var entries: [EntryStub]
     var onLink: (EntryLink) -> Void
+    var backgroundMode: TranscludeBackgroundMode = .colored
     
     @Environment (\.colorScheme) var colorScheme
     
@@ -19,7 +20,14 @@ struct TranscludeListView: View {
                 VStack {
                     TranscludeView(
                         entry: entry,
-                        onLink: onLink
+                        onLink: onLink,
+                        backgroundMode: backgroundMode
+                    )
+                    .shadow(
+                        color: DeckTheme.cardShadow.opacity(0.08),
+                        radius: 1.5,
+                        x: 0,
+                        y: 1.5
                     )
                 }
                 .tint(

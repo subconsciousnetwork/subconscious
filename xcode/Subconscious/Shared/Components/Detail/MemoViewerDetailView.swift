@@ -61,11 +61,7 @@ struct MemoViewerDetailView: View {
         .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.visible)
-        .toolbarBackground(
-            store.state.themeColor?.toColor() ?? Color.background,
-            for: .navigationBar
-        )
+        .toolbarBackground(.automatic)
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -73,8 +69,7 @@ struct MemoViewerDetailView: View {
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
                 },
-                status: store.state.loadingState,
-                themeColor: store.state.themeColor
+                status: store.state.loadingState
             )
         })
         .onAppear {
@@ -157,13 +152,20 @@ struct MemoViewerDetailLoadedView: View {
                         
                         Spacer()
                     }
-                    .padding()
+                    .padding(DeckTheme.cardPadding)
                     .frame(
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
                     .background(store.state.themeColor?.toColor())
-                    .cornerRadius(DeckTheme.cornerRadius, corners: [.bottomLeft, .bottomRight])
+                    .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+                    .shadow(
+                        color: DeckTheme.cardShadow.opacity(0.08),
+                        radius: 1.5,
+                        x: 0,
+                        y: 1.5
+                    )
                     .padding(.bottom, AppTheme.unit4)
+                    .padding(.top, AppTheme.unit2)
                     
                     BacklinksView(
                         backlinks: store.state.backlinks,
@@ -171,12 +173,8 @@ struct MemoViewerDetailLoadedView: View {
                             notify(.requestFindLinkDetail(link))
                         }
                     )
-                    
-                    Spacer()
                 }
-                .background(.background)
             }
-            .background(store.state.themeColor?.toColor())
         }
     }
 }
