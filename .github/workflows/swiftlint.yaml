@@ -14,5 +14,3 @@ jobs:
       - uses: actions/checkout@v3
       - name: GitHub Action for SwiftLint
         uses: norio-nomura/action-swiftlint@master
-        env:
-          DIFF_BASE: ${{ github.base_ref }}
