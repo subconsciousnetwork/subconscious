@@ -44,13 +44,13 @@ extension BlockEditor {
             contentView
                 .layoutBlock()
                 .setting(\.backgroundColor, value: .systemBackground)
+                .addingSubview(selectView) { selectView in
+                    selectView.layoutDefault()
+                }
                 .addingSubview(stackView) { stackView in
                     stackView
                         .layoutBlock()
                         .addingArrangedSubview(self.textView)
-                }
-                .addingSubview(selectView) { selectView in
-                    selectView.layoutDefault()
                 }
         }
         
