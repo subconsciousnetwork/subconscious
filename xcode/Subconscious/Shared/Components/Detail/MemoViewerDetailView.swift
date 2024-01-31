@@ -162,16 +162,21 @@ struct MemoViewerDetailLoadedView: View {
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
                     .background(store.state.themeColor?.toColor())
-                    Divider()
-                        .padding(.bottom, AppTheme.unit4)
+                    .cornerRadius(DeckTheme.cornerRadius, corners: [.bottomLeft, .bottomRight])
+                    .padding(.bottom, AppTheme.unit4)
+                    
                     BacklinksView(
                         backlinks: store.state.backlinks,
                         onLink: { link in
                             notify(.requestFindLinkDetail(link))
                         }
                     )
+                    
+                    Spacer()
                 }
+                .background(.background)
             }
+            .background(store.state.themeColor?.toColor())
         }
     }
 }
