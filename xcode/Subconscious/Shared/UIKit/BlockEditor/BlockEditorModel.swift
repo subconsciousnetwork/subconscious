@@ -177,7 +177,6 @@ extension BlockEditor {
         case exitBlockSelectMode
         /// Select a block
         case selectBlock(id: UUID, isSelected: Bool = true)
-        case toggleSelectBlock(id: UUID)
         case selectModePressed(id: UUID)
         /// Move the block up one position in the stack.
         /// If block is first block, this does nothing.
@@ -485,12 +484,8 @@ extension BlockEditor.Model: ModelProtocol {
             return selectBlock(
                 state: state,
                 id: id,
-                isSelected: isSelected
-            )
-        case let .toggleSelectBlock(id: id):
-            return toggleSelectBlock(
-                state: state,
-                id: id
+                isSelected: isSelected,
+                environment: environment
             )
         case let .selectModePressed(id):
             return selectModePressed(
@@ -1499,7 +1494,8 @@ extension BlockEditor.Model: ModelProtocol {
     static func selectBlock(
         state: Self,
         id: UUID,
-        isSelected: Bool
+        isSelected: Bool,
+        environment: Environment
     ) -> Update {
         guard state.blocks.isBlockSelectMode else {
             Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
@@ -1516,6 +1512,19 @@ extension BlockEditor.Model: ModelProtocol {
         block.body.blockSelection.setBlockSelected(isSelected)
         model.blocks.blocks[i] = block
 
+        let hasSelectedBlocks = model.blocks.blocks.contains(where: { block in
+            block.body.blockSelection.isBlockSelected
+        })
+
+        /// If we've de-selected the last block, then exit block select mode.
+        if !hasSelectedBlocks {
+            return update(
+                state: state,
+                action: .exitBlockSelectMode,
+                environment: environment
+            )
+        }
+
         let indexPath = IndexPath(
             row: i,
             section: BlockEditor.Section.blocks.rawValue
@@ -1531,38 +1540,7 @@ extension BlockEditor.Model: ModelProtocol {
             ]
         )
     }
-    
-    static func toggleSelectBlock(
-        state: Self,
-        id: UUID
-    ) -> Update {
-        guard state.blocks.isBlockSelectMode else {
-            Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
-            return Update(state: state)
-        }
-        
-        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
-            return Update(state: state)
-        }
-        
-        var model = state
-        var block = model.blocks.blocks[i]
-        let isSelected = block.body.blockSelection.isBlockSelected
 
-        block.body.blockSelection.setBlockSelected(!isSelected)
-        model.blocks.blocks[i] = block
-
-        let indexPath = IndexPath(
-            row: i,
-            section: BlockEditor.Section.blocks.rawValue
-        )
-        
-        return Update(
-            state: model,
-            changes: [.reconfigureCollectionItems([indexPath])]
-        )
-    }
-    
     static func selectModePressed(
         state: Self,
         id: UUID
