@@ -177,7 +177,6 @@ extension BlockEditor {
         case exitBlockSelectMode
         /// Select a block
         case selectBlock(id: UUID, isSelected: Bool = true)
-        case selectModePressed(id: UUID)
         /// Move the block up one position in the stack.
         /// If block is first block, this does nothing.
         case moveBlockUp(id: UUID)
@@ -193,7 +192,6 @@ extension BlockEditor {
         /// Open link in transclude
         case requestFindLinkDetail(EntryLink)
 
-        case setBlockSelectMenuPresented(_ isPresented: Bool)
         case becomeTextBlock
         case becomeHeadingBlock
         case becomeListBlock
@@ -215,7 +213,9 @@ extension BlockEditor {
             _ indexPaths: [IndexPath],
             animationDuration: TimeInterval? = nil
         )
-        case reloadCollectionView
+        case reloadCollectionView(
+            animationDuration: TimeInterval? = nil
+        )
         case moveBlock(
             at: IndexPath,
             to: IndexPath
@@ -487,11 +487,6 @@ extension BlockEditor.Model: ModelProtocol {
                 isSelected: isSelected,
                 environment: environment
             )
-        case let .selectModePressed(id):
-            return selectModePressed(
-                state: state,
-                id: id
-            )
         case let .moveBlockUp(id):
             return moveBlockUp(
                 state: state,
@@ -529,12 +524,6 @@ extension BlockEditor.Model: ModelProtocol {
         case .requestFindLinkDetail(_):
             return requestFindLinkDetail(
                 state: state,
-                environment: environment
-            )
-        case let .setBlockSelectMenuPresented(isPresented):
-            return setBlockSelectMenuPresented(
-                state: state,
-                isPresented: isPresented,
                 environment: environment
             )
         case .becomeTextBlock:
@@ -835,7 +824,7 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<Action> = refreshTranscludesFx.merge(with: loadRelatedFx)
             .eraseToAnyPublisher()
 
-        return Update(state: model, fx: fx, changes: [.reloadCollectionView])
+        return Update(state: model, fx: fx, changes: [.reloadCollectionView()])
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
@@ -1477,8 +1466,12 @@ extension BlockEditor.Model: ModelProtocol {
         selecting ids: Set<UUID>
     ) -> Update {
         var model = state
+        model.isBlockSelectMenuPresented = true
         model.blocks.enterBlockSelectMode(selecting: ids)
-        return Update(state: model, changes: [.reloadCollectionView])
+        return Update(
+            state: model,
+            changes: [.reloadCollectionView(animationDuration: Duration.fast)]
+        )
     }
     
     // TODO: Reimplement
@@ -1487,8 +1480,11 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self
     ) -> Update {
         var model = state
+        model.isBlockSelectMenuPresented = false
         model.blocks.exitBlockSelectMode()
-        return Update(state: model, changes: [.reloadCollectionView])
+        return Update(
+            state: model,
+            changes: [.reloadCollectionView()])
     }
     
     static func selectBlock(
@@ -1538,19 +1534,6 @@ extension BlockEditor.Model: ModelProtocol {
                     animationDuration: Duration.fast
                 )
             ]
-        )
-    }
-
-    static func selectModePressed(
-        state: Self,
-        id: UUID
-    ) -> Update {
-        var model = state
-        model.blocks.enterBlockSelectMode(selecting: Set([id]))
-        model.isBlockSelectMenuPresented = true
-        return Update(
-            state: model,
-            changes: [.reloadCollectionView]
         )
     }
 
@@ -1745,7 +1728,7 @@ extension BlockEditor.Model: ModelProtocol {
             logger.info("Could not parse URL as SubSlashlinkURL \(url)")
             return Update(state: state)
         }
-        guard let owner = state.ownerSphere else {
+        guard state.ownerSphere != nil else {
             logger.info("Owner sphere identity is unknown. Doing nothing.")
             return Update(state: state)
         }
@@ -1763,23 +1746,6 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         return Update(state: state)
-    }
-
-    static func setBlockSelectMenuPresented(
-        state: Self,
-        isPresented: Bool,
-        environment: Environment
-    ) -> Update {
-        var model = state
-        model.isBlockSelectMenuPresented = isPresented
-        guard !isPresented else {
-            return Update(state: model)
-        }
-        return update(
-            state: model,
-            action: .exitBlockSelectMode,
-            environment: environment
-        )
     }
 
     static func becomeTextBlock(

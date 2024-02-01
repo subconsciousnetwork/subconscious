@@ -78,6 +78,7 @@ extension BlockEditor {
                 selectedRange: state.body.textSelection
             )
             textView.setFirstResponder(state.body.blockSelection.isEditing)
+
             // Set editability of textview
             textView.setModifiable(!state.body.blockSelection.isBlockSelectMode)
             // Handle block select mode

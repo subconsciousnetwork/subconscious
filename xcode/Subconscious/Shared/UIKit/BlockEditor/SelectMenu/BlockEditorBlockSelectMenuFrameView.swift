@@ -26,10 +26,8 @@ extension BlockEditor {
 
 
         private func setPresented(isPresented: Bool) {
-            if isPresented {
-                self.store.send(.setBlockSelectMenuPresented(true))
-            } else {
-                self.store.send(.setBlockSelectMenuPresented(false))
+            if !isPresented {
+                self.store.send(.exitBlockSelectMode)
             }
         }
 

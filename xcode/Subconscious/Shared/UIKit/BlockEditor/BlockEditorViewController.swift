@@ -215,8 +215,8 @@ extension BlockEditor {
             switch change {
             case .present:
                 return present()
-            case .reloadCollectionView:
-                return reloadCollectionView()
+            case let .reloadCollectionView(animationDuration):
+                return reloadCollectionView(animationDuration: animationDuration)
             case let .reconfigureCollectionItems(indexPaths, animationDuration):
                 return reconfigureCollectionItems(
                     indexPaths: indexPaths,
@@ -245,9 +245,17 @@ extension BlockEditor {
             }
         }
 
-        private func reloadCollectionView() {
-            UIView.performWithoutAnimation {
-                collectionView.reloadData()
+        private func reloadCollectionView(
+            animationDuration: TimeInterval? = nil
+        ) {
+            if let animationDuration {
+                UIView.animate(withDuration: animationDuration) {
+                    self.collectionView.reloadData()
+                }
+            } else {
+                UIView.performWithoutAnimation {
+                    self.collectionView.reloadData()
+                }
             }
         }
 
@@ -497,7 +505,7 @@ extension BlockEditor.Action {
     static func from(_ action: BlockEditor.TextBlockAction) -> Self {
         switch action {
         case let .selectModePressed(id):
-            return .selectModePressed(id: id)
+            return .enterBlockSelectMode(selecting: Set([id]))
         case let .boldButtonPressed(id, _, selection):
             return .insertBold(id: id, selection: selection)
         case let .italicButtonPressed(id, _, selection):
