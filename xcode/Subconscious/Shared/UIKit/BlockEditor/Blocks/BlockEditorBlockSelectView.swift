@@ -33,12 +33,15 @@ extension BlockEditor {
                 ) {
                 case (true, false, _):
                     self.backgroundColor = .quaternarySystemFill
+                    self.layer.opacity = 1
                     return
                 case (false, true, true):
                     self.backgroundColor = .accent.withAlphaComponent(0.1)
+                    self.layer.opacity = 1
                     return
                 default:
                     self.backgroundColor = .clear
+                    self.layer.opacity = 0
                     return
                 }
             }
