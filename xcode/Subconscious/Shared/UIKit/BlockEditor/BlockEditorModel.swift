@@ -1472,6 +1472,7 @@ extension BlockEditor.Model: ModelProtocol {
             state: model,
             changes: [.reloadCollectionView(animationDuration: Duration.fast)]
         )
+        .animation(.default)
     }
     
     // TODO: Reimplement
@@ -1484,7 +1485,9 @@ extension BlockEditor.Model: ModelProtocol {
         model.blocks.exitBlockSelectMode()
         return Update(
             state: model,
-            changes: [.reloadCollectionView()])
+            changes: [.reloadCollectionView(animationDuration: Duration.fast)]
+        )
+        .animation(.default)
     }
     
     static func selectBlock(

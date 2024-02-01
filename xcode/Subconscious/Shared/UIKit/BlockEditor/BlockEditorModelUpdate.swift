@@ -32,7 +32,7 @@ extension BlockEditor {
             self.transaction = transaction
             self.changes = changes
         }
-        
+
         var state: Model
         var fx: Fx<Model.Action>
         var transaction: Transaction?
