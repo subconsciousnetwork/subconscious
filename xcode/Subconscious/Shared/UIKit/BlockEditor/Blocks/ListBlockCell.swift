@@ -86,12 +86,13 @@ extension BlockEditor {
                 .anchorHeight(constant: lineHeight)
                 .addingSubview(UIView()) { bulletView in
                     bulletView.backgroundColor = .secondaryLabel
-                    bulletView.layer.cornerRadius = bulletSize / 2
+                    let halfBulletSize = bulletSize / 2
+                    bulletView.layer.cornerRadius = halfBulletSize
                     bulletView
-                        .anchorCenterX()
-                        .anchorCenterY()
                         .anchorWidth(constant: bulletSize)
                         .anchorHeight(constant: bulletSize)
+                        .anchorCenterY(constant: -1 * halfBulletSize)
+                        .anchorCenterX()
                 }
 
             return frameView

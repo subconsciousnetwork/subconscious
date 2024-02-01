@@ -157,6 +157,7 @@ extension BlockEditor {
         private func setupViews() {
             // View starts out hidden and is not shown until ready
             view.alpha = 0
+            view.backgroundColor = .accent.withAlphaComponent(0.1)
             view.addSubview(collectionView)
         }
 

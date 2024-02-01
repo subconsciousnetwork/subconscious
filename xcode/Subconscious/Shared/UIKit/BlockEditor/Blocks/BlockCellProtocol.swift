@@ -15,7 +15,8 @@ extension BlockCellProtocol {
     /// Set default theme for block cells
     @discardableResult
     func themeDefault() -> Self {
-        self.contentView.backgroundColor = .accent.withAlphaComponent(0.1)
+        self.backgroundColor = .clear
+        self.contentView.backgroundColor = .clear
         return self
     }
 }

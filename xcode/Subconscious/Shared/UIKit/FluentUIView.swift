@@ -230,14 +230,15 @@ extension UIView: FluentObject {
     /// Anchor center X to superview
     /// - Returns: Self
     @discardableResult
-    func anchorCenterX() -> Self {
+    func anchorCenterX(constant: CGFloat = 0) -> Self {
         guard let superview = superview else {
             logger.warning("\(SUPERVIEW_CONSTRAINT_WARNING)")
             return self
         }
         translatesAutoresizingMaskIntoConstraints = false
         self.centerXAnchor.constraint(
-            equalTo: superview.centerXAnchor
+            equalTo: superview.centerXAnchor,
+            constant: constant
         ).isActive = true
         return self
     }
@@ -245,14 +246,15 @@ extension UIView: FluentObject {
     /// Anchor center Y to superview
     /// - Returns: Self
     @discardableResult
-    func anchorCenterY() -> Self {
+    func anchorCenterY(constant: CGFloat = 0) -> Self {
         guard let superview = superview else {
             logger.warning("\(SUPERVIEW_CONSTRAINT_WARNING)")
             return self
         }
         translatesAutoresizingMaskIntoConstraints = false
         self.centerYAnchor.constraint(
-            equalTo: superview.centerYAnchor
+            equalTo: superview.centerYAnchor,
+            constant: constant
         ).isActive = true
         return self
     }
