@@ -1759,9 +1759,6 @@ extension BlockEditor.Model: ModelProtocol {
             if !block.body.blockSelection.isBlockSelected {
                 return block
             }
-            if case .text = block.blockType {
-                return block
-            }
             var block =  block
             block.blockType = .text
             return block
@@ -1778,32 +1775,75 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
-        logger.warning("Not implemented")
-        return Update(state: state)
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            var block =  block
+            block.blockType = .heading
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
     }
 
     static func becomeListBlock(
         state: Self,
         environment: Environment
     ) -> Update {
-        logger.warning("Not implemented")
-        return Update(state: state)
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            var block =  block
+            block.blockType = .list
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
     }
 
     static func becomeQuoteBlock(
         state: Self,
         environment: Environment
     ) -> Update {
-        logger.warning("Not implemented")
-        return Update(state: state)
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            var block =  block
+            block.blockType = .quote
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
     }
 
     static func deleteBlock(
         state: Self,
         environment: Environment
     ) -> Update {
-        logger.warning("Not implemented")
-        return Update(state: state)
+        let blocks = state.blocks.blocks.filter({ block in
+            block.body.blockSelection.isBlockSelected
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
     }
 }
 
