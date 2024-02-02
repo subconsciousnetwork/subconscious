@@ -268,7 +268,9 @@ extension BlockEditor {
                     self.collectionView.reconfigureItems(at: indexPaths)
                 }
             } else {
-                self.collectionView.reconfigureItems(at: indexPaths)
+                UIView.performWithoutAnimation {
+                    self.collectionView.reconfigureItems(at: indexPaths)
+                }
             }
         }
 

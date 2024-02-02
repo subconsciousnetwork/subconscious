@@ -1755,8 +1755,23 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
-        logger.warning("Not implemented")
-        return Update(state: state)
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            if case .text = block.blockType {
+                return block
+            }
+            var block =  block
+            block.blockType = .text
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
     }
 
     static func becomeHeadingBlock(
