@@ -718,7 +718,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         guard let address = address else {
             logger.info("Editor loaded draft (no address)")
-            return Update(state: model)
+            return Update(state: model, changes: [.present])
         }
 
         // Load editor document, transcludes, and related all in one go.
