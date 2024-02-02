@@ -16,13 +16,24 @@ struct BacklinksView: View {
             HStack {
                 Text("Related Notes")
                     .font(.caption)
+                    .foregroundStyle(.secondary)
                 Spacer()
             }
             if backlinks.count > 0 {
-                TranscludeListView(
-                    entries: backlinks,
-                    onLink: onLink
-                )
+                VStack(spacing: AppTheme.unit2) {
+                    ForEach(backlinks, id: \.self) { entry in
+                        VStack {
+                            TranscludeView(
+                                entry: entry,
+                                onLink: onLink
+                            )
+                            .buttonStyle(RelatedNoteButtonStyle(color: entry.color))
+                        }
+                        .tint(
+                            entry.headers.themeColor?.toHighlightColor()
+                        )
+                    }
+                }
             } else {
                 TitleGroupView(
                     title: Text("No related notes yet")

@@ -14,6 +14,7 @@ import ObservableStore
 /// Used for content from other spheres that we don't have write access to.
 struct MemoViewerDetailView: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment(\.colorScheme) var colorScheme
     
     @StateObject private var store = Store(
         state: MemoViewerDetailModel(),
@@ -45,23 +46,41 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadingView(
                     notify: notify
                 )
+                .background(
+                    colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+                )
             case .loaded:
                 MemoViewerDetailLoadedView(
                     store: store,
                     address: description.address,
                     notify: notify
                 )
+                .background(
+                    colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+                )
             case .notFound:
                 MemoViewerDetailNotFoundView(
                     backlinks: store.state.backlinks,
                     notify: notify
+                )
+                .background(
+                    colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
                 )
             }
         }
         .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.automatic)
+        .toolbarBackground(
+            colorScheme == .dark
+            ? DeckTheme.darkBgStart
+            : DeckTheme.lightBgStart,
+            for: .navigationBar
+        )
+        .toolbarBackground(
+            colorScheme == .dark ? DeckTheme.darkBgEnd : DeckTheme.lightBgEnd,
+            for: .tabBar
+        )
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -92,6 +111,7 @@ struct MemoViewerDetailView: View {
         ) {
             MemoViewerDetailMetaSheetView(store: metaSheet)
         }
+        
     }
 }
 
@@ -126,6 +146,7 @@ struct MemoViewerDetailLoadingView: View {
 
 struct MemoViewerDetailLoadedView: View {
     @ObservedObject var store: Store<MemoViewerDetailModel>
+    
     var address: Slashlink
     var notify: (MemoViewerDetailNotification) -> Void
     

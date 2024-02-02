@@ -36,17 +36,13 @@ struct EntryListView: View {
                         ) {
                             EntryRow(
                                 entry: entry,
-                                highlight: entry.highlightColor(
-                                    colorScheme: colorScheme
-                                ),
+                                highlight: entry.highlightColor,
                                 onLink: onLink
                             )
                         }
                         .buttonStyle(
                             EntryListRowButtonStyle(
-                                color: entry.color(
-                                    colorScheme: colorScheme
-                                )
+                                color: entry.color
                             )
                         )
                         .modifier(RowViewModifier())

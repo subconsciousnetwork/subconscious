@@ -23,12 +23,9 @@ struct TranscludeListView: View {
                         onLink: onLink,
                         backgroundMode: backgroundMode
                     )
-//                    .shadow(
-//                        color: DeckTheme.cardShadow.opacity(0.08),
-//                        radius: 1.5,
-//                        x: 0,
-//                        y: 1.5
-//                    )
+                    .buttonStyle(
+                        TranscludeButtonStyle()
+                    )
                 }
                 .tint(
                     entry.headers.themeColor?.toHighlightColor()

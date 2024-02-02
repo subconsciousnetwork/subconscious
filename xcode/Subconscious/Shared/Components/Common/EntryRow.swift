@@ -17,7 +17,7 @@ struct EntryRow: View {
     var onLink: (EntryLink) -> Void = { _ in }
     
     var color: Color {
-        entry.color(colorScheme: colorScheme)
+        entry.color
     }
 
     var body: some View {

@@ -20,21 +20,7 @@ struct TranscludeView: View {
     @Environment (\.colorScheme) var colorScheme
     
     var highlight: Color {
-        entry.highlightColor(
-            colorScheme: colorScheme
-        )
-    }
-    
-    var color: Color {
-        backgroundMode == .colored 
-            ? entry.color(
-                colorScheme: colorScheme
-            ) 
-            : .background.opacity(
-                colorScheme == .dark
-                    ? 0.1
-                    : 0.5
-            )
+        entry.highlightColor
     }
     
     var body: some View {
@@ -60,11 +46,7 @@ struct TranscludeView: View {
                 .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
             }
         )
-        .buttonStyle(
-            TranscludeButtonStyle(
-                color: color
-            )
-        )
+        
     }
 }
 

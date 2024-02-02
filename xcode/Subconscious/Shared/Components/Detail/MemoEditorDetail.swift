@@ -49,6 +49,7 @@ struct MemoEditorDetailView: View {
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
+    @Environment(\.colorScheme) var colorScheme
     /// Initialization state passed down from parent
     var description: MemoEditorDetailDescription
     /// An address to forward notifications (informational actions)
@@ -80,10 +81,21 @@ struct MemoEditorDetailView: View {
                 plainEditor()
             }
         }
+        .background(
+            colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+        )
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.visible)
-        .toolbarBackground(Color.background, for: .navigationBar)
+        .toolbarBackground(
+            colorScheme == .dark
+            ? DeckTheme.darkBgStart
+            : DeckTheme.lightBgStart,
+            for: .navigationBar
+        )
+        .toolbarBackground(
+            colorScheme == .dark ? DeckTheme.darkBgEnd : DeckTheme.lightBgEnd,
+            for: .tabBar
+        )
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -222,9 +234,20 @@ struct MemoEditorDetailView: View {
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
                         .tint(highlight)
+                        .background(
+                            store.state.themeColor?.toColor()
+                                ?? store.state.address?.themeColor.toColor()
+                        )
+                        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+                        .shadow(
+                            color: DeckTheme.cardShadow.opacity(0.08),
+                            radius: 1.5,
+                            x: 0,
+                            y: 1.5
+                        )
+                        .padding(.bottom, AppTheme.unit4)
+                        .padding(.top, AppTheme.unit2)
                         
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onLink: { link in

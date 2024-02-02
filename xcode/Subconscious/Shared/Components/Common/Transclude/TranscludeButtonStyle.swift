@@ -14,6 +14,38 @@ struct TranscludeButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) var colorScheme
     
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.vertical, AppTheme.unit3)
+            .padding(.horizontal, AppTheme.unit3)
+            .expandAlignedLeading()
+            .background(
+                .background.opacity(
+                    colorScheme == .dark
+                    ? 0.1
+                    : 0.5
+                )
+            )
+            .overlay(
+                Rectangle()
+                    .fill(configuration.isPressed
+                          ? Color.backgroundPressed
+                          : Color.clear)
+            )
+            .contentShape(Self.roundedRect)
+            .clipShape(Self.roundedRect)
+            .cornerRadius(AppTheme.cornerRadiusLg, corners: .allCorners)
+            .animation(.default, value: configuration.isPressed)
+    }
+}
+
+struct RelatedNoteButtonStyle: ButtonStyle {
+    private static let roundedRect = RoundedRectangle(
+        cornerRadius: AppTheme.cornerRadiusLg
+    )
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) var colorScheme
+    
     var color: Color
     
     func makeBody(configuration: Configuration) -> some View {
@@ -32,6 +64,12 @@ struct TranscludeButtonStyle: ButtonStyle {
             .clipShape(Self.roundedRect)
             .cornerRadius(AppTheme.cornerRadiusLg, corners: .allCorners)
             .animation(.default, value: configuration.isPressed)
+            .shadow(
+                color: DeckTheme.cardShadow.opacity(0.08),
+                radius: 1.5,
+                x: 0,
+                y: 1.5
+            )
     }
 }
 
@@ -43,7 +81,7 @@ struct TranscludeButtonStyle_Previews: PreviewProvider {
                 Text("Test")
             }
         ).buttonStyle(
-            TranscludeButtonStyle(color: Color.secondary)
+            TranscludeButtonStyle()
         )
     }
 }

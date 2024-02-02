@@ -16,11 +16,11 @@ struct CardContentView: View {
     var onLink: (EntryLink) -> Void
     
     var highlight: Color {
-        entry.highlightColor(colorScheme: colorScheme)
+        entry.highlightColor
     }
     
     var color: Color {
-        entry.color(colorScheme: colorScheme)
+        entry.color
     }
     
     var body: some View {
