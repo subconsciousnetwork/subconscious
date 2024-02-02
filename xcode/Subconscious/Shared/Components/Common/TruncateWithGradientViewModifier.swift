@@ -9,7 +9,6 @@ import SwiftUI
 
 /// Truncate a view at a max height with a gradient overlay
 struct TruncateWithGradientViewModifier: ViewModifier {
-    var color: Color
     var maxHeight: CGFloat
     
     private static let maxGradientHeight: CGFloat = 80
@@ -18,54 +17,32 @@ struct TruncateWithGradientViewModifier: ViewModifier {
         content
             .frame(maxHeight: maxHeight, alignment: .topLeading)
             .clipped()
-            .overlay(
-                GeometryReader {
-                    geo in
+            .mask(
+                GeometryReader { geo in
                     if (geo.size.height >= maxHeight) {
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(
-                                        stops: [
-                                            Gradient.Stop(
-                                                color: color.opacity(0),
-                                                location: 0.1
-                                            ),
-                                            Gradient.Stop(
-                                                color: color,
-                                                location: 0.9
-                                            )
-                                        ]
-                                    ),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(
-                                height: min(
-                                    maxHeight / 2,
-                                    Self.maxGradientHeight
-                                ),
-                                alignment: .bottom
-                            )
-                            .offset(
-                                y: geo.size.height - min(
-                                    maxHeight / 2,
-                                    Self.maxGradientHeight
-                                )
-                            )
-                            .allowsHitTesting(false)
+                        LinearGradient(
+                            gradient: Gradient(
+                                colors: [
+                                    .black,
+                                    .black,
+                                    .clear
+                                ]
+                            ),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    } else {
+                        Rectangle().fill(.black)
                     }
-                },
-                alignment: .bottom
+                }
             )
     }
 }
 
 extension View {
     /// Truncate a view at a max height with a gradient overlay
-    func truncateWithGradient(color: Color, maxHeight: CGFloat) -> some View {
-        self.modifier(TruncateWithGradientViewModifier(color: color, maxHeight: maxHeight))
+    func truncateWithGradient(maxHeight: CGFloat) -> some View {
+        self.modifier(TruncateWithGradientViewModifier(maxHeight: maxHeight))
     }
 }
 
@@ -74,7 +51,7 @@ struct TruncateWithGradientViewModifier_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             Text("Hello")
-                .truncateWithGradient(color: .red, maxHeight: 64)
+                .truncateWithGradient(maxHeight: 64)
                 .background(.yellow)
         }
     }

@@ -78,7 +78,7 @@ struct StoryEntryView: View {
                             .foregroundColor(.primary)
                         }
                         .tint(highlight)
-                        .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
+                        .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
                 }
                 .contentShape(Rectangle())
             }

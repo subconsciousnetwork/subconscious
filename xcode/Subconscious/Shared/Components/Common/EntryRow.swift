@@ -30,7 +30,7 @@ struct EntryRow: View {
             .font(.callout)
             .multilineTextAlignment(.leading)
             .padding(.bottom, AppTheme.unit2)
-            .truncateWithGradient(color: color, maxHeight: AppTheme.maxEntryListRowHeight)
+            .truncateWithGradient(maxHeight: AppTheme.maxEntryListRowHeight)
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())

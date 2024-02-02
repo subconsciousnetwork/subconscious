@@ -30,6 +30,7 @@ struct TranscludeButtonStyle: ButtonStyle {
             )
             .contentShape(Self.roundedRect)
             .clipShape(Self.roundedRect)
+            .cornerRadius(AppTheme.cornerRadiusLg, corners: .allCorners)
             .animation(.default, value: configuration.isPressed)
     }
 }
