@@ -1441,15 +1441,20 @@ struct MemoEditorDetailModel: ModelProtocol {
         detail: MemoEditorDetailResponse,
         autofocus: Bool
     ) -> Update<MemoEditorDetailModel> {
+        var actions: [MemoEditorDetailAction] = [
+            .setDetailLastWriteWins(detail)
+        ]
+        
         // If autofocus is true, request focus, and also set selection to end
         // of editor text.
+        if autofocus {
+            actions.append(.requestEditorFocus(autofocus))
+            actions.append(.setEditorSelectionAtEnd)
+        }
+        
         return update(
             state: state,
-            actions: [
-                .setDetailLastWriteWins(detail),
-                .requestEditorFocus(autofocus),
-                .setEditorSelectionAtEnd
-            ],
+            actions: actions,
             environment: environment
         )
     }
