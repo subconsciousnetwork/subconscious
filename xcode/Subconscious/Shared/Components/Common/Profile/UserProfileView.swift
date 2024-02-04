@@ -32,7 +32,7 @@ struct RecentTabView: View {
     var body: some View {
         if let user = store.state.user,
            let recent = store.state.recentEntries {
-            VStack(spacing: AppTheme.unit2) {
+            LazyVStack(spacing: AppTheme.unit2) {
                 ForEach(recent) { entry in
                     StoryEntryView(
                         story: StoryEntry(
@@ -79,7 +79,7 @@ struct FollowTabView: View {
     
     var body: some View {
         if let following = store.state.following {
-            VStack(spacing: AppTheme.unit2) {
+            LazyVStack(spacing: AppTheme.unit2) {
                 ForEach(following) { follow in
                     StoryUserView(
                         story: follow,
