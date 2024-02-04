@@ -43,7 +43,7 @@ struct AppendLinkSearchView: View {
                 }
                 .listStyle(.plain)
             }
-            .navigationTitle("Edit link")
+            .navigationTitle("Append link")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(content: {
                 ToolbarItem(placement: .cancellationAction) {
