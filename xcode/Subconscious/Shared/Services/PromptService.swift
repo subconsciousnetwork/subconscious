@@ -40,7 +40,7 @@ actor PromptService {
         /// Patch our base grammar with the returned grammar (if any) and
         /// use the returned start string to begin flattening.
         return tracery.flatten(
-            grammar: PromptService.prompts.patchGrammar(match.grammar),
+            grammar: grammar.patchGrammar(match.grammar),
             start: match.start
         )
     }
