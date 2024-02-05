@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-enum TranscludeBackgroundMode {
-    case colored
-    case plain
-}
-
 struct TranscludeView: View {
     var entry: EntryStub
     var onLink: (EntryLink) -> Void

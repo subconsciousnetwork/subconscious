@@ -14,7 +14,6 @@ import ObservableStore
 /// Used for content from other spheres that we don't have write access to.
 struct MemoViewerDetailView: View {
     @ObservedObject var app: Store<AppModel>
-    @Environment(\.colorScheme) var colorScheme
     
     @StateObject private var store = Store(
         state: MemoViewerDetailModel(),
@@ -130,7 +129,6 @@ struct MemoViewerDetailLoadingView: View {
 
 struct MemoViewerDetailLoadedView: View {
     @ObservedObject var store: Store<MemoViewerDetailModel>
-    
     var address: Slashlink
     var notify: (MemoViewerDetailNotification) -> Void
     

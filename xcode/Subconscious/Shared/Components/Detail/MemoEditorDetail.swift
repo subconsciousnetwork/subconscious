@@ -49,7 +49,6 @@ struct MemoEditorDetailView: View {
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
-    @Environment(\.colorScheme) var colorScheme
     /// Initialization state passed down from parent
     var description: MemoEditorDetailDescription
     /// An address to forward notifications (informational actions)
@@ -80,7 +79,7 @@ struct MemoEditorDetailView: View {
             } else {
                 plainEditor()
             }
-        }                        
+        }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .modifier(AppThemeBackgroundViewModifier())

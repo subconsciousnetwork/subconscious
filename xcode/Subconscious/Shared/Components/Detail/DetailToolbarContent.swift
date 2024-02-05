@@ -13,7 +13,6 @@ struct DetailToolbarContent: ToolbarContent {
     var defaultAudience: Audience
     var onTapOmnibox: () -> Void
     var status: LoadingState
-    var themeColor: ThemeColor? = nil
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
@@ -21,8 +20,7 @@ struct DetailToolbarContent: ToolbarContent {
                 OmniboxView(
                     address: address,
                     defaultAudience: defaultAudience,
-                    status: status,
-                    color: themeColor?.toHighlightColor() ?? .accentColor
+                    status: status
                 )
             }
         }
