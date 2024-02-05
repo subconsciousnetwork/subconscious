@@ -84,17 +84,6 @@ struct NotebookNavigationView: View {
                         }
                     }
                 }
-                .background(
-                    colorScheme == .dark
-                    ? DeckTheme.darkBg
-                    : DeckTheme.lightBg
-                )
-                .toolbarBackground(
-                    colorScheme == .dark
-                    ? DeckTheme.darkBgStart
-                    : DeckTheme.lightBgStart,
-                    for: .navigationBar
-                )
                 .onReceive(store.actions) { action in
                     switch action {
                     case .requestScrollToTop:

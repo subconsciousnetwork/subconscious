@@ -262,10 +262,6 @@ struct UserProfileView: View {
                 )
             }
         })
-        .toolbarBackground(
-            colorScheme == .dark ? DeckTheme.darkBgEnd : DeckTheme.lightBgEnd,
-            for: .tabBar
-        )
         .metaSheet(store: store)
         .follow(store: store)
         .unfollow(store: store)

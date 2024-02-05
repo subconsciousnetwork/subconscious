@@ -80,22 +80,11 @@ struct MemoEditorDetailView: View {
             } else {
                 plainEditor()
             }
-        }
-        .background(
-            colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
-        )
+        }                        
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(
-            colorScheme == .dark
-            ? DeckTheme.darkBgStart
-            : DeckTheme.lightBgStart,
-            for: .navigationBar
-        )
-        .toolbarBackground(
-            colorScheme == .dark ? DeckTheme.darkBgEnd : DeckTheme.lightBgEnd,
-            for: .tabBar
-        )
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,

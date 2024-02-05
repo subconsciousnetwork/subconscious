@@ -23,39 +23,42 @@ struct DetailStackView<Root: View>: View {
                 tag: DetailStackAction.setDetails
             )
         ) {
-            root().navigationDestination(
-                for: MemoDetailDescription.self
-            ) { detail in
-                switch detail {
-                case .editor(let description):
-                    MemoEditorDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: DetailStackAction.tag
+            root()
+                .modifier(AppThemeToolbarViewModifier())
+                .modifier(AppThemeBackgroundViewModifier())
+                .navigationDestination(
+                    for: MemoDetailDescription.self
+                ) { detail in
+                    switch detail {
+                    case .editor(let description):
+                        MemoEditorDetailView(
+                            app: app,
+                            description: description,
+                            notify: Address.forward(
+                                send: store.send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
-                case .viewer(let description):
-                    MemoViewerDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: DetailStackAction.tag
+                    case .viewer(let description):
+                        MemoViewerDetailView(
+                            app: app,
+                            description: description,
+                            notify: Address.forward(
+                                send: store.send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
-                case .profile(let description):
-                    UserProfileDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: DetailStackAction.tag
+                    case .profile(let description):
+                        UserProfileDetailView(
+                            app: app,
+                            description: description,
+                            notify: Address.forward(
+                                send: store.send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
+                    }
                 }
-            }
         }
     }
 }

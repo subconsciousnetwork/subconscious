@@ -136,15 +136,11 @@ struct DeckNavigationView: View {
             .padding(AppTheme.padding)
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
-            )
             .toolbar {
                 MainToolbar(
                     app: app
                 )
             }
-            
         }
     }
 }

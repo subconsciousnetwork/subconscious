@@ -90,10 +90,6 @@ struct NotebookView: View {
             store.actions.compactMap(AppAction.from),
             perform: app.send
         )
-        .toolbarBackground(
-            colorScheme == .dark ? DeckTheme.darkBgEnd : DeckTheme.lightBgEnd,
-            for: .tabBar
-        )
     }
 }
 
