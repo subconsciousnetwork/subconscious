@@ -162,6 +162,8 @@ enum HomeProfileAction: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestAppendToEntry(_ address: Slashlink, _ append: String)
+    case succeedAppendToEntry(_ address: Slashlink)
 }
 
 // MARK: Cursors and tagging functions
@@ -193,6 +195,8 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
             return .requestUpdateAudience(address, audience)
         case let .requestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
+        case let .requestAppendToEntry(address, append):
+            return .requestAppendToEntry(address, append)
         default:
             return .detailStack(action)
         }
@@ -381,9 +385,20 @@ struct HomeProfileModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case let .succeedAppendToEntry(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedAppendToEntry(address)
+                    ),
+                    .appear
+                ],
+                environment: environment
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
-                .requestAssignNoteColor:
+                .requestAssignNoteColor, .requestAppendToEntry:
             return Update(state: state)
         }
     }

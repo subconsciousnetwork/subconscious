@@ -183,6 +183,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
     case requestQuoteInNewDetail(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
 extension MemoViewerDetailNotification {
@@ -192,6 +193,8 @@ extension MemoViewerDetailNotification {
             return .requestUserProfileDetail(user.address)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return nil
         }
@@ -229,6 +232,8 @@ enum MemoViewerDetailAction: Hashable {
     case succeedIndexBackgroundSphere
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
+    
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
@@ -290,7 +295,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             return MemoViewerDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: environment
             )
         case .appear(let description):
             return appear(
@@ -387,6 +392,15 @@ struct MemoViewerDetailModel: ModelProtocol {
             return update(
                 state: state,
                 action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return update(
+                state: state,
+                actions: [
+                    .metaSheet(.selectAppendLinkSearchSuggestion(suggestion)),
+                    .presentMetaSheet(false)
+                ],
                 environment: environment
             )
         }
@@ -620,6 +634,8 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
             return .requestAuthorDetail(user)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewNote(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return .metaSheet(action)
         }

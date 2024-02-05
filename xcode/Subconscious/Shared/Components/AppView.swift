@@ -322,6 +322,10 @@ enum AppAction: Hashable {
     case succeedLogActivity
     case failLogActivity(_ error: String)
     
+    case appendToEntry(address: Slashlink, append: String)
+    case succeedAppendToEntry(address: Slashlink)
+    case failAppendToEntry(address: Slashlink, _ error: String)
+    
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
     case requestProfileRoot
@@ -1203,11 +1207,7 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 tab: tab
             )
-        case .requestNotebookRoot:
-            return Update(state: state)
-        case .requestProfileRoot:
-            return Update(state: state)
-        case .requestDeckRoot:
+        case .requestNotebookRoot, .requestProfileRoot, .requestDeckRoot:
             return Update(state: state)
         case .checkRecoveryStatus:
             return checkRecoveryStatus(
@@ -1232,7 +1232,7 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
-                .succeedAssignNoteColor:
+                .succeedAssignNoteColor, .succeedAppendToEntry:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
             return succeedSaveEntry(
@@ -1246,6 +1246,13 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 entry: entry
+            )
+        case let .appendToEntry(address, append):
+            return appendToEntry(
+                state: state,
+                environment: environment,
+                address: address,
+                append: append
             )
         case let .moveEntry(from, to):
             return moveEntry(
@@ -1275,7 +1282,7 @@ struct AppModel: ModelProtocol {
                 address: address,
                 color: color
             )
-        case .failSaveEntry(address: let address, error: let error):
+        case let .failSaveEntry(address, error):
             logger.warning(
                 """
                 Failed to save entry: \(address)
@@ -1290,7 +1297,22 @@ struct AppModel: ModelProtocol {
                 ),
                 environment: environment
             )
-        case .failMoveEntry(from: let from, to: let to, error: let error):
+        case let .failAppendToEntry(address, error):
+            logger.warning(
+                """
+                Failed to append to entry: \(address)
+                \(error)
+                """
+            )
+            
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not append to note"
+                ),
+                environment: environment
+            )
+        case let .failMoveEntry(from, to, error):
             logger.warning(
                 """
                 Failed to move entry: \(from) -> \(to)
@@ -1304,7 +1326,7 @@ struct AppModel: ModelProtocol {
                 ),
                 environment: environment
             )
-        case .failMergeEntry(parent: let parent, child: let child, error: let error):
+        case let .failMergeEntry(parent, child, error):
             logger.warning(
                 """
                 Failed to merge entries: \(child) -> \(parent)
@@ -3020,6 +3042,24 @@ struct AppModel: ModelProtocol {
                 error: error.localizedDescription
             )
         }).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func appendToEntry(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink,
+        append: String
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = Future.detached {
+            try await environment.data.appendToEntry(address: address, append: append)
+            return .succeedAppendToEntry(address: address)
+        }
+        .recover { error in
+            .failAppendToEntry(address: address, error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }

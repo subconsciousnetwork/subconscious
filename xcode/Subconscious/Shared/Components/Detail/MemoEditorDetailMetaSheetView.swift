@@ -75,6 +75,21 @@ struct MemoEditorDetailMetaSheetView: View {
                         }
                         
                         Button(
+                            action: {
+                                store.send(.presentAppendLinkSearchSheet(true))
+                            },
+                            label: {
+                                Label(
+                                    "Append to note",
+                                    systemImage: "link.badge.plus"
+                                )
+                            }
+                        )
+                        .buttonStyle(RowButtonStyle())
+                        
+                        Divider()
+                        
+                        Button(
                             role: .destructive,
                             action: {
                                 store.send(.presentDeleteConfirmationDialog(true))
@@ -148,6 +163,19 @@ struct MemoEditorDetailMetaSheetView: View {
                 Text("Delete")
             }
         }
+        .sheet(
+            isPresented: store.binding(
+                get: \.isAppendLinkSearchPresented,
+                tag: MemoEditorDetailMetaSheetAction.presentAppendLinkSearchSheet
+            )
+        ) {
+            AppendLinkSearchView(
+                store: store.viewStore(
+                    get: \.appendLinkSearch,
+                    tag: MemoEditorDetailMetaSheetAppendLinkSearchCursor.tag
+                )
+            )
+        }
     }
 }
 
@@ -176,6 +204,15 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     /// Should be handled by parent component.
     case requestDelete(Slashlink?)
     case requestQuoteInNewNote(_ address: Slashlink)
+    
+    /// Tagged actions for append link search sheet
+    case appendLinkSearch(AppendLinkSearchAction)
+    case presentAppendLinkSearchSheet(_ isPresented: Bool)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
+    
+    static func setAppendLinkSearchSubject(_ address: Slashlink?) -> Self {
+        .appendLinkSearch(.setSubject(address))
+    }
 
     static var refreshRenameSuggestions: Self {
         .renameSearch(.refreshRenameSuggestions)
@@ -201,6 +238,9 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
+    
+    var isAppendLinkSearchPresented = false
+    var appendLinkSearch = AppendLinkSearchModel()
     
     static func update(
         state: Self,
@@ -240,6 +280,25 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isPresented: isPresented
+            )
+        // Append link
+        case .appendLinkSearch(let action):
+            return MemoEditorDetailMetaSheetAppendLinkSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .presentAppendLinkSearchSheet(let isPresented):
+            return presentAppendLinkSearchSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .selectAppendLinkSearchSuggestion(let suggestion):
+            return selectAppendLinkSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
             )
         case let .setAddress(address):
             return setAddress(
@@ -351,6 +410,41 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
         
         return Update(state: model)
     }
+    
+    static func presentAppendLinkSearchSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.isAppendLinkSearchPresented = isPresented
+        return update(
+            state: model,
+            action: .setAppendLinkSearchSubject(address),
+            environment: environment
+        )
+    }
+    
+    static func selectAppendLinkSuggestion(
+        state: Self,
+        environment: Environment,
+        suggestion: AppendLinkSuggestion
+    ) -> Update<Self> {
+        var model = state
+        model.isAppendLinkSearchPresented = false
+        return update(
+            state: model,
+            actions: [
+                .appendLinkSearch(.selectSuggestion(suggestion)),
+                .presentAppendLinkSearchSheet(false)
+            ],
+            environment: environment
+        )
+    }
 }
 
 // MARK: RenameSearchCursor
@@ -377,6 +471,34 @@ struct MemoEditorDetailMetaSheetRenameSearchCursor: CursorProtocol {
             return .selectRenameSuggestion(suggestion)
         default:
             return .renameSearch(action)
+        }
+    }
+}
+
+// MARK: AppendLinkSearchCursor
+struct MemoEditorDetailMetaSheetAppendLinkSearchCursor: CursorProtocol {
+    typealias Model = MemoEditorDetailMetaSheetModel
+    typealias ViewModel = AppendLinkSearchModel
+
+    static func get(state: Model) -> ViewModel {
+        state.appendLinkSearch
+    }
+    
+    static func set(
+        state: Model,
+        inner: ViewModel
+    ) -> Model {
+        var model = state
+        model.appendLinkSearch = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case .selectSuggestion(let suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
+        default:
+            return .appendLinkSearch(action)
         }
     }
 }

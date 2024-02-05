@@ -953,6 +953,65 @@ final class DatabaseService {
             results: results
         )
     }
+    
+    /// Map "Append Link" results into suggested actions
+    static func collateAppendLinkSuggestions(
+        current: Slashlink,
+        results: [Slashlink]
+    ) -> [AppendLinkSuggestion] {
+        return results.map { result in
+            .append(
+                address: current,
+                target: result
+            )
+        }
+    }
+    
+    /// Given a query and a `current` slug, produce an array of suggestions
+    /// for notes to append a link to.
+    func searchAppendLink(
+        owner: Did?,
+        query: String,
+        current: Slashlink
+    ) throws -> [AppendLinkSuggestion] {
+        guard self.state == .ready else {
+            return []
+        }
+        
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+
+        let results: [Slashlink] = try database
+            .execute(
+                sql: """
+                SELECT id
+                FROM memo_search
+                WHERE memo_search MATCH ?
+                    AND did IN (SELECT value FROM json_each(?))
+                    AND substr(memo_search.slug, 1, 1) != '_'
+                ORDER BY rank
+                LIMIT 25
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query),
+                    .json(dids, or: "[]")
+                ]
+            )
+            .compactMap({ row in
+                row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner)
+            })
+        
+        return Self.collateAppendLinkSuggestions(
+            current: current,
+            results: results
+        )
+    }
 
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.

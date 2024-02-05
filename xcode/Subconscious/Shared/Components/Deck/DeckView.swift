@@ -122,6 +122,8 @@ enum DeckAction: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestAppendToEntry(_ address: Slashlink, _ append: String)
+    case succeedAppendToEntry(_ address: Slashlink)
 }
 
 extension AppAction {
@@ -139,6 +141,8 @@ extension AppAction {
             return .updateAudience(address: address, audience: audience)
         case let .requestAssignNoteColor(address, color):
             return .assignColor(address: address, color: color)
+        case let .requestAppendToEntry(address, append):
+            return .appendToEntry(address: address, append: append)
         default:
             return nil
         }
@@ -162,6 +166,8 @@ extension DeckAction {
             return .succeedUpdateAudience(receipt)
         case let .succeedAssignNoteColor(address, color):
             return .succeedAssignNoteColor(address, color)
+        case let .succeedAppendToEntry(address):
+            return .succeedAppendToEntry(address)
         default:
             return nil
         }
@@ -224,6 +230,8 @@ struct DeckDetailStackCursor: CursorProtocol {
             return .requestUpdateAudience(address, audience)
         case let .requestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
+        case let .requestAppendToEntry(address, append):
+            return .requestAppendToEntry(address, append)
         case _:
             return .detailStack(action)
         }
@@ -404,8 +412,20 @@ struct DeckModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case let .succeedAppendToEntry(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedAppendToEntry(address)
+                    ),
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
-                .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor:
+                .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
+                .requestAppendToEntry:
             return Update(state: state)
         }
         

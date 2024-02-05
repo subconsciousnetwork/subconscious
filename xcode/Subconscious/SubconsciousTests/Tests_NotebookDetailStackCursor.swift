@@ -69,4 +69,14 @@ final class Tests_NotebookDetailStackCursor: XCTestCase {
             NotebookAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .c)
         )
     }
+    
+    func testTagRequestAppendToEntry() throws {
+        let action = NotebookDetailStackCursor.tag(
+            .requestAppendToEntry(Slashlink("@bob/foo")!, "test")
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.requestAppendToEntry(Slashlink("@bob/foo")!, "test")
+        )
+    }
 }

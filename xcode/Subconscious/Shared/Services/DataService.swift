@@ -606,6 +606,12 @@ actor DataService {
         try await writeMemo(address: entry.address, memo: entry.contents)
     }
     
+    func appendToEntry(address: Slashlink, append: String) async throws {
+        var memo = try await readMemo(address: address)
+        memo.body.append(append)
+        return try await writeMemo(address: address, memo: memo)
+    }
+    
     nonisolated func writeEntryPublisher(
         _ entry: MemoEntry
     ) -> AnyPublisher<Void, Error> {
@@ -827,6 +833,18 @@ actor DataService {
             )
         }
         .eraseToAnyPublisher()
+    }
+    
+    func searchAppendLink(
+        query: String,
+        current: Slashlink
+    ) async throws -> [AppendLinkSuggestion] {
+        let identity = try? await self.noosphere.identity()
+        return try self.database.searchAppendLink(
+            owner: identity,
+            query: query,
+            current: current
+        )
     }
     
     /// Log a search query in search history db

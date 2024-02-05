@@ -149,7 +149,7 @@ struct MemoEditorDetailView: View {
             MemoEditorDetailMetaSheetView(
                 store: store.viewStore(
                     get: \.metaSheet,
-                    tag: DetailMetaSheetCursor.tag
+                    tag: MemoEditorDetailMetaSheetCursor.tag
                 )
             )
         }
@@ -295,6 +295,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestUpdateAudience(address: Slashlink, audience: Audience)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case requestQuoteInNewDetail(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
 extension MemoEditorDetailNotification {
@@ -314,6 +315,8 @@ extension MemoEditorDetailNotification {
             return .requestAssignNoteColor(address, color)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return nil
         }
@@ -376,7 +379,10 @@ enum MemoEditorDetailAction: Hashable {
     /// more recently than DetailModel.
     case setDetailLastWriteWins(MemoEditorDetailResponse)
     /// Set detail
-    case setDetail(detail: MemoEditorDetailResponse, autofocus: Bool)
+    case setDetail(
+        detail: MemoEditorDetailResponse,
+        autofocus: Bool
+    )
     case setDraftDetail(
         defaultAudience: Audience,
         fallback: String
@@ -466,6 +472,7 @@ enum MemoEditorDetailAction: Hashable {
     case refreshLists
     
     case requestQuoteInNewNote(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
@@ -578,7 +585,7 @@ struct MemoEditorDetailSubtextTextCursor: CursorProtocol {
     }
 }
 
-struct DetailMetaSheetCursor: CursorProtocol {
+struct MemoEditorDetailMetaSheetCursor: CursorProtocol {
     typealias Model = MemoEditorDetailModel
     typealias ViewModel = MemoEditorDetailMetaSheetModel
 
@@ -607,6 +614,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
             return .requestDelete(address)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewNote(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return .metaSheet(action)
         }
@@ -691,7 +700,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     ) -> Update<MemoEditorDetailModel> {
         switch action {
         case .metaSheet(let action):
-            return DetailMetaSheetCursor.update(
+            return MemoEditorDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -990,6 +999,15 @@ struct MemoEditorDetailModel: ModelProtocol {
             return update(
                 state: state,
                 action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return update(
+                state: state,
+                actions: [
+                    .metaSheet(.selectAppendLinkSearchSuggestion(suggestion)),
+                    .presentMetaSheet(false)
+                ],
                 environment: environment
             )
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
@@ -1423,26 +1441,20 @@ struct MemoEditorDetailModel: ModelProtocol {
         detail: MemoEditorDetailResponse,
         autofocus: Bool
     ) -> Update<MemoEditorDetailModel> {
-        guard autofocus else {
-            // If autofocus is false, request blur if needed
-            return update(
-                state: state,
-                actions: [
-                    .setDetailLastWriteWins(detail),
-                    .requestEditorFocus(false)
-                ],
-                environment: environment
-            )
-        }
+        var actions: [MemoEditorDetailAction] = [
+            .setDetailLastWriteWins(detail)
+        ]
+        
         // If autofocus is true, request focus, and also set selection to end
         // of editor text.
+        if autofocus {
+            actions.append(.requestEditorFocus(autofocus))
+            actions.append(.setEditorSelectionAtEnd)
+        }
+        
         return update(
             state: state,
-            actions: [
-                .setDetailLastWriteWins(detail),
-                .requestEditorFocus(true),
-                .setEditorSelectionAtEnd
-            ],
+            actions: actions,
             environment: environment
         )
     }
