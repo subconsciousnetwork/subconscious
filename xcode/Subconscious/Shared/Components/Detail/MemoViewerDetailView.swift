@@ -46,6 +46,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadingView(
                     notify: notify
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 MemoViewerDetailLoadedView(
                     store: store,
@@ -57,11 +58,14 @@ struct MemoViewerDetailView: View {
                     backlinks: store.state.backlinks,
                     notify: notify
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -104,8 +108,8 @@ struct MemoViewerDetailNotFoundView: View {
     var body: some View {
         ScrollView {
             NotFoundView()
-            ThickDividerView()
                 .padding(.bottom, AppTheme.unit4)
+            
             BacklinksView(
                 backlinks: backlinks,
                 onLink: { link in
@@ -176,8 +180,6 @@ struct MemoViewerDetailLoadedView: View {
                     )
                 }
             }
-            .modifier(AppThemeBackgroundViewModifier())
-            .modifier(AppThemeToolbarViewModifier())
         }
     }
 }
@@ -348,7 +350,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .succeedRefreshBacklinks(let backlinks):
             var model = state
             model.backlinks = backlinks
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         case .failRefreshBacklinks(let error):
             logger.error("Failed to refresh backlinks: \(error)")
             return Update(state: state)
@@ -483,7 +485,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         // If no response, then mark not found
         guard let entry = entry else {
             model.loadingState = .notFound
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         }
         
         model.loadingState = .loaded
@@ -498,7 +500,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             action: .setDom(dom),
             environment: environment
-        )
+        ).animation(.easeOutCubic())
     }
     
     static func refreshBacklinks(

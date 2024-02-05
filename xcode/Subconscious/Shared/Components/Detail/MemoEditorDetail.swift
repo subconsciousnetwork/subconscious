@@ -837,6 +837,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             var model = state
             model.backlinks = backlinks
             return Update(state: model)
+                .animation(.easeOutCubic())
         case .failRefreshBacklinks(let error):
             logger.error("Failed to refresh backlinks: \(error)")
             return Update(state: state)
@@ -1381,6 +1382,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             ],
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     /// Set detail model.
@@ -1473,6 +1475,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             actions: actions,
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     static func setDraftDetail(
