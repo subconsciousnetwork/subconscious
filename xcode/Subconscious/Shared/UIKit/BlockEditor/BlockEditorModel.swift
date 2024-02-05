@@ -53,8 +53,8 @@ extension BlockEditor {
         var ourSphere: Did?
         /// Who owns this document?
         var ownerSphere: Did?
-        
         var address: Slashlink? = nil
+        var defaultAudience = Audience.local
         var contentType = ContentType.subtext
         var fileExtension = ContentType.subtext.fileExtension
         /// Created date
@@ -85,6 +85,8 @@ extension BlockEditor {
 extension BlockEditor {
     // MARK: Actions
     enum Action {
+        /// Tagging action for detail meta bottom sheet
+        case metaSheet(MemoEditorDetailMetaSheetAction)
         /// Handle app backgrounding, etec
         case scenePhaseChange(ScenePhase)
         /// View is ready for updates.
@@ -152,6 +154,10 @@ extension BlockEditor {
         /// Autosave whatever is in the editor.
         /// Sent at some interval to save draft state.
         case autosave
+        /// Find a unique address for a note that doesn't have one yet
+        case requestAssignAddress
+        /// Assign an address to a note
+        case assignAddress(Slashlink?)
         case textDidChange(id: UUID?, dom: Subtext, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
         case splitBlock(id: UUID, selection: NSRange)
@@ -197,6 +203,11 @@ extension BlockEditor {
         case becomeListBlock
         case becomeQuoteBlock
         case deleteBlock
+
+        /// Synonym for `.metaSheet(.setAdress(:))`
+        static func setMetaSheetAddress(_ address: Slashlink?) -> Self {
+            .metaSheet(.setAddress(address))
+        }
     }
 }
 
@@ -245,6 +256,12 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         switch action {
+        case let .metaSheet(action):
+            return metaSheet(
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .scenePhaseChange:
             return scenePhaseChange(
                 state: state,
@@ -415,6 +432,17 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestAssignAddress:
+            return requestAssignAddress(
+                state: state,
+                environment: environment
+            )
+        case let .assignAddress(address):
+            return assignAddress(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case let .textDidChange(id, dom, selection):
             return textDidChange(
                 state: state,
@@ -554,6 +582,15 @@ extension BlockEditor.Model: ModelProtocol {
         }
     }
     
+    static func metaSheet(
+        state: Self,
+        action: MemoEditorDetailMetaSheetAction,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Not implemented")
+        return Update(state: state)
+    }
+
     static func scenePhaseChange(
         state: Self,
         environment: Environment
@@ -1150,6 +1187,15 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
+        /// If no address, derive one and update
+        guard state.address != nil else {
+            return update(
+                state: state,
+                action: .requestAssignAddress,
+                environment: environment
+            )
+        }
+
         let snapshot = MemoEntry(state)
         return save(
             state: state,
@@ -1157,7 +1203,48 @@ extension BlockEditor.Model: ModelProtocol {
             environment: environment
         )
     }
-    
+
+    static func requestAssignAddress(
+        state: Self,
+        environment: AppEnvironment
+    ) -> Update {
+        let fx: Fx<BlockEditor.Action> = environment.data
+            .findUniqueAddressForPublisher(
+                state.blocks.description,
+                audience: state.defaultAudience
+            ).map({ address in
+                BlockEditor.Action.assignAddress(address)
+            }).eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    static func assignAddress(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink?
+    ) -> Update {
+        guard let address = address else {
+            logger.info("Did not get address for note")
+            return Update(state: state)
+        }
+
+        var model = state
+        model.address = address
+
+        let snapshot = MemoEntry(state)
+
+        return update(
+            state: model,
+            actions: [
+                .save(snapshot),
+                .setMetaSheetAddress(address)
+            ],
+            environment: environment
+        )
+        .animation(.default)
+    }
+
     static func textDidChange(
         state: Self,
         id: UUID?,
