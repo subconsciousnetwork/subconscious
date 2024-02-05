@@ -15,10 +15,6 @@ struct EntryRow: View {
     var emptyExcerpt = "Empty"
     var highlight: Color = .secondary
     var onLink: (EntryLink) -> Void = { _ in }
-    
-    var color: Color {
-        entry.color
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
