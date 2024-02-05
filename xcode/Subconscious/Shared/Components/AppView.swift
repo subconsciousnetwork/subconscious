@@ -2154,17 +2154,27 @@ struct AppModel: ModelProtocol {
         var model = state
         model.lastGatewaySyncStatus = .failed(error)
         
+        
+        var actions: [AppAction] = [
+            .indexOurSphere,
+            .toastStack(
+                .pushToast(
+                    message: "Sync failed",
+                    image: "exclamationmark.arrow.triangle.2.circlepath"
+                )
+            )
+        ]
+        
+        // If we have a gateway ID but sync failed then provisioning may have failed / timed out.
+        // Let's retry in-case it suddenly resolves the issue.
+        if let _ = state.gatewayId,
+           state.gatewayProvisioningStatus != .succeeded {
+            actions.append(.requestGatewayProvisioningStatus)
+        }
+        
         return update(
             state: model,
-            actions: [
-                .indexOurSphere,
-                .toastStack(
-                    .pushToast(
-                        message: "Sync failed",
-                        image: "exclamationmark.arrow.triangle.2.circlepath"
-                    )
-                )
-            ],
+            actions: actions,
             environment: environment
         ).animation()
     }
