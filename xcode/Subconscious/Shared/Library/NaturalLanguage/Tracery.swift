@@ -79,3 +79,32 @@ public struct Tracery {
         flatten(depth: 0, grammar: grammar, start: start)
     }
 }
+
+extension Grammar {
+    /// Merge one or more grammars into this grammar, appending new values to
+    /// old keys. If a key does not exist in this grammar yet, it creates it.
+    /// - Returns: merged grammar
+    func mergeGrammar(_ grammars: Grammar...) -> Self {
+        var merged = self
+        for grammar in grammars {
+            for (key, values) in grammar {
+                var mergedValues = merged[key] ?? []
+                mergedValues.append(contentsOf: values)
+                merged[key] = mergedValues
+            }
+        }
+        return merged
+    }
+
+    /// Patch a grammar, overwriting old keys.
+    /// - Returns patched grammar
+    func patchGrammar(_ grammars: Grammar...) -> Self {
+        var patched = self
+        for grammar in grammars {
+            for (key, values) in grammar {
+                patched[key] = values
+            }
+        }
+        return patched
+    }
+}

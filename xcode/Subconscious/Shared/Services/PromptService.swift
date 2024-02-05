@@ -9,14 +9,38 @@ import SwiftUI
 
 actor PromptService {
     private let tracery = Tracery()
-    private var grammar: Dictionary<String, Array<String>>
+    private var disambiguator: TraceryDisambiguator
+    private var grammar: Grammar
 
     init(grammar: Dictionary<String, Array<String>> = [:]) {
         self.grammar = grammar
+
+        var disambiguator = TraceryDisambiguator()
+
+        disambiguator.route(
+            RegexRoute(/journal|diary/) { match, input in
+                TraceryContext(start: "#reflect#")
+            }
+        )
+
+        self.disambiguator = disambiguator
     }
 
     func generate(start: String = "#start#") -> String {
         tracery.flatten(grammar: grammar, start: start)
+    }
+
+    /// Generate a prompt given an input string
+    func generate(input: String) -> String {
+        guard let match = disambiguator.match(input).randomElement() else {
+            return generate()
+        }
+        /// Patch our base grammar with the returned grammar (if any) and
+        /// use the returned start string to begin flattening.
+        return tracery.flatten(
+            grammar: PromptService.prompts.patchGrammar(match.grammar),
+            start: match.start
+        )
     }
 }
 
@@ -162,8 +186,8 @@ struct PromptService_Previews: PreviewProvider {
 
         private func regeneratePrompts() async {
             var prompts: [String] = []
-            prompts.append(await prompt.generate())
-            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate(input: "journal"))
+            prompts.append(await prompt.generate(input: "dear diary"))
             prompts.append(await prompt.generate())
             prompts.append(await prompt.generate())
             prompts.append(await prompt.generate())
