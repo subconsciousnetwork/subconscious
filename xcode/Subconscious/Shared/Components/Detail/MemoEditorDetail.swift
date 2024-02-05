@@ -1139,6 +1139,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             action: .editor(.setText(text)),
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     /// Handle editor focus request.
