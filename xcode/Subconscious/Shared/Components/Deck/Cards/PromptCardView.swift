@@ -30,7 +30,12 @@ struct PromptCardView: View {
             HStack {
                 Image(systemName: "sparkles")
                 
+                // By default this view refused to wrap onto a second line
+                // Resolved via https://stackoverflow.com/a/59277022
                 Text(message)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
                 
                 Spacer()
             }
