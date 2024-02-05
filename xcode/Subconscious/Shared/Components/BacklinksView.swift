@@ -20,7 +20,7 @@ struct BacklinksView: View {
                 Spacer()
             }
             if backlinks.count > 0 {
-                VStack(spacing: AppTheme.unit2) {
+                LazyVStack(spacing: AppTheme.unit2) {
                     ForEach(backlinks, id: \.self) { entry in
                         VStack {
                             TranscludeView(

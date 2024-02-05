@@ -19,7 +19,7 @@ struct TranscludeListView: View {
                 VStack {
                     TranscludeView(
                         entry: entry,
-                        onLink: onLink,
+                        onLink: onLink
                     )
                     .buttonStyle(
                         TranscludeButtonStyle()
