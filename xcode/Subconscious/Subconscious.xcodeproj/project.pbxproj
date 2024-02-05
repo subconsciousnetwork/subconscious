@@ -66,6 +66,8 @@
 		B563ACC22B705FC800068BC1 /* AppThemeToolbarViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B563ACC02B705FC800068BC1 /* AppThemeToolbarViewModifier.swift */; };
 		B563ACC42B70601B00068BC1 /* AppThemeBackgroundViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B563ACC32B70601B00068BC1 /* AppThemeBackgroundViewModifier.swift */; };
 		B563ACC52B70601B00068BC1 /* AppThemeBackgroundViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B563ACC32B70601B00068BC1 /* AppThemeBackgroundViewModifier.swift */; };
+		B563ACC72B70C22000068BC1 /* RelatedNoteButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B563ACC62B70C22000068BC1 /* RelatedNoteButtonStyle.swift */; };
+		B563ACC82B70C22000068BC1 /* RelatedNoteButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B563ACC62B70C22000068BC1 /* RelatedNoteButtonStyle.swift */; };
 		B5690C3C29FB4DEF00067580 /* FollowUserViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */; };
 		B5690C3D29FB4DEF00067580 /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971529B6A0DF003204FC /* DidQrCodeView.swift */; };
 		B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */; };
@@ -610,6 +612,7 @@
 		B56139A02B1EF9FE005F1A32 /* EntryListRowButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListRowButtonStyle.swift; sourceTree = "<group>"; };
 		B563ACC02B705FC800068BC1 /* AppThemeToolbarViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeToolbarViewModifier.swift; sourceTree = "<group>"; };
 		B563ACC32B70601B00068BC1 /* AppThemeBackgroundViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeBackgroundViewModifier.swift; sourceTree = "<group>"; };
+		B563ACC62B70C22000068BC1 /* RelatedNoteButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelatedNoteButtonStyle.swift; sourceTree = "<group>"; };
 		B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserViaQRCodeView.swift; sourceTree = "<group>"; };
 		B569971529B6A0DF003204FC /* DidQrCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
 		B56B80932B05AEA800AABF08 /* MathUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathUtilities.swift; sourceTree = "<group>"; };
@@ -1026,6 +1029,7 @@
 				B8616DF729C38775001C666A /* TranscludeButtonStyle.swift */,
 				B828F0A22AFFF05800FDE4AE /* TranscludeListView.swift */,
 				B8D328B629A671DA00850A37 /* TranscludeView.swift */,
+				B563ACC62B70C22000068BC1 /* RelatedNoteButtonStyle.swift */,
 			);
 			path = Transclude;
 			sourceTree = "<group>";
@@ -2127,6 +2131,7 @@
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
 				B5CA6F432B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
+				B563ACC72B70C22000068BC1 /* RelatedNoteButtonStyle.swift in Sources */,
 				B856521C2975B2CF00B7FCA0 /* StoryAudienceView.swift in Sources */,
 				B515E9DB2ACBBB810067A329 /* RectangleCroppedTopRightCorner.swift in Sources */,
 				B88CC958284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
@@ -2455,6 +2460,7 @@
 				B8AE34C3276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B542EF7E2AF4967900BE29F1 /* FollowUserSheetModifier.swift in Sources */,
+				B563ACC82B70C22000068BC1 /* RelatedNoteButtonStyle.swift in Sources */,
 				B8D7F04327A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B8B4251028FDE6960081B8D5 /* FileStore.swift in Sources */,
 				B8616DF929C3877F001C666A /* TranscludeButtonStyle.swift in Sources */,

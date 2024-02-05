@@ -39,40 +39,6 @@ struct TranscludeButtonStyle: ButtonStyle {
     }
 }
 
-struct RelatedNoteButtonStyle: ButtonStyle {
-    private static let roundedRect = RoundedRectangle(
-        cornerRadius: AppTheme.cornerRadiusLg
-    )
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.colorScheme) var colorScheme
-    
-    var color: Color
-    
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .padding(.vertical, AppTheme.unit3)
-            .padding(.horizontal, AppTheme.unit3)
-            .expandAlignedLeading()
-            .background(color)
-            .overlay(
-                Rectangle()
-                    .fill(configuration.isPressed
-                          ? Color.backgroundPressed
-                          : Color.clear)
-            )
-            .contentShape(Self.roundedRect)
-            .clipShape(Self.roundedRect)
-            .cornerRadius(AppTheme.cornerRadiusLg, corners: .allCorners)
-            .animation(.default, value: configuration.isPressed)
-            .shadow(
-                color: DeckTheme.cardShadow.opacity(0.08),
-                radius: 1.5,
-                x: 0,
-                y: 1.5
-            )
-    }
-}
-
 struct TranscludeButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
         Button(

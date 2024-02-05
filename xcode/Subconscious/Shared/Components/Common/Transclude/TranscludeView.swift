@@ -15,7 +15,6 @@ enum TranscludeBackgroundMode {
 struct TranscludeView: View {
     var entry: EntryStub
     var onLink: (EntryLink) -> Void
-    var backgroundMode: TranscludeBackgroundMode = .colored
     
     @Environment (\.colorScheme) var colorScheme
     

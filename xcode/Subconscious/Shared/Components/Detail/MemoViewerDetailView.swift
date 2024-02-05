@@ -163,12 +163,7 @@ struct MemoViewerDetailLoadedView: View {
                     )
                     .background(store.state.themeColor?.toColor())
                     .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
-                    .shadow(
-                        color: DeckTheme.cardShadow.opacity(0.08),
-                        radius: 1.5,
-                        x: 0,
-                        y: 1.5
-                    )
+                    .shadow(style: .transclude)
                     .padding(.bottom, AppTheme.unit4)
                     .padding(.top, AppTheme.unit2)
                     

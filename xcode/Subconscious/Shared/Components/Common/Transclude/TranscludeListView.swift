@@ -10,7 +10,6 @@ import SwiftUI
 struct TranscludeListView: View {
     var entries: [EntryStub]
     var onLink: (EntryLink) -> Void
-    var backgroundMode: TranscludeBackgroundMode = .colored
     
     @Environment (\.colorScheme) var colorScheme
     
@@ -21,7 +20,6 @@ struct TranscludeListView: View {
                     TranscludeView(
                         entry: entry,
                         onLink: onLink,
-                        backgroundMode: backgroundMode
                     )
                     .buttonStyle(
                         TranscludeButtonStyle()
