@@ -26,14 +26,16 @@ actor PromptService {
         self.disambiguator = disambiguator
     }
 
-    func generate(start: String = "#start#") -> String {
+    func generate(start: String = "#start#") async -> String {
         tracery.flatten(grammar: grammar, start: start)
     }
 
     /// Generate a prompt given an input string
-    func generate(input: String) -> String {
-        guard let match = disambiguator.match(input).randomElement() else {
-            return generate()
+    func generate(input: String) async -> String {
+        guard
+            let match = await disambiguator.match(input).randomElement()
+        else {
+            return await generate()
         }
         /// Patch our base grammar with the returned grammar (if any) and
         /// use the returned start string to begin flattening.

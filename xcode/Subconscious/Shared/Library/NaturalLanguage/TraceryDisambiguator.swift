@@ -13,12 +13,12 @@ struct TraceryContext: Hashable {
 }
 
 protocol TraceryDisambiguatorRoute {
-    func match(_ input: String) -> TraceryContext?
+    func match(_ input: String) async -> TraceryContext?
 }
 
 struct RegexRoute<Output>: TraceryDisambiguatorRoute {
     let pattern: Regex<Output>
-    let route: (Regex<Output>.Match, String) -> TraceryContext?
+    let route: (Regex<Output>.Match, String) async -> TraceryContext?
 
     init(
         _ pattern: Regex<Output>,
@@ -28,11 +28,11 @@ struct RegexRoute<Output>: TraceryDisambiguatorRoute {
         self.route = route
     }
 
-    func match(_ input: String) -> TraceryContext? {
+    func match(_ input: String) async -> TraceryContext? {
         guard let match = try? pattern.firstMatch(in: input) else {
             return nil
         }
-        return self.route(match, input)
+        return await self.route(match, input)
     }
 }
 
@@ -50,10 +50,13 @@ struct TraceryDisambiguator {
 
     /// Match input against disambiguators, returning up to `max` matches
     /// for input.
-    func match(_ input: String, max maxResults: Int = 5) -> [TraceryContext] {
+    func match(
+        _ input: String,
+        max maxResults: Int = 5
+    ) async -> [TraceryContext] {
         var results: [TraceryContext] = []
         for route in routes {
-            if let result = route.match(input) {
+            if let result = await route.match(input) {
                 results.append(result)
                 if results.count >= maxResults {
                     return results
