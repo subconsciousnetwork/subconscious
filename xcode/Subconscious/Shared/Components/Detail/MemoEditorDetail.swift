@@ -196,6 +196,12 @@ struct MemoEditorDetailView: View {
     
     var highlight: Color? {
         store.state.themeColor?.toHighlightColor()
+            ?? store.state.address?.themeColor.toHighlightColor()
+    }
+    
+    var background: Color? {
+        store.state.themeColor?.toColor()
+            ?? store.state.address?.themeColor.toColor()
     }
 
     /// Constructs a plain text editor for the view
@@ -222,11 +228,7 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
-                        .tint(highlight)
-                        .background(
-                            store.state.themeColor?.toColor()
-                                ?? store.state.address?.themeColor.toColor()
-                        )
+                        .background(background)
                         .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
                         .shadow(
                             color: DeckTheme.cardShadow.opacity(0.08),
@@ -245,6 +247,8 @@ struct MemoEditorDetailView: View {
                         )
                     }
                 }
+                .tint(highlight)
+                
                 if store.state.editor.focus {
                     DetailKeyboardToolbarView(
                         isSheetPresented: Binding(
