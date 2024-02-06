@@ -15,6 +15,5 @@ struct AppThemeBackgroundViewModifier: ViewModifier {
             .background(
                 colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
             )
-            .transition(.identity)
     }
 }
