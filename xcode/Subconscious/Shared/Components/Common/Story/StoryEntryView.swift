@@ -41,15 +41,11 @@ struct StoryEntryView: View {
     }
     
     var highlight: Color {
-        story.entry.highlightColor(
-            colorScheme: colorScheme
-        )
+        story.entry.highlightColor
     }
     
     var color: Color {
-        story.entry.color(
-            colorScheme: colorScheme
-        )
+        story.entry.color
     }
     
     var body: some View {
@@ -78,7 +74,7 @@ struct StoryEntryView: View {
                             .foregroundColor(.primary)
                         }
                         .tint(highlight)
-                        .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
+                        .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
                 }
                 .contentShape(Rectangle())
             }
@@ -86,7 +82,7 @@ struct StoryEntryView: View {
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .buttonStyle(
             EntryListRowButtonStyle(
-                color: story.entry.color(colorScheme: colorScheme)
+                color: story.entry.color
             )
         )
         .contextMenu {

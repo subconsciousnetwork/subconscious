@@ -82,8 +82,8 @@ struct MemoEditorDetailView: View {
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.visible)
-        .toolbarBackground(Color.background, for: .navigationBar)
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -195,6 +195,12 @@ struct MemoEditorDetailView: View {
     
     var highlight: Color? {
         store.state.themeColor?.toHighlightColor()
+            ?? store.state.address?.themeColor.toHighlightColor()
+    }
+    
+    var background: Color? {
+        store.state.themeColor?.toColor()
+            ?? store.state.address?.themeColor.toColor()
     }
 
     /// Constructs a plain text editor for the view
@@ -221,10 +227,12 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
-                        .tint(highlight)
+                        .background(background)
+                        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+                        .shadow(style: .transclude)
+                        .padding(.bottom, AppTheme.unit4)
+                        .padding(.top, AppTheme.unit2)
                         
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onLink: { link in
@@ -233,6 +241,8 @@ struct MemoEditorDetailView: View {
                         )
                     }
                 }
+                .tint(highlight)
+                
                 if store.state.editor.focus {
                     DetailKeyboardToolbarView(
                         isSheetPresented: Binding(
@@ -821,6 +831,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             var model = state
             model.backlinks = backlinks
             return Update(state: model)
+                .animation(.easeOutCubic())
         case .failRefreshBacklinks(let error):
             logger.error("Failed to refresh backlinks: \(error)")
             return Update(state: state)
@@ -1122,6 +1133,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             action: .editor(.setText(text)),
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     /// Handle editor focus request.
@@ -1365,6 +1377,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             ],
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     /// Set detail model.
@@ -1457,6 +1470,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             actions: actions,
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     static func setDraftDetail(

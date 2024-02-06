@@ -42,7 +42,6 @@ struct EntryListEmptyView: View {
                 .frame(minHeight: geom.size.height)
             }
             .foregroundColor(Color.secondary)
-            .background(Color.background)
             .refreshable {
                 onRefresh()
             }

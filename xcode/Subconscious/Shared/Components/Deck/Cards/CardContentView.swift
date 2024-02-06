@@ -16,11 +16,11 @@ struct CardContentView: View {
     var onLink: (EntryLink) -> Void
     
     var highlight: Color {
-        entry.highlightColor(colorScheme: colorScheme)
+        entry.highlightColor
     }
     
     var color: Color {
-        entry.color(colorScheme: colorScheme)
+        entry.color
     }
     
     var body: some View {
@@ -33,7 +33,7 @@ struct CardContentView: View {
         .foregroundStyle(.primary.opacity(0.8))
         .accentColor(highlight)
         .frame(height: DeckTheme.cardContentSize.height, alignment: .topLeading)
-        .truncateWithGradient(color: color, maxHeight: DeckTheme.cardContentSize.height)
+        .truncateWithGradient(maxHeight: DeckTheme.cardContentSize.height)
         .padding(DeckTheme.cardPadding)
        
         Spacer()

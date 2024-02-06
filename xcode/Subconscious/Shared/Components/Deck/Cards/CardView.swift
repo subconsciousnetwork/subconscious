@@ -18,9 +18,9 @@ struct CardView: View {
     var color: Color {
         switch entry.card {
         case let .entry(entry, _, _):
-            return entry.color(colorScheme: colorScheme)
+            return entry.color
         case let .prompt(_, entry, _, _):
-            return entry.color(colorScheme: colorScheme)
+            return entry.color
         default:
             return .secondary
         }
@@ -29,9 +29,9 @@ struct CardView: View {
     var highlight: Color {
         switch entry.card {
         case let .entry(entry, _, _):
-            return entry.highlightColor(colorScheme: colorScheme)
+            return entry.highlightColor
         case let .prompt(_, entry, _, _):
-            return entry.highlightColor(colorScheme: colorScheme)
+            return entry.highlightColor
         default:
             return .secondary
         }

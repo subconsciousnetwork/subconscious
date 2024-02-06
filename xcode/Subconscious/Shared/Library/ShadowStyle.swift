@@ -22,6 +22,13 @@ extension ShadowStyle {
         x: 0,
         y: 2
     )
+    
+    static let transclude = ShadowStyle(
+        color: DeckTheme.cardShadow.opacity(0.08),
+        radius: 1.5,
+        x: 0,
+        y: 1.5
+    )
 }
 
 extension View {

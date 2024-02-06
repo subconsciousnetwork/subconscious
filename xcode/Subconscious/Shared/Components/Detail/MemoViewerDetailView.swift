@@ -37,7 +37,7 @@ struct MemoViewerDetailView: View {
     var navigationTitle: String {
         store.state.address?.markup ?? store.state.title
     }
-
+    
     var body: some View {
         VStack {
             switch store.state.loadingState {
@@ -45,6 +45,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadingView(
                     notify: notify
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 MemoViewerDetailLoadedView(
                     store: store,
@@ -56,12 +57,14 @@ struct MemoViewerDetailView: View {
                     backlinks: store.state.backlinks,
                     notify: notify
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.visible)
-        .toolbarBackground(Color.background, for: .navigationBar)
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -104,8 +107,8 @@ struct MemoViewerDetailNotFoundView: View {
     var body: some View {
         ScrollView {
             NotFoundView()
-            ThickDividerView()
                 .padding(.bottom, AppTheme.unit4)
+            
             BacklinksView(
                 backlinks: backlinks,
                 onLink: { link in
@@ -137,7 +140,7 @@ struct MemoViewerDetailLoadedView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack {
+                VStack(spacing: 0) {
                     VStack {
                         SubtextView(
                             peer: store.state.owner?.address.peer,
@@ -152,12 +155,16 @@ struct MemoViewerDetailLoadedView: View {
                         
                         Spacer()
                     }
-                    .padding()
+                    .padding(DeckTheme.cardPadding)
                     .frame(
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
-                    ThickDividerView()
-                        .padding(.bottom, AppTheme.unit4)
+                    .background(store.state.themeColor?.toColor())
+                    .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+                    .shadow(style: .transclude)
+                    .padding(.bottom, AppTheme.unit4)
+                    .padding(.top, AppTheme.unit2)
+                    
                     BacklinksView(
                         backlinks: store.state.backlinks,
                         onLink: { link in
@@ -278,6 +285,10 @@ struct MemoViewerDetailModel: ModelProtocol {
     var title = ""
     var dom: Subtext = Subtext.empty
     var backlinks: [EntryStub] = []
+    var headers: WellKnownHeaders? = nil
+    var themeColor: ThemeColor? {
+        headers?.themeColor ?? address?.themeColor
+    }
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -332,7 +343,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .succeedRefreshBacklinks(let backlinks):
             var model = state
             model.backlinks = backlinks
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         case .failRefreshBacklinks(let error):
             logger.error("Failed to refresh backlinks: \(error)")
             return Update(state: state)
@@ -467,13 +478,14 @@ struct MemoViewerDetailModel: ModelProtocol {
         // If no response, then mark not found
         guard let entry = entry else {
             model.loadingState = .notFound
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         }
         
         model.loadingState = .loaded
         let memo = entry.contents
         model.address = entry.address
         model.title = memo.title()
+        model.headers = memo.wellKnownHeaders()
         
         let dom = memo.dom()
         
@@ -481,7 +493,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             action: .setDom(dom),
             environment: environment
-        ).animation(.easeOut)
+        ).animation(.easeOutCubic())
     }
     
     static func refreshBacklinks(

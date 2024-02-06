@@ -58,9 +58,8 @@ struct UserProfileDetailView: View {
             app.actions.compactMap(UserProfileDetailAction.from),
             perform: store.send
         )
-        .background(
-            colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
-        )
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
     }
 }
 

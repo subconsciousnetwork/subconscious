@@ -14,12 +14,15 @@ struct TranscludeListView: View {
     @Environment (\.colorScheme) var colorScheme
     
     var body: some View {
-        LazyVStack(spacing: AppTheme.unit2) {
+        VStack(spacing: AppTheme.unit2) {
             ForEach(entries, id: \.self) { entry in
                 VStack {
                     TranscludeView(
                         entry: entry,
                         onLink: onLink
+                    )
+                    .buttonStyle(
+                        TranscludeButtonStyle()
                     )
                 }
                 .tint(

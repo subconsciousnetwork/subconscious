@@ -1,23 +1,25 @@
 //
-//  EntryListRowButtonStyle.swift
-//  Subconscious (iOS)
+//  RelatedNoteButtonStyle.swift
+//  Subconscious
 //
-//  Created by Ben Follington on 5/12/2023.
+//  Created by Ben Follington on 5/2/2024.
 //
 
-import Foundation
 import SwiftUI
 
-struct EntryListRowButtonStyle: ButtonStyle {
+struct RelatedNoteButtonStyle: ButtonStyle {
     private static let roundedRect = RoundedRectangle(
         cornerRadius: AppTheme.cornerRadiusLg
     )
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) var colorScheme
+    
     var color: Color
-    var padding: CGFloat = AppTheme.unit3
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(padding)
+            .padding(.vertical, AppTheme.unit3)
+            .padding(.horizontal, AppTheme.unit3)
             .expandAlignedLeading()
             .background(color)
             .overlay(
@@ -28,22 +30,21 @@ struct EntryListRowButtonStyle: ButtonStyle {
             )
             .contentShape(Self.roundedRect)
             .clipShape(Self.roundedRect)
+            .cornerRadius(AppTheme.cornerRadiusLg, corners: .allCorners)
             .animation(.default, value: configuration.isPressed)
             .shadow(style: .transclude)
     }
 }
 
-struct EntryListRowButtonStyle_Previews: PreviewProvider {
+struct RelatedNoteButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            Button(
-                action: {},
-                label: {
-                    Text("Test")
-                }
-            ).buttonStyle(
-                EntryListRowButtonStyle(color: .secondaryBackground)
-            )
-        }
+        Button(
+            action: {},
+            label: {
+                Text("Test")
+            }
+        ).buttonStyle(
+            TranscludeButtonStyle()
+        )
     }
 }

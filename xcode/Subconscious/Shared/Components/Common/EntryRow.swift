@@ -15,10 +15,6 @@ struct EntryRow: View {
     var emptyExcerpt = "Empty"
     var highlight: Color = .secondary
     var onLink: (EntryLink) -> Void = { _ in }
-    
-    var color: Color {
-        entry.color(colorScheme: colorScheme)
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
@@ -30,7 +26,7 @@ struct EntryRow: View {
             .font(.callout)
             .multilineTextAlignment(.leading)
             .padding(.bottom, AppTheme.unit2)
-            .truncateWithGradient(color: color, maxHeight: AppTheme.maxEntryListRowHeight)
+            .truncateWithGradient(maxHeight: AppTheme.maxEntryListRowHeight)
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())

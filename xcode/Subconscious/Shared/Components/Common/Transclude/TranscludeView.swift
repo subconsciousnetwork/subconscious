@@ -14,15 +14,7 @@ struct TranscludeView: View {
     @Environment (\.colorScheme) var colorScheme
     
     var highlight: Color {
-        entry.highlightColor(
-            colorScheme: colorScheme
-        )
-    }
-    
-    var color: Color {
-        entry.color(
-            colorScheme: colorScheme
-        )
+        entry.highlightColor
     }
     
     var body: some View {
@@ -45,14 +37,10 @@ struct TranscludeView: View {
                     )
                 }
                 .tint(highlight)
-                .truncateWithGradient(color: color, maxHeight: AppTheme.maxTranscludeHeight)
+                .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
             }
         )
-        .buttonStyle(
-            TranscludeButtonStyle(
-                color: color
-            )
-        )
+        
     }
 }
 

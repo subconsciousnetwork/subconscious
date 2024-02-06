@@ -18,11 +18,11 @@ struct PromptCardView: View {
     var onQuote: (Slashlink) -> Void
     
     var background: Color {
-        entry.color(colorScheme: colorScheme)
+        entry.color
     }
     
     var highlight: Color {
-        entry.highlightColor(colorScheme: colorScheme)
+        entry.highlightColor
     }
     
     var body: some View {

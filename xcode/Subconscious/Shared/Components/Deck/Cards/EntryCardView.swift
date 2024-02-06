@@ -16,7 +16,7 @@ struct EntryCardView: View {
     var onLink: (EntryLink) -> Void
     
     var background: Color {
-        entry.color(colorScheme: colorScheme)
+        entry.color
     }
     
     var body: some View {
