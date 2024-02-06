@@ -19,7 +19,7 @@ actor PromptService {
 
         disambiguator.route(
             RegexRoute(/journal|diary/) { match, input in
-                TraceryContext(start: "#reflect#")
+                [.journal(1)]
             }
         )
 
@@ -29,19 +29,38 @@ actor PromptService {
     func generate(start: String = "#start#") async -> String {
         tracery.flatten(grammar: grammar, start: start)
     }
+    
+    func selectGrammar(match: DisambiguatorMatch) -> TraceryContext {
+        // Cascading rules to map a set of scores to a TraceryContext
+        // Most specific first etc.
+        if match.contains(where: { t in
+            switch t {
+            case let .journal(score):
+                return score > 0.5
+            default:
+                return false
+            }
+        }) {
+            return TraceryContext(start: "#reflect#")
+        } else {
+            return TraceryContext(start: "#start#")
+        }
+    }
 
     /// Generate a prompt given an input string
     func generate(input: String) async -> String {
-        guard
-            let match = await disambiguator.match(input).randomElement()
-        else {
+        let match = await disambiguator.match(input)
+        guard match.count > 0 else {
             return await generate()
         }
+        
+        let context = selectGrammar(match: match)
+        
         /// Patch our base grammar with the returned grammar (if any) and
         /// use the returned start string to begin flattening.
         return tracery.flatten(
-            grammar: grammar.patchGrammar(match.grammar),
-            start: match.start
+            grammar: grammar.patchGrammar(context.grammar),
+            start: context.start
         )
     }
 }

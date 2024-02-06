@@ -12,25 +12,33 @@ struct TraceryContext: Hashable {
     var grammar: Grammar = [:]
 }
 
+enum DisambiguatorTag {
+    case journal(_ score: CGFloat)
+    case project(_ score: CGFloat)
+    case list(_ score: CGFloat, _ count: Int)
+}
+
+typealias DisambiguatorMatch = [DisambiguatorTag]
+
 protocol TraceryDisambiguatorRoute {
-    func match(_ input: String) async -> TraceryContext?
+    func classify(_ input: String) async -> DisambiguatorMatch
 }
 
 struct RegexRoute<Output>: TraceryDisambiguatorRoute {
     let pattern: Regex<Output>
-    let route: (Regex<Output>.Match, String) async -> TraceryContext?
+    let route: (Regex<Output>.Match, String) async -> DisambiguatorMatch
 
     init(
         _ pattern: Regex<Output>,
-        route: @escaping (Regex<Output>.Match, String) -> TraceryContext?
+        route: @escaping (Regex<Output>.Match, String) -> DisambiguatorMatch
     ) {
         self.pattern = pattern.ignoresCase()
         self.route = route
     }
 
-    func match(_ input: String) async -> TraceryContext? {
+    func classify(_ input: String) async -> DisambiguatorMatch {
         guard let match = try? pattern.firstMatch(in: input) else {
-            return nil
+            return []
         }
         return await self.route(match, input)
     }
@@ -38,14 +46,14 @@ struct RegexRoute<Output>: TraceryDisambiguatorRoute {
 
 /// A router for Tracery Grammars
 struct TraceryDisambiguator {
-    var routes: [TraceryDisambiguatorRoute]
+    var classifiers: [TraceryDisambiguatorRoute]
 
-    init(routes: [TraceryDisambiguatorRoute] = []) {
-        self.routes = routes
+    init(classifiers: [TraceryDisambiguatorRoute] = []) {
+        self.classifiers = classifiers
     }
 
     mutating func route(_ route: TraceryDisambiguatorRoute) {
-        self.routes.append(route)
+        self.classifiers.append(route)
     }
 
     /// Match input against disambiguators, returning up to `max` matches
@@ -53,15 +61,11 @@ struct TraceryDisambiguator {
     func match(
         _ input: String,
         max maxResults: Int = 5
-    ) async -> [TraceryContext] {
-        var results: [TraceryContext] = []
-        for route in routes {
-            if let result = await route.match(input) {
-                results.append(result)
-                if results.count >= maxResults {
-                    return results
-                }
-            }
+    ) async -> DisambiguatorMatch {
+        var results: DisambiguatorMatch = []
+        for route in classifiers {
+            let classification = await route.classify(input)
+            results.append(contentsOf: classification)
         }
         return results
     }
