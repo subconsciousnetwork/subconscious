@@ -18,8 +18,57 @@ actor PromptService {
         var disambiguator = TraceryDisambiguator()
 
         disambiguator.route(
-            RegexRoute(/journal|diary/) { match, input in
-                [.journal(1)]
+            RegexRoute(/journal|diary/) { matches, input in
+                [DisambiguatorScore(tag: .journal, weight: 0.5)]
+            }
+        )
+        disambiguator.route(
+            RegexRoute(/me|myself|I am|my/) { matches, input in
+                [DisambiguatorScore(tag: .journal, weight: 0.5)]
+            }
+        )
+        
+        disambiguator.route(
+            SubtextRoute() { dom, input in
+                [
+                    DisambiguatorScore(
+                        tag: .link,
+                        weight: CGFloat(dom.slashlinks.count) * 0.1
+                    ),
+                    DisambiguatorScore(
+                        tag: .list,
+                        weight: CGFloat(dom.blocks.filter({ block in
+                            switch block {
+                            case .list:
+                                return true
+                            default:
+                                return false
+                            }
+                        }).count) * 0.1
+                    ),
+                    DisambiguatorScore(
+                        tag: .quote,
+                        weight: CGFloat(dom.blocks.filter({ block in
+                            switch block {
+                            case .quote:
+                                return true
+                            default:
+                                return false
+                            }
+                        }).count) * 0.1
+                    ),
+                    DisambiguatorScore(
+                        tag: .heading,
+                        weight: CGFloat(dom.blocks.filter({ block in
+                            switch block {
+                            case .heading:
+                                return true
+                            default:
+                                return false
+                            }
+                        }).isEmpty ? 0 : 1)
+                    )
+                ]
             }
         )
 
@@ -33,10 +82,10 @@ actor PromptService {
     func selectGrammar(match: DisambiguatorMatch) -> TraceryContext {
         // Cascading rules to map a set of scores to a TraceryContext
         // Most specific first etc.
-        if match.contains(where: { t in
-            switch t {
-            case let .journal(score):
-                return score > 0.5
+        if match.contains(where: { score in
+            switch score.tag {
+            case .journal:
+                return score.weight > 0.5
             default:
                 return false
             }
@@ -209,7 +258,18 @@ struct PromptService_Previews: PreviewProvider {
             var prompts: [String] = []
             prompts.append(await prompt.generate(input: "journal"))
             prompts.append(await prompt.generate(input: "dear diary"))
-            prompts.append(await prompt.generate())
+            prompts.append(await prompt.generate(input: "I am writing in my journal"))
+            prompts.append(await prompt.generate(input: "no match"))
+            prompts.append(await prompt.generate(input: "I am writing in my journal"))
+            prompts.append(await prompt.generate(input: "I am writing in my journal and @ben/link @gordon/link I have links!"))
+            prompts.append(await prompt.generate(input:
+                """
+                - test
+                - one
+                - two
+                - three
+                """
+            ))
             prompts.append(await prompt.generate())
             prompts.append(await prompt.generate())
             prompts.append(await prompt.generate())

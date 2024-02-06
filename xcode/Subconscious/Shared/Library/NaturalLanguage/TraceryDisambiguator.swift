@@ -13,34 +13,79 @@ struct TraceryContext: Hashable {
 }
 
 enum DisambiguatorTag {
-    case journal(_ score: CGFloat)
-    case project(_ score: CGFloat)
-    case list(_ score: CGFloat, _ count: Int)
+    case journal
+    case project
+    case list
+    case link
+    case quote
+    case heading
 }
 
-typealias DisambiguatorMatch = [DisambiguatorTag]
+struct DisambiguatorScore {
+    let tag: DisambiguatorTag
+    let weight: CGFloat
+}
+
+typealias DisambiguatorMatch = [DisambiguatorScore]
+
+extension DisambiguatorMatch {
+    func consolidate() -> DisambiguatorMatch {
+        // iterate over all entries and combine the scores of matching tags
+        var consolidated: DisambiguatorMatch = []
+        for score in self {
+            if let index = consolidated.firstIndex(where: { $0.tag == score.tag }) {
+                consolidated[index] = DisambiguatorScore(
+                    tag: score.tag,
+                    weight: consolidated[index].weight + score.weight
+                )
+            } else {
+                consolidated.append(score)
+            }
+        }
+        
+        return consolidated
+    }
+}
 
 protocol TraceryDisambiguatorRoute {
     func classify(_ input: String) async -> DisambiguatorMatch
 }
 
+struct SubtextRoute: TraceryDisambiguatorRoute {
+    let route: (Subtext, String) async -> DisambiguatorMatch
+
+    init(
+        route: @escaping (Subtext, String) -> DisambiguatorMatch
+    ) {
+        self.route = route
+    }
+
+    func classify(_ input: String) async -> DisambiguatorMatch {
+        let dom = Subtext(markup: input)
+        return await self.route(dom, input)
+    }
+}
+
 struct RegexRoute<Output>: TraceryDisambiguatorRoute {
     let pattern: Regex<Output>
-    let route: (Regex<Output>.Match, String) async -> DisambiguatorMatch
+    let route: ([Regex<Output>.Match], String) async -> DisambiguatorMatch
 
     init(
         _ pattern: Regex<Output>,
-        route: @escaping (Regex<Output>.Match, String) -> DisambiguatorMatch
+        route: @escaping ([Regex<Output>.Match], String) -> DisambiguatorMatch
     ) {
         self.pattern = pattern.ignoresCase()
         self.route = route
     }
 
     func classify(_ input: String) async -> DisambiguatorMatch {
-        guard let match = try? pattern.firstMatch(in: input) else {
+        let matches = input.matches(of: pattern)
+        
+        guard !matches.isEmpty else {
             return []
         }
-        return await self.route(match, input)
+        
+        return await self.route(matches, input)
     }
 }
 
@@ -67,6 +112,6 @@ struct TraceryDisambiguator {
             let classification = await route.classify(input)
             results.append(contentsOf: classification)
         }
-        return results
+        return results.consolidate()
     }
 }
