@@ -8,34 +8,33 @@
 import SwiftUI
 
 actor PromptService {
-    private let tracery = Tracery()
-    private var disambiguator: TraceryDisambiguator
-    private var grammar: Grammar
+    private let tracery: Tracery
+    private let grammar: Grammar
+    private var orchestrator: PromptOrchestrator
 
     init(grammar: Dictionary<String, Array<String>> = [:]) {
-        self.grammar = grammar
+        let tracery = Tracery()
 
-        var disambiguator = TraceryDisambiguator()
+        var orchestrator = PromptOrchestrator()
 
-        disambiguator.route(
-            RegexRoute(/journal|diary/) { matches, input in
-                [DisambiguatorScore(tag: .journal, weight: 0.5)]
+        orchestrator.classifier(
+            RegexClassifier(/journal|diary/) { matches, input in
+                [PromptClassification(tag: .journal, weight: 0.6)]
             }
         )
-        disambiguator.route(
-            RegexRoute(/me|myself|I am|my/) { matches, input in
-                [DisambiguatorScore(tag: .journal, weight: 0.5)]
+        orchestrator.classifier(
+            RegexClassifier(/me|myself|I am|my/) { matches, input in
+                [PromptClassification(tag: .journal, weight: 0.6)]
             }
         )
-        
-        disambiguator.route(
-            SubtextRoute() { dom, input in
+        orchestrator.classifier(
+            SubtextClassifier() { dom, input in
                 [
-                    DisambiguatorScore(
+                    PromptClassification(
                         tag: .link,
                         weight: CGFloat(dom.slashlinks.count) * 0.1
                     ),
-                    DisambiguatorScore(
+                    PromptClassification(
                         tag: .list,
                         weight: CGFloat(dom.blocks.filter({ block in
                             switch block {
@@ -46,7 +45,7 @@ actor PromptService {
                             }
                         }).count) * 0.1
                     ),
-                    DisambiguatorScore(
+                    PromptClassification(
                         tag: .quote,
                         weight: CGFloat(dom.blocks.filter({ block in
                             switch block {
@@ -57,7 +56,7 @@ actor PromptService {
                             }
                         }).count) * 0.1
                     ),
-                    DisambiguatorScore(
+                    PromptClassification(
                         tag: .heading,
                         weight: CGFloat(dom.blocks.filter({ block in
                             switch block {
@@ -72,45 +71,45 @@ actor PromptService {
             }
         )
 
-        self.disambiguator = disambiguator
+        // Journal route
+        orchestrator.route(
+            PromptRoute { input, classifications in
+                guard classifications.contains(where: { classification in
+                    switch classification.tag {
+                    case .journal:
+                        return classification.weight > 0.5
+                    default:
+                        return false
+                    }
+                }) else {
+                    return []
+                }
+                let prompt = tracery.flatten(
+                    grammar: grammar,
+                    start: "#reflect#"
+                )
+                return [PromptResult(result: prompt, weight: 0.5)]
+            }
+        )
+
+        self.orchestrator = orchestrator
+        self.tracery = tracery
+        self.grammar = grammar
     }
 
     func generate(start: String = "#start#") async -> String {
         tracery.flatten(grammar: grammar, start: start)
     }
     
-    func selectGrammar(match: DisambiguatorMatch) -> TraceryContext {
-        // Cascading rules to map a set of scores to a TraceryContext
-        // Most specific first etc.
-        if match.contains(where: { score in
-            switch score.tag {
-            case .journal:
-                return score.weight > 0.5
-            default:
-                return false
-            }
-        }) {
-            return TraceryContext(start: "#reflect#")
-        } else {
-            return TraceryContext(start: "#start#")
-        }
-    }
-
     /// Generate a prompt given an input string
     func generate(input: String) async -> String {
-        let match = await disambiguator.match(input)
-        guard match.count > 0 else {
+        let results = await orchestrator.generate(input)
+        let result = results.randomElement()?.result
+        guard let result = result else {
             return await generate()
         }
-        
-        let context = selectGrammar(match: match)
-        
-        /// Patch our base grammar with the returned grammar (if any) and
-        /// use the returned start string to begin flattening.
-        return tracery.flatten(
-            grammar: grammar.patchGrammar(context.grammar),
-            start: context.start
-        )
+        return result
+
     }
 }
 
