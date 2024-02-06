@@ -47,7 +47,7 @@ final class Tests_SphereFile: XCTestCase {
             noosphere: noosphere,
             identity: receipt.identity
         )
-        let body = "Foo".toData()!
+        let body = "Foo bar".toData()!
         try await sphere.write(
             slug: Slug("foo")!,
             contentType: "text/subtext",
@@ -57,6 +57,8 @@ final class Tests_SphereFile: XCTestCase {
         let file = try await sphere.readFile(slashlink: Slashlink("/foo")!)
         let value = try await file.readHeaderValueFirst(name: "Content-Type")
         XCTAssertEqual(value, "text/subtext")
+        let length = try await file.readHeaderValueFirst(name: "Content-Length")
+        XCTAssertEqual(length, "\(body.count)")
     }
     
     func testReadHeaderNames() async throws {
@@ -76,7 +78,8 @@ final class Tests_SphereFile: XCTestCase {
         let file = try await sphere.readFile(slashlink: Slashlink("/foo")!)
         let names = try await file.readHeaderNames()
         XCTAssertTrue(names.contains("Content-Type"))
-        XCTAssertEqual(names.count, 1)
+        XCTAssertTrue(names.contains("Content-Length"))
+        XCTAssertEqual(names.count, 2)
     }
 
     func testConsume() async throws {
