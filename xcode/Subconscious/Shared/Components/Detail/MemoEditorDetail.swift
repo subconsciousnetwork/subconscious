@@ -196,11 +196,13 @@ struct MemoEditorDetailView: View {
     var highlight: Color? {
         store.state.themeColor?.toHighlightColor()
             ?? store.state.address?.themeColor.toHighlightColor()
+            ?? ThemeColor.a.toColor()
     }
     
     var background: Color? {
         store.state.themeColor?.toColor()
             ?? store.state.address?.themeColor.toColor()
+            ?? ThemeColor.a.toColor()
     }
 
     /// Constructs a plain text editor for the view
