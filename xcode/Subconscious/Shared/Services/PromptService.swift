@@ -27,6 +27,32 @@ actor PromptService {
                 [PromptClassification(tag: .journal, weight: 0.6)]
             }
         )
+        orchestrator.classifier(
+            RegexClassifier(/todo/) { matches, input in
+                [PromptClassification(tag: .project, weight: 0.2 * CGFloat(matches.count))]
+            }
+        )
+        orchestrator.classifier(
+            RegexClassifier(/\?\s/) { matches, input in
+                [PromptClassification(tag: .question, weight: 0.5 * CGFloat(matches.count))]
+            }
+        )
+        orchestrator.classifier(
+            RegexClassifier(/(\b\d{1,2}\D{0,3}\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\D{0,3}\b\d{2,4})|(\b\d{4}-\d{1,2}-\d{1,2}\b)|(\b\d{1,2}-\d{1,2}-\d{2,4}\b)|(\b\d{1,2}\/\d{1,2}\/\d{2,4}\b)/) { matches, input in
+                
+                if matches.count == 1 {
+                    return [
+                        PromptClassification(tag: .journal, weight: 0.5),
+                        PromptClassification(tag: .date, weight: 0.2)
+                    ]
+                }
+                
+                return [
+                    PromptClassification(tag: .date, weight: 0.2 * CGFloat(matches.count)),
+                    PromptClassification(tag: .list, weight: 0.1 * CGFloat(matches.count)),
+                ]
+            }
+        )
         orchestrator.classifier(KeywordClassifier() { keywords, input in
             keywords.map { k in
                 PromptClassification(tag: .noun(k), weight: 1)
@@ -37,7 +63,7 @@ actor PromptService {
                 [
                     PromptClassification(
                         tag: .link,
-                        weight: CGFloat(dom.slashlinks.count) * 0.1
+                        weight: CGFloat(dom.slashlinks.count) * 0.3
                     ),
                     PromptClassification(
                         tag: .list,
@@ -48,7 +74,7 @@ actor PromptService {
                             default:
                                 return false
                             }
-                        }).count) * 0.1
+                        }).count) * 0.2
                     ),
                     PromptClassification(
                         tag: .quote,
@@ -59,7 +85,7 @@ actor PromptService {
                             default:
                                 return false
                             }
-                        }).count) * 0.1
+                        }).count) * 0.6
                     ),
                     PromptClassification(
                         tag: .heading,

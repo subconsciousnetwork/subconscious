@@ -11,10 +11,12 @@ import NaturalLanguage
 enum PromptClassificationTag: Hashable {
     case journal
     case project
+    case question
     case list
     case link
     case quote
     case heading
+    case date
     case noun(_ text: String)
 }
 
