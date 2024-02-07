@@ -23,6 +23,8 @@ extension BlockEditor {
                 BlockEditor.BlockSelectMenuFrameView(store: store)
                     .zIndex(1)
             }
+            .tint(store.state.highlight)
+            .background(store.state.background)
         }
     }
 }

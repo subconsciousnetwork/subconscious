@@ -61,6 +61,7 @@ extension BlockEditor {
         var created: Date? = nil
         /// Last modified date.
         var modified: Date? = nil
+        var themeColor: ThemeColor? = nil
         var additionalHeaders: [Header] = []
         
         var blocks: BlocksModel = BlocksModel()
@@ -78,6 +79,18 @@ extension BlockEditor {
             }
             self.saveState = state
             Self.logger.log("Editor save state: \(String(describing: state))")
+        }
+
+        var highlight: Color? {
+            themeColor?.toHighlightColor()
+                ?? address?.themeColor.toHighlightColor()
+                ?? ThemeColor.a.toColor()
+        }
+
+        var background: Color? {
+            themeColor?.toColor()
+                ?? address?.themeColor.toColor()
+                ?? ThemeColor.a.toColor()
         }
     }
 }
