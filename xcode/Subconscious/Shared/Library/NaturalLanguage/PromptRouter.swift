@@ -140,6 +140,32 @@ struct RegexClassifier<Output>: PromptClassifierProtocol {
     }
 }
 
+/// Compose a collection of classifiers into a single classifier that returns
+/// a consolidated collection of classifications.
+struct PromptClassifier: PromptClassifierProtocol {
+    private var classifiers: [PromptClassifierProtocol]
+
+    init(classifiers: [PromptClassifierProtocol] = []) {
+        self.classifiers = classifiers
+    }
+
+    /// Add a classifier, mutating this instance
+    mutating func classifier(
+        _ classifier: PromptClassifierProtocol
+    ) {
+        self.classifiers.append(classifier)
+    }
+
+    func classify(_ input: String) async -> PromptClassifications {
+        var classifications: PromptClassifications = []
+        for classifier in classifiers {
+            let classification = await classifier.classify(input)
+            classifications.append(contentsOf: classification)
+        }
+        return classifications.consolidate()
+    }
+}
+
 /// The request context for prompt routes
 struct PromptRouteRequest {
     var process: (String) async -> String?
@@ -164,32 +190,6 @@ struct PromptRoute: PromptRouteProtocol {
 
     func route(_ context: PromptRouteRequest) async -> String? {
         await _route(context)
-    }
-}
-
-/// Compose a collection of classifiers into a single classifier that returns
-/// a consolidated collection of classifications.
-struct PromptClassifier: PromptClassifierProtocol {
-    private var classifiers: [PromptClassifierProtocol]
-
-    init(classifiers: [PromptClassifierProtocol] = []) {
-        self.classifiers = classifiers
-    }
-
-    /// Add a classifier, mutating this instance
-    mutating func classifier(
-        _ classifier: PromptClassifierProtocol
-    ) {
-        self.classifiers.append(classifier)
-    }
-
-    func classify(_ input: String) async -> PromptClassifications {
-        var classifications: PromptClassifications = []
-        for classifier in classifiers {
-            let classification = await classifier.classify(input)
-            classifications.append(contentsOf: classification)
-        }
-        return classifications.consolidate()
     }
 }
 
