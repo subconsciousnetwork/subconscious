@@ -196,7 +196,10 @@ struct PromptRoute: PromptRouteProtocol {
 /// A prompt router request is intended to live for the lifetime of a single
 /// router processing request.
 actor PromptRouterRequest {
-    private static let maxDepth = 100
+    /// An arbitrary depth at which we stop recursive processing.
+    /// This number should be generous, but small. If you exceed it, you're
+    /// probably doing something wrong.
+    private let maxDepth = 100
     private var depth = 0
 
     private var routes: [PromptRouteProtocol]
@@ -220,7 +223,7 @@ actor PromptRouterRequest {
     func process(_ input: String) async -> String? {
         self.depth = depth + 1
         // Exit if recursion limit has been reached for this request
-        if depth > Self.maxDepth {
+        if depth > maxDepth {
             return nil
         }
         let classifications = await classifier.classify(input)
@@ -245,8 +248,6 @@ actor PromptRouterRequest {
 /// general ones.
 /// Tip: routes can consider recursively calling the router with new input.
 struct PromptRouter {
-    /// An arbitrary depth at which we stop recursive processing
-    private static let maxProcessDepth = 100
     private var routes: [PromptRouteProtocol]
     private var classifier: PromptClassifierProtocol
 
