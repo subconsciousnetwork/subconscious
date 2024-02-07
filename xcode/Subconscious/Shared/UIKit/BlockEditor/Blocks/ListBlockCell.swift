@@ -12,7 +12,8 @@ import ObservableStore
 extension BlockEditor {
     class ListBlockCell:
         UICollectionViewCell,
-        UITextViewDelegate
+        UITextViewDelegate,
+        BlockCellProtocol
     {
         static let identifier = "ListBlockCell"
         
@@ -23,13 +24,7 @@ extension BlockEditor {
         var send: (TextBlockAction) -> Void = { _ in }
 
         private lazy var selectView = BlockEditor.BlockSelectView()
-        private lazy var stackView = UIStackView()
-        private var listContainerMargins = NSDirectionalEdgeInsets(
-            top: 0,
-            leading: AppTheme.unit4,
-            bottom: 0,
-            trailing: 0
-        )
+        private lazy var stackView = UIStackView().vStack()
         private lazy var listContainer = UIView()
         private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
@@ -42,85 +37,36 @@ extension BlockEditor {
         override init(frame: CGRect) {
             super.init(frame: frame)
 
-            contentView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.axis = .vertical
-            stackView.spacing = 0
-            stackView.distribution = .fill
-            stackView.alignment = .leading
-            stackView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            contentView.addSubview(stackView)
-            
-            listContainer.directionalLayoutMargins = listContainerMargins
-            stackView.addArrangedSubview(listContainer)
-            
-            textView.isScrollEnabled = false
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            listContainer.addSubview(textView)
-            
-            listContainer.addSubview(bulletView)
-            
-            stackView.addArrangedSubview(transcludeListView)
-            
-            selectView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(selectView)
+            self.themeDefault()
 
-            let listContainerGuide = listContainer.layoutMarginsGuide
-            NSLayoutConstraint.activate([
-                selectView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit
-                ),
-                selectView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -1 * AppTheme.unit
-                ),
-                selectView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                selectView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                ),
-                bulletView.leadingAnchor.constraint(
-                    equalTo: listContainer.leadingAnchor,
-                    constant: AppTheme.unit4
-                ),
-                bulletView.topAnchor.constraint(
-                    equalTo: listContainer.topAnchor,
-                    constant: AppTheme.unit2
-                ),
-                textView.leadingAnchor.constraint(
-                    equalTo: listContainerGuide.leadingAnchor
-                ),
-                textView.trailingAnchor.constraint(
-                    equalTo: listContainerGuide.trailingAnchor
-                ),
-                textView.topAnchor.constraint(
-                    equalTo: listContainerGuide.topAnchor
-                ),
-                textView.bottomAnchor.constraint(
-                    equalTo: listContainerGuide.bottomAnchor
-                ),
-                stackView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
-                ),
-                stackView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
-                ),
-                stackView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                stackView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                )
-            ])
+            contentView
+                .layoutBlock()
+                .addingSubview(selectView) { selectView in
+                    selectView.layoutDefault()
+                }
+                .addingSubview(stackView) { stackView in
+                    listContainer
+                        .addingSubview(textView) { textView in
+                            textView.layoutBlock(
+                                edges: UIEdgeInsets(
+                                    top: 0,
+                                    left: AppTheme.unit4,
+                                    bottom: 0,
+                                    right: 0
+                                )
+                            )
+                        }
+                        .addingSubview(bulletView) { bulletView in
+                            bulletView
+                                .anchorLeading(constant: AppTheme.unit4)
+                                .anchorTop(constant: AppTheme.unit2)
+                        }
+
+                    stackView
+                        .layoutBlock()
+                        .addingArrangedSubview(listContainer)
+                        .addingArrangedSubview(transcludeListView)
+                }
         }
         
         required init?(coder: NSCoder) {
@@ -133,68 +79,47 @@ extension BlockEditor {
             let lineHeight: CGFloat = AppTheme.lineHeight
             
             let frameView = UIView()
-            frameView.isUserInteractionEnabled = false
-            frameView.translatesAutoresizingMaskIntoConstraints = false
-            frameView.setContentCompressionResistancePriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            frameView.setContentCompressionResistancePriority(
-                .defaultHigh,
-                for: .horizontal
-            )
-            
-            let bulletView = UIView()
-            bulletView.backgroundColor = .secondaryLabel
-            bulletView.translatesAutoresizingMaskIntoConstraints = false
-            bulletView.layer.cornerRadius = bulletSize / 2
-            frameView.addSubview(bulletView)
+                .setting(\.isUserInteractionEnabled, value: false)
+                .contentCompressionResistance(for: .vertical)
+                .contentCompressionResistance(for: .horizontal)
+                .anchorWidth(constant: frameWidth)
+                .anchorHeight(constant: lineHeight)
+                .addingSubview(UIView()) { bulletView in
+                    bulletView.backgroundColor = .secondaryLabel
+                    let halfBulletSize = bulletSize / 2
+                    bulletView.layer.cornerRadius = halfBulletSize
+                    bulletView
+                        .anchorWidth(constant: bulletSize)
+                        .anchorHeight(constant: bulletSize)
+                        .anchorCenterY(constant: -1 * halfBulletSize)
+                        .anchorCenterX()
+                }
 
-            NSLayoutConstraint.activate([
-                frameView.widthAnchor.constraint(
-                    equalToConstant: frameWidth
-                ),
-                frameView.heightAnchor.constraint(
-                    equalToConstant: lineHeight
-                ),
-                bulletView.widthAnchor.constraint(
-                    equalToConstant: bulletSize
-                ),
-                bulletView.heightAnchor.constraint(
-                    equalToConstant: bulletSize
-                ),
-                bulletView.centerXAnchor.constraint(
-                    equalTo: frameView.centerXAnchor
-                ),
-                bulletView.centerYAnchor.constraint(
-                    equalTo: frameView.centerYAnchor
-                )
-            ])
             return frameView
         }
 
         func update(
             parentController: UIViewController,
-            state: BlockEditor.TextBlockModel
+            state: BlockEditor.BlockModel
         ) {
             self.id = state.id
             transcludeListView.update(
                 parentController: parentController,
-                entries: state.transcludes,
+                entries: state.body.transcludes,
                 send: Address.forward(
                     send: send,
                     tag: BlockEditor.TextBlockAction.from
                 )
             )
             textView.setText(
-                state.dom.description,
-                selectedRange: state.selection
+                state.body.dom.description,
+                selectedRange: state.body.textSelection
             )
-            textView.setFirstResponder(state.isEditing)
+            textView.setFirstResponder(state.body.blockSelection.isEditing)
             // Set editability of textview
-            textView.setModifiable(!state.isBlockSelectMode)
-            // Handle select mode
-            selectView.isHidden = !state.isBlockSelected
+            textView.setModifiable(!state.body.blockSelection.isBlockSelectMode)
+            // Handle block select mode
+            selectView.update(state.body.blockSelection)
         }
 
         private func send(
@@ -217,22 +142,24 @@ struct BlockEditorListBlockCell_Previews: PreviewProvider {
             let controller = UIViewController()
             view.update(
                 parentController: controller,
-                state: BlockEditor.TextBlockModel(
-                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
-                    transcludes: [
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/foo")!,
-                            excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                            headers: .emptySubtext
-                        ),
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/bar")!,
-                            excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                            headers: .emptySubtext
-                        ),
-                    ]
+                state: BlockEditor.BlockModel(
+                    body: BlockEditor.BlockBodyModel(
+                        dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
+                        transcludes: [
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/foo")!,
+                                excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
+                                headers: .emptySubtext
+                            ),
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/bar")!,
+                                excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
+                                headers: .emptySubtext
+                            ),
+                        ]
+                    )
                 )
             )
             return view

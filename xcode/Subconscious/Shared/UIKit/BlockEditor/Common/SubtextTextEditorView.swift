@@ -18,6 +18,7 @@ enum SubtextTextEditorAction: Hashable {
     /// Link tap in linked text
     case activateLink(URL)
 
+    case selectModePressed
     case upButtonPressed
     case downButtonPressed
     case boldButtonPressed(text: String, selection: NSRange)
@@ -47,6 +48,10 @@ class SubtextTextEditorView: UIView.SubtextTextView {
         super.init(frame: frame, textContainer: textContainer)
         self.delegate = self
         self.inputAccessoryView = toolbar
+        self.isEditable = true
+        // Grow vertically
+        self.isScrollEnabled = false
+        self.adjustsFontForContentSizeCategory = true
     }
     
     required init?(coder: NSCoder) {
@@ -63,6 +68,8 @@ class SubtextTextEditorView: UIView.SubtextTextView {
         _ action: BlockEditor.BlockToolbarAction
     ) -> SubtextTextEditorAction {
         switch action {
+        case .selectModePressed:
+            return .selectModePressed
         case .upButtonPressed:
             return .upButtonPressed
         case .downButtonPressed:

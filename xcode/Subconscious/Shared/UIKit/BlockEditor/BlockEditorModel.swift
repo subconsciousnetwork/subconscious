@@ -29,7 +29,10 @@ extension BlockEditor {
             Model(
                 blocks: BlocksModel(
                     blocks: [
-                        BlockModel.heading(TextBlockModel())
+                        BlockModel(
+                            blockType: .heading,
+                            body: BlockBodyModel()
+                        )
                     ]
                 )
             )
@@ -50,14 +53,15 @@ extension BlockEditor {
         var ourSphere: Did?
         /// Who owns this document?
         var ownerSphere: Did?
-        
         var address: Slashlink? = nil
+        var defaultAudience = Audience.local
         var contentType = ContentType.subtext
         var fileExtension = ContentType.subtext.fileExtension
         /// Created date
         var created: Date? = nil
         /// Last modified date.
         var modified: Date? = nil
+        var themeColor: ThemeColor? = nil
         var additionalHeaders: [Header] = []
         
         var blocks: BlocksModel = BlocksModel()
@@ -66,6 +70,9 @@ extension BlockEditor {
         /// Cached transcludes for links in body
         var transcludes: [Slashlink: EntryStub] = [:]
 
+        /// Is block select menu being presented?
+        var isBlockSelectMenuPresented = false
+
         mutating func setSaveState(_ state: SaveState) {
             if self.saveState == state {
                 return
@@ -73,12 +80,26 @@ extension BlockEditor {
             self.saveState = state
             Self.logger.log("Editor save state: \(String(describing: state))")
         }
+
+        var highlight: Color? {
+            themeColor?.toHighlightColor()
+                ?? address?.themeColor.toHighlightColor()
+                ?? ThemeColor.a.toColor()
+        }
+
+        var background: Color? {
+            themeColor?.toColor()
+                ?? address?.themeColor.toColor()
+                ?? ThemeColor.a.toColor()
+        }
     }
 }
 
 extension BlockEditor {
     // MARK: Actions
     enum Action {
+        /// Tagging action for detail meta bottom sheet
+        case metaSheet(MemoEditorDetailMetaSheetAction)
         /// Handle app backgrounding, etec
         case scenePhaseChange(ScenePhase)
         /// View is ready for updates.
@@ -143,6 +164,10 @@ extension BlockEditor {
         /// Autosave whatever is in the editor.
         /// Sent at some interval to save draft state.
         case autosave
+        /// Find a unique address for a note that doesn't have one yet
+        case requestAssignAddress
+        /// Assign an address to a note
+        case assignAddress(Slashlink?)
         case textDidChange(id: UUID?, dom: Subtext, selection: NSRange)
         case didChangeSelection(id: UUID, selection: NSRange)
         case splitBlock(id: UUID, selection: NSRange)
@@ -161,14 +186,13 @@ extension BlockEditor {
         /// Issues a tap event at a point.
         /// If the point matches a block, and the editor is in selection mode,
         /// this will toggle block selection.
-        case tap(CGPoint)
+        case tapCell(IndexPath?)
         /// Enter edit mode, optionally selecting a block
-        case enterBlockSelectMode(selecting: UUID?)
+        case enterBlockSelectMode(selecting: Set<UUID> = Set())
         /// Exit edit mode. Also de-selects all blocks
         case exitBlockSelectMode
         /// Select a block
         case selectBlock(id: UUID, isSelected: Bool = true)
-        case toggleSelectBlock(id: UUID)
         /// Move the block up one position in the stack.
         /// If block is first block, this does nothing.
         case moveBlockUp(id: UUID)
@@ -183,6 +207,17 @@ extension BlockEditor {
         case activateLink(URL)
         /// Open link in transclude
         case requestFindLinkDetail(EntryLink)
+
+        case becomeTextBlock
+        case becomeHeadingBlock
+        case becomeListBlock
+        case becomeQuoteBlock
+        case deleteBlock
+
+        /// Synonym for `.metaSheet(.setAdress(:))`
+        static func setMetaSheetAddress(_ address: Slashlink?) -> Self {
+            .metaSheet(.setAddress(address))
+        }
     }
 }
 
@@ -192,8 +227,16 @@ extension BlockEditor {
     enum Change: Hashable {
         /// Set the controller to ready state
         case present
-        case reconfigureCollectionItems([IndexPath])
-        case reloadEditor
+        /// Reconfigure specific collection items.
+        /// You can set the animation duration. The default duration of
+        /// 0 means "no animation".
+        case reconfigureCollectionItems(
+            _ indexPaths: [IndexPath],
+            animationDuration: TimeInterval? = nil
+        )
+        case reloadCollectionView(
+            animationDuration: TimeInterval? = nil
+        )
         case moveBlock(
             at: IndexPath,
             to: IndexPath
@@ -215,7 +258,7 @@ extension BlockEditor {
 extension BlockEditor.Model: ModelProtocol {
     typealias Action = BlockEditor.Action
     typealias Environment = AppEnvironment
-    typealias UpdateType = BlockEditor.Model.Update
+    typealias Update = BlockEditor.Update
     
     static func update(
         state: Self,
@@ -223,6 +266,12 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         switch action {
+        case let .metaSheet(action):
+            return metaSheet(
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .scenePhaseChange:
             return scenePhaseChange(
                 state: state,
@@ -386,6 +435,17 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestAssignAddress:
+            return requestAssignAddress(
+                state: state,
+                environment: environment
+            )
+        case let .assignAddress(address):
+            return assignAddress(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case let .textDidChange(id, dom, selection):
             return textDidChange(
                 state: state,
@@ -436,10 +496,11 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 point: point
             )
-        case let .tap(point):
-            return tap(
+        case let .tapCell(indexPath):
+            return tapCell(
                 state: state,
-                point: point
+                indexPath: indexPath,
+                environment: environment
             )
         case let .enterBlockSelectMode(selecting):
             return enterBlockSelectMode(
@@ -454,12 +515,8 @@ extension BlockEditor.Model: ModelProtocol {
             return selectBlock(
                 state: state,
                 id: id,
-                isSelected: isSelected
-            )
-        case let .toggleSelectBlock(id: id):
-            return toggleSelectBlock(
-                state: state,
-                id: id
+                isSelected: isSelected,
+                environment: environment
             )
         case let .moveBlockUp(id):
             return moveBlockUp(
@@ -500,9 +557,43 @@ extension BlockEditor.Model: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .becomeTextBlock:
+            return becomeTextBlock(
+                state: state,
+                environment: environment
+            )
+        case .becomeHeadingBlock:
+            return becomeHeadingBlock(
+                state: state,
+                environment: environment
+            )
+        case .becomeListBlock:
+            return becomeListBlock(
+                state: state,
+                environment: environment
+            )
+        case .becomeQuoteBlock:
+            return becomeQuoteBlock(
+                state: state,
+                environment: environment
+            )
+        case .deleteBlock:
+            return deleteBlock(
+                state: state,
+                environment: environment
+            )
         case .forwardRequestSave(_):
             return Update(state: state)
         }
+    }
+    
+    static func metaSheet(
+        state: Self,
+        action: MemoEditorDetailMetaSheetAction,
+        environment: Environment
+    ) -> Update {
+        logger.warning("Not implemented")
+        return Update(state: state)
     }
 
     static func scenePhaseChange(
@@ -669,7 +760,7 @@ extension BlockEditor.Model: ModelProtocol {
         
         guard let address = address else {
             logger.info("Editor loaded draft (no address)")
-            return Update(state: model)
+            return Update(state: model, changes: [.present])
         }
 
         // Load editor document, transcludes, and related all in one go.
@@ -775,7 +866,7 @@ extension BlockEditor.Model: ModelProtocol {
         let fx: Fx<Action> = refreshTranscludesFx.merge(with: loadRelatedFx)
             .eraseToAnyPublisher()
 
-        return Update(state: model, fx: fx, changes: [.reloadEditor])
+        return Update(state: model, fx: fx, changes: [.reloadCollectionView()])
     }
     
     /// Reload editor if needed, using a last-write-wins strategy.
@@ -840,7 +931,7 @@ extension BlockEditor.Model: ModelProtocol {
             Action.failLoadRelated(error.localizedDescription)
         })
         .eraseToAnyPublisher()
-        
+
         return Update(state: state, fx: fx)
     }
     
@@ -873,16 +964,17 @@ extension BlockEditor.Model: ModelProtocol {
         let owner = state.ownerSphere.map({ did in Peer.did(did) })
         
         // Fetch only the slashlinks that are not in the cache
-        let slashlinksToFetch = state.blocks.blocks.flatMap({ block in
-            block.dom?.parsedSlashlinks ?? []
-        })
-        .filter({ slashlink in
-            state.transcludes[slashlink] == nil
-        })
-        .uniquing()
-        
+        let slashlinksToFetch = state.blocks.blocks
+            .flatMap({ block in
+                block.body.dom.parsedSlashlinks
+            })
+            .filter({ slashlink in
+                state.transcludes[slashlink] == nil
+            })
+            .uniquing()
+
         logger.info("Fetching transcludes for \(slashlinksToFetch)")
-        
+
         let fx: Fx<Action> = Future.detached {
             let transcludes = await environment.transclude.fetchTranscludes(
                 slashlinks: slashlinksToFetch,
@@ -893,7 +985,7 @@ extension BlockEditor.Model: ModelProtocol {
             )
         }
         .eraseToAnyPublisher()
-        
+
         return Update(state: state, fx: fx)
     }
     
@@ -909,10 +1001,9 @@ extension BlockEditor.Model: ModelProtocol {
         var blocks: [BlockEditor.BlockModel] = []
         var indexPaths: [IndexPath] = []
         for (i, block) in state.blocks.blocks.enumerated() {
-            let updatedBlock = block.update { textBlock in
-                textBlock.updateTranscludes(index: model.transcludes)
-            }
-            blocks.append(updatedBlock ?? block)
+            var block = block
+            block.body.updateTranscludes(index: model.transcludes)
+            blocks.append(block)
             
             let indexPath = IndexPath(
                 row: i,
@@ -957,7 +1048,7 @@ extension BlockEditor.Model: ModelProtocol {
             )
         }
         .eraseToAnyPublisher()
-        
+
         return Update(state: state, fx: fx)
     }
     
@@ -1007,15 +1098,9 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         
-        let block = state.blocks.blocks[i]
-        
-        guard let block = block.update({ textBlock in
-            textBlock.updateTranscludes(index: state.transcludes)
-        }) else {
-            Self.logger.log("block#\(id) unable to update as text block. Doing nothing.")
-            return Update(state: state)
-        }
-        
+        var block = state.blocks.blocks[i]
+        block.body.updateTranscludes(index: state.transcludes)
+
         var model = state
         model.blocks.blocks[i] = block
         
@@ -1088,6 +1173,15 @@ extension BlockEditor.Model: ModelProtocol {
         state: Self,
         environment: Environment
     ) -> Update {
+        /// If no address, derive one and update
+        guard state.address != nil else {
+            return update(
+                state: state,
+                action: .requestAssignAddress,
+                environment: environment
+            )
+        }
+
         let snapshot = MemoEntry(state)
         return requestSave(
             state: state,
@@ -1095,7 +1189,48 @@ extension BlockEditor.Model: ModelProtocol {
             environment: environment
         )
     }
-    
+
+    static func requestAssignAddress(
+        state: Self,
+        environment: AppEnvironment
+    ) -> Update {
+        let fx: Fx<BlockEditor.Action> = environment.data
+            .findUniqueAddressForPublisher(
+                state.blocks.description,
+                audience: state.defaultAudience
+            ).map({ address in
+                BlockEditor.Action.assignAddress(address)
+            }).eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    static func assignAddress(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink?
+    ) -> Update {
+        guard let address = address else {
+            logger.info("Did not get address for note")
+            return Update(state: state)
+        }
+
+        var model = state
+        model.address = address
+
+        let snapshot = MemoEntry(state)
+
+        return update(
+            state: model,
+            actions: [
+                .requestSave(snapshot),
+                .setMetaSheetAddress(address)
+            ],
+            environment: environment
+        )
+        .animation(.default)
+    }
+
     static func textDidChange(
         state: Self,
         id: UUID?,
@@ -1114,25 +1249,16 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         
-        let block = state.blocks.blocks[i].setText(
+        var block = state.blocks.blocks[i]
+        block.body.setText(
             dom: dom,
-            selection: selection
+            textSelection: selection
         )
-        
-        guard let block = block else {
-            Self.logger.log("block#\(id) could not update block text. Doing nothing.")
-            return Update(state: state)
-        }
-        
+
         model.blocks.blocks[i] = block
         
         // Mark unsaved
         model.setSaveState(.unsaved)
-        
-        guard let dom = block.dom else {
-            logger.info("block#\(id) no DOM for this block. Skipping transclude load.")
-            return Update(state: model)
-        }
         
         return update(
             state: model,
@@ -1154,12 +1280,8 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         var model = state
-        guard let block = state.blocks.blocks[i].setSelection(
-            selection: selection
-        ) else {
-            Self.logger.log("block#\(id) could not update block selection. Doing nothing.")
-            return Update(state: state)
-        }
+        var block = state.blocks.blocks[i]
+        block.body.setTextSelection(selection)
         model.blocks.blocks[i] = block
         return Update(state: model)
     }
@@ -1176,13 +1298,9 @@ extension BlockEditor.Model: ModelProtocol {
         
         Self.logger.log("block#\(id) splitting at \(nsRange.location)")
         
-        let blockA = state.blocks.blocks[indexA]
-        
-        guard let blockTextA = blockA.dom?.description else {
-            Self.logger.log("block#\(id) cannot split block without text. Doing nothing.")
-            return Update(state: state)
-        }
-        
+        var blockA = state.blocks.blocks[indexA]
+        let blockTextA = blockA.body.dom.description
+
         guard let (textA, textB) = blockTextA.splitAtRange(nsRange) else {
             Self.logger.log(
                 "block#\(id) could not split text at range. Doing nothing."
@@ -1190,24 +1308,23 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         
-        guard let blockA = blockA.setText(
+        blockA.body.setText(
             dom: Subtext(markup: textA),
-            selection: NSRange(location: nsRange.location, length: 0)
-        ) else {
-            Self.logger.log(
-                "block#\(id) could set text. Doing nothing."
+            textSelection: NSRange(location: nsRange.location, length: 0)
+        )
+        
+        var blockB = BlockEditor.BlockModel(
+            blockType: .text,
+            body: BlockEditor.BlockBodyModel(
+                dom: Subtext(markup: textB)
             )
-            return Update(state: state)
-        }
-        
-        var blockB = BlockEditor.TextBlockModel()
-        blockB.dom = Subtext(markup: textB)
-        
+        )
+
         let indexB = state.blocks.blocks.index(after: indexA)
         var model = state
         model.blocks.blocks[indexA] = blockA
         model.blocks.blocks.insert(
-            .text(blockB),
+            blockB,
             at: indexB
         )
         
@@ -1251,31 +1368,22 @@ extension BlockEditor.Model: ModelProtocol {
         Self.logger.log("block#\(id) merging up")
         
         let indexUp = state.blocks.blocks.index(before: indexDown)
-        let blockUp = state.blocks.blocks[indexUp]
-        
-        guard let blockUpText = blockUp.dom?.description else {
-            Self.logger.log("block#\(id) cannot merge up into block without text. Doing nothing.")
-            return Update(state: state)
-        }
+        var blockUp = state.blocks.blocks[indexUp]
+
+        let blockUpText = blockUp.body.dom.description
         
         let blockDown = state.blocks.blocks[indexDown]
-        guard let blockDownText = blockDown.dom?.description else {
-            Self.logger.log("block#\(id) cannot merge non-text block. Doing nothing.")
-            return Update(state: state)
-        }
+        let blockDownText = blockDown.body.dom.description
         
         let selectionNSRange = NSRange(
             blockUpText.endIndex..<blockUpText.endIndex,
             in: blockUpText
         )
         
-        guard let blockUp = blockUp.setText(
+        blockUp.body.setText(
             dom: Subtext(markup: blockUpText + blockDownText),
-            selection: selectionNSRange
-        ) else {
-            Self.logger.log("block#\(id) could not merge text. Doing nothing.")
-            return Update(state: state)
-        }
+            textSelection: selectionNSRange
+        )
         
         var model = state
         model.blocks.blocks[indexUp] = blockUp
@@ -1312,7 +1420,9 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
-            block.setEditing(block.id == id) ?? block
+            var block = block
+            block.body.blockSelection.setEditing(block.id == id)
+            return block
         })
         return Update(state: model)
     }
@@ -1333,7 +1443,9 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
-            block.setEditing(block.id == id) ?? block
+            var block = block
+            block.body.blockSelection.setEditing(block.id == id)
+            return block
         })
         
         return Update(
@@ -1348,8 +1460,9 @@ extension BlockEditor.Model: ModelProtocol {
     ) -> Update {
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
+            var block = block
             if block.id == id {
-                return block.setEditing(false) ?? block
+                block.body.blockSelection.setEditing(false)
             }
             return block
         })
@@ -1372,8 +1485,9 @@ extension BlockEditor.Model: ModelProtocol {
         
         var model = state
         model.blocks.blocks = state.blocks.blocks.map({ block in
+            var block = block
             if block.id == id {
-                return block.setEditing(false) ?? block
+                block.body.blockSelection.setEditing(false)
             }
             return block
         })
@@ -1393,22 +1507,45 @@ extension BlockEditor.Model: ModelProtocol {
         return Update(state: state)
     }
     
-    // TODO: Reimplement
-    // https://github.com/subconsciousnetwork/subconscious/issues/982
-    static func tap(
+    static func tapCell(
         state: Self,
-        point: CGPoint
+        indexPath: IndexPath?,
+        environment: Environment
     ) -> Update {
-        return Update(state: state)
+        guard let indexPath = indexPath else {
+            logger.debug("No index path for tap")
+            return Update(state: state)
+        }
+
+        guard let block = state.blocks.blocks.get(indexPath.row) else {
+            logger.warning("Tap given index path \(indexPath), but no block exists at this index path. Doing nothing.")
+            return Update(state: state)
+        }
+
+        return update(
+            state: state,
+            action: .selectBlock(
+                id: block.id,
+                isSelected: !block.body.blockSelection.isBlockSelected
+            ),
+            environment: environment
+        )
     }
     
     // TODO: Reimplement
     // https://github.com/subconsciousnetwork/subconscious/issues/982
     static func enterBlockSelectMode(
         state: Self,
-        selecting id: UUID?
+        selecting ids: Set<UUID>
     ) -> Update {
-        return Update(state: state)
+        var model = state
+        model.isBlockSelectMenuPresented = true
+        model.blocks.enterBlockSelectMode(selecting: ids)
+        return Update(
+            state: model,
+            changes: [.reloadCollectionView(animationDuration: Duration.fast)]
+        )
+        .animation(.default)
     }
     
     // TODO: Reimplement
@@ -1416,13 +1553,21 @@ extension BlockEditor.Model: ModelProtocol {
     static func exitBlockSelectMode(
         state: Self
     ) -> Update {
-        return Update(state: state)
+        var model = state
+        model.isBlockSelectMenuPresented = false
+        model.blocks.exitBlockSelectMode()
+        return Update(
+            state: model,
+            changes: [.reloadCollectionView(animationDuration: Duration.fast)]
+        )
+        .animation(.default)
     }
     
     static func selectBlock(
         state: Self,
         id: UUID,
-        isSelected: Bool
+        isSelected: Bool,
+        environment: Environment
     ) -> Update {
         guard state.blocks.isBlockSelectMode else {
             Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
@@ -1434,15 +1579,24 @@ extension BlockEditor.Model: ModelProtocol {
         }
         
         var model = state
-        let block = model.blocks.blocks[i]
-        let updatedBlock = block.setBlockSelected(isSelected) ?? block
-        
-        guard block != updatedBlock else {
-            Self.logger.debug("Block selection state did not change.")
-            return Update(state: state)
+        var block = model.blocks.blocks[i]
+
+        block.body.blockSelection.setBlockSelected(isSelected)
+        model.blocks.blocks[i] = block
+
+        let hasSelectedBlocks = model.blocks.blocks.contains(where: { block in
+            block.body.blockSelection.isBlockSelected
+        })
+
+        /// If we've de-selected the last block, then exit block select mode.
+        if !hasSelectedBlocks {
+            return update(
+                state: state,
+                action: .exitBlockSelectMode,
+                environment: environment
+            )
         }
-        model.blocks.blocks[i] = updatedBlock
-        
+
         let indexPath = IndexPath(
             row: i,
             section: BlockEditor.Section.blocks.rawValue
@@ -1450,45 +1604,15 @@ extension BlockEditor.Model: ModelProtocol {
         
         return Update(
             state: model,
-            changes: [.reconfigureCollectionItems([indexPath])]
+            changes: [
+                .reconfigureCollectionItems(
+                    [indexPath],
+                    animationDuration: Duration.fast
+                )
+            ]
         )
     }
-    
-    static func toggleSelectBlock(
-        state: Self,
-        id: UUID
-    ) -> Update {
-        guard state.blocks.isBlockSelectMode else {
-            Self.logger.log("block#\(id) selected, but not in select mode. Doing nothing.")
-            return Update(state: state)
-        }
-        
-        guard let i = state.blocks.blocks.firstIndex(whereID: id) else {
-            return Update(state: state)
-        }
-        
-        var model = state
-        let block = model.blocks.blocks[i]
-        let isSelected = block.isBlockSelected
-        let updatedBlock = block.setBlockSelected(!isSelected) ?? block
-        
-        guard block != updatedBlock else {
-            Self.logger.debug("Block selection state did not change.")
-            return Update(state: state)
-        }
-        model.blocks.blocks[i] = updatedBlock
-        
-        let indexPath = IndexPath(
-            row: i,
-            section: BlockEditor.Section.blocks.rawValue
-        )
-        
-        return Update(
-            state: model,
-            changes: [.reconfigureCollectionItems([indexPath])]
-        )
-    }
-    
+
     static func moveBlockUp(
         state: Self,
         id: UUID
@@ -1586,12 +1710,8 @@ extension BlockEditor.Model: ModelProtocol {
             return Update(state: state)
         }
         
-        let block = state.blocks.blocks[i]
-        
-        guard let text = block.dom?.description else {
-            Self.logger.log("block#\(id) can't insert markup. Block has no text. Doing nothing.")
-            return Update(state: state)
-        }
+        var block = state.blocks.blocks[i]
+        let text = block.body.dom.description
         
         guard let selectedRange = Range(selection, in: text) else {
             Self.logger.log("block#\(id) could not find text in range. Doing nothing.")
@@ -1612,13 +1732,10 @@ extension BlockEditor.Model: ModelProtocol {
             in: replacement.string
         )
         
-        guard let block = block.setText(
+        block.body.setText(
             dom: Subtext(markup: replacement.string),
-            selection: cursorNSRange
-        ) else {
-            Self.logger.log("block#\(id) could not set text. Doing nothing.")
-            return Update(state: state)
-        }
+            textSelection: cursorNSRange
+        )
         
         var model = state
         model.blocks.blocks[i] = block
@@ -1687,7 +1804,7 @@ extension BlockEditor.Model: ModelProtocol {
             logger.info("Could not parse URL as SubSlashlinkURL \(url)")
             return Update(state: state)
         }
-        guard let owner = state.ownerSphere else {
+        guard state.ownerSphere != nil else {
             logger.info("Owner sphere identity is unknown. Doing nothing.")
             return Update(state: state)
         }
@@ -1705,6 +1822,101 @@ extension BlockEditor.Model: ModelProtocol {
         environment: Environment
     ) -> Update {
         return Update(state: state)
+    }
+
+    static func becomeTextBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            var block =  block
+            block.blockType = .text
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
+    }
+
+    static func becomeHeadingBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            var block =  block
+            block.blockType = .heading
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
+    }
+
+    static func becomeListBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            var block =  block
+            block.blockType = .list
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
+    }
+
+    static func becomeQuoteBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let blocks = state.blocks.blocks.map({ block in
+            if !block.body.blockSelection.isBlockSelected {
+                return block
+            }
+            var block =  block
+            block.blockType = .quote
+            return block
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
+    }
+
+    static func deleteBlock(
+        state: Self,
+        environment: Environment
+    ) -> Update {
+        let blocks = state.blocks.blocks.filter({ block in
+            block.body.blockSelection.isBlockSelected
+        })
+        var state = state
+        state.blocks.blocks = blocks
+        return Update(
+            state: state,
+            changes: [.reloadCollectionView()]
+        )
     }
 }
 

@@ -22,15 +22,16 @@ extension UIView {
         private(set) var dom = Subtext.empty
 
         private let defaultTextContainerInset = UIEdgeInsets(
-            top: AppTheme.unit2,
+            top: AppTheme.unit,
             left: AppTheme.padding,
-            bottom: AppTheme.unit2,
+            bottom: AppTheme.unit,
             right: AppTheme.padding
         )
         
         override init(frame: CGRect, textContainer: NSTextContainer?) {
             super.init(frame: frame, textContainer: textContainer)
             // Automatically adjust font size based on system font size
+            self.backgroundColor = .clear
             adjustsFontForContentSizeCategory = true
             font = .preferredFont(forTextStyle: .body)
             textContainerInset = defaultTextContainerInset

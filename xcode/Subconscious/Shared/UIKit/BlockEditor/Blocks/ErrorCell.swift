@@ -12,7 +12,8 @@ extension BlockEditor {
     /// An error cell for when we don't know what else to display
     class ErrorCell:
         UICollectionViewCell,
-        Identifiable
+        Identifiable,
+        BlockCellProtocol
     {
         static let identifier = "ErrorCell"
         
@@ -21,7 +22,7 @@ extension BlockEditor {
         
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .systemBackground
+            self.themeDefault()
             label.text = String(localized: "Unknown cell type")
             contentView.addSubview(label)
         }

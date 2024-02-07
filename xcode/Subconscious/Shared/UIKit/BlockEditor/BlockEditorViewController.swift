@@ -37,7 +37,7 @@ extension BlockEditor {
         )
 
         /// Gesture used to select blocks in selection mode
-        private lazy var tapGesture = UILongPressGestureRecognizer(
+        private lazy var tapGesture = UITapGestureRecognizer(
             target: self,
             action: #selector(onTap)
         )
@@ -104,6 +104,7 @@ extension BlockEditor {
                 appearance: .plain
             )
             config.showsSeparators = false
+
             let layout = UICollectionViewCompositionalLayout.list(
                 using: config
             )
@@ -148,12 +149,15 @@ extension BlockEditor {
             collectionView.delegate = self
             collectionView.dataSource = self
 
+            collectionView.backgroundColor = .accent.withAlphaComponent(0.1)
+
             return collectionView
         }
         
         private func setupViews() {
             // View starts out hidden and is not shown until ready
             view.alpha = 0
+            view.backgroundColor = .accent.withAlphaComponent(0.1)
             view.addSubview(collectionView)
         }
 
@@ -189,8 +193,11 @@ extension BlockEditor {
         @objc private func onTap(_ gesture: UIGestureRecognizer) {
             switch gesture.state {
             case .ended:
+                // Get gesture point
                 let point = gesture.location(in: self.collectionView)
-                store.send(.tap(point))
+                // Get cell index path for point (if any)
+                let indexPath = self.collectionView.indexPathForItem(at: point)
+                store.send(.tapCell(indexPath))
             default:
                 break
             }
@@ -208,10 +215,13 @@ extension BlockEditor {
             switch change {
             case .present:
                 return present()
-            case .reloadEditor:
-                return reloadEditor()
-            case let .reconfigureCollectionItems(indexPaths):
-                return reconfigureCollectionItems(indexPaths)
+            case let .reloadCollectionView(animationDuration):
+                return reloadCollectionView(animationDuration: animationDuration)
+            case let .reconfigureCollectionItems(indexPaths, animationDuration):
+                return reconfigureCollectionItems(
+                    indexPaths: indexPaths,
+                    animationDuration: animationDuration
+                )
             case let .moveBlock(at, to):
                 return moveBlock(at: at, to: to)
             case let .splitBlock(reconfigure, insert, requestEditing):
@@ -235,17 +245,32 @@ extension BlockEditor {
             }
         }
 
-        private func reloadEditor() {
-            UIView.performWithoutAnimation {
-                collectionView.reloadData()
+        private func reloadCollectionView(
+            animationDuration: TimeInterval? = nil
+        ) {
+            if let animationDuration {
+                UIView.animate(withDuration: animationDuration) {
+                    self.collectionView.reloadData()
+                }
+            } else {
+                UIView.performWithoutAnimation {
+                    self.collectionView.reloadData()
+                }
             }
         }
 
         private func reconfigureCollectionItems(
-            _ indexPaths: [IndexPath]
+            indexPaths: [IndexPath],
+            animationDuration: TimeInterval? = nil
         ) {
-            UIView.performWithoutAnimation {
-                self.collectionView.reconfigureItems(at: indexPaths)
+            if let animationDuration {
+                UIView.animate(withDuration: animationDuration) {
+                    self.collectionView.reconfigureItems(at: indexPaths)
+                }
+            } else {
+                UIView.performWithoutAnimation {
+                    self.collectionView.reconfigureItems(at: indexPaths)
+                }
             }
         }
 
@@ -363,30 +388,30 @@ extension BlockEditor {
             forItemAt indexPath: IndexPath
         ) -> UICollectionViewCell {
             let block = store.state.blocks.blocks[indexPath.row]
-            switch block {
-            case let .heading(state):
+            switch block.blockType {
+            case .heading:
                 return headingCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
-            case let .text(state):
+            case .text:
                 return textCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
-            case let .quote(state):
+            case .quote:
                 return quoteCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
-            case let .list(state):
+            case .list:
                 return listCell(
                     collectionView,
                     forItemAt: indexPath,
-                    state: state
+                    state: block
                 )
             }
         }
@@ -394,7 +419,7 @@ extension BlockEditor {
         private func textCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TextBlockCell.identifier,
@@ -411,7 +436,7 @@ extension BlockEditor {
         private func headingCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: HeadingBlockCell.identifier,
@@ -428,7 +453,7 @@ extension BlockEditor {
         private func quoteCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: QuoteBlockCell.identifier,
@@ -445,7 +470,7 @@ extension BlockEditor {
         private func listCell(
             _ collectionView: UICollectionView,
             forItemAt indexPath: IndexPath,
-            state: TextBlockModel
+            state: BlockModel
         ) -> UICollectionViewCell {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: ListBlockCell.identifier,
@@ -481,6 +506,8 @@ extension BlockEditor {
 extension BlockEditor.Action {
     static func from(_ action: BlockEditor.TextBlockAction) -> Self {
         switch action {
+        case let .selectModePressed(id):
+            return .enterBlockSelectMode(selecting: Set([id]))
         case let .boldButtonPressed(id, _, selection):
             return .insertBold(id: id, selection: selection)
         case let .italicButtonPressed(id, _, selection):
@@ -496,9 +523,9 @@ extension BlockEditor.Action {
         case let .didChangeSelection(id, selection):
             return .didChangeSelection(id: id, selection: selection)
         case let .didBeginEditing(id):
-            return .editing(id: id)
+            return .renderEditing(id: id)
         case let .didEndEditing(id):
-            return .blur(id: id)
+            return .renderBlur(id: id)
         case let .upButtonPressed(id):
             return .moveBlockUp(id: id)
         case let .downButtonPressed(id):

@@ -88,7 +88,7 @@ extension Color {
     static let icon = SwiftUI.Color.accentColor
     static let secondaryIcon = SwiftUI.Color.secondary
     static let tertiaryIcon = SwiftUI.Color(
-        uiColor: UIColor.tertiarySystemFill
+        uiColor: UIColor.tertiaryLabel
     )
     static let buttonText = SwiftUI.Color.accentColor
     /// Fill for pressed-state overlays
@@ -186,5 +186,18 @@ extension UIColor {
     /// for light/dark mode.
     static var accent: UIColor {
         UIColor(Color.accentColor)
+    }
+}
+
+extension ShadowStyle {
+    static func brandShadowLg(
+        _ colorScheme: ColorScheme
+    ) -> ShadowStyle {
+        ShadowStyle(
+            color: Color.brandDropShadow(colorScheme).opacity(0.5),
+            radius: 8,
+            x: 0,
+            y: 4
+        )
     }
 }

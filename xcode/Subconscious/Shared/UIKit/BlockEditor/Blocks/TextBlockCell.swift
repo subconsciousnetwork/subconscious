@@ -12,7 +12,8 @@ import ObservableStore
 extension BlockEditor {
     class TextBlockCell:
         UICollectionViewCell,
-        UITextViewDelegate
+        UITextViewDelegate,
+        BlockCellProtocol
     {
         static let identifier = "TextBlockCell"
         
@@ -23,72 +24,30 @@ extension BlockEditor {
         var send: (TextBlockAction) -> Void = { _ in }
         
         private lazy var selectView = BlockEditor.BlockSelectView()
-        private lazy var stackView = UIStackView()
+        private lazy var stackView = UIStackView().vStack()
         private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
                 self?.send(action)
             }
         )
         private var transcludeListView = UIHostingView<TranscludeListView>()
-        
+
         override init(frame: CGRect) {
             super.init(frame: frame)
             
-            contentView.backgroundColor = .systemBackground
-            contentView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.axis = .vertical
-            stackView.spacing = AppTheme.unit
-            stackView.alignment = .fill
-            stackView.distribution = .fill
-            stackView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            contentView.addSubview(stackView)
-            
-            textView.isEditable = true
-            textView.isScrollEnabled = false
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.addArrangedSubview(textView)
+            self.themeDefault()
 
-            stackView.addArrangedSubview(transcludeListView)
-            
-            selectView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(selectView)
-            
-            NSLayoutConstraint.activate([
-                selectView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit
-                ),
-                selectView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -1 * AppTheme.unit
-                ),
-                selectView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                selectView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                ),
-                stackView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
-                ),
-                stackView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
-                ),
-                stackView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                stackView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                )
-            ])
+            contentView
+                .layoutBlock()
+                .addingSubview(selectView) { selectView in
+                    selectView.layoutDefault()
+                }
+                .addingSubview(stackView) { stackView in
+                    stackView
+                        .layoutBlock()
+                        .addingArrangedSubview(self.textView)
+                        .addingArrangedSubview(self.transcludeListView)
+                }
         }
         
         required init?(coder: NSCoder) {
@@ -98,28 +57,32 @@ extension BlockEditor {
         private func send(
             _ event: SubtextTextEditorAction
         ) {
-            self.send(TextBlockAction.from(id: id, action: event))
+            self.send(BlockEditor.TextBlockAction.from(id: id, action: event))
         }
         
         func update(
             parentController: UIViewController,
-            state: BlockEditor.TextBlockModel
+            state: BlockEditor.BlockModel
         ) {
             self.id = state.id
             transcludeListView.update(
                 parentController: parentController,
-                entries: state.transcludes,
-                send: Address.forward(send: send, tag: TextBlockAction.from)
+                entries: state.body.transcludes,
+                send: Address.forward(
+                    send: send,
+                    tag: BlockEditor.TextBlockAction.from
+                )
             )
             textView.setText(
-                state.dom.description,
-                selectedRange: state.selection
+                state.body.dom.description,
+                selectedRange: state.body.textSelection
             )
-            textView.setFirstResponder(state.isEditing)
+            textView.setFirstResponder(state.body.blockSelection.isEditing)
+
             // Set editability of textview
-            textView.setModifiable(!state.isBlockSelectMode)
-            // Handle select mode
-            selectView.isHidden = !state.isBlockSelected
+            textView.setModifiable(!state.body.blockSelection.isBlockSelectMode)
+            // Handle block select mode
+            selectView.update(state.body.blockSelection)
         }
     }
 }
@@ -131,22 +94,24 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
             let controller = UIViewController()
             view.update(
                 parentController: controller,
-                state: BlockEditor.TextBlockModel(
-                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
-                    transcludes: [
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/foo")!,
-                            excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                            headers: .emptySubtext
-                        ),
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/bar")!,
-                            excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                            headers: .emptySubtext
-                        ),
-                    ]
+                state: BlockEditor.BlockModel(
+                    body: BlockEditor.BlockBodyModel(
+                        dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
+                        transcludes: [
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/foo")!,
+                                excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
+                                headers: .emptySubtext
+                            ),
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/bar")!,
+                                excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
+                                headers: .emptySubtext
+                            ),
+                        ]
+                    )
                 )
             )
             return view
@@ -157,24 +122,28 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
             let controller = UIViewController()
             view.update(
                 parentController: controller,
-                state: BlockEditor.TextBlockModel(
-                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
-                    isBlockSelectMode: true,
-                    isBlockSelected: true,
-                    transcludes: [
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/foo")!,
-                            excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                            headers: .emptySubtext
+                state: BlockEditor.BlockModel(
+                    body: BlockEditor.BlockBodyModel(
+                        dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled."),
+                        blockSelection: BlockEditor.BlockSelectionModel(
+                            isBlockSelectMode: true,
+                            isBlockSelected: true
                         ),
-                        EntryStub(
-                            did: Did("did:key:abc123")!,
-                            address: Slashlink("@example/bar")!,
-                            excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                            headers: .emptySubtext
-                        ),
-                    ]
+                        transcludes: [
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/foo")!,
+                                excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
+                                headers: .emptySubtext
+                            ),
+                            EntryStub(
+                                did: Did("did:key:abc123")!,
+                                address: Slashlink("@example/bar")!,
+                                excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
+                                headers: .emptySubtext
+                            ),
+                        ]
+                    )
                 )
             )
             return view

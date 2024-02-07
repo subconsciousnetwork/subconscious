@@ -11,7 +11,8 @@ import SwiftUI
 extension BlockEditor {
     class HeadingBlockCell:
         UICollectionViewCell,
-        UITextViewDelegate
+        UITextViewDelegate,
+        BlockCellProtocol
     {
         static let identifier = "HeadingBlockCell"
         
@@ -19,90 +20,63 @@ extension BlockEditor {
         
         var send: (TextBlockAction) -> Void = { _ in }
 
+        private lazy var stackView = UIStackView().vStack()
         private lazy var selectView = BlockEditor.BlockSelectView()
         private lazy var textView = SubtextTextEditorView(
             send: { [weak self] action in
                 self?.send(action)
             }
         )
-        
+
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.backgroundColor = .systemBackground
             
-            // Automatically adjust font size based on system font size
-            textView.isScrollEnabled = false
-            textView.font = .preferredFont(forTextStyle: .headline)
-            textView.adjustsFontForContentSizeCategory = true
-            textView.textContainerInset = UIEdgeInsets(
-                top: AppTheme.unit2,
-                left: AppTheme.padding,
-                bottom: AppTheme.unit2,
-                right: AppTheme.padding
-            )
-            textView.textContainer.lineFragmentPadding = 0
-            textView.translatesAutoresizingMaskIntoConstraints = false
-            
-            contentView.setContentHuggingPriority(
-                .defaultHigh,
-                for: .vertical
-            )
-            contentView.addSubview(textView)
+            self.themeDefault()
 
-            selectView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview(selectView)
-
-            NSLayoutConstraint.activate([
-                selectView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: AppTheme.unit
-                ),
-                selectView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -1 * AppTheme.unit
-                ),
-                selectView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                selectView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
-                ),
-                textView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor
-                ),
-                textView.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor
-                ),
-                textView.topAnchor.constraint(
-                    equalTo: contentView.topAnchor
-                ),
-                textView.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor
+            textView.modifier({ textView in
+                textView.font = .preferredFont(forTextStyle: .headline)
+                textView.textContainerInset = UIEdgeInsets(
+                    top: AppTheme.unit2,
+                    left: AppTheme.padding,
+                    bottom: AppTheme.unit2,
+                    right: AppTheme.padding
                 )
-            ])
+                textView.textContainer.lineFragmentPadding = 0
+            })
+
+            contentView
+                .layoutBlock()
+                .addingSubview(selectView) { selectView in
+                    selectView.layoutDefault()
+                }
+                .addingSubview(stackView) { stackView in
+                    stackView
+                        .layoutBlock()
+                        .addingArrangedSubview(self.textView)
+                }
         }
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(_ state: BlockEditor.TextBlockModel) {
+        func update(_ state: BlockEditor.BlockModel) {
             self.id = state.id
             textView.setText(
-                state.dom.description,
-                selectedRange: state.selection
+                state.body.dom.description,
+                selectedRange: state.body.textSelection
             )
-            textView.setFirstResponder(state.isEditing)
+            textView.setFirstResponder(state.body.blockSelection.isEditing)
             // Set editability of textview
-            textView.setModifiable(!state.isBlockSelectMode)
-            // Handle select mode
-            selectView.isHidden = !state.isBlockSelected
+            textView.setModifiable(!state.body.blockSelection.isBlockSelectMode)
+            // Handle block select mode
+            selectView.update(state.body.blockSelection)
         }
-        
+
         private func send(
             _ event: SubtextTextEditorAction
         ) {
-            self.send(TextBlockAction.from(id: id, action: event))
+            self.send(BlockEditor.TextBlockAction.from(id: id, action: event))
         }
     }
 }
@@ -112,8 +86,10 @@ struct BlockEditorHeadingBlockCell_Previews: PreviewProvider {
         UIViewPreviewRepresentable {
             let view = BlockEditor.HeadingBlockCell()
             view.update(
-                BlockEditor.TextBlockModel(
-                    dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.")
+                BlockEditor.BlockModel(
+                    body: BlockEditor.BlockBodyModel(
+                        dom: Subtext(markup: "Ashby’s law of requisite variety: If a system is to be stable, the number of states of its control mechanism must be greater than or equal to the number of states in the system being controlled.")
+                    )
                 )
             )
             return view

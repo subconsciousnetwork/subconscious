@@ -10,6 +10,7 @@ import UIKit
 
 extension BlockEditor {
     enum BlockToolbarAction: Hashable {
+        case selectModePressed
         case upButtonPressed
         case downButtonPressed
         case dismissKeyboardButtonPressed
@@ -56,6 +57,14 @@ extension UIToolbar {
 
         let spacer = UIBarButtonItem.flexibleSpace()
         
+        let selectModeButton = UIBarButtonItem(
+            title: String(localized: "Select mode"),
+            image: UIImage(systemName: "checklist"),
+            handle: {
+                send(.selectModePressed)
+            }
+        )
+        
         let formatMenu = UIMenu.blockFormatMenu(
             send: { action in
                 send(BlockEditor.BlockToolbarAction.from(action))
@@ -82,6 +91,7 @@ extension UIToolbar {
                 downButton,
                 spacer,
                 formatButton,
+                selectModeButton,
                 dismissKeyboardButton
             ],
             animated: false

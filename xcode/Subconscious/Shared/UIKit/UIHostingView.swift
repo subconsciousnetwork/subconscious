@@ -38,26 +38,12 @@ class UIHostingView<Content: View>: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        // Add hosting controler view to this view
-        self.addSubview(hostingController.view)
-        
-        hostingController.view
-            .translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            hostingController.view.leadingAnchor.constraint(
-                equalTo: self.leadingAnchor
-            ),
-            hostingController.view.trailingAnchor.constraint(
-                equalTo: self.trailingAnchor
-            ),
-            hostingController.view.topAnchor.constraint(
-                equalTo: self.topAnchor
-            ),
-            hostingController.view.bottomAnchor.constraint(
-                equalTo: self.bottomAnchor
-            )
-        ])
+        self.addingSubview(hostingController.view) { hostingControllerView in
+            hostingControllerView
+                .setting(\.backgroundColor, value: .clear)
+                .layoutBlock()
+        }
+
     }
 
     convenience init(
