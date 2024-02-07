@@ -141,7 +141,8 @@ struct RegexClassifier<Output>: PromptClassifierProtocol {
 }
 
 /// The request context for prompt routes
-struct PromptRouteRequest: Hashable {
+struct PromptRouteRequest {
+    var process: (String) async -> String?
     var input: String
     var classifications: PromptClassifications
 }
@@ -192,12 +193,60 @@ struct PromptClassifier: PromptClassifierProtocol {
     }
 }
 
+/// A prompt router request is intended to live for the lifetime of a single
+/// router processing request.
+actor PromptRouterRequest {
+    private static let maxDepth = 100
+    private var depth = 0
+
+    private var routes: [PromptRouteProtocol]
+    private var classifier: PromptClassifierProtocol
+
+    init(
+        routes: [PromptRouteProtocol] = [],
+        classifier: PromptClassifierProtocol
+    ) {
+        self.routes = routes
+        self.classifier = classifier
+    }
+
+    /// Runs each route in order, returning the first result.
+    /// Routes may to recursively process input with this router using the
+    /// `process` function on the request struct passed to the route.
+    /// A router request instance can recurse like this up to a maximum safe
+    /// recursion depth. If that recursion depth is exceeded, this method
+    /// returns nil.
+    /// - Returns result or nil if no result, or safe recursion depth reached
+    func process(_ input: String) async -> String? {
+        self.depth = depth + 1
+        // Exit if recursion limit has been reached for this request
+        if depth > Self.maxDepth {
+            return nil
+        }
+        let classifications = await classifier.classify(input)
+        let request = PromptRouteRequest(
+            process: self.process,
+            input: input,
+            classifications: classifications
+        )
+        // Try each route in succession until we get a match
+        for route in routes {
+            if let result = await route.route(request) {
+                return result
+            }
+        }
+        return nil
+    }
+}
+
 /// Combine a series of routes into a router for inputs
 /// The first route producing a match is used.
 /// Routes are processed in order. More specific routes should precede more
 /// general ones.
 /// Tip: routes can consider recursively calling the router with new input.
 struct PromptRouter {
+    /// An arbitrary depth at which we stop recursive processing
+    private static let maxProcessDepth = 100
     private var routes: [PromptRouteProtocol]
     private var classifier: PromptClassifierProtocol
 
@@ -216,17 +265,10 @@ struct PromptRouter {
 
     /// Pipe input through a succession of routes until a match is found
     func process(_ input: String) async -> String? {
-        let classifications = await classifier.classify(input)
-        let request = PromptRouteRequest(
-            input: input,
-            classifications: classifications
+        let request = PromptRouterRequest(
+            routes: routes,
+            classifier: classifier
         )
-        // Try each route in succession until we get a match
-        for route in routes {
-            if let result = await route.route(request) {
-                return result
-            }
-        }
-        return nil
+        return await request.process(input)
     }
 }
