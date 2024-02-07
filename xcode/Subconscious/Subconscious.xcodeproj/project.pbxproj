@@ -166,7 +166,6 @@
 		B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057F327DC35BE002C0129 /* Tests_Slug.swift */; };
 		B800ABE8297DE7D20024D1FD /* DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800ABE7297DE7D20024D1FD /* DataService.swift */; };
 		B800ABE9297DE7D20024D1FD /* DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800ABE7297DE7D20024D1FD /* DataService.swift */; };
-		B80640552AF173D400E80DC3 /* Tests_BlockEditorBlockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80640542AF173D400E80DC3 /* Tests_BlockEditorBlockModel.swift */; };
 		B80890A72A056A130087E091 /* SlashlinkDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80890A62A056A130087E091 /* SlashlinkDisplayView.swift */; };
 		B80890A82A056A130087E091 /* SlashlinkDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80890A62A056A130087E091 /* SlashlinkDisplayView.swift */; };
 		B8099F002A3B5A820014FC2E /* MemoRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8099EFF2A3B5A820014FC2E /* MemoRecord.swift */; };
@@ -468,6 +467,7 @@
 		B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */; };
 		B8C80F0129FC201000BAC84D /* Peer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C80F0029FC201000BAC84D /* Peer.swift */; };
 		B8C80F0329FC20A300BAC84D /* Tests_Peer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C80F0229FC20A300BAC84D /* Tests_Peer.swift */; };
+		B8C908A12B7410170063FA96 /* Tests_BlockSelectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C9089F2B7410140063FA96 /* Tests_BlockSelectionModel.swift */; };
 		B8CA8F1E288F07F9005F8802 /* zettelkasten.json in Resources */ = {isa = PBXBuildFile; fileRef = B8CA8F1D288F07F9005F8802 /* zettelkasten.json */; };
 		B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA8F2328908D65005F8802 /* BundleUtilities.swift */; };
 		B8CAA6CB2A02FA7000F4A0F6 /* Link.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CAA6CA2A02FA7000F4A0F6 /* Link.swift */; };
@@ -700,7 +700,6 @@
 		B80057EA27DC355E002C0129 /* SubconsciousTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousTests.swift; sourceTree = "<group>"; };
 		B80057F327DC35BE002C0129 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
 		B800ABE7297DE7D20024D1FD /* DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataService.swift; sourceTree = "<group>"; };
-		B80640542AF173D400E80DC3 /* Tests_BlockEditorBlockModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_BlockEditorBlockModel.swift; sourceTree = "<group>"; };
 		B80890A62A056A130087E091 /* SlashlinkDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlashlinkDisplayView.swift; sourceTree = "<group>"; };
 		B8099EFF2A3B5A820014FC2E /* MemoRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoRecord.swift; sourceTree = "<group>"; };
 		B8099F012A3B6FA50014FC2E /* Tests_MemoRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MemoRecord.swift; sourceTree = "<group>"; };
@@ -916,6 +915,7 @@
 		B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test_Markup.swift; sourceTree = "<group>"; };
 		B8C80F0029FC201000BAC84D /* Peer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Peer.swift; sourceTree = "<group>"; };
 		B8C80F0229FC20A300BAC84D /* Tests_Peer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Peer.swift; sourceTree = "<group>"; };
+		B8C9089F2B7410140063FA96 /* Tests_BlockSelectionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_BlockSelectionModel.swift; sourceTree = "<group>"; };
 		B8CA8F1D288F07F9005F8802 /* zettelkasten.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = zettelkasten.json; sourceTree = "<group>"; };
 		B8CA8F2328908D65005F8802 /* BundleUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleUtilities.swift; sourceTree = "<group>"; };
 		B8CAA6CA2A02FA7000F4A0F6 /* Link.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Link.swift; sourceTree = "<group>"; };
@@ -1162,7 +1162,7 @@
 				B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */,
 				B58CC8E92B0DEC70004CFFEA /* Tests_ArrayUtilities.swift */,
 				B80C9E442A2A7CF100E152FB /* Tests_Audience.swift */,
-				B80640542AF173D400E80DC3 /* Tests_BlockEditorBlockModel.swift */,
+				B8C9089F2B7410140063FA96 /* Tests_BlockSelectionModel.swift */,
 				B53B60172B47F51E007BF747 /* Tests_CardModel.swift */,
 				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
 				B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */,
@@ -2069,7 +2069,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B80640552AF173D400E80DC3 /* Tests_BlockEditorBlockModel.swift in Sources */,
 				B88DFEF129E7454100B00DE8 /* Tests_CombineUtilities.swift in Sources */,
 				B8AC58762AC7568A00F1647D /* Tests_RecoveryPhrase.swift in Sources */,
 				B82FF242298C0DAF0097D688 /* Tests_Noosphere.swift in Sources */,
@@ -2140,6 +2139,7 @@
 				B8B604E9291476E9006FCB77 /* Tests_Migrations.swift in Sources */,
 				B8A617222971E4860054D410 /* Tests_Slashlink.swift in Sources */,
 				B8B3194F2909F36800A1E62A /* Tests_FileFingerprint.swift in Sources */,
+				B8C908A12B7410170063FA96 /* Tests_BlockSelectionModel.swift in Sources */,
 				B8682DCB2804BF04001CD8DD /* Tests_Subtext.swift in Sources */,
 				B88CC956284FCF8C00994928 /* Tests_DatabaseService.swift in Sources */,
 				B8D328BA29A69D2D00850A37 /* Tests_URLUtilities.swift in Sources */,
