@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NaturalLanguage
 
 enum PromptClassificationTag: Hashable {
     case journal
@@ -14,6 +15,7 @@ enum PromptClassificationTag: Hashable {
     case link
     case quote
     case heading
+    case noun(_ text: String)
 }
 
 struct PromptClassification: Hashable, Comparable {
@@ -64,6 +66,41 @@ typealias PromptResults = [PromptResult]
 /// Protocol to implement a classifier
 protocol PromptClassifierProtocol {
     func classify(_ input: String) async -> PromptClassifications
+}
+
+struct KeywordClassifier: PromptClassifierProtocol {
+    let route: ([String], String) async -> PromptClassifications
+    
+    init(
+        route: @escaping ([String], String) -> PromptClassifications
+    ) {
+        self.route = route
+    }
+    
+    private func extractKeywords(from text: String) -> [String] {
+        let tagger = NLTagger(tagSchemes: [.lexicalClass])
+        tagger.string = text
+        
+        let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace, .joinNames]
+        let tags: [NLTag] = [.noun] // Focus on nouns
+
+        var keywords = [String]()
+        
+        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
+            if let tag = tag, tags.contains(tag) {
+                let keyword = String(text[tokenRange])
+                keywords.append(keyword)
+            }
+            return true
+        }
+
+        return keywords
+    }
+    
+    func classify(_ input: String) async -> PromptClassifications {
+        let keywords = extractKeywords(from: input)
+        return await self.route(keywords, input)
+    }
 }
 
 struct SubtextClassifier: PromptClassifierProtocol {

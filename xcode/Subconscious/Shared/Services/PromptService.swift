@@ -27,6 +27,11 @@ actor PromptService {
                 [PromptClassification(tag: .journal, weight: 0.6)]
             }
         )
+        orchestrator.classifier(KeywordClassifier() { keywords, input in
+            keywords.map { k in
+                PromptClassification(tag: .noun(k), weight: 1)
+            }
+        })
         orchestrator.classifier(
             SubtextClassifier() { dom, input in
                 [
