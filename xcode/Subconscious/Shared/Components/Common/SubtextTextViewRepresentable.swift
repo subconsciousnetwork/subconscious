@@ -43,6 +43,7 @@ enum SubtextTextAction: Hashable {
     case setSelection(range: NSRange, text: String)
     /// Set selection at the end of the text
     case setSelectionAtEnd
+    case setSelectionAtStart
     case setEditable(Bool)
 }
 
@@ -93,6 +94,13 @@ struct SubtextTextModel: ModelProtocol {
                 state.text.endIndex...,
                 in: state.text
             )
+            return update(
+                state: state,
+                action: .setSelection(range: range, text: state.text),
+                environment: ()
+            )
+        case .setSelectionAtStart:
+            let range = NSRange(location: 0, length: 0)
             return update(
                 state: state,
                 action: .setSelection(range: range, text: state.text),

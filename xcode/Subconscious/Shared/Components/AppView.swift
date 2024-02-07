@@ -9,6 +9,7 @@ import SwiftUI
 import ObservableStore
 import os
 import Combine
+import SentrySwiftUI
 
 /// Top-level view for app
 struct AppView: View {
@@ -85,6 +86,7 @@ struct AppView: View {
         .onChange(of: self.scenePhase) { phase in
             store.send(.scenePhaseChange(phase))
         }
+        .sentryTrace("AppView")
     }
 }
 
@@ -161,8 +163,7 @@ enum AppAction: Hashable {
 
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
-    case persistFeedTabEnabled(Bool)
-    case persistDeckTabEnabled(Bool)
+    case persistNoosphereLogLevel(Noosphere.NoosphereLogLevel)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -299,16 +300,36 @@ enum AppAction: Hashable {
     //  own store, and then replay these as equivalent actions on the app
     //  store. The component subscribes to the app store's actions publisher
     //  and responds to "succeed" actions.
-    /// Attempt to delete a memo
-    case deleteMemo(Slashlink?)
-    /// Deletion attempt failed
+    case saveEntry(MemoEntry)
+    case deleteEntry(Slashlink?)
+    case mergeEntry(parent: Slashlink, child: Slashlink)
+    case moveEntry(from: Slashlink, to: Slashlink)
+    case updateAudience(address: Slashlink, audience: Audience)
+    case assignColor(address: Slashlink, color: ThemeColor)
+    
+    // These notifications will be passe down to child stores to update themselves accordingly.
+    case succeedSaveEntry(address: Slashlink, modified: Date)
+    case succeedDeleteEntry(Slashlink)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedUpdateAudience(MoveReceipt)
+    case succeedAssignNoteColor(address: Slashlink, color: ThemeColor)
+    case failSaveEntry(address: Slashlink, error: String)
     case failDeleteMemo(String)
-    /// Deletion attempt succeeded
-    case succeedDeleteMemo(Slashlink)
+    case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
+    case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
+    case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
+    case failAssignNoteColor(address: Slashlink, error: String)
+    
+    case succeedLogActivity
+    case failLogActivity(_ error: String)
+    
+    case appendToEntry(address: Slashlink, append: String)
+    case succeedAppendToEntry(address: Slashlink)
+    case failAppendToEntry(address: Slashlink, _ error: String)
     
     case setSelectedAppTab(AppTab)
     case requestNotebookRoot
-    case requestFeedRoot
     case requestProfileRoot
     case requestDeckRoot
     
@@ -543,8 +564,7 @@ struct AppModel: ModelProtocol {
     
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
-    var isFeedTabEnabled = false
-    var isDeckTabEnabled = false
+    var noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic
 
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
@@ -875,17 +895,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isBlockEditorEnabled: isBlockEditorEnabled
             )
-        case let .persistFeedTabEnabled(isFeedTabEnabled):
-            return persistFeedTabEnabled(
+        case let .persistNoosphereLogLevel(level):
+            return persistNoosphereLogLevel(
                 state: state,
                 environment: environment,
-                isFeedTabEnabled: isFeedTabEnabled
-            )
-        case let .persistDeckTabEnabled(isDeckTabEnabled):
-            return persistDeckTabEnabled(
-                state: state,
-                environment: environment,
-                isDeckTabEnabled: isDeckTabEnabled
+                level: level
             )
         case .resetNoosphereService:
             return resetNoosphereService(
@@ -1171,7 +1185,7 @@ struct AppModel: ModelProtocol {
                 petname: petname
             )
         // MARK: Note management
-        case let .deleteMemo(address):
+        case let .deleteEntry(address):
             return deleteMemo(
                 state: state,
                 environment: environment,
@@ -1183,8 +1197,8 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case let .succeedDeleteMemo(address):
-            return succeedDeleteMemo(
+        case let .succeedDeleteEntry(address):
+            return succeedDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
@@ -1195,13 +1209,7 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 tab: tab
             )
-        case .requestNotebookRoot:
-            return Update(state: state)
-        case .requestFeedRoot:
-            return Update(state: state)
-        case .requestProfileRoot:
-            return Update(state: state)
-        case .requestDeckRoot:
+        case .requestNotebookRoot, .requestProfileRoot, .requestDeckRoot:
             return Update(state: state)
         case .checkRecoveryStatus:
             return checkRecoveryStatus(
@@ -1223,6 +1231,150 @@ struct AppModel: ModelProtocol {
         case .succeedRecoverOurSphere:
             return succeedRecoverOurSphere(
                 state: state,
+                environment: environment
+            )
+        case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
+                .succeedAssignNoteColor, .succeedAppendToEntry:
+            return Update(state: state)
+        case .succeedSaveEntry(address: let address, modified: let modified):
+            return succeedSaveEntry(
+                state: state,
+                environment: environment,
+                address: address,
+                modified: modified
+            )
+        case let .saveEntry(entry):
+            return saveEntry(
+                state: state,
+                environment: environment,
+                entry: entry
+            )
+        case let .appendToEntry(address, append):
+            return appendToEntry(
+                state: state,
+                environment: environment,
+                address: address,
+                append: append
+            )
+        case let .moveEntry(from, to):
+            return moveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .mergeEntry(parent, child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case let .updateAudience(address, audience):
+            return updateAudience(
+                state: state,
+                environment: environment,
+                address: address,
+                audience: audience
+            )
+        case let .assignColor(address, color):
+            return assignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
+            )
+        case let .failSaveEntry(address, error):
+            logger.warning(
+                """
+                Failed to save entry: \(address)
+                \(error)
+                """
+            )
+            
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not save note"
+                ),
+                environment: environment
+            )
+        case let .failAppendToEntry(address, error):
+            logger.warning(
+                """
+                Failed to append to entry: \(address)
+                \(error)
+                """
+            )
+            
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not append to note"
+                ),
+                environment: environment
+            )
+        case let .failMoveEntry(from, to, error):
+            logger.warning(
+                """
+                Failed to move entry: \(from) -> \(to)
+                \(error)
+                """
+            )
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not move note"
+                ),
+                environment: environment
+            )
+        case let .failMergeEntry(parent, child, error):
+            logger.warning(
+                """
+                Failed to merge entries: \(child) -> \(parent)
+                \(error)
+                """
+            )
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not merge notes"
+                ),
+                environment: environment
+            )
+        case let .failUpdateAudience(address, audience, error):
+            logger.warning(
+                """
+                Failed to update audience for entry: \(address) \(audience)
+                \(error)
+                """
+            )
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not change audience"
+                ),
+                environment: environment
+            )
+        case let .failLogActivity(error):
+            logger.warning(
+                """
+                Failed to log activity: \(error)
+                """
+            )
+            return Update(state: state)
+        case let .failAssignNoteColor(address, error):
+            logger.warning(
+                """
+                Failed to assign color for entry: \(address)
+                \(error)
+                """
+            )
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not set color"
+                ),
                 environment: environment
             )
         }
@@ -1248,9 +1400,8 @@ struct AppModel: ModelProtocol {
         model.gatewayId = AppDefaults.standard.gatewayId
         model.inviteCode = InviteCode(AppDefaults.standard.inviteCode ?? "")
         model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
+        model.noosphereLogLevel = Noosphere.NoosphereLogLevel(description: AppDefaults.standard.noosphereLogLevel)
         model.isBlockEditorEnabled = AppDefaults.standard.isBlockEditorEnabled
-        model.isFeedTabEnabled = AppDefaults.standard.isFeedTabEnabled
-        model.isDeckTabEnabled = AppDefaults.standard.isDeckTabEnabled
         
         // Update model from app defaults
         return update(
@@ -1631,27 +1782,15 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func persistFeedTabEnabled(
+    static func persistNoosphereLogLevel(
         state: AppModel,
         environment: AppEnvironment,
-        isFeedTabEnabled: Bool
+        level: Noosphere.NoosphereLogLevel
     ) -> Update<AppModel> {
         // Persist value
-        AppDefaults.standard.isFeedTabEnabled = isFeedTabEnabled
+        AppDefaults.standard.noosphereLogLevel = level.description
         var model = state
-        model.isFeedTabEnabled = isFeedTabEnabled
-        return Update(state: model)
-    }
-    
-    static func persistDeckTabEnabled(
-        state: AppModel,
-        environment: AppEnvironment,
-        isDeckTabEnabled: Bool
-    ) -> Update<AppModel> {
-        // Persist value
-        AppDefaults.standard.isDeckTabEnabled = isDeckTabEnabled
-        var model = state
-        model.isDeckTabEnabled = isDeckTabEnabled
+        model.noosphereLogLevel = level
         return Update(state: model)
     }
 
@@ -2015,17 +2154,27 @@ struct AppModel: ModelProtocol {
         var model = state
         model.lastGatewaySyncStatus = .failed(error)
         
+        
+        var actions: [AppAction] = [
+            .indexOurSphere,
+            .toastStack(
+                .pushToast(
+                    message: "Sync failed",
+                    image: "exclamationmark.arrow.triangle.2.circlepath"
+                )
+            )
+        ]
+        
+        // If we have a gateway ID but sync failed then provisioning may have failed / timed out.
+        // Let's retry in-case it suddenly resolves the issue.
+        if let _ = state.gatewayId,
+           state.gatewayProvisioningStatus != .succeeded {
+            actions.append(.requestGatewayProvisioningStatus)
+        }
+        
         return update(
             state: model,
-            actions: [
-                .indexOurSphere,
-                .toastStack(
-                    .pushToast(
-                        message: "Sync failed",
-                        image: "exclamationmark.arrow.triangle.2.circlepath"
-                    )
-                )
-            ],
+            actions: actions,
             environment: environment
         ).animation()
     }
@@ -2731,7 +2880,7 @@ struct AppModel: ModelProtocol {
         let fx: Fx<Action> = environment.data
             .deleteMemoPublisher(address)
             .map({ _ in
-                Action.succeedDeleteMemo(address)
+                Action.succeedDeleteEntry(address)
             })
             .recover({ error in
                 Action.failDeleteMemo(error.localizedDescription)
@@ -2756,7 +2905,7 @@ struct AppModel: ModelProtocol {
     }
 
     /// Entry delete succeeded
-    static func succeedDeleteMemo(
+    static func succeedDeleteEntry(
         state: Self,
         environment: Environment,
         address: Slashlink
@@ -2780,8 +2929,6 @@ struct AppModel: ModelProtocol {
         if tab == state.selectedAppTab {
             let action = Func.run {
                 switch (tab) {
-                case .feed:
-                    return AppAction.requestFeedRoot
                 case .deck:
                     return AppAction.requestDeckRoot
                 case .notebook:
@@ -2891,6 +3038,185 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
+    
+    static func saveEntry(
+        state: Self,
+        environment: AppEnvironment,
+        entry: MemoEntry
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = environment.data.writeEntryPublisher(
+            entry
+        ).map({ _ in
+            .succeedSaveEntry(address: entry.address, modified: entry.contents.modified)
+        }).recover({ error in
+            .failSaveEntry(
+                address: entry.address,
+                error: error.localizedDescription
+            )
+        }).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func appendToEntry(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink,
+        append: String
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = Future.detached {
+            try await environment.data.appendToEntry(address: address, append: append)
+            return .succeedAppendToEntry(address: address)
+        }
+        .recover { error in
+            .failAppendToEntry(address: address, error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    struct SucceedSaveEntryActivityEvent: Codable {
+        public static let event = "save_entry"
+        public let address: String
+    }
+    
+    static func succeedSaveEntry(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink,
+        modified: Date
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = Future.detached {
+            try environment.database.writeActivity(
+                event: ActivityEvent(
+                    category: .system,
+                    event: SucceedSaveEntryActivityEvent.event,
+                    message: "",
+                    metadata: SucceedSaveEntryActivityEvent(address: address.description)
+                )
+            )
+            
+            return .succeedLogActivity
+        }
+        .recover { error in 
+            .failLogActivity(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        logger.log(
+            "Saved entry",
+            metadata: [
+                "address": address.description
+            ]
+        )
+        return Update(state: state, fx: fx)
+    }
+    
+    static func mergeEntry(
+        state: Self,
+        environment: AppEnvironment,
+        parent: Slashlink,
+        child: Slashlink
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = environment.data.mergeEntryPublisher(
+            parent: parent,
+            child: child
+        ).map({ _ in
+            .succeedMergeEntry(parent: parent, child: child)
+        }).recover{ error in
+            .failMergeEntry(
+                parent: parent,
+                child: child,
+                error: error.localizedDescription
+            )
+        }.eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    static func moveEntry(
+        state: Self,
+        environment: AppEnvironment,
+        from: Slashlink,
+        to: Slashlink
+    ) -> Update<Self> {
+        let fx: Fx<AppAction> = environment.data.moveEntryPublisher(
+            from: from,
+            to: to
+        )
+        .map({ _ in
+            .succeedMoveEntry(from: from, to: to)
+        })
+        .recover{ error in
+            .failMoveEntry(
+                from: from,
+                to: to,
+                error: error.localizedDescription
+            )
+        }.eraseToAnyPublisher()
+        
+        return Update(
+            state: state,
+            fx: fx
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+    
+    static func updateAudience(
+        state: Self,
+        environment: AppEnvironment,
+        address: Slashlink,
+        audience: Audience
+    ) -> Update<Self> {
+        let from = address
+        let to = from.withAudience(audience)
+
+        let fx: Fx<AppAction> = environment.data.moveEntryPublisher(
+            from: from,
+            to: to
+        ).map({ receipt in
+            .succeedUpdateAudience(receipt)
+        }).recover{ error in
+            .failUpdateAudience(
+                address: address,
+                audience: audience,
+                error: error.localizedDescription
+            )
+        }.eraseToAnyPublisher()
+
+        return Update(
+            state: state,
+            fx: fx
+        )
+    }
+    
+    static func assignNoteColor(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        color: ThemeColor
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            try await environment.data.assignNoteColor(
+                address: address,
+                color: color
+            )
+            
+            return .succeedAssignNoteColor(
+                address: address,
+                color: color
+            )
+        }
+        .recover { error in
+            return .failAssignNoteColor(
+                address: address,
+                error: error.localizedDescription
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
 }
 
 // MARK: Environment
@@ -2915,7 +3241,10 @@ struct AppEnvironment {
     var gatewayProvisioningService: GatewayProvisioningService
     
     var pasteboard = UIPasteboard.general
-    
+
+    /// Service for generating creative prompts and oblique strategies
+    var prompt = PromptService.default
+
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
         Timer.publish(
@@ -2951,6 +3280,7 @@ struct AppEnvironment {
         )
         let defaultGateway = GatewayURL(AppDefaults.standard.gatewayURL)
         let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
+        let defaultLogLevel = Noosphere.NoosphereLogLevel(description: AppDefaults.standard.noosphereLogLevel)
         
         let sentry = SentryIntegration()
 
@@ -2958,7 +3288,7 @@ struct AppEnvironment {
         let noosphereLogLevel: Noosphere.NoosphereLogLevel = (
             Config.default.debug ?
                 .academic :
-                .basic
+                defaultLogLevel
         )
 
         let noosphere = NoosphereService(

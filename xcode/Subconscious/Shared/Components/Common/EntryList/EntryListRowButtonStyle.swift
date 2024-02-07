@@ -13,10 +13,11 @@ struct EntryListRowButtonStyle: ButtonStyle {
         cornerRadius: AppTheme.cornerRadiusLg
     )
     var color: Color
+    var padding: CGFloat = AppTheme.unit3
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(AppTheme.unit3)
+            .padding(padding)
             .expandAlignedLeading()
             .background(color)
             .overlay(
@@ -28,12 +29,7 @@ struct EntryListRowButtonStyle: ButtonStyle {
             .contentShape(Self.roundedRect)
             .clipShape(Self.roundedRect)
             .animation(.default, value: configuration.isPressed)
-            .shadow(
-                color: DeckTheme.cardShadow.opacity(0.08),
-                radius: 1.5,
-                x: 0,
-                y: 1.5
-            )
+            .shadow(style: .transclude)
     }
 }
 

@@ -66,6 +66,8 @@ final class DatabaseService {
         category: "DatabaseService"
     )
     
+    private static let jsonDecoder = JSONDecoder()
+    
     init(
         database: SQLite3Database,
         migrations: Migrations
@@ -489,7 +491,7 @@ final class DatabaseService {
 
         let results = try database.execute(
             sql: """
-            SELECT slashlink, modified, length(body) > length(excerpt), excerpt
+            SELECT slashlink, excerpt, headers
             FROM memo
             WHERE did = ?
                 AND slug = ?
@@ -502,25 +504,24 @@ final class DatabaseService {
             ]
         )
 
-        return results.compactMap({ row in
+        return try results.compactMap({
+            row in
             guard
                 let address = row.col(0)?
                     .toString()?
-                    .toSlashlink(),
-                let modified = row.col(1)?.toDate(),
-                let isTruncated = row.col(2)?.toBool()
+                    .toSlashlink()
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(1)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(2)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                isTruncated: isTruncated,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -562,7 +563,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
+            SELECT did, slashlink, excerpt, headers
             FROM memo
             WHERE did NOT IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -573,29 +574,50 @@ final class DatabaseService {
                 .json(ignoredDids, or: "[]")
             ]
         )
-        return results.compactMap({ row in
+        return try results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
                 let slashlink = row.col(1)?
                     .toString()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let isTruncated = row.col(3)?.toBool()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: slashlink,
                 excerpt: excerpt,
-                isTruncated: isTruncated,
-                modified: modified
+                headers: headers
             )
         })
+    }
+    
+    func parseHeadersJson(json: String) throws -> WellKnownHeaders {
+        var headers: [Header] = []
+        let jsonData = Data(json.utf8)
+        let headersArray = try JSONDecoder().decode(
+            [[String: String]].self,
+            from: jsonData
+        )
+        
+        for header in headersArray {
+            if let name = header["name"],
+               let value = header["value"] {
+                headers.append(Header(name: name, value: value))
+            }
+        }
+        
+        return WellKnownHeaders(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension
+        ).updating(headers)
     }
     
     /// List recent entries
@@ -614,7 +636,7 @@ final class DatabaseService {
         
         let results = try database.execute(
             sql: """
-            SELECT did, id, modified, length(body) > length(excerpt), excerpt
+            SELECT did, id, excerpt, headers
             FROM memo
             WHERE did IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
@@ -625,28 +647,26 @@ final class DatabaseService {
                 .json(dids, or: "[]")
             ]
         )
-        return results.compactMap({ row in
+        return try results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let isTruncated = row.col(3)?.toBool()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                isTruncated: isTruncated,
-                modified: modified
+                headers: headers
             )
         })
     }
@@ -933,6 +953,65 @@ final class DatabaseService {
             results: results
         )
     }
+    
+    /// Map "Append Link" results into suggested actions
+    static func collateAppendLinkSuggestions(
+        current: Slashlink,
+        results: [Slashlink]
+    ) -> [AppendLinkSuggestion] {
+        return results.map { result in
+            .append(
+                address: current,
+                target: result
+            )
+        }
+    }
+    
+    /// Given a query and a `current` slug, produce an array of suggestions
+    /// for notes to append a link to.
+    func searchAppendLink(
+        owner: Did?,
+        query: String,
+        current: Slashlink
+    ) throws -> [AppendLinkSuggestion] {
+        guard self.state == .ready else {
+            return []
+        }
+        
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+
+        let results: [Slashlink] = try database
+            .execute(
+                sql: """
+                SELECT id
+                FROM memo_search
+                WHERE memo_search MATCH ?
+                    AND did IN (SELECT value FROM json_each(?))
+                    AND substr(memo_search.slug, 1, 1) != '_'
+                ORDER BY rank
+                LIMIT 25
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query),
+                    .json(dids, or: "[]")
+                ]
+            )
+            .compactMap({ row in
+                row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner)
+            })
+        
+        return Self.collateAppendLinkSuggestions(
+            current: current,
+            results: results
+        )
+    }
 
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
@@ -1053,6 +1132,81 @@ final class DatabaseService {
         return query
     }
     
+    // Transform a database result into a well-formed EntryStub
+    private func hydrateEntryStub(owner: Did?, row: SQLite3Database.Row) throws  -> EntryStub? {
+        guard let did = row.col(0)?.toString()?.toDid() else {
+            return nil
+        }
+        
+        let petname = row.col(1)?.toString()?.toPetname()
+        let slug = row.col(2)?.toString()?.toSlug()
+        let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+        let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
+        switch (petname, slug) {
+        case let (.some(petname), .some(slug)):
+            return EntryStub(
+                did: did,
+                address: Slashlink(
+                    peer: Peer.petname(petname),
+                    slug: slug
+                ),
+                excerpt: excerpt,
+                headers: headers
+            )
+        case let (.none, .some(slug)):
+            let address = Slashlink(
+                peer: Peer.did(did),
+                slug: slug
+            ).relativizeIfNeeded(did: owner)
+            return EntryStub(
+                did: did,
+                address: address,
+                excerpt: excerpt,
+                headers: headers
+            )
+        default:
+            return nil
+        }
+    }
+
+    
+    func readEntryBodyLinks(
+        owner: Did?,
+        did: Did,
+        slug: Slug
+    ) throws -> [EntryStub] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        
+        // Get links from body.
+        // Use content indexed in database, even though it might be stale.
+        return try database.execute(
+            sql: """
+            WITH json_slugs AS (
+              SELECT value->>'description' AS slug
+              FROM json_each((SELECT links FROM memo WHERE slug = ? AND did = ?))
+            )
+            SELECT m.did,
+                peer.petname,
+                m.slug,
+                m.excerpt,
+                m.headers
+            FROM memo m
+            LEFT JOIN peer ON m.did = peer.did
+            JOIN json_slugs js ON m.slug = js.slug;
+            LIMIT 200
+            """,
+            parameters: [
+                .text(slug.description),
+                .text(did.description)
+            ]
+        )
+        .compactMap({ row in
+           return try hydrateEntryStub(owner: owner, row: row)
+        })
+    }
+    
     func readEntryBacklinks(
         owner: Did?,
         did: Did,
@@ -1070,9 +1224,8 @@ final class DatabaseService {
                 memo_search.did,
                 peer.petname,
                 memo_search.slug,
-                memo_search.modified,
-                length(memo_search.body) > length(memo_search.excerpt),
-                memo_search.excerpt
+                memo_search.excerpt,
+                memo_search.headers
             FROM memo_search
             LEFT JOIN peer ON memo_search.did = peer.did
             WHERE memo_search.description MATCH ?
@@ -1085,43 +1238,8 @@ final class DatabaseService {
                 .queryFTS5(link.slug.description),
                 .text(link.id)
             ]
-        ).compactMap({ row -> EntryStub? in
-            guard let did = row.col(0)?.toString()?.toDid() else {
-                return nil
-            }
-            
-            let petname = row.col(1)?.toString()?.toPetname()
-            let slug = row.col(2)?.toString()?.toSlug()
-            let modified = row.col(3)?.toDate()
-            let isTruncated = row.col(4)?.toBool() ?? false
-            let excerpt = Subtext(markup: row.col(5)?.toString() ?? "")
-            switch (petname, slug, modified) {
-            case let (.some(petname), .some(slug), .some(modified)):
-                return EntryStub(
-                    did: did,
-                    address: Slashlink(
-                        peer: Peer.petname(petname),
-                        slug: slug
-                    ),
-                    excerpt: excerpt,
-                    isTruncated: isTruncated,
-                    modified: modified
-                )
-            case let (.none, .some(slug), .some(modified)):
-                let address = Slashlink(
-                    peer: Peer.did(did),
-                    slug: slug
-                ).relativizeIfNeeded(did: owner)
-                return EntryStub(
-                    did: did,
-                    address: address,
-                    excerpt: excerpt,
-                    isTruncated: isTruncated,
-                    modified: modified
-                )
-            default:
-                return nil
-            }
+        ).compactMap({ row in
+            return try hydrateEntryStub(owner: owner, row: row)
         })
     }
     
@@ -1136,7 +1254,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, length(body) > length(excerpt), excerpt
+            SELECT did, id, excerpt, headers
             FROM memo_search
             WHERE memo_search.modified BETWEEN ? AND ?
                 AND substr(memo_search.slug, 1, 1) != '_'
@@ -1154,21 +1272,19 @@ final class DatabaseService {
                 let address = row.col(1)?
                     .toString()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let isTruncated = row.col(3)?.toBool()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                isTruncated: isTruncated,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -1181,10 +1297,10 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
+            SELECT did, slashlink, excerpt, headers
             FROM memo
             WHERE substr(memo.slug, 1, 1) != '_'
-            AND length(excerpt) > 100
+            AND length(excerpt) > 64
             AND slashlink NOT IN (SELECT value FROM json_each(?))
             ORDER BY RANDOM()
             LIMIT 1
@@ -1196,21 +1312,19 @@ final class DatabaseService {
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
-                    .toSlashlink(),
-                let modified = row.col(2)?.toDate(),
-                let isTruncated = row.col(3)?.toBool()
+                    .toSlashlink()
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                isTruncated: isTruncated,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -1224,7 +1338,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT did, slashlink, modified, length(body) > length(excerpt), excerpt
+            SELECT did, slashlink, excerpt, headers
             FROM memo
             WHERE substr(memo.slug, 1, 1) != '_'
             ORDER BY RANDOM()
@@ -1236,21 +1350,19 @@ final class DatabaseService {
                 let did = row.col(0)?.toString()?.toDid(),
                 let address = row.col(1)?
                     .toString()?
-                    .toSlashlink(),
-                let modified = row.col(2)?.toDate(),
-                let isTruncated = row.col(3)?.toBool()
+                    .toSlashlink()
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                isTruncated: isTruncated,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -1267,7 +1379,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT did, id, modified, length(body) > length(excerpt), excerpt
+            SELECT did, id, excerpt, headers
             FROM memo_search
             WHERE description MATCH ?
                 AND substr(slug, 1, 1) != '_'
@@ -1285,21 +1397,19 @@ final class DatabaseService {
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: owner),
-                let modified = row.col(2)?.toDate(),
-                let isTruncated = row.col(3)?.toBool()
+                    .relativizeIfNeeded(did: owner)
             else {
                 return nil
             }
             
-            let excerpt = Subtext(markup: row.col(4)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
                 address: address,
                 excerpt: excerpt,
-                isTruncated: isTruncated,
-                modified: modified
+                headers: headers
             )
         })
         .first
@@ -1313,7 +1423,8 @@ final class DatabaseService {
         
         let dids = [
             Did.local.description,
-            owner.description]
+            owner.description
+        ]
         
         return try? database.execute(
             sql: """
@@ -1346,8 +1457,62 @@ final class DatabaseService {
         })
         .first
     }
+    
+    /// Record a user or system activity for later reference
+    func writeActivity<Data: Codable>(event: ActivityEvent<Data>) throws {
+        guard self.state == .ready else {
+            return
+        }
+        
+        try database.execute(
+            sql: """
+            INSERT INTO activity (category, event, message, metadata)
+            VALUES (?, ?, ?, ?)
+            """,
+            parameters: [
+                .text(event.category.rawValue),
+                .text(event.event),
+                .text(event.message),
+                .json(event.metadata, or: "{}")
+            ]
+        )
+    }
+    
+    /// List activity events of a certain type, in reverse chronological order
+    func listActivityEventType<Data: Codable>(eventType: String) throws -> [ActivityEvent<Data>] {
+        let results = try database.execute(
+            sql: """
+                 SELECT category, event, message, metadata
+                 FROM activity
+                 WHERE event = ?
+                 ORDER BY created DESC
+                 LIMIT 1000
+                 """,
+            parameters: [.text(
+                eventType
+            )]
+         )
+                         
+         return results.compactMap { row -> ActivityEvent<Data>? in
+             guard let category = row.col(0)?.toString(),
+                   let category = ActivityEventCategory(rawValue: category),
+                   let event = row.col(1)?.toString(),
+                   let message = row.col(2)?.toString(),
+                   let metadata = row.col(3)?.toString()?.data(using: .utf8),
+                   let metadata = try? JSONDecoder().decode(Data.self, from: metadata)
+             else {
+                 return nil
+             }
+             
+             return ActivityEvent<Data>(
+                category: category,
+                event: event,
+                message: message,
+                metadata: metadata
+             )
+         }
+    }
 }
-
 
 // MARK: Migrations
 extension Config {
@@ -1529,6 +1694,21 @@ extension Config {
                     new.size
                 );
             END;
+            """
+        ),
+        SQLMigration(
+            version: Int.from(iso8601String: "2024-01-10T11:59:00")!,
+            sql: """
+            /* Tracks `ActivityEvent`s in a queryable stream */
+            CREATE TABLE activity
+            (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                category TEXT                           NOT NULL,
+                event    TEXT                           NOT NULL,
+                message  TEXT DEFAULT ''                NOT NULL,
+                metadata TEXT DEFAULT '{}'              NOT NULL,
+                created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+            );
             """
         )
     ])

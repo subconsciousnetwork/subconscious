@@ -14,14 +14,18 @@ struct TranscludeButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) var colorScheme
     
-    var color: Color
-    
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.vertical, AppTheme.unit3)
             .padding(.horizontal, AppTheme.unit3)
             .expandAlignedLeading()
-            .background(color)
+            .background(
+                .background.opacity(
+                    colorScheme == .dark
+                    ? 0.1
+                    : 0.5
+                )
+            )
             .overlay(
                 Rectangle()
                     .fill(configuration.isPressed
@@ -30,6 +34,7 @@ struct TranscludeButtonStyle: ButtonStyle {
             )
             .contentShape(Self.roundedRect)
             .clipShape(Self.roundedRect)
+            .cornerRadius(AppTheme.cornerRadiusLg, corners: .allCorners)
             .animation(.default, value: configuration.isPressed)
     }
 }
@@ -42,7 +47,7 @@ struct TranscludeButtonStyle_Previews: PreviewProvider {
                 Text("Test")
             }
         ).buttonStyle(
-            TranscludeButtonStyle(color: Color.secondary)
+            TranscludeButtonStyle()
         )
     }
 }

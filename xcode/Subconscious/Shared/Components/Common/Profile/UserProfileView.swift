@@ -32,30 +32,34 @@ struct RecentTabView: View {
     var body: some View {
         if let user = store.state.user,
            let recent = store.state.recentEntries {
-            ForEach(recent) { entry in
-                StoryEntryView(
-                    story: StoryEntry(
-                        entry: entry,
-                        author: user
-                    ),
-                    onRequestDetail: { address, excerpt in
-                        notify(
-                            .requestDetail(
-                                .from(
-                                    address: address,
-                                    fallback: excerpt
+            LazyVStack(spacing: AppTheme.unit2) {
+                ForEach(recent) { entry in
+                    StoryEntryView(
+                        story: StoryEntry(
+                            entry: entry,
+                            author: user
+                        ),
+                        onRequestDetail: { address, excerpt in
+                            notify(
+                                .requestDetail(
+                                    .from(
+                                        address: address,
+                                        fallback: excerpt
+                                    )
                                 )
                             )
-                        )
-                    },
-                    onLink: { link in
-                        notify(.requestFindLinkDetail(link))
-                    }
-                )
-                
-                Divider()
+                        },
+                        onLink: { link in
+                            notify(.requestFindLinkDetail(link))
+                        },
+                        onQuote: { address in
+                            notify(.requestQuoteInNewNote(address))
+                        }
+                    )
+                }
+                .transition(.opacity)
             }
-            .transition(.opacity)
+            .padding(AppTheme.unit2)
             
             if recent.count == 0 {
                 let name = user.address.peer?.markup ?? "This user"
@@ -75,29 +79,30 @@ struct FollowTabView: View {
     
     var body: some View {
         if let following = store.state.following {
-            ForEach(following) { follow in
-                StoryUserView(
-                    story: follow,
-                    action: { address in
-                        notify(
-                            .requestNavigateToProfile(address)
-                        )
-                    },
-                    profileAction: { user, action in
-                        store.send(
-                            UserProfileDetailAction.from(user, action)
-                        )
-                    },
-                    onRefreshUser: {
-                        store.send(
-                            .requestWaitForFollowedUserResolution(follow.entry.petname)
-                        )
-                    }
-                )
-                
-                Divider()
+            LazyVStack(spacing: AppTheme.unit2) {
+                ForEach(following) { follow in
+                    StoryUserView(
+                        story: follow,
+                        action: { address in
+                            notify(
+                                .requestNavigateToProfile(address)
+                            )
+                        },
+                        profileAction: { user, action in
+                            store.send(
+                                UserProfileDetailAction.from(user, action)
+                            )
+                        },
+                        onRefreshUser: {
+                            store.send(
+                                .requestWaitForFollowedUserResolution(follow.entry.petname)
+                            )
+                        }
+                    )
+                }
+                .transition(.opacity)
             }
-            .transition(.opacity)
+            .padding(AppTheme.unit2)
             
             if following.count == 0 {
                 let name = store.state.user?.address.peer?.markup ?? "This user"
@@ -114,6 +119,9 @@ struct FollowTabView: View {
 struct UserProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<UserProfileDetailModel>
+    @Environment(\.colorScheme) var colorScheme
+    
+    static let resetScrollTargetId: Int = 0
     
     private var state: UserProfileDetailModel {
         store.state
@@ -129,10 +137,10 @@ struct UserProfileView: View {
         await store.refresh()
     }
     
-    func columnLoading(label: String) -> TabbedColumnItem<FeedPlaceholderView> {
+    func columnLoading(label: String) -> TabbedColumnItem<StoryListPlaceholderView> {
         TabbedColumnItem(
             label: label,
-            view: FeedPlaceholderView()
+            view: StoryListPlaceholderView()
         )
     }
     
@@ -176,6 +184,7 @@ struct UserProfileView: View {
                                 )
                             }
                         )
+                        .id(Self.resetScrollTargetId)
                         .disabled(state.loadingState != .loaded)
                         .padding(
                             .init([.top, .horizontal]),

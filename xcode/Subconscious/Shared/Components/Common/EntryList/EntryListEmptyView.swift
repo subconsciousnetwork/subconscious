@@ -42,7 +42,6 @@ struct EntryListEmptyView: View {
                 .frame(minHeight: geom.size.height)
             }
             .foregroundColor(Color.secondary)
-            .background(Color.background)
             .refreshable {
                 onRefresh()
             }
@@ -50,9 +49,9 @@ struct EntryListEmptyView: View {
     }
 }
 
-struct FeedEmptyView_Previews: PreviewProvider {
+struct EntryListEmptyView_Previews: PreviewProvider {
     static var previews: some View {
-        FeedEmptyView(
+        EntryListEmptyView(
             onRefresh: {}
         )
     }

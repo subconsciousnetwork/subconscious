@@ -18,13 +18,19 @@ struct EntryStub:
     let did: Did
     let address: Slashlink
     let excerpt: Subtext
-    // Is the excerpt shorter than the full body of the entry?
-    let isTruncated: Bool
-    let modified: Date
+    let headers: WellKnownHeaders
 
     var id: Slashlink { address }
     var debugDescription: String {
         "Subconscious.EntryStub(\(address))"
+    }
+    
+    var sharedText: String {
+        """
+        \(excerpt)
+        
+        \(address)
+        """
     }
     
     func withAddress(_ address: Slashlink) -> Self {
@@ -32,8 +38,7 @@ struct EntryStub:
             did: did,
             address: address,
             excerpt: excerpt,
-            isTruncated: isTruncated,
-            modified: modified
+            headers: headers
         )
     }
     

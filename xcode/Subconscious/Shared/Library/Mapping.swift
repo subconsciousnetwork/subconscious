@@ -8,12 +8,6 @@
 
 import Foundation
 
-extension Substring {
-    func toString() -> String {
-        String(self)
-    }
-}
-
 extension Data {
     func toString(encoding: String.Encoding = .utf8) -> String? {
         String(data: self, encoding: encoding)

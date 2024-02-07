@@ -61,7 +61,7 @@ public struct SphereReceipt:
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
 public actor Noosphere {
     /// Wraps `NS_NOOSPHERE_LOG_*` constants
-    enum NoosphereLogLevel: UInt32 {
+    enum NoosphereLogLevel: UInt32, CaseIterable {
         /// Equivalent to minimal format / INFO filter
         case basic
         /// Equivalent to minimal format / DEBUG filter
@@ -76,6 +76,54 @@ public actor Noosphere {
         case tiresome
         /// Equivalent to pretty format / TRACE filter
         case deafening
+        
+        private static let basicDescription = "basic"
+        private static let chattyDescription = "chatty"
+        private static let silentDescription = "silent"
+        private static let academicDescription = "academic"
+        private static let informedDescription = "informed"
+        private static let tiresomeDescription = "tiresome"
+        private static let deafeningDescription = "deafening"
+
+        init(description: String) {
+            switch description {
+            case NoosphereLogLevel.basicDescription:
+                self = .basic
+            case NoosphereLogLevel.chattyDescription:
+                self = .chatty
+            case NoosphereLogLevel.silentDescription:
+                self = .silent
+            case NoosphereLogLevel.academicDescription:
+                self = .academic
+            case NoosphereLogLevel.informedDescription:
+                self = .informed
+            case NoosphereLogLevel.tiresomeDescription:
+                self = .tiresome
+            case NoosphereLogLevel.deafeningDescription:
+                self = .deafening
+            default:
+                self = .basic
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .basic:
+                return NoosphereLogLevel.basicDescription
+            case .chatty:
+                return NoosphereLogLevel.chattyDescription
+            case .silent:
+                return NoosphereLogLevel.silentDescription
+            case .academic:
+                return NoosphereLogLevel.academicDescription
+            case .informed:
+                return NoosphereLogLevel.informedDescription
+            case .tiresome:
+                return NoosphereLogLevel.tiresomeDescription
+            case .deafening:
+                return NoosphereLogLevel.deafeningDescription
+            }
+        }
         
         var rawValue: UInt32 {
             switch self {

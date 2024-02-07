@@ -640,19 +640,12 @@ extension Subtext {
 }
 
 extension Subtext {
-    private static let maxExcerptSize = 280
-    private static let maxExcerptBlocks = 2
+    private static let maxExcerptSize = 1024
     private static let maxGeneratedSlugSize = 128
     
     /// Derive an excerpt
     func excerpt(fallback: String = "") -> Subtext {
-        let length = Self.maxExcerptSize * Self.maxExcerptBlocks
-        
-        // Fast path: we're already the right length
-        if self.description.count < length &&
-            self.blocks.count <= Self.maxExcerptBlocks {
-            return self
-        }
+        let length = Self.maxExcerptSize
         
         // Otherwise we need to truncate the string
         let truncated = self.description.truncateAtWordBoundary(
@@ -660,16 +653,10 @@ extension Subtext {
         )
         // Re-parse it
         let dom = Subtext(markup: truncated)
-        
-        // If we have less than `maxExcerptBlocks` blocks, we can just return
-        if dom.blocks.count <= Self.maxExcerptBlocks {
-            return dom
-        }
-        
+
         // Otherwise we have to trim excess blocks
         let markup = dom.blocks
             .filter({ block in !block.isEmpty })
-            .prefix(Self.maxExcerptBlocks)
             .map { block in block.description }
             .joined(separator: "\n")
        
@@ -678,7 +665,7 @@ extension Subtext {
     
     static func excerpt<S: StringProtocol>(markup: S, fallback: String = "") -> Subtext {
         let body = markup.truncateAtWordBoundary(
-            maxChars: Self.maxExcerptBlocks * Self.maxExcerptSize
+            maxChars: Self.maxExcerptSize
         )
         return Subtext(markup: body).excerpt(fallback: fallback)
     }

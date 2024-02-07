@@ -14,14 +14,21 @@ struct EntryListView: View {
     var onEntryDelete: (Slashlink) -> Void
     var onRefresh: () -> Void
     var onLink: (EntryLink) -> Void
+    var onQuote: (Slashlink) -> Void
     
     @Environment(\.colorScheme) var colorScheme
+    static let resetScrollTargetId: Int = 0
 
     var body: some View {
         if let entries = entries {
             if entries.count > 0 {
                 List {
-                    ForEach(entries) { entry in
+                    // invisible marker to scroll back to
+                    EmptyView().id(Self.resetScrollTargetId)
+                    
+                    ForEach(entries.indices, id: \.self) { idx in
+                        let entry = entries[idx]
+                        
                         Button(
                             action: {
                                 onEntryPress(entry)
@@ -29,17 +36,13 @@ struct EntryListView: View {
                         ) {
                             EntryRow(
                                 entry: entry,
-                                highlight: entry.highlightColor(
-                                    colorScheme: colorScheme
-                                ),
+                                highlight: entry.highlightColor,
                                 onLink: onLink
                             )
                         }
                         .buttonStyle(
                             EntryListRowButtonStyle(
-                                color: entry.color(
-                                    colorScheme: colorScheme
-                                )
+                                color: entry.color
                             )
                         )
                         .modifier(RowViewModifier())
@@ -55,6 +58,35 @@ struct EntryListView: View {
                                 Text("Delete")
                             }
                             .tint(.red)
+                        }
+                        .contextMenu {
+                            ShareLink(item: entry.sharedText)
+                            
+                            Button(
+                                action: {
+                                    onQuote(entry.address)
+                                },
+                                label: {
+                                    Label(
+                                        "Quote in new note",
+                                        systemImage: "quote.opening"
+                                    )
+                                }
+                            )
+                            
+                            Divider()
+                            
+                            Button(
+                                role: .destructive,
+                                action: {
+                                    onEntryDelete(entry.address)
+                                }
+                            ) {
+                                Label(
+                                    "Delete",
+                                    systemImage: "trash"
+                                )
+                            }
                         }
                     }
                     
@@ -89,8 +121,7 @@ struct EntryListView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 ),
                 EntryStub(
                     did: Did.dummyData(),
@@ -100,14 +131,14 @@ struct EntryListView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 )
             ],
             onEntryPress: { entry in },
             onEntryDelete: { slug in },
             onRefresh: {},
-            onLink: { _ in }
+            onLink: { _ in },
+            onQuote: { _ in }
         )
     }
 }

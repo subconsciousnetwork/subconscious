@@ -13,6 +13,7 @@ import Combine
 /// Display a user profile detail view.
 /// Used to browse users entries and list of petnames.
 struct UserProfileDetailView: View {
+    @Environment(\.colorScheme) var colorScheme
     @ObservedObject var app: Store<AppModel>
     @StateObject private var store = Store(
         state: UserProfileDetailModel(),
@@ -57,6 +58,8 @@ struct UserProfileDetailView: View {
             app.actions.compactMap(UserProfileDetailAction.from),
             perform: store.send
         )
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
     }
 }
 
@@ -66,6 +69,7 @@ enum UserProfileDetailNotification: Hashable {
     case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
     case requestFindLinkDetail(EntryLink)
+    case requestQuoteInNewNote(_ address: Slashlink)
 }
 
 extension UserProfileDetailAction {
@@ -94,7 +98,16 @@ extension UserProfileDetailAction {
             return .refresh(forceSync: false)
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
-            
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(address, modified)
+        case let .succeedDeleteEntry(address):
+            return .succeedDeleteEntry(address)
+        case let .succeedMergeEntry(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from: from, to: to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
         case let .succeedFollowPeer(petname):
             return .succeedFollow(petname)
         case let .succeedUnfollowPeer(identity, petname):
@@ -176,6 +189,12 @@ enum UserProfileDetailAction: Equatable {
     case succeedEditProfile
     
     case completeIndexPeers(_ results: [PeerIndexResult])
+    
+    case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
+    case succeedDeleteEntry(_ address: Slashlink)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -566,11 +585,20 @@ struct UserProfileDetailModel: ModelProtocol {
                 results: results
             )
         // Notifications to app level
-        case .attemptFollow:
+        case .attemptFollow, .attemptRename, .attemptUnfollow:
             return Update(state: state)
-        case .attemptRename:
-            return Update(state: state)
-        case .attemptUnfollow:
+        case .succeedSaveEntry, .succeedDeleteEntry, .succeedMoveEntry,
+                .succeedMergeEntry, .succeedUpdateAudience:
+            if (state.address?.isOurs ?? false) {
+                return update(
+                    state: state,
+                    action: .refresh(
+                        forceSync: false
+                    ),
+                    environment: environment
+                )
+            }
+            
             return Update(state: state)
         }
     }

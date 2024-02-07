@@ -102,15 +102,13 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
                                 did: Did("did:key:abc123")!,
                                 address: Slashlink("@example/foo")!,
                                 excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                                isTruncated: true,
-                                modified: Date.now
+                                headers: .emptySubtext
                             ),
                             EntryStub(
                                 did: Did("did:key:abc123")!,
                                 address: Slashlink("@example/bar")!,
                                 excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                                isTruncated: true,
-                                modified: Date.now
+                                headers: .emptySubtext
                             ),
                         ]
                     )
@@ -136,15 +134,13 @@ struct BlockEditorTextBlockCell_Previews: PreviewProvider {
                                 did: Did("did:key:abc123")!,
                                 address: Slashlink("@example/foo")!,
                                 excerpt: Subtext(markup: "An autopoietic system is a network of processes that recursively depend on each other for their own generation and realization."),
-                                isTruncated: true,
-                                modified: Date.now
+                                headers: .emptySubtext
                             ),
                             EntryStub(
                                 did: Did("did:key:abc123")!,
                                 address: Slashlink("@example/bar")!,
                                 excerpt: Subtext(markup: "Modularity is a form of hierarchy"),
-                                isTruncated: false,
-                                modified: Date.now
+                                headers: .emptySubtext
                             ),
                         ]
                     )

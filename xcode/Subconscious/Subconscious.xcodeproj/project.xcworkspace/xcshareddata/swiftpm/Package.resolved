@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/subconsciousnetwork/noosphere",
       "state" : {
-        "branch" : "swift-noosphere-v0.16.0",
-        "revision" : "60e9a3add4d26d42ee4d12f566bff39959793c93"
+        "branch" : "swift-noosphere-v0.16.1",
+        "revision" : "a6602b098d7b9bd79a8574c518b0985bb7d72c82"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa.git",
       "state" : {
-        "revision" : "d277532e1c8af813981ba01f591b15bbdd735615",
-        "version" : "8.8.0"
+        "revision" : "5c8abdeabf8d0dc5055879a657e31bac49bc1624",
+        "version" : "8.19.0"
       }
     },
     {

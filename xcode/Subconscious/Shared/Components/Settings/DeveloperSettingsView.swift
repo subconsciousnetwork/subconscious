@@ -51,26 +51,16 @@ struct DeveloperSettingsView: View {
                     }
                 )
             }
-            
-            Section(footer: Text("Enable and disable experimental tabs")) {
-                Toggle(
-                    isOn: app.binding(
-                        get: \.isFeedTabEnabled,
-                        tag: AppAction.persistFeedTabEnabled
-                    ),
-                    label: {
-                        Text("Enable Feed Tab")
+            Section {
+                Picker("Noosphere log detail", selection: app.binding(
+                    get: \.noosphereLogLevel,
+                    tag: AppAction.persistNoosphereLogLevel
+                )) {
+                    ForEach(Noosphere.NoosphereLogLevel.allCases, id: \.self) { level in
+                        Text(level.description).tag(level)
                     }
-                )
-                Toggle(
-                    isOn: app.binding(
-                        get: \.isDeckTabEnabled,
-                        tag: AppAction.persistDeckTabEnabled
-                    ),
-                    label: {
-                        Text("Enable Deck Tab")
-                    }
-                )
+                }
+                .pickerStyle(DefaultPickerStyle())
             }
         }
         .navigationTitle("Developer")

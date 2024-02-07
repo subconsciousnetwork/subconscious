@@ -1,90 +1,5 @@
 import SwiftUI
 
-struct CardView: View {
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var entry: CardModel
-    var onLink: (EntryLink) -> Void
-    
-    var color: Color {
-        switch entry.card {
-        case let .entry(entry, _, _):
-            return entry.color(colorScheme: colorScheme)
-        default:
-            return .secondary
-        }
-    }
-    
-    var highlight: Color {
-        switch entry.card {
-        case let .entry(entry, _, _):
-            return entry.highlightColor(colorScheme: colorScheme)
-        default:
-            return .secondary
-        }
-    }
-    
-    var blendMode: BlendMode {
-        colorScheme == .dark
-           ? .plusLighter
-           : .plusDarker
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit2) {
-            switch entry.card {
-            case let .entry(entry, _, backlinks):
-                SubtextView(
-                    peer: entry.toPeer(),
-                    subtext: entry.excerpt,
-                    onLink: onLink
-                )
-                // Opacity allows blendMode to show through
-                .foregroundStyle(.primary.opacity(0.8))
-                .accentColor(highlight)
-                
-                Spacer()
-                
-                HStack {
-                    // Consider: should the date go here?
-                    Text(
-                        entry.address.markup
-                    )
-                    .lineLimit(1)
-                    
-                    if !backlinks.isEmpty {
-                        Spacer()
-                        
-                        HStack {
-                            Image(systemName: "link")
-                            Text("\(backlinks.count)")
-                        }
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(highlight)
-                .padding(DeckTheme.cardPadding)
-            
-            case .action(let string):
-                // TEMP
-                VStack {
-                    Image(systemName: "scribble.variable")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 64, height: 64)
-                    Text(string)
-                }
-                .foregroundStyle(.secondary)
-            }
-            
-        }
-        .padding(DeckTheme.cardPadding)
-        .allowsHitTesting(false)
-        .background(color)
-        .cornerRadius(DeckTheme.cornerRadius)
-    }
-}
-
 enum CardDragGestureProgress {
     case inactive
     case started
@@ -118,6 +33,7 @@ struct CardEffectModifier: ViewModifier {
                         : DeckTheme.lightBgMid
                     )
                     .opacity(4.0*stackFactor)
+                    .blendMode(.sourceAtop)
             )
             .scaleEffect(max(0,min(1, 1-stackFactor + 0.03)))
             .rotation3DEffect(
@@ -143,12 +59,10 @@ struct CardEffectModifier: ViewModifier {
                 // Background cards rotate for decoration
                 : .degrees(rotation(stackFactor))
             )
-            // Prevent any gestures on background cards
-            .disabled(!focused)
             // Reduce shadow intensity with depth
             .shadow(
                 color: DeckTheme.cardShadow.opacity(
-                    0.2 * (1.0 - 5.0*stackFactor)
+                    0.15 * (1.0 - 5.0*stackFactor)
                 ),
                 radius: 2.5,
                 x: 0,
@@ -214,6 +128,16 @@ struct CardSwipeGlowEffect: View {
     }
 }
 
+enum CardNotification {
+    case swipeRight(CardModel)
+    case swipeLeft(CardModel)
+    case swipeStarted
+    case swipeAbandoned
+    case cardTapped(CardModel)
+    case linkTapped(EntryLink)
+    case quoteCard(Slashlink)
+}
+
 struct CardStack: View {
     private static let swipeActivationThreshold = 128.0
     private static let swipeThrowDistance = 512.0
@@ -221,12 +145,7 @@ struct CardStack: View {
     var deck: [CardModel]
     var current: Int
     
-    var onSwipeRight: (CardModel) -> Void
-    var onSwipeLeft: (CardModel) -> Void
-    var onSwipeStart: () -> Void
-    var onSwipeAbandoned: () -> Void
-    var onCardTapped: (CardModel) -> Void
-    var onLink: (EntryLink) -> Void
+    var notify: (CardNotification) -> Void
         
     // Use a dictionary of offsets so that we can animate two cards at once during the transition.
     // This dictionary is frequently cleared during the gesture lifecycle.
@@ -281,20 +200,16 @@ struct CardStack: View {
                         : -Self.swipeThrowDistance
                 
                 if (offset > 0) {
-                    onSwipeRight(card)
+                    notify(.swipeRight(card))
                 } else {
-                    onSwipeLeft(card)
+                    notify(.swipeLeft(card))
                 }
             } else {
                 // Reset the card position
                 offsets[card] = CGSize.zero
-                onSwipeAbandoned()
+                notify(.swipeAbandoned)
             }
         }
-    }
-    
-    var enumeratedDeck: [EnumeratedSequence<[CardModel]>.Element] {
-        Array(deck.enumerated())
     }
     
     func effects(card: CardModel, stackFactor: CGFloat, focused: Bool) -> CardEffectModifier {
@@ -312,8 +227,8 @@ struct CardStack: View {
     func gestures(card: CardModel) -> CardGestureModifier {
         CardGestureModifier(
             offsets: $offsets,
-            onTapped: { onCardTapped(card) },
-            onSwipeStart: onSwipeStart,
+            onTapped: { notify(.cardTapped(card)) },
+            onSwipeStart: { notify(.swipeStarted) },
             onSwipeChanged: { translation in
                 dragChanged(card: card, translation: translation)
             },
@@ -330,13 +245,10 @@ struct CardStack: View {
             let stackFactor = stackFactor(for: index)
             CardView(
                 entry: card,
-                onLink: onLink
+                onLink: { entry in notify(.linkTapped(entry)) },
+                onQuote: { address in notify(.quoteCard(address)) }
             )
             // Size card based on available space
-            .frame(
-                width: size.width,
-                height: size.width * 1.25
-            )
             .modifier(
                 effects(
                     card: card,
@@ -350,6 +262,11 @@ struct CardStack: View {
             // Fade out cards as we move past them
             .opacity(index >= current ? 1 : 0)
             .animation(.spring(), value: current)
+            .frame(
+                maxHeight: DeckTheme.cardSize.height
+            )
+            // Prevent any gestures on background cards
+            .disabled(index != current)
             
             Spacer()
         }
@@ -372,8 +289,9 @@ struct CardStack: View {
             Spacer()
             GeometryReader { geo in
                 ZStack {
-                    ForEach(enumeratedDeck, id: \.element.id) {
-                        index, card in
+                    ForEach(deck.indices, id: \.self) { index in
+                        let card = deck[index]
+                        
                         if (index >= current - 1 && index < current + 4) {
                             innerCard(size: geo.size, index: index, card: card)
                         }
@@ -400,19 +318,34 @@ struct CardStack_Previews: PreviewProvider {
     static var previews: some View {
         CardStack(
             deck: [
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
-                CardModel(entry: EntryStub.dummyData(), user: UserProfile.dummyData(), backlinks: []),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
+                CardModel(
+                    entry: EntryStub.dummyData(),
+                    user: UserProfile.dummyData(),
+                    related: []
+                ),
             ],
             current: 0,
-            onSwipeRight: { _ in },
-            onSwipeLeft: { _ in },
-            onSwipeStart: { },
-            onSwipeAbandoned: { },
-            onCardTapped: { _ in },
-            onLink: { _ in }
+            notify: { _ in }
         )
     }
 }

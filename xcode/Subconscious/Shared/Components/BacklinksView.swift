@@ -16,13 +16,24 @@ struct BacklinksView: View {
             HStack {
                 Text("Related Notes")
                     .font(.caption)
+                    .foregroundStyle(.secondary)
                 Spacer()
             }
             if backlinks.count > 0 {
-                TranscludeListView(
-                    entries: backlinks,
-                    onLink: onLink
-                )
+                LazyVStack(spacing: AppTheme.unit2) {
+                    ForEach(backlinks, id: \.self) { entry in
+                        VStack {
+                            TranscludeView(
+                                entry: entry,
+                                onLink: onLink
+                            )
+                            .buttonStyle(RelatedNoteButtonStyle(color: entry.color))
+                        }
+                        .tint(
+                            entry.headers.themeColor?.toHighlightColor()
+                        )
+                    }
+                }
             } else {
                 TitleGroupView(
                     title: Text("No related notes yet")
@@ -49,8 +60,7 @@ struct BacklinksView_Previews: PreviewProvider {
                         did: Did.dummyData(),
                         address: Slashlink("@handle/short")!,
                         excerpt: Subtext(markup: "Short"),
-                        isTruncated: false,
-                        modified: Date.now
+                        headers: .emptySubtext
                     ),
                     EntryStub(
                         did: Did.dummyData(),
@@ -58,8 +68,7 @@ struct BacklinksView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        isTruncated: false,
-                        modified: Date.now
+                        headers: .emptySubtext
                     ),
                     EntryStub(
                         did: Did.dummyData(),
@@ -67,8 +76,7 @@ struct BacklinksView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        isTruncated: false,
-                        modified: Date.now
+                        headers: .emptySubtext
                     ),
                     EntryStub(
                         did: Did.local,
@@ -76,8 +84,7 @@ struct BacklinksView_Previews: PreviewProvider {
                         excerpt: Subtext(
                             markup: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                         ),
-                        isTruncated: false,
-                        modified: Date.now
+                        headers: .emptySubtext
                     )
                 ],
                 onLink: { link in }

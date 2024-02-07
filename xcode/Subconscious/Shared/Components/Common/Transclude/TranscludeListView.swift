@@ -21,11 +21,12 @@ struct TranscludeListView: View {
                         entry: entry,
                         onLink: onLink
                     )
+                    .buttonStyle(
+                        TranscludeButtonStyle()
+                    )
                 }
                 .tint(
-                    entry.address.highlightColor(
-                        colorScheme: colorScheme
-                    )
+                    entry.headers.themeColor?.toHighlightColor()
                 )
             }
         }
@@ -45,8 +46,7 @@ struct TranscludeListView_Previews: PreviewProvider {
                               Some years ago- never mind how long precisely
                               """
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 ),
             ],
             onLink: { _ in }

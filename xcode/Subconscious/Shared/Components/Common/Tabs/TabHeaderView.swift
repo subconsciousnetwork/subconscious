@@ -33,18 +33,12 @@ struct TabHeaderView: View {
                     )
                 }
             }
-            .overlay(
-                Rectangle()
-                    .fill(Color.separator)
-                    .frame(height: 1),
-                alignment: .bottom
-            )
             Spacer()
             GeometryReader { geometry in
                 let increment = geometry.size.width * (1.0 / CGFloat(items.count))
                 Rectangle()
                     .fill(Color.accentColor)
-                    .frame(width: increment - inset, height: 3)
+                    .frame(width: increment - inset, height: 2)
                     .cornerRadius(2, corners: [.topLeft, .topRight])
                     .offset(x: inset / 2 + increment * CGFloat(focusedTabIndex), y: 0)
                     .animation(.easeInOut(duration: Duration.fast), value: focusedTabIndex)

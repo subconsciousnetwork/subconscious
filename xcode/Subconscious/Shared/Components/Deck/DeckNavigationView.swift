@@ -21,104 +21,126 @@ struct DeckNavigationView: View {
         )
     }
     
+    func notify(notification: CardNotification) {
+        switch notification {
+        case let .swipeLeft(card):
+            store.send(.skipCard(card))
+        case let .swipeRight(card):
+            store.send(.chooseCard(card))
+        case .swipeStarted:
+            store.send(.cardPickedUp)
+        case .swipeAbandoned:
+            store.send(.cardReleased)
+        case let .cardTapped(card):
+            store.send(.cardTapped(card))
+        case let .linkTapped(link):
+            store.send(
+                .detailStack(.findAndPushLinkDetail(link))
+            )
+        case let .quoteCard(address):
+            store.send(.detailStack(.pushQuoteInNewDetail(address)))
+        }
+    }
+    
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             VStack(alignment: .leading) {
-                if case let .entry(_, author, _) = store.state.topCard?.card,
-                   let name = author.toNameVariant() {
-                    Button(
-                        action: {
-                            detailStack.send(
-                                .pushDetail(
-                                    .profile(
-                                        UserProfileDetailDescription(
-                                            address: author.address
-                                        )
-                                    )
-                                )
-                            )
-                            
-                        },
-                        label: {
-                            HStack(
-                                alignment: .center,
-                                spacing: AppTheme.unit3
-                            ) {
-                                ProfilePic(
-                                    pfp: author.pfp,
-                                    size: .large
-                                )
-                                
-                                PetnameView(
-                                    name: name,
-                                    aliases: [],
-                                    showMaybePrefix: false
-                                )
-                            }
-                            .transition(
-                                .push(
-                                    from: .bottom
-                                )
-                            )
-                        }
-                    )
-                }
-                
-                if (store.state.deck.isEmpty) {
+                switch store.state.loadingStatus {
+                case .loading:
                     VStack(alignment: .center) {
                         Spacer()
-                        ProgressView()
+                        CardShuffleView()
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                
-                CardStack(
-                    deck: store.state.deck,
-                    current: store.state.pointer,
-                    onSwipeRight: { card in
-                        store.send(
-                            .chooseCard(
-                                card
-                            )
-                        )
-                    },
-                    onSwipeLeft: { card in
-                        store.send(
-                            .skipCard(
-                                card
-                            )
-                        )
-                    },
-                    onSwipeStart: {
-                        store.send(.cardPickedUp)
-                    },
-                    onSwipeAbandoned: {
-                        store.send(.cardReleased)
-                    },
-                    onCardTapped: { card in
-                        store.send(.cardTapped(card))
-                    },
-                    onLink: { link in
-                        store.send(
-                            .detailStack(.findAndPushLinkDetail(link))
+                case .loaded:
+                    if let author = store.state.topCard?.author,
+                       let name = author.toNameVariant() {
+                        Button(
+                            action: {
+                                detailStack.send(
+                                    .pushDetail(
+                                        .profile(
+                                            UserProfileDetailDescription(
+                                                address: author.address
+                                            )
+                                        )
+                                    )
+                                )
+                                
+                            },
+                            label: {
+                                HStack(
+                                    alignment: .center,
+                                    spacing: AppTheme.unit3
+                                ) {
+                                    ProfilePic(
+                                        pfp: author.pfp,
+                                        size: .large
+                                    )
+                                    
+                                    PetnameView(
+                                        name: name,
+                                        aliases: [],
+                                        showMaybePrefix: false
+                                    )
+                                }
+                                .transition(
+                                    .push(
+                                        from: .bottom
+                                    )
+                                )
+                            }
                         )
                     }
-                )
-                .offset(x: 0, y: -AppTheme.unit * 16)
+                    
+                    CardStack(
+                        deck: store.state.deck,
+                        current: store.state.pointer,
+                        notify: notify
+                    )
+                    .offset(y: -AppTheme.unit * 8)
+                    
+                case .notFound:
+                    HStack {
+                        Spacer()
+                        VStack(spacing: AppTheme.unit * 6) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 64))
+                            VStack(spacing: AppTheme.unit) {
+                                Text("Your Subconscious is empty")
+                            }
+                            
+                            VStack(spacing: AppTheme.unit) {
+                                Text(
+                                """
+                                Become totally empty
+                                Quiet the restlessness of the mind
+                                Only then will you witness everything unfolding from emptiness.
+                                """
+                                )
+                                .italic()
+                                Text(
+                                    "Lao Tzu"
+                                )
+                            }
+                            .frame(width: 240)
+                            .font(.caption)
+                        }
+                        Spacer()
+                    }
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                }
             }
             .padding(AppTheme.padding)
-            .frame(maxWidth: .infinity)
-            .ignoresSafeArea(.all, edges: .bottom)
-            .background(
-                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
-            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .toolbar {
                 MainToolbar(
                     app: app
                 )
             }
-            
         }
     }
 }

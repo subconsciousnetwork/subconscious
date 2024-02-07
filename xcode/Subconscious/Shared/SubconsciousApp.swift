@@ -13,6 +13,7 @@ import OSLog
 struct SubconsciousApp: App {
     init() {
         SentryIntegration.start()
+        NoosphereLogProxy.connect()
     }
 
     var body: some Scene {

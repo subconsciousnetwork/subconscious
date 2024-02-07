@@ -40,6 +40,9 @@ extension AppTheme {
     static let mdPfpSize: CGFloat = 32
     static let lgPfpSize: CGFloat = 48
     
+    static let maxEntryListRowHeight: CGFloat = unit * 28
+    static let maxTranscludeHeight: CGFloat = unit * 32
+    
     static let brandMark = Image("sub_logo")
     
     static let onboarding = OnboardingTheme()
@@ -106,7 +109,7 @@ extension Color {
         .opacity(0.5)
     static let primaryButtonBackgroundDisabled = primaryButtonBackground
         .opacity(0.3)
-    static let primaryButtonText = SwiftUI.Color.accentColor
+    static var primaryButtonText: Color { SwiftUI.Color.accentColor }
     static let primaryButtonTextPressed = primaryButtonText.opacity(0.5)
     static let primaryButtonTextDisabled = primaryButtonText.opacity(0.3)
     static let fabBackground = primaryButtonBackground

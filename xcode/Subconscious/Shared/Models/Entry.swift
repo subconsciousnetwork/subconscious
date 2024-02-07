@@ -34,8 +34,7 @@ extension EntryStub {
         
         self.address = entry.address
         self.excerpt = Subtext(markup: entry.contents.excerpt())
-        self.modified = entry.contents.modified
         self.did = did
-        self.isTruncated = excerpt.count < entry.contents.body.count
+        self.headers = entry.contents.wellKnownHeaders()
     }
 }

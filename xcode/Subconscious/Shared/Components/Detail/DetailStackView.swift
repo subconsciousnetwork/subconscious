@@ -14,7 +14,7 @@ struct DetailStackView<Root: View>: View {
     
     var store: ViewStore<DetailStackModel>
     var root: () -> Root
-
+    
     var body: some View {
         NavigationStack(
             path: Binding(
@@ -23,49 +23,43 @@ struct DetailStackView<Root: View>: View {
                 tag: DetailStackAction.setDetails
             )
         ) {
-            root().navigationDestination(
-                for: MemoDetailDescription.self
-            ) { detail in
-                switch detail {
-                case .editor(let description):
-                    MemoEditorDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: DetailStackAction.tag
+            root()
+                .modifier(AppThemeToolbarViewModifier())
+                .modifier(AppThemeBackgroundViewModifier())
+                .navigationDestination(
+                    for: MemoDetailDescription.self
+                ) { detail in
+                    switch detail {
+                    case .editor(let description):
+                        MemoEditorDetailView(
+                            app: app,
+                            description: description,
+                            notify: Address.forward(
+                                send: store.send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
-                case .viewer(let description):
-                    MemoViewerDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: DetailStackAction.tag
+                    case .viewer(let description):
+                        MemoViewerDetailView(
+                            app: app,
+                            description: description,
+                            notify: Address.forward(
+                                send: store.send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
-                case .profile(let description):
-                    UserProfileDetailView(
-                        app: app,
-                        description: description,
-                        notify: Address.forward(
-                            send: store.send,
-                            tag: DetailStackAction.tag
+                    case .profile(let description):
+                        UserProfileDetailView(
+                            app: app,
+                            description: description,
+                            notify: Address.forward(
+                                send: store.send,
+                                tag: DetailStackAction.tag
+                            )
                         )
-                    )
+                    }
                 }
-            }
         }
-        // Tint using the current detail's highlight color.
-        // BUT only for notes.
-        .tint(
-            (store.state.details.last?.address?.isProfile ?? false)
-                ? nil
-                : store.state.details.last?.address?.highlightColor(
-                    colorScheme: colorScheme
-                )
-        )
     }
 }
 
@@ -135,19 +129,27 @@ enum DetailStackAction: Hashable {
 
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
+    
+    case pushQuoteInNewDetail(Slashlink)
 
-    /// Request delete memo.
-    /// Gets forwarded up to parent for handling.
-    case requestDeleteMemo(Slashlink?)
-    /// Deletion attempt failed. Forwarded down from parent.
-    case failDeleteMemo(String)
-    /// Deletion attempt succeeded. Forwarded down from parent.
-    case succeedDeleteMemo(Slashlink)
-
+    /// Note lifecycle events.
+    /// `request`s are passed up to the app root
+    /// `succeed`s are passed down from the app root
+    case requestDeleteEntry(Slashlink?)
+    case succeedDeleteEntry(Slashlink)
+    case requestSaveEntry(_ entry: MemoEntry)
+    case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedSaveEntry(address: Slashlink, modified: Date)
-    case succeedUpdateAudience(MoveReceipt)
+    case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
+    case requestAppendToEntry(_ address: Slashlink, _ append: String)
+    case succeedAppendToEntry(_ address: Slashlink)
 
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
@@ -167,15 +169,15 @@ enum DetailStackAction: Hashable {
 struct DetailStackModel: Hashable, ModelProtocol {
     typealias Action = DetailStackAction
     typealias Environment = AppEnvironment
-
+    
     var details: [MemoDetailDescription] = []
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "DetailStackModel"
     )
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -226,6 +228,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 autofocus: autofocus
             )
+        case let .pushQuoteInNewDetail(address):
+            return pushQuoteInNewDetail(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case let .failPushRandomDetail(error):
             return failPushRandomDetail(
                 state: state,
@@ -237,25 +245,19 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .requestDeleteMemo(address):
-            return requestDeleteMemo(
+        case let .succeedSaveEntry(address, modified):
+            return succeedSaveEntry(
+                state: state,
+                environment: environment,
+                address: address,
+                modified: modified
+            )
+        case let .succeedDeleteEntry(address):
+            return succeedDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
             )
-        case let .succeedDeleteMemo(address):
-            return succeedDeleteMemo(
-                state: state,
-                environment: environment,
-                address: address
-            )
-        case let .failDeleteMemo(error):
-            return failDeleteMemo(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        // These act as notifications for parent models to react to
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
                 state: state,
@@ -270,17 +272,48 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 parent: parent,
                 child: child
             )
-        case .succeedSaveEntry:
-            return Update(state: state)
-        case let.succeedUpdateAudience(receipt):
+        case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
                 environment: environment,
                 receipt: receipt
             )
+        case let .succeedAssignNoteColor(address, color):
+            return succeedAssignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
+            )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            switch suggestion {
+            case let .append(address, target):
+                let fx = Just(
+                    DetailStackAction.requestAppendToEntry(target, "\n\(address.markup)")
+                ).eraseToAnyPublisher()
+                
+                return Update(state: state, fx: fx)
+            }
+        // Consider, do we actually want to open the note we appended to?
+        case let .succeedAppendToEntry(address):
+            return update(
+                state: state,
+                action: .pushDetail(
+                    .editor(
+                        MemoEditorDetailDescription(
+                            address: address
+                        )
+                    )
+                ),
+                environment: environment
+            )
+        case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
+                .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
+                .requestAppendToEntry:
+            return Update(state: state)
         }
     }
-
+    
     static func setDetails(
         state: Self,
         environment: Environment,
@@ -293,7 +326,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         model.details = details
         return Update(state: model)
     }
-   
+    
     
     static func findAndPushLinkDetail(
         state: Self,
@@ -308,18 +341,18 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 fallback: link.title
             )
         }
-        .recover { error in
-            logger.error("Failed to resolve peer: \(error)")
-            return .findAndPushDetail(
-                address: link.address,
-                fallback: link.title
-            )
-        }
-        .eraseToAnyPublisher()
+            .recover { error in
+                logger.error("Failed to resolve peer: \(error)")
+                return .findAndPushDetail(
+                    address: link.address,
+                    fallback: link.title
+                )
+            }
+            .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
     }
-
+    
     static func findAndPushDetail(
         state: Self,
         environment: Environment,
@@ -340,10 +373,10 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment
             )
         }
-
+        
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
-        guard address.peer != nil else {
+        guard address.peer != nil && !address.isLocal else {
             return update(
                 state: state,
                 action: .findAndPushMemoEditorDetail(
@@ -353,7 +386,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment
             )
         }
-
+        
         // If slashlink pointing to other sphere, dispatch action
         // for viewer.
         return update(
@@ -368,7 +401,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Find and push a specific detail for slug
     static func findAndPushMemoEditorDetail(
         state: Self,
@@ -390,7 +423,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
+    
     /// Push a detail view onto the stack
     static func pushDetail(
         state: Self,
@@ -401,8 +434,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
         model.details.append(detail)
         return Update(state: model)
     }
-
-
+    
+    
     /// Push a detail view onto the stack
     static func failPushDetail(
         state: Self,
@@ -412,7 +445,7 @@ struct DetailStackModel: Hashable, ModelProtocol {
         logger.log("Attempt to push invalid detail: \(error)")
         return Update(state: state)
     }
-
+    
     /// Request detail for a random entry
     static func pushRandomDetail(
         state: Self,
@@ -434,8 +467,25 @@ struct DetailStackModel: Hashable, ModelProtocol {
                     )
                 )
             }).eraseToAnyPublisher()
-
+        
         return Update(state: state, fx: fx)
+    }
+    
+    static func pushQuoteInNewDetail(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            action: .pushDetail(
+                .editor(
+                    MemoEditorDetailDescription(
+                        fallback: "\n\n\(address.markup)"
+                    )
+                )
+            ),
+            environment: environment)
     }
 
     static func failPushRandomDetail(
@@ -464,17 +514,17 @@ struct DetailStackModel: Hashable, ModelProtocol {
             environment: environment
         )
     }
-
-    static func requestDeleteMemo(
+    
+    static func succeedSaveEntry(
         state: Self,
         environment: Environment,
-        address: Slashlink?
+        address: Slashlink,
+        modified: Date
     ) -> Update<Self> {
-        // No-op. Should be handled by parent.
         return Update(state: state)
     }
-
-    static func succeedDeleteMemo(
+    
+    static func succeedDeleteEntry(
         state: Self,
         environment: Environment,
         address: Slashlink
@@ -491,14 +541,6 @@ struct DetailStackModel: Hashable, ModelProtocol {
         })
         model.details = details
         return Update(state: model)
-    }
-
-    static func failDeleteMemo(
-        state: Self,
-        environment: Environment,
-        error: String
-    ) -> Update<Self> {
-        return Update(state: state)
     }
     
     /// Move success lifecycle handler.
@@ -599,25 +641,39 @@ struct DetailStackModel: Hashable, ModelProtocol {
         )
     }
 
+    static func succeedAssignNoteColor(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        color: ThemeColor
+    ) -> Update<Self> {
+        return Update(state: state)
+    }
 }
 
 extension DetailStackAction {
     static func tag(_ action: MemoEditorDetailNotification) -> Self {
         switch action {
-        case .requestDelete(let address):
-            return .requestDeleteMemo(address)
+        case let .requestDelete(address):
+            return .requestDeleteEntry(address)
+        case let .requestSaveEntry(entry):
+            return .requestSaveEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .requestMoveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .requestMergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address, audience)
+        case let .requestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
+        case let .requestQuoteInNewDetail(address):
+            return .pushQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         case let .requestDetail(detail):
             return .pushDetail(detail)
         case let .requestFindLinkDetail(link):
             return .findAndPushLinkDetail(link)
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedSaveEntry(address, modified):
-            return .succeedSaveEntry(address: address, modified: modified)
-        case let .succeedUpdateAudience(receipt):
-            return .succeedUpdateAudience(receipt)
         }
     }
 
@@ -637,6 +693,10 @@ extension DetailStackAction {
                     )
                 )
             )
+        case let .requestQuoteInNewDetail(address):
+            return .pushQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         }
     }
 
@@ -652,6 +712,8 @@ extension DetailStackAction {
                     address: address
                 )
             ))
+        case let .requestQuoteInNewNote(address):
+            return .pushQuoteInNewDetail(address)
         }
     }
 }

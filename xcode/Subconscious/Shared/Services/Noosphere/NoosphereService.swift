@@ -49,7 +49,7 @@ extension NoosphereService {
         
         // We _could_ also choose to simply bail out and navigate to the address without
         // traversing, at the expense of the clever redirect.
-        var did: Did? = nil
+        var did = slashlink.toDid()
         if let petname = slashlink.petname {
             did = try? await Func.run {
                 let sphere = try await self.traverse(petname: petname)
@@ -62,8 +62,13 @@ extension NoosphereService {
             return slashlink
         }
         
+        // Preserve local DID
+        guard !did.isLocal else {
+            return slashlink
+        }
+        
         // Is this address ours? Trim off the peer
-        guard did != ourIdentity else {
+        if did == ourIdentity {
             return Slashlink(slug: slashlink.slug)
         }
     
@@ -191,6 +196,12 @@ actor NoosphereService:
         logger.log("Reset cached instances of Noosphere and Sphere")
         self._noosphere = nil
         self._sphere = nil
+    }
+    
+    func setLogLevel(_ level: Noosphere.NoosphereLogLevel) {
+        logger.log("Set log level: \(level.description)")
+        self._noosphereLogLevel = level
+        self.reset()
     }
     
     /// Gets or creates memoized Noosphere singleton instance
@@ -524,9 +535,15 @@ actor NoosphereService:
         }
     }
     
-    func listAuthorizations() async throws -> [Authorization] {
+    func listAuthorizations() async throws -> [NamedAuthorization] {
         try await errorLoggingService.capturing {
             try await sphere().listAuthorizations()
+        }
+    }
+    
+    func authorizationName(authorization: Authorization) async throws -> String {
+        try await errorLoggingService.capturing {
+            try await sphere().authorizationName(authorization: authorization)
         }
     }
     

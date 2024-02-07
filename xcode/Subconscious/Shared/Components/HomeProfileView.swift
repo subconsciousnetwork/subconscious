@@ -13,6 +13,7 @@ import Combine
 struct HomeProfileNavigationView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<HomeProfileModel>
+    @Environment(\.colorScheme) var colorScheme
     var detailStack: ViewStore<DetailStackModel> {
         store.viewStore(
             get: HomeProfileDetailStackCursor.get,
@@ -29,15 +30,27 @@ struct HomeProfileNavigationView: View {
             app: app,
             store: detailStack
         ) {
-            VStack(spacing: 0) {
-                UserProfileDetailView(
-                    app: app,
-                    description: UserProfileDetailDescription(address: Slashlink.ourProfile),
-                    notify: Address.forward(
-                        send: store.send,
-                        tag: HomeProfileNavigationView.tag
+            ScrollViewReader { proxy in
+                VStack(spacing: 0) {
+                    UserProfileDetailView(
+                        app: app,
+                        description: UserProfileDetailDescription(address: Slashlink.ourProfile),
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: HomeProfileNavigationView.tag
+                        )
                     )
-                )
+                }
+                .onReceive(store.actions) { action in
+                    switch action {
+                    case .requestScrollToTop:
+                        withAnimation(.resetScroll) {
+                            proxy.scrollTo(0, anchor: .top)
+                        }
+                    default:
+                        return
+                    }
+                }
             }
         }
     }
@@ -123,11 +136,25 @@ enum HomeProfileAction: Hashable {
     
     case setSearchPresented(Bool)
     case requestProfileRoot
+    case requestScrollToTop
     
-    /// DetailStack-related actions
-    case requestDeleteMemo(Slashlink?)
-    case succeedDeleteMemo(Slashlink)
-    case failDeleteMemo(String)
+    /// Note lifecycle events.
+    /// `request`s are passed up to the app root
+    /// `succeed`s are passed down from the app root
+    case requestDeleteEntry(Slashlink?)
+    case succeedDeleteEntry(Slashlink)
+    case requestSaveEntry(_ entry: MemoEntry)
+    case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case requestUpdateAudience(_ address: Slashlink, _ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestAppendToEntry(_ address: Slashlink, _ append: String)
+    case succeedAppendToEntry(_ address: Slashlink)
 }
 
 // MARK: Cursors and tagging functions
@@ -147,8 +174,20 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
-        case let .requestDeleteMemo(slashlink):
-            return .requestDeleteMemo(slashlink)
+        case let .requestSaveEntry(entry):
+            return .requestSaveEntry(entry)
+        case let .requestDeleteEntry(entry):
+            return .requestDeleteEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .requestMoveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .requestMergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address, audience)
+        case let .requestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
+        case let .requestAppendToEntry(address, append):
+            return .requestAppendToEntry(address, append)
         default:
             return .detailStack(action)
         }
@@ -162,10 +201,18 @@ extension HomeProfileAction {
             return .ready
         case .requestProfileRoot:
             return .requestProfileRoot
-        case let .succeedDeleteMemo(address):
-            return .succeedDeleteMemo(address)
-        case let .failDeleteMemo(error):
-            return .failDeleteMemo(error)
+        case let .succeedDeleteEntry(entry):
+            return .succeedDeleteEntry(entry)
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSaveEntry(address, modified)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+        case let .succeedAssignNoteColor(address, color):
+            return .succeedAssignNoteColor(address, color)
         default:
             return nil
         }
@@ -175,8 +222,18 @@ extension HomeProfileAction {
 extension AppAction {
     static func from(_ action: HomeProfileAction) -> Self? {
         switch action {
-        case let .requestDeleteMemo(slashlink):
-            return .deleteMemo(slashlink)
+        case let .requestDeleteEntry(entry):
+            return .deleteEntry(entry)
+        case let .requestSaveEntry(entry):
+            return .saveEntry(entry)
+        case let .requestMoveEntry(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .updateAudience(address: address, audience: audience)
+        case let .requestAssignNoteColor(address, color):
+            return .assignColor(address: address, color: color)
         default:
             return nil
         }
@@ -268,24 +325,72 @@ struct HomeProfileModel: ModelProtocol {
                 action: DetailStackAction.fromSuggestion(suggestion),
                 environment: environment
             )
-        case .requestDeleteMemo(let address):
-            return requestDeleteMemo(
+        case let .succeedSaveEntry(address, modified):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedSaveEntry(address, modified)),
+                    .appear
+                ],
+                environment: environment
+            )
+        case .succeedDeleteEntry(let address):
+            return succeedDeleteEntry(
                 state: state,
                 environment: environment,
                 address: address
             )
-        case .failDeleteMemo(let error):
-            return failDeleteMemo(
+        case let .succeedUpdateAudience(receipt):
+            return update(
                 state: state,
-                environment: environment,
-                error: error
+                actions: [
+                    .detailStack(.succeedUpdateAudience(receipt)),
+                    .appear
+                ],
+                environment: environment
             )
-        case .succeedDeleteMemo(let address):
-            return succeedDeleteMemo(
+        case let .succeedMoveEntry(from, to):
+            return update(
                 state: state,
-                environment: environment,
-                address: address
+                actions: [
+                    .detailStack(.succeedMoveEntry(from: from, to: to)),
+                    .appear
+                ],
+                environment: environment
             )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedMergeEntry(parent: parent, child: child)),
+                    .appear
+                ],
+                environment: environment
+            )
+        case let .succeedAssignNoteColor(address, color):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(.succeedAssignNoteColor(address, color)),
+                    .appear
+                ],
+                environment: environment
+            )
+        case let .succeedAppendToEntry(address):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedAppendToEntry(address)
+                    ),
+                    .appear
+                ],
+                environment: environment
+            )
+        case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
+                .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
+                .requestAssignNoteColor, .requestAppendToEntry:
+            return Update(state: state)
         }
     }
     
@@ -315,6 +420,11 @@ struct HomeProfileModel: ModelProtocol {
         state: Self,
         environment: AppEnvironment
     ) -> Update<Self> {
+        if state.details.isEmpty {
+            let fx: Fx<HomeProfileAction> = Just(.requestScrollToTop).eraseToAnyPublisher()
+            return Update(state: state, fx: fx)
+        }
+        
         return HomeProfileDetailStackCursor.update(
             state: state,
             action: .setDetails([]),
@@ -347,13 +457,13 @@ struct HomeProfileModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .detailStack(.requestDeleteMemo(address)),
+            action: .detailStack(.requestDeleteEntry(address)),
             environment: environment
         )
     }
     
     /// Entry delete succeeded
-    static func succeedDeleteMemo(
+    static func succeedDeleteEntry(
         state: Self,
         environment: Environment,
         address: Slashlink
@@ -366,26 +476,7 @@ struct HomeProfileModel: ModelProtocol {
         )
         return update(
             state: state,
-            action: .detailStack(.succeedDeleteMemo(address)),
-            environment: environment
-        )
-    }
-
-    /// Entry delete failed
-    static func failDeleteMemo(
-        state: Self,
-        environment: Environment,
-        error: String
-    ) -> Update<Self> {
-        logger.log(
-            "Failed to delete memo",
-            metadata: [
-                "error": error
-            ]
-        )
-        return update(
-            state: state,
-            action: .detailStack(.failDeleteMemo(error)),
+            action: .detailStack(.succeedDeleteEntry(address)),
             environment: environment
         )
     }

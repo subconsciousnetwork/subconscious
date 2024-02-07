@@ -37,7 +37,7 @@ struct MemoViewerDetailView: View {
     var navigationTitle: String {
         store.state.address?.markup ?? store.state.title
     }
-
+    
     var body: some View {
         VStack {
             switch store.state.loadingState {
@@ -45,6 +45,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadingView(
                     notify: notify
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 MemoViewerDetailLoadedView(
                     store: store,
@@ -56,12 +57,14 @@ struct MemoViewerDetailView: View {
                     backlinks: store.state.backlinks,
                     notify: notify
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.visible)
-        .toolbarBackground(Color.background, for: .navigationBar)
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -104,8 +107,8 @@ struct MemoViewerDetailNotFoundView: View {
     var body: some View {
         ScrollView {
             NotFoundView()
-            ThickDividerView()
                 .padding(.bottom, AppTheme.unit4)
+            
             BacklinksView(
                 backlinks: backlinks,
                 onLink: { link in
@@ -137,7 +140,7 @@ struct MemoViewerDetailLoadedView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack {
+                VStack(spacing: 0) {
                     VStack {
                         SubtextView(
                             peer: store.state.owner?.address.peer,
@@ -152,12 +155,16 @@ struct MemoViewerDetailLoadedView: View {
                         
                         Spacer()
                     }
-                    .padding()
+                    .padding(DeckTheme.cardPadding)
                     .frame(
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
-                    ThickDividerView()
-                        .padding(.bottom, AppTheme.unit4)
+                    .background(store.state.themeColor?.toColor())
+                    .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+                    .shadow(style: .transclude)
+                    .padding(.bottom, AppTheme.unit4)
+                    .padding(.top, AppTheme.unit2)
+                    
                     BacklinksView(
                         backlinks: store.state.backlinks,
                         onLink: { link in
@@ -182,6 +189,8 @@ enum MemoViewerDetailNotification: Hashable {
     )
     case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
+    case requestQuoteInNewDetail(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
 extension MemoViewerDetailNotification {
@@ -189,6 +198,10 @@ extension MemoViewerDetailNotification {
         switch action {
         case let .requestAuthorDetail(user):
             return .requestUserProfileDetail(user.address)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return nil
         }
@@ -225,6 +238,9 @@ enum MemoViewerDetailAction: Hashable {
     
     case succeedIndexBackgroundSphere
     case requestAuthorDetail(_ author: UserProfile)
+    case requestQuoteInNewNote(_ address: Slashlink)
+    
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
@@ -269,6 +285,10 @@ struct MemoViewerDetailModel: ModelProtocol {
     var title = ""
     var dom: Subtext = Subtext.empty
     var backlinks: [EntryStub] = []
+    var headers: WellKnownHeaders? = nil
+    var themeColor: ThemeColor? {
+        headers?.themeColor ?? address?.themeColor
+    }
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -286,7 +306,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             return MemoViewerDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: environment
             )
         case .appear(let description):
             return appear(
@@ -323,7 +343,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .succeedRefreshBacklinks(let backlinks):
             var model = state
             model.backlinks = backlinks
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         case .failRefreshBacklinks(let error):
             logger.error("Failed to refresh backlinks: \(error)")
             return Update(state: state)
@@ -377,6 +397,21 @@ struct MemoViewerDetailModel: ModelProtocol {
             return update(
                 state: state,
                 action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case .requestQuoteInNewNote:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return update(
+                state: state,
+                actions: [
+                    .metaSheet(.selectAppendLinkSearchSuggestion(suggestion)),
+                    .presentMetaSheet(false)
+                ],
                 environment: environment
             )
         }
@@ -443,13 +478,14 @@ struct MemoViewerDetailModel: ModelProtocol {
         // If no response, then mark not found
         guard let entry = entry else {
             model.loadingState = .notFound
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         }
         
         model.loadingState = .loaded
         let memo = entry.contents
         model.address = entry.address
         model.title = memo.title()
+        model.headers = memo.wellKnownHeaders()
         
         let dom = memo.dom()
         
@@ -457,7 +493,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             action: .setDom(dom),
             environment: environment
-        ).animation(.easeOut)
+        ).animation(.easeOutCubic())
     }
     
     static func refreshBacklinks(
@@ -608,6 +644,10 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
             return .presentMetaSheet(false)
         case let .requestAuthorDetail(user):
             return .requestAuthorDetail(user)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewNote(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return .metaSheet(action)
         }
@@ -644,8 +684,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                             excerpt: Subtext(
                                 markup: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\""
                             ),
-                            isTruncated: false,
-                            modified: Date.now
+                            headers: .emptySubtext
                         )
                     ]
                 ),
@@ -665,8 +704,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless."
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 ),
                 EntryStub(
                     did: Did.dummyData(),
@@ -676,8 +714,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?"
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 )
             ],
             notify: {

@@ -10,6 +10,7 @@ import SwiftUI
 /// An EntryRow suitable for use in lists.
 /// Provides a preview/excerpt of the entry.
 struct EntryRow: View {
+    @Environment (\.colorScheme) var colorScheme
     var entry: EntryStub
     var emptyExcerpt = "Empty"
     var highlight: Color = .secondary
@@ -25,6 +26,7 @@ struct EntryRow: View {
             .font(.callout)
             .multilineTextAlignment(.leading)
             .padding(.bottom, AppTheme.unit2)
+            .truncateWithGradient(maxHeight: AppTheme.maxEntryListRowHeight)
             
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
@@ -36,7 +38,7 @@ struct EntryRow: View {
 
                 Text(
                     NiceDateFormatter.shared.string(
-                        from: entry.modified,
+                        from: entry.headers.modified,
                         relativeTo: Date.now
                     )
                 )
@@ -47,6 +49,7 @@ struct EntryRow: View {
             .lineLimit(1)
             .foregroundColor(highlight)
             .multilineTextAlignment(.leading)
+            
         }
         .tint(highlight)
     }
@@ -68,8 +71,7 @@ struct EntryRow_Previews: PreviewProvider {
                               Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.
                               """
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 )
             )
             EntryRow(
@@ -81,8 +83,7 @@ struct EntryRow_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 )
             )
             EntryRow(
@@ -94,8 +95,7 @@ struct EntryRow_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 )
             )
             EntryRow(
@@ -107,8 +107,7 @@ struct EntryRow_Previews: PreviewProvider {
                     excerpt: Subtext(
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
-                    isTruncated: false,
-                    modified: Date.now
+                    headers: .emptySubtext
                 )
             )
         }

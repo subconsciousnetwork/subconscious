@@ -54,7 +54,41 @@ struct MemoEditorDetailMetaSheetView: View {
                             )
                         }
                         .buttonStyle(RowButtonStyle())
+                        
                         Divider()
+                        
+                        if let address = store.state.address {
+                            Button(
+                                action: {
+                                    store.send(.requestQuoteInNewNote(address))
+                                },
+                                label: {
+                                    Label(
+                                        "Quote in new note",
+                                        systemImage: "quote.opening"
+                                    )
+                                }
+                            )
+                            .buttonStyle(RowButtonStyle())
+                            
+                            Divider()
+                        }
+                        
+                        Button(
+                            action: {
+                                store.send(.presentAppendLinkSearchSheet(true))
+                            },
+                            label: {
+                                Label(
+                                    "Append to note",
+                                    systemImage: "link.badge.plus"
+                                )
+                            }
+                        )
+                        .buttonStyle(RowButtonStyle())
+                        
+                        Divider()
+                        
                         Button(
                             role: .destructive,
                             action: {
@@ -67,9 +101,34 @@ struct MemoEditorDetailMetaSheetView: View {
                             )
                         }
                         .buttonStyle(RowButtonStyle())
+                        Divider()
                     }
                 }
                 .padding()
+                
+                HStack(spacing: AppTheme.padding) {
+                    let themeColors = ThemeColor.allCases
+                    
+                    ForEach(themeColors, id: \.self) { themeColor in
+                        Button(
+                            action: {
+                                store.send(.requestAssignNoteColor(themeColor))
+                            }
+                        ) {
+                            ZStack {
+                                Circle()
+                                    .fill(themeColor.toColor())
+                                Circle()
+                                    .stroke(Color.separator)
+                                if themeColor == store.state.themeColor {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .frame(width: 32, height: 32)
+                        }
+                    }
+                }
             }
         }
         .presentationDragIndicator(.hidden)
@@ -104,6 +163,19 @@ struct MemoEditorDetailMetaSheetView: View {
                 Text("Delete")
             }
         }
+        .sheet(
+            isPresented: store.binding(
+                get: \.isAppendLinkSearchPresented,
+                tag: MemoEditorDetailMetaSheetAction.presentAppendLinkSearchSheet
+            )
+        ) {
+            AppendLinkSearchView(
+                store: store.viewStore(
+                    get: \.appendLinkSearch,
+                    tag: MemoEditorDetailMetaSheetAppendLinkSearchCursor.tag
+                )
+            )
+        }
     }
 }
 
@@ -115,10 +187,15 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: Slashlink?)
     case setDefaultAudience(_ audience: Audience)
+    
     /// Requests that audience be updated.
     /// Should be handled by parent component.
     case requestUpdateAudience(_ audience: Audience)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    
+    case setNoteColor(_ color: ThemeColor?)
+    case requestAssignNoteColor(_ color: ThemeColor)
+    case succeedAssignNoteColor(_ color: ThemeColor)
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -126,6 +203,16 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     /// Request this address be deleted.
     /// Should be handled by parent component.
     case requestDelete(Slashlink?)
+    case requestQuoteInNewNote(_ address: Slashlink)
+    
+    /// Tagged actions for append link search sheet
+    case appendLinkSearch(AppendLinkSearchAction)
+    case presentAppendLinkSearchSheet(_ isPresented: Bool)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
+    
+    static func setAppendLinkSearchSubject(_ address: Slashlink?) -> Self {
+        .appendLinkSearch(.setSubject(address))
+    }
 
     static var refreshRenameSuggestions: Self {
         .renameSearch(.refreshRenameSuggestions)
@@ -141,6 +228,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: Slashlink?
+    var themeColor: ThemeColor?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -150,6 +238,9 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
+    
+    var isAppendLinkSearchPresented = false
+    var appendLinkSearch = AppendLinkSearchModel()
     
     static func update(
         state: Self,
@@ -190,6 +281,25 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+        // Append link
+        case .appendLinkSearch(let action):
+            return MemoEditorDetailMetaSheetAppendLinkSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .presentAppendLinkSearchSheet(let isPresented):
+            return presentAppendLinkSearchSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .selectAppendLinkSearchSuggestion(let suggestion):
+            return selectAppendLinkSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
         case let .setAddress(address):
             return setAddress(
                 state: state,
@@ -202,15 +312,28 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 audience: audience
             )
-        case .requestUpdateAudience:
-            return Update(state: state)
         case .succeedUpdateAudience(let receipt):
             return update(
                 state: state,
                 action: .setAddress(receipt.to),
                 environment: environment
             )
-        case .requestDelete:
+        // Editor passes us the current color when the sheet is opened
+        case let .setNoteColor(color):
+            return setNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
+        // Update internal color to match the updated value
+        case let .succeedAssignNoteColor(color):
+            return setNoteColor(
+                state: state,
+                environment: environment,
+                color: color
+            )
+        case .requestUpdateAudience, .requestDelete, .requestAssignNoteColor,
+                .requestQuoteInNewNote:
             return Update(state: state)
         }
     }
@@ -276,6 +399,52 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
         model.defaultAudience = audience
         return Update(state: model)
     }
+    
+    static func setNoteColor(
+        state: Self,
+        environment: Environment,
+        color: ThemeColor?
+    ) -> Update<Self> {
+        var model = state
+        model.themeColor = color
+        
+        return Update(state: model)
+    }
+    
+    static func presentAppendLinkSearchSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.isAppendLinkSearchPresented = isPresented
+        return update(
+            state: model,
+            action: .setAppendLinkSearchSubject(address),
+            environment: environment
+        )
+    }
+    
+    static func selectAppendLinkSuggestion(
+        state: Self,
+        environment: Environment,
+        suggestion: AppendLinkSuggestion
+    ) -> Update<Self> {
+        var model = state
+        model.isAppendLinkSearchPresented = false
+        return update(
+            state: model,
+            actions: [
+                .appendLinkSearch(.selectSuggestion(suggestion)),
+                .presentAppendLinkSearchSheet(false)
+            ],
+            environment: environment
+        )
+    }
 }
 
 // MARK: RenameSearchCursor
@@ -302,6 +471,34 @@ struct MemoEditorDetailMetaSheetRenameSearchCursor: CursorProtocol {
             return .selectRenameSuggestion(suggestion)
         default:
             return .renameSearch(action)
+        }
+    }
+}
+
+// MARK: AppendLinkSearchCursor
+struct MemoEditorDetailMetaSheetAppendLinkSearchCursor: CursorProtocol {
+    typealias Model = MemoEditorDetailMetaSheetModel
+    typealias ViewModel = AppendLinkSearchModel
+
+    static func get(state: Model) -> ViewModel {
+        state.appendLinkSearch
+    }
+    
+    static func set(
+        state: Model,
+        inner: ViewModel
+    ) -> Model {
+        var model = state
+        model.appendLinkSearch = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case .selectSuggestion(let suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
+        default:
+            return .appendLinkSearch(action)
         }
     }
 }

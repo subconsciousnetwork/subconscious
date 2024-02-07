@@ -34,6 +34,8 @@ extension Duration {
 extension Animation {
     //  Penner curves sourced from
     //  https://matthewlein.com/tools/ceaser
+    
+    static let resetScroll = Animation.easeInOut(duration: Duration.normal)
 
     /// Penner easeOutCubic curve
     static func easeOutCubic(duration: Double = Duration.normal) -> Animation {

@@ -82,8 +82,8 @@ struct MemoEditorDetailView: View {
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.visible)
-        .toolbarBackground(Color.background, for: .navigationBar)
+        .modifier(AppThemeBackgroundViewModifier())
+        .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
@@ -149,7 +149,7 @@ struct MemoEditorDetailView: View {
             MemoEditorDetailMetaSheetView(
                 store: store.viewStore(
                     get: \.metaSheet,
-                    tag: DetailMetaSheetCursor.tag
+                    tag: MemoEditorDetailMetaSheetCursor.tag
                 )
             )
         }
@@ -192,6 +192,18 @@ struct MemoEditorDetailView: View {
             perform: notify
         )
     }
+    
+    var highlight: Color? {
+        store.state.themeColor?.toHighlightColor()
+            ?? store.state.address?.themeColor.toHighlightColor()
+            ?? ThemeColor.a.toColor()
+    }
+    
+    var background: Color? {
+        store.state.themeColor?.toColor()
+            ?? store.state.address?.themeColor.toColor()
+            ?? ThemeColor.a.toColor()
+    }
 
     /// Constructs a plain text editor for the view
     private func plainEditor() -> some View {
@@ -217,8 +229,12 @@ struct MemoEditorDetailView: View {
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
                         )
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
+                        .background(background)
+                        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+                        .shadow(style: .transclude)
+                        .padding(.bottom, AppTheme.unit4)
+                        .padding(.top, AppTheme.unit2)
+                        
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onLink: { link in
@@ -227,6 +243,8 @@ struct MemoEditorDetailView: View {
                         )
                     }
                 }
+                .tint(highlight)
+                
                 if store.state.editor.focus {
                     DetailKeyboardToolbarView(
                         isSheetPresented: Binding(
@@ -281,29 +299,36 @@ enum MemoEditorDetailNotification: Hashable {
     case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(EntryLink)
+    
+    case requestSaveEntry(MemoEntry)
     case requestDelete(Slashlink?)
-    case succeedMoveEntry(from: Slashlink, to: Slashlink)
-    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    case succeedSaveEntry(address: Slashlink, modified: Date)
-    case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
+    case requestUpdateAudience(address: Slashlink, audience: Audience)
+    case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestQuoteInNewDetail(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
 extension MemoEditorDetailNotification {
     static func from(_ action: MemoEditorDetailAction) -> Self? {
         switch action {
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedSave(entry):
-            return .succeedSaveEntry(
-                address: entry.address,
-                modified: entry.contents.modified
-            )
-        case .succeedUpdateAudience(let receipt):
-            return .succeedUpdateAudience(receipt)
+        case let .forwardRequestSaveEntry(entry):
+            return .requestSaveEntry(entry)
         case .forwardRequestDelete(let address):
             return .requestDelete(address)
+        case let .forwardRequestMoveEntry(from, to):
+            return .requestMoveEntry(from: from, to: to)
+        case let .forwardRequestMergeEntry(parent, child):
+            return .requestMergeEntry(parent: parent, child: child)
+        case let .forwardRequestUpdateAudience(address, audience):
+            return .requestUpdateAudience(address: address, audience: audience)
+        case let .forwardRequestAssignNoteColor(address, color):
+            return .requestAssignNoteColor(address, color)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewDetail(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return nil
         }
@@ -313,11 +338,8 @@ extension MemoEditorDetailNotification {
 extension MemoEditorDetailNotification {
     static func from(_ action: BlockEditor.Action) -> Self? {
         switch action {
-        case let .succeedSave(entry):
-            return .succeedSaveEntry(
-                address: entry.address,
-                modified: entry.contents.modified
-            )
+        case let .forwardRequestSave(snapshot):
+            return .requestSaveEntry(snapshot)
         case let .requestFindLinkDetail(link):
             return .requestFindLinkDetail(link)
         default:
@@ -369,26 +391,16 @@ enum MemoEditorDetailAction: Hashable {
     /// more recently than DetailModel.
     case setDetailLastWriteWins(MemoEditorDetailResponse)
     /// Set detail
-    case setDetail(detail: MemoEditorDetailResponse, autofocus: Bool)
+    case setDetail(
+        detail: MemoEditorDetailResponse,
+        autofocus: Bool
+    )
     case setDraftDetail(
         defaultAudience: Audience,
         fallback: String
     )
     /// Set detail to initial conditions
     case resetDetail
-
-    // Change audience
-    case updateAudience(_ audience: Audience)
-    case succeedUpdateAudience(_ receipt: MoveReceipt)
-    case failUpdateAudience(_ message: String)
-
-    /// Request delete.
-    /// Forwards down meta sheet requestDelete, which hides sheet.
-    /// Then, after a delay for the bottom sheet animation, sends a
-    /// forwardRequestDelete, which is relayed to DetailOuterAction.
-    case requestDelete(_ address: Slashlink?)
-    /// Action relayed as RequestDelete to DetailOuterAction.
-    case forwardRequestDelete(_ address: Slashlink?)
 
     /// Finish with editing focus
     case doneEditing
@@ -401,13 +413,6 @@ enum MemoEditorDetailAction: Hashable {
     case requestAssignAddress
     case assignAddress(Slashlink?)
 
-    /// Save an entry at a particular snapshot value
-    case save(MemoEntry?)
-    case succeedSave(MemoEntry)
-    case failSave(
-        address: Slashlink,
-        message: String
-    )
 
     // Meta bottom sheet
     // Exposes controls for audience, rename, delete, etc.
@@ -424,18 +429,29 @@ enum MemoEditorDetailAction: Hashable {
     // Rename entry
     /// Intercepted rename action
     case selectRenameSuggestion(RenameSuggestion)
-    /// Move an entry from one location to another
-    case moveEntry(from: Slashlink, to: Slashlink)
-    /// Move entry succeeded. Lifecycle action.
+    
+    /// Note lifecycle events.
+    /// `request`s are handled here and dispatch `forward`s
+    /// `forward`s are passed up to the app root
+    /// `succeed`s are passed down from the app root
+    case requestSaveEntry(MemoEntry) // prepare our state for saving
+    case forwardRequestSaveEntry(MemoEntry) // request save at app level
+    case succeedSave(address: Slashlink, modified: Date) // respond to save success
+    case requestDelete(_ address: Slashlink?)
+    case forwardRequestDelete(_ address: Slashlink?)
+    case requestMoveEntry(from: Slashlink, to: Slashlink)
+    case forwardRequestMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
-    /// Move entry failed. Lifecycle action.
-    case failMoveEntry(String)
-    /// Merge entries
-    case mergeEntry(parent: Slashlink, child: Slashlink)
-    /// Merge entry succeeded. Lifecycle action.
+    case requestMergeEntry(parent: Slashlink, child: Slashlink)
+    case forwardRequestMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
-    /// Merge entry failed. Lifecycle action.
-    case failMergeEntry(String)
+    case requestUpdateAudience(_ audience: Audience)
+    case forwardRequestUpdateAudience(address: Slashlink, _ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case requestAssignNoteColor(_ color: ThemeColor)
+    case forwardRequestAssignNoteColor(address: Slashlink, _ color: ThemeColor)
+    case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    
 
     // Editor
     /// Update editor dom and mark if this state is saved or not
@@ -466,6 +482,9 @@ enum MemoEditorDetailAction: Hashable {
 
     /// Refresh after save
     case refreshLists
+    
+    case requestQuoteInNewNote(_ address: Slashlink)
+    case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
@@ -474,6 +493,10 @@ enum MemoEditorDetailAction: Hashable {
 
     static var setEditorSelectionAtEnd: Self {
         .editor(.setSelectionAtEnd)
+    }
+    
+    static var setEditorSelectionAtStart: Self {
+        .editor(.setSelectionAtStart)
     }
 
     /// Select a link completion
@@ -488,6 +511,10 @@ enum MemoEditorDetailAction: Hashable {
     static func setMetaSheetAddress(_ address: Slashlink?) -> Self {
         .metaSheet(.setAddress(address))
     }
+    
+    static func setMetaSheetColor(_ color: ThemeColor?) -> Self {
+        .metaSheet(.setNoteColor(color))
+    }
 
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
         .metaSheet(.setDefaultAudience(audience))
@@ -498,9 +525,9 @@ extension MemoEditorDetailAction {
     static func from(_ suggestion: RenameSuggestion) -> Self {
         switch suggestion {
         case let .move(from, to):
-            return .moveEntry(from: from, to: to)
+            return .requestMoveEntry(from: from, to: to)
         case let .merge(parent, child):
-            return .mergeEntry(parent: parent, child: child)
+            return .requestMergeEntry(parent: parent, child: child)
         }
     }
 }
@@ -511,6 +538,17 @@ extension MemoEditorDetailAction {
         action: AppAction
     ) -> MemoEditorDetailAction? {
         switch (action) {
+        case let .succeedSaveEntry(address, modified):
+            return .succeedSave(address: address, modified: modified)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent: parent, child: child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
+        case let .succeedAssignNoteColor(address, color):
+            return .succeedAssignNoteColor(address, color)
+            
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
             return .refreshBacklinks
@@ -559,7 +597,7 @@ struct MemoEditorDetailSubtextTextCursor: CursorProtocol {
     }
 }
 
-struct DetailMetaSheetCursor: CursorProtocol {
+struct MemoEditorDetailMetaSheetCursor: CursorProtocol {
     typealias Model = MemoEditorDetailModel
     typealias ViewModel = MemoEditorDetailMetaSheetModel
 
@@ -580,10 +618,16 @@ struct DetailMetaSheetCursor: CursorProtocol {
         switch action {
         case .selectRenameSuggestion(let suggestion):
             return .selectRenameSuggestion(suggestion)
-        case .requestUpdateAudience(let audience):
-            return .updateAudience(audience)
+        case let .requestUpdateAudience(audience):
+            return .requestUpdateAudience(audience)
+        case let .requestAssignNoteColor(color):
+            return .requestAssignNoteColor(color)
         case .requestDelete(let address):
             return .requestDelete(address)
+        case let .requestQuoteInNewNote(address):
+            return .requestQuoteInNewNote(address)
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return .selectAppendLinkSearchSuggestion(suggestion)
         default:
             return .metaSheet(action)
         }
@@ -611,6 +655,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         modified: Date.distantPast,
         fileExtension: ContentType.subtext.fileExtension
     )
+    var themeColor: ThemeColor? = nil
+    
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
     var backlinks: [EntryStub] = []
@@ -666,7 +712,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     ) -> Update<MemoEditorDetailModel> {
         switch action {
         case .metaSheet(let action):
-            return DetailMetaSheetCursor.update(
+            return MemoEditorDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -787,6 +833,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             var model = state
             model.backlinks = backlinks
             return Update(state: model)
+                .animation(.easeOutCubic())
         case .failRefreshBacklinks(let error):
             logger.error("Failed to refresh backlinks: \(error)")
             return Update(state: state)
@@ -797,8 +844,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .forwardRequestDelete:
-            return Update(state: state)
         case .doneEditing:
             return doneEditing(
                 state: state,
@@ -820,24 +865,17 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
-        case .save(let entry):
-            return save(
+        case .requestSaveEntry(let entry):
+            return requestSave(
                 state: state,
                 environment: environment,
                 entry: entry
             )
-        case let .succeedSave(entry):
+        case let .succeedSave(address, _):
             return succeedSave(
                 state: state,
                 environment: environment,
-                entry: entry
-            )
-        case let .failSave(address, message):
-            return failSave(
-                state: state,
-                environment: environment,
-                address: address,
-                message: message
+                address: address
             )
         case let .presentMetaSheet(isPresented):
             return presentMetaSheet(
@@ -878,8 +916,8 @@ struct MemoEditorDetailModel: ModelProtocol {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .updateAudience(audience):
-            return updateAudience(
+        case let .requestUpdateAudience(audience):
+            return requestUpdateAudience(
                 state: state,
                 environment: environment,
                 audience: audience
@@ -890,11 +928,18 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 receipt: receipt
             )
-        case let .failUpdateAudience(message):
-            return log(
+        case let .requestAssignNoteColor(color):
+            return requestAssignNoteColor(
                 state: state,
                 environment: environment,
-                message: message
+                color: color
+            )
+        case let .succeedAssignNoteColor(address, color):
+            return succeedAssignNoteColor(
+                state: state,
+                environment: environment,
+                address: address,
+                color: color
             )
         case let .selectRenameSuggestion(suggestion):
             return selectRenameSuggestion(
@@ -902,8 +947,8 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 suggestion: suggestion
             )
-        case .moveEntry(let from, let to):
-            return moveEntry(
+        case .requestMoveEntry(let from, let to):
+            return requestMoveEntry(
                 state: state,
                 environment: environment,
                 from: from,
@@ -916,14 +961,8 @@ struct MemoEditorDetailModel: ModelProtocol {
                 from: from,
                 to: to
             )
-        case .failMoveEntry(let error):
-            return failMoveEntry(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case .mergeEntry(let parent, let child):
-            return mergeEntry(
+        case .requestMergeEntry(let parent, let child):
+            return requestMergeEntry(
                 state: state,
                 environment: environment,
                 parent: parent,
@@ -935,12 +974,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                 environment: environment,
                 parent: parent,
                 child: child
-            )
-        case .failMergeEntry(let error):
-            return failMergeEntry(
-                state: state,
-                environment: environment,
-                error: error
             )
         case .insertEditorWikilinkAtSelection:
             return insertTaggedMarkup(
@@ -975,6 +1008,25 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestQuoteInNewNote:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .selectAppendLinkSearchSuggestion(suggestion):
+            return update(
+                state: state,
+                actions: [
+                    .metaSheet(.selectAppendLinkSearchSuggestion(suggestion)),
+                    .presentMetaSheet(false)
+                ],
+                environment: environment
+            )
+        case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
+                .forwardRequestMergeEntry, .forwardRequestUpdateAudience,
+                .forwardRequestAssignNoteColor:
+            return Update(state: state)
         }
     }
     
@@ -1083,6 +1135,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             action: .editor(.setText(text)),
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     /// Handle editor focus request.
@@ -1306,6 +1359,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.address = detail.entry.address
         model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
+        model.themeColor = model.headers.themeColor
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.saveState = detail.saveState
         
@@ -1316,6 +1370,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .setMetaSheetAddress(model.address),
+                .setMetaSheetColor(model.themeColor),
                 .setEditor(
                     text: text,
                     saveState: detail.saveState,
@@ -1324,6 +1379,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             ],
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     /// Set detail model.
@@ -1379,9 +1435,9 @@ struct MemoEditorDetailModel: ModelProtocol {
             return update(
                 state: model,
                 actions: [
-                    .save(snapshot),
+                    snapshot.map(MemoEditorDetailAction.requestSaveEntry),
                     .forceSetDetail(detail)
-                ],
+                ].compactMap({ v in v }),
                 environment: environment
             )
         }
@@ -1400,28 +1456,23 @@ struct MemoEditorDetailModel: ModelProtocol {
         detail: MemoEditorDetailResponse,
         autofocus: Bool
     ) -> Update<MemoEditorDetailModel> {
-        guard autofocus else {
-            // If autofocus is false, request blur if needed
-            return update(
-                state: state,
-                actions: [
-                    .setDetailLastWriteWins(detail),
-                    .requestEditorFocus(false)
-                ],
-                environment: environment
-            )
-        }
+        var actions: [MemoEditorDetailAction] = [
+            .setDetailLastWriteWins(detail)
+        ]
+        
         // If autofocus is true, request focus, and also set selection to end
         // of editor text.
+        if autofocus {
+            actions.append(.requestEditorFocus(autofocus))
+            actions.append(.setEditorSelectionAtEnd)
+        }
+        
         return update(
             state: state,
-            actions: [
-                .setDetailLastWriteWins(detail),
-                .requestEditorFocus(true),
-                .setEditorSelectionAtEnd
-            ],
+            actions: actions,
             environment: environment
         )
+        .animation(.easeOutCubic())
     }
     
     static func setDraftDetail(
@@ -1431,9 +1482,17 @@ struct MemoEditorDetailModel: ModelProtocol {
         fallback: String
     ) -> Update<MemoEditorDetailModel> {
         var model = state
-
+        
         model.defaultAudience = defaultAudience
-
+        
+        // if fallback starts with newlines, cursor at start
+        // otherwise, cursor at end
+        var selection = MemoEditorDetailAction.setEditorSelectionAtEnd
+        if let first = fallback.first,
+           first.isNewline {
+            selection = .setEditorSelectionAtStart
+        }
+        
         return update(
             state: model,
             actions: [
@@ -1442,7 +1501,9 @@ struct MemoEditorDetailModel: ModelProtocol {
                     text: fallback,
                     saveState: .unsaved,
                     modified: Date.now
-                )
+                ),
+                selection,
+                .requestEditorFocus(true)
             ],
             environment: environment
         )
@@ -1491,39 +1552,6 @@ struct MemoEditorDetailModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    static func updateAudience(
-        state: MemoEditorDetailModel,
-        environment: AppEnvironment,
-        audience: Audience
-    ) -> Update<MemoEditorDetailModel> {
-        guard let from = state.address else {
-            logger.log(
-                "Update audience requested, but no memo is being edited."
-            )
-            return Update(state: state)
-        }
-
-        let to = from.withAudience(audience)
-
-        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryPublisher(
-            from: from,
-            to: to
-        ).map({ receipt in
-            MemoEditorDetailAction.succeedUpdateAudience(receipt)
-        }).catch({ error in
-            Just(MemoEditorDetailAction.failUpdateAudience(error.localizedDescription))
-        }).eraseToAnyPublisher()
-
-        var model = state
-        model.address = to
-        
-        return update(
-            state: model,
-            action: .metaSheet(.requestUpdateAudience(audience)),
-            environment: environment
-        ).mergeFx(fx)
-    }
-    
     static func succeedUpdateAudience(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
@@ -1536,7 +1564,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.address = receipt.to
         return update(
             state: model,
-            // Forrward success down to meta sheet
+            // Forward success down to meta sheet
             action: .metaSheet(.succeedUpdateAudience(receipt)),
             environment: environment
         )
@@ -1593,10 +1621,13 @@ struct MemoEditorDetailModel: ModelProtocol {
             )
         }
         
-        let entry = state.snapshotEntry()
+        guard let entry = state.snapshotEntry() else {
+            return Update(state: state)
+        }
+        
         return update(
             state: state,
-            action: .save(entry),
+            action: .requestSaveEntry(entry),
             environment: environment
         )
     }
@@ -1634,26 +1665,22 @@ struct MemoEditorDetailModel: ModelProtocol {
         return update(
             state: model,
             actions: [
-                .save(entry),
+                entry.map(MemoEditorDetailAction.requestSaveEntry),
                 .setMetaSheetAddress(address)
-            ],
+            ].compactMap({ v in v }),
             environment: environment
         )
         .animation(.default)
     }
     
     /// Save snapshot of entry
-    static func save(
+    static func requestSave(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        entry: MemoEntry?
+        entry: MemoEntry
     ) -> Update<MemoEditorDetailModel> {
         // If editor dom is already saved, noop
         guard state.saveState != .saved else {
-            return Update(state: state)
-        }
-        // If there is no entry, nothing to save
-        guard let entry = entry else {
             return Update(state: state)
         }
         
@@ -1662,18 +1689,9 @@ struct MemoEditorDetailModel: ModelProtocol {
         // Mark saving in-progress
         model.saveState = .saving
         
-        let fx: Fx<MemoEditorDetailAction> = environment.data.writeEntryPublisher(
-            entry
-        ).map({ _ in
-            MemoEditorDetailAction.succeedSave(entry)
-        }).catch({ error in
-            Just(
-                MemoEditorDetailAction.failSave(
-                    address: entry.address,
-                    message: error.localizedDescription
-                )
-            )
-        }).eraseToAnyPublisher()
+        let fx: Fx<MemoEditorDetailAction> = Just(
+            MemoEditorDetailAction.forwardRequestSaveEntry(entry)
+        ).eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
     }
@@ -1682,10 +1700,10 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func succeedSave(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        entry: MemoEntry
+        address: Slashlink
     ) -> Update<MemoEditorDetailModel> {
         logger.debug(
-            "Saved entry: \(entry.address)"
+            "Saved entry: \(address)"
         )
         var model = state
         
@@ -1699,27 +1717,11 @@ struct MemoEditorDetailModel: ModelProtocol {
         // 2022-02-09 Gordon Brander
         if
             model.saveState == .saving &&
-                model.stateMatches(entry: entry)
+                model.address == address
         {
             model.saveState = .saved
         }
         
-        return Update(state: model)
-    }
-    
-    static func failSave(
-        state: MemoEditorDetailModel,
-        environment: AppEnvironment,
-        address: Slashlink,
-        message: String
-    ) -> Update<MemoEditorDetailModel> {
-        //  TODO: show user a "try again" banner
-        logger.warning(
-            "Save failed for entry (\(address)) with error: \(message)"
-        )
-        // Mark modified, since we failed to save
-        var model = state
-        model.saveState = .unsaved
         return Update(state: model)
     }
     
@@ -1847,45 +1849,41 @@ struct MemoEditorDetailModel: ModelProtocol {
         environment: AppEnvironment,
         suggestion: RenameSuggestion
     ) -> Update<MemoEditorDetailModel> {
-        update(
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            MemoEditorDetailAction.from(suggestion)
+        }
+        .eraseToAnyPublisher()
+        
+        return update(
             state: state,
             actions: [
                 // Forward intercepted action down to child
                 .metaSheet(.selectRenameSuggestion(suggestion)),
-                // Additionally, act on rename suggestion
-                MemoEditorDetailAction.from(suggestion)
             ],
             environment: environment
-        )
+        ).mergeFx(fx)
     }
 
     /// Move entry
-    static func moveEntry(
+    static func requestMoveEntry(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
         from: Slashlink,
         to: Slashlink
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryPublisher(
-            from: from,
-            to: to
-        )
-        .map({ _ in
-            MemoEditorDetailAction.succeedMoveEntry(from: from, to: to)
-        })
-        .catch({ error in
-            Just(
-                MemoEditorDetailAction.failMoveEntry(
-                    error.localizedDescription
-                )
-            )
-        })
-        .eraseToAnyPublisher()
-        return Update(
-            state: state,
-            fx: fx
-        )
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+        let moveFx: Fx<MemoEditorDetailAction> = Just(
+            MemoEditorDetailAction.forwardRequestMoveEntry(from: from, to: to)
+        ).eraseToAnyPublisher()
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        // Save before moving
+        let fx = saveFx.merge(with: moveFx).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+            .animation(.easeOutCubic(duration: Duration.keyboard))
     }
     
     /// Move success lifecycle handler.
@@ -1921,36 +1919,24 @@ struct MemoEditorDetailModel: ModelProtocol {
         )
     }
     
-    /// Move failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failMoveEntry(
-        state: MemoEditorDetailModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<MemoEditorDetailModel> {
-        logger.warning(
-            "Failed to move entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-    
     /// Merge entry
-    static func mergeEntry(
+    static func requestMergeEntry(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
         parent: Slashlink,
         child: Slashlink
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.mergeEntryPublisher(
-            parent: parent,
-            child: child
-        ).map({ _ in
-            MemoEditorDetailAction.succeedMergeEntry(parent: parent, child: child)
-        }).catch({ error in
-            Just(
-                MemoEditorDetailAction.failMergeEntry(error.localizedDescription)
-            )
-        }).eraseToAnyPublisher()
+        let mergeFx: Fx<MemoEditorDetailAction> = Just(
+            .forwardRequestMergeEntry(parent: parent, child: child)
+        ).eraseToAnyPublisher()
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        // Save before merging
+        let fx = saveFx.merge(with: mergeFx).eraseToAnyPublisher()
+        
         return Update(state: state, fx: fx)
     }
     
@@ -1975,17 +1961,82 @@ struct MemoEditorDetailModel: ModelProtocol {
         )
     }
     
-    /// Merge failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failMergeEntry(
+    static func requestUpdateAudience(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        error: String
+        audience: Audience
     ) -> Update<MemoEditorDetailModel> {
-        logger.warning(
-            "Failed to merge entry with error: \(error)"
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        let audienceFx: Fx<MemoEditorDetailAction> = Just(
+            .forwardRequestUpdateAudience(
+                address: address,
+                audience
+            )
+        ).eraseToAnyPublisher()
+        
+        // Save before updating audience
+        let fx = saveFx.merge(with: audienceFx).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func requestAssignNoteColor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        color: ThemeColor
+    ) -> Update<MemoEditorDetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let saveFx: Fx<MemoEditorDetailAction> = Just(
+            .autosave
+        ).eraseToAnyPublisher()
+        
+        let audienceFx: Fx<MemoEditorDetailAction> = Just(
+            .forwardRequestAssignNoteColor(
+                address: address,
+                color
+            )
+        ).eraseToAnyPublisher()
+        
+        // Save before updating color
+        let fx = saveFx.merge(with: audienceFx).eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedAssignNoteColor(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        color: ThemeColor
+    ) -> Update<MemoEditorDetailModel> {
+        guard state.address != nil else {
+            return Update(state: state)
+        }
+        
+        // Only forward the event if the address matches
+        guard state.address == address else {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.themeColor = color
+            
+        return update(
+            state: model,
+            // Forward success down to meta sheet
+            action: .metaSheet(.succeedAssignNoteColor(color)),
+            environment: environment
         )
-        return Update(state: state)
     }
     
     /// Insert wikilink markup into editor, begining at previous range
@@ -2108,6 +2159,7 @@ extension MemoEntry {
             created: detail.headers.created,
             modified: detail.headers.modified,
             fileExtension: detail.headers.fileExtension,
+            themeColor: detail.headers.themeColor,
             additionalHeaders: detail.additionalHeaders,
             body: detail.editor.text
         )

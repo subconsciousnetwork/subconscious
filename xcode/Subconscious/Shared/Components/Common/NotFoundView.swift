@@ -34,7 +34,6 @@ public struct NotFoundView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .foregroundColor(Color.secondary)
-        .background(Color.background)
         .transition(.opacity)
     }
 }

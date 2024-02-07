@@ -18,113 +18,106 @@ struct StoryUserView: View {
     var onRefreshUser: () -> Void = {}
     
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-            HStack(alignment: .center, spacing: 0) {
-                Group {
-                    HStack(spacing: AppTheme.unit2) {
-                        ProfilePic(pfp: story.user.pfp, size: .medium)
-                        
-                        if let name = story.user.toNameVariant() {
-                            PetnameView(name: name, aliases: story.user.aliases)
-                        }
-                    }
-                    
-                    Spacer()
-                    
+        Button(
+            action: {
+                switch (story.user.ourFollowStatus, story.entry.status) {
+                case (.following(_), .unresolved):
+                    onRefreshUser()
+                case (.following(let name), _):
+                    action(Slashlink(petname: name.toPetname()))
+                case _:
+                    action(story.user.address)
+                }
+            },
+            label: {
+            VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                HStack(alignment: .center, spacing: 0) {
                     Group {
-                        switch story.entry.status {
-                        case .unresolved:
-                            Image(systemName: "person.fill.questionmark")
-                                .foregroundColor(.secondary)
-                        case .pending:
-                            PendingSyncBadge()
-                                .foregroundColor(.secondary)
-                        case .resolved:
-                            switch (story.user.ourFollowStatus, story.user.category) {
-                            case (.following(_), _):
-                                Image.from(appIcon: .following)
+                        HStack(spacing: AppTheme.unit2) {
+                            ProfilePic(pfp: story.user.pfp, size: .medium)
+                            
+                            if let name = story.user.toNameVariant() {
+                                PetnameView(name: name, aliases: story.user.aliases)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Group {
+                            switch story.entry.status {
+                            case .unresolved:
+                                Image(systemName: "person.fill.questionmark")
                                     .foregroundColor(.secondary)
-                            case (_, .ourself):
-                                Image.from(appIcon: .you(colorScheme))
+                            case .pending:
+                                PendingSyncBadge()
                                     .foregroundColor(.secondary)
-                            case (_, _):
-                                EmptyView()
+                            case .resolved:
+                                switch (story.user.ourFollowStatus, story.user.category) {
+                                case (.following(_), _):
+                                    Image.from(appIcon: .following)
+                                        .foregroundColor(.secondary)
+                                case (_, .ourself):
+                                    Image.from(appIcon: .you(colorScheme))
+                                        .foregroundColor(.secondary)
+                                case (_, _):
+                                    EmptyView()
+                                }
                             }
                         }
                     }
-                    .frame(
-                        width: AppTheme.minTouchSize,
-                        height: AppTheme.minTouchSize,
-                        alignment: .trailing // Creates correct spacing when next to "..."
-                    )
+                    .disabled(!story.entry.status.isReady)
                 }
-                .disabled(!story.entry.status.isReady)
                 
-                Menu(
-                    content: {
-                        if story.user.isFollowedByUs {
-                            Button(
-                                action: {
-                                    profileAction(story.user, .requestUnfollow)
-                                },
-                                label: {
-                                    Label(
-                                        title: { Text("Unfollow") },
-                                        icon: { Image(systemName: "person.fill.xmark") }
-                                    )
-                                }
-                            )
-                            Button(
-                                action: {
-                                    profileAction(story.user, .requestRename)
-                                },
-                                label: {
-                                    Label(
-                                        title: { Text("Rename") },
-                                        icon: { Image(systemName: "pencil") }
-                                    )
-                                }
-                            )
-                        } else {
-                            Button(
-                                action: {
-                                    profileAction(story.user, .requestFollow)
-                                },
-                                label: {
-                                    Label(
-                                        title: { Text("Follow") },
-                                        icon: { Image(systemName: "person.badge.plus") }
-                                    )
-                                }
-                            )
-                        }
+                if let bio = story.user.bio,
+                   bio.hasVisibleContent {
+                    Text(verbatim: bio.text)
+                }
+            }
+            .contentShape(.interaction, RectangleCroppedTopRightCorner())
+        })
+        .buttonStyle(
+            EntryListRowButtonStyle(
+                color: .secondaryBackground
+            )
+        )
+        .contextMenu {
+            if story.user.isFollowedByUs {
+                Button(
+                    action: {
+                        profileAction(story.user, .requestUnfollow)
                     },
                     label: {
-                        EllipsisLabelView()
+                        Label(
+                            title: { Text("Unfollow") },
+                            icon: { Image(systemName: "person.fill.xmark") }
+                        )
                     }
-                ).disabled(story.user.category == .ourself)
-            }
-            // Omit trailing padding to allow ... hit target to move to top right corner
-            .padding([.leading], AppTheme.padding)
-            
-            if let bio = story.user.bio,
-               bio.hasVisibleContent {
-                Text(verbatim: bio.text)
-                    .padding([.leading, .trailing, .bottom], AppTheme.padding)
+                )
+                Button(
+                    action: {
+                        profileAction(story.user, .requestRename)
+                    },
+                    label: {
+                        Label(
+                            title: { Text("Rename") },
+                            icon: { Image(systemName: "pencil") }
+                        )
+                    }
+                )
+            } else {
+                Button(
+                    action: {
+                        profileAction(story.user, .requestFollow)
+                    },
+                    label: {
+                        Label(
+                            title: { Text("Follow") },
+                            icon: { Image(systemName: "person.badge.plus") }
+                        )
+                    }
+                )
             }
         }
-        .contentShape(.interaction, RectangleCroppedTopRightCorner())
-        .onTapGesture {
-            switch (story.user.ourFollowStatus, story.entry.status) {
-            case (.following(_), .unresolved):
-                onRefreshUser()
-            case (.following(let name), _):
-                action(Slashlink(petname: name.toPetname()))
-            case _:
-                action(story.user.address)
-            }
-        }
-        .background(.background)
     }
 }
 

@@ -125,28 +125,13 @@ final class Tests_NoosphereService: XCTestCase {
         XCTAssertEqual(versionC, versionZ)
     }
     
-    func testFindBestLinkAddressNoContext() async throws {
+    func testFindBestLinkAddressUnresolvable() async throws {
         let tmp = try TestUtilities.createTmpDir()
         let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
         let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
         
-        try await data.noosphere.write(
-            slug: Slug(
-                "test"
-            )!,
-            contentType: "text/subtext",
-            additionalHeaders: [],
-            body: (
-                "hello"
-            ).toData(
-                encoding: .utf8
-            )!
-        )
-        try await data.noosphere.save()
-        
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
-        let link = SubSlashlinkLink(slashlink: slashlink)
         
         let address = try await data.noosphere.findBestAddressForLink(
             slashlink
@@ -162,27 +147,8 @@ final class Tests_NoosphereService: XCTestCase {
         
         let _ = try await data.noosphere.createSphere(ownerKeyName: "quick-test")
         
-        // Follow a user and attempt to navigate to a link based on them
-        
-        try await data.noosphere.write(
-            slug: Slug(
-                "test"
-            )!,
-            contentType: "text/subtext",
-            additionalHeaders: [],
-            body: (
-                "hello"
-            ).toData(
-                encoding: .utf8
-            )!
-        )
-        try await data.noosphere.save()
-        
-        let friend = Did.dummyData()
         let friendName = Petname("friend")!
-        try await data.addressBook.followUser(did: friend, petname: friendName)
-        
-        let slashlink = Slashlink(slug: Slug("hello")!)
+        let slashlink = Slashlink(peer: .petname(friendName), slug: Slug("hello")!)
         
         let address = try await data.noosphere.findBestAddressForLink(
             slashlink
@@ -190,5 +156,34 @@ final class Tests_NoosphereService: XCTestCase {
        
         XCTAssertEqual(address, slashlink)
     }
-
+    
+    func testFindBestLinkAddressWithDraft() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let slashlink = Slashlink(peer: .did(.local), slug: Slug("hello")!)
+        
+        let address = try await data.noosphere.findBestAddressForLink(
+            slashlink
+        )
+       
+        // Should preserve Did.local
+        XCTAssertEqual(address, slashlink)
+    }
+    
+    func testFindBestLinkAddressWithOwnNote() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let did = try await data.noosphere.identity()
+        
+        let slashlink = Slashlink(peer: .did(did), slug: Slug("hello")!)
+        
+        let address = try await data.noosphere.findBestAddressForLink(
+            slashlink
+        )
+       
+        // Should drop our DID
+        XCTAssertEqual(address, Slashlink(slug: Slug("hello")!))
+    }
 }

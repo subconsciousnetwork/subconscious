@@ -9,82 +9,74 @@ import XCTest
 @testable import Subconscious
 
 final class Tests_NotebookDetailStackCursor: XCTestCase {
-    func testTagRequestDeleteMemo() throws {
+    func testTagRequestSaveEntry() throws {
+        let memo = MemoEntry(address: Slashlink("@bob/foo")!, contents: Memo.dummyData())
         let action = NotebookDetailStackCursor.tag(
-            .requestDeleteMemo(Slashlink("@bob/foo")!)
+            .requestSaveEntry(memo)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.requestDeleteMemo(Slashlink("@bob/foo")!)
+            NotebookAction.requestSaveEntry(memo)
         )
     }
     
-    func testTagSucceedMergeEntry() throws {
+    func testTagRequestDeleteEntry() throws {
         let action = NotebookDetailStackCursor.tag(
-            .succeedMergeEntry(
-                parent: Slashlink("/foo")!,
-                child: Slashlink("/bar")!
-            )
+            .requestDeleteEntry(Slashlink("@bob/foo")!)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.succeedMergeEntry(
-                parent: Slashlink("/foo")!,
-                child: Slashlink("/bar")!
-            )
+            NotebookAction.requestDeleteEntry(Slashlink("@bob/foo")!)
         )
     }
     
-    func testTagSucceedMoveEntry() throws {
+    func testTagRequestMoveEntry() throws {
         let action = NotebookDetailStackCursor.tag(
-            .succeedMoveEntry(
-                from: Slashlink("/foo")!,
-                to: Slashlink("/bar")!
-            )
+            .requestMoveEntry(from: Slashlink("@bob/foo")!, to: Slashlink("@bob/bar")!)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.succeedMoveEntry(
-                from: Slashlink("/foo")!,
-                to: Slashlink("/bar")!
-            )
+            NotebookAction.requestMoveEntry(from: Slashlink("@bob/foo")!, to: Slashlink("@bob/bar")!)
         )
     }
     
-    func testTagSucceedUpdateAudience() throws {
+    func testTagRequestMergeEntry() throws {
         let action = NotebookDetailStackCursor.tag(
-            .succeedUpdateAudience(
-                MoveReceipt(
-                    from: Slashlink("/foo")!,
-                    to: Slashlink("/bar")!
-                )
-            )
+            .requestMergeEntry(parent: Slashlink("@bob/foo")!, child: Slashlink("@bob/bar")!)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.succeedUpdateAudience(
-                MoveReceipt(
-                    from: Slashlink("/foo")!,
-                    to: Slashlink("/bar")!
-                )
-            )
+            NotebookAction.requestMergeEntry(parent: Slashlink("@bob/foo")!, child: Slashlink("@bob/bar")!)
         )
     }
     
-    func testTagSucceedSaveEntry() throws {
-        let date = Date.now
+    func testTagRequestUpdateAudience() throws {
         let action = NotebookDetailStackCursor.tag(
-            .succeedSaveEntry(
-                address: Slashlink("/bar")!,
-                modified: date
-            )
+            .requestUpdateAudience(Slashlink("@bob/foo")!, .public)
         )
         XCTAssertEqual(
             action,
-            NotebookAction.succeedSaveEntry(
-                slug: Slashlink("/bar")!,
-                modified: date
-            )
+            NotebookAction.requestUpdateAudience(Slashlink("@bob/foo")!, .public)
+        )
+    }
+    
+    func testTagRequestAssignNoteColor() throws {
+        let action = NotebookDetailStackCursor.tag(
+            .requestAssignNoteColor(Slashlink("@bob/foo")!, .c)
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.requestAssignNoteColor(Slashlink("@bob/foo")!, .c)
+        )
+    }
+    
+    func testTagRequestAppendToEntry() throws {
+        let action = NotebookDetailStackCursor.tag(
+            .requestAppendToEntry(Slashlink("@bob/foo")!, "test")
+        )
+        XCTAssertEqual(
+            action,
+            NotebookAction.requestAppendToEntry(Slashlink("@bob/foo")!, "test")
         )
     }
 }

@@ -8,6 +8,18 @@
 
 import Foundation
 
+extension Substring {
+    func toString() -> String {
+        String(self)
+    }
+}
+
+extension String {
+    func toSubstring() -> Substring {
+        self[...]
+    }
+}
+
 extension String {
     /// Remove leading `prefix` from string if it exists.
     /// - Returns: new  string without prefix
