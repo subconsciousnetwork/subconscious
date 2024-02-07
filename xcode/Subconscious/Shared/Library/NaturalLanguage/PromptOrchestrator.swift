@@ -84,12 +84,20 @@ struct KeywordClassifier: PromptClassifierProtocol {
         tagger.string = text
         
         let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace, .joinNames]
-        let tags: [NLTag] = [.noun] // Focus on nouns
+        let tags: [NLTag] = [.noun, .personalName, .placeName, .organizationName]
 
         var keywords = [String]()
         
-        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
-            if let tag = tag, tags.contains(tag) {
+        tagger.enumerateTags(
+            in: text.startIndex..<text.endIndex,
+            unit: .word,
+            scheme: .lexicalClass,
+            options: options
+        ) {
+            tag,
+            tokenRange in
+            if let tag = tag,
+               tags.contains(tag) {
                 let keyword = String(text[tokenRange])
                 keywords.append(keyword)
             }
