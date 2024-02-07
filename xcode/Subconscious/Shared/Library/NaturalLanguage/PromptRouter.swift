@@ -196,10 +196,12 @@ struct PromptRoute: PromptRouteProtocol {
 /// A prompt router request is intended to live for the lifetime of a single
 /// router processing request.
 actor PromptRouterRequest {
-    /// An arbitrary depth at which we stop recursive processing.
+    /// An arbitrary depth at which we stop checking routes and return nil.
     /// This number should be generous, but small. If you exceed it, you're
     /// probably doing something wrong.
-    private let maxDepth = 100
+    private let maxDepth = 500
+    /// The number of times this actor's `process` method has been called.
+    /// This includes subsequent routes, and also recursive calls.
     private var depth = 0
 
     private var routes: [PromptRouteProtocol]
