@@ -128,6 +128,8 @@
 		B5A7AD332A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
 		B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */; };
 		B5AD5C902AA7FF1900FC5BC5 /* Tests_DetailStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */; };
+		B5BC3D2A2B731A3000DB8A49 /* UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */; };
+		B5BC3D2B2B731A3000DB8A49 /* UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */; };
 		B5C818D62AF380A7001F65BE /* CardStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C818D52AF380A7001F65BE /* CardStackView.swift */; };
 		B5C918EE2A67A16A004C6CD5 /* AuthorizationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */; };
 		B5C918F02A67ADEF004C6CD5 /* SphereSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */; };
@@ -664,6 +666,7 @@
 		B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailStackView.swift; sourceTree = "<group>"; };
 		B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DetailStack.swift; sourceTree = "<group>"; };
+		B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLikesService.swift; sourceTree = "<group>"; };
 		B5C818D52AF380A7001F65BE /* CardStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStackView.swift; sourceTree = "<group>"; };
 		B5C918ED2A67A16A004C6CD5 /* AuthorizationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationSettingsView.swift; sourceTree = "<group>"; };
 		B5C918EF2A67ADEF004C6CD5 /* SphereSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereSettingsView.swift; sourceTree = "<group>"; };
@@ -1360,6 +1363,7 @@
 				B8CBAFA8299580E50079107E /* StoreProtocol.swift */,
 				B50B045A2A04B61000AA584B /* TranscludeService.swift */,
 				B508956F29E79BE70048106B /* UserProfileService.swift */,
+				B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -2406,6 +2410,7 @@
 				B51359282AC11570004385A7 /* ErrorDetailView.swift in Sources */,
 				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
+				B5BC3D2A2B731A3000DB8A49 /* UserLikesService.swift in Sources */,
 				B8AB08BD2A9D502C00998099 /* ListBlockCell.swift in Sources */,
 				B57339582AEF800300D43333 /* ToastView.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
@@ -2564,6 +2569,7 @@
 				B85EC461296F099700558761 /* ProfilePic.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8B4251928FDE8AA0081B8D5 /* MemoData.swift in Sources */,
+				B5BC3D2B2B731A3000DB8A49 /* UserLikesService.swift in Sources */,
 				B50B045C2A04B61000AA584B /* TranscludeService.swift in Sources */,
 				B5CFC7FF29E5403900178631 /* FollowUserSheet.swift in Sources */,
 			);
