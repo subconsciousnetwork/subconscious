@@ -175,8 +175,8 @@
 		B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B8133AEB29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8133AEA29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift */; };
 		B8133AEC29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8133AEA29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift */; };
-		B81719992B713904008367D5 /* PromptOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81719982B713904008367D5 /* PromptOrchestrator.swift */; };
-		B817199A2B713904008367D5 /* PromptOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81719982B713904008367D5 /* PromptOrchestrator.swift */; };
+		B81719992B713904008367D5 /* PromptRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81719982B713904008367D5 /* PromptRouter.swift */; };
+		B817199A2B713904008367D5 /* PromptRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81719982B713904008367D5 /* PromptRouter.swift */; };
 		B81A1A6D29DF267200B4CD1C /* LoadingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A1A6C29DF267200B4CD1C /* LoadingState.swift */; };
 		B81A1A6F29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A1A6E29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift */; };
 		B81A535C27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
@@ -697,7 +697,7 @@
 		B80CC806299D4DF000C4D7C0 /* Tests_SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SQLite3Database.swift; sourceTree = "<group>"; };
 		B8109C2727A8879C00CD2B6D /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		B8133AEA29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubtextAttributedStringRenderer.swift; sourceTree = "<group>"; };
-		B81719982B713904008367D5 /* PromptOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptOrchestrator.swift; sourceTree = "<group>"; };
+		B81719982B713904008367D5 /* PromptRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptRouter.swift; sourceTree = "<group>"; };
 		B81A1A6C29DF267200B4CD1C /* LoadingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingState.swift; sourceTree = "<group>"; };
 		B81A1A6E29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoViewerDetailMetaSheetView.swift; sourceTree = "<group>"; };
 		B81A535B27275138001A6268 /* Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
@@ -1215,7 +1215,7 @@
 		B81719972B7138DE008367D5 /* NaturalLanguage */ = {
 			isa = PBXGroup;
 			children = (
-				B81719982B713904008367D5 /* PromptOrchestrator.swift */,
+				B81719982B713904008367D5 /* PromptRouter.swift */,
 				B8B9640D2B692EBB00A96165 /* Tracery.swift */,
 			);
 			path = NaturalLanguage;
@@ -2137,7 +2137,7 @@
 				B569971729B6A0DF003204FC /* DidQrCodeView.swift in Sources */,
 				B542EF672AF48F2100BE29F1 /* StoreUtilities.swift in Sources */,
 				B8EA3EE82915C23200B92C2E /* HeaderSubtext.swift in Sources */,
-				B81719992B713904008367D5 /* PromptOrchestrator.swift in Sources */,
+				B81719992B713904008367D5 /* PromptRouter.swift in Sources */,
 				B58C73A729DBB3B500B00EA1 /* UserProfileView.swift in Sources */,
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
 				B83B19A32A005C6B007657D9 /* Did+SubconsciousLocal.swift in Sources */,
@@ -2417,7 +2417,7 @@
 			files = (
 				B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
-				B817199A2B713904008367D5 /* PromptOrchestrator.swift in Sources */,
+				B817199A2B713904008367D5 /* PromptRouter.swift in Sources */,
 				B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */,
 				B59E9E1B2AB8FA29008E3543 /* HomeProfileView.swift in Sources */,
 				B8B9640F2B692EBB00A96165 /* Tracery.swift in Sources */,

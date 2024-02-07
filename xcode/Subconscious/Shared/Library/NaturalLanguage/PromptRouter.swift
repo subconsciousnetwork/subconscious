@@ -54,17 +54,6 @@ extension PromptClassifications {
     }
 }
 
-struct PromptResult: Hashable, Comparable {
-    static func < (lhs: PromptResult, rhs: PromptResult) -> Bool {
-        lhs.weight < rhs.weight
-    }
-
-    let result: String
-    let weight: CGFloat
-}
-
-typealias PromptResults = [PromptResult]
-
 /// Protocol to implement a classifier
 protocol PromptClassifierProtocol {
     func classify(_ input: String) async -> PromptClassifications
@@ -151,80 +140,93 @@ struct RegexClassifier<Output>: PromptClassifierProtocol {
     }
 }
 
+/// The request context for prompt routes
+struct PromptRouteRequest: Hashable {
+    var input: String
+    var classifications: PromptClassifications
+}
+
 /// Protocol to implement a route
 protocol PromptRouteProtocol {
-    func route(
-        input: String,
-        classifications: PromptClassifications
-    ) async -> [PromptResult]
+    func route(_ context: PromptRouteRequest) async -> String?
 }
 
 /// Default implementation of a route that just takes a closure
 struct PromptRoute: PromptRouteProtocol {
-    private var _route: (String, PromptClassifications) async -> [PromptResult]
+    private var _route: (PromptRouteRequest) async -> String?
 
     init(
-        _ route: @Sendable @escaping (
-            String,
-            PromptClassifications
-        ) async -> [PromptResult]
+        _ route: @Sendable @escaping (PromptRouteRequest) async -> String?
     ) {
         self._route = route
     }
 
-    func route(
-        input: String,
-        classifications: PromptClassifications
-    ) async -> [PromptResult] {
-        await _route(input, classifications)
+    func route(_ context: PromptRouteRequest) async -> String? {
+        await _route(context)
     }
 }
 
-struct PromptOrchestrator {
+/// Compose a collection of classifiers into a single classifier that returns
+/// a consolidated collection of classifications.
+struct PromptClassifier: PromptClassifierProtocol {
     private var classifiers: [PromptClassifierProtocol]
-    private var routes: [PromptRouteProtocol]
 
-    init(
-        classifiers: [PromptClassifierProtocol] = [],
-        routes: [PromptRouteProtocol] = []
-    ) {
+    init(classifiers: [PromptClassifierProtocol] = []) {
         self.classifiers = classifiers
-        self.routes = routes
     }
 
-    mutating func classifier(_ classifier: PromptClassifierProtocol) {
+    /// Add a classifier, mutating this instance
+    mutating func classifier(
+        _ classifier: PromptClassifierProtocol
+    ) {
         self.classifiers.append(classifier)
     }
 
-    mutating func route(_ route: PromptRouteProtocol) {
-        self.routes.append(route)
-    }
-
-    /// Match input against disambiguators, returning up to `max` matches
-    /// for input.
-    func generate(
-        _ input: String,
-        max maxResults: Int = 5
-    ) async -> [PromptResult] {
+    func classify(_ input: String) async -> PromptClassifications {
         var classifications: PromptClassifications = []
         for classifier in classifiers {
             let classification = await classifier.classify(input)
             classifications.append(contentsOf: classification)
         }
-        let consolidatedClassifications = classifications.consolidate()
-        var results: [PromptResult] = []
+        return classifications.consolidate()
+    }
+}
+
+/// Combine a series of routes into a router for inputs
+/// The first route producing a match is used.
+/// Routes are processed in order. More specific routes should precede more
+/// general ones.
+/// Tip: routes can consider recursively calling the router with new input.
+struct PromptRouter {
+    private var routes: [PromptRouteProtocol]
+    private var classifier: PromptClassifierProtocol
+
+    init(
+        routes: [PromptRouteProtocol] = [],
+        classifier: PromptClassifierProtocol
+    ) {
+        self.routes = routes
+        self.classifier = classifier
+    }
+
+    /// Add a route, mutating this instance
+    mutating func route(_ route: PromptRouteProtocol) {
+        self.routes.append(route)
+    }
+
+    /// Pipe input through a succession of routes until a match is found
+    func process(_ input: String) async -> String? {
+        let classifications = await classifier.classify(input)
+        let request = PromptRouteRequest(
+            input: input,
+            classifications: classifications
+        )
+        // Try each route in succession until we get a match
         for route in routes {
-            let routeResults = await route.route(
-                input: input,
-                classifications: consolidatedClassifications
-            )
-            for result in routeResults {
-                results.append(result)
-                if results.count >= maxResults {
-                    return results.reversed()
-                }
+            if let result = await route.route(request) {
+                return result
             }
         }
-        return results.reversed()
+        return nil
     }
 }

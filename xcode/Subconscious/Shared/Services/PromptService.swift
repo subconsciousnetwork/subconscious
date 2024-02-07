@@ -10,34 +10,33 @@ import SwiftUI
 actor PromptService {
     private let tracery: Tracery
     private let grammar: Grammar
-    private var orchestrator: PromptOrchestrator
+    private var router: PromptRouter
 
     init(grammar: Dictionary<String, Array<String>> = [:]) {
         let tracery = Tracery()
 
-        var orchestrator = PromptOrchestrator()
-
-        orchestrator.classifier(
+        var classifier = PromptClassifier()
+        classifier.classifier(
             RegexClassifier(/journal|diary/) { matches, input in
                 [PromptClassification(tag: .journal, weight: 0.6)]
             }
         )
-        orchestrator.classifier(
+        classifier.classifier(
             RegexClassifier(/me|myself|I am|my/) { matches, input in
                 [PromptClassification(tag: .journal, weight: 0.6)]
             }
         )
-        orchestrator.classifier(
+        classifier.classifier(
             RegexClassifier(/todo/) { matches, input in
                 [PromptClassification(tag: .project, weight: 0.2 * CGFloat(matches.count))]
             }
         )
-        orchestrator.classifier(
+        classifier.classifier(
             RegexClassifier(/\?\s/) { matches, input in
                 [PromptClassification(tag: .question, weight: 0.5 * CGFloat(matches.count))]
             }
         )
-        orchestrator.classifier(
+        classifier.classifier(
             RegexClassifier(/(\b\d{1,2}\D{0,3}\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\D{0,3}\b\d{2,4})|(\b\d{4}-\d{1,2}-\d{1,2}\b)|(\b\d{1,2}-\d{1,2}-\d{2,4}\b)|(\b\d{1,2}\/\d{1,2}\/\d{2,4}\b)/) { matches, input in
                 
                 if matches.count == 1 {
@@ -53,12 +52,12 @@ actor PromptService {
                 ]
             }
         )
-        orchestrator.classifier(KeywordClassifier() { keywords, input in
+        classifier.classifier(KeywordClassifier() { keywords, input in
             keywords.map { k in
                 PromptClassification(tag: .noun(k), weight: 1)
             }
         })
-        orchestrator.classifier(
+        classifier.classifier(
             SubtextClassifier() { dom, input in
                 [
                     PromptClassification(
@@ -102,28 +101,30 @@ actor PromptService {
             }
         )
 
+        var router = PromptRouter(classifier: classifier)
         // Journal route
-        orchestrator.route(
-            PromptRoute { input, classifications in
-                guard classifications.contains(where: { classification in
-                    switch classification.tag {
-                    case .journal:
-                        return classification.weight > 0.5
-                    default:
-                        return false
+        router.route(
+            PromptRoute { request in
+                guard request.classifications.contains(
+                    where: { classification in
+                        switch classification.tag {
+                        case .journal:
+                            return classification.weight > 0.5
+                        default:
+                            return false
+                        }
                     }
-                }) else {
-                    return []
+                ) else {
+                    return nil
                 }
-                let prompt = tracery.flatten(
+                return tracery.flatten(
                     grammar: grammar,
                     start: "#reflect#"
                 )
-                return [PromptResult(result: prompt, weight: 0.5)]
             }
         )
 
-        self.orchestrator = orchestrator
+        self.router = router
         self.tracery = tracery
         self.grammar = grammar
     }
@@ -134,9 +135,7 @@ actor PromptService {
     
     /// Generate a prompt given an input string
     func generate(input: String) async -> String {
-        let results = await orchestrator.generate(input)
-        let result = results.randomElement()?.result
-        guard let result = result else {
+        guard let result = await router.process(input) else {
             return await generate()
         }
         return result
