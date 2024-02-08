@@ -39,6 +39,11 @@ extension PromptClassifications {
         // iterate over all entries and combine the scores of matching tags
         var consolidated: PromptClassifications = []
         for score in self {
+            // Omit zero contribution tags
+            guard score.weight != 0 else {
+                continue
+            }
+            
             if let index = consolidated.firstIndex(where: { $0.tag == score.tag }) {
                 consolidated[index] = PromptClassification(
                     tag: score.tag,
