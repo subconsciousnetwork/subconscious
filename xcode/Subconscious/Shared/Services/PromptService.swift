@@ -122,12 +122,80 @@ actor PromptService {
                 ) else {
                     return nil
                 }
+                
                 return tracery.flatten(
                     grammar: grammar,
                     start: "#reflect#"
                 )
             }
         )
+        
+        router.route(
+            PromptRoute { request in
+                guard request.classifications.contains(
+                    where: { classification in
+                        switch classification.tag {
+                        case .project:
+                            return classification.weight > 0.5
+                        default:
+                            return false
+                        }
+                    }
+                ) else {
+                    return nil
+                }
+                
+                return tracery.flatten(
+                    grammar: grammar,
+                    start: "#work#"
+                )
+            }
+        )
+        
+        router.route(
+            PromptRoute { request in
+                guard request.classifications.contains(
+                    where: { classification in
+                        switch classification.tag {
+                        case .question:
+                            return classification.weight > 0.5
+                        default:
+                            return false
+                        }
+                    }
+                ) else {
+                    return nil
+                }
+                
+                return tracery.flatten(
+                    grammar: grammar,
+                    start: "#question#"
+                )
+            }
+        )
+        
+        router.route(
+            PromptRoute { request in
+                guard request.classifications.contains(
+                    where: { classification in
+                        switch classification.tag {
+                        case .quote:
+                            return classification.weight > 0.5
+                        default:
+                            return false
+                        }
+                    }
+                ) else {
+                    return nil
+                }
+                
+                return tracery.flatten(
+                    grammar: grammar,
+                    start: "#quote#"
+                )
+            }
+        )
+
 
         self.router = router
         self.tracery = tracery
@@ -277,6 +345,98 @@ extension PromptService {
             "What is something you want to make?",
             "What is something you want to achieve?",
             "What is something you want to build?",
+        ],
+        "work": [
+            "What are the unknowns?",
+            "Can you mitigate risks?",
+            "What is the next step?",
+            "What are the key milestones?",
+            "Who are the stakeholders involved?",
+            "What resources are required?",
+            "How can you measure success?",
+            "What are the potential bottlenecks?",
+            "Who can provide expert insights?",
+            "What is the deadline?",
+            "How does this align with goals?",
+            "What are the dependencies?",
+            "Can this process be optimized?",
+            "What feedback has been received?",
+            "How can teamwork be improved?",
+            "What are the cost implications?",
+            "Is there a plan B?",
+            "What training is needed?",
+            "How can communication be enhanced?",
+            "What are the competitive advantages?",
+            "Are there regulatory considerations?",
+            "What technological tools can help?",
+            "How can we track progress?",
+            "What are the scalability options?",
+            "How can we ensure quality?",
+            "What are the project risks?",
+            "Can we automate any steps?",
+            "What lessons have been learned?"
+        ],
+        "quote": [
+            "Who else would say this?",
+            "Does this remind you of anyone?",
+            "What if you took this literally?",
+            "What's the underlying message?",
+            "How does this apply today?",
+            "Can you find a counterquote?",
+            "What's the historical context?",
+            "How would you paraphrase this?",
+            "What examples embody this?",
+            "What's the opposite viewpoint?",
+            "How does this inspire you?",
+            "What are the limitations?",
+            "How can this be misunderstood?",
+            "What would your critique be?",
+            "Where can this be applied?",
+            "What emotions does this evoke?",
+            "How can this change behavior?",
+            "What's the most controversial aspect?",
+            "How is this universally relevant?",
+            "What personal experiences relate?",
+            "Can this be simplified further?",
+            "What wisdom does this ignore?",
+            "How would a skeptic respond?",
+            "What assumptions does this make?",
+            "What are the implications?",
+            "How can this be expanded?",
+            "What questions does this raise?",
+            "How does this challenge you?"
+        ],
+        "question": [
+            "Is there more than one answer?",
+            "When should you ask this?",
+            "Who could answer best?",
+            "How can you validate your answer?",
+            
+            "What assumptions are being made?",
+            "Why is this question important?",
+            "What context is necessary?",
+            "How does this question evolve?",
+            "What's the underlying problem?",
+            "Can you ask it differently?",
+            "What evidence supports your view?",
+            "Who else has asked this?",
+            "What if the roles were reversed?",
+            "How would experts disagree?",
+            "What are the possible consequences?",
+            "Can this question be broken down?",
+            "What biases might affect answers?",
+            "How can this lead to action?",
+            "What similar questions exist?",
+            "How does time affect the answer?",
+            "What do different cultures say?",
+            "How can technology provide solutions?",
+            "What if your initial answer is wrong?",
+            "How does this question connect to others?",
+            "What does this reveal about you?",
+            "Can history offer insights?",
+            "What are the ethical considerations?",
+            "How does this question inspire creativity?",
+            "What future questions does this prompt?"
         ]
     ]
 
