@@ -403,10 +403,12 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             context.coordinator.isUIViewUpdating = false
         }
 
-        if (view.text != state.text) {
+        let txt = view.text
+        if (txt != state.text && context.coordinator.lastText != state.text) {
             SubtextTextViewRepresentable.logger.debug("updateUIView: set text")
             view.text = state.text
         }
+        context.coordinator.lastText = view.text
 
         // Update width
         if view.fixedWidth != self.frame.width {
