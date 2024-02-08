@@ -196,7 +196,7 @@ struct MemoEditorDetailView: View {
     var highlight: Color? {
         store.state.themeColor?.toHighlightColor()
             ?? store.state.address?.themeColor.toHighlightColor()
-            ?? ThemeColor.a.toColor()
+            ?? ThemeColor.a.toHighlightColor()
     }
     
     var background: Color? {
