@@ -73,16 +73,21 @@ struct MemoEditorDetailView: View {
     }
     
     var body: some View {
-        VStack {
-            if app.state.isBlockEditorEnabled {
-                blockEditor()
-            } else {
-                plainEditor()
+        ZStack {
+            VStack { }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .modifier(AppThemeBackgroundViewModifier())
+            
+            VStack {
+                if app.state.isBlockEditorEnabled {
+                    blockEditor()
+                } else {
+                    plainEditor()
+                }
             }
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .modifier(AppThemeBackgroundViewModifier())
         .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
@@ -211,7 +216,7 @@ struct MemoEditorDetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        SubtextTextViewRepresentable( state: store.state.editor, send: Address.forward(
+                        SubtextTextViewRepresentable(state: store.state.editor, send: Address.forward(
                                 send: store.send,
                                 tag: MemoEditorDetailSubtextTextCursor.tag
                             ),
