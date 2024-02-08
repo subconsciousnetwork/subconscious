@@ -57,6 +57,11 @@ actor PromptService {
             }
         )
         classifier.classifier(
+            RegexClassifier(/".+"|\'.+\'|“.+”/) { matches, input in
+                [PromptClassification(tag: .quote, weight: 0.6 * CGFloat(matches.count))]
+            }
+        )
+        classifier.classifier(
             RegexClassifier(/(\b\d{1,2}\D{0,3}\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\D{0,3}\b\d{2,4})|(\b\d{4}-\d{1,2}-\d{1,2}\b)|(\b\d{1,2}-\d{1,2}-\d{2,4}\b)|(\b\d{1,2}\/\d{1,2}\/\d{2,4}\b)/) { matches, input in
                 
                 if matches.count == 1 {
