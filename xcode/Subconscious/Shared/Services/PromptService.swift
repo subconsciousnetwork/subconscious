@@ -22,32 +22,32 @@ actor PromptService {
             }
         )
         classifier.classifier(
-            RegexClassifier(/for me|by me|with me|myself|I am|I need|I want|I should|will I|can I|could I|would I/) { matches, input in
+            RegexClassifier(/for me|by me|with me|myself|I am|I need|I want|I should|will I|can I|could I|would I|I feel|I think|I believe|I hope|I wish|I regret|I wonder|I'm trying|I'm hoping|I'm feeling|I've been|I've felt|I've thought|I plan|I'm planning|I've decided|I'm considering|I'm reflecting|reflecting on|thinking about|pondering|contemplating|dreaming of|aspiring to|goals for|my goals|my aspirations|my dreams|my fears|my hopes|my challenges|my successes|my failures|learning from|growing from|my journey|my path|my experiences|my reflections|personal growth|self-improvement|self-discovery|self-reflection|self-awareness|understanding myself|exploring my|navigating my|confronting my|embracing my|my mental health|my well-being|my happiness|my sadness|my anger|my frustration|my joy|my gratitude|grateful for|thankful for|appreciative of|looking forward to/) { matches, input in
                 [PromptClassification(tag: .journal, weight: CGFloat(matches.count) * 0.1)]
             }
         )
         classifier.classifier(
-            RegexClassifier(/might be|what if|I wonder|then just|this can be|this means|this implies|it follows that|another way/) { matches, input in
+            RegexClassifier(/might be|what if|I wonder|then just|this can be|this might be|this could be|this means|this implies|it follows that|another way|possibly|potentially|imagine if|suppose that|assuming that|if we consider|it's conceivable|it's possible|could it be|is it possible|there's a chance|the idea of|the concept of|the possibility of|one possibility is|to speculate|in theory|theoretically|hypothetically|let's assume|for the sake of argument|what about|how about|could we|would it be|might we consider|exploring the idea|investigating the \w|pondering the \w|contemplating the \w|envisaging|forecasting|predicting|the future of|the potential for|the prospects of|speculating about|daydreaming about|dreaming of|fantasizing about|envisioning|reimagining|rethinking|questioning the|challenging the \w|redefining|redesigning|reconsidering|reconceptualizing/) { matches, input in
                 [PromptClassification(tag: .idea, weight: CGFloat(matches.count) * 0.1)]
             }
         )
         classifier.classifier(
-            RegexClassifier(/in fact|it's possible|imagine that|we can think|one can think|most \w have|but this is|instead|this is why|this is often|more useful than|aren't always|can never|\w is a \w|once an \w|are how we|this means|this implies|it follows that/) { matches, input in
+            RegexClassifier(/in fact|indeed|it's possible|perhaps|imagine that|we can think|one can think|most \w+ have|but this is|instead|this is why|this is often|more useful than|aren't always|can never|nevertheless|however|on the other hand|\w+ is a \w+|once an \w+|are how we|this means|this implies|it follows that|to illustrate|for example|for instance|consider the case|in contrast|despite|although|given that|assuming that|if we assume|leads us to believe|suggests that|points to|evidence suggests|studies show|research indicates|it could be argued|it is argued|it is believed|one might argue|one might consider|the fact that|it is clear that|it is evident that|therefore|thus|as a result|consequently|which means|which implies|which suggests|suggesting/) { matches, input in
                 [PromptClassification(tag: .argument, weight: CGFloat(matches.count) * 0.1)]
             }
         )
         classifier.classifier(
-            RegexClassifier(/media|twitter|instagram|bluesky|facebook|book|movie|film|music|album|song|article|letter|essay|image|photo|picture|performance|concert|youtube|twitch|video|livestream|netflix|cinema|ballet|theatre|television|tv|journalism|news/) { matches, input in
+            RegexClassifier(/media|digital media|social media|art|visual art|digital art|twitter|instagram|bluesky|facebook|snapchat|tiktok|linkedin|book|ebook|audiobook|novel|magazine|newspaper|movie|film|documentary|series|miniseries|music|album|EP|single|song|playlist|mixtape|article|editorial|op-ed|letter|essay|report|thesis|image|painting|illustration|drawing|photo|photography|picture|graphic|infographic|performance|concert|festival|show|live performance|youtube|vimeo|twitch|video|livestream|streaming|netflix|hulu|amazon prime|disney|cinema|ballet|opera|theatre|musical|play|television|tv|cable tv|satellite tv|journalism|news|broadcast|podcast|vlog|webinar|forum|blog|vlogging|streaming service|media platform|content creation|multimedia|animation|anime|manga|graphic novel|comic|comic book|video game|gaming|esports|virtual reality|vr|augmented reality|ar|interactive media|digital content/) { matches, input in
                 [PromptClassification(tag: .media, weight: CGFloat(matches.count) * 0.1)]
             }
         )
         classifier.classifier(
-            RegexClassifier(/todo|to do|next up|next steps/) { matches, input in
-                [PromptClassification(tag: .project, weight: 0.6 * CGFloat(matches.count))]
+            RegexClassifier(/\b(project|todo|to do|next up|next steps|action items|priorities|planned tasks|upcoming tasks|task list|agenda|schedule|work plan|project plan|milestone|goals for|objective|deliverable|due date|deadline)\b/) { matches, input in
+                [PromptClassification(tag: .project, weight: 0.4 * CGFloat(matches.count))]
             }
         )
         classifier.classifier(
-            RegexClassifier(/\b(project|deadline|milestone|task|objective|deliverable|code|repo|campaign|strategy|research|study|publication|experiment|issue|meeting|publish|deploy)\b/ ) { matches, input in
+            RegexClassifier(/\b(goal|code|repository|repo|branch|merge|pull request|campaign|strategy|planning|research|study|analysis|data|survey|publication|paper|article|experiment|testing|prototype|issue|bug|fix|solution|meeting|agenda|minutes|discussion|publish|deploy|release|version|update|upgrade|implementation|execution|evaluation|assessment|review|feedback|collaboration|partnership|team|group|workshop|seminar|conference|symposium|webinar|presentation|speaker|audience|networking|outcome|result|impact|progress|update|status|tracking|report|dashboard|KPI|metric|benchmark|performance|efficiency|productivity|optimization|innovation|development|design|architecture|engineering|user experience|UX|user interface|UI|customer|client|stakeholder|vendor|supplier|contract|proposal|budget|cost|expense|funding|grant|resource|allocation|scheduling|timeline|roadmap|framework|methodology|approach|technique|tool|software|platform|application|app|system|infrastructure|hardware|equipment|material|supply|logistics|procurement|operation|process|workflow|procedure|guideline|policy|compliance|regulation|standard|quality|safety|security|privacy|confidentiality|intellectual property|copyright|patent|trademark|license|authorization|certification|accreditation|validation|verification)\b/) { matches, input in
                 [PromptClassification(tag: .project, weight: 0.2 * CGFloat(matches.count))]
             }
         )
