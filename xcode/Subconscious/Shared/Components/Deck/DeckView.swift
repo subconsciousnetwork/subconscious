@@ -834,7 +834,7 @@ struct DeckModel: ModelProtocol {
                 context: nil
             )
             
-            let prompt = await environment.prompt.generate(start: "#connect#")
+            let prompt = await environment.prompt.generate(input: entry.excerpt.description)
 
             return CardModel(
                 card: .prompt(
