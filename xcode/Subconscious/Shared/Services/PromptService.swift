@@ -22,8 +22,23 @@ actor PromptService {
             }
         )
         classifier.classifier(
-            RegexClassifier(/me|myself|I am|my/) { matches, input in
-                [PromptClassification(tag: .journal, weight: 0.6)]
+            RegexClassifier(/for me|by me|with me|myself|I am|I need|I want|I should|will I|can I|could I|would I/) { matches, input in
+                [PromptClassification(tag: .journal, weight: CGFloat(matches.count) * 0.1)]
+            }
+        )
+        classifier.classifier(
+            RegexClassifier(/might be|what if|I wonder|then just|this can be|this means|this implies|it follows that|another way/) { matches, input in
+                [PromptClassification(tag: .idea, weight: CGFloat(matches.count) * 0.1)]
+            }
+        )
+        classifier.classifier(
+            RegexClassifier(/in fact|it's possible|imagine that|we can think|one can think|most \w have|but this is|instead|this is why|this is often|more useful than|aren't always|can never|\w is a \w|once an \w|are how we|this means|this implies|it follows that/) { matches, input in
+                [PromptClassification(tag: .argument, weight: CGFloat(matches.count) * 0.1)]
+            }
+        )
+        classifier.classifier(
+            RegexClassifier(/media|twitter|instagram|bluesky|facebook|book|movie|film|music|album|song|article|letter|essay|image|photo|picture|performance|concert|youtube|twitch|video|livestream|netflix|cinema|ballet|theatre|television|tv|journalism|news/) { matches, input in
+                [PromptClassification(tag: .media, weight: CGFloat(matches.count) * 0.1)]
             }
         )
         classifier.classifier(
@@ -46,7 +61,7 @@ actor PromptService {
                 
                 if matches.count == 1 {
                     return [
-                        PromptClassification(tag: .journal, weight: 0.5),
+                        PromptClassification(tag: .journal, weight: 0.6),
                         PromptClassification(tag: .date, weight: 0.2)
                     ]
                 }
@@ -135,6 +150,30 @@ actor PromptService {
                 guard request.classifications.contains(
                     where: { classification in
                         switch classification.tag {
+                        case .idea:
+                            return classification.weight > 0.8
+                        case .argument:
+                            return classification.weight > 0.8
+                        default:
+                            return false
+                        }
+                    }
+                ) else {
+                    return nil
+                }
+                
+                return tracery.flatten(
+                    grammar: grammar,
+                    start: "#connect#"
+                )
+            }
+        )
+        
+        router.route(
+            PromptRoute { request in
+                guard request.classifications.contains(
+                    where: { classification in
+                        switch classification.tag {
                         case .quote:
                             return classification.weight > 0.5
                         default:
@@ -198,6 +237,28 @@ actor PromptService {
         
         router.route(
             PromptRoute { request in
+                guard request.classifications.contains(
+                    where: { classification in
+                        switch classification.tag {
+                        case .media:
+                            return classification.weight > 1.0
+                        default:
+                            return false
+                        }
+                    }
+                ) else {
+                    return nil
+                }
+                
+                return tracery.flatten(
+                    grammar: grammar,
+                    start: "#media#"
+                )
+            }
+        )
+        
+        router.route(
+            PromptRoute { request in
                 return tracery.flatten(
                     grammar: grammar,
                     start: "#start#"
@@ -227,8 +288,7 @@ actor PromptService {
 extension PromptService {
     static let prompts = [
         "start": [
-            "#connect#",
-            "#reflect#"
+            "#connect#"
         ],
         "connect": [
             "What else is like this?",
@@ -324,35 +384,12 @@ extension PromptService {
             "What are you looking forward to tomorrow?",
             "What are you worried about?",
             "What are you excited about?",
-            "What is something you want to change?",
-            "What is something you want to improve?",
-            "What is something you want to learn?",
-            "What is something you want to do?",
-            "What is something you want to make?",
-            "What is something you want to achieve?",
-            "What is something you want to build?",
-            "What is something you want to try?",
-            "What is something you want to start?",
-            "What is something you want to stop?",
-            "What is something you want to finish?",
-            "What is something you want to change?",
-            "What is something you want to improve?",
-            "What is something you want to learn?",
-            "What is something you want to do?",
-            "What is something you want to make?",
-            "What is something you want to achieve?",
-            "What is something you want to build?",
-            "What is something you want to try?",
-            "What is something you want to start?",
-            "What is something you want to stop?",
-            "What is something you want to finish?",
-            "What is something you want to change?",
-            "What is something you want to improve?",
-            "What is something you want to learn?",
-            "What is something you want to do?",
-            "What is something you want to make?",
-            "What is something you want to achieve?",
-            "What is something you want to build?",
+            "Who does this remind you of?",
+            "What are your prioties?",
+            "What are you avoiding?",
+            "When did you last laugh?",
+            "What are you proud of?",
+            "What makes you nostalgic?"
         ],
         "work": [
             "What are the unknowns?",
@@ -404,9 +441,9 @@ extension PromptService {
             "How can this change behavior?",
             "What's the most controversial aspect?",
             "How is this universally relevant?",
-            "What personal experiences relate?",
+            "Does this remind you of a personal story?",
             "Can this be simplified further?",
-            "What wisdom does this ignore?",
+            "What does this ignore?",
             "How would a skeptic respond?",
             "What assumptions does this make?",
             "What are the implications?",
@@ -419,7 +456,6 @@ extension PromptService {
             "When should you ask this?",
             "Who could answer best?",
             "How can you validate your answer?",
-            
             "What assumptions are being made?",
             "Why is this question important?",
             "What context is necessary?",
@@ -445,6 +481,29 @@ extension PromptService {
             "What are the ethical considerations?",
             "How does this question inspire creativity?",
             "What future questions does this prompt?"
+        ],
+        "media": [
+            "How does this make you feel?",
+            "What is the main aesthetic?",
+            "Does this bring back a memory?",
+            "What themes are explored?",
+            "Who is the target audience?",
+            "What's the cultural significance?",
+            "What motifs are repeated?",
+            "How does this challenge norms?",
+            "What is the narrative?",
+            "What symbolism is used?",
+            "How is contrast used?",
+            "What era is reflected?",
+            "What are the colors?",
+            "Who is the main character?",
+            "What's unique about the style?",
+            "What the relationships?",
+            "What role does setting play?",
+            "How is tension created?",
+            "What questions does it raise?",
+            "Where is the conflict?",
+            "What genre is it?"
         ]
     ]
 
