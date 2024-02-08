@@ -188,6 +188,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         /// Subtext renderer instance
         var renderer: SubtextAttributedStringRenderer
         var subtext: Subtext? = nil
+        
+        // The last known rendered text
         var lastText: String? = nil
 
         init(
@@ -403,8 +405,26 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             context.coordinator.isUIViewUpdating = false
         }
 
-        let txt = view.text
-        if (txt != state.text && context.coordinator.lastText != state.text) {
+        // When a key is pressed, updateUIView is called multiple times. The first time, state has
+        // not yet been updated to hold the latest text BUT view.text has already updated.
+        // This can result in thrashing the TextView and killing performance.
+        
+        // Pathological scenario:
+        // state.text = "abc"
+        // view.text = "abc"
+        // > user types "d"
+        // view.text = "abcd"
+        // updateUIView() called
+        // we set view.text = state.text
+        // now, view.text = "abc"
+        // THEN state.text updates to "abcd"
+        // updateUIVIew() called again
+        // we set view.text = state.text
+        // view.text == "abcd"
+        
+        // so we set view.text TWICE when we could set it zero times
+        // caching the last known rendered value allows us to detect and sidestep this scenario
+        if (view.text != state.text && context.coordinator.lastText != state.text) {
             SubtextTextViewRepresentable.logger.debug("updateUIView: set text")
             view.text = state.text
         }
