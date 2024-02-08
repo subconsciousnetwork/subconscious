@@ -128,45 +128,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 )
             )
         }
-//        
-//        // This allows us to intercept touches on embedded transclude blocks
-//        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//            guard let touch = touches.first else {
-//                super.touchesBegan(touches, with: event)
-//                return
-//            }
-//
-//            let tapPoint = touch.location(in: self)
-//            
-//            guard let textLayoutManager = self.textLayoutManager else {
-//                SubtextTextViewRepresentable.logger.warning("Could not access textLayoutManager")
-//                super.touchesBegan(touches, with: event)
-//                return
-//            }
-//            
-//            guard let textContentStorage = textLayoutManager
-//                .textContentManager as? NSTextContentStorage
-//            else {
-//                SubtextTextViewRepresentable.logger.warning("Could not access textContentStorage")
-//                super.touchesBegan(touches, with: event)
-//                return
-//            }
-//            
-//            // Did tap a text element?
-//            if let textElement = textLayoutManager
-//                .textLayoutFragment(for: tapPoint)?
-//                .textElement
-//            {
-//                let content = textContentStorage.attributedString(
-//                    for: textElement
-//                )
-//                
-//                // TODO: check for whether this tap should navigate to a link
-//                SubtextTextViewRepresentable.logger.debug("Tapped: \(String(describing: content?.string))")
-//                // Calling super preserves default behaviour
-//                super.touchesBegan(touches, with: event)
-//            }
-//        }
     }
 
     // MARK: Coordinator
@@ -175,8 +136,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         UITextViewDelegate,
         NSTextContentStorageDelegate,
         NSTextStorageDelegate,
-        NSTextContentManagerDelegate,
-        NSTextLayoutManagerDelegate
+        NSTextContentManagerDelegate
     {
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
@@ -290,44 +250,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 )
             )
         }
-        
-        // MARK: - NSTextLayoutManagerDelegate
-                                
-//        func textLayoutManager(
-//            _ textLayoutManager: NSTextLayoutManager,
-//            textLayoutFragmentFor location: NSTextLocation,
-//            in textElement: NSTextElement
-//        ) -> NSTextLayoutFragment {
-//            let baseLayoutFragment = NSTextLayoutFragment(
-//                textElement: textElement,
-//                range: textElement.elementRange
-//            )
-// 
-//            guard renderTranscludeBlocks else {
-//                return baseLayoutFragment
-//            }
-//
-//            guard let paragraph = textElement as? NSTextParagraph else {
-//                return baseLayoutFragment
-//            }
-//
-//            // Only render transcludes for a single slashlink in a single block
-//            guard let _ = subtext?
-//                .block(forParagraph: paragraph)?
-//                .slashlinks
-//                .get(0)?
-//                .toSlashlink()
-//            else {
-//                return baseLayoutFragment
-//            }
-//
-//            let layoutFragment = TranscludeBlockLayoutFragment(
-//                textElement: paragraph,
-//                range: paragraph.elementRange
-//            )
-//
-//            return layoutFragment
-//        }
     }
 
     static var logger = Logger(
@@ -357,10 +279,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         let textContentStorage = NSTextContentStorage()
         let textContainer = NSTextContainer()
         textContentStorage.delegate = context.coordinator
-        textLayoutManager.delegate = context.coordinator
-        
         textContentStorage.addTextLayoutManager(textLayoutManager)
-        
         textLayoutManager.textContainer = textContainer
         
         let view = SubtextTextView(frame: self.frame, textContainer: textContainer)
@@ -420,7 +339,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         // THEN state.text updates to "abcd"
         // updateUIVIew() called again
         // we set view.text = state.text
-        // view.text == "abcd"
+        // view.text = "abcd"
         
         // so we set view.text TWICE when we could set it zero times
         // caching the last known rendered value allows us to detect and sidestep this scenario
