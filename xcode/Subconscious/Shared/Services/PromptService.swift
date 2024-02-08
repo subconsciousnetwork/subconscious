@@ -27,13 +27,18 @@ actor PromptService {
             }
         )
         classifier.classifier(
-            RegexClassifier(/todo/) { matches, input in
+            RegexClassifier(/todo|to do|next up|next steps/) { matches, input in
+                [PromptClassification(tag: .project, weight: 0.6 * CGFloat(matches.count))]
+            }
+        )
+        classifier.classifier(
+            RegexClassifier(/\b(project|deadline|milestone|task|objective|deliverable|code|repo|campaign|strategy|research|study|publication|experiment|issue|meeting|publish|deploy)\b/ ) { matches, input in
                 [PromptClassification(tag: .project, weight: 0.2 * CGFloat(matches.count))]
             }
         )
         classifier.classifier(
             RegexClassifier(/\?\s/) { matches, input in
-                [PromptClassification(tag: .question, weight: 0.5 * CGFloat(matches.count))]
+                [PromptClassification(tag: .question, weight: 0.6 * CGFloat(matches.count))]
             }
         )
         classifier.classifier(
