@@ -114,7 +114,7 @@ actor PromptService {
                     where: { classification in
                         switch classification.tag {
                         case .journal:
-                            return classification.weight > 0.5
+                            return classification.weight > 0.8
                         default:
                             return false
                         }
@@ -135,7 +135,7 @@ actor PromptService {
                 guard request.classifications.contains(
                     where: { classification in
                         switch classification.tag {
-                        case .project:
+                        case .quote:
                             return classification.weight > 0.5
                         default:
                             return false
@@ -147,11 +147,11 @@ actor PromptService {
                 
                 return tracery.flatten(
                     grammar: grammar,
-                    start: "#work#"
+                    start: "#quote#"
                 )
             }
         )
-        
+       
         router.route(
             PromptRoute { request in
                 guard request.classifications.contains(
@@ -179,8 +179,8 @@ actor PromptService {
                 guard request.classifications.contains(
                     where: { classification in
                         switch classification.tag {
-                        case .quote:
-                            return classification.weight > 0.5
+                        case .project:
+                            return classification.weight > 1.0
                         default:
                             return false
                         }
@@ -191,11 +191,19 @@ actor PromptService {
                 
                 return tracery.flatten(
                     grammar: grammar,
-                    start: "#quote#"
+                    start: "#work#"
                 )
             }
         )
-
+        
+        router.route(
+            PromptRoute { request in
+                return tracery.flatten(
+                    grammar: grammar,
+                    start: "#start#"
+                )
+            }
+        )
 
         self.router = router
         self.tracery = tracery
