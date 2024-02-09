@@ -71,10 +71,15 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
 
     typealias UIViewType = WKWebView
     var url: URL?
+    /// The "origin" URL for the file. That is, the directory that content
+    /// is allowed to be loaded from. If you leave this empty, it will default
+    /// to the parent directory of `url`.
     var origin: URL?
+    /// Closure to receive post messages from JavaScript land
+    var receiveMessage: (String) -> Void
     var isBackgroundClear: Bool = false
     // The name of the API method you'll use in JavaScript to send messages
-    var messageHandlerName = "messageHandler"
+    var messageHandlerName = "native"
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -120,15 +125,14 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(messageHandlerName: messageHandlerName)
+        Coordinator(self)
     }
 
-    class Coordinator: UIViewController, WKScriptMessageHandler {
-        var messageHandlerName: String
+    class Coordinator: NSObject, WKScriptMessageHandler {
+        var view: LocalWebViewRepresentable
 
-        init(messageHandlerName: String) {
-            self.messageHandlerName = messageHandlerName
-            super.init(nibName: nil, bundle: nil)
+        init(_ view: LocalWebViewRepresentable) {
+            self.view = view
         }
         
         required init?(coder: NSCoder) {
@@ -139,10 +143,10 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
             _ userContentController: WKUserContentController,
             didReceive message: WKScriptMessage
         ) {
-            if message.name == messageHandlerName {
+            if message.name == view.messageHandlerName {
                 // Handle the message
                 if let messageBody = message.body as? String {
-                    print("Received message from web: \(messageBody)")
+                    view.receiveMessage(messageBody)
                 }
             }
         }
@@ -157,7 +161,8 @@ struct WebViewRepresentable_Previews: PreviewProvider {
                 forResource: "index",
                 withExtension: "html",
                 subdirectory: "Assets"
-            )
+            ),
+            receiveMessage: { message in }
         )
         WebViewRepresentable(
             url: URL(string: "https://example.com")
