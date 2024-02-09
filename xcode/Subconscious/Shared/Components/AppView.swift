@@ -2168,6 +2168,7 @@ struct AppModel: ModelProtocol {
         // If we have a gateway ID but sync failed then provisioning may have failed / timed out.
         // Let's retry in-case it suddenly resolves the issue.
         if let _ = state.gatewayId,
+           state.gatewayURL == AppDefaults.defaultGatewayURL,
            state.gatewayProvisioningStatus != .succeeded {
             actions.append(.requestGatewayProvisioningStatus)
         }

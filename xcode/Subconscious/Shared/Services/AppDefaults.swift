@@ -17,8 +17,9 @@ struct AppDefaults {
     @UserDefaultsProperty(forKey: "firstRunComplete")
     var firstRunComplete = false
     
+    static let defaultGatewayURL = "http://127.0.0.1:4433"
     @UserDefaultsProperty(forKey: "gatewayURL")
-    var gatewayURL = "http://127.0.0.1:4433"
+    var gatewayURL = Self.defaultGatewayURL
     
     @UserDefaultsProperty(forKey: "gatewayId")
     var gatewayId: String? = nil
