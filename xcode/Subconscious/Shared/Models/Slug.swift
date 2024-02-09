@@ -19,6 +19,7 @@ public struct Slug:
     private static let slugRegex = /([\w\d\-]+)(\/[\w\d\-]+)*/
     private static let hiddenPrefix = "_"
     public static let profile = Slug(hidden: "profile_")!
+    public static let likes = Slug(hidden: "likes_")!
 
     public static func < (lhs: Slug, rhs: Slug) -> Bool {
         lhs.id < rhs.id

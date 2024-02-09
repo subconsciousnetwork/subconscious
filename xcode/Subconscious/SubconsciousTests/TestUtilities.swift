@@ -33,6 +33,7 @@ struct TestUtilities {
         var addressBook: AddressBookService
         var userProfile: UserProfileService
         var transclude: TranscludeService
+        var userLikes: UserLikesService
     }
     
     /// Set up and return a data service instance
@@ -97,6 +98,12 @@ struct TestUtilities {
             noosphere: noosphere,
             userProfile: userProfile
         )
+        
+        let likes = UserLikesService(
+            noosphere: noosphere,
+            database: database,
+            addressBook: addressBook
+        )
 
         return DataServiceEnvironment(
             data: data,
@@ -105,7 +112,8 @@ struct TestUtilities {
             local: local,
             addressBook: addressBook,
             userProfile: userProfile,
-            transclude: transclude
+            transclude: transclude,
+            userLikes: likes
         )
     }
 }
