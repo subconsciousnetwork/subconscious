@@ -365,6 +365,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var address: Slashlink? = nil
     var user: UserProfile? = nil
+    var likes: [Slashlink] = []
     
     // These are optional so we can differentiate between 
     // (1) first load (no content, show placeholder state)
@@ -668,6 +669,7 @@ struct UserProfileDetailModel: ModelProtocol {
         model.statistics = content.statistics
         model.recentEntries = content.recentEntries
         model.following = content.following
+        model.likes = content.likes
         model.loadingState = .loaded
         
         return Update(state: model).animation(.default)

@@ -558,6 +558,9 @@ actor UserProfileService {
             )
         }
         let likes = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry(likes: [])
+        
+        // take this list and read entries from the DB for each link
+        
         let recentEntries = sortEntriesByModified(entries: entries)
         
         logger.log("Assemble response")

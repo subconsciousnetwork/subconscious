@@ -116,6 +116,31 @@ struct FollowTabView: View {
     }
 }
 
+struct LikesTabView: View {
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
+    
+    var body: some View {
+        let likes = store.state.likes
+        LazyVStack(spacing: AppTheme.unit2) {
+            ForEach(likes) { like in
+                SlashlinkDisplayView(slashlink: like)
+            }
+            .transition(.opacity)
+        }
+        .padding(AppTheme.unit2)
+        
+        if likes.count == 0 {
+            let name = store.state.user?.address.peer?.markup ?? "This user"
+            EmptyStateView(
+                message: "\(name) hasn't liked anything yet."
+            )
+        } else {
+            FabSpacerView()
+        }
+    }
+}
+
 struct UserProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<UserProfileDetailModel>
@@ -164,10 +189,13 @@ struct UserProfileView: View {
         )
     }
     
-    var columnLikes: TabbedColumnItem<Text> {
+    var columnLikes: TabbedColumnItem<LikesTabView> {
         TabbedColumnItem(
             label: "Likes",
-            view: Text("hi")
+            view: LikesTabView(
+                store: store,
+                notify: notify
+            )
         )
     }
     
