@@ -129,6 +129,8 @@ enum DeckAction: Hashable {
     case succeedAppendToEntry(_ address: Slashlink)
     case requestLikeEntry(Slashlink)
     case succeedLikeEntry(_ address: Slashlink)
+    case requestUnlikeEntry(Slashlink)
+    case succeedUnlikeEntry(_ address: Slashlink)
 }
 
 extension AppAction {
@@ -148,8 +150,10 @@ extension AppAction {
             return .assignColor(address: address, color: color)
         case let .requestAppendToEntry(address, append):
             return .appendToEntry(address: address, append: append)
-        case let .requestLikeEntry(address: address):
+        case let .requestLikeEntry(address):
             return .likeEntry(address: address)
+        case let .requestUnlikeEntry(address):
+            return .unlikeEntry(address: address)
         default:
             return nil
         }
@@ -177,6 +181,8 @@ extension DeckAction {
             return .succeedAppendToEntry(address)
         case let .succeedLikeEntry(address):
             return .succeedLikeEntry(address)
+        case let .succeedUnlikeEntry(address):
+            return .succeedUnlikeEntry(address)
         default:
             return nil
         }
@@ -477,18 +483,21 @@ struct DeckModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case .succeedLikeEntry(_):
-            return update(
+        case let .succeedLikeEntry(address):
+            return succeedLikeEntry(
                 state: state,
-                actions: [
-                    .refreshLikes,
-                    .refreshUpcomingCards
-                ],
-                environment: environment
+                environment: environment,
+                address: address
+            )
+        case let .succeedUnlikeEntry(address):
+            return succeedUnlikeEntry(
+                state: state,
+                environment: environment,
+                address: address
             )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
-                .requestAppendToEntry, .requestLikeEntry:
+                .requestAppendToEntry, .requestLikeEntry, .requestUnlikeEntry:
             return Update(state: state)
         }
         
@@ -639,6 +648,47 @@ struct DeckModel: ModelProtocol {
         ) -> Update<Self> {
             logger.error("Failed to refresh like: \(error)")
             return Update(state: state)
+        }
+        
+        func succeedLikeEntry(
+            state: Self,
+            environment: Environment,
+            address: Slashlink
+        ) -> Update<Self> {
+            state.feedback.prepare()
+            state.feedback.impactOccurred()
+            
+            var model = state
+            model.likes.append(address)
+            return update(
+                state: model,
+                actions: [
+                    .refreshLikes,
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
+        }
+        
+        func succeedUnlikeEntry(
+            state: Self,
+            environment: Environment,
+            address: Slashlink
+        ) -> Update<Self> {
+            var model = state
+            model.likes.removeAll(where: { like in like == address })
+            
+            state.selectionFeedback.prepare()
+            state.selectionFeedback.selectionChanged()
+            
+            return update(
+                state: state,
+                actions: [
+                    .refreshLikes,
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
         }
         
         func topupDeck(state: Self, environment: Environment) -> Update<Self> {

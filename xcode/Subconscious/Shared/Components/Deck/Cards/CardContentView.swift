@@ -92,9 +92,16 @@ struct CardContentView: View {
                 }
                 
                 HStack {
-                    LikeButtonView(liked: liked, action: {
-                        notify(.like(entry))
-                    })
+                    LikeButtonView(
+                        liked: liked,
+                        action: {
+                            notify(
+                                liked
+                                   ? .unlike(entry.address)
+                                   : .like(entry.address)
+                            )
+                        }
+                    )
                 }
             }
             .font(.callout)

@@ -22,10 +22,10 @@ struct UserLikesEntry: Codable, Equatable, Hashable {
     static let currentVersion = "0.0"
     
     init(likes: [Slashlink]) {
-        self.likes = likes
+        self.collection = likes
     }
     
-    var likes: [Slashlink]
+    var collection: [Slashlink]
 }
 
 actor UserLikesService {
@@ -134,7 +134,21 @@ actor UserLikesService {
             await self.readLikesMemo(sphere: self.noosphere)
                 ?? UserLikesEntry(likes: [])
         
-        likes.likes.append(address)
+        likes.collection.append(address)
+        
+        try await self.writeOurLikes(likes: likes)
+    }
+    
+    public func toggleLike(for address: Slashlink) async throws -> Void {
+        var likes: UserLikesEntry =
+            await self.readLikesMemo(sphere: self.noosphere)
+                ?? UserLikesEntry(likes: [])
+        
+        if (likes.collection.contains(where: { like in like == address })) {
+            likes.collection.removeAll(where: { like in like == address })
+        } else {
+            likes.collection.append(address)
+        }
         
         try await self.writeOurLikes(likes: likes)
     }
@@ -144,7 +158,7 @@ actor UserLikesService {
             await self.readLikesMemo(sphere: self.noosphere)
                 ?? UserLikesEntry(likes: [])
         
-        likes.likes.removeAll(where: { like in like == address })
+        likes.collection.removeAll(where: { like in like == address })
         
         try await self.writeOurLikes(likes: likes)
     }
@@ -155,7 +169,7 @@ actor UserLikesService {
             return []
         }
         
-        return likes.likes
+        return likes.collection
     }
     
     public func readOurLikes() async throws -> [Slashlink] {
@@ -163,7 +177,7 @@ actor UserLikesService {
             return []
         }
         
-        return likes.likes
+        return likes.collection
     }
     
     public func isLikedByUs(address: Slashlink) async throws -> Bool {

@@ -41,6 +41,8 @@ struct DeckNavigationView: View {
             store.send(.detailStack(.pushQuoteInNewDetail(address)))
         case let .cardLiked(address):
             store.send(.requestLikeEntry(address))
+        case let .cardUnliked(address):
+            store.send(.requestUnlikeEntry(address))
         }
     }
     

@@ -307,6 +307,7 @@ enum AppAction: Hashable {
     case updateAudience(address: Slashlink, audience: Audience)
     case assignColor(address: Slashlink, color: ThemeColor)
     case likeEntry(address: Slashlink)
+    case unlikeEntry(address: Slashlink)
     
     // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -316,6 +317,7 @@ enum AppAction: Hashable {
     case succeedUpdateAudience(MoveReceipt)
     case succeedAssignNoteColor(address: Slashlink, color: ThemeColor)
     case succeedLikeEntry(address: Slashlink)
+    case succeedUnlikeEntry(address: Slashlink)
     case failSaveEntry(address: Slashlink, error: String)
     case failDeleteMemo(String)
     case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
@@ -323,6 +325,7 @@ enum AppAction: Hashable {
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
     case failAssignNoteColor(address: Slashlink, error: String)
     case failLikeEntry(address: Slashlink, error: String)
+    case failUnlikeEntry(address: Slashlink, error: String)
     
     case succeedLogActivity
     case failLogActivity(_ error: String)
@@ -1237,7 +1240,8 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
-                .succeedAssignNoteColor, .succeedAppendToEntry, .succeedLikeEntry:
+                .succeedAssignNoteColor, .succeedAppendToEntry, .succeedLikeEntry,
+                .succeedUnlikeEntry:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
             return succeedSaveEntry(
@@ -1289,6 +1293,12 @@ struct AppModel: ModelProtocol {
             )
         case let .likeEntry(address):
             return likeEntry(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .unlikeEntry(address):
+            return unlikeEntry(
                 state: state,
                 environment: environment,
                 address: address
@@ -1397,6 +1407,20 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: .pushToast(
                     message: "Could not like"
+                ),
+                environment: environment
+            )
+        case let .failUnlikeEntry(address, error):
+            logger.warning(
+                """
+                Failed to unlike entry: \(address)
+                \(error)
+                """
+            )
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not remove like"
                 ),
                 environment: environment
             )
@@ -3257,6 +3281,29 @@ struct AppModel: ModelProtocol {
         }
         .recover { error in
             return .failLikeEntry(
+                address: address,
+                error: error.localizedDescription
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func unlikeEntry(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            try await environment.userLikes.removeLike(for: address)
+            
+            return .succeedUnlikeEntry(
+                address: address
+            )
+        }
+        .recover { error in
+            return .failUnlikeEntry(
                 address: address,
                 error: error.localizedDescription
             )

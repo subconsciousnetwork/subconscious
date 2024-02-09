@@ -137,6 +137,7 @@ enum CardStackNotification {
     case linkTapped(EntryLink)
     case cardQuoted(Slashlink)
     case cardLiked(Slashlink)
+    case cardUnliked(Slashlink)
 }
 
 struct CardStack: View {
@@ -248,8 +249,11 @@ struct CardStack: View {
                 card: card,
                 notify: { notification in
                     switch notification {
-                    case let .like(entry):
-                        notify(.cardLiked(entry.address))
+                    case let .like(address):
+                        notify(.cardLiked(address))
+                        break
+                    case let .unlike(address):
+                        notify(.cardUnliked(address))
                         break
                     case let .quote(address):
                         notify(.cardQuoted(address))

@@ -10,7 +10,8 @@ import SwiftUI
 
 enum CardNotification {
     case linkTapped(EntryLink)
-    case like(EntryStub)
+    case like(Slashlink)
+    case unlike(Slashlink)
     case quote(Slashlink)
 }
 
