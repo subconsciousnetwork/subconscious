@@ -420,6 +420,8 @@
 		B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */; };
 		B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */; };
 		B8B1769D2ACCD02100A8CAAB /* MockErrorLoggingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B1769C2ACCD02100A8CAAB /* MockErrorLoggingService.swift */; };
+		B8B18FE42B76C32E0090AC6B /* URLWithQueryParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B18FE32B76C32E0090AC6B /* URLWithQueryParameters.swift */; };
+		B8B18FE52B76C32E0090AC6B /* URLWithQueryParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B18FE32B76C32E0090AC6B /* URLWithQueryParameters.swift */; };
 		B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3194C2909E81D00A1E62A /* FileInfo.swift */; };
 		B8B3194F2909F36800A1E62A /* Tests_FileFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3194E2909F36800A1E62A /* Tests_FileFingerprint.swift */; };
 		B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3EE722979DEE900779B7F /* FirstRunView.swift */; };
@@ -876,6 +878,7 @@
 		B8AE34C7276BF77000777FF0 /* SearchTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextField.swift; sourceTree = "<group>"; };
 		B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8B1769C2ACCD02100A8CAAB /* MockErrorLoggingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockErrorLoggingService.swift; sourceTree = "<group>"; };
+		B8B18FE32B76C32E0090AC6B /* URLWithQueryParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLWithQueryParameters.swift; sourceTree = "<group>"; };
 		B8B3194C2909E81D00A1E62A /* FileInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileInfo.swift; sourceTree = "<group>"; };
 		B8B3194E2909F36800A1E62A /* Tests_FileFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FileFingerprint.swift; sourceTree = "<group>"; };
 		B8B3EE722979DEE900779B7F /* FirstRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunView.swift; sourceTree = "<group>"; };
@@ -1735,6 +1738,7 @@
 				B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */,
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
+				B8B18FE32B76C32E0090AC6B /* URLWithQueryParameters.swift */,
 				B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
@@ -2211,6 +2215,7 @@
 				B8A1621829B39337008322EB /* ExpandAlignedLeadingViewModifier.swift in Sources */,
 				B8CAF2112A9E89A30057D5DE /* UIFontHelpers.swift in Sources */,
 				B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */,
+				B8B18FE42B76C32E0090AC6B /* URLWithQueryParameters.swift in Sources */,
 				B54930B12A2F0FE300958F12 /* StoryPlaceholderView.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */,
@@ -2549,6 +2554,7 @@
 				B8D328B829A671DA00850A37 /* TranscludeView.swift in Sources */,
 				B8E1A9582A16E98D00B757A5 /* PeerRecord.swift in Sources */,
 				B5D71D1A2A32B2AF000E058A /* NotFoundView.swift in Sources */,
+				B8B18FE52B76C32E0090AC6B /* URLWithQueryParameters.swift in Sources */,
 				B528CB3C2A5BB8C0001E3B8F /* FabSpacerView.swift in Sources */,
 				B8B6BCB629CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B59850B62B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */,

@@ -73,21 +73,29 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
     var url: URL?
     var origin: URL?
     var isBackgroundClear: Bool = false
+    // The name of the API method you'll use in JavaScript to send messages
+    var messageHandlerName = "messageHandler"
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
-        /// Required to load modules from local file system
+        // Required to load modules from local file system
         configuration.preferences.setValue(
             true,
             forKey: "allowFileAccessFromFileURLs"
         )
+        // We'll use this to set up a communication channel with the WebView
+        let contentController = WKUserContentController()
+        // name is the name you'll use in JavaScript to send messages
+        contentController.add(context.coordinator, name: messageHandlerName)
+        configuration.userContentController = contentController
+
         let webView = WKWebView(frame: .zero, configuration: configuration)
         if isBackgroundClear {
             webView.setBackgroundClear()
         }
         return webView
     }
-    
+
     @discardableResult
     func load(webView: WKWebView, url: URL?) -> WKNavigation? {
         guard let url = url else {
@@ -99,6 +107,7 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
             return nil
         }
         let request = URLRequest(url: url)
+        Self.logger.info("Loading \(url)")
         return webView.loadFileRequest(
             request,
             // Allow access to origin URL, or parent directory by default
@@ -108,6 +117,35 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         load(webView: webView, url: url)
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(messageHandlerName: messageHandlerName)
+    }
+
+    class Coordinator: UIViewController, WKScriptMessageHandler {
+        var messageHandlerName: String
+
+        init(messageHandlerName: String) {
+            self.messageHandlerName = messageHandlerName
+            super.init(nibName: nil, bundle: nil)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func userContentController(
+            _ userContentController: WKUserContentController,
+            didReceive message: WKScriptMessage
+        ) {
+            if message.name == messageHandlerName {
+                // Handle the message
+                if let messageBody = message.body as? String {
+                    print("Received message from web: \(messageBody)")
+                }
+            }
+        }
     }
 }
 
