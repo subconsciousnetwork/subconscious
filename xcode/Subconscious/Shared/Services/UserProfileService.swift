@@ -97,6 +97,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var recentEntries: [EntryStub]
     var following: [StoryUser]
     var followingStatus: UserProfileFollowStatus
+    var likes: [Slashlink]
 }
 
 struct UserProfileEntry: Codable, Equatable, Hashable {
@@ -117,6 +118,7 @@ actor UserProfileService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var addressBook: AddressBookService
+    private var userLikes: UserLikesService
     private var jsonDecoder: JSONDecoder
     private var jsonEncoder: JSONEncoder
     
@@ -130,11 +132,13 @@ actor UserProfileService {
     init(
         noosphere: NoosphereService,
         database: DatabaseService,
-        addressBook: AddressBookService
+        addressBook: AddressBookService,
+        userLikes: UserLikesService
     ) {
         self.noosphere = noosphere
         self.database = database
         self.addressBook = addressBook
+        self.userLikes = userLikes
         
         self.jsonDecoder = JSONDecoder()
         self.jsonEncoder = JSONEncoder()
@@ -553,7 +557,7 @@ actor UserProfileService {
                 slugs: notes
             )
         }
-        
+        let likes = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry(likes: [])
         let recentEntries = sortEntriesByModified(entries: entries)
         
         logger.log("Assemble response")
@@ -561,12 +565,13 @@ actor UserProfileService {
             profile: profile,
             statistics: UserProfileStatistics(
                 noteCount: entries.count,
-                backlinkCount: -1, // TODO: populate with real count
+                likeCount: likes.collection.count,
                 followingCount: following.count
             ),
             recentEntries: recentEntries,
             following: following,
-            followingStatus: followingStatus
+            followingStatus: followingStatus,
+            likes: likes.collection
         )
     }
     

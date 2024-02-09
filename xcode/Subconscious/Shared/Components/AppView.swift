@@ -3415,10 +3415,15 @@ struct AppEnvironment {
         )
         self.addressBook = addressBook
         
+        self.userLikes = UserLikesService(
+            noosphere: noosphere
+        )
+        
         self.userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userLikes: userLikes
         )
         
         self.data = DataService(
@@ -3436,11 +3441,6 @@ struct AppEnvironment {
             userProfile: userProfile
         )
         
-        self.userLikes = UserLikesService(
-            noosphere: noosphere,
-            database: database,
-            addressBook: addressBook
-        )
     }
 }
 

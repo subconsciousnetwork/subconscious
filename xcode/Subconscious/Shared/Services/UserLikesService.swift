@@ -30,8 +30,6 @@ struct UserLikesEntry: Codable, Equatable, Hashable {
 
 actor UserLikesService {
     private var noosphere: NoosphereService
-    private var database: DatabaseService
-    private var addressBook: AddressBookService
     private var jsonDecoder: JSONDecoder
     private var jsonEncoder: JSONEncoder
     
@@ -43,15 +41,8 @@ actor UserLikesService {
     private static let collectionContentType = "application/vnd.subconscious.collection+json"
     private static let contentSchemaVersionHeader = "Content-Schema-Verson"
     
-    init(
-        noosphere: NoosphereService,
-        database: DatabaseService,
-        addressBook: AddressBookService
-    ) {
+    init(noosphere: NoosphereService) {
         self.noosphere = noosphere
-        self.database = database
-        self.addressBook = addressBook
-        
         self.jsonDecoder = JSONDecoder()
         self.jsonEncoder = JSONEncoder()
         // ensure keys are sorted on write to maintain content hash
@@ -76,7 +67,7 @@ actor UserLikesService {
     /// Attempt to read & deserialize a user `_likes_.json` at the given address.
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
-    private func readLikesMemo(
+    func readLikesMemo(
         sphere: SphereProtocol
     ) async -> UserLikesEntry? {
         let identity = try? await sphere.identity()

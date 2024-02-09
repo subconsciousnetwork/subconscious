@@ -164,6 +164,13 @@ struct UserProfileView: View {
         )
     }
     
+    var columnLikes: TabbedColumnItem<Text> {
+        TabbedColumnItem(
+            label: "Likes",
+            view: Text("hi")
+        )
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -198,18 +205,20 @@ struct UserProfileView: View {
                     // so discard the value.
                     if let _ = state.recentEntries,
                        let _ = state.following {
-                        TabbedTwoColumnView(
+                        TabbedThreeColumnView(
                             columnA: columnRecent,
                             columnB: columnFollowing,
+                            columnC: columnLikes,
                             selectedColumnIndex: state.currentTabIndex,
                             changeColumn: { index in
                                 send(.tabIndexSelected(index))
                             }
                         )
                     } else {
-                        TabbedTwoColumnView(
+                        TabbedThreeColumnView(
                             columnA: columnLoading(label: "Notes"),
                             columnB: columnLoading(label: "Following"),
+                            columnC: columnLoading(label: "Likes"),
                             selectedColumnIndex: state.currentTabIndex,
                             changeColumn: { index in
                                 send(.tabIndexSelected(index))

@@ -237,7 +237,7 @@ extension UserProfileStatistics: DummyData {
     static func dummyData() -> UserProfileStatistics {
         UserProfileStatistics(
             noteCount: Int.random(in: 0..<999),
-            backlinkCount: Int.random(in: 0..<999),
+            likeCount: Int.random(in: 0..<999),
             followingCount: Int.random(in: 0..<99)
         )
     }

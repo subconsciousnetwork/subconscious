@@ -199,7 +199,7 @@ enum UserProfileDetailAction: Equatable {
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
     let noteCount: Int
-    let backlinkCount: Int
+    let likeCount: Int
     let followingCount: Int
 }
 
@@ -337,6 +337,7 @@ struct UserProfileDetailModel: ModelProtocol {
     // MARK: Tab Indices
     static let recentEntriesTabIndex: Int = 0
     static let followingTabIndex: Int = 1
+    static let likesTabIndex: Int = 2
     
     var loadingState = LoadingState.loading
     
