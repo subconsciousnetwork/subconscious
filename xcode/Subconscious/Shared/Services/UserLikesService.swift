@@ -81,7 +81,7 @@ actor UserLikesService {
     ) async -> UserLikesEntry? {
         let identity = try? await sphere.identity()
         do {
-            let data = try? await sphere.read(slashlink: Slashlink(slug: Slug.profile))
+            let data = try? await sphere.read(slashlink: Slashlink(slug: Slug.likes))
             guard let data = data else {
                 return nil
             }
@@ -103,7 +103,7 @@ actor UserLikesService {
             return try await parseLikes(body: data.body)
         } catch {
             logger.warning(
-                "Failed to read profile at \(String(describing: identity)): \(error.localizedDescription)"
+                "Failed to read likes at \(String(describing: identity)): \(error.localizedDescription)"
             )
             return nil
         }
@@ -130,9 +130,9 @@ actor UserLikesService {
     }
     
     public func persistLike(for address: Slashlink) async throws -> Void {
-        guard var likes = await self.readLikesMemo(sphere: self.noosphere) else {
-            throw UserLikesServiceError.failedToPersistLike(address)
-        }
+        var likes: UserLikesEntry =
+            await self.readLikesMemo(sphere: self.noosphere)
+                ?? UserLikesEntry(likes: [])
         
         likes.likes.append(address)
         
@@ -140,9 +140,9 @@ actor UserLikesService {
     }
     
     public func removeLike(for address: Slashlink) async throws -> Void {
-        guard var likes = await self.readLikesMemo(sphere: self.noosphere) else {
-            throw UserLikesServiceError.failedToRemoveLike(address)
-        }
+        var likes: UserLikesEntry =
+            await self.readLikesMemo(sphere: self.noosphere)
+                ?? UserLikesEntry(likes: [])
         
         likes.likes.removeAll(where: { like in like == address })
         
@@ -151,22 +151,22 @@ actor UserLikesService {
     
     public func readLikesFor(user: Slashlink) async throws -> [Slashlink] {
         let sphere = try await self.noosphere.sphere(address: user)
-        guard var likes = await self.readLikesMemo(sphere: sphere) else {
-            throw UserLikesServiceError.failedToReadLikes
+        guard let likes = await self.readLikesMemo(sphere: sphere) else {
+            return []
         }
         
         return likes.likes
     }
     
     public func readOurLikes() async throws -> [Slashlink] {
-        guard var likes = await self.readLikesMemo(sphere: self.noosphere) else {
-            throw UserLikesServiceError.failedToReadLikes
+        guard let likes = await self.readLikesMemo(sphere: self.noosphere) else {
+            return []
         }
         
         return likes.likes
     }
     
-    public func isLiked(address: Slashlink) async throws -> Bool {
+    public func isLikedByUs(address: Slashlink) async throws -> Bool {
         let likes = try await self.readOurLikes()
         return likes.contains(where: { like in like == address })
     }
