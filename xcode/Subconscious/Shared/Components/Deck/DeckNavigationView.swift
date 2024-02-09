@@ -21,7 +21,7 @@ struct DeckNavigationView: View {
         )
     }
     
-    func notify(notification: CardNotification) {
+    func notify(notification: CardStackNotification) {
         switch notification {
         case let .swipeLeft(card):
             store.send(.skipCard(card))
@@ -37,8 +37,10 @@ struct DeckNavigationView: View {
             store.send(
                 .detailStack(.findAndPushLinkDetail(link))
             )
-        case let .quoteCard(address):
+        case let .cardQuoted(address):
             store.send(.detailStack(.pushQuoteInNewDetail(address)))
+        case let .cardLiked(address):
+            store.send(.requestLikeEntry(address))
         }
     }
     

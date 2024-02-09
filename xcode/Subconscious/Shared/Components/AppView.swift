@@ -306,6 +306,7 @@ enum AppAction: Hashable {
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
     case assignColor(address: Slashlink, color: ThemeColor)
+    case likeEntry(address: Slashlink)
     
     // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -314,12 +315,14 @@ enum AppAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(MoveReceipt)
     case succeedAssignNoteColor(address: Slashlink, color: ThemeColor)
+    case succeedLikeEntry(address: Slashlink)
     case failSaveEntry(address: Slashlink, error: String)
     case failDeleteMemo(String)
     case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
     case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
     case failAssignNoteColor(address: Slashlink, error: String)
+    case failLikeEntry(address: Slashlink, error: String)
     
     case succeedLogActivity
     case failLogActivity(_ error: String)
@@ -1234,7 +1237,7 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
-                .succeedAssignNoteColor, .succeedAppendToEntry:
+                .succeedAssignNoteColor, .succeedAppendToEntry, .succeedLikeEntry:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
             return succeedSaveEntry(
@@ -1283,6 +1286,12 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 address: address,
                 color: color
+            )
+        case let .likeEntry(address):
+            return likeEntry(
+                state: state,
+                environment: environment,
+                address: address
             )
         case let .failSaveEntry(address, error):
             logger.warning(
@@ -1374,6 +1383,20 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: .pushToast(
                     message: "Could not set color"
+                ),
+                environment: environment
+            )
+        case let .failLikeEntry(address, error):
+            logger.warning(
+                """
+                Failed to like entry: \(address)
+                \(error)
+                """
+            )
+            return update(
+                state: state,
+                action: .pushToast(
+                    message: "Could not like"
                 ),
                 environment: environment
             )
@@ -3219,6 +3242,29 @@ struct AppModel: ModelProtocol {
         
         return Update(state: state, fx: fx)
     }
+    
+    static func likeEntry(
+        state: Self,
+        environment: Environment,
+        address: Slashlink
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            try await environment.userLikes.persistLike(for: address)
+            
+            return .succeedLikeEntry(
+                address: address
+            )
+        }
+        .recover { error in
+            return .failLikeEntry(
+                address: address,
+                error: error.localizedDescription
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
 }
 
 // MARK: Environment
@@ -3239,6 +3285,7 @@ struct AppEnvironment {
     
     var addressBook: AddressBookService
     var userProfile: UserProfileService
+    var userLikes: UserLikesService
     
     var gatewayProvisioningService: GatewayProvisioningService
     
@@ -3340,6 +3387,12 @@ struct AppEnvironment {
             database: database,
             noosphere: noosphere,
             userProfile: userProfile
+        )
+        
+        self.userLikes = UserLikesService(
+            noosphere: noosphere,
+            database: database,
+            addressBook: addressBook
         )
     }
 }

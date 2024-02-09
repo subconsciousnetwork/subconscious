@@ -12,8 +12,9 @@ struct EntryCardView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var entry: EntryStub
+    var liked: Bool
     var related: Set<EntryStub>
-    var onLink: (EntryLink) -> Void
+    var notify: (CardNotification) -> Void
     
     var background: Color {
         entry.color
@@ -22,8 +23,9 @@ struct EntryCardView: View {
     var body: some View {
         CardContentView(
             entry: entry,
+            liked: liked,
             related: related,
-            onLink: onLink
+            notify: notify
         )
         .allowsHitTesting(false)
         .background(background)

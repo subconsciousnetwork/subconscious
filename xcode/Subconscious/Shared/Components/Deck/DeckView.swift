@@ -106,6 +106,9 @@ enum DeckAction: Hashable {
     
     case refreshUpcomingCards
     case refreshDeck
+    case refreshLikes
+    case succeedRefreshLikes([Slashlink])
+    case failRefreshLikes(String)
     
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
@@ -124,6 +127,8 @@ enum DeckAction: Hashable {
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case requestAppendToEntry(_ address: Slashlink, _ append: String)
     case succeedAppendToEntry(_ address: Slashlink)
+    case requestLikeEntry(Slashlink)
+    case succeedLikeEntry(_ address: Slashlink)
 }
 
 extension AppAction {
@@ -143,6 +148,8 @@ extension AppAction {
             return .assignColor(address: address, color: color)
         case let .requestAppendToEntry(address, append):
             return .appendToEntry(address: address, append: append)
+        case let .requestLikeEntry(address: address):
+            return .likeEntry(address: address)
         default:
             return nil
         }
@@ -168,6 +175,8 @@ extension DeckAction {
             return .succeedAssignNoteColor(address, color)
         case let .succeedAppendToEntry(address):
             return .succeedAppendToEntry(address)
+        case let .succeedLikeEntry(address):
+            return .succeedLikeEntry(address)
         default:
             return nil
         }
@@ -266,6 +275,8 @@ struct DeckModel: ModelProtocol {
     var seen: Set<EntryStub> = []
     var pointer: Int = 0
     var author: UserProfile? = nil
+    var likes: [Slashlink] = []
+    
     var selectionFeedback = UISelectionFeedbackGenerator()
     var feedback = UIImpactFeedbackGenerator()
     
@@ -306,9 +317,15 @@ struct DeckModel: ModelProtocol {
                 environment: environment
             )
         case .appear:
-            return appear(state: state, environment: environment)
+            return appear(
+                state: state,
+                environment: environment
+            )
         case .refreshDeck, .requestDiscardDeck:
-            return discardAndRedrawDeck(state: state, environment: environment)
+            return discardAndRedrawDeck(
+                state: state,
+                environment: environment
+            )
         case .topupDeck:
             return topupDeck(state: state, environment: environment)
         case let .setDeck(deck, startIndex):
@@ -323,19 +340,36 @@ struct DeckModel: ModelProtocol {
         case .cardReleased:
             return cardReleased(state: state)
         case let .cardTapped(card):
-            return cardTapped(state: state, card: card, environment: environment)
+            return cardTapped(
+                state: state,
+                card: card,
+                environment: environment
+            )
         case let .chooseCard(card):
-            return chooseCard(state: state, card: card, environment: environment)
+            return chooseCard(
+                state: state,
+                card: card,
+                environment: environment
+            )
         case .skipCard:
             return skipCard(state: state, environment: environment)
         case let .shuffleCardsUpNext(entries):
-            return shuffleCardsUpNext(state: state, entries: entries)
+            return shuffleCardsUpNext(
+                state: state,
+                entries: entries
+            )
         case let .appendCards(entries):
-            return appendCards(state: state, entries: entries)
+            return appendCards(
+                state: state,
+                entries: entries
+            )
         case .noCardsToDraw:
             return noCardsToDraw(state: state)
         case .nextCard:
-            return nextCard(state: state, environment: environment)
+            return nextCard(
+                state: state,
+                environment: environment
+            )
         case let .cardPresented(card):
             return cardPresented(state: state, card: card)
         case .requestDeckRoot:
@@ -344,7 +378,27 @@ struct DeckModel: ModelProtocol {
                 environment: environment
             )
         case .refreshUpcomingCards:
-            return refreshUpcomingCards(state: state, environment: environment)
+            return refreshUpcomingCards(
+                state: state,
+                environment: environment
+            )
+        case .refreshLikes:
+            return refreshLikes(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshLikes(likes):
+            return succeedRefreshLikes(
+                state: state,
+                environment: environment,
+                likes: likes
+            )
+        case let .failRefreshLikes(error):
+            return failRefreshLikes(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case let .succeedSaveEntry(address, modified):
             return update(
                 state: state,
@@ -423,9 +477,18 @@ struct DeckModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case .succeedLikeEntry(_):
+            return update(
+                state: state,
+                actions: [
+                    .refreshLikes,
+                    .refreshUpcomingCards
+                ],
+                environment: environment
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
-                .requestAppendToEntry:
+                .requestAppendToEntry, .requestLikeEntry:
             return Update(state: state)
         }
         
@@ -436,7 +499,7 @@ struct DeckModel: ModelProtocol {
             if state.deck.isEmpty {
                 return update(
                     state: state,
-                    action: .refreshDeck,
+                    actions: [.refreshLikes, .refreshDeck],
                     environment: environment
                 )
             }
@@ -456,6 +519,7 @@ struct DeckModel: ModelProtocol {
                 
                 let us = try await environment.noosphere.identity()
                 let recent = try environment.database.listFeed(owner: us)
+                let likes = try await environment.userLikes.readOurLikes()
                 
                 var initialDraw = Array(recent
                     .prefix(10) // take the 10 most recent posts
@@ -478,7 +542,8 @@ struct DeckModel: ModelProtocol {
                     let card = try await toCard(
                         entry: entry,
                         ourIdentity: us,
-                        environment: environment
+                        environment: environment,
+                        liked: likes.contains(where: { like in like == entry.address })
                     )
                     
                     deck.append(card)
@@ -501,6 +566,7 @@ struct DeckModel: ModelProtocol {
             let fx: Fx<DeckAction> = Future.detached {
                 // Create the first slice of the deck (unchanged)
                 let firstSlice = deck.prefix(upTo: state.pointer)
+                let likes = try await environment.userLikes.readOurLikes()
 
                 // Initialize an array for the updated cards
                 var updated: [CardModel] = Array(firstSlice)
@@ -521,7 +587,12 @@ struct DeckModel: ModelProtocol {
                         continue
                     }
                     
-                    updated.append(card.update(entry: entry))
+                    updated.append(
+                        card.update(
+                            entry: entry,
+                            liked: likes.contains(where: { like in like == entry.address })
+                        )
+                    )
                 }
 
                 // Set the combined deck and return
@@ -533,6 +604,41 @@ struct DeckModel: ModelProtocol {
             .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
+        }
+        
+        func refreshLikes(
+            state: Self,
+            environment: Environment
+        ) -> Update<Self> {
+            let fx: Fx<DeckAction> = Future.detached {
+                let likes = try await environment.userLikes.readOurLikes()
+                return .succeedRefreshLikes(likes)
+            }
+            .recover { error in
+                .failRefreshLikes(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        }
+        
+        func succeedRefreshLikes(
+            state: Self,
+            environment: Environment,
+            likes: [Slashlink]
+        ) -> Update<Self> {
+            var model = state
+            model.likes = likes
+            return Update(state: model)
+        }
+        
+        func failRefreshLikes(
+            state: Self,
+            environment: Environment,
+            error: String
+        ) -> Update<Self> {
+            logger.error("Failed to refresh like: \(error)")
+            return Update(state: state)
         }
         
         func topupDeck(state: Self, environment: Environment) -> Update<Self> {
@@ -547,7 +653,8 @@ struct DeckModel: ModelProtocol {
                 let card = try await toCard(
                     entry: entry,
                     ourIdentity: us,
-                    environment: environment
+                    environment: environment,
+                    liked: state.likes.contains(where: { like in like == entry.address })
                 )
                 
                 return .appendCards([card])
@@ -665,7 +772,8 @@ struct DeckModel: ModelProtocol {
                     let card = try await toCard(
                         entry: entry,
                         ourIdentity: us,
-                        environment: environment
+                        environment: environment,
+                        liked: state.likes.contains(where: { like in like == entry.address })
                     )
                     
                     draw.append(card)
@@ -720,7 +828,8 @@ struct DeckModel: ModelProtocol {
                 let card = try await toCard(
                     entry: entry,
                     ourIdentity: us,
-                    environment: environment
+                    environment: environment,
+                    liked: state.likes.contains(where: { like in like == entry.address })
                 )
                     
                 draw.append(card)
@@ -820,7 +929,8 @@ struct DeckModel: ModelProtocol {
         func toCard(
             entry: EntryStub,
             ourIdentity: Did,
-            environment: DeckEnvironment
+            environment: DeckEnvironment,
+            liked: Bool
         ) async throws -> CardModel {
             let links = try readLinks(
                 entry: entry,
@@ -842,7 +952,8 @@ struct DeckModel: ModelProtocol {
                     entry: entry,
                     author: user,
                     related: links
-                )
+                ),
+                liked: liked
             )
         }
         
@@ -869,7 +980,6 @@ struct DeckModel: ModelProtocol {
             
             return combinedSet
         }
-
         
         func isTooShort(entry: EntryStub) -> Bool {
             return entry.excerpt.base.count < 64
