@@ -103,12 +103,13 @@ extension BlockEditor {
             var config = UICollectionLayoutListConfiguration(
                 appearance: .plain
             )
+            config.backgroundColor = .clear
             config.showsSeparators = false
 
             let layout = UICollectionViewCompositionalLayout.list(
                 using: config
             )
-            
+
             let collectionView = UICollectionView(
                 frame: .zero,
                 collectionViewLayout: layout
@@ -149,7 +150,7 @@ extension BlockEditor {
             collectionView.delegate = self
             collectionView.dataSource = self
 
-            collectionView.backgroundColor = .accent.withAlphaComponent(0.1)
+            collectionView.backgroundColor = .clear
 
             return collectionView
         }
@@ -157,7 +158,7 @@ extension BlockEditor {
         private func setupViews() {
             // View starts out hidden and is not shown until ready
             view.alpha = 0
-            view.backgroundColor = .accent.withAlphaComponent(0.1)
+            view.backgroundColor = .clear
             view.addSubview(collectionView)
         }
 
