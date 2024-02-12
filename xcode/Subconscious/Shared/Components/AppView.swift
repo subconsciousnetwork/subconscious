@@ -324,7 +324,6 @@ enum AppAction: Hashable {
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
     case failAssignNoteColor(address: Slashlink, error: String)
     case failUpdateLikeStatus(address: Slashlink, error: String)
-    case failUnlikeEntry(address: Slashlink, error: String)
     
     case succeedLogActivity
     case failLogActivity(_ error: String)
@@ -1397,28 +1396,14 @@ struct AppModel: ModelProtocol {
         case let .failUpdateLikeStatus(address, error):
             logger.warning(
                 """
-                Failed to like entry: \(address)
+                Failed to update like status entry: \(address)
                 \(error)
                 """
             )
             return update(
                 state: state,
                 action: .pushToast(
-                    message: "Could not like"
-                ),
-                environment: environment
-            )
-        case let .failUnlikeEntry(address, error):
-            logger.warning(
-                """
-                Failed to unlike entry: \(address)
-                \(error)
-                """
-            )
-            return update(
-                state: state,
-                action: .pushToast(
-                    message: "Could not remove like"
+                    message: "Could not update status"
                 ),
                 environment: environment
             )
@@ -3297,7 +3282,7 @@ struct AppModel: ModelProtocol {
             return .succeedUpdateLikeStatus(address: address, liked: false)
         }
         .recover { error in
-            return .failUnlikeEntry(
+            return .failUpdateLikeStatus(
                 address: address,
                 error: error.localizedDescription
             )
