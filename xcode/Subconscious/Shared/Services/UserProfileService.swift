@@ -97,7 +97,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var recentEntries: [EntryStub]
     var following: [StoryUser]
     var followingStatus: UserProfileFollowStatus
-    var likes: [Slashlink]
+    var likes: [EntryStub]
 }
 
 struct UserProfileEntry: Codable, Equatable, Hashable {
@@ -557,9 +557,36 @@ actor UserProfileService {
                 slugs: notes
             )
         }
-        let likes = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry(likes: [])
+        let likedLinks = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry(likes: [])
+        var likes: [EntryStub] = []
         
-        // take this list and read entries from the DB for each link
+        // iterate backwards for reverse chronological feed
+        // likes are unlikely to be in the local DB (with the exception of our own)
+        // for each like we read the memo which may be quite slow depending
+        // on how many degrees away from this peer we are
+        // we might need to load likes as a seperate background task
+        for link in likedLinks.collection.reversed() {
+            let did = try await sphere.resolve(peer: link.peer)
+            let memo = try await sphere.read(slashlink: link)
+            
+            guard let memo = memo.toMemo() else {
+                continue
+            }
+            
+            let excerpt = Subtext.excerpt(markup: memo.body)
+
+            likes.append(
+                EntryStub(
+                    did: did,
+                    address: Slashlink(
+                        petname: link.petname,
+                        slug: link.slug
+                    ),
+                    excerpt: excerpt,
+                    headers: memo.wellKnownHeaders()
+                )
+            )
+        }
         
         let recentEntries = sortEntriesByModified(entries: entries)
         
@@ -568,13 +595,13 @@ actor UserProfileService {
             profile: profile,
             statistics: UserProfileStatistics(
                 noteCount: entries.count,
-                likeCount: likes.collection.count,
+                likeCount: likes.count,
                 followingCount: following.count
             ),
             recentEntries: recentEntries,
             following: following,
             followingStatus: followingStatus,
-            likes: likes.collection
+            likes: likes
         )
     }
     

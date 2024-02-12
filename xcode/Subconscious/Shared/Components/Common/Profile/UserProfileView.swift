@@ -121,22 +121,38 @@ struct LikesTabView: View {
     var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        let likes = store.state.likes
-        LazyVStack(spacing: AppTheme.unit2) {
-            ForEach(likes) { like in
-                SlashlinkDisplayView(slashlink: like)
+        if let user = store.state.user {
+            let likes = store.state.likes
+            LazyVStack(spacing: AppTheme.unit2) {
+                ForEach(likes) { like in
+                StoryEntryView(
+                    story: StoryEntry(
+                        entry: like,
+                        author: user
+                    ),
+                    onRequestDetail: {
+                        _,
+                        _ in
+                    },
+                    onLink: {
+                        _ in
+                    },
+                    onQuote: {
+                        _ in
+                    })
+                }
+                .transition(.opacity)
             }
-            .transition(.opacity)
-        }
-        .padding(AppTheme.unit2)
-        
-        if likes.count == 0 {
-            let name = store.state.user?.address.peer?.markup ?? "This user"
-            EmptyStateView(
-                message: "\(name) hasn't liked anything yet."
-            )
-        } else {
-            FabSpacerView()
+            .padding(AppTheme.unit2)
+            
+            if likes.count == 0 {
+                let name = store.state.user?.address.peer?.markup ?? "This user"
+                EmptyStateView(
+                    message: "\(name) hasn't liked anything yet."
+                )
+            } else {
+                FabSpacerView()
+            }
         }
     }
 }

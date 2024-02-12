@@ -365,7 +365,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var address: Slashlink? = nil
     var user: UserProfile? = nil
-    var likes: [Slashlink] = []
+    var likes: [EntryStub] = []
     
     // These are optional so we can differentiate between 
     // (1) first load (no content, show placeholder state)
