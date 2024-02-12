@@ -48,33 +48,33 @@ struct MemoViewerDetailMetaSheetView: View {
                         Divider()
                         
                         if let address = store.state.address {
-                            Button(
-                                action: {
-                                    store.send(.requestUpdateLikeStatus(address, liked: true))
-                                },
-                                label: {
-                                    Label(
-                                        "Add to likes",
-                                        systemImage: "heart"
-                                    )
-                                }
-                            )
-                            .buttonStyle(RowButtonStyle())
-                            
-                            Divider()
-                            
-                            Button(
-                                action: {
-                                    store.send(.requestUpdateLikeStatus(address, liked: false))
-                                },
-                                label: {
-                                    Label(
-                                        "Remove from likes",
-                                        systemImage: "heart.slash"
-                                    )
-                                }
-                            )
-                            .buttonStyle(RowButtonStyle())
+                            if store.state.liked {
+                                Button(
+                                    action: {
+                                        store.send(.requestUpdateLikeStatus(address, liked: false))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Remove from likes",
+                                            systemImage: "heart.slash"
+                                        )
+                                    }
+                                )
+                                .buttonStyle(RowButtonStyle())
+                            } else {
+                                Button(
+                                    action: {
+                                        store.send(.requestUpdateLikeStatus(address, liked: true))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Add to likes",
+                                            systemImage: "heart"
+                                        )
+                                    }
+                                )
+                                .buttonStyle(RowButtonStyle())
+                            }
                             
                             Divider()
                             
@@ -149,6 +149,7 @@ struct MemoViewerDetailMetaSheetView: View {
 enum MemoViewerDetailMetaSheetAction: Hashable {
     case setAddress(_ address: Slashlink)
     case setAuthor(_ author: UserProfile)
+    case setLiked(_ liked: Bool)
     case requestDismiss
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
@@ -207,6 +208,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     var memoVersion: String?
     var noteVersion: String?
     var authorKey: String?
+    var liked: Bool = false
     
     var shareableLink: String? {
         guard let address = address else {
@@ -235,6 +237,12 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 author: author
+            )
+        case let .setLiked(liked):
+            return setLiked(
+                state: state,
+                environment: environment,
+                liked: liked
             )
         case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote,
                 .requestUpdateLikeStatus:
@@ -279,6 +287,16 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.author = author
+        return Update(state: model)
+    }
+    
+    static func setLiked(
+        state: Self,
+        environment: Environment,
+        liked: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.liked = liked
         return Update(state: model)
     }
     

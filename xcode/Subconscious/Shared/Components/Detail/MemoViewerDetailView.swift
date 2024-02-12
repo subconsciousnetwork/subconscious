@@ -154,6 +154,24 @@ struct MemoViewerDetailLoadedView: View {
                         )
                         
                         Spacer()
+                        
+                        if let address = store.state.address {
+                            HStack {
+                                Spacer()
+                                
+                                LikeButtonView(
+                                    liked: store.state.liked,
+                                    action: {
+                                        notify(
+                                            .requestUpdateLikeStatus(
+                                                address,
+                                                liked: !store.state.liked
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                     .padding(DeckTheme.cardPadding)
                     .frame(
@@ -244,6 +262,10 @@ enum MemoViewerDetailAction: Hashable {
     case requestQuoteInNewNote(_ address: Slashlink)
     case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
+    case refreshLikedStatus
+    case succeedRefreshLikedStatus(_ liked: Bool)
+    case failRefreshFetchLikedStatus(_ error: String)
+    
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
@@ -252,6 +274,9 @@ enum MemoViewerDetailAction: Hashable {
     }
     static func setMetaSheetAuthor(_ author: UserProfile) -> Self {
         .metaSheet(.setAuthor(author))
+    }
+    static func setMetaSheetLiked(_ liked: Bool) -> Self {
+        .metaSheet(.setLiked(liked))
     }
 }
 
@@ -265,6 +290,8 @@ extension MemoViewerDetailAction {
             return .succeedIndexBackgroundSphere
         case .succeedSyncSphereWithGateway:
             return .refreshAll
+        case .succeedUpdateLikeStatus:
+            return .refreshLikedStatus
         case _:
             return nil
         }
@@ -288,6 +315,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     var defaultAudience = Audience.local
     var title = ""
     var dom: Subtext = Subtext.empty
+    var liked: Bool = false
     var backlinks: [EntryStub] = []
     var headers: WellKnownHeaders? = nil
     var themeColor: ThemeColor? {
@@ -415,6 +443,22 @@ struct MemoViewerDetailModel: ModelProtocol {
                 action: .presentMetaSheet(false),
                 environment: environment
             )
+        case .refreshLikedStatus:
+            return refreshLikedStatus(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshLikedStatus(liked):
+            var model = state
+            model.liked = liked
+            return update(
+                state: model,
+                action: .metaSheet(.setLiked(liked)),
+                environment: environment
+            )
+        case let .failRefreshFetchLikedStatus(error):
+            logger.error("Failed to refresh liked status: \(error)")
+            return Update(state: state)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return update(
                 state: state,
@@ -501,9 +545,32 @@ struct MemoViewerDetailModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .setDom(dom),
+            actions: [
+                .setDom(dom),
+                .refreshLikedStatus
+            ],
             environment: environment
         ).animation(.easeOutCubic())
+    }
+    
+    static func refreshLikedStatus(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<MemoViewerDetailAction> = Future.detached {
+            let liked = try await environment.userLikes.isLikedByUs(address: address)
+            return .succeedRefreshLikedStatus(liked)
+        }
+        .recover { error in
+            .failRefreshFetchLikedStatus(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func refreshBacklinks(
