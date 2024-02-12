@@ -50,6 +50,36 @@ struct MemoViewerDetailMetaSheetView: View {
                         if let address = store.state.address {
                             Button(
                                 action: {
+                                    store.send(.requestUpdateLikeStatus(address, liked: true))
+                                },
+                                label: {
+                                    Label(
+                                        "Add to likes",
+                                        systemImage: "heart"
+                                    )
+                                }
+                            )
+                            .buttonStyle(RowButtonStyle())
+                            
+                            Divider()
+                            
+                            Button(
+                                action: {
+                                    store.send(.requestUpdateLikeStatus(address, liked: false))
+                                },
+                                label: {
+                                    Label(
+                                        "Remove from likes",
+                                        systemImage: "heart.slash"
+                                    )
+                                }
+                            )
+                            .buttonStyle(RowButtonStyle())
+                            
+                            Divider()
+                            
+                            Button(
+                                action: {
                                     store.send(.requestQuoteInNewNote(address))
                                 },
                                 label: {
@@ -122,6 +152,7 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
     case requestDismiss
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
     /// Tagged actions for append link search sheet
     case appendLinkSearch(AppendLinkSearchAction)
@@ -205,7 +236,8 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 author: author
             )
-        case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote:
+        case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote,
+                .requestUpdateLikeStatus:
             return Update(state: state)
             
         // Append link

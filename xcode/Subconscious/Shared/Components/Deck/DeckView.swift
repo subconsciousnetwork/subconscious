@@ -127,10 +127,8 @@ enum DeckAction: Hashable {
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case requestAppendToEntry(_ address: Slashlink, _ append: String)
     case succeedAppendToEntry(_ address: Slashlink)
-    case requestLikeEntry(Slashlink)
-    case succeedLikeEntry(_ address: Slashlink)
-    case requestUnlikeEntry(Slashlink)
-    case succeedUnlikeEntry(_ address: Slashlink)
+    case requestUpdateLikeStatus(Slashlink, liked: Bool)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
 }
 
 extension AppAction {
@@ -150,9 +148,10 @@ extension AppAction {
             return .assignColor(address: address, color: color)
         case let .requestAppendToEntry(address, append):
             return .appendToEntry(address: address, append: append)
-        case let .requestLikeEntry(address):
-            return .likeEntry(address: address)
-        case let .requestUnlikeEntry(address):
+        case let .requestUpdateLikeStatus(address, liked):
+            if liked {
+                return .likeEntry(address: address)
+            }
             return .unlikeEntry(address: address)
         default:
             return nil
@@ -179,10 +178,8 @@ extension DeckAction {
             return .succeedAssignNoteColor(address, color)
         case let .succeedAppendToEntry(address):
             return .succeedAppendToEntry(address)
-        case let .succeedLikeEntry(address):
-            return .succeedLikeEntry(address)
-        case let .succeedUnlikeEntry(address):
-            return .succeedUnlikeEntry(address)
+        case let .succeedUpdateLikeStatus(address, liked):
+            return .succeedUpdateLikeStatus(address, liked: liked)
         default:
             return nil
         }
@@ -247,6 +244,8 @@ struct DeckDetailStackCursor: CursorProtocol {
             return .requestAssignNoteColor(address, color)
         case let .requestAppendToEntry(address, append):
             return .requestAppendToEntry(address, append)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case _:
             return .detailStack(action)
         }
@@ -483,21 +482,16 @@ struct DeckModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case let .succeedLikeEntry(address):
-            return succeedLikeEntry(
+        case let .succeedUpdateLikeStatus(address, liked):
+            return succeedUpdateLikeStatus(
                 state: state,
                 environment: environment,
-                address: address
-            )
-        case let .succeedUnlikeEntry(address):
-            return succeedUnlikeEntry(
-                state: state,
-                environment: environment,
-                address: address
+                address: address,
+                liked: liked
             )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
-                .requestAppendToEntry, .requestLikeEntry, .requestUnlikeEntry:
+                .requestAppendToEntry, .requestUpdateLikeStatus:
             return Update(state: state)
         }
         
@@ -650,32 +644,30 @@ struct DeckModel: ModelProtocol {
             return Update(state: state)
         }
         
-        func succeedLikeEntry(
+        func succeedUpdateLikeStatus(
             state: Self,
             environment: Environment,
-            address: Slashlink
+            address: Slashlink,
+            liked: Bool
         ) -> Update<Self> {
-            state.feedback.prepare()
-            state.feedback.impactOccurred()
             
             var model = state
-            model.likes.append(address)
-            return update(
-                state: model,
-                actions: [
-                    .refreshLikes,
-                    .refreshUpcomingCards
-                ],
-                environment: environment
-            )
-        }
-        
-        func succeedUnlikeEntry(
-            state: Self,
-            environment: Environment,
-            address: Slashlink
-        ) -> Update<Self> {
-            var model = state
+            if liked {
+                state.feedback.prepare()
+                state.feedback.impactOccurred()
+                
+                model.likes.append(address)
+                return update(
+                    state: model,
+                    actions: [
+                        .refreshLikes,
+                        .refreshUpcomingCards
+                    ],
+                    environment: environment
+                )
+            }
+            
+            // Unliked
             model.likes.removeAll(where: { like in like == address })
             
             state.selectionFeedback.prepare()

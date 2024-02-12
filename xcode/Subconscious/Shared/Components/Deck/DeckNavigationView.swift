@@ -40,9 +40,9 @@ struct DeckNavigationView: View {
         case let .cardQuoted(address):
             store.send(.detailStack(.pushQuoteInNewDetail(address)))
         case let .cardLiked(address):
-            store.send(.requestLikeEntry(address))
+            store.send(.requestUpdateLikeStatus(address, liked: true))
         case let .cardUnliked(address):
-            store.send(.requestUnlikeEntry(address))
+            store.send(.requestUpdateLikeStatus(address, liked: false))
         }
     }
     

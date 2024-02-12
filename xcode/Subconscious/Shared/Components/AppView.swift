@@ -316,15 +316,14 @@ enum AppAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(MoveReceipt)
     case succeedAssignNoteColor(address: Slashlink, color: ThemeColor)
-    case succeedLikeEntry(address: Slashlink)
-    case succeedUnlikeEntry(address: Slashlink)
+    case succeedUpdateLikeStatus(address: Slashlink, liked: Bool)
     case failSaveEntry(address: Slashlink, error: String)
     case failDeleteMemo(String)
     case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
     case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
     case failAssignNoteColor(address: Slashlink, error: String)
-    case failLikeEntry(address: Slashlink, error: String)
+    case failUpdateLikeStatus(address: Slashlink, error: String)
     case failUnlikeEntry(address: Slashlink, error: String)
     
     case succeedLogActivity
@@ -1240,8 +1239,7 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
-                .succeedAssignNoteColor, .succeedAppendToEntry, .succeedLikeEntry,
-                .succeedUnlikeEntry:
+                .succeedAssignNoteColor, .succeedAppendToEntry, .succeedUpdateLikeStatus:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
             return succeedSaveEntry(
@@ -1396,7 +1394,7 @@ struct AppModel: ModelProtocol {
                 ),
                 environment: environment
             )
-        case let .failLikeEntry(address, error):
+        case let .failUpdateLikeStatus(address, error):
             logger.warning(
                 """
                 Failed to like entry: \(address)
@@ -3275,12 +3273,10 @@ struct AppModel: ModelProtocol {
         let fx: Fx<Action> = Future.detached {
             try await environment.userLikes.persistLike(for: address)
             
-            return .succeedLikeEntry(
-                address: address
-            )
+            return .succeedUpdateLikeStatus(address: address, liked: true)
         }
         .recover { error in
-            return .failLikeEntry(
+            return .failUpdateLikeStatus(
                 address: address,
                 error: error.localizedDescription
             )
@@ -3298,9 +3294,7 @@ struct AppModel: ModelProtocol {
         let fx: Fx<Action> = Future.detached {
             try await environment.userLikes.removeLike(for: address)
             
-            return .succeedUnlikeEntry(
-                address: address
-            )
+            return .succeedUpdateLikeStatus(address: address, liked: false)
         }
         .recover { error in
             return .failUnlikeEntry(

@@ -125,21 +125,28 @@ struct LikesTabView: View {
             let likes = store.state.likes
             LazyVStack(spacing: AppTheme.unit2) {
                 ForEach(likes) { like in
-                StoryEntryView(
-                    story: StoryEntry(
-                        entry: like,
-                        author: user
-                    ),
-                    onRequestDetail: {
-                        _,
-                        _ in
-                    },
-                    onLink: {
-                        _ in
-                    },
-                    onQuote: {
-                        _ in
-                    })
+                    StoryEntryView(
+                        story: StoryEntry(
+                            entry: like,
+                            author: user
+                        ),
+                        onRequestDetail: { address, excerpt in
+                            notify(
+                                .requestDetail(
+                                    .from(
+                                        address: address,
+                                        fallback: excerpt
+                                    )
+                                )
+                            )
+                        },
+                        onLink: { link in
+                            notify(.requestFindLinkDetail(link))
+                        },
+                        onQuote: { address in
+                            notify(.requestQuoteInNewNote(address))
+                        }
+                    )
                 }
                 .transition(.opacity)
             }

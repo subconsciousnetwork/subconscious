@@ -190,6 +190,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
     case requestQuoteInNewDetail(_ address: Slashlink)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
@@ -200,6 +201,8 @@ extension MemoViewerDetailNotification {
             return .requestUserProfileDetail(user.address)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewDetail(address)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
@@ -239,6 +242,7 @@ enum MemoViewerDetailAction: Hashable {
     case succeedIndexBackgroundSphere
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
@@ -400,6 +404,12 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment
             )
         case .requestQuoteInNewNote:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case .requestUpdateLikeStatus:
             return update(
                 state: state,
                 action: .presentMetaSheet(false),
@@ -646,6 +656,8 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
             return .requestAuthorDetail(user)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewNote(address)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
