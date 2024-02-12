@@ -65,7 +65,7 @@ actor UserLikesService {
     }
     
     /// Attempt to read & deserialize a user `_likes_.json` at the given address.
-    /// Because profile data is optional and we expect it will not always be present
+    /// Because likes are optional we expect they will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
     func readLikesMemo(
         sphere: SphereProtocol
@@ -100,8 +100,8 @@ actor UserLikesService {
         }
     }
     
-    /// Update our `_likes_` memo with the contents of the passed profile.
-    /// This will save the underlying sphere and attempt to sync.
+    /// Update our `_likes_` memo with the contents of the passed collection.
+    /// This will save the underlying sphere.
     func writeOurLikes(likes: UserLikesEntry) async throws {
         let data = try self.jsonEncoder.encode(likes)
         
@@ -120,6 +120,7 @@ actor UserLikesService {
         _ = try await self.noosphere.save()
     }
     
+    /// Like a note
     public func persistLike(for address: Slashlink) async throws -> Void {
         var likes: UserLikesEntry =
             await self.readLikesMemo(sphere: self.noosphere)
@@ -130,6 +131,7 @@ actor UserLikesService {
         try await self.writeOurLikes(likes: likes)
     }
     
+    /// Toggle like status for a note
     public func toggleLike(for address: Slashlink) async throws -> Void {
         var likes: UserLikesEntry =
             await self.readLikesMemo(sphere: self.noosphere)
@@ -144,6 +146,7 @@ actor UserLikesService {
         try await self.writeOurLikes(likes: likes)
     }
     
+    /// "Unlike" a note
     public func removeLike(for address: Slashlink) async throws -> Void {
         var likes: UserLikesEntry =
             await self.readLikesMemo(sphere: self.noosphere)
