@@ -60,8 +60,8 @@ struct UserProfileHeaderView: View {
                 label: {
                     HStack(spacing: AppTheme.unit2) {
                         ProfileStatisticView(label: "Notes", count: statistics?.noteCount)
-                        ProfileStatisticView(label: "Likes", count: statistics?.likeCount)
                         ProfileStatisticView(label: "Following", count: statistics?.followingCount)
+                        ProfileStatisticView(label: "Likes", count: statistics?.likeCount)
                     }
                     .font(.caption)
                     .foregroundColor(.primary)
