@@ -79,10 +79,15 @@ struct TestUtilities {
             database: database
         )
         
+        
+        let likes = UserLikesService(
+            noosphere: noosphere
+        )
         let userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userLikes: likes
         )
         
         let data = DataService(
@@ -97,12 +102,6 @@ struct TestUtilities {
             database: database,
             noosphere: noosphere,
             userProfile: userProfile
-        )
-        
-        let likes = UserLikesService(
-            noosphere: noosphere,
-            database: database,
-            addressBook: addressBook
         )
 
         return DataServiceEnvironment(

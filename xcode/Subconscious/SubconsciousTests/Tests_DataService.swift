@@ -208,10 +208,14 @@ final class Tests_DataService: XCTestCase {
                 noosphere: noosphere,
                 database: database
             )
+            let userLikes = UserLikesService(
+                noosphere: noosphere
+            )
             let userProfile = UserProfileService(
                 noosphere: noosphere,
                 database: database,
-                addressBook: addressBook
+                addressBook: addressBook,
+                userLikes: userLikes
             )
             
             let data = DataService(
@@ -257,10 +261,14 @@ final class Tests_DataService: XCTestCase {
             database: database
         )
         
+        let userLikes = UserLikesService(
+            noosphere: noosphere
+        )
         let userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userLikes: userLikes
         )
         
         let data = DataService(
@@ -563,10 +571,14 @@ final class Tests_DataService: XCTestCase {
             database: database
         )
         
+        let userLikes = UserLikesService(
+            noosphere: noosphere
+        )
         let userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userLikes: userLikes
         )
         
         let data = DataService(
