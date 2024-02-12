@@ -686,6 +686,8 @@ extension DetailStackAction {
             return .requestAssignNoteColor(address, color)
         case let .requestQuoteInNewDetail(address):
             return .pushQuoteInNewDetail(address)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         case let .requestDetail(detail):

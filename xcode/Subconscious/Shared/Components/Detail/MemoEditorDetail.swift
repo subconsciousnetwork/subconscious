@@ -216,24 +216,47 @@ struct MemoEditorDetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        SubtextTextViewRepresentable(state: store.state.editor, send: Address.forward(
-                                send: store.send,
-                                tag: MemoEditorDetailSubtextTextCursor.tag
-                            ),
-                            frame: geometry.frame(in: .local),
-                            onLink: self.onLink
-                        )
-                        .insets(
-                            EdgeInsets(
-                                top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
+                        VStack {
+                            SubtextTextViewRepresentable(
+                                state: store.state.editor,
+                                send: Address.forward(
+                                    send: store.send,
+                                    tag: MemoEditorDetailSubtextTextCursor.tag
+                                ),
+                                frame: geometry.frame(in: .local),
+                                onLink: self.onLink
                             )
-                        )
-                        .frame(
-                            minHeight: UIFont.appTextMono.lineHeight * 8
-                        )
+                            .insets(
+                                EdgeInsets(
+                                    top: AppTheme.padding,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
+                                )
+                            )
+                            .frame(
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+                            )
+                            
+                            if let address = store.state.address {
+                                HStack {
+                                    Spacer()
+                                    
+                                    LikeButtonView(
+                                        liked: store.state.liked,
+                                        action: {
+                                            notify(
+                                                .requestUpdateLikeStatus(
+                                                    address,
+                                                    liked: !store.state.liked
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
+                                .padding(AppTheme.padding)
+                            }
+                        }
                         .background(background)
                         .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
                         .shadow(style: .transclude)
@@ -312,6 +335,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestUpdateAudience(address: Slashlink, audience: Audience)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case requestQuoteInNewDetail(_ address: Slashlink)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
@@ -332,6 +356,8 @@ extension MemoEditorDetailNotification {
             return .requestAssignNoteColor(address, color)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewDetail(address)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
@@ -456,6 +482,12 @@ enum MemoEditorDetailAction: Hashable {
     case requestAssignNoteColor(_ color: ThemeColor)
     case forwardRequestAssignNoteColor(address: Slashlink, _ color: ThemeColor)
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    
+    case refreshLikedStatus
+    case succeedRefreshLikedStatus(_ liked: Bool)
+    case failRefreshFetchLikedStatus(_ error: String)
     
 
     // Editor
@@ -520,6 +552,10 @@ enum MemoEditorDetailAction: Hashable {
     static func setMetaSheetColor(_ color: ThemeColor?) -> Self {
         .metaSheet(.setNoteColor(color))
     }
+    
+    static func setMetaSheetLiked(_ liked: Bool) -> Self {
+        .metaSheet(.setLiked(liked))
+    }
 
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
         .metaSheet(.setDefaultAudience(audience))
@@ -553,6 +589,8 @@ extension MemoEditorDetailAction {
             return .succeedUpdateAudience(receipt)
         case let .succeedAssignNoteColor(address, color):
             return .succeedAssignNoteColor(address, color)
+        case let .succeedUpdateLikeStatus(address, liked):
+            return .succeedUpdateLikeStatus(address, liked: liked)
             
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
@@ -631,6 +669,8 @@ struct MemoEditorDetailMetaSheetCursor: CursorProtocol {
             return .requestDelete(address)
         case let .requestQuoteInNewNote(address):
             return .requestQuoteInNewNote(address)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
@@ -661,6 +701,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         fileExtension: ContentType.subtext.fileExtension
     )
     var themeColor: ThemeColor? = nil
+    var liked: Bool = false
     
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
@@ -1028,6 +1069,45 @@ struct MemoEditorDetailModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case .refreshLikedStatus:
+            return refreshLikedStatus(
+                state: state,
+                environment: environment
+            )
+        case .requestUpdateLikeStatus:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .succeedRefreshLikedStatus(liked):
+            var model = state
+            model.liked = liked
+            return update(
+                state: model,
+                action: .setMetaSheetLiked(liked),
+                environment: environment
+            )
+        case let .failRefreshFetchLikedStatus(error):
+            logger.error("Failed to refresh liked status: \(error)")
+            return Update(state: state)
+        case let .succeedUpdateLikeStatus(address, liked):
+            guard address == state.address else {
+                return Update(state: state)
+            }
+            
+            var model = state
+            model.liked = liked
+            return update(
+                state: model,
+                action: .metaSheet(
+                    .succeedUpdateLikeStatus(
+                        address,
+                        liked: liked
+                    )
+                ),
+                environment: environment
+            )
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
                 .forwardRequestMergeEntry, .forwardRequestUpdateAudience,
                 .forwardRequestAssignNoteColor:
@@ -1285,7 +1365,10 @@ struct MemoEditorDetailModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .refreshBacklinks,
+            actions: [
+                .refreshBacklinks,
+                .refreshLikedStatus
+            ],
             environment: environment
         ).mergeFx(fx)
     }
@@ -2112,6 +2195,26 @@ struct MemoEditorDetailModel: ModelProtocol {
             ],
             environment: environment
         )
+    }
+    
+    static func refreshLikedStatus(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            let liked = try await environment.userLikes.isLikedByUs(address: address)
+            return .succeedRefreshLikedStatus(liked)
+        }
+        .recover { error in
+            .failRefreshFetchLikedStatus(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     /// Snapshot editor state in preparation for saving.
