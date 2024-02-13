@@ -50,7 +50,7 @@ struct CardContentView: View {
     var entry: EntryStub
     var liked: Bool
     var related: Set<EntryStub>
-    var notify: (CardNotification) -> Void
+    var notify: (EntryNotification) -> Void
     
     var highlight: Color {
         entry.highlightColor

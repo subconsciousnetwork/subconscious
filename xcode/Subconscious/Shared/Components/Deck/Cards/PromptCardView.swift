@@ -15,7 +15,7 @@ struct PromptCardView: View {
     var entry: EntryStub
     var liked: Bool
     var related: Set<EntryStub>
-    var notify: (CardNotification) -> Void
+    var notify: (EntryNotification) -> Void
     
     var background: Color {
         entry.color
@@ -62,6 +62,32 @@ struct PromptCardView: View {
         .cornerRadius(DeckTheme.cornerRadius)
         .contextMenu {
             ShareLink(item: entry.sharedText)
+            
+            if liked {
+                Button(
+                    action: {
+                        notify(.unlike(entry.address))
+                    },
+                    label: {
+                        Label(
+                            "Remove from likes",
+                            systemImage: "heart.slash"
+                        )
+                    }
+                )
+            } else {
+                Button(
+                    action: {
+                        notify(.like(entry.address))
+                    },
+                    label: {
+                        Label(
+                            "Add to likes",
+                            systemImage: "heart"
+                        )
+                    }
+                )
+            }
             
             Button(
                 action: {

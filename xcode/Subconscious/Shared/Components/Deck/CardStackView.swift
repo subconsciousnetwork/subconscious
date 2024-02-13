@@ -261,6 +261,10 @@ struct CardStack: View {
                     case let .linkTapped(link):
                         notify(.linkTapped(link))
                         break
+                    case .tapped:
+                        notify(.cardTapped(card))
+                    case .delete:
+                        break
                     }
                 }
             )

@@ -14,7 +14,7 @@ struct EntryCardView: View {
     var entry: EntryStub
     var liked: Bool
     var related: Set<EntryStub>
-    var notify: (CardNotification) -> Void
+    var notify: (EntryNotification) -> Void
     
     var background: Color {
         entry.color

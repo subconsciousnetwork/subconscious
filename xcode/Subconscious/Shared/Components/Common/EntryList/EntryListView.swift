@@ -7,17 +7,33 @@
 
 import SwiftUI
 
+enum EntryNotification {
+    case tapped(EntryStub)
+    case like(Slashlink)
+    case unlike(Slashlink)
+    case delete(Slashlink)
+    case linkTapped(EntryLink)
+    case quote(Slashlink)
+}
+
 /// List view for entries
 struct EntryListView: View {
     var entries: [EntryStub]?
-    var onEntryPress: (EntryStub) -> Void
-    var onEntryDelete: (Slashlink) -> Void
+    var likes: [Slashlink]?
     var onRefresh: () -> Void
-    var onLink: (EntryLink) -> Void
-    var onQuote: (Slashlink) -> Void
+    
+    var notify: (EntryNotification) -> Void
     
     @Environment(\.colorScheme) var colorScheme
     static let resetScrollTargetId: Int = 0
+    
+    private func liked(_ entry: EntryStub) -> Bool {
+        likes?.contains(
+            where: {
+                like in like == entry.address
+            })
+            ?? false
+    }
 
     var body: some View {
         if let entries = entries {
@@ -31,13 +47,13 @@ struct EntryListView: View {
                         
                         Button(
                             action: {
-                                onEntryPress(entry)
+                                notify(.tapped(entry))
                             }
                         ) {
                             EntryRow(
                                 entry: entry,
                                 highlight: entry.highlightColor,
-                                onLink: onLink
+                                onLink: { link in notify(.linkTapped(link)) }
                             )
                         }
                         .buttonStyle(
@@ -52,7 +68,7 @@ struct EntryListView: View {
                         ) {
                             Button(
                                 action: {
-                                    onEntryDelete(entry.address)
+                                    notify(.delete(entry.address))
                                 }
                             ) {
                                 Text("Delete")
@@ -62,9 +78,35 @@ struct EntryListView: View {
                         .contextMenu {
                             ShareLink(item: entry.sharedText)
                             
+                            if liked(entry) {
+                                Button(
+                                    action: {
+                                        notify(.unlike(entry.address))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Remove from likes",
+                                            systemImage: "heart.slash"
+                                        )
+                                    }
+                                )
+                            } else {
+                                Button(
+                                    action: {
+                                        notify(.like(entry.address))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Add to likes",
+                                            systemImage: "heart"
+                                        )
+                                    }
+                                )
+                            }
+                            
                             Button(
                                 action: {
-                                    onQuote(entry.address)
+                                    notify(.quote(entry.address))
                                 },
                                 label: {
                                     Label(
@@ -79,7 +121,7 @@ struct EntryListView: View {
                             Button(
                                 role: .destructive,
                                 action: {
-                                    onEntryDelete(entry.address)
+                                    notify(.delete(entry.address))
                                 }
                             ) {
                                 Label(
@@ -134,11 +176,8 @@ struct EntryListView_Previews: PreviewProvider {
                     headers: .emptySubtext
                 )
             ],
-            onEntryPress: { entry in },
-            onEntryDelete: { slug in },
             onRefresh: {},
-            onLink: { _ in },
-            onQuote: { _ in }
+            notify: { _ in }
         )
     }
 }

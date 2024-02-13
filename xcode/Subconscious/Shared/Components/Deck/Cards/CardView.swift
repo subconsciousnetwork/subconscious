@@ -8,18 +8,11 @@
 import Foundation
 import SwiftUI
 
-enum CardNotification {
-    case linkTapped(EntryLink)
-    case like(Slashlink)
-    case unlike(Slashlink)
-    case quote(Slashlink)
-}
-
 struct CardView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var card: CardModel
-    var notify: (CardNotification) -> Void
+    var notify: (EntryNotification) -> Void
     
     var color: Color {
         switch card.card {
