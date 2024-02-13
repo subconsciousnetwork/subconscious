@@ -223,7 +223,8 @@ final class Tests_DataService: XCTestCase {
                 database: database,
                 local: local,
                 addressBook: addressBook,
-                userProfile: userProfile
+                userProfile: userProfile,
+                userLikes: userLikes
             )
             
             versionX = try await noosphere.version()
@@ -276,7 +277,8 @@ final class Tests_DataService: XCTestCase {
             database: database,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            userLikes: userLikes
         )
         let versionY = try await noosphere.version()
         
@@ -586,7 +588,8 @@ final class Tests_DataService: XCTestCase {
             database: database,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            userLikes: userLikes
         )
                 
         try await data.writeMemo(

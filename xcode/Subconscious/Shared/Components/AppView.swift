@@ -3387,7 +3387,8 @@ struct AppEnvironment {
             database: database,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            userLikes: userLikes
         )
         
         self.gatewayProvisioningService = GatewayProvisioningService()

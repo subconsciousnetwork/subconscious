@@ -42,8 +42,7 @@ struct RecentTabView: View {
                                 like in entry.address == like
                             })
                         ),
-                        notify: {
-                            notification in
+                        notify: { notification in
                             UserProfileDetailNotification.from(notification).flatMap(notify)
                         }
                     )

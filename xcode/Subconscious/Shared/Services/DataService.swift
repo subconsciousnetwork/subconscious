@@ -49,6 +49,7 @@ actor DataService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var userProfile: UserProfileService
+    private var userLikes: UserLikesService
     private var local: HeaderSubtextMemoStore
     private var logger: Logger = logger
 
@@ -57,13 +58,15 @@ actor DataService {
         database: DatabaseService,
         local: HeaderSubtextMemoStore,
         addressBook: AddressBookService,
-        userProfile: UserProfileService
+        userProfile: UserProfileService,
+        userLikes: UserLikesService
     ) {
         self.database = database
         self.noosphere = noosphere
         self.local = local
         self.addressBook = addressBook
         self.userProfile = userProfile
+        self.userLikes = userLikes
     }
     
     /// Create a default sphere for user if needed, and persist sphere details.
@@ -750,17 +753,19 @@ actor DataService {
     nonisolated func listFeedPublisher() -> AnyPublisher<[StoryEntry], Error> {
         Future.detached {
             let entries = try await self.listFeed()
+            let likes = try await self.userLikes.readOurLikes()
             var authors: [Did:UserProfile] = [:]
             var stories: [StoryEntry] = []
             
             for entry in entries {
+                let liked = likes.contains(where: { like in like == entry.address })
                 // Have we already found the author for this post?
                 if let author = authors[entry.did] {
                     stories.append(
                         StoryEntry(
                             entry: entry,
                             author: author,
-                            liked: false
+                            liked: liked
                         )
                     )
                     continue
@@ -777,7 +782,7 @@ actor DataService {
                     StoryEntry(
                         entry: entry,
                         author: user,
-                        liked: false
+                        liked: liked
                     )
                 )
             }
