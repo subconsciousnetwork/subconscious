@@ -129,10 +129,12 @@ public extension ThemeColor {
     }
 }
 
-private extension Hashable {
+extension String {
     var themeColor: ThemeColor {
         let colors = ThemeColor.allCases
-        return colors[abs(self.hashValue) % colors.count]
+        let hash = self.utf8.reduce(0) { $0 + Int($1) }
+        
+        return colors[abs(hash.hashValue) % colors.count]
     }
 }
 
