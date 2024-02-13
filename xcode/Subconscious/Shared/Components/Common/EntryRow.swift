@@ -36,12 +36,6 @@ struct EntryRow: View {
                     .theme(base: highlight, slug: highlight)
 
                 Spacer()
-                
-                if liked {
-                    Image(systemName: "heart.fill")
-                        .font(.caption)
-                        .foregroundColor(highlight)
-                }
 
                 Text(
                     NiceDateFormatter.shared.string(
@@ -51,6 +45,12 @@ struct EntryRow: View {
                 )
                 .font(.subheadline)
                 .foregroundColor(highlight)
+                
+                if liked {
+                    Image(systemName: "heart.fill")
+                        .font(.caption)
+                        .foregroundColor(highlight)
+                }
             }
             .font(.callout)
             .lineLimit(1)
