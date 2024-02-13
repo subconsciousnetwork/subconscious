@@ -130,7 +130,7 @@ enum DetailStackAction: Hashable {
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
     
-    case pushQuoteInNewDetail(Slashlink)
+    case pushQuoteInNewDetail(Slashlink, comment: String? = nil)
 
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
@@ -230,11 +230,12 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 environment: environment,
                 autofocus: autofocus
             )
-        case let .pushQuoteInNewDetail(address):
+        case let .pushQuoteInNewDetail(address, comment):
             return pushQuoteInNewDetail(
                 state: state,
                 environment: environment,
-                address: address
+                address: address,
+                comment: comment
             )
         case let .failPushRandomDetail(error):
             return failPushRandomDetail(
@@ -483,8 +484,23 @@ struct DetailStackModel: Hashable, ModelProtocol {
     static func pushQuoteInNewDetail(
         state: Self,
         environment: Environment,
-        address: Slashlink
+        address: Slashlink,
+        comment: String?
     ) -> Update<Self> {
+        if let comment = comment {
+            return update(
+                state: state,
+                action: .pushDetail(
+                    .editor(
+                        MemoEditorDetailDescription(
+                            fallback: "\n\n\(comment) \(address.markup)"
+                        )
+                    )
+                ),
+                environment: environment
+            )
+        }
+        
         return update(
             state: state,
             action: .pushDetail(
@@ -494,7 +510,8 @@ struct DetailStackModel: Hashable, ModelProtocol {
                     )
                 )
             ),
-            environment: environment)
+            environment: environment
+        )
     }
 
     static func failPushRandomDetail(
@@ -684,8 +701,8 @@ extension DetailStackAction {
             return .requestUpdateAudience(address, audience)
         case let .requestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
-        case let .requestQuoteInNewDetail(address):
-            return .pushQuoteInNewDetail(address)
+        case let .requestQuoteInNewDetail(address, comment):
+            return .pushQuoteInNewDetail(address, comment: comment)
         case let .requestUpdateLikeStatus(address, liked):
             return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
@@ -713,8 +730,8 @@ extension DetailStackAction {
                     )
                 )
             )
-        case let .requestQuoteInNewDetail(address):
-            return .pushQuoteInNewDetail(address)
+        case let .requestQuoteInNewDetail(address, comment):
+            return .pushQuoteInNewDetail(address, comment: comment)
         case let .requestUpdateLikeStatus(address, liked):
             return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
@@ -734,8 +751,8 @@ extension DetailStackAction {
                     address: address
                 )
             ))
-        case let .requestQuoteInNewNote(address):
-            return .pushQuoteInNewDetail(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .pushQuoteInNewDetail(address, comment: comment)
         }
     }
 }

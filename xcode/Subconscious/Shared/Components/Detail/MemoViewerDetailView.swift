@@ -180,6 +180,7 @@ struct MemoViewerDetailLoadedView: View {
                     .background(store.state.themeColor?.toColor())
                     .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
                     .shadow(style: .transclude)
+                    .padding(.bottom, AppTheme.unit4)
                     .padding(.top, AppTheme.unit2)
                     
                     CommentsView(
@@ -188,8 +189,7 @@ struct MemoViewerDetailLoadedView: View {
                             store.send(.refreshComments)
                         },
                         onRespond: { comment in
-                            // TODO: new action for quoting with the comment included
-                            notify(.requestQuoteInNewDetail(address))
+                            notify(.requestQuoteInNewDetail(address, comment: comment))
                         }
                     )
                     
@@ -217,7 +217,7 @@ enum MemoViewerDetailNotification: Hashable {
     )
     case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
-    case requestQuoteInNewDetail(_ address: Slashlink)
+    case requestQuoteInNewDetail(_ address: Slashlink, comment: String? = nil)
     case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
@@ -227,8 +227,8 @@ extension MemoViewerDetailNotification {
         switch action {
         case let .requestAuthorDetail(user):
             return .requestUserProfileDetail(user.address)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewDetail(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewDetail(address, comment: comment)
         case let .requestUpdateLikeStatus(address, liked):
             return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
@@ -269,7 +269,7 @@ enum MemoViewerDetailAction: Hashable {
     
     case succeedIndexBackgroundSphere
     case requestAuthorDetail(_ author: UserProfile)
-    case requestQuoteInNewNote(_ address: Slashlink)
+    case requestQuoteInNewNote(_ address: Slashlink, comment: String? = nil)
     case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
     case refreshLikedStatus
@@ -788,8 +788,8 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
             return .presentMetaSheet(false)
         case let .requestAuthorDetail(user):
             return .requestAuthorDetail(user)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewNote(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewNote(address, comment: comment)
         case let .requestUpdateLikeStatus(address, liked):
             return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):

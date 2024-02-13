@@ -27,9 +27,10 @@ struct CommentsView: View {
                     }
                 }
             )
+            .foregroundStyle(.secondary)
             
             if comments.count > 0 {
-                LazyVStack(alignment: .leading, spacing: AppTheme.unit2) {
+                LazyVStack(alignment: .leading, spacing: AppTheme.unit) {
                     ForEach(comments, id: \.self) { comment in
                         Button(
                             action: { onRespond(comment) },

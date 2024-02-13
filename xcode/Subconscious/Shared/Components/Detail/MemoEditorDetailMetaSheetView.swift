@@ -237,7 +237,7 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     /// Request this address be deleted.
     /// Should be handled by parent component.
     case requestDelete(Slashlink?)
-    case requestQuoteInNewNote(_ address: Slashlink)
+    case requestQuoteInNewNote(_ address: Slashlink, comment: String? = nil)
     
     /// Tagged actions for append link search sheet
     case appendLinkSearch(AppendLinkSearchAction)
