@@ -138,6 +138,8 @@ enum NotebookAction: Hashable {
     /// from the list before requesting delete for the animation to work.
     case stageDeleteEntry(Slashlink)
     
+    /// Fetch like status
+    /// This could be removed if we instead index liked status in SQLite
     case refreshLikes
     case succeedRefreshLikes(_ likes: [Slashlink])
     case failRefreshLikes(_ error: String)

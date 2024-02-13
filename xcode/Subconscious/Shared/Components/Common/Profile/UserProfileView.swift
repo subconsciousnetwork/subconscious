@@ -25,6 +25,26 @@ struct ProfileStatisticView: View {
     }
 }
 
+extension UserProfileDetailNotification {
+    static func from(_ notification: EntryNotification) -> UserProfileDetailNotification? {
+        switch notification {
+        case let .tapped(entry):
+            return .requestDetail(
+                .from(
+                    address: entry.address,
+                    fallback: entry.excerpt.description
+                )
+            )
+        case let .linkTapped(link):
+            return .requestFindLinkDetail(link)
+        case let .quote(address):
+            return .requestQuoteInNewNote(address)
+        default:
+            return nil
+        }
+    }
+}
+
 struct RecentTabView: View {
     @ObservedObject var store: Store<UserProfileDetailModel>
     var notify: (UserProfileDetailNotification) -> Void
@@ -37,23 +57,11 @@ struct RecentTabView: View {
                     StoryEntryView(
                         story: StoryEntry(
                             entry: entry,
-                            author: user
+                            author: user,
+                            liked: false
                         ),
-                        onRequestDetail: { address, excerpt in
-                            notify(
-                                .requestDetail(
-                                    .from(
-                                        address: address,
-                                        fallback: excerpt
-                                    )
-                                )
-                            )
-                        },
-                        onLink: { link in
-                            notify(.requestFindLinkDetail(link))
-                        },
-                        onQuote: { address in
-                            notify(.requestQuoteInNewNote(address))
+                        notify: { notification in
+                            UserProfileDetailNotification.from(notification).flatMap(notify)
                         }
                     )
                 }
@@ -128,23 +136,11 @@ struct LikesTabView: View {
                     StoryEntryView(
                         story: StoryEntry(
                             entry: like,
-                            author: user
+                            author: user,
+                            liked: false
                         ),
-                        onRequestDetail: { address, excerpt in
-                            notify(
-                                .requestDetail(
-                                    .from(
-                                        address: address,
-                                        fallback: excerpt
-                                    )
-                                )
-                            )
-                        },
-                        onLink: { link in
-                            notify(.requestFindLinkDetail(link))
-                        },
-                        onQuote: { address in
-                            notify(.requestQuoteInNewNote(address))
+                        notify: { notification in
+                            UserProfileDetailNotification.from(notification).flatMap(notify)
                         }
                     )
                 }

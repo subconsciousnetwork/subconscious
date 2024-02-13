@@ -25,9 +25,8 @@ struct StoryEntryView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var story: StoryEntry
-    var onRequestDetail: (Slashlink, String) -> Void
-    var onLink: (EntryLink) -> Void
-    var onQuote: (Slashlink) -> Void
+    var notify: (EntryNotification) -> Void
+    
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -51,10 +50,7 @@ struct StoryEntryView: View {
     var body: some View {
         Button(
             action: {
-                onRequestDetail(
-                    story.entry.address,
-                    story.entry.excerpt.description
-                )
+                notify(.tapped(story.entry))
             },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
@@ -68,7 +64,7 @@ struct StoryEntryView: View {
                             SubtextView(
                                 peer: story.entry.toPeer(),
                                 subtext: story.entry.excerpt,
-                                onLink: onLink
+                                onLink: { link in notify(.linkTapped(link)) }
                             )
                             .multilineTextAlignment(.leading)
                             .foregroundColor(.primary)
@@ -88,9 +84,35 @@ struct StoryEntryView: View {
         .contextMenu {
             ShareLink(item: sharedNote)
             
+            if story.liked {
+                Button(
+                    action: {
+                        notify(.unlike(story.entry.address))
+                    },
+                    label: {
+                        Label(
+                            "Remove from likes",
+                            systemImage: "heart.slash"
+                        )
+                    }
+                )
+            } else {
+                Button(
+                    action: {
+                        notify(.like(story.entry.address))
+                    },
+                    label: {
+                        Label(
+                            "Add to likes",
+                            systemImage: "heart"
+                        )
+                    }
+                )
+            }
+            
             Button(
                 action: {
-                    onQuote(story.entry.address)
+                    notify(.quote(story.entry.address))
                 },
                 label: {
                     Label(
@@ -125,11 +147,10 @@ struct StoryPlainView_Previews: PreviewProvider {
                     ),
                     did: Did.dummyData()
                 ),
-                author: UserProfile.dummyData()
+                author: UserProfile.dummyData(),
+                liked: false
             ),
-            onRequestDetail: { _, _ in },
-            onLink: { _ in },
-            onQuote: { _ in }
+            notify: { _ in }
         )
     }
 }

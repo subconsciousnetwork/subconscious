@@ -756,7 +756,13 @@ actor DataService {
             for entry in entries {
                 // Have we already found the author for this post?
                 if let author = authors[entry.did] {
-                    stories.append(StoryEntry(entry: entry, author: author))
+                    stories.append(
+                        StoryEntry(
+                            entry: entry,
+                            author: author,
+                            liked: false
+                        )
+                    )
                     continue
                 }
                 
@@ -767,7 +773,13 @@ actor DataService {
                 )
                 
                 authors.updateValue(user, forKey: entry.did)
-                stories.append(StoryEntry(entry: entry, author: user))
+                stories.append(
+                    StoryEntry(
+                        entry: entry,
+                        author: user,
+                        liked: false
+                    )
+                )
             }
             
             return stories
