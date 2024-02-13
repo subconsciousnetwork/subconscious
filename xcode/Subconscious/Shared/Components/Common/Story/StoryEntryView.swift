@@ -54,25 +54,39 @@ struct StoryEntryView: View {
             },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
-                        VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                            BylineSmView(
-                                pfp: .generated(story.entry.did),
-                                slashlink: story.entry.address,
-                                highlight: highlight
-                            )
-                            
-                            SubtextView(
-                                peer: story.entry.toPeer(),
-                                subtext: story.entry.excerpt,
-                                onLink: { link in notify(.linkTapped(link)) }
-                            )
-                            .multilineTextAlignment(.leading)
-                            .foregroundColor(.primary)
-                        }
-                        .tint(highlight)
-                        .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
+                    VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                        BylineSmView(
+                            pfp: .generated(story.entry.did),
+                            slashlink: story.entry.address,
+                            highlight: highlight
+                        )
+                        
+                        SubtextView(
+                            peer: story.entry.toPeer(),
+                            subtext: story.entry.excerpt,
+                            onLink: { link in notify(.linkTapped(link)) }
+                        )
+                        .multilineTextAlignment(.leading)
+                        .foregroundColor(.primary)
+                    }
+                    .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
                 }
+                .tint(highlight)
                 .contentShape(Rectangle())
+                .overlay(VStack {
+                    Spacer()
+                        HStack {
+                            Spacer()
+                            
+                            if story.liked {
+                                Image(systemName: "heart.fill")
+                                    .font(.caption)
+                                    .foregroundColor(highlight)
+                            }
+                        }
+                    }
+                    .allowsHitTesting(false)
+                )
             }
         )
         .contentShape(.interaction, RectangleCroppedTopRightCorner())

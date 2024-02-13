@@ -98,6 +98,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var following: [StoryUser]
     var followingStatus: UserProfileFollowStatus
     var likes: [EntryStub]
+    var ourLikes: [Slashlink]
 }
 
 struct UserProfileEntry: Codable, Equatable, Hashable {
@@ -557,7 +558,8 @@ actor UserProfileService {
                 slugs: notes
             )
         }
-        let likedLinks = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry(likes: [])
+        let ourLikes = try await userLikes.readOurLikes()
+        let likedLinks = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry()
         var likes: [EntryStub] = []
         
         // iterate backwards for reverse chronological feed
@@ -601,7 +603,8 @@ actor UserProfileService {
             recentEntries: recentEntries,
             following: following,
             followingStatus: followingStatus,
-            likes: likes
+            likes: likes,
+            ourLikes: ourLikes
         )
     }
     

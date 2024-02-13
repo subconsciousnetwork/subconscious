@@ -984,6 +984,6 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         var model = state
         model.likes = likes
-        return Update(state: model)
+        return Update(state: model).animation(.easeOutCubic())
     }
 }

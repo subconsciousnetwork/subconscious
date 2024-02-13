@@ -52,6 +52,7 @@ struct EntryListView: View {
                         ) {
                             EntryRow(
                                 entry: entry,
+                                liked: liked(entry),
                                 highlight: entry.highlightColor,
                                 onLink: { link in notify(.linkTapped(link)) }
                             )

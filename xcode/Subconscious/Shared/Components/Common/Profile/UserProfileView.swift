@@ -39,7 +39,12 @@ extension UserProfileDetailNotification {
             return .requestFindLinkDetail(link)
         case let .quote(address):
             return .requestQuoteInNewNote(address)
-        default:
+        case let .like(address):
+            return .requestUpdateLikeStatus(address, liked: true)
+        case let .unlike(address):
+            return .requestUpdateLikeStatus(address, liked: false)
+        // Not currently possible from this view
+        case .delete:
             return nil
         }
     }
@@ -58,9 +63,12 @@ struct RecentTabView: View {
                         story: StoryEntry(
                             entry: entry,
                             author: user,
-                            liked: false
+                            liked: store.state.ourLikes.contains(where: {
+                                like in entry.address == like
+                            })
                         ),
-                        notify: { notification in
+                        notify: {
+                            notification in
                             UserProfileDetailNotification.from(notification).flatMap(notify)
                         }
                     )
@@ -137,7 +145,9 @@ struct LikesTabView: View {
                         story: StoryEntry(
                             entry: like,
                             author: user,
-                            liked: false
+                            liked: store.state.ourLikes.contains(where: {
+                                ourLike in like.address == ourLike
+                            })
                         ),
                         notify: { notification in
                             UserProfileDetailNotification.from(notification).flatMap(notify)

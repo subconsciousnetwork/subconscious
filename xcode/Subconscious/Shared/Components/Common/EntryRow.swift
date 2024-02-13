@@ -12,6 +12,7 @@ import SwiftUI
 struct EntryRow: View {
     @Environment (\.colorScheme) var colorScheme
     var entry: EntryStub
+    var liked: Bool
     var emptyExcerpt = "Empty"
     var highlight: Color = .secondary
     var onLink: (EntryLink) -> Void = { _ in }
@@ -35,6 +36,12 @@ struct EntryRow: View {
                     .theme(base: highlight, slug: highlight)
 
                 Spacer()
+                
+                if liked {
+                    Image(systemName: "heart.fill")
+                        .font(.caption)
+                        .foregroundColor(highlight)
+                }
 
                 Text(
                     NiceDateFormatter.shared.string(
@@ -72,7 +79,8 @@ struct EntryRow_Previews: PreviewProvider {
                               """
                     ),
                     headers: .emptySubtext
-                )
+                ),
+                liked: false
             )
             EntryRow(
                 entry: EntryStub(
@@ -84,7 +92,8 @@ struct EntryRow_Previews: PreviewProvider {
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
                     headers: .emptySubtext
-                )
+                ),
+                liked: false
             )
             EntryRow(
                 entry: EntryStub(
@@ -96,7 +105,8 @@ struct EntryRow_Previews: PreviewProvider {
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
                     headers: .emptySubtext
-                )
+                ),
+                liked: false
             )
             EntryRow(
                 entry: EntryStub(
@@ -108,7 +118,8 @@ struct EntryRow_Previews: PreviewProvider {
                         markup: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply."
                     ),
                     headers: .emptySubtext
-                )
+                ),
+                liked: false
             )
         }
         .padding(AppTheme.unit2)
