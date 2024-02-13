@@ -25,31 +25,6 @@ struct ProfileStatisticView: View {
     }
 }
 
-extension UserProfileDetailNotification {
-    static func from(_ notification: EntryNotification) -> UserProfileDetailNotification? {
-        switch notification {
-        case let .tapped(entry):
-            return .requestDetail(
-                .from(
-                    address: entry.address,
-                    fallback: entry.excerpt.description
-                )
-            )
-        case let .linkTapped(link):
-            return .requestFindLinkDetail(link)
-        case let .quote(address):
-            return .requestQuoteInNewNote(address)
-        case let .like(address):
-            return .requestUpdateLikeStatus(address, liked: true)
-        case let .unlike(address):
-            return .requestUpdateLikeStatus(address, liked: false)
-        // Not currently possible from this view
-        case .delete:
-            return nil
-        }
-    }
-}
-
 struct RecentTabView: View {
     @ObservedObject var store: Store<UserProfileDetailModel>
     var notify: (UserProfileDetailNotification) -> Void
