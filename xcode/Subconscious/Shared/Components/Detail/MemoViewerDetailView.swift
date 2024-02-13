@@ -180,8 +180,18 @@ struct MemoViewerDetailLoadedView: View {
                     .background(store.state.themeColor?.toColor())
                     .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
                     .shadow(style: .transclude)
-                    .padding(.bottom, AppTheme.unit4)
                     .padding(.top, AppTheme.unit2)
+                    
+                    CommentsView(
+                        comments: store.state.comments,
+                        onRefresh: {
+                            store.send(.refreshComments)
+                        },
+                        onRespond: { comment in
+                            // TODO: new action for quoting with the comment included
+                            notify(.requestQuoteInNewDetail(address))
+                        }
+                    )
                     
                     BacklinksView(
                         backlinks: store.state.backlinks,
@@ -266,6 +276,10 @@ enum MemoViewerDetailAction: Hashable {
     case succeedRefreshLikedStatus(_ liked: Bool)
     case failRefreshFetchLikedStatus(_ error: String)
     
+    case refreshComments
+    case succeedRefreshComments(_ comments: [String])
+    case failRefreshComments(_ error: String)
+    
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
@@ -321,6 +335,8 @@ struct MemoViewerDetailModel: ModelProtocol {
     var themeColor: ThemeColor? {
         headers?.themeColor ?? address?.themeColor
     }
+    
+    var comments: [String] = []
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -468,6 +484,20 @@ struct MemoViewerDetailModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case .refreshComments:
+            return refreshComments(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshComments(comments):
+            return succeedRefreshComments(
+                state: state,
+                environment: environment,
+                comments: comments
+            )
+        case let .failRefreshComments(error):
+            logger.error("Failed to refresh comments: \(error)")
+            return Update(state: state)
         }
     }
     
@@ -516,7 +546,8 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .fetchOwnerProfile,
-                .refreshBacklinks
+                .refreshBacklinks,
+                .refreshComments
             ],
             environment: environment
         ).mergeFx(fx)
@@ -698,6 +729,42 @@ struct MemoViewerDetailModel: ModelProtocol {
         )
     }
     
+    static func refreshComments(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<MemoViewerDetailAction> = Future.detached {
+            var comments: [String] = []
+            
+            for _ in 0...2 {
+                let comment = await environment.prompt.generate(
+                    input: state.dom.description
+                )
+                comments.append(comment)
+            }
+            
+            return comments.uniquing()
+        }
+        .map { comments in
+            .succeedRefreshComments(comments)
+        }
+        .recover { error in
+            .failRefreshComments(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshComments(
+        state: Self,
+        environment: Environment,
+        comments: [String]
+    ) -> Update<Self> {
+        var model = state
+        model.comments = comments
+        return Update(state: model).animation(.easeOutCubic())
+    }
 }
 
 /// Meta sheet cursor
