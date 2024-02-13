@@ -59,7 +59,6 @@ struct CommentsView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             CommentsView(
-                
                 comments: [
                     "This is a comment",
                     "This is another comment"
