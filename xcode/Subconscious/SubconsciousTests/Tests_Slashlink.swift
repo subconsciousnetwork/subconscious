@@ -23,6 +23,8 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNotNil(Slashlink("@bob-foo.alice-foo"))
         XCTAssertNotNil(Slashlink("@bob_foo.alice_foo"))
         XCTAssertNotNil(Slashlink("@bob_foo.alice_foo/foo/bar/baz"))
+        XCTAssertNotNil(Slashlink("did:subconscious:local/k-elo-orfkjwldkfssfsdkkdsdfkkfkssdfaskasfa"))
+        XCTAssertNotNil(Slashlink("did:key:abc123/a-slug"))
     }
     
     func testNotValid() throws {

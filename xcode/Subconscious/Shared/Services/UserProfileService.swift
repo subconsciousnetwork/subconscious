@@ -568,6 +568,11 @@ actor UserProfileService {
         // on how many degrees away from this peer we are
         // we might need to load likes as a seperate background task
         for link in likedLinks.collection.reversed() {
+            // This user may have liked their own draft notes, but we can't fetch these
+            if link.isLocal {
+                continue
+            }
+            
             let did = try await sphere.resolve(peer: link.peer)
             let memo = try await sphere.read(slashlink: link)
             
