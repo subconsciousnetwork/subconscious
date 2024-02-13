@@ -8,11 +8,11 @@
 import SwiftUI
 
 enum EntryNotification {
-    case tapped(EntryStub)
+    case requestDetail(EntryStub)
     case like(Slashlink)
     case unlike(Slashlink)
     case delete(Slashlink)
-    case linkTapped(EntryLink)
+    case requestLinkDetail(EntryLink)
     case quote(Slashlink)
 }
 
@@ -47,14 +47,14 @@ struct EntryListView: View {
                         
                         Button(
                             action: {
-                                notify(.tapped(entry))
+                                notify(.requestDetail(entry))
                             }
                         ) {
                             EntryRow(
                                 entry: entry,
                                 liked: liked(entry),
                                 highlight: entry.highlightColor,
-                                onLink: { link in notify(.linkTapped(link)) }
+                                onLink: { link in notify(.requestLinkDetail(link)) }
                             )
                         }
                         .buttonStyle(

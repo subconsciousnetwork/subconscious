@@ -73,6 +73,30 @@ enum UserProfileDetailNotification: Hashable {
     case requestUpdateLikeStatus(Slashlink, liked: Bool)
 }
 
+extension UserProfileDetailNotification {
+    static func from(_ notification: EntryNotification) -> UserProfileDetailNotification? {
+        switch notification {
+        case let .requestDetail(entry):
+            return .requestDetail( .from(
+                    address: entry.address,
+                    fallback: entry.excerpt.description
+                )
+            )
+        case let .requestLinkDetail(link):
+            return .requestFindLinkDetail(link)
+        case let .quote(address):
+            return .requestQuoteInNewNote(address)
+        case let .like(address):
+            return .requestUpdateLikeStatus(address, liked: true)
+        case let .unlike(address):
+            return .requestUpdateLikeStatus(address, liked: false)
+        // Not currently possible from this view
+        case .delete:
+            return nil
+        }
+    }
+}
+
 extension UserProfileDetailAction {
     static func toAppAction(_ action: Self) -> AppAction? {
         switch action {
@@ -88,30 +112,7 @@ extension UserProfileDetailAction {
             return nil
         }
     }
-    
-    static func from(_ notification: EntryNotification) -> UserProfileDetailNotification? {
-        switch notification {
-        case let .tapped(entry):
-            return .requestDetail( .from(
-                    address: entry.address,
-                    fallback: entry.excerpt.description
-                )
-            )
-        case let .linkTapped(link):
-            return .requestFindLinkDetail(link)
-        case let .quote(address):
-            return .requestQuoteInNewNote(address)
-        case let .like(address):
-            return .requestUpdateLikeStatus(address, liked: true)
-        case let .unlike(address):
-            return .requestUpdateLikeStatus(address, liked: false)
-        // Not currently possible from this view
-        case .delete:
-            return nil
-        }
-    }
 }
-
 
 extension UserProfileDetailAction {
     static func from(_ action: AppAction) -> Self? {

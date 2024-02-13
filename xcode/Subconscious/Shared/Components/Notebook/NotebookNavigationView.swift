@@ -15,7 +15,7 @@ struct NotebookNavigationView: View {
     
     func notify(_ notification: EntryNotification) -> Void {
         switch notification {
-        case let .tapped(entry):
+        case let .requestDetail(entry):
             store.send(
                 .pushDetail(
                     MemoEditorDetailDescription(
@@ -30,7 +30,7 @@ struct NotebookNavigationView: View {
                     address
                 )
             )
-        case let .linkTapped(link):
+        case let .requestLinkDetail(link):
             store.send(
                 .detailStack(
                     .findAndPushLinkDetail(

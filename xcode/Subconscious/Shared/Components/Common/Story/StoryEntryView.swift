@@ -50,7 +50,7 @@ struct StoryEntryView: View {
     var body: some View {
         Button(
             action: {
-                notify(.tapped(story.entry))
+                notify(.requestDetail(story.entry))
             },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
@@ -64,7 +64,7 @@ struct StoryEntryView: View {
                         SubtextView(
                             peer: story.entry.toPeer(),
                             subtext: story.entry.excerpt,
-                            onLink: { link in notify(.linkTapped(link)) }
+                            onLink: { link in notify(.requestLinkDetail(link)) }
                         )
                         .multilineTextAlignment(.leading)
                         .foregroundColor(.primary)

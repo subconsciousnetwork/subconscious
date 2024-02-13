@@ -133,11 +133,8 @@ enum CardStackNotification {
     case swipeLeft(CardModel)
     case swipeStarted
     case swipeAbandoned
-    case cardTapped(CardModel)
-    case linkTapped(EntryLink)
-    case cardQuoted(Slashlink)
-    case cardLiked(Slashlink)
-    case cardUnliked(Slashlink)
+    
+    case entry(EntryNotification)
 }
 
 struct CardStack: View {
@@ -229,7 +226,11 @@ struct CardStack: View {
     func gestures(card: CardModel) -> CardGestureModifier {
         CardGestureModifier(
             offsets: $offsets,
-            onTapped: { notify(.cardTapped(card)) },
+            onTapped: {
+                if let entry = card.entry {
+                    notify(.entry(.requestDetail(entry)))
+                }
+            },
             onSwipeStart: { notify(.swipeStarted) },
             onSwipeChanged: { translation in
                 dragChanged(card: card, translation: translation)
@@ -248,24 +249,7 @@ struct CardStack: View {
             CardView(
                 card: card,
                 notify: { notification in
-                    switch notification {
-                    case let .like(address):
-                        notify(.cardLiked(address))
-                        break
-                    case let .unlike(address):
-                        notify(.cardUnliked(address))
-                        break
-                    case let .quote(address):
-                        notify(.cardQuoted(address))
-                        break
-                    case let .linkTapped(link):
-                        notify(.linkTapped(link))
-                        break
-                    case .tapped:
-                        notify(.cardTapped(card))
-                    case .delete:
-                        break
-                    }
+                    notify(.entry(notification))
                 }
             )
             // Size card based on available space
