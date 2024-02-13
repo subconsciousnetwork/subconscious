@@ -132,6 +132,9 @@ public extension ThemeColor {
 extension String {
     var themeColor: ThemeColor {
         let colors = ThemeColor.allCases
+        // fast determimistic hash of the string
+        // the inbuilt Swift Hasher() has a random seed, which changes on each
+        // execution
         let hash = self.utf8.reduce(0) { $0 + Int($1) }
         
         return colors[abs(hash.hashValue) % colors.count]
