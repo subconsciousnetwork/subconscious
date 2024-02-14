@@ -3256,7 +3256,7 @@ struct AppModel: ModelProtocol {
                 try await environment.userLikes.removeLike(for: address)
             }
             
-            return .succeedUpdateLikeStatus(address: address, liked: true)
+            return .succeedUpdateLikeStatus(address: address, liked: liked)
         }
         .recover { error in
             return .failUpdateLikeStatus(
