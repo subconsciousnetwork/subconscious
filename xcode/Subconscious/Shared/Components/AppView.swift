@@ -306,8 +306,7 @@ enum AppAction: Hashable {
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
     case assignColor(address: Slashlink, color: ThemeColor)
-    case likeEntry(address: Slashlink)
-    case unlikeEntry(address: Slashlink)
+    case setLiked(address: Slashlink, liked: Bool)
     
     // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -1293,17 +1292,12 @@ struct AppModel: ModelProtocol {
                 address: address,
                 color: color
             )
-        case let .likeEntry(address):
-            return likeEntry(
+        case let .setLiked(address, liked):
+            return setLiked(
                 state: state,
                 environment: environment,
-                address: address
-            )
-        case let .unlikeEntry(address):
-            return unlikeEntry(
-                state: state,
-                environment: environment,
-                address: address
+                address: address,
+                liked: liked
             )
         case let .failSaveEntry(address, error):
             return operationFailed(
@@ -3249,36 +3243,20 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    static func likeEntry(
+    static func setLiked(
         state: Self,
         environment: Environment,
-        address: Slashlink
+        address: Slashlink,
+        liked: Bool
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
-            try await environment.userLikes.persistLike(for: address)
+            if liked {
+                try await environment.userLikes.persistLike(for: address)
+            } else {
+                try await environment.userLikes.removeLike(for: address)
+            }
             
             return .succeedUpdateLikeStatus(address: address, liked: true)
-        }
-        .recover { error in
-            return .failUpdateLikeStatus(
-                address: address,
-                error: error.localizedDescription
-            )
-        }
-        .eraseToAnyPublisher()
-        
-        return Update(state: state, fx: fx)
-    }
-    
-    static func unlikeEntry(
-        state: Self,
-        environment: Environment,
-        address: Slashlink
-    ) -> Update<Self> {
-        let fx: Fx<Action> = Future.detached {
-            try await environment.userLikes.removeLike(for: address)
-            
-            return .succeedUpdateLikeStatus(address: address, liked: false)
         }
         .recover { error in
             return .failUpdateLikeStatus(

@@ -299,10 +299,7 @@ extension AppAction {
         case let .requestAssignNoteColor(address, color):
             return .assignColor(address: address, color: color)
         case let .requestUpdateLikeStatus(address, liked):
-            if liked {
-                return .likeEntry(address: address)
-            }
-            return .unlikeEntry(address: address)
+            return .setLiked(address: address, liked: liked)
         default:
             return nil
         }

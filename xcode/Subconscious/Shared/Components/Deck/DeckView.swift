@@ -149,10 +149,7 @@ extension AppAction {
         case let .requestAppendToEntry(address, append):
             return .appendToEntry(address: address, append: append)
         case let .requestUpdateLikeStatus(address, liked):
-            if liked {
-                return .likeEntry(address: address)
-            }
-            return .unlikeEntry(address: address)
+            return .setLiked(address: address, liked: liked)
         default:
             return nil
         }
