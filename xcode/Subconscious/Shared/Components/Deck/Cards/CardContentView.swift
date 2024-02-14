@@ -50,7 +50,7 @@ struct CardContentView: View {
     var entry: EntryStub
     var liked: Bool
     var related: Set<EntryStub>
-    var notify: (CardNotification) -> Void
+    var notify: (EntryNotification) -> Void
     
     var highlight: Color {
         entry.highlightColor
@@ -64,7 +64,7 @@ struct CardContentView: View {
         SubtextView(
             peer: entry.toPeer(),
             subtext: entry.excerpt,
-            onLink: { link in notify(.linkTapped(link)) }
+            onLink: { link in notify(.requestLinkDetail(link)) }
         )
         // Opacity allows blendMode to show through
         .foregroundStyle(.primary.opacity(0.8))

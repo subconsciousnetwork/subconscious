@@ -95,7 +95,8 @@ struct TestUtilities {
             database: database,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            userLikes: likes
         )
         
         let transclude = TranscludeService(

@@ -12,6 +12,56 @@ struct NotebookNavigationView: View {
     @ObservedObject var store: Store<NotebookModel>
     
     @Environment (\.colorScheme) var colorScheme
+    
+    func notify(_ notification: EntryNotification) -> Void {
+        switch notification {
+        case let .requestDetail(entry):
+            store.send(
+                .pushDetail(
+                    MemoEditorDetailDescription(
+                        address: entry.address,
+                        fallback: entry.excerpt.description
+                    )
+                )
+            )
+        case let .delete(address):
+            store.send(
+                .confirmDelete(
+                    address
+                )
+            )
+        case let .requestLinkDetail(link):
+            store.send(
+                .detailStack(
+                    .findAndPushLinkDetail(
+                        link
+                    )
+                )
+            )
+        case let .quote(address):
+            store.send(
+                .detailStack(
+                    .pushQuoteInNewDetail(
+                        address
+                    )
+                )
+            )
+        case let .like(address):
+            store.send(
+                .requestUpdateLikeStatus(
+                    address,
+                    liked: true
+                )
+            )
+        case let .unlike(address):
+            store.send(
+                .requestUpdateLikeStatus(
+                    address,
+                    liked: false
+                )
+            )
+        }
+    }
 
     var body: some View {
         DetailStackView(
@@ -25,31 +75,11 @@ struct NotebookNavigationView: View {
                 VStack(spacing: 0) {
                     EntryListView(
                         entries: store.state.recent,
-                        onEntryPress: {
-                            entry in
-                            store.send(
-                                .pushDetail(
-                                    MemoEditorDetailDescription(
-                                        address: entry.address,
-                                        fallback: entry.excerpt.description
-                                    )
-                                )
-                            )
-                        },
-                        onEntryDelete: { address in
-                            store.send(.confirmDelete(address))
-                        },
+                        likes: store.state.likes,
                         onRefresh: {
                             app.send(.syncAll)
                         },
-                        onLink: { link in
-                            store.send(
-                                .detailStack(.findAndPushLinkDetail(link))
-                            )
-                        },
-                        onQuote: { address in
-                            store.send(.detailStack(.pushQuoteInNewDetail(address)))
-                        }
+                        notify: self.notify
                     )
                     .ignoresSafeArea(.keyboard, edges: .bottom)
                     .confirmationDialog(

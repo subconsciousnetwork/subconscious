@@ -98,6 +98,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var following: [StoryUser]
     var followingStatus: UserProfileFollowStatus
     var likes: [EntryStub]
+    var ourLikes: [Slashlink]
 }
 
 struct UserProfileEntry: Codable, Equatable, Hashable {
@@ -557,7 +558,8 @@ actor UserProfileService {
                 slugs: notes
             )
         }
-        let likedLinks = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry(likes: [])
+        let ourLikes = try await userLikes.readOurLikes()
+        let likedLinks = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry()
         var likes: [EntryStub] = []
         
         // iterate backwards for reverse chronological feed
@@ -566,6 +568,11 @@ actor UserProfileService {
         // on how many degrees away from this peer we are
         // we might need to load likes as a seperate background task
         for link in likedLinks.collection.reversed() {
+            // This user may have liked their own draft notes, but we can't fetch these
+            if link.isLocal {
+                continue
+            }
+            
             let did = try await sphere.resolve(peer: link.peer)
             let memo = try await sphere.read(slashlink: link)
             
@@ -601,7 +608,8 @@ actor UserProfileService {
             recentEntries: recentEntries,
             following: following,
             followingStatus: followingStatus,
-            likes: likes
+            likes: likes,
+            ourLikes: ourLikes
         )
     }
     

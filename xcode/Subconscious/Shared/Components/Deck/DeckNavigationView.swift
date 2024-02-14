@@ -31,18 +31,23 @@ struct DeckNavigationView: View {
             store.send(.cardPickedUp)
         case .swipeAbandoned:
             store.send(.cardReleased)
-        case let .cardTapped(card):
-            store.send(.cardTapped(card))
-        case let .linkTapped(link):
-            store.send(
-                .detailStack(.findAndPushLinkDetail(link))
-            )
-        case let .cardQuoted(address):
-            store.send(.detailStack(.pushQuoteInNewDetail(address)))
-        case let .cardLiked(address):
-            store.send(.requestUpdateLikeStatus(address, liked: true))
-        case let .cardUnliked(address):
-            store.send(.requestUpdateLikeStatus(address, liked: false))
+        case let .entry(entryNotification):
+            switch entryNotification {
+            case let .requestDetail(entry):
+                store.send(.cardDetailRequested(entry))
+            case let .requestLinkDetail(link):
+                store.send(
+                    .detailStack(.findAndPushLinkDetail(link))
+                )
+            case let .quote(address):
+                store.send(.detailStack(.pushQuoteInNewDetail(address)))
+            case let .like(address):
+                store.send(.requestUpdateLikeStatus(address, liked: true))
+            case let .unlike(address):
+                store.send(.requestUpdateLikeStatus(address, liked: false))
+            case .delete:
+                break
+            }
         }
     }
     

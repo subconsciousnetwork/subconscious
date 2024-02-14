@@ -90,7 +90,7 @@ enum DeckAction: Hashable {
     
     case cardPickedUp
     case cardReleased
-    case cardTapped(CardModel)
+    case cardDetailRequested(EntryStub)
     
     case chooseCard(CardModel)
     case skipCard(CardModel)
@@ -341,10 +341,10 @@ struct DeckModel: ModelProtocol {
             return cardPickedUp(state: state)
         case .cardReleased:
             return cardReleased(state: state)
-        case let .cardTapped(card):
-            return cardTapped(
+        case let .cardDetailRequested(entry):
+            return cardDetailRequested(
                 state: state,
-                card: card,
+                entry: entry,
                 environment: environment
             )
         case let .chooseCard(card):
@@ -753,26 +753,22 @@ struct DeckModel: ModelProtocol {
             return Update(state: state)
         }
 
-        func cardTapped(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
+        func cardDetailRequested(state: Self, entry: EntryStub, environment: Environment) -> Update<Self> {
             state.feedback.prepare()
             state.feedback.impactOccurred()
-            
-            if let entry = card.entry {
-                return update(
-                    state: state,
-                    action: .detailStack(
-                        .pushDetail(
-                            MemoDetailDescription.from(
-                                address: entry.address,
-                                fallback: entry.excerpt.description
-                            )
+        
+            return update(
+                state: state,
+                action: .detailStack(
+                    .pushDetail(
+                        MemoDetailDescription.from(
+                            address: entry.address,
+                            fallback: entry.excerpt.description
                         )
-                    ),
-                    environment: environment
-                )
-            }
-            
-            return Update(state: state)
+                    )
+                ),
+                environment: environment
+            )
         }
        
         

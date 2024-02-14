@@ -138,6 +138,12 @@ enum NotebookAction: Hashable {
     /// from the list before requesting delete for the animation to work.
     case stageDeleteEntry(Slashlink)
     
+    /// Fetch like status
+    /// This could be removed if we instead index liked status in SQLite
+    case refreshLikes
+    case succeedRefreshLikes(_ likes: [Slashlink])
+    case failRefreshLikes(_ error: String)
+    
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
     /// `succeed`s are passed down from the app root
@@ -354,6 +360,7 @@ struct NotebookModel: ModelProtocol {
     
     ///  Recent entries (nil means "hasn't been loaded from DB")
     var recent: [EntryStub]? = nil
+    var likes: [Slashlink]? = nil
     
     var feed: [EntryStub]? = nil
     
@@ -538,6 +545,20 @@ struct NotebookModel: ModelProtocol {
                 address: address,
                 liked: liked
             )
+        case .refreshLikes:
+            return refreshLikes(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshLikes(likes):
+            return succeedRefreshLikes(
+                state: state,
+                environment: environment,
+                likes: likes
+            )
+        case let .failRefreshLikes(error):
+            logger.warning("Failed to refresh likes: \(error)")
+            return Update(state: state)
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
                 .requestAssignNoteColor, .requestAppendToEntry, .requestUpdateLikeStatus:
@@ -624,6 +645,7 @@ struct NotebookModel: ModelProtocol {
             actions: [
                 .search(.refreshSuggestions),
                 .countEntries,
+                .refreshLikes,
                 .listRecent
             ],
             environment: environment
@@ -937,5 +959,31 @@ struct NotebookModel: ModelProtocol {
             action: .setDetails([]),
             environment: environment
         )
+    }
+    
+    static func refreshLikes(
+        state: NotebookModel,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel> {
+        let fx: Fx<NotebookAction> = Future.detached {
+            let likes = try await environment.userLikes.readOurLikes()
+            return .succeedRefreshLikes(likes)
+        }
+        .recover { error in
+            .failRefreshLikes(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshLikes(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        likes: [Slashlink]
+    ) -> Update<NotebookModel> {
+        var model = state
+        model.likes = likes
+        return Update(state: model).animation(.easeOutCubic())
     }
 }

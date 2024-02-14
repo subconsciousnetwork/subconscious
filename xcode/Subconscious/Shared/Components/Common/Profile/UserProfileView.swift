@@ -37,23 +37,13 @@ struct RecentTabView: View {
                     StoryEntryView(
                         story: StoryEntry(
                             entry: entry,
-                            author: user
+                            author: user,
+                            liked: store.state.ourLikes.contains(where: {
+                                like in entry.address == like
+                            })
                         ),
-                        onRequestDetail: { address, excerpt in
-                            notify(
-                                .requestDetail(
-                                    .from(
-                                        address: address,
-                                        fallback: excerpt
-                                    )
-                                )
-                            )
-                        },
-                        onLink: { link in
-                            notify(.requestFindLinkDetail(link))
-                        },
-                        onQuote: { address in
-                            notify(.requestQuoteInNewNote(address))
+                        notify: { notification in
+                            UserProfileDetailNotification.from(notification).flatMap(notify)
                         }
                     )
                 }
@@ -128,23 +118,13 @@ struct LikesTabView: View {
                     StoryEntryView(
                         story: StoryEntry(
                             entry: like,
-                            author: user
+                            author: user,
+                            liked: store.state.ourLikes.contains(where: {
+                                ourLike in like.address == ourLike
+                            })
                         ),
-                        onRequestDetail: { address, excerpt in
-                            notify(
-                                .requestDetail(
-                                    .from(
-                                        address: address,
-                                        fallback: excerpt
-                                    )
-                                )
-                            )
-                        },
-                        onLink: { link in
-                            notify(.requestFindLinkDetail(link))
-                        },
-                        onQuote: { address in
-                            notify(.requestQuoteInNewNote(address))
+                        notify: { notification in
+                            UserProfileDetailNotification.from(notification).flatMap(notify)
                         }
                     )
                 }

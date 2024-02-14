@@ -20,12 +20,7 @@ enum UserLikesServiceError: Error {
 
 struct UserLikesEntry: Codable, Equatable, Hashable {
     static let currentVersion = "0.0"
-    
-    init(likes: [Slashlink]) {
-        self.collection = likes
-    }
-    
-    var collection: [Slashlink]
+    var collection: [Slashlink] = []
 }
 
 actor UserLikesService {
@@ -53,7 +48,10 @@ actor UserLikesService {
         body: Data
     ) async throws -> UserLikesEntry {
         do {
-            return try jsonDecoder.decode(UserLikesEntry.self, from: body)
+            var payload = try jsonDecoder.decode(UserLikesEntry.self, from: body)
+            // Ensure there are no duplicates in the parsed collection
+            payload.collection = payload.collection.uniquing(with: { like in like })
+            return payload
         } catch {
             // catch errors so we can give more context if there was a formatting error
             guard let string = String(data: body, encoding: .utf8) else {
@@ -124,9 +122,11 @@ actor UserLikesService {
     public func persistLike(for address: Slashlink) async throws -> Void {
         var likes: UserLikesEntry =
             await self.readLikesMemo(sphere: self.noosphere)
-                ?? UserLikesEntry(likes: [])
+                ?? UserLikesEntry()
         
-        likes.collection.append(address)
+        if !likes.collection.contains(where: { like in like == address }) {
+            likes.collection.append(address)
+        }
         
         try await self.writeOurLikes(likes: likes)
     }
@@ -135,7 +135,7 @@ actor UserLikesService {
     public func toggleLike(for address: Slashlink) async throws -> Void {
         var likes: UserLikesEntry =
             await self.readLikesMemo(sphere: self.noosphere)
-                ?? UserLikesEntry(likes: [])
+                ?? UserLikesEntry()
         
         if (likes.collection.contains(where: { like in like == address })) {
             likes.collection.removeAll(where: { like in like == address })
@@ -150,7 +150,7 @@ actor UserLikesService {
     public func removeLike(for address: Slashlink) async throws -> Void {
         var likes: UserLikesEntry =
             await self.readLikesMemo(sphere: self.noosphere)
-                ?? UserLikesEntry(likes: [])
+                ?? UserLikesEntry()
         
         likes.collection.removeAll(where: { like in like == address })
         

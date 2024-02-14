@@ -753,6 +753,8 @@ extension DetailStackAction {
             ))
         case let .requestQuoteInNewNote(address, comment):
             return .pushQuoteInNewDetail(address, comment: comment)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         }
     }
 }

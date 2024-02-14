@@ -16,6 +16,7 @@ struct StoryEntry:
     var id: String { entry.id.description }
     var entry: EntryStub
     var author: UserProfile
+    var liked: Bool
 
     var description: String {
         """
