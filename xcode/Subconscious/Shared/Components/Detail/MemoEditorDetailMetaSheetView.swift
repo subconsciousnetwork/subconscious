@@ -58,13 +58,43 @@ struct MemoEditorDetailMetaSheetView: View {
                         Divider()
                         
                         if let address = store.state.address {
+                            if store.state.liked {
+                                Button(
+                                    action: {
+                                        store.send(.requestUpdateLikeStatus(address, liked: false))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Unlike",
+                                            systemImage: "heart.slash"
+                                        )
+                                    }
+                                )
+                                .buttonStyle(RowButtonStyle())
+                            } else {
+                                Button(
+                                    action: {
+                                        store.send(.requestUpdateLikeStatus(address, liked: true))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Like",
+                                            systemImage: "heart"
+                                        )
+                                    }
+                                )
+                                .buttonStyle(RowButtonStyle())
+                            }
+                            
+                            Divider()
+                            
                             Button(
                                 action: {
                                     store.send(.requestQuoteInNewNote(address))
                                 },
                                 label: {
                                     Label(
-                                        "Quote in new note",
+                                        "Quote",
                                         systemImage: "quote.opening"
                                     )
                                 }
@@ -186,6 +216,7 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case presentRenameSheetFor(_ address: Slashlink?)
     case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: Slashlink?)
+    case setLiked(_ liked: Bool)
     case setDefaultAudience(_ audience: Audience)
     
     /// Requests that audience be updated.
@@ -196,6 +227,9 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case setNoteColor(_ color: ThemeColor?)
     case requestAssignNoteColor(_ color: ThemeColor)
     case succeedAssignNoteColor(_ color: ThemeColor)
+    
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -235,6 +269,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     }
     var isRenameSheetPresented = false
     var renameSearch = RenameSearchModel()
+    var liked = false
     
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
@@ -306,6 +341,12 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
+        case let .setLiked(liked):
+            return setLiked(
+                state: state,
+                environment: environment,
+                liked: liked
+            )
         case .setDefaultAudience(let audience):
             return setDefaultAudience(
                 state: state,
@@ -332,8 +373,14 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 color: color
             )
+        case let .succeedUpdateLikeStatus(_, liked):
+            return setLiked(
+                state: state,
+                environment: environment,
+                liked: liked
+            )
         case .requestUpdateAudience, .requestDelete, .requestAssignNoteColor,
-                .requestQuoteInNewNote:
+                .requestQuoteInNewNote, .requestUpdateLikeStatus:
             return Update(state: state)
         }
     }
@@ -388,6 +435,16 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
             action: .renameSearch(.setSubject(address)),
             environment: environment
         )
+    }
+    
+    static func setLiked(
+        state: Self,
+        environment: Environment,
+        liked: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.liked = liked
+        return Update(state: model)
     }
     
     static func setDefaultAudience(

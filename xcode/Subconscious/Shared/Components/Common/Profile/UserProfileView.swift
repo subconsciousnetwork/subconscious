@@ -116,6 +116,54 @@ struct FollowTabView: View {
     }
 }
 
+struct LikesTabView: View {
+    @ObservedObject var store: Store<UserProfileDetailModel>
+    var notify: (UserProfileDetailNotification) -> Void
+    
+    var body: some View {
+        if let user = store.state.user {
+            let likes = store.state.likes
+            LazyVStack(spacing: AppTheme.unit2) {
+                ForEach(likes) { like in
+                    StoryEntryView(
+                        story: StoryEntry(
+                            entry: like,
+                            author: user
+                        ),
+                        onRequestDetail: { address, excerpt in
+                            notify(
+                                .requestDetail(
+                                    .from(
+                                        address: address,
+                                        fallback: excerpt
+                                    )
+                                )
+                            )
+                        },
+                        onLink: { link in
+                            notify(.requestFindLinkDetail(link))
+                        },
+                        onQuote: { address in
+                            notify(.requestQuoteInNewNote(address))
+                        }
+                    )
+                }
+                .transition(.opacity)
+            }
+            .padding(AppTheme.unit2)
+            
+            if likes.count == 0 {
+                let name = store.state.user?.address.peer?.markup ?? "This user"
+                EmptyStateView(
+                    message: "\(name) hasn't liked anything yet."
+                )
+            } else {
+                FabSpacerView()
+            }
+        }
+    }
+}
+
 struct UserProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<UserProfileDetailModel>
@@ -164,6 +212,16 @@ struct UserProfileView: View {
         )
     }
     
+    var columnLikes: TabbedColumnItem<LikesTabView> {
+        TabbedColumnItem(
+            label: "Likes",
+            view: LikesTabView(
+                store: store,
+                notify: notify
+            )
+        )
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -198,18 +256,20 @@ struct UserProfileView: View {
                     // so discard the value.
                     if let _ = state.recentEntries,
                        let _ = state.following {
-                        TabbedTwoColumnView(
+                        TabbedThreeColumnView(
                             columnA: columnRecent,
                             columnB: columnFollowing,
+                            columnC: columnLikes,
                             selectedColumnIndex: state.currentTabIndex,
                             changeColumn: { index in
                                 send(.tabIndexSelected(index))
                             }
                         )
                     } else {
-                        TabbedTwoColumnView(
+                        TabbedThreeColumnView(
                             columnA: columnLoading(label: "Notes"),
                             columnB: columnLoading(label: "Following"),
+                            columnC: columnLoading(label: "Likes"),
                             selectedColumnIndex: state.currentTabIndex,
                             changeColumn: { index in
                                 send(.tabIndexSelected(index))

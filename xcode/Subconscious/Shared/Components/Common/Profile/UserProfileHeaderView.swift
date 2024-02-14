@@ -60,9 +60,8 @@ struct UserProfileHeaderView: View {
                 label: {
                     HStack(spacing: AppTheme.unit2) {
                         ProfileStatisticView(label: "Notes", count: statistics?.noteCount)
-                        // TODO: put this back when we have backlink count
-                        // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
                         ProfileStatisticView(label: "Following", count: statistics?.followingCount)
+                        ProfileStatisticView(label: "Likes", count: statistics?.likeCount)
                     }
                     .font(.caption)
                     .foregroundColor(.primary)
@@ -128,7 +127,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     ourFollowStatus: .following(Petname.Name("ben")!),
                     aliases: []
                 ),
-                statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19)
+                statistics: UserProfileStatistics(noteCount: 123, likeCount: 64, followingCount: 19)
             )
             UserProfileHeaderView(
                 user: UserProfile(

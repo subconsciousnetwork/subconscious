@@ -8,15 +8,21 @@
 import Foundation
 import SwiftUI
 
+enum CardNotification {
+    case linkTapped(EntryLink)
+    case like(Slashlink)
+    case unlike(Slashlink)
+    case quote(Slashlink)
+}
+
 struct CardView: View {
     @Environment(\.colorScheme) private var colorScheme
     
-    var entry: CardModel
-    var onLink: (EntryLink) -> Void
-    var onQuote: (Slashlink) -> Void
+    var card: CardModel
+    var notify: (CardNotification) -> Void
     
     var color: Color {
-        switch entry.card {
+        switch card.card {
         case let .entry(entry, _, _):
             return entry.color
         case let .prompt(_, entry, _, _):
@@ -27,7 +33,7 @@ struct CardView: View {
     }
     
     var highlight: Color {
-        switch entry.card {
+        switch card.card {
         case let .entry(entry, _, _):
             return entry.highlightColor
         case let .prompt(_, entry, _, _):
@@ -45,20 +51,21 @@ struct CardView: View {
     
     var body: some View {
         VStack {
-            switch entry.card {
+            switch card.card {
             case let .entry(entry, _, related):
                 EntryCardView(
                     entry: entry,
+                    liked: self.card.liked,
                     related: related,
-                    onLink: onLink
+                    notify: notify
                 )
             case let .prompt(message, entry, _, related):
                 PromptCardView(
                     message: message,
                     entry: entry,
+                    liked: self.card.liked,
                     related: related,
-                    onLink: onLink,
-                    onQuote: onQuote
+                    notify: notify
                 )
             case let .action(message):
                 ActionCardView(message: message)
@@ -70,16 +77,16 @@ struct CardView: View {
 struct CardView_Previews: PreviewProvider {
     static var previews: some View {
         CardView(
-            entry: CardModel(
+            card: CardModel(
                 card: .prompt(
                     message: "Hello",
                     entry: EntryStub.dummyData(),
                     author: UserProfile.dummyData(),
                     related: []
-                )
+                ),
+                liked: false
             ),
-            onLink: { _ in },
-            onQuote: { _ in }
+            notify: { _ in }
         )
     }
 }

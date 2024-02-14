@@ -79,24 +79,20 @@ struct TabbedThreeColumnView<A: View, B: View, C: View>: View {
             focusedTabIndex: selectedColumnIndex
         )
         
-        VStack {
-            TabView(selection: Binding(
-                get: { selectedColumnIndex },
-                set: changeColumn
-            )) {
+        LazyVStack(spacing: 0) {
+            switch (selectedColumnIndex) {
+            case UserProfileDetailModel.recentEntriesTabIndex:
                 columnA.view
-                    .tabItem { Text(columnA.label) }
-                    .tag(0)
-                
+            case UserProfileDetailModel.followingTabIndex:
                 columnB.view
-                    .tabItem { Text(columnB.label) }
-                    .tag(1)
-                
+            case UserProfileDetailModel.likesTabIndex:
                 columnC.view
-                    .tabItem { Text(columnC.label) }
-                    .tag(2)
+            case _:
+                EmptyView()
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            
+            Spacer()
         }
+        .frame(maxHeight: .infinity)
     }
 }

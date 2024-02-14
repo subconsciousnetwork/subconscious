@@ -16,13 +16,15 @@ final class Tests_CardModel: XCTestCase {
                 entry: first,
                 author: UserProfile.dummyData(),
                 related: []
-            )
+            ),
+            liked: false
         )
         
         let second = EntryStub.dummyData()
-        let updated = card.update(entry: second)
+        let updated = card.update(entry: second, liked: true)
         
         XCTAssert(updated.entry == second)
+        XCTAssert(updated.liked == true)
     }
     
     func testUpdatePrompt() throws {
@@ -33,12 +35,14 @@ final class Tests_CardModel: XCTestCase {
                 entry: first,
                 author: UserProfile.dummyData(),
                 related: []
-            )
+            ),
+            liked: true
         )
         
         let second = EntryStub.dummyData()
-        let updated = card.update(entry: second)
+        let updated = card.update(entry: second, liked: false)
         
         XCTAssert(updated.entry == second)
+        XCTAssert(updated.liked == false)
     }
 }

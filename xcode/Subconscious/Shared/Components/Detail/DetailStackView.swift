@@ -150,6 +150,8 @@ enum DetailStackAction: Hashable {
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     case requestAppendToEntry(_ address: Slashlink, _ append: String)
     case succeedAppendToEntry(_ address: Slashlink)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
 
     /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
     static func pushDetail(
@@ -307,9 +309,16 @@ struct DetailStackModel: Hashable, ModelProtocol {
                 ),
                 environment: environment
             )
+        case let .succeedUpdateLikeStatus(address, liked):
+            return succeedUpdateLikeStatus(
+                state: state,
+                environment: environment,
+                address: address,
+                liked: liked
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
-                .requestAppendToEntry:
+                .requestAppendToEntry, .requestUpdateLikeStatus:
             return Update(state: state)
         }
     }
@@ -649,6 +658,15 @@ struct DetailStackModel: Hashable, ModelProtocol {
     ) -> Update<Self> {
         return Update(state: state)
     }
+    
+    static func succeedUpdateLikeStatus(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        liked: Bool
+    ) -> Update<Self> {
+        return Update(state: state)
+    }
 }
 
 extension DetailStackAction {
@@ -668,6 +686,8 @@ extension DetailStackAction {
             return .requestAssignNoteColor(address, color)
         case let .requestQuoteInNewDetail(address):
             return .pushQuoteInNewDetail(address)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         case let .requestDetail(detail):
@@ -695,6 +715,8 @@ extension DetailStackAction {
             )
         case let .requestQuoteInNewDetail(address):
             return .pushQuoteInNewDetail(address)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         }

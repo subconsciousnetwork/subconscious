@@ -199,7 +199,7 @@ enum UserProfileDetailAction: Equatable {
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
     let noteCount: Int
-    let backlinkCount: Int
+    let likeCount: Int
     let followingCount: Int
 }
 
@@ -337,6 +337,7 @@ struct UserProfileDetailModel: ModelProtocol {
     // MARK: Tab Indices
     static let recentEntriesTabIndex: Int = 0
     static let followingTabIndex: Int = 1
+    static let likesTabIndex: Int = 2
     
     var loadingState = LoadingState.loading
     
@@ -364,6 +365,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var address: Slashlink? = nil
     var user: UserProfile? = nil
+    var likes: [EntryStub] = []
     
     // These are optional so we can differentiate between 
     // (1) first load (no content, show placeholder state)
@@ -667,6 +669,7 @@ struct UserProfileDetailModel: ModelProtocol {
         model.statistics = content.statistics
         model.recentEntries = content.recentEntries
         model.following = content.following
+        model.likes = content.likes
         model.loadingState = .loaded
         
         return Update(state: model).animation(.default)

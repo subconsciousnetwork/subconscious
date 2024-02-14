@@ -48,13 +48,43 @@ struct MemoViewerDetailMetaSheetView: View {
                         Divider()
                         
                         if let address = store.state.address {
+                            if store.state.liked {
+                                Button(
+                                    action: {
+                                        store.send(.requestUpdateLikeStatus(address, liked: false))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Unlike",
+                                            systemImage: "heart.slash"
+                                        )
+                                    }
+                                )
+                                .buttonStyle(RowButtonStyle())
+                            } else {
+                                Button(
+                                    action: {
+                                        store.send(.requestUpdateLikeStatus(address, liked: true))
+                                    },
+                                    label: {
+                                        Label(
+                                            "Like",
+                                            systemImage: "heart"
+                                        )
+                                    }
+                                )
+                                .buttonStyle(RowButtonStyle())
+                            }
+                            
+                            Divider()
+                            
                             Button(
                                 action: {
                                     store.send(.requestQuoteInNewNote(address))
                                 },
                                 label: {
                                     Label(
-                                        "Quote in new note",
+                                        "Quote",
                                         systemImage: "quote.opening"
                                     )
                                 }
@@ -119,9 +149,11 @@ struct MemoViewerDetailMetaSheetView: View {
 enum MemoViewerDetailMetaSheetAction: Hashable {
     case setAddress(_ address: Slashlink)
     case setAuthor(_ author: UserProfile)
+    case setLiked(_ liked: Bool)
     case requestDismiss
     case requestAuthorDetail(_ author: UserProfile)
     case requestQuoteInNewNote(_ address: Slashlink)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
     /// Tagged actions for append link search sheet
     case appendLinkSearch(AppendLinkSearchAction)
@@ -176,6 +208,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     var memoVersion: String?
     var noteVersion: String?
     var authorKey: String?
+    var liked: Bool = false
     
     var shareableLink: String? {
         guard let address = address else {
@@ -205,7 +238,14 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 author: author
             )
-        case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote:
+        case let .setLiked(liked):
+            return setLiked(
+                state: state,
+                environment: environment,
+                liked: liked
+            )
+        case .requestDismiss, .requestAuthorDetail, .requestQuoteInNewNote,
+                .requestUpdateLikeStatus:
             return Update(state: state)
             
         // Append link
@@ -247,6 +287,16 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.author = author
+        return Update(state: model)
+    }
+    
+    static func setLiked(
+        state: Self,
+        environment: Environment,
+        liked: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.liked = liked
         return Update(state: model)
     }
     

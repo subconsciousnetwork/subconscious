@@ -13,9 +13,9 @@ struct PromptCardView: View {
     
     var message: String
     var entry: EntryStub
+    var liked: Bool
     var related: Set<EntryStub>
-    var onLink: (EntryLink) -> Void
-    var onQuote: (Slashlink) -> Void
+    var notify: (CardNotification) -> Void
     
     var background: Color {
         entry.color
@@ -52,11 +52,12 @@ struct PromptCardView: View {
             
             CardContentView(
                 entry: entry,
+                liked: liked,
                 related: related,
-                onLink: onLink
+                notify: notify
             )
         }
-        .allowsHitTesting(false)
+//        .allowsHitTesting(false)
         .background(background)
         .cornerRadius(DeckTheme.cornerRadius)
         .contextMenu {
@@ -64,7 +65,7 @@ struct PromptCardView: View {
             
             Button(
                 action: {
-                    onQuote(entry.address)
+                    notify(.quote(entry.address))
                 },
                 label: {
                     Label(
@@ -77,3 +78,14 @@ struct PromptCardView: View {
     }
 }
 
+struct PromptCardView_Previews: PreviewProvider {
+    static var previews: some View {
+        PromptCardView(
+            message: "Henlo world!",
+            entry: EntryStub.dummyData(),
+            liked: true,
+            related: [EntryStub.dummyData()],
+            notify: { _ in }
+        )
+    }
+}
