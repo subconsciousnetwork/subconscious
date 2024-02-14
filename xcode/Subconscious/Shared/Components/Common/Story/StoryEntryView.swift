@@ -105,7 +105,7 @@ struct StoryEntryView: View {
                     },
                     label: {
                         Label(
-                            "Remove from likes",
+                            "Unlike",
                             systemImage: "heart.slash"
                         )
                     }
@@ -117,7 +117,7 @@ struct StoryEntryView: View {
                     },
                     label: {
                         Label(
-                            "Add to likes",
+                            "Like",
                             systemImage: "heart"
                         )
                     }
@@ -130,7 +130,7 @@ struct StoryEntryView: View {
                 },
                 label: {
                     Label(
-                        "Quote in new note",
+                        "Quote",
                         systemImage: "quote.opening"
                     )
                 }

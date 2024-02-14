@@ -70,7 +70,7 @@ struct PromptCardView: View {
                     },
                     label: {
                         Label(
-                            "Remove from likes",
+                            "Unlike",
                             systemImage: "heart.slash"
                         )
                     }
@@ -82,7 +82,7 @@ struct PromptCardView: View {
                     },
                     label: {
                         Label(
-                            "Add to likes",
+                            "Like",
                             systemImage: "heart"
                         )
                     }
@@ -95,7 +95,7 @@ struct PromptCardView: View {
                 },
                 label: {
                     Label(
-                        "Quote in new note",
+                        "Quote",
                         systemImage: "quote.opening"
                     )
                 }

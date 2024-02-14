@@ -86,7 +86,7 @@ struct EntryListView: View {
                                     },
                                     label: {
                                         Label(
-                                            "Remove from likes",
+                                            "Unlike",
                                             systemImage: "heart.slash"
                                         )
                                     }
@@ -98,7 +98,7 @@ struct EntryListView: View {
                                     },
                                     label: {
                                         Label(
-                                            "Add to likes",
+                                            "Like",
                                             systemImage: "heart"
                                         )
                                     }
@@ -111,7 +111,7 @@ struct EntryListView: View {
                                 },
                                 label: {
                                     Label(
-                                        "Quote in new note",
+                                        "Quote",
                                         systemImage: "quote.opening"
                                     )
                                 }
