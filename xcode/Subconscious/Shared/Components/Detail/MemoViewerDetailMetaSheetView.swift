@@ -55,7 +55,7 @@ struct MemoViewerDetailMetaSheetView: View {
                                     },
                                     label: {
                                         Label(
-                                            "Remove from likes",
+                                            "Unlike",
                                             systemImage: "heart.slash"
                                         )
                                     }
@@ -68,7 +68,7 @@ struct MemoViewerDetailMetaSheetView: View {
                                     },
                                     label: {
                                         Label(
-                                            "Add to likes",
+                                            "Like",
                                             systemImage: "heart"
                                         )
                                     }
@@ -84,7 +84,7 @@ struct MemoViewerDetailMetaSheetView: View {
                                 },
                                 label: {
                                     Label(
-                                        "Quote in new note",
+                                        "Quote",
                                         systemImage: "quote.opening"
                                     )
                                 }
