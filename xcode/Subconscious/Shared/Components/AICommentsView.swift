@@ -1,5 +1,5 @@
 //
-//  CommentsView.swift
+//  AICommentsView.swift
 //  Subconscious
 //
 //  Created by Ben Follington on 13/2/2024.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CommentsView: View {
+struct AICommentsView: View {
     var comments: [String]
     var onRefresh: () -> Void
     var onRespond: (_ comment: String) -> Void
@@ -55,10 +55,10 @@ struct CommentsView: View {
     }
 }
 
-struct CommentsView_Previews: PreviewProvider {
+struct AICommentsView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            CommentsView(
+            AICommentsView(
                 comments: [
                     "This is a comment",
                     "This is another comment"

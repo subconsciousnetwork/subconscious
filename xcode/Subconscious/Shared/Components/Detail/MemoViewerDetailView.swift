@@ -183,7 +183,7 @@ struct MemoViewerDetailLoadedView: View {
                     .padding(.bottom, AppTheme.unit4)
                     .padding(.top, AppTheme.unit2)
                     
-                    CommentsView(
+                    AICommentsView(
                         comments: store.state.comments,
                         onRefresh: {
                             store.send(.refreshComments)
