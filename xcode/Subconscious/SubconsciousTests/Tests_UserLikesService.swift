@@ -87,7 +87,7 @@ final class Tests_UserLikesService: XCTestCase {
         
         let likes3 = try await data.userLikes.readOurLikes()
         
-        XCTAssert(likes3.count == 1)
+        XCTAssert(likes3.count == 2)
     }
     
     func testIsLiked() async throws {
