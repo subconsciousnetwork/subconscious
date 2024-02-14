@@ -152,7 +152,7 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
     case setLiked(_ liked: Bool)
     case requestDismiss
     case requestAuthorDetail(_ author: UserProfile)
-    case requestQuoteInNewNote(_ address: Slashlink)
+    case requestQuoteInNewNote(_ address: Slashlink, comment: String? = nil)
     case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
     /// Tagged actions for append link search sheet

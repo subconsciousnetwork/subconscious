@@ -263,6 +263,18 @@ struct MemoEditorDetailView: View {
                         .padding(.bottom, AppTheme.unit4)
                         .padding(.top, AppTheme.unit2)
                         
+                        AICommentsView(
+                            comments: store.state.comments,
+                            onRefresh: {
+                                store.send(.refreshComments)
+                            },
+                            onRespond: { comment in
+                                if let address = store.state.address {
+                                    notify(.requestQuoteInNewDetail(address, comment: comment))
+                                }
+                            }
+                        )
+                        
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onLink: { link in
@@ -334,7 +346,7 @@ enum MemoEditorDetailNotification: Hashable {
     case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(address: Slashlink, audience: Audience)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
-    case requestQuoteInNewDetail(_ address: Slashlink)
+    case requestQuoteInNewDetail(_ address: Slashlink, comment: String? = nil)
     case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
@@ -354,8 +366,8 @@ extension MemoEditorDetailNotification {
             return .requestUpdateAudience(address: address, audience: audience)
         case let .forwardRequestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewDetail(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewDetail(address, comment: comment)
         case let .requestUpdateLikeStatus(address, liked):
             return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
@@ -411,6 +423,10 @@ enum MemoEditorDetailAction: Hashable {
     case refreshBacklinks
     case succeedRefreshBacklinks(_ backlinks: [EntryStub])
     case failRefreshBacklinks(_ error: String)
+    
+    case refreshComments
+    case succeedRefreshComments(_ comments: [String])
+    case failRefreshComments(_ error: String)
     
     /// Unable to load detail
     case failLoadDetail(String)
@@ -520,7 +536,7 @@ enum MemoEditorDetailAction: Hashable {
     /// Refresh after save
     case refreshLists
     
-    case requestQuoteInNewNote(_ address: Slashlink)
+    case requestQuoteInNewNote(_ address: Slashlink, comment: String? = nil)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 
     /// Local action for requesting editor focus.
@@ -667,8 +683,8 @@ struct MemoEditorDetailMetaSheetCursor: CursorProtocol {
             return .requestAssignNoteColor(color)
         case .requestDelete(let address):
             return .requestDelete(address)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewNote(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewNote(address, comment: comment)
         case let .requestUpdateLikeStatus(address, liked):
             return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
@@ -706,6 +722,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
     var backlinks: [EntryStub] = []
+    
+    var comments: [String] = []
     
     /// Is editor saved?
     var saveState = SaveState.saved
@@ -1108,6 +1126,20 @@ struct MemoEditorDetailModel: ModelProtocol {
                 ),
                 environment: environment
             )
+        case .refreshComments:
+            return refreshComments(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshComments(comments):
+            return succeedRefreshComments(
+                state: state,
+                environment: environment,
+                comments: comments
+            )
+        case let .failRefreshComments(error):
+            logger.error("Failed to refresh comments: \(error)")
+            return Update(state: state)
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
                 .forwardRequestMergeEntry, .forwardRequestUpdateAudience,
                 .forwardRequestAssignNoteColor:
@@ -1367,7 +1399,8 @@ struct MemoEditorDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .refreshBacklinks,
-                .refreshLikedStatus
+                .refreshLikedStatus,
+                .refreshComments
             ],
             environment: environment
         ).mergeFx(fx)
@@ -2215,6 +2248,43 @@ struct MemoEditorDetailModel: ModelProtocol {
         .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
+    }
+    
+    static func refreshComments(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            var comments: [String] = []
+            
+            for _ in 0...2 {
+                let comment = await environment.prompt.generate(
+                    input: state.editor.text
+                )
+                comments.append(comment)
+            }
+            
+            return comments.uniquing()
+        }
+        .map { comments in
+            .succeedRefreshComments(comments)
+        }
+        .recover { error in
+            .failRefreshComments(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshComments(
+        state: Self,
+        environment: Environment,
+        comments: [String]
+    ) -> Update<Self> {
+        var model = state
+        model.comments = comments
+        return Update(state: model).animation(.easeOutCubic())
     }
     
     /// Snapshot editor state in preparation for saving.
