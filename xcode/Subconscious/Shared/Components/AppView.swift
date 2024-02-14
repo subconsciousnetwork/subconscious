@@ -1237,8 +1237,13 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
-                .succeedAssignNoteColor, .succeedAppendToEntry, .succeedUpdateLikeStatus:
+        case .succeedMoveEntry,
+                .succeedMergeEntry,
+                .succeedLogActivity,
+                .succeedUpdateAudience,
+                .succeedAssignNoteColor,
+                .succeedAppendToEntry,
+                .succeedUpdateLikeStatus:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
             return succeedSaveEntry(
@@ -1301,76 +1306,59 @@ struct AppModel: ModelProtocol {
                 address: address
             )
         case let .failSaveEntry(address, error):
-            logger.warning(
-                """
-                Failed to save entry: \(address)
-                \(error)
-                """
-            )
-            
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not save note"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to save entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not save note"
             )
         case let .failAppendToEntry(address, error):
-            logger.warning(
-                """
-                Failed to append to entry: \(address)
-                \(error)
-                """
-            )
-            
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not append to note"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to append to entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not append to note"
             )
         case let .failMoveEntry(from, to, error):
-            logger.warning(
-                """
-                Failed to move entry: \(from) -> \(to)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not move note"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to move entry: \(from) -> \(to)
+                   \(error)
+                   """,
+                notification: "Could not move note"
             )
         case let .failMergeEntry(parent, child, error):
-            logger.warning(
-                """
-                Failed to merge entries: \(child) -> \(parent)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not merge notes"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to merge entries: \(child) -> \(parent)
+                   \(error)
+                   """,
+                notification: "Could not merge notes"
             )
         case let .failUpdateAudience(address, audience, error):
-            logger.warning(
-                """
-                Failed to update audience for entry: \(address) \(audience)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not change audience"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to update audience for entry: \(address) \(audience)
+                   \(error)
+                   """,
+                notification: "Could not change audience"
             )
         case let .failLogActivity(error):
             logger.warning(
@@ -1380,34 +1368,45 @@ struct AppModel: ModelProtocol {
             )
             return Update(state: state)
         case let .failAssignNoteColor(address, error):
-            logger.warning(
-                """
-                Failed to assign color for entry: \(address)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not set color"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to assign color for entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not set color"
             )
         case let .failUpdateLikeStatus(address, error):
-            logger.warning(
-                """
-                Failed to update like status entry: \(address)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not update status"
-                ),
-                environment: environment
+                environment: environment,
+                error: 
+                   """
+                   Failed to update like status entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not update status"
             )
         }
+    }
+    
+    static func operationFailed(
+        state: Self,
+        environment: Environment,
+        error: String,
+        notification: String
+    ) -> Update<Self> {
+        logger.warning("\(error)")
+        
+        return update(
+            state: state,
+            action: .pushToast(
+                message: notification
+            ),
+            environment: environment
+        )
     }
     
     /// Log message and no-op
