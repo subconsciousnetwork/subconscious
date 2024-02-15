@@ -179,18 +179,15 @@ struct MemoEditorDetailView: View {
     }
     
     private func blockEditor() -> some View {
-        BlockEditor.Representable(
-            store: blockEditorStore
-        )
-        .frame(
-            minHeight: UIFont.appTextMono.lineHeight * 8
-        )
-        .onReceive(
-            blockEditorStore.actions.compactMap(
-                MemoEditorDetailNotification.from
+        LocalWebViewRepresentable(
+            url: Bundle.main.url(
+                forResource: "index",
+                withExtension: "html",
+                subdirectory: "Assets/editor"
             ),
-            perform: notify
+            receiveMessage: { message in }
         )
+        
     }
     
     var highlight: Color? {
