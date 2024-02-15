@@ -185,9 +185,9 @@ struct MemoEditorDetailView: View {
                 withExtension: "html",
                 subdirectory: "Assets/editor"
             ),
-            receiveMessage: { message in }
+            receiveMessage: { message in },
+            isBackgroundClear: true
         )
-        
     }
     
     var highlight: Color? {
