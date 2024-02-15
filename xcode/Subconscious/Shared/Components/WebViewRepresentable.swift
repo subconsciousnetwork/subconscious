@@ -77,6 +77,8 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
     var origin: URL?
     /// Closure to receive post messages from JavaScript land
     var receiveMessage: (String) -> Void
+    var showsHorizontalScrollIndicator = true
+    var showsVerticalScrollIndicator = true
     var isBackgroundClear: Bool = false
     // The name of the API method you'll use in JavaScript to send messages
     var messageHandlerName = "native"
@@ -95,9 +97,16 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
         configuration.userContentController = contentController
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
+
+        webView.scrollView
+            .showsVerticalScrollIndicator = showsVerticalScrollIndicator
+        webView.scrollView
+            .showsHorizontalScrollIndicator = showsHorizontalScrollIndicator
+
         if isBackgroundClear {
             webView.setBackgroundClear()
         }
+
         return webView
     }
 

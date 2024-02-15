@@ -191,8 +191,15 @@ struct MemoEditorDetailView: View {
                 subdirectory: "Assets/editor"
             ),
             receiveMessage: { message in },
+            showsHorizontalScrollIndicator: false,
+            showsVerticalScrollIndicator: false,
             isBackgroundClear: true
         )
+        .padding(.bottom, AppTheme.unit4)
+        .padding(.top, AppTheme.unit2)
+        .background(background)
+        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+        .shadow(style: .transclude)
     }
     
     var highlight: Color? {
