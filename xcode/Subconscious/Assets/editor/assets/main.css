@@ -1,0 +1,46 @@
+html,
+body {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
+.theme {
+  --color-brand-grey: #DFDBEB;
+  --color-card-a: #FAF5F0;
+  --color-card-b: #EBFAF7;
+  --color-card-c: #F7EDF7;
+  --color-card-d: #FAEBF0;
+  --color-card-e: #EDF0F7;
+  --duration-default: 200ms;
+}
+
+.bg-card-a {
+  background-color: var(--color-card-a);
+}
+
+.bg-card-b {
+  background-color: var(--color-card-b);
+}
+
+.bg-card-c {
+  background-color: var(--color-card-c);
+}
+
+.bg-card-d {
+  background-color: var(--color-card-d);
+}
+
+.bg-card-e {
+  background-color: var(--color-card-e);
+}
+
+.bg-brand-grey {
+  background-color: var(--color-brand-grey);
+}
+
+:not(:defined) {
+  display: none;
+  opacity: 0;
+  transition: opacity var(--duration-default) ease-out;
+}
