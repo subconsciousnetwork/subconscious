@@ -97,6 +97,8 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var recentEntries: [EntryStub]
     var following: [StoryUser]
     var followingStatus: UserProfileFollowStatus
+    var likes: [EntryStub]
+    var ourLikes: [Slashlink]
 }
 
 struct UserProfileEntry: Codable, Equatable, Hashable {
@@ -117,6 +119,7 @@ actor UserProfileService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var addressBook: AddressBookService
+    private var userLikes: UserLikesService
     private var jsonDecoder: JSONDecoder
     private var jsonEncoder: JSONEncoder
     
@@ -130,11 +133,13 @@ actor UserProfileService {
     init(
         noosphere: NoosphereService,
         database: DatabaseService,
-        addressBook: AddressBookService
+        addressBook: AddressBookService,
+        userLikes: UserLikesService
     ) {
         self.noosphere = noosphere
         self.database = database
         self.addressBook = addressBook
+        self.userLikes = userLikes
         
         self.jsonDecoder = JSONDecoder()
         self.jsonEncoder = JSONEncoder()
@@ -553,6 +558,42 @@ actor UserProfileService {
                 slugs: notes
             )
         }
+        let ourLikes = try await userLikes.readOurLikes()
+        let likedLinks = await userLikes.readLikesMemo(sphere: sphere) ?? UserLikesEntry()
+        var likes: [EntryStub] = []
+        
+        // iterate backwards for reverse chronological feed
+        // likes are unlikely to be in the local DB (with the exception of our own)
+        // for each like we read the memo which may be quite slow depending
+        // on how many degrees away from this peer we are
+        // we might need to load likes as a seperate background task
+        for link in likedLinks.collection.reversed() {
+            // This user may have liked their own draft notes, but we can't fetch these
+            if link.isLocal {
+                continue
+            }
+            
+            let did = try await sphere.resolve(peer: link.peer)
+            let memo = try await sphere.read(slashlink: link)
+            
+            guard let memo = memo.toMemo() else {
+                continue
+            }
+            
+            let excerpt = Subtext.excerpt(markup: memo.body)
+
+            likes.append(
+                EntryStub(
+                    did: did,
+                    address: Slashlink(
+                        petname: link.petname,
+                        slug: link.slug
+                    ),
+                    excerpt: excerpt,
+                    headers: memo.wellKnownHeaders()
+                )
+            )
+        }
         
         let recentEntries = sortEntriesByModified(entries: entries)
         
@@ -561,12 +602,14 @@ actor UserProfileService {
             profile: profile,
             statistics: UserProfileStatistics(
                 noteCount: entries.count,
-                backlinkCount: -1, // TODO: populate with real count
+                likeCount: likes.count,
                 followingCount: following.count
             ),
             recentEntries: recentEntries,
             following: following,
-            followingStatus: followingStatus
+            followingStatus: followingStatus,
+            likes: likes,
+            ourLikes: ourLikes
         )
     }
     

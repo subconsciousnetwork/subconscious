@@ -73,16 +73,21 @@ struct MemoEditorDetailView: View {
     }
     
     var body: some View {
-        VStack {
-            if app.state.isBlockEditorEnabled {
-                blockEditor()
-            } else {
-                plainEditor()
+        ZStack {
+            VStack { }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .modifier(AppThemeBackgroundViewModifier())
+            
+            VStack {
+                if app.state.isBlockEditorEnabled {
+                    blockEditor()
+                } else {
+                    plainEditor()
+                }
             }
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .modifier(AppThemeBackgroundViewModifier())
         .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
@@ -193,7 +198,7 @@ struct MemoEditorDetailView: View {
     var highlight: Color? {
         store.state.themeColor?.toHighlightColor()
             ?? store.state.address?.themeColor.toHighlightColor()
-            ?? ThemeColor.a.toColor()
+            ?? ThemeColor.a.toHighlightColor()
     }
     
     var background: Color? {
@@ -208,29 +213,64 @@ struct MemoEditorDetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        SubtextTextViewRepresentable( state: store.state.editor, send: Address.forward(
-                                send: store.send,
-                                tag: MemoEditorDetailSubtextTextCursor.tag
-                            ),
-                            frame: geometry.frame(in: .local),
-                            onLink: self.onLink
-                        )
-                        .insets(
-                            EdgeInsets(
-                                top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
+                        VStack {
+                            SubtextTextViewRepresentable(
+                                state: store.state.editor,
+                                send: Address.forward(
+                                    send: store.send,
+                                    tag: MemoEditorDetailSubtextTextCursor.tag
+                                ),
+                                frame: geometry.frame(in: .local),
+                                onLink: self.onLink
                             )
-                        )
-                        .frame(
-                            minHeight: UIFont.appTextMono.lineHeight * 8
-                        )
+                            .insets(
+                                EdgeInsets(
+                                    top: AppTheme.padding,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
+                                )
+                            )
+                            .frame(
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+                            )
+                            
+                            if let address = store.state.address {
+                                HStack {
+                                    Spacer()
+                                    
+                                    LikeButtonView(
+                                        liked: store.state.liked,
+                                        action: {
+                                            notify(
+                                                .requestUpdateLikeStatus(
+                                                    address,
+                                                    liked: !store.state.liked
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
+                                .padding(AppTheme.padding)
+                            }
+                        }
                         .background(background)
                         .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
                         .shadow(style: .transclude)
                         .padding(.bottom, AppTheme.unit4)
                         .padding(.top, AppTheme.unit2)
+                        
+                        AICommentsView(
+                            comments: store.state.comments,
+                            onRefresh: {
+                                store.send(.refreshComments)
+                            },
+                            onRespond: { comment in
+                                if let address = store.state.address {
+                                    notify(.requestQuoteInNewDetail(address, comment: comment))
+                                }
+                            }
+                        )
                         
                         BacklinksView(
                             backlinks: store.state.backlinks,
@@ -303,7 +343,8 @@ enum MemoEditorDetailNotification: Hashable {
     case requestMergeEntry(parent: Slashlink, child: Slashlink)
     case requestUpdateAudience(address: Slashlink, audience: Audience)
     case requestAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
-    case requestQuoteInNewDetail(_ address: Slashlink)
+    case requestQuoteInNewDetail(_ address: Slashlink, comment: String? = nil)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
@@ -322,8 +363,10 @@ extension MemoEditorDetailNotification {
             return .requestUpdateAudience(address: address, audience: audience)
         case let .forwardRequestAssignNoteColor(address, color):
             return .requestAssignNoteColor(address, color)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewDetail(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewDetail(address, comment: comment)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
@@ -377,6 +420,10 @@ enum MemoEditorDetailAction: Hashable {
     case refreshBacklinks
     case succeedRefreshBacklinks(_ backlinks: [EntryStub])
     case failRefreshBacklinks(_ error: String)
+    
+    case refreshComments
+    case succeedRefreshComments(_ comments: [String])
+    case failRefreshComments(_ error: String)
     
     /// Unable to load detail
     case failLoadDetail(String)
@@ -448,6 +495,12 @@ enum MemoEditorDetailAction: Hashable {
     case requestAssignNoteColor(_ color: ThemeColor)
     case forwardRequestAssignNoteColor(address: Slashlink, _ color: ThemeColor)
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    
+    case refreshLikedStatus
+    case succeedRefreshLikedStatus(_ liked: Bool)
+    case failRefreshFetchLikedStatus(_ error: String)
     
 
     // Editor
@@ -480,7 +533,7 @@ enum MemoEditorDetailAction: Hashable {
     /// Refresh after save
     case refreshLists
     
-    case requestQuoteInNewNote(_ address: Slashlink)
+    case requestQuoteInNewNote(_ address: Slashlink, comment: String? = nil)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 
     /// Local action for requesting editor focus.
@@ -511,6 +564,10 @@ enum MemoEditorDetailAction: Hashable {
     
     static func setMetaSheetColor(_ color: ThemeColor?) -> Self {
         .metaSheet(.setNoteColor(color))
+    }
+    
+    static func setMetaSheetLiked(_ liked: Bool) -> Self {
+        .metaSheet(.setLiked(liked))
     }
 
     static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
@@ -545,6 +602,8 @@ extension MemoEditorDetailAction {
             return .succeedUpdateAudience(receipt)
         case let .succeedAssignNoteColor(address, color):
             return .succeedAssignNoteColor(address, color)
+        case let .succeedUpdateLikeStatus(address, liked):
+            return .succeedUpdateLikeStatus(address, liked: liked)
             
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
@@ -621,8 +680,10 @@ struct MemoEditorDetailMetaSheetCursor: CursorProtocol {
             return .requestAssignNoteColor(color)
         case .requestDelete(let address):
             return .requestDelete(address)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewNote(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewNote(address, comment: comment)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
@@ -653,10 +714,13 @@ struct MemoEditorDetailModel: ModelProtocol {
         fileExtension: ContentType.subtext.fileExtension
     )
     var themeColor: ThemeColor? = nil
+    var liked: Bool = false
     
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
     var backlinks: [EntryStub] = []
+    
+    var comments: [String] = []
     
     /// Is editor saved?
     var saveState = SaveState.saved
@@ -1020,6 +1084,59 @@ struct MemoEditorDetailModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case .refreshLikedStatus:
+            return refreshLikedStatus(
+                state: state,
+                environment: environment
+            )
+        case .requestUpdateLikeStatus:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case let .succeedRefreshLikedStatus(liked):
+            var model = state
+            model.liked = liked
+            return update(
+                state: model,
+                action: .setMetaSheetLiked(liked),
+                environment: environment
+            )
+        case let .failRefreshFetchLikedStatus(error):
+            logger.error("Failed to refresh liked status: \(error)")
+            return Update(state: state)
+        case let .succeedUpdateLikeStatus(address, liked):
+            guard address == state.address else {
+                return Update(state: state)
+            }
+            
+            var model = state
+            model.liked = liked
+            return update(
+                state: model,
+                action: .metaSheet(
+                    .succeedUpdateLikeStatus(
+                        address,
+                        liked: liked
+                    )
+                ),
+                environment: environment
+            )
+        case .refreshComments:
+            return refreshComments(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshComments(comments):
+            return succeedRefreshComments(
+                state: state,
+                environment: environment,
+                comments: comments
+            )
+        case let .failRefreshComments(error):
+            logger.error("Failed to refresh comments: \(error)")
+            return Update(state: state)
         case .forwardRequestSaveEntry, .forwardRequestDelete, .forwardRequestMoveEntry,
                 .forwardRequestMergeEntry, .forwardRequestUpdateAudience,
                 .forwardRequestAssignNoteColor:
@@ -1277,7 +1394,11 @@ struct MemoEditorDetailModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .refreshBacklinks,
+            actions: [
+                .refreshBacklinks,
+                .refreshLikedStatus,
+                .refreshComments
+            ],
             environment: environment
         ).mergeFx(fx)
     }
@@ -2104,6 +2225,63 @@ struct MemoEditorDetailModel: ModelProtocol {
             ],
             environment: environment
         )
+    }
+    
+    static func refreshLikedStatus(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            let liked = try await environment.userLikes.isLikedByUs(address: address)
+            return .succeedRefreshLikedStatus(liked)
+        }
+        .recover { error in
+            .failRefreshFetchLikedStatus(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func refreshComments(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<MemoEditorDetailAction> = Future.detached {
+            var comments: [String] = []
+            
+            for _ in 0...2 {
+                let comment = await environment.prompt.generate(
+                    input: state.editor.text
+                )
+                comments.append(comment)
+            }
+            
+            return comments.uniquing()
+        }
+        .map { comments in
+            .succeedRefreshComments(comments)
+        }
+        .recover { error in
+            .failRefreshComments(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshComments(
+        state: Self,
+        environment: Environment,
+        comments: [String]
+    ) -> Update<Self> {
+        var model = state
+        model.comments = comments
+        return Update(state: model).animation(.easeOutCubic())
     }
     
     /// Snapshot editor state in preparation for saving.

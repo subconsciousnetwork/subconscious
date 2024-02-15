@@ -128,14 +128,13 @@ struct CardSwipeGlowEffect: View {
     }
 }
 
-enum CardNotification {
+enum CardStackNotification {
     case swipeRight(CardModel)
     case swipeLeft(CardModel)
     case swipeStarted
     case swipeAbandoned
-    case cardTapped(CardModel)
-    case linkTapped(EntryLink)
-    case quoteCard(Slashlink)
+    
+    case entry(EntryNotification)
 }
 
 struct CardStack: View {
@@ -145,7 +144,7 @@ struct CardStack: View {
     var deck: [CardModel]
     var current: Int
     
-    var notify: (CardNotification) -> Void
+    var notify: (CardStackNotification) -> Void
         
     // Use a dictionary of offsets so that we can animate two cards at once during the transition.
     // This dictionary is frequently cleared during the gesture lifecycle.
@@ -227,7 +226,11 @@ struct CardStack: View {
     func gestures(card: CardModel) -> CardGestureModifier {
         CardGestureModifier(
             offsets: $offsets,
-            onTapped: { notify(.cardTapped(card)) },
+            onTapped: {
+                if let entry = card.entry {
+                    notify(.entry(.requestDetail(entry)))
+                }
+            },
             onSwipeStart: { notify(.swipeStarted) },
             onSwipeChanged: { translation in
                 dragChanged(card: card, translation: translation)
@@ -244,9 +247,10 @@ struct CardStack: View {
             
             let stackFactor = stackFactor(for: index)
             CardView(
-                entry: card,
-                onLink: { entry in notify(.linkTapped(entry)) },
-                onQuote: { address in notify(.quoteCard(address)) }
+                card: card,
+                notify: { notification in
+                    notify(.entry(notification))
+                }
             )
             // Size card based on available space
             .modifier(
@@ -321,27 +325,32 @@ struct CardStack_Previews: PreviewProvider {
                 CardModel(
                     entry: EntryStub.dummyData(),
                     user: UserProfile.dummyData(),
-                    related: []
+                    related: [],
+                    liked: false
                 ),
                 CardModel(
                     entry: EntryStub.dummyData(),
                     user: UserProfile.dummyData(),
-                    related: []
+                    related: [],
+                    liked: false
                 ),
                 CardModel(
                     entry: EntryStub.dummyData(),
                     user: UserProfile.dummyData(),
-                    related: []
+                    related: [],
+                    liked: false
                 ),
                 CardModel(
                     entry: EntryStub.dummyData(),
                     user: UserProfile.dummyData(),
-                    related: []
+                    related: [],
+                    liked: false
                 ),
                 CardModel(
                     entry: EntryStub.dummyData(),
                     user: UserProfile.dummyData(),
-                    related: []
+                    related: [],
+                    liked: false
                 ),
             ],
             current: 0,

@@ -26,6 +26,7 @@ enum CardType: Equatable, Hashable {
 struct CardModel: Identifiable, Equatable, Hashable {
     var id: UUID = UUID()
     var card: CardType
+    var liked: Bool
     
     var author: UserProfile? {
         switch card {
@@ -43,18 +44,20 @@ extension CardModel {
     init(
         entry: EntryStub,
         user: UserProfile,
-        related: Set<EntryStub>
+        related: Set<EntryStub>,
+        liked: Bool
     ) {
         self.init(
             card: .entry(
                 entry: entry,
                 author: user,
                 related: related
-            )
+            ),
+            liked: liked
         )
     }
     
-    func update(entry: EntryStub) -> Self {
+    func update(entry: EntryStub, liked: Bool) -> Self {
         switch card {
         case .action(_):
             return self
@@ -64,7 +67,8 @@ extension CardModel {
                     entry: entry,
                     author: author,
                     related: related
-                )
+                ),
+                liked: liked
             )
         case .prompt(
             message: let message,
@@ -78,7 +82,8 @@ extension CardModel {
                     entry: entry,
                     author: author,
                     related: related
-                )
+                ),
+                liked: liked
             )
         }
     }

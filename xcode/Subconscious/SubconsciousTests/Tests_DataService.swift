@@ -208,10 +208,14 @@ final class Tests_DataService: XCTestCase {
                 noosphere: noosphere,
                 database: database
             )
+            let userLikes = UserLikesService(
+                noosphere: noosphere
+            )
             let userProfile = UserProfileService(
                 noosphere: noosphere,
                 database: database,
-                addressBook: addressBook
+                addressBook: addressBook,
+                userLikes: userLikes
             )
             
             let data = DataService(
@@ -219,7 +223,8 @@ final class Tests_DataService: XCTestCase {
                 database: database,
                 local: local,
                 addressBook: addressBook,
-                userProfile: userProfile
+                userProfile: userProfile,
+                userLikes: userLikes
             )
             
             versionX = try await noosphere.version()
@@ -257,10 +262,14 @@ final class Tests_DataService: XCTestCase {
             database: database
         )
         
+        let userLikes = UserLikesService(
+            noosphere: noosphere
+        )
         let userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userLikes: userLikes
         )
         
         let data = DataService(
@@ -268,7 +277,8 @@ final class Tests_DataService: XCTestCase {
             database: database,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            userLikes: userLikes
         )
         let versionY = try await noosphere.version()
         
@@ -563,10 +573,14 @@ final class Tests_DataService: XCTestCase {
             database: database
         )
         
+        let userLikes = UserLikesService(
+            noosphere: noosphere
+        )
         let userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userLikes: userLikes
         )
         
         let data = DataService(
@@ -574,7 +588,8 @@ final class Tests_DataService: XCTestCase {
             database: database,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            userLikes: userLikes
         )
                 
         try await data.writeMemo(

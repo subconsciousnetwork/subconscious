@@ -155,6 +155,8 @@ enum HomeProfileAction: Hashable {
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case requestAppendToEntry(_ address: Slashlink, _ append: String)
     case succeedAppendToEntry(_ address: Slashlink)
+    case requestUpdateLikeStatus(Slashlink, liked: Bool)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
 }
 
 // MARK: Cursors and tagging functions
@@ -188,6 +190,8 @@ struct HomeProfileDetailStackCursor: CursorProtocol {
             return .requestAssignNoteColor(address, color)
         case let .requestAppendToEntry(address, append):
             return .requestAppendToEntry(address, append)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         default:
             return .detailStack(action)
         }
@@ -213,6 +217,8 @@ extension HomeProfileAction {
             return .succeedUpdateAudience(receipt)
         case let .succeedAssignNoteColor(address, color):
             return .succeedAssignNoteColor(address, color)
+        case let .succeedUpdateLikeStatus(address, liked):
+            return .succeedUpdateLikeStatus(address, liked: liked)
         default:
             return nil
         }
@@ -234,6 +240,8 @@ extension AppAction {
             return .updateAudience(address: address, audience: audience)
         case let .requestAssignNoteColor(address, color):
             return .assignColor(address: address, color: color)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .setLiked(address: address, liked: liked)
         default:
             return nil
         }
@@ -387,9 +395,20 @@ struct HomeProfileModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case let .succeedUpdateLikeStatus(address, liked):
+            return update(
+                state: state,
+                actions: [
+                    .detailStack(
+                        .succeedUpdateLikeStatus(address, liked: liked)
+                    ),
+                    .appear
+                ],
+                environment: environment
+            )
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
-                .requestAssignNoteColor, .requestAppendToEntry:
+                .requestAssignNoteColor, .requestAppendToEntry, .requestUpdateLikeStatus:
             return Update(state: state)
         }
     }

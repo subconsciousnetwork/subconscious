@@ -69,7 +69,32 @@ enum UserProfileDetailNotification: Hashable {
     case requestNavigateToProfile(_ address: Slashlink)
     case requestDetail(MemoDetailDescription)
     case requestFindLinkDetail(EntryLink)
-    case requestQuoteInNewNote(_ address: Slashlink)
+    case requestQuoteInNewNote(_ address: Slashlink, comment: String? = nil)
+    case requestUpdateLikeStatus(Slashlink, liked: Bool)
+}
+
+extension UserProfileDetailNotification {
+    static func from(_ notification: EntryNotification) -> UserProfileDetailNotification? {
+        switch notification {
+        case let .requestDetail(entry):
+            return .requestDetail( .from(
+                    address: entry.address,
+                    fallback: entry.excerpt.description
+                )
+            )
+        case let .requestLinkDetail(link):
+            return .requestFindLinkDetail(link)
+        case let .quote(address):
+            return .requestQuoteInNewNote(address)
+        case let .like(address):
+            return .requestUpdateLikeStatus(address, liked: true)
+        case let .unlike(address):
+            return .requestUpdateLikeStatus(address, liked: false)
+        // Not currently possible from this view
+        case .delete:
+            return nil
+        }
+    }
 }
 
 extension UserProfileDetailAction {
@@ -98,6 +123,7 @@ extension UserProfileDetailAction {
             return .refresh(forceSync: false)
         case .succeedRecoverOurSphere:
             return .refresh(forceSync: false)
+            
         case let .succeedSaveEntry(address, modified):
             return .succeedSaveEntry(address, modified)
         case let .succeedDeleteEntry(address):
@@ -114,7 +140,9 @@ extension UserProfileDetailAction {
             return .succeedUnfollow(identity: identity, petname: petname)
         case let .succeedRenamePeer(did, from, to):
             return .succeedRename(identity: did, from: from, to: to)
-            
+        case let .succeedUpdateLikeStatus(address, liked):
+            return .succeedUpdateLikeStatus(address, liked: liked)
+
         default:
             return nil
         }
@@ -190,16 +218,23 @@ enum UserProfileDetailAction: Equatable {
     
     case completeIndexPeers(_ results: [PeerIndexResult])
     
+    /// Fetch like status
+    /// This could be removed if we instead index liked status in SQLite
+    case refreshOurLikeStatus
+    case succeedRefreshOurLikeStatus(_ likes: [Slashlink])
+    case failRefreshOurLikeStatus(_ error: String)
+    
     case succeedSaveEntry(_ address: Slashlink, _ modified: Date)
     case succeedDeleteEntry(_ address: Slashlink)
     case succeedMoveEntry(from: Slashlink, to: Slashlink)
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
     let noteCount: Int
-    let backlinkCount: Int
+    let likeCount: Int
     let followingCount: Int
 }
 
@@ -337,6 +372,7 @@ struct UserProfileDetailModel: ModelProtocol {
     // MARK: Tab Indices
     static let recentEntriesTabIndex: Int = 0
     static let followingTabIndex: Int = 1
+    static let likesTabIndex: Int = 2
     
     var loadingState = LoadingState.loading
     
@@ -364,6 +400,10 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var address: Slashlink? = nil
     var user: UserProfile? = nil
+    var likes: [EntryStub] = []
+    
+    // We may be viewing another person's profile but we want to know OUR like status
+    var ourLikes: [Slashlink] = []
     
     // These are optional so we can differentiate between 
     // (1) first load (no content, show placeholder state)
@@ -584,6 +624,27 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment,
                 results: results
             )
+        case .refreshOurLikeStatus:
+            return refreshOurLikes(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshOurLikeStatus(likes):
+            return succeedRefreshOurLikes(
+                state: state,
+                environment: environment,
+                likes: likes
+            )
+        case let .succeedUpdateLikeStatus(address, liked):
+            return succeedUpdateLikeStatus(
+                state: state,
+                environment: environment,
+                address: address,
+                liked: liked
+            )
+        case let .failRefreshOurLikeStatus(error):
+            logger.warning("Failed to refresh likes: \(error)")
+            return Update(state: state)
         // Notifications to app level
         case .attemptFollow, .attemptRename, .attemptUnfollow:
             return Update(state: state)
@@ -667,6 +728,8 @@ struct UserProfileDetailModel: ModelProtocol {
         model.statistics = content.statistics
         model.recentEntries = content.recentEntries
         model.following = content.following
+        model.likes = content.likes
+        model.ourLikes = content.ourLikes
         model.loadingState = .loaded
         
         return Update(state: model).animation(.default)
@@ -1146,5 +1209,60 @@ struct UserProfileDetailModel: ModelProtocol {
             action: .refresh(forceSync: false),
             environment: environment
         )
+    }
+    
+    static func refreshOurLikes(
+        state: UserProfileDetailModel,
+        environment: AppEnvironment
+    ) -> Update<UserProfileDetailModel> {
+        let fx: Fx<UserProfileDetailAction> = Future.detached {
+            let likes = try await environment.userLikes.readOurLikes()
+            return .succeedRefreshOurLikeStatus(likes)
+        }
+        .recover { error in
+            .failRefreshOurLikeStatus(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshOurLikes(
+        state: UserProfileDetailModel,
+        environment: AppEnvironment,
+        likes: [Slashlink]
+    ) -> Update<UserProfileDetailModel> {
+        var model = state
+        model.ourLikes = likes
+        return Update(state: model).animation(.easeOutCubic())
+    }
+    
+    static func succeedUpdateLikeStatus(
+        state: UserProfileDetailModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        liked: Bool
+    ) -> Update<UserProfileDetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        // If this is our profile we have to refresh the likes tab as well
+        if address.isOurProfile {
+            return update(
+                state: state,
+                action: .refresh(
+                    forceSync: false
+                ),
+                environment: environment
+            ).animation(.easeOutCubic())
+        }
+        
+        // Otherwise we just refresh the like status
+        return update(
+            state: state,
+            action: .refreshOurLikeStatus,
+            environment: environment
+        ).animation(.easeOutCubic())
     }
 }

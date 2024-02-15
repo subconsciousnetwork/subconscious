@@ -138,6 +138,12 @@ enum NotebookAction: Hashable {
     /// from the list before requesting delete for the animation to work.
     case stageDeleteEntry(Slashlink)
     
+    /// Fetch like status
+    /// This could be removed if we instead index liked status in SQLite
+    case refreshLikes
+    case succeedRefreshLikes(_ likes: [Slashlink])
+    case failRefreshLikes(_ error: String)
+    
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
     /// `succeed`s are passed down from the app root
@@ -155,6 +161,8 @@ enum NotebookAction: Hashable {
     case succeedAssignNoteColor(_ address: Slashlink, _ color: ThemeColor)
     case requestAppendToEntry(_ address: Slashlink, _ append: String)
     case succeedAppendToEntry(_ address: Slashlink)
+    case requestUpdateLikeStatus(Slashlink, liked: Bool)
+    case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -237,6 +245,8 @@ struct NotebookDetailStackCursor: CursorProtocol {
             return .requestAssignNoteColor(address, color)
         case let .requestAppendToEntry(address, append):
             return .requestAppendToEntry(address, append)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case _:
             return .detailStack(action)
         }
@@ -271,6 +281,8 @@ extension NotebookAction {
             return .succeedUpdateAudience(receipt)
         case let .succeedAssignNoteColor(address, color):
             return .succeedAssignNoteColor(address, color)
+        case let .succeedUpdateLikeStatus(address, liked):
+            return .succeedUpdateLikeStatus(address, liked: liked)
         default:
             return nil
         }
@@ -292,6 +304,8 @@ extension AppAction {
             return .updateAudience(address: address, audience: audience)
         case let .requestAssignNoteColor(address, color):
             return .assignColor(address: address, color: color)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .setLiked(address: address, liked: liked)
         default:
             return nil
         }
@@ -346,6 +360,7 @@ struct NotebookModel: ModelProtocol {
     
     ///  Recent entries (nil means "hasn't been loaded from DB")
     var recent: [EntryStub]? = nil
+    var likes: [Slashlink]? = nil
     
     var feed: [EntryStub]? = nil
     
@@ -518,10 +533,35 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         case let .succeedAppendToEntry(address):
-            return succeedAppendToEntry(state: state, environment: environment, address: address)
+            return succeedAppendToEntry(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .succeedUpdateLikeStatus(address, liked):
+            return succeedUpdateLikeStatus(
+                state: state,
+                environment: environment,
+                address: address,
+                liked: liked
+            )
+        case .refreshLikes:
+            return refreshLikes(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshLikes(likes):
+            return succeedRefreshLikes(
+                state: state,
+                environment: environment,
+                likes: likes
+            )
+        case let .failRefreshLikes(error):
+            logger.warning("Failed to refresh likes: \(error)")
+            return Update(state: state)
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
-                .requestAssignNoteColor, .requestAppendToEntry:
+                .requestAssignNoteColor, .requestAppendToEntry, .requestUpdateLikeStatus:
             return Update(state: state)
         }
     }
@@ -605,6 +645,7 @@ struct NotebookModel: ModelProtocol {
             actions: [
                 .search(.refreshSuggestions),
                 .countEntries,
+                .refreshLikes,
                 .listRecent
             ],
             environment: environment
@@ -844,6 +885,22 @@ struct NotebookModel: ModelProtocol {
             environment: environment
         )
     }
+    
+    static func succeedUpdateLikeStatus(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: Slashlink,
+        liked: Bool
+    ) -> Update<Self> {
+        return update(
+            state: state,
+            actions: [
+                .detailStack(.succeedUpdateLikeStatus(address, liked: liked)),
+                .refreshLists
+            ],
+            environment: environment
+        )
+    }
 
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
@@ -902,5 +959,31 @@ struct NotebookModel: ModelProtocol {
             action: .setDetails([]),
             environment: environment
         )
+    }
+    
+    static func refreshLikes(
+        state: NotebookModel,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel> {
+        let fx: Fx<NotebookAction> = Future.detached {
+            let likes = try await environment.userLikes.readOurLikes()
+            return .succeedRefreshLikes(likes)
+        }
+        .recover { error in
+            .failRefreshLikes(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshLikes(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        likes: [Slashlink]
+    ) -> Update<NotebookModel> {
+        var model = state
+        model.likes = likes
+        return Update(state: model).animation(.easeOutCubic())
     }
 }

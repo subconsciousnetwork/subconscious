@@ -25,9 +25,8 @@ struct StoryEntryView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var story: StoryEntry
-    var onRequestDetail: (Slashlink, String) -> Void
-    var onLink: (EntryLink) -> Void
-    var onQuote: (Slashlink) -> Void
+    var notify: (EntryNotification) -> Void
+    
     var sharedNote: String {
         """
         \(story.entry.excerpt)
@@ -51,32 +50,43 @@ struct StoryEntryView: View {
     var body: some View {
         Button(
             action: {
-                onRequestDetail(
-                    story.entry.address,
-                    story.entry.excerpt.description
-                )
+                notify(.requestDetail(story.entry))
             },
             label: {
                 VStack(alignment: .leading, spacing: AppTheme.tightPadding) {
-                        VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                            BylineSmView(
-                                pfp: .generated(story.entry.did),
-                                slashlink: story.entry.address,
-                                highlight: highlight
-                            )
-                            
-                            SubtextView(
-                                peer: story.entry.toPeer(),
-                                subtext: story.entry.excerpt,
-                                onLink: onLink
-                            )
-                            .multilineTextAlignment(.leading)
-                            .foregroundColor(.primary)
-                        }
-                        .tint(highlight)
-                        .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
+                    VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                        BylineSmView(
+                            pfp: .generated(story.entry.did),
+                            slashlink: story.entry.address,
+                            highlight: highlight
+                        )
+                        
+                        SubtextView(
+                            peer: story.entry.toPeer(),
+                            subtext: story.entry.excerpt,
+                            onLink: { link in notify(.requestLinkDetail(link)) }
+                        )
+                        .multilineTextAlignment(.leading)
+                        .foregroundColor(.primary)
+                    }
+                    .truncateWithGradient(maxHeight: AppTheme.maxTranscludeHeight)
                 }
+                .tint(highlight)
                 .contentShape(Rectangle())
+                .overlay(VStack {
+                    Spacer()
+                        HStack {
+                            Spacer()
+                            
+                            if story.liked {
+                                Image(systemName: "heart.fill")
+                                    .font(.caption)
+                                    .foregroundColor(highlight)
+                            }
+                        }
+                    }
+                    .allowsHitTesting(false)
+                )
             }
         )
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
@@ -88,13 +98,39 @@ struct StoryEntryView: View {
         .contextMenu {
             ShareLink(item: sharedNote)
             
+            if story.liked {
+                Button(
+                    action: {
+                        notify(.unlike(story.entry.address))
+                    },
+                    label: {
+                        Label(
+                            "Unlike",
+                            systemImage: "heart.slash"
+                        )
+                    }
+                )
+            } else {
+                Button(
+                    action: {
+                        notify(.like(story.entry.address))
+                    },
+                    label: {
+                        Label(
+                            "Like",
+                            systemImage: "heart"
+                        )
+                    }
+                )
+            }
+            
             Button(
                 action: {
-                    onQuote(story.entry.address)
+                    notify(.quote(story.entry.address))
                 },
                 label: {
                     Label(
-                        "Quote in new note",
+                        "Quote",
                         systemImage: "quote.opening"
                     )
                 }
@@ -125,11 +161,10 @@ struct StoryPlainView_Previews: PreviewProvider {
                     ),
                     did: Did.dummyData()
                 ),
-                author: UserProfile.dummyData()
+                author: UserProfile.dummyData(),
+                liked: false
             ),
-            onRequestDetail: { _, _ in },
-            onLink: { _ in },
-            onQuote: { _ in }
+            notify: { _ in }
         )
     }
 }

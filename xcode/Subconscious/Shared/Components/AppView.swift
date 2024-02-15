@@ -306,6 +306,7 @@ enum AppAction: Hashable {
     case moveEntry(from: Slashlink, to: Slashlink)
     case updateAudience(address: Slashlink, audience: Audience)
     case assignColor(address: Slashlink, color: ThemeColor)
+    case setLiked(address: Slashlink, liked: Bool)
     
     // These notifications will be passe down to child stores to update themselves accordingly.
     case succeedSaveEntry(address: Slashlink, modified: Date)
@@ -314,12 +315,14 @@ enum AppAction: Hashable {
     case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     case succeedUpdateAudience(MoveReceipt)
     case succeedAssignNoteColor(address: Slashlink, color: ThemeColor)
+    case succeedUpdateLikeStatus(address: Slashlink, liked: Bool)
     case failSaveEntry(address: Slashlink, error: String)
     case failDeleteMemo(String)
     case failMoveEntry(from: Slashlink, to: Slashlink, error: String)
     case failMergeEntry(parent: Slashlink, child: Slashlink, error: String)
     case failUpdateAudience(address: Slashlink, audience: Audience, error: String)
     case failAssignNoteColor(address: Slashlink, error: String)
+    case failUpdateLikeStatus(address: Slashlink, error: String)
     
     case succeedLogActivity
     case failLogActivity(_ error: String)
@@ -1233,8 +1236,13 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .succeedMoveEntry, .succeedMergeEntry, .succeedLogActivity, .succeedUpdateAudience,
-                .succeedAssignNoteColor, .succeedAppendToEntry:
+        case .succeedMoveEntry,
+                .succeedMergeEntry,
+                .succeedLogActivity,
+                .succeedUpdateAudience,
+                .succeedAssignNoteColor,
+                .succeedAppendToEntry,
+                .succeedUpdateLikeStatus:
             return Update(state: state)
         case .succeedSaveEntry(address: let address, modified: let modified):
             return succeedSaveEntry(
@@ -1284,77 +1292,67 @@ struct AppModel: ModelProtocol {
                 address: address,
                 color: color
             )
-        case let .failSaveEntry(address, error):
-            logger.warning(
-                """
-                Failed to save entry: \(address)
-                \(error)
-                """
-            )
-            
-            return update(
+        case let .setLiked(address, liked):
+            return setLiked(
                 state: state,
-                action: .pushToast(
-                    message: "Could not save note"
-                ),
-                environment: environment
+                environment: environment,
+                address: address,
+                liked: liked
+            )
+        case let .failSaveEntry(address, error):
+            return operationFailed(
+                state: state,
+                environment: environment,
+                error:
+                   """
+                   Failed to save entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not save note"
             )
         case let .failAppendToEntry(address, error):
-            logger.warning(
-                """
-                Failed to append to entry: \(address)
-                \(error)
-                """
-            )
-            
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not append to note"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to append to entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not append to note"
             )
         case let .failMoveEntry(from, to, error):
-            logger.warning(
-                """
-                Failed to move entry: \(from) -> \(to)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not move note"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to move entry: \(from) -> \(to)
+                   \(error)
+                   """,
+                notification: "Could not move note"
             )
         case let .failMergeEntry(parent, child, error):
-            logger.warning(
-                """
-                Failed to merge entries: \(child) -> \(parent)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not merge notes"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to merge entries: \(child) -> \(parent)
+                   \(error)
+                   """,
+                notification: "Could not merge notes"
             )
         case let .failUpdateAudience(address, audience, error):
-            logger.warning(
-                """
-                Failed to update audience for entry: \(address) \(audience)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not change audience"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to update audience for entry: \(address) \(audience)
+                   \(error)
+                   """,
+                notification: "Could not change audience"
             )
         case let .failLogActivity(error):
             logger.warning(
@@ -1364,20 +1362,45 @@ struct AppModel: ModelProtocol {
             )
             return Update(state: state)
         case let .failAssignNoteColor(address, error):
-            logger.warning(
-                """
-                Failed to assign color for entry: \(address)
-                \(error)
-                """
-            )
-            return update(
+            return operationFailed(
                 state: state,
-                action: .pushToast(
-                    message: "Could not set color"
-                ),
-                environment: environment
+                environment: environment,
+                error:
+                   """
+                   Failed to assign color for entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not set color"
+            )
+        case let .failUpdateLikeStatus(address, error):
+            return operationFailed(
+                state: state,
+                environment: environment,
+                error: 
+                   """
+                   Failed to update like status entry: \(address)
+                   \(error)
+                   """,
+                notification: "Could not update status"
             )
         }
+    }
+    
+    static func operationFailed(
+        state: Self,
+        environment: Environment,
+        error: String,
+        notification: String
+    ) -> Update<Self> {
+        logger.warning("\(error)")
+        
+        return update(
+            state: state,
+            action: .pushToast(
+                message: notification
+            ),
+            environment: environment
+        )
     }
     
     /// Log message and no-op
@@ -2165,9 +2188,11 @@ struct AppModel: ModelProtocol {
             )
         ]
         
-        // If we have a gateway ID but sync failed then provisioning may have failed / timed out.
+        // If we have a gateway ID but sync failed and we are using the default gateway,
+        // then provisioning may have failed / timed out.
         // Let's retry in-case it suddenly resolves the issue.
         if let _ = state.gatewayId,
+           state.gatewayURL == AppDefaults.defaultGatewayURL,
            state.gatewayProvisioningStatus != .succeeded {
             actions.append(.requestGatewayProvisioningStatus)
         }
@@ -3217,6 +3242,32 @@ struct AppModel: ModelProtocol {
         
         return Update(state: state, fx: fx)
     }
+    
+    static func setLiked(
+        state: Self,
+        environment: Environment,
+        address: Slashlink,
+        liked: Bool
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            if liked {
+                try await environment.userLikes.persistLike(for: address)
+            } else {
+                try await environment.userLikes.removeLike(for: address)
+            }
+            
+            return .succeedUpdateLikeStatus(address: address, liked: liked)
+        }
+        .recover { error in
+            return .failUpdateLikeStatus(
+                address: address,
+                error: error.localizedDescription
+            )
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
 }
 
 // MARK: Environment
@@ -3237,6 +3288,7 @@ struct AppEnvironment {
     
     var addressBook: AddressBookService
     var userProfile: UserProfileService
+    var userLikes: UserLikesService
     
     var gatewayProvisioningService: GatewayProvisioningService
     
@@ -3319,10 +3371,15 @@ struct AppEnvironment {
         )
         self.addressBook = addressBook
         
+        self.userLikes = UserLikesService(
+            noosphere: noosphere
+        )
+        
         self.userProfile = UserProfileService(
             noosphere: noosphere,
             database: database,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userLikes: userLikes
         )
         
         self.data = DataService(
@@ -3330,7 +3387,8 @@ struct AppEnvironment {
             database: database,
             local: local,
             addressBook: addressBook,
-            userProfile: userProfile
+            userProfile: userProfile,
+            userLikes: userLikes
         )
         
         self.gatewayProvisioningService = GatewayProvisioningService()
@@ -3339,6 +3397,7 @@ struct AppEnvironment {
             noosphere: noosphere,
             userProfile: userProfile
         )
+        
     }
 }
 

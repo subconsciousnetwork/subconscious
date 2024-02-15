@@ -154,6 +154,24 @@ struct MemoViewerDetailLoadedView: View {
                         )
                         
                         Spacer()
+                        
+                        if let address = store.state.address {
+                            HStack {
+                                Spacer()
+                                
+                                LikeButtonView(
+                                    liked: store.state.liked,
+                                    action: {
+                                        notify(
+                                            .requestUpdateLikeStatus(
+                                                address,
+                                                liked: !store.state.liked
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                     .padding(DeckTheme.cardPadding)
                     .frame(
@@ -164,6 +182,16 @@ struct MemoViewerDetailLoadedView: View {
                     .shadow(style: .transclude)
                     .padding(.bottom, AppTheme.unit4)
                     .padding(.top, AppTheme.unit2)
+                    
+                    AICommentsView(
+                        comments: store.state.comments,
+                        onRefresh: {
+                            store.send(.refreshComments)
+                        },
+                        onRespond: { comment in
+                            notify(.requestQuoteInNewDetail(address, comment: comment))
+                        }
+                    )
                     
                     BacklinksView(
                         backlinks: store.state.backlinks,
@@ -189,7 +217,8 @@ enum MemoViewerDetailNotification: Hashable {
     )
     case requestFindLinkDetail(EntryLink)
     case requestUserProfileDetail(_ address: Slashlink)
-    case requestQuoteInNewDetail(_ address: Slashlink)
+    case requestQuoteInNewDetail(_ address: Slashlink, comment: String? = nil)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
@@ -198,8 +227,10 @@ extension MemoViewerDetailNotification {
         switch action {
         case let .requestAuthorDetail(user):
             return .requestUserProfileDetail(user.address)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewDetail(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewDetail(address, comment: comment)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
@@ -238,7 +269,16 @@ enum MemoViewerDetailAction: Hashable {
     
     case succeedIndexBackgroundSphere
     case requestAuthorDetail(_ author: UserProfile)
-    case requestQuoteInNewNote(_ address: Slashlink)
+    case requestQuoteInNewNote(_ address: Slashlink, comment: String? = nil)
+    case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    
+    case refreshLikedStatus
+    case succeedRefreshLikedStatus(_ liked: Bool)
+    case failRefreshFetchLikedStatus(_ error: String)
+    
+    case refreshComments
+    case succeedRefreshComments(_ comments: [String])
+    case failRefreshComments(_ error: String)
     
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
     
@@ -248,6 +288,9 @@ enum MemoViewerDetailAction: Hashable {
     }
     static func setMetaSheetAuthor(_ author: UserProfile) -> Self {
         .metaSheet(.setAuthor(author))
+    }
+    static func setMetaSheetLiked(_ liked: Bool) -> Self {
+        .metaSheet(.setLiked(liked))
     }
 }
 
@@ -261,6 +304,8 @@ extension MemoViewerDetailAction {
             return .succeedIndexBackgroundSphere
         case .succeedSyncSphereWithGateway:
             return .refreshAll
+        case .succeedUpdateLikeStatus:
+            return .refreshLikedStatus
         case _:
             return nil
         }
@@ -284,11 +329,14 @@ struct MemoViewerDetailModel: ModelProtocol {
     var defaultAudience = Audience.local
     var title = ""
     var dom: Subtext = Subtext.empty
+    var liked: Bool = false
     var backlinks: [EntryStub] = []
     var headers: WellKnownHeaders? = nil
     var themeColor: ThemeColor? {
         headers?.themeColor ?? address?.themeColor
     }
+    
+    var comments: [String] = []
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -405,6 +453,28 @@ struct MemoViewerDetailModel: ModelProtocol {
                 action: .presentMetaSheet(false),
                 environment: environment
             )
+        case .requestUpdateLikeStatus:
+            return update(
+                state: state,
+                action: .presentMetaSheet(false),
+                environment: environment
+            )
+        case .refreshLikedStatus:
+            return refreshLikedStatus(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshLikedStatus(liked):
+            var model = state
+            model.liked = liked
+            return update(
+                state: model,
+                action: .metaSheet(.setLiked(liked)),
+                environment: environment
+            )
+        case let .failRefreshFetchLikedStatus(error):
+            logger.error("Failed to refresh liked status: \(error)")
+            return Update(state: state)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return update(
                 state: state,
@@ -414,6 +484,20 @@ struct MemoViewerDetailModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case .refreshComments:
+            return refreshComments(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshComments(comments):
+            return succeedRefreshComments(
+                state: state,
+                environment: environment,
+                comments: comments
+            )
+        case let .failRefreshComments(error):
+            logger.error("Failed to refresh comments: \(error)")
+            return Update(state: state)
         }
     }
     
@@ -462,7 +546,8 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .fetchOwnerProfile,
-                .refreshBacklinks
+                .refreshBacklinks,
+                .refreshComments
             ],
             environment: environment
         ).mergeFx(fx)
@@ -491,9 +576,32 @@ struct MemoViewerDetailModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .setDom(dom),
+            actions: [
+                .setDom(dom),
+                .refreshLikedStatus
+            ],
             environment: environment
         ).animation(.easeOutCubic())
+    }
+    
+    static func refreshLikedStatus(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<MemoViewerDetailAction> = Future.detached {
+            let liked = try await environment.userLikes.isLikedByUs(address: address)
+            return .succeedRefreshLikedStatus(liked)
+        }
+        .recover { error in
+            .failRefreshFetchLikedStatus(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
     
     static func refreshBacklinks(
@@ -621,6 +729,42 @@ struct MemoViewerDetailModel: ModelProtocol {
         )
     }
     
+    static func refreshComments(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<MemoViewerDetailAction> = Future.detached {
+            var comments: [String] = []
+            
+            for _ in 0...2 {
+                let comment = await environment.prompt.generate(
+                    input: state.dom.description
+                )
+                comments.append(comment)
+            }
+            
+            return comments.uniquing()
+        }
+        .map { comments in
+            .succeedRefreshComments(comments)
+        }
+        .recover { error in
+            .failRefreshComments(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshComments(
+        state: Self,
+        environment: Environment,
+        comments: [String]
+    ) -> Update<Self> {
+        var model = state
+        model.comments = comments
+        return Update(state: model).animation(.easeOutCubic())
+    }
 }
 
 /// Meta sheet cursor
@@ -644,8 +788,10 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
             return .presentMetaSheet(false)
         case let .requestAuthorDetail(user):
             return .requestAuthorDetail(user)
-        case let .requestQuoteInNewNote(address):
-            return .requestQuoteInNewNote(address)
+        case let .requestQuoteInNewNote(address, comment):
+            return .requestQuoteInNewNote(address, comment: comment)
+        case let .requestUpdateLikeStatus(address, liked):
+            return .requestUpdateLikeStatus(address, liked: liked)
         case let .selectAppendLinkSearchSuggestion(suggestion):
             return .selectAppendLinkSearchSuggestion(suggestion)
         default:
