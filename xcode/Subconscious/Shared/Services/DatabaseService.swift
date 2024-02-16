@@ -421,7 +421,7 @@ final class DatabaseService {
             sql: """
             INSERT OR REPLACE INTO associate (
                 petname,
-                identity,
+                did,
                 address,
                 peer,
                 since
@@ -1785,14 +1785,14 @@ extension Config {
             """
         ),
         SQLMigration(
-            version: Int.from(iso8601String: "2024-02-16T11:59:02")!,
+            version: Int.from(iso8601String: "2024-02-16T11:59:03")!,
             sql: """
             /* Tracks peers of peers AKA associates */
             CREATE TABLE associate
             (
                 id       INTEGER PRIMARY KEY AUTOINCREMENT,
                 petname  TEXT                           NOT NULL,
-                identity TEXT                           NOT NULL,
+                did      TEXT                           NOT NULL,
                 address  TEXT                           NOT NULL,
                 peer     TEXT                           NOT NULL,
                 since    TEXT                           DEFAULT NULL

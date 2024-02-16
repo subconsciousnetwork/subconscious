@@ -9,6 +9,7 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 import os
+import Combine
 
 struct FollowNewUserFormSheetView: View {
     var store: ViewStore<FollowNewUserFormSheetModel>
@@ -73,6 +74,23 @@ struct FollowNewUserFormSheetView: View {
                             ShareableDidQrCodeView(did: did, color: Color.gray)
                         }
                     }
+                    
+                    Section(header: Text("Suggestions")) {
+                        VStack(alignment: .leading) {
+                            ForEach(store.state.suggestions, id: \.identity) { suggestion in
+                                VStack(alignment: .leading) {
+                                    PetnameView(
+                                        name: .known(
+                                            suggestion.address,
+                                            suggestion.petname.root
+                                        ),
+                                        aliases: [suggestion.address.petname].compactMap { v in v }
+                                    )
+                                    Divider()
+                                }
+                            }
+                        }
+                    }
                 }
                 .navigationTitle("Follow User")
                 .toolbar {
@@ -132,6 +150,10 @@ enum FollowNewUserFormSheetAction: Equatable {
     
     case attemptFollow
     case dismissSheet
+    
+    case refreshSuggestions
+    case succeedRefreshSuggestions(_ suggestions: [AssociateRecord])
+    case failRefreshSuggestions(_ error: String)
 }
 
 typealias FollowNewUserFormSheetEnvironment = AppEnvironment
@@ -195,6 +217,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
     
     var did: Did? = nil
     var isQrCodeScannerPresented = false
+    var suggestions: [AssociateRecord] = []
     
     var form: FollowUserFormModel = FollowUserFormModel()
     
@@ -216,7 +239,11 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         case .populate(let did):
             var model = state
             model.did = did
-            return Update(state: model)
+            return update(
+                state: model,
+                action: .refreshSuggestions,
+                environment: environment
+            )
         case .presentQRCodeScanner(let isPresented):
             var model = state
             model.failQRCodeScanErrorMessage = nil
@@ -273,6 +300,46 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         case .attemptFollow:
             // Handled by FollowNewUserFormSheetCursor.tag
             return Update(state: state)
+        case .refreshSuggestions:
+            return refreshSuggestions(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshSuggestions(suggestions):
+            return succeedRefreshSuggestions(
+                state: state,
+                environment: environment,
+                suggestions: suggestions
+            )
+        case let .failRefreshSuggestions(error):
+            logger.warning("Failed to refresh suggestions: \(error)")
+            return Update(state: state)
         }
+    }
+    
+    static func refreshSuggestions(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            let suggestions = try environment.database.listAssociates()
+            return .succeedRefreshSuggestions(suggestions)
+        }
+        .recover { error in
+            .failRefreshSuggestions(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshSuggestions(
+        state: Self,
+        environment: Environment,
+        suggestions: [AssociateRecord]
+    ) -> Update<Self> {
+        var model = state
+        model.suggestions = suggestions
+        return Update(state: model)
     }
 }
