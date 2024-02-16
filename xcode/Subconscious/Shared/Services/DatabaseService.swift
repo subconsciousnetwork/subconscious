@@ -293,6 +293,51 @@ final class DatabaseService {
             )
         })
     }
+    
+    /// List all peers in database
+    func listAssociates() throws -> [AssociateRecord] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        return try database.execute(
+            sql: """
+            SELECT a.petname, a.did, a.address, a.peer, a.since
+            FROM associate a
+            LEFT JOIN peer p ON a.did = p.did
+            WHERE p.did IS NULL
+            AND a.since IS NOT NULL
+            GROUP BY a.did
+            ORDER BY count(*) DESC;
+            """
+        ).map({ row in
+            guard let petname = row.col(0)?.toString()?.toPetname() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode petname from row"
+                )
+            }
+            guard let identity = row.col(1)?.toString()?.toDid() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode did from row"
+                )
+            }
+            guard let address = row.col(2)?.toString()?.toSlashlink() else {
+                throw CodingError.decodingError(message: "Failed to decode address from row")
+            }
+            guard let peer = row.col(3)?.toString()?.toPetname() else {
+                throw CodingError.decodingError(message: "Failed to decode peer from row")
+            }
+            
+            let since = row.col(4)?.toString()
+            
+            return AssociateRecord(
+                petname: petname,
+                identity: identity,
+                address: address,
+                peer: peer,
+                since: since
+            )
+        })
+    }
  
     /// Purge all content of sphere with given petname from the database.
     /// This method accounts for the possibility of following the same DID
@@ -363,6 +408,33 @@ final class DatabaseService {
             sql: """
             UPDATE peer SET since = NULL
             """
+        )
+    }
+    
+    func writeAssociate(
+        _ record: AssociateRecord
+    ) throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        try database.execute(
+            sql: """
+            INSERT OR REPLACE INTO associate (
+                petname,
+                identity,
+                address,
+                peer,
+                since
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            parameters: [
+                .text(record.petname.description),
+                .text(record.identity.description),
+                .text(record.address.description),
+                .text(record.peer.description),
+                .text(record.since?.description),
+            ]
         )
     }
 
@@ -1711,6 +1783,22 @@ extension Config {
                 created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
             );
             """
+        ),
+        SQLMigration(
+            version: Int.from(iso8601String: "2024-02-16T11:59:02")!,
+            sql: """
+            /* Tracks peers of peers AKA associates */
+            CREATE TABLE associate
+            (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                petname  TEXT                           NOT NULL,
+                identity TEXT                           NOT NULL,
+                address  TEXT                           NOT NULL,
+                peer     TEXT                           NOT NULL,
+                since    TEXT                           DEFAULT NULL
+            );
+            """
         )
     ])
 }
+    

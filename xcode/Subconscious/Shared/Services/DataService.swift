@@ -137,6 +137,7 @@ actor DataService {
         // Get changes since the last time we indexed this peer,
         // or get all changes if this is the first time we've tried to index.
         let changes = try await sphere.changes(since: peer?.since)
+        let peerChanges = try await sphere.getPeerChanges(since: peer?.since)
         logger.log(
             "Indexing peer",
             metadata: [
@@ -144,7 +145,8 @@ actor DataService {
                 "identity": identity.description,
                 "version": version,
                 "since": peer?.since ?? "nil",
-                "changes": changes.count.description
+                "changes": changes.count.description,
+                "peerChanges": peerChanges.count.description,
             ]
         )
         
@@ -152,6 +154,7 @@ actor DataService {
         try database.savepoint(savepoint)
         
         do {
+            // Memos
             for change in changes {
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
@@ -186,6 +189,28 @@ actor DataService {
                     )
                 }
             }
+            
+            for change in peerChanges {
+                switch change {
+                case let .remove(petname):
+//                    try database.removeAssociate(petname.join(
+//                        petname: petname
+//                    ))
+                    break
+                case let .update(associate):
+                    if let address = petname.join(petname: associate.petname) {
+                        let associate = AssociateRecord(
+                            petname: associate.petname,
+                            identity: associate.identity,
+                            address: Slashlink(petname: address),
+                            peer: petname,
+                            since: associate.version
+                        )
+                        try database.writeAssociate(associate)
+                    }
+                }
+            }
+            
             try database.writePeer(
                 PeerRecord(
                     petname: petname,
