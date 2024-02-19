@@ -48,9 +48,6 @@ extension SentryIntegration {
             // per https://docs.sentry.io/product/sentry-basics/dsn-explainer/#dsn-utilization this is fine to be public, unless it's abused (e.g. someone sending us /extra/ errors.
             options.dsn = "https://72ea1a54aeb04f60880d75fcffe705ed@o4505393671569408.ingest.sentry.io/4505393756438528"
             options.environment = Config.default.debug ? "development" : "production"
-            options.tracesSampleRate = 1.0
-            options.profilesSampleRate = 1.0
-            options.attachViewHierarchy = true
             
             options.beforeSend = { event in
                 let ev = event
