@@ -524,6 +524,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             // Set meta sheet address as well
             actions: [
                 .setMetaSheetAddress(description.address),
+                .refreshComments,
                 .refreshAll
             ],
             environment: environment
@@ -551,8 +552,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .fetchOwnerProfile,
-                .refreshBacklinks,
-                .refreshComments
+                .refreshBacklinks
             ],
             environment: environment
         ).mergeFx(fx)
