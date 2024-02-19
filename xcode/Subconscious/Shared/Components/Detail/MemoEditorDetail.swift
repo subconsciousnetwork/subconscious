@@ -254,7 +254,12 @@ struct MemoEditorDetailView: View {
                                         }
                                     )
                                 }
-                                .padding(AppTheme.padding)
+                                .padding(EdgeInsets(
+                                    top: 0,
+                                    leading: DeckTheme.cardPadding,
+                                    bottom: DeckTheme.cardPadding,
+                                    trailing: DeckTheme.cardPadding
+                                ))
                             }
                         }
                         .background(background)
@@ -272,7 +277,8 @@ struct MemoEditorDetailView: View {
                                 if let address = store.state.address {
                                     notify(.requestQuoteInNewDetail(address, comment: comment))
                                 }
-                            }
+                            },
+                            background: background ?? .secondary
                         )
                         
                         BacklinksView(
