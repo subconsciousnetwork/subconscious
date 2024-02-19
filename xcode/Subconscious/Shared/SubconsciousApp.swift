@@ -12,7 +12,6 @@ import OSLog
 @main
 struct SubconsciousApp: App {
     init() {
-        SentryIntegration.start()
         NoosphereLogProxy.connect()
     }
 
