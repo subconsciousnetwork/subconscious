@@ -137,6 +137,10 @@ struct MemoViewerDetailLoadedView: View {
         category: "MemoViewerDetailLoadedView"
     )
     
+    var background: Color? {
+        store.state.themeColor?.toColor()
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -177,7 +181,7 @@ struct MemoViewerDetailLoadedView: View {
                     .frame(
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
-                    .background(store.state.themeColor?.toColor())
+                    .background(background)
                     .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
                     .shadow(style: .transclude)
                     .padding(.bottom, AppTheme.unit4)
@@ -190,7 +194,8 @@ struct MemoViewerDetailLoadedView: View {
                         },
                         onRespond: { comment in
                             notify(.requestQuoteInNewDetail(address, comment: comment))
-                        }
+                        },
+                        background: background ?? .secondary
                     )
                     
                     BacklinksView(

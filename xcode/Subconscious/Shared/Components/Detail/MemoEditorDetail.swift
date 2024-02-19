@@ -277,7 +277,8 @@ struct MemoEditorDetailView: View {
                                 if let address = store.state.address {
                                     notify(.requestQuoteInNewDetail(address, comment: comment))
                                 }
-                            }
+                            },
+                            background: background ?? .secondary
                         )
                         
                         BacklinksView(
