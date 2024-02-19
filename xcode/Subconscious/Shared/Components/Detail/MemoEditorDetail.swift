@@ -256,9 +256,9 @@ struct MemoEditorDetailView: View {
                                 }
                                 .padding(EdgeInsets(
                                     top: 0,
-                                    leading: AppTheme.padding,
-                                    bottom: AppTheme.padding,
-                                    trailing: AppTheme.padding
+                                    leading: DeckTheme.cardPadding,
+                                    bottom: DeckTheme.cardPadding,
+                                    trailing: DeckTheme.cardPadding
                                 ))
                             }
                         }
