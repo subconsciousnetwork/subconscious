@@ -201,6 +201,10 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
+            
+            // Since this change originated from within the UITextView
+            // we can safely suppress re-renders.
+            // We're passing view.text in so there's no need to re-set it.
             self.suspendTextRendering = true
             self.representable.send(.setText(view.text))
             self.suspendTextRendering = false
@@ -243,6 +247,10 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
+            
+            // Since this change originated from within the UITextView
+            // we can safely suppress re-renders.
+            // We're passing view.text in so there's no need to re-set it.
             self.suspendTextRendering = true
             representable.send(
                 .setSelection(
