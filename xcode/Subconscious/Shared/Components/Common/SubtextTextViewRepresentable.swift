@@ -144,14 +144,12 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
         var representable: SubtextTextViewRepresentable
+        var suspendTextRendering: Bool = false
         var renderTranscludeBlocks: Bool = false
         /// Subtext renderer instance
         var renderer: SubtextAttributedStringRenderer
         var subtext: Subtext? = nil
         
-        // The last known rendered text
-        var lastText: String? = nil
-
         init(
             representable: SubtextTextViewRepresentable
         ) {
@@ -203,7 +201,13 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
+            
+            // Since this change originated from within the UITextView
+            // we can safely suppress re-renders.
+            // We're passing view.text in so there's no need to re-set it.
+            self.suspendTextRendering = true
             self.representable.send(.setText(view.text))
+            self.suspendTextRendering = false
         }
 
         /// Handle editing begin (focus)
@@ -243,12 +247,18 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
+            
+            // Since this change originated from within the UITextView
+            // we can safely suppress re-renders.
+            // We're passing view.text in so there's no need to re-set it.
+            self.suspendTextRendering = true
             representable.send(
                 .setSelection(
                     range: textView.selectedRange,
                     text: textView.text
                 )
             )
+            self.suspendTextRendering = false
         }
     }
 
@@ -343,11 +353,9 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         
         // so we set view.text TWICE when we could set it zero times
         // caching the last known rendered value allows us to detect and sidestep this scenario
-        if (view.text != state.text && context.coordinator.lastText != state.text) {
-            SubtextTextViewRepresentable.logger.debug("updateUIView: set text")
+        if view.text != state.text && !context.coordinator.suspendTextRendering {
             view.text = state.text
         }
-        context.coordinator.lastText = view.text
 
         // Update width
         if view.fixedWidth != self.frame.width {
