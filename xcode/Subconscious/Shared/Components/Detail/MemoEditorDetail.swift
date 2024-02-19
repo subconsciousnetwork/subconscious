@@ -254,7 +254,12 @@ struct MemoEditorDetailView: View {
                                         }
                                     )
                                 }
-                                .padding(AppTheme.padding)
+                                .padding(EdgeInsets(
+                                    top: 0,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
+                                ))
                             }
                         }
                         .background(background)
