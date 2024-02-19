@@ -86,6 +86,10 @@ enum DiscoverAction: Hashable {
     
     case appear
     
+    case refreshSuggestions
+    case succeedRefreshSuggestions(_ suggestions: [AssociateRecord])
+    case failRefreshSuggestions(_ error: String)
+    
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
     /// `succeed`s are passed down from the app root
@@ -238,6 +242,7 @@ struct DiscoverModel: ModelProtocol {
     )
     
     var detailStack = DetailStackModel()
+    var suggestions: [AssociateRecord] = []
     
     var loadingStatus: LoadingState = .loading
     
@@ -369,6 +374,21 @@ struct DiscoverModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case .refreshSuggestions:
+            return refreshSuggestions(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshSuggestions(suggestions):
+            return succeedRefreshSuggestions(
+                state: state,
+                environment: environment,
+                suggestions: suggestions
+            )
+        case let .failRefreshSuggestions(error):
+            logger.warning("Failed to refresh suggestions: \(error)")
+            return Update(state: state)
+
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
                 .requestAppendToEntry, .requestUpdateLikeStatus:
@@ -379,7 +399,11 @@ struct DiscoverModel: ModelProtocol {
             state: Self,
             environment: Environment
         ) -> Update<Self> {
-            return Update(state: state)
+            return update(
+                state: state,
+                action: .refreshSuggestions,
+                environment: environment
+            )
         }
         
         func requestDiscoverRoot(
@@ -392,5 +416,31 @@ struct DiscoverModel: ModelProtocol {
                 environment: environment
             )
         }
+    }
+    
+    static func refreshSuggestions(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            let suggestions = try environment.database.listAssociates()
+            return .succeedRefreshSuggestions(suggestions)
+        }
+        .recover { error in
+            .failRefreshSuggestions(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshSuggestions(
+        state: Self,
+        environment: Environment,
+        suggestions: [AssociateRecord]
+    ) -> Update<Self> {
+        var model = state
+        model.suggestions = suggestions
+        return Update(state: model)
     }
 }

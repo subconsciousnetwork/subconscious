@@ -23,8 +23,44 @@ struct DiscoverNavigationView: View {
    
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
-            VStack(alignment: .leading) {
-                Text("hi")
+            ScrollView {
+                VStack(alignment: .leading) {
+                    ForEach(store.state.suggestions) { suggestion in
+                        StoryUserView(
+                            story: StoryUser(
+                                entry: AddressBookEntry(
+                                    petname: suggestion.petname,
+                                    did: suggestion.identity,
+                                    status: .resolved(""),
+                                    version: suggestion.since ?? ""
+                                ),
+                                user: UserProfile(
+                                    did: suggestion.identity,
+                                    nickname: nil,
+                                    address: suggestion.address,
+                                    pfp: .generated(
+                                        suggestion.identity
+                                    ),
+                                    bio: nil,
+                                    category: .human,
+                                    ourFollowStatus: .notFollowing,
+                                    aliases: [suggestion.address.petname].compactMap {
+                                        v in v
+                                    })
+                            ),
+                            action: { address in
+                                detailStack.send(
+                                    .pushDetail(
+                                        .profile(
+                                            UserProfileDetailDescription(
+                                                address: address
+                                            )
+                                        )
+                                    )
+                                )
+                            })
+                    }
+                }
             }
             .padding(AppTheme.padding)
             .ignoresSafeArea(.keyboard, edges: .bottom)

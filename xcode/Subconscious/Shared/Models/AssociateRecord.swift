@@ -7,7 +7,9 @@
 
 import Foundation
 
-struct AssociateRecord: Hashable {
+struct AssociateRecord: Hashable, Identifiable {
+    var id: String { identity.description }
+    
     var petname: Petname
     var identity: Did
     var address: Slashlink

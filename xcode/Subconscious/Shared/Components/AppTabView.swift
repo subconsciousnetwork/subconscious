@@ -38,7 +38,7 @@ struct AppTabView: View {
                 .tabItem {
                     Label("Discover", systemImage: "globe")
                 }
-                .tag(AppTab.deck)
+                .tag(AppTab.discover)
             
             NotebookView(app: store)
                 .tabItem {
