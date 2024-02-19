@@ -518,20 +518,15 @@ struct DeckModel: ModelProtocol {
                 try? await Task.sleep(for: .seconds(Duration.loading))
                 
                 let us = try await environment.noosphere.identity()
-                let recent = try environment.database.listFeed(owner: us)
+                let recent = try environment.database.listAll(owner: us, limit: 5)
                 let likes = try await environment.userLikes.readOurLikes()
                 
                 var initialDraw = Array(recent
-                    .prefix(10) // take the 10 most recent posts
+                    .prefix(5) // take the 10 most recent posts
                     .shuffled() // shuffle
-                    .prefix(3)) // take 3
-                
-                // Draw 2 random cards to keep it surprising
-                for _ in 0..<2 {
-                    guard let entry = environment.database.readRandomEntry(owner: us) else {
-                        continue
-                    }
-                    
+                    .prefix(2))
+            
+                if let entry = environment.database.readRandomEntry(owner: us) {
                     initialDraw.append(entry)
                 }
                 

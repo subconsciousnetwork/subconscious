@@ -745,51 +745,9 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
-    func listFeed() async throws -> [EntryStub] {
+    func listAll(limit: Int = 1000) async throws -> [EntryStub] {
         let identity = try await noosphere.identity()
-        return try self.database.listFeed(owner: identity)
-    }
-    
-    nonisolated func listFeedPublisher() -> AnyPublisher<[StoryEntry], Error> {
-        Future.detached {
-            let entries = try await self.listFeed()
-            let likes = try await self.userLikes.readOurLikes()
-            var authors: [Did:UserProfile] = [:]
-            var stories: [StoryEntry] = []
-            
-            for entry in entries {
-                let liked = likes.contains(where: { like in like == entry.address })
-                // Have we already found the author for this post?
-                if let author = authors[entry.did] {
-                    stories.append(
-                        StoryEntry(
-                            entry: entry,
-                            author: author,
-                            liked: liked
-                        )
-                    )
-                    continue
-                }
-                
-                let user = try await self.userProfile.identifyUser(
-                    did: entry.did,
-                    address: entry.address,
-                    context: nil
-                )
-                
-                authors.updateValue(user, forKey: entry.did)
-                stories.append(
-                    StoryEntry(
-                        entry: entry,
-                        author: user,
-                        liked: liked
-                    )
-                )
-            }
-            
-            return stories
-        }
-        .eraseToAnyPublisher()
+        return try self.database.listAll(owner: identity, limit: limit)
     }
     
     func countMemos() async throws -> Int {

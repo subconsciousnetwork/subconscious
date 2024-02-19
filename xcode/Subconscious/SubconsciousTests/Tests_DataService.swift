@@ -526,7 +526,7 @@ final class Tests_DataService: XCTestCase {
             body: "Hello world!"
         )))
 
-        let list = try await environment.data.listFeed()
+        let list = try await environment.data.listAll()
         
         XCTAssertEqual(list.count, 3)
         XCTAssertEqual(list.filter({ entry in entry.address.isOurs }).count, 2)
