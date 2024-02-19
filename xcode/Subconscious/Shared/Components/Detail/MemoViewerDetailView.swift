@@ -144,7 +144,39 @@ struct MemoViewerDetailLoadedView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    if let author = store.state.owner,
+                       let name = author.toNameVariant() {
+                        Button(
+                            action: {
+                                store.send(.requestAuthorDetail(author))
+                            },
+                            label: {
+                                HStack(
+                                    alignment: .center,
+                                    spacing: AppTheme.unit3
+                                ) {
+                                    ProfilePic(
+                                        pfp: author.pfp,
+                                        size: .large
+                                    )
+                                    
+                                    PetnameView(
+                                        name: name,
+                                        aliases: [],
+                                        showMaybePrefix: false
+                                    )
+                                }
+                                .transition(
+                                    .push(
+                                        from: .bottom
+                                    )
+                                )
+                            }
+                        )
+                        .padding(AppTheme.padding)
+                        
+                    }
                     VStack {
                         SubtextView(
                             peer: store.state.owner?.address.peer,
