@@ -13,6 +13,7 @@ enum AppTab: String, Hashable {
     case deck
     case notebook
     case profile
+    case discover
 }
 
 struct AppTabView: View {
@@ -30,6 +31,12 @@ struct AppTabView: View {
             DeckView(app: store)
                 .tabItem {
                     Label("Deck", systemImage: "square.stack.3d.up.fill")
+                }
+                .tag(AppTab.deck)
+            
+            DiscoverView(app: store)
+                .tabItem {
+                    Label("Discover", systemImage: "globe")
                 }
                 .tag(AppTab.deck)
             

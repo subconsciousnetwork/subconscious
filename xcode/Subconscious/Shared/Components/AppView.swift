@@ -336,6 +336,7 @@ enum AppAction: Hashable {
     case requestNotebookRoot
     case requestProfileRoot
     case requestDeckRoot
+    case requestDiscoverRoot
     
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
@@ -1213,7 +1214,10 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 tab: tab
             )
-        case .requestNotebookRoot, .requestProfileRoot, .requestDeckRoot:
+        case .requestNotebookRoot,
+                .requestProfileRoot,
+                .requestDeckRoot,
+                .requestDiscoverRoot:
             return Update(state: state)
         case .checkRecoveryStatus:
             return checkRecoveryStatus(
@@ -2959,6 +2963,8 @@ struct AppModel: ModelProtocol {
                     return AppAction.requestDeckRoot
                 case .notebook:
                     return AppAction.requestNotebookRoot
+                case .discover:
+                    return AppAction.requestDiscoverRoot
                 case .profile:
                     return AppAction.requestProfileRoot
                 }
