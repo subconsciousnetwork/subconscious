@@ -137,7 +137,7 @@ extension String {
         // execution
         let hash = self.utf8.reduce(0) { $0 + Int($1) }
         
-        return colors[abs(hash.hashValue) % colors.count]
+        return colors[abs(hash) % colors.count]
     }
 }
 
