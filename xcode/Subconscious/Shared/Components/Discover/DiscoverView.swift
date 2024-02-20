@@ -69,12 +69,12 @@ struct DiscoverView: View {
             store.send(.appear)
         }
         .frame(maxWidth: .infinity)
-        /// Replay some app actions on deck store
+        /// Replay some app actions on discover store
         .onReceive(
             app.actions.compactMap(DiscoverAction.from),
             perform: store.send
         )
-        /// Replay some deck actions on app store
+        /// Replay some discover actions on app store
         .onReceive(
             store.actions.compactMap(AppAction.from),
             perform: app.send
@@ -98,7 +98,6 @@ enum DiscoverAction: Hashable {
     case failRefreshSuggestions(_ error: String)
     
     case requestFollowNeighbor(_ neighbor: NeighborRecord)
-    case forwardRequestFollowNeighbor(_ neighbor: NeighborRecord)
     
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
@@ -143,7 +142,7 @@ extension AppAction {
             return .appendToEntry(address: address, append: append)
         case let .requestUpdateLikeStatus(address, liked):
             return .setLiked(address: address, liked: liked)
-        case let .forwardRequestFollowNeighbor(neighbor):
+        case let .requestFollowNeighbor(neighbor):
             return .followPeer(
                 identity: neighbor.identity,
                 petname: neighbor.petname
@@ -443,14 +442,10 @@ struct DiscoverModel: ModelProtocol {
             var model = state
             model.pendingFollows.append(neighbor)
             
-            let fx: Fx<DiscoverAction> = Just(
-                .forwardRequestFollowNeighbor(neighbor)
-            ).eraseToAnyPublisher()
-            
-            return Update(state: model, fx: fx).animation(.easeOutCubic())
+            return Update(state: model).animation(.easeOutCubic())
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
-                .requestAppendToEntry, .requestUpdateLikeStatus, .forwardRequestFollowNeighbor:
+                .requestAppendToEntry, .requestUpdateLikeStatus:
             return Update(state: state)
         }
         

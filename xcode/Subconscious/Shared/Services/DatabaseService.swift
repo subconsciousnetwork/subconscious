@@ -452,6 +452,24 @@ final class DatabaseService {
         )
     }
     
+    /// Delete neighbor from database
+    func removeNeighbor(neighbor: Petname, peer: Petname) throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        try database.execute(
+            sql: """
+            DELETE FROM neighbor
+            WHERE petname = ?
+            AND peer = ?
+            """,
+            parameters: [
+                .text(neighbor.description),
+                .text(peer.description)
+            ]
+        )
+    }
+    
     func writeNeighbor(
         _ record: NeighborRecord
     ) throws {
