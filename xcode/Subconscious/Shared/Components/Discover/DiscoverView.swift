@@ -97,6 +97,9 @@ enum DiscoverAction: Hashable {
     case succeedRefreshSuggestions(_ suggestions: [UserDiscoverySuggestion])
     case failRefreshSuggestions(_ error: String)
     
+    case requestFollowNeighbor(_ neighbor: NeighborRecord)
+    case forwardRequestFollowNeighbor(_ neighbor: NeighborRecord)
+    
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
     /// `succeed`s are passed down from the app root
@@ -116,6 +119,9 @@ enum DiscoverAction: Hashable {
     case succeedAppendToEntry(_ address: Slashlink)
     case requestUpdateLikeStatus(Slashlink, liked: Bool)
     case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
+    
+    case succeedFollowPeer(_ identity: Did, _ petname: Petname)
+    case succeedUnfollowPeer(identity: Did, petname: Petname)
 }
 
 extension AppAction {
@@ -137,6 +143,11 @@ extension AppAction {
             return .appendToEntry(address: address, append: append)
         case let .requestUpdateLikeStatus(address, liked):
             return .setLiked(address: address, liked: liked)
+        case let .forwardRequestFollowNeighbor(neighbor):
+            return .followPeer(
+                identity: neighbor.identity,
+                petname: neighbor.petname
+            )
         default:
             return nil
         }
@@ -164,6 +175,12 @@ extension DiscoverAction {
             return .succeedAppendToEntry(address)
         case let .succeedUpdateLikeStatus(address, liked):
             return .succeedUpdateLikeStatus(address, liked: liked)
+        case let .succeedFollowPeer(did, petname):
+            return .succeedFollowPeer(did, petname)
+        case let .succeedUnfollowPeer(identity, petname):
+            return .succeedUnfollowPeer(identity: identity, petname: petname)
+        case .succeedIndexOurSphere:
+            return .refreshSuggestions
         default:
             return nil
         }
@@ -250,6 +267,7 @@ struct DiscoverModel: ModelProtocol {
     
     var detailStack = DetailStackModel()
     var suggestions: [UserDiscoverySuggestion] = []
+    var pendingFollows: [NeighborRecord] = []
     
     var loadingStatus: LoadingState = .loading
     
@@ -381,6 +399,30 @@ struct DiscoverModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case let .succeedFollowPeer(did, _):
+            var model = state
+            model.suggestions = state.suggestions.filter { suggestion in
+                suggestion.neighbor.identity != did
+            }
+            model.pendingFollows = state.pendingFollows.filter { neighbor in
+                neighbor.identity != did
+            }
+            
+            return update(
+                state: state,
+                actions: [
+                    .refreshSuggestions,
+                ],
+                environment: environment
+            )
+        case .succeedUnfollowPeer:
+            return update(
+                state: state,
+                actions: [
+                    .refreshSuggestions,
+                ],
+                environment: environment
+            )
         case .refreshSuggestions:
             return refreshSuggestions(
                 state: state,
@@ -393,12 +435,22 @@ struct DiscoverModel: ModelProtocol {
                 suggestions: suggestions
             )
         case let .failRefreshSuggestions(error):
+            var model = state
+            model.loadingStatus = .notFound
             logger.warning("Failed to refresh suggestions: \(error)")
-            return Update(state: state)
-
+            return Update(state: model)
+        case let .requestFollowNeighbor(neighbor):
+            var model = state
+            model.pendingFollows.append(neighbor)
+            
+            let fx: Fx<DiscoverAction> = Just(
+                .forwardRequestFollowNeighbor(neighbor)
+            ).eraseToAnyPublisher()
+            
+            return Update(state: model, fx: fx).animation(.easeOutCubic())
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
-                .requestAppendToEntry, .requestUpdateLikeStatus:
+                .requestAppendToEntry, .requestUpdateLikeStatus, .forwardRequestFollowNeighbor:
             return Update(state: state)
         }
         
@@ -457,6 +509,8 @@ struct DiscoverModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.suggestions = suggestions
-        return Update(state: model)
+        model.pendingFollows = []
+        model.loadingStatus = .loaded
+        return Update(state: model).animation(.easeOutCubic())
     }
 }

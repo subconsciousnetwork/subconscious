@@ -120,6 +120,8 @@
 		B597C7372B4E34DB003F4342 /* ActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B597C7362B4E34DA003F4342 /* ActivityEvent.swift */; };
 		B59850B52B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
 		B59850B62B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
+		B59CA6642B84523E00838A3E /* DiscoverUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CA6632B84523E00838A3E /* DiscoverUserView.swift */; };
+		B59CA6662B84590700838A3E /* DiscoverActionButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CA6652B84590700838A3E /* DiscoverActionButtonStyle.swift */; };
 		B59D556329BBFF56007915E2 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59D556229BBFF56007915E2 /* FormField.swift */; };
 		B59E4E572B3BA781000A2B49 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E562B3BA781000A2B49 /* CardView.swift */; };
 		B59E4E592B3BA8E7000A2B49 /* EntryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */; };
@@ -665,6 +667,8 @@
 		B5908BEA29DAB05B00225B1A /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		B597C7362B4E34DA003F4342 /* ActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEvent.swift; sourceTree = "<group>"; };
 		B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoosphereLogProxy.swift; sourceTree = "<group>"; };
+		B59CA6632B84523E00838A3E /* DiscoverUserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverUserView.swift; sourceTree = "<group>"; };
+		B59CA6652B84590700838A3E /* DiscoverActionButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverActionButtonStyle.swift; sourceTree = "<group>"; };
 		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B59E4E562B3BA781000A2B49 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCardView.swift; sourceTree = "<group>"; };
@@ -1085,6 +1089,8 @@
 			children = (
 				B54BC3C02B83160400D6C76D /* DiscoverView.swift */,
 				B54BC3C22B83171900D6C76D /* DiscoverNavigationView.swift */,
+				B59CA6632B84523E00838A3E /* DiscoverUserView.swift */,
+				B59CA6652B84590700838A3E /* DiscoverActionButtonStyle.swift */,
 			);
 			path = Discover;
 			sourceTree = "<group>";
@@ -2216,6 +2222,7 @@
 				B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */,
 				B8C80F0129FC201000BAC84D /* Peer.swift in Sources */,
 				B8C3AA922B33B5DA00E7B44D /* BlockEditorModelUpdate.swift in Sources */,
+				B59CA6642B84523E00838A3E /* DiscoverUserView.swift in Sources */,
 				B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */,
 				B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */,
 				B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */,
@@ -2370,6 +2377,7 @@
 				B542EF712AF4949B00BE29F1 /* EditProfileSheetModifier.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */,
+				B59CA6662B84590700838A3E /* DiscoverActionButtonStyle.swift in Sources */,
 				B59E4E5F2B3BA91D000A2B49 /* CardContentView.swift in Sources */,
 				B8D328B729A671DA00850A37 /* TranscludeView.swift in Sources */,
 				B81A1A6F29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift in Sources */,

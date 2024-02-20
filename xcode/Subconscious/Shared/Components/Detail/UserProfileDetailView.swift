@@ -134,7 +134,7 @@ extension UserProfileDetailAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
-        case let .succeedFollowPeer(petname):
+        case let .succeedFollowPeer(_, petname):
             return .succeedFollow(petname)
         case let .succeedUnfollowPeer(identity, petname):
             return .succeedUnfollow(identity: identity, petname: petname)

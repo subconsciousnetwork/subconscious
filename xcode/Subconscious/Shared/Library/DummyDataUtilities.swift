@@ -37,6 +37,15 @@ extension Slug: DummyData {
     }
 }
 
+extension Slashlink: DummyData {
+    static func dummyData() -> Slashlink {
+        let slug = Slug.dummyData()
+        let petname = Petname.dummyData()
+        
+        return Slashlink(petname: petname, slug: slug)
+    }
+}
+
 extension Petname.Name: DummyData {
     static func dummyData() -> Petname.Name {
         let options = [

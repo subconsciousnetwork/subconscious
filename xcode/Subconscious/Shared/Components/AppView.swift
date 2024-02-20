@@ -278,7 +278,7 @@ enum AppAction: Hashable {
     // Addressbook Management Actions
     case followPeer(identity: Did, petname: Petname)
     case failFollowPeer(error: String)
-    case succeedFollowPeer(_ petname: Petname)
+    case succeedFollowPeer(_ identity: Did, _ petname: Petname)
     
     case renamePeer(from: Petname, to: Petname)
     case failRenamePeer(error: String)
@@ -1142,10 +1142,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .succeedFollowPeer(let petname):
+        case let .succeedFollowPeer(did, petname):
             return succeedFollowPeer(
                 state: state,
                 environment: environment,
+                identity: did,
                 petname: petname
             )
         case .renamePeer(let from, let to):
@@ -2742,7 +2743,7 @@ struct AppModel: ModelProtocol {
                     preventOverwrite: true
                 )
                 .map({ _ in
-                    .succeedFollowPeer(petname)
+                    .succeedFollowPeer(identity, petname)
                 })
                 .recover { error in
                     .failFollowPeer(
@@ -2770,6 +2771,7 @@ struct AppModel: ModelProtocol {
     static func succeedFollowPeer(
         state: AppModel,
         environment: AppEnvironment,
+        identity: Did,
         petname: Petname
     ) -> Update<AppModel> {
         logger.log(

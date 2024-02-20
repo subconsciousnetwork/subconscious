@@ -24,47 +24,48 @@ struct DiscoverNavigationView: View {
     var body: some View {
         DetailStackView(app: app, store: detailStack) {
             ScrollView {
-                VStack(alignment: .leading) {
-                    ForEach(store.state.suggestions) { suggestion in
-                        StoryUserView(
-                            story: StoryUser(
-                                entry: AddressBookEntry(
-                                    petname: suggestion.neighbor.petname,
-                                    did: suggestion.neighbor.identity,
-                                    status: .resolved(""),
-                                    version: suggestion.neighbor.since ?? ""
-                                ),
-                                user: UserProfile(
-                                    did: suggestion.neighbor.identity,
-                                    nickname: suggestion.neighbor.nickname,
-                                    address: suggestion.neighbor.address,
-                                    pfp: .generated(
-                                        suggestion.neighbor.identity
-                                    ),
-                                    bio: suggestion.neighbor.bio,
-                                    category: .human,
-                                    ourFollowStatus: .notFollowing,
-                                    aliases: [suggestion.neighbor.address.petname].compactMap {
-                                        v in v
-                                    })
-                            ),
-                            action: { address in
-                                detailStack.send(
-                                    .pushDetail(
-                                        .profile(
-                                            UserProfileDetailDescription(
-                                                address: address
+                VStack {
+                    switch store.state.loadingStatus {
+                    case .loading:
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    case .loaded:
+                        VStack(alignment: .leading) {
+                            ForEach(store.state.suggestions) { suggestion in
+                                DiscoverUserView(
+                                    suggestion: suggestion,
+                                    action: { address in
+                                        detailStack.send(
+                                            .pushDetail(
+                                                .profile(
+                                                    UserProfileDetailDescription(
+                                                        address: address
+                                                    )
+                                                )
                                             )
                                         )
-                                    )
+                                    },
+                                    pendingFollow: store.state.pendingFollows.contains(where: { pending in
+                                        pending == suggestion.neighbor
+                                    }),
+                                    onFollow: { neighbor in
+                                        store.send(.requestFollowNeighbor(neighbor))
+                                    }
                                 )
-                            })
+                            }
+                        }
+                        .padding(AppTheme.padding)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case .notFound:
+                        NotFoundView()
                     }
                 }
             }
-            .padding(AppTheme.padding)
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .navigationTitle("Discover")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 MainToolbar(
                     app: app

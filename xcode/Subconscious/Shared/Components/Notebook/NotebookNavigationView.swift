@@ -102,6 +102,7 @@ struct NotebookNavigationView: View {
                         }
                     }
                 }
+                .ignoresSafeArea(.keyboard, edges: .bottom)
                 .navigationTitle("Notes")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
