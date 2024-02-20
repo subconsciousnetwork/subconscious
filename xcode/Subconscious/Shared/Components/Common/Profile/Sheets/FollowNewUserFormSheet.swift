@@ -65,6 +65,29 @@ struct FollowNewUserFormSheetView: View {
                         )
                     }
                     
+                    Section(header: Text("Suggestions")) {
+                        ForEach(store.state.suggestions, id: \.identity) { suggestion in
+                            Button(
+                                action: {
+                                    store.send(.requestFollowSuggestion(suggestion))
+                                },
+                                label: {
+                                    VStack(alignment: .leading) {
+                                        PetnameView(
+                                            name: .unknown(
+                                                suggestion.address,
+                                                suggestion.name
+                                            ),
+                                            aliases: []
+                                        )
+                                        Text("\(suggestion.identity.description)")
+                                            .font(.caption.monospaced())
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    
                     if let did = store.state.did {
                         Section(header: Text("Your DID")) {
                             DidView(did: did)
@@ -75,22 +98,6 @@ struct FollowNewUserFormSheetView: View {
                         }
                     }
                     
-                    Section(header: Text("Suggestions")) {
-                        VStack(alignment: .leading) {
-                            ForEach(store.state.suggestions, id: \.identity) { suggestion in
-                                VStack(alignment: .leading) {
-                                    PetnameView(
-                                        name: .known(
-                                            suggestion.address,
-                                            suggestion.petname.root
-                                        ),
-                                        aliases: [suggestion.address.petname].compactMap { v in v }
-                                    )
-                                    Divider()
-                                }
-                            }
-                        }
-                    }
                 }
                 .navigationTitle("Follow User")
                 .toolbar {
@@ -150,6 +157,8 @@ enum FollowNewUserFormSheetAction: Equatable {
     
     case attemptFollow
     case dismissSheet
+    
+    case requestFollowSuggestion(_ neighbor: NeighborRecord)
     
     case refreshSuggestions
     case succeedRefreshSuggestions(_ suggestions: [NeighborRecord])
@@ -314,6 +323,17 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         case let .failRefreshSuggestions(error):
             logger.warning("Failed to refresh suggestions: \(error)")
             return Update(state: state)
+        case let .requestFollowSuggestion(neighbor):
+            return update(
+                state: state,
+                actions: [
+                    .form(.didField(.reset)),
+                    .form(.petnameField(.reset)),
+                    .form(.didField(.setValue(input: neighbor.identity.description))),
+                    .form(.petnameField(.setValue(input: neighbor.name.description)))
+                ],
+                environment: environment
+            )
         }
     }
     

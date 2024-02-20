@@ -17,5 +17,9 @@ struct NeighborRecord: Hashable, Identifiable {
     var bio: UserProfileBio?
     var peer: Petname
     var since: Cid?
+    
+    var name: Petname.Name {
+        nickname ?? petname.root
+    }
 }
 

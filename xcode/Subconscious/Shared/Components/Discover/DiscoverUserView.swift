@@ -28,8 +28,7 @@ struct DiscoverUserView: View {
                     HStack(spacing: AppTheme.unit2) {
                         ProfilePic(pfp: .generated(suggestion.neighbor.identity), size: .medium)
                         
-                        let name = suggestion.neighbor.nickname ?? suggestion.neighbor.petname.root
-                        Text("\(name.description)")
+                        Text("\(suggestion.neighbor.name.description)")
                             .italic()
                             .fontWeight(.medium)
                     }
