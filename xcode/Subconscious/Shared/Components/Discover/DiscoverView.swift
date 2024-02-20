@@ -10,6 +10,13 @@ import SwiftUI
 import ObservableStore
 import Combine
 
+struct UserDiscoverySuggestion: Equatable, Hashable, Identifiable {
+    var id: String { neighbor.id }
+    
+    var neighbor: NeighborRecord
+    var followedBy: [PeerRecord]
+}
+
 struct DiscoverView: View {
     @ObservedObject var app: Store<AppModel>
     @StateObject var store: Store<DiscoverModel> = Store(
@@ -87,7 +94,7 @@ enum DiscoverAction: Hashable {
     case appear
     
     case refreshSuggestions
-    case succeedRefreshSuggestions(_ suggestions: [AssociateRecord])
+    case succeedRefreshSuggestions(_ suggestions: [UserDiscoverySuggestion])
     case failRefreshSuggestions(_ error: String)
     
     /// Note lifecycle events.
@@ -242,7 +249,7 @@ struct DiscoverModel: ModelProtocol {
     )
     
     var detailStack = DetailStackModel()
-    var suggestions: [AssociateRecord] = []
+    var suggestions: [UserDiscoverySuggestion] = []
     
     var loadingStatus: LoadingState = .loading
     
@@ -423,8 +430,17 @@ struct DiscoverModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
-            let suggestions = try environment.database.listAssociates()
-            return .succeedRefreshSuggestions(suggestions)
+            let neighbors = try environment.database.listNeighbors()
+            
+            return .succeedRefreshSuggestions(try neighbors.map { suggestion in
+                let followedBy = try environment.database.listPeersFollowingNeighbor(
+                    neighborIdentity: suggestion.identity
+                )
+                return UserDiscoverySuggestion(
+                    neighbor: suggestion,
+                    followedBy: followedBy
+                )
+            })
         }
         .recover { error in
             .failRefreshSuggestions(error.localizedDescription)
@@ -437,7 +453,7 @@ struct DiscoverModel: ModelProtocol {
     static func succeedRefreshSuggestions(
         state: Self,
         environment: Environment,
-        suggestions: [AssociateRecord]
+        suggestions: [UserDiscoverySuggestion]
     ) -> Update<Self> {
         var model = state
         model.suggestions = suggestions

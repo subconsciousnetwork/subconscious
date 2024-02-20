@@ -294,19 +294,56 @@ final class DatabaseService {
         })
     }
     
-    /// List all peers in database
-    func listAssociates() throws -> [AssociateRecord] {
+    func listPeersFollowingNeighbor(neighborIdentity: Did) throws -> [PeerRecord] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         return try database.execute(
             sql: """
-            SELECT a.petname, a.did, a.address, a.peer, a.since
-            FROM associate a
-            LEFT JOIN peer p ON a.did = p.did
+            SELECT DISTINCT p.petname, p.did, p.since
+            FROM neighbor n
+            INNER JOIN peer p ON n.peer = p.petname
+            WHERE n.did = ?;
+            """,
+            parameters: [
+                .text(neighborIdentity.description)
+            ]
+        ).map({
+            row in
+            guard let petname = row.col(0)?.toString()?.toPetname() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode petname from row"
+                )
+            }
+            guard let identity = row.col(1)?.toString()?.toDid() else {
+                throw CodingError.decodingError(
+                    message: "Failed to decode did from row"
+                )
+            }
+            
+            let since = row.col(2)?.toString()
+            
+            return PeerRecord(
+                petname: petname,
+                identity: identity,
+                since: since
+            )
+        })
+    }
+    
+    /// List all peers in database
+    func listNeighbors() throws -> [NeighborRecord] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        return try database.execute(
+            sql: """
+            SELECT n.petname, n.did, n.address, n.nickname, n.bio, n.peer, n.since
+            FROM neighbor n
+            LEFT JOIN peer p ON n.did = p.did
             WHERE p.did IS NULL
-            AND a.since IS NOT NULL
-            GROUP BY a.did
+            AND n.since IS NOT NULL
+            GROUP BY n.did
             ORDER BY count(*) DESC;
             """
         ).map({ row in
@@ -323,16 +360,20 @@ final class DatabaseService {
             guard let address = row.col(2)?.toString()?.toSlashlink() else {
                 throw CodingError.decodingError(message: "Failed to decode address from row")
             }
-            guard let peer = row.col(3)?.toString()?.toPetname() else {
+            let nickname = row.col(3)?.toString()?.toPetname()?.root
+            let bio = UserProfileBio(row.col(4)?.toString() ?? "")
+            guard let peer = row.col(5)?.toString()?.toPetname() else {
                 throw CodingError.decodingError(message: "Failed to decode peer from row")
             }
             
-            let since = row.col(4)?.toString()
+            let since = row.col(6)?.toString()
             
-            return AssociateRecord(
+            return NeighborRecord(
                 petname: petname,
                 identity: identity,
                 address: address,
+                nickname: nickname,
+                bio: bio,
                 peer: peer,
                 since: since
             )
@@ -411,27 +452,31 @@ final class DatabaseService {
         )
     }
     
-    func writeAssociate(
-        _ record: AssociateRecord
+    func writeNeighbor(
+        _ record: NeighborRecord
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO associate (
+            INSERT OR REPLACE INTO neighbor (
                 petname,
                 did,
                 address,
+                nickname,
+                bio,
                 peer,
                 since
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             parameters: [
                 .text(record.petname.description),
                 .text(record.identity.description),
                 .text(record.address.description),
+                .text(record.nickname?.description),
+                .text(record.bio?.text),
                 .text(record.peer.description),
                 .text(record.since?.description),
             ]
@@ -1785,15 +1830,17 @@ extension Config {
             """
         ),
         SQLMigration(
-            version: Int.from(iso8601String: "2024-02-16T11:59:03")!,
+            version: Int.from(iso8601String: "2024-02-20T11:59:00")!,
             sql: """
-            /* Tracks peers of peers AKA associates */
-            CREATE TABLE associate
+            /* Tracks peers of peers AKA neighbors */
+            CREATE TABLE neighbor
             (
                 id       INTEGER PRIMARY KEY AUTOINCREMENT,
                 petname  TEXT                           NOT NULL,
                 did      TEXT                           NOT NULL,
                 address  TEXT                           NOT NULL,
+                nickname TEXT                           DEFAULT NULL,
+                bio      TEXT                           DEFAULT NULL,
                 peer     TEXT                           NOT NULL,
                 since    TEXT                           DEFAULT NULL
             );

@@ -197,16 +197,23 @@ actor DataService {
 //                        petname: petname
 //                    ))
                     break
-                case let .update(associate):
-                    if let address = petname.join(petname: associate.petname) {
-                        let associate = AssociateRecord(
-                            petname: associate.petname,
-                            identity: associate.identity,
+                case let .update(neighbor):
+                    if let address = petname.join(petname: neighbor.petname) {
+                        guard let sphere = try? await noosphere.traverse(petname: address) else {
+                            continue
+                        }
+                        let profile = await userProfile.readProfileMemo(sphere: sphere)
+                        
+                        let neighbor = NeighborRecord(
+                            petname: neighbor.petname,
+                            identity: neighbor.identity,
                             address: Slashlink(petname: address),
+                            nickname: Petname.Name(profile?.nickname ?? ""),
+                            bio: UserProfileBio(profile?.bio ?? ""),
                             peer: petname,
-                            since: associate.version
+                            since: neighbor.version
                         )
-                        try database.writeAssociate(associate)
+                        try database.writeNeighbor(neighbor)
                     }
                 }
             }

@@ -154,7 +154,7 @@
 		B5D71D1A2A32B2AF000E058A /* NotFoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D71D182A32B2AF000E058A /* NotFoundView.swift */; };
 		B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
 		B5D769CC29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
-		B5D7826A2B7F3AC500B230F9 /* AssociateRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D782692B7F3AC500B230F9 /* AssociateRecord.swift */; };
+		B5D7826A2B7F3AC500B230F9 /* NeighborRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D782692B7F3AC500B230F9 /* NeighborRecord.swift */; };
 		B5D8FEB72AAC426C002CBF00 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */; };
 		B5D8FEB82AAC426C002CBF00 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */; };
 		B5E07B322B0337A100F302EA /* Tests_UserProfileDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E07B312B0337A100F302EA /* Tests_UserProfileDetailModel.swift */; };
@@ -691,7 +691,7 @@
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
 		B5D71D182A32B2AF000E058A /* NotFoundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotFoundView.swift; sourceTree = "<group>"; };
 		B5D769CA29F770440015385A /* GenerativeProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerativeProfilePic.swift; sourceTree = "<group>"; };
-		B5D782692B7F3AC500B230F9 /* AssociateRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssociateRecord.swift; sourceTree = "<group>"; };
+		B5D782692B7F3AC500B230F9 /* NeighborRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeighborRecord.swift; sourceTree = "<group>"; };
 		B5D8D30029AF1F9B0011D820 /* Did.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Did.swift; sourceTree = "<group>"; };
 		B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		B5E07B312B0337A100F302EA /* Tests_UserProfileDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserProfileDetailModel.swift; sourceTree = "<group>"; };
@@ -1505,7 +1505,7 @@
 				B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */,
 				B8C80F0029FC201000BAC84D /* Peer.swift */,
 				B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */,
-				B5D782692B7F3AC500B230F9 /* AssociateRecord.swift */,
+				B5D782692B7F3AC500B230F9 /* NeighborRecord.swift */,
 				B8E2B02829AD0E23004A78B3 /* Petname.swift */,
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
 				B5CA6F402B5A5D5000877B0D /* AppendLinkSuggestion.swift */,
@@ -2460,7 +2460,7 @@
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */,
-				B5D7826A2B7F3AC500B230F9 /* AssociateRecord.swift in Sources */,
+				B5D7826A2B7F3AC500B230F9 /* NeighborRecord.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

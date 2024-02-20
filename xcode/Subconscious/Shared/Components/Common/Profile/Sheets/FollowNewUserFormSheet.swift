@@ -152,7 +152,7 @@ enum FollowNewUserFormSheetAction: Equatable {
     case dismissSheet
     
     case refreshSuggestions
-    case succeedRefreshSuggestions(_ suggestions: [AssociateRecord])
+    case succeedRefreshSuggestions(_ suggestions: [NeighborRecord])
     case failRefreshSuggestions(_ error: String)
 }
 
@@ -217,7 +217,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
     
     var did: Did? = nil
     var isQrCodeScannerPresented = false
-    var suggestions: [AssociateRecord] = []
+    var suggestions: [NeighborRecord] = []
     
     var form: FollowUserFormModel = FollowUserFormModel()
     
@@ -322,7 +322,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
-            let suggestions = try environment.database.listAssociates()
+            let suggestions = try environment.database.listNeighbors()
             return .succeedRefreshSuggestions(suggestions)
         }
         .recover { error in
@@ -336,7 +336,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
     static func succeedRefreshSuggestions(
         state: Self,
         environment: Environment,
-        suggestions: [AssociateRecord]
+        suggestions: [NeighborRecord]
     ) -> Update<Self> {
         var model = state
         model.suggestions = suggestions

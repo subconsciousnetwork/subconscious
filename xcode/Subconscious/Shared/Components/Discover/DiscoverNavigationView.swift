@@ -29,22 +29,22 @@ struct DiscoverNavigationView: View {
                         StoryUserView(
                             story: StoryUser(
                                 entry: AddressBookEntry(
-                                    petname: suggestion.petname,
-                                    did: suggestion.identity,
+                                    petname: suggestion.neighbor.petname,
+                                    did: suggestion.neighbor.identity,
                                     status: .resolved(""),
-                                    version: suggestion.since ?? ""
+                                    version: suggestion.neighbor.since ?? ""
                                 ),
                                 user: UserProfile(
-                                    did: suggestion.identity,
-                                    nickname: nil,
-                                    address: suggestion.address,
+                                    did: suggestion.neighbor.identity,
+                                    nickname: suggestion.neighbor.nickname,
+                                    address: suggestion.neighbor.address,
                                     pfp: .generated(
-                                        suggestion.identity
+                                        suggestion.neighbor.identity
                                     ),
-                                    bio: nil,
+                                    bio: suggestion.neighbor.bio,
                                     category: .human,
                                     ourFollowStatus: .notFollowing,
-                                    aliases: [suggestion.address.petname].compactMap {
+                                    aliases: [suggestion.neighbor.address.petname].compactMap {
                                         v in v
                                     })
                             ),
