@@ -1848,7 +1848,7 @@ extension Config {
             """
         ),
         SQLMigration(
-            version: Int.from(iso8601String: "2024-02-20T11:59:00")!,
+            version: Int.from(iso8601String: "2024-02-21T11:59:00")!,
             sql: """
             /* Tracks peers of peers AKA neighbors */
             CREATE TABLE neighbor
@@ -1862,6 +1862,9 @@ extension Config {
                 peer     TEXT                           NOT NULL,
                 since    TEXT                           DEFAULT NULL
             );
+            
+            /* Force re-indexing of peers */
+            UPDATE peer SET since = NULL;
             """
         )
     ])
