@@ -154,40 +154,65 @@ actor DataService {
         try database.savepoint(savepoint)
         
         do {
+            var toUpdate: [(Slug, Memo)] = []
+            var toRemove: [Slug] = []
             // Memos
             for change in changes {
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
                 // If memo does not exist, that means change was a remove.
+                
                 if let memo = try? await sphere.read(
                     slashlink: slashlink
                 ).toMemo() {
-                    try database.writeMemo(
-                        MemoRecord(
-                            did: identity,
-                            petname: petname,
-                            slug: change,
-                            memo: memo
-                        )
-                    )
-                    logger.log(
-                        "Indexed memo \(slashlink)",
-                        metadata: [
-                            "slashlink": slashlink.description
-                        ]
-                    )
+                    toUpdate.append((change, memo))
                 } else {
-                    logger.log(
-                        "Removed indexed memo \(slashlink)",
-                        metadata: [
-                            "slashlink": slashlink.description
-                        ]
-                    )
-                    try database.removeMemo(
-                        did: identity,
-                        slug: change
-                    )
+                    toRemove.append(change)
                 }
+            }
+            
+            await Task.yield()
+            
+            let records = try await withThrowingTaskGroup(of: MemoRecord.self) { group in
+                var records = [MemoRecord]()
+                
+                for (slug, memo) in toUpdate {
+                    group.addTask {
+                        // Each task attempts to instantiate a MemoRecord
+                        return try MemoRecord(did: identity, petname: petname, slug: slug, memo: memo)
+                    }
+                }
+                
+                // Collect the results
+                for try await record in group {
+                    records.append(record)
+                }
+                
+                return records
+            }
+            
+            for record in records {
+                try database.writeMemo(record)
+                logger.log(
+                    "Indexed memo \(record.slug)",
+                    metadata: [
+                        "slug": record.slug.description
+                    ]
+                )
+            }
+            
+            for slug in toRemove {
+                let slashlink = Slashlink(slug: slug)
+                try database.removeMemo(
+                    did: identity,
+                    slug: slug
+                )
+                logger.log(
+                    "Removed indexed memo \(slashlink)",
+                    metadata: [
+                        "slashlink": slashlink.description
+                    ]
+                )
             }
             
             for change in peerChanges {
@@ -215,6 +240,8 @@ actor DataService {
                         try database.writeNeighbor(neighbor)
                     }
                 }
+                
+                await Task.yield()
             }
             
             try database.writePeer(
