@@ -553,7 +553,7 @@ final class DatabaseService {
         return excerpt.data(using: .utf8)
     }
     
-    func listFeed(owner: Did) throws -> [EntryStub] {
+    func listAll(owner: Did, limit: Int = 1000) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -568,10 +568,11 @@ final class DatabaseService {
             WHERE did NOT IN (SELECT value FROM json_each(?))
                 AND substr(slug, 1, 1) != '_'
             ORDER BY modified DESC
-            LIMIT 1000
+            LIMIT ?
             """,
             parameters: [
-                .json(ignoredDids, or: "[]")
+                .json(ignoredDids, or: "[]"),
+                .integer(limit)
             ]
         )
         return try results.compactMap({ row in

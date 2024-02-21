@@ -77,6 +77,7 @@ struct AppView: View {
             )
         }
         .onAppear {
+            SentryIntegration.start()
             store.send(.appear)
         }
         // Track changes to scene phase so we know when app gets
