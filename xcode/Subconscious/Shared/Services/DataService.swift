@@ -292,48 +292,62 @@ actor DataService {
     }
     
     func indexPeers(petnames: [Petname]) async -> [PeerIndexResult] {
-        var results: [PeerIndexResult] = []
-        
-        for petname in petnames {
-            logger.log(
-                "Indexing peer",
-                metadata: [
-                    "petname": petname.description
-                ]
-            )
+        let results = await withTaskGroup(of: PeerIndexResult.self) { group in
+            var results: [PeerIndexResult] = []
+            for petname in petnames {
+                group.addTask {
+                    await self.logger.log(
+                        "Indexing peer",
+                        metadata: [
+                            "petname": petname.description
+                        ]
+                    )
+                    do {
+                        let (changeCount, peer) = try await self.indexPeer(
+                            petname: petname
+                        )
+                        return .success(
+                            PeerIndexSuccess(
+                                changeCount: changeCount,
+                                peer: peer
+                            )
+                        )
+                    } catch {
+                        return .failure(
+                            PeerIndexError(
+                                error: error.localizedDescription,
+                                petname: petname
+                            )
+                        )
+                    }
+                }
+            }
             
-            do {
-                let (changeCount, peer) = try await self.indexPeer(
-                    petname: petname
-                )
-                
-                results.append(.success(peer))
-                
-                try database.writeActivity(
+            // Collect the results
+            for await result in group {
+                results.append(result)
+            }
+            
+            return results
+        }
+        
+        for result in results {
+            switch result {
+            case let .success(result):
+                try? database.writeActivity(
                     event: ActivityEvent(
                         category: .system,
                         event: SucceedIndexPeerActivityEvent.event,
-                        message: "Found \(changeCount) updates from \(petname.markup)",
+                        message: "Found \(result.changeCount) updates from \(result.peer.petname.markup)",
                         metadata: SucceedIndexPeerActivityEvent(
-                            did: peer.identity.description,
-                            petname: petname.description,
-                            changes: changeCount
+                            did: result.peer.identity.description,
+                            petname: result.peer.petname.description,
+                            changes: result.changeCount
                         )
                     )
                 )
-                
-                // Give other tasks a chance to use noosphere, indexing many peers
-                // can take a long time and potentially block user actions
-                await Task.yield()
-            } catch {
-                results.append(
-                    PeerIndexResult.failure(
-                        PeerIndexError(
-                            error: error.localizedDescription,
-                            petname: petname
-                        )
-                    )
-                )
+            default:
+                break
             }
         }
         

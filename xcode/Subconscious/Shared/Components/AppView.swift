@@ -100,7 +100,12 @@ struct PeerIndexError: Error, Hashable {
     let petname: Petname
 }
 
-typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
+struct PeerIndexSuccess: Hashable {
+    let changeCount: Int
+    let peer: PeerRecord
+}
+
+typealias PeerIndexResult = Result<PeerIndexSuccess, PeerIndexError>
 
 // MARK: Action
 enum AppAction: Hashable {
@@ -2447,13 +2452,13 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         for result in results {
             switch (result) {
-            case .success(let peer):
+            case .success(let result):
                 logger.log(
                     "Indexed peer",
                     metadata: [
-                        "petname": peer.petname.description,
-                        "identity": peer.identity.description,
-                        "since": peer.since ?? "nil"
+                        "petname": result.peer.petname.description,
+                        "identity": result.peer.identity.description,
+                        "since": result.peer.since ?? "nil"
                     ]
                 )
                 break

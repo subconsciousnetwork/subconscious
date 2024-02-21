@@ -1192,7 +1192,7 @@ struct UserProfileDetailModel: ModelProtocol {
         // Check if we're in the list of successfully indexed peers
         let shouldRefresh = results.contains(where: { result in
             switch (result) {
-            case .success(let peer) where peer.identity == state.user?.did:
+            case .success(let result) where result.peer.identity == state.user?.did:
                 return true
             default:
                 return false
