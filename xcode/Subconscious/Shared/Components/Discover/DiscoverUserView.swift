@@ -16,6 +16,7 @@ struct DiscoverUserView: View {
     
     var pendingFollow: Bool = false
     var onFollow: (NeighborRecord) -> Void
+    var onUnfollow: (NeighborRecord) -> Void
     
     var body: some View {
         Button(
@@ -35,20 +36,20 @@ struct DiscoverUserView: View {
                     
                     Spacer()
                     
-                    if pendingFollow {
-                        ProgressView()
-                    } else {
-                        Button(
-                            action: {
+                    Button(
+                        action: {
+                            if pendingFollow {
+                                onUnfollow(suggestion.neighbor)
+                            } else {
                                 onFollow(suggestion.neighbor)
-                            },
-                            label: {
-                                Text("Follow")
-                                    .font(.caption)
                             }
-                        )
-                        .buttonStyle(DiscoverActionButtonStyle())
-                    }
+                        },
+                        label: {
+                            Text(pendingFollow ? "Unfollow" : "Follow")
+                                .font(.caption)
+                        }
+                    )
+                    .buttonStyle(DiscoverActionButtonStyle())
                 }
                 .padding(
                     EdgeInsets(
@@ -106,7 +107,8 @@ struct DiscoverUserView_Previews: PreviewProvider {
                     followedBy: []
                 ),
                 action: { _ in },
-                onFollow: { _ in }
+                onFollow: { _ in },
+                onUnfollow: { _ in }
             )
             
             Spacer()

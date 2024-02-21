@@ -98,6 +98,7 @@ enum DiscoverAction: Hashable {
     case failRefreshSuggestions(_ error: String)
     
     case requestFollowNeighbor(_ neighbor: NeighborRecord)
+    case requestUnfollowNeighbor(_ neighbor: NeighborRecord)
     
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
@@ -118,9 +119,6 @@ enum DiscoverAction: Hashable {
     case succeedAppendToEntry(_ address: Slashlink)
     case requestUpdateLikeStatus(Slashlink, liked: Bool)
     case succeedUpdateLikeStatus(_ address: Slashlink, liked: Bool)
-    
-    case succeedFollowPeer(_ identity: Did, _ petname: Petname)
-    case succeedUnfollowPeer(identity: Did, petname: Petname)
 }
 
 extension AppAction {
@@ -144,6 +142,11 @@ extension AppAction {
             return .setLiked(address: address, liked: liked)
         case let .requestFollowNeighbor(neighbor):
             return .followPeer(
+                identity: neighbor.identity,
+                petname: neighbor.petname
+            )
+        case let .requestUnfollowNeighbor(neighbor):
+            return .unfollowPeer(
                 identity: neighbor.identity,
                 petname: neighbor.petname
             )
@@ -174,12 +177,6 @@ extension DiscoverAction {
             return .succeedAppendToEntry(address)
         case let .succeedUpdateLikeStatus(address, liked):
             return .succeedUpdateLikeStatus(address, liked: liked)
-        case let .succeedFollowPeer(did, petname):
-            return .succeedFollowPeer(did, petname)
-        case let .succeedUnfollowPeer(identity, petname):
-            return .succeedUnfollowPeer(identity: identity, petname: petname)
-        case .succeedIndexOurSphere:
-            return .refreshSuggestions
         default:
             return nil
         }
@@ -398,30 +395,6 @@ struct DiscoverModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case let .succeedFollowPeer(did, _):
-            var model = state
-            model.suggestions = state.suggestions.filter { suggestion in
-                suggestion.neighbor.identity != did
-            }
-            model.pendingFollows = state.pendingFollows.filter { neighbor in
-                neighbor.identity != did
-            }
-            
-            return update(
-                state: state,
-                actions: [
-                    .refreshSuggestions,
-                ],
-                environment: environment
-            )
-        case .succeedUnfollowPeer:
-            return update(
-                state: state,
-                actions: [
-                    .refreshSuggestions,
-                ],
-                environment: environment
-            )
         case .refreshSuggestions:
             return refreshSuggestions(
                 state: state,
@@ -441,7 +414,10 @@ struct DiscoverModel: ModelProtocol {
         case let .requestFollowNeighbor(neighbor):
             var model = state
             model.pendingFollows.append(neighbor)
-            
+            return Update(state: model).animation(.easeOutCubic())
+        case let .requestUnfollowNeighbor(neighbor):
+            var model = state
+            model.pendingFollows.removeAll(where: { n in n == neighbor })
             return Update(state: model).animation(.easeOutCubic())
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,

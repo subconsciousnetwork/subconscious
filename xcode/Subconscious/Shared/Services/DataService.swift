@@ -192,8 +192,10 @@ actor DataService {
             
             for change in peerChanges {
                 switch change {
-                case let .remove(neighborPetname):
-                    try database.removeNeighbor(neighbor: neighborPetname, peer: petname)
+                case .remove:
+                    // We ignore removals for neighbors so that we can form a maximal
+                    // set of known contacts over all history to power discovery features.
+                    continue
                 case let .update(neighbor):
                     if let address = petname.join(petname: neighbor.petname) {
                         guard let sphere = try? await noosphere.traverse(petname: address) else {

@@ -51,6 +51,9 @@ struct DiscoverNavigationView: View {
                                     }),
                                     onFollow: { neighbor in
                                         store.send(.requestFollowNeighbor(neighbor))
+                                    },
+                                    onUnfollow: { neighbor in
+                                        store.send(.requestUnfollowNeighbor(neighbor))
                                     }
                                 )
                             }
