@@ -521,10 +521,12 @@ struct DeckModel: ModelProtocol {
                 let recent = try environment.database.listAll(owner: us, limit: 5)
                 let likes = try await environment.userLikes.readOurLikes()
                 
-                var initialDraw = Array(recent
-                    .prefix(5) // take the 10 most recent posts
-                    .shuffled() // shuffle
-                    .prefix(2))
+                var initialDraw = Array(
+                    recent
+                        .prefix(5)
+                        .shuffled()
+                        .prefix(2)
+                )
             
                 if let entry = environment.database.readRandomEntry(owner: us) {
                     initialDraw.append(entry)
