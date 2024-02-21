@@ -171,13 +171,11 @@ actor DataService {
                 }
             }
             
-            await Task.yield()
-            
             let records = try await withThrowingTaskGroup(of: MemoRecord.self) { group in
                 var records = [MemoRecord]()
                 
                 for (slug, memo) in toUpdate {
-                    group.addTask {
+                    group.addTask(priority: .background) {
                         // Each task attempts to instantiate a MemoRecord
                         return try MemoRecord(did: identity, petname: petname, slug: slug, memo: memo)
                     }
@@ -190,6 +188,8 @@ actor DataService {
                 
                 return records
             }
+            
+            await Task.yield()
             
             for record in records {
                 try database.writeMemo(record)
@@ -295,7 +295,7 @@ actor DataService {
         let results = await withTaskGroup(of: PeerIndexResult.self) { group in
             var results: [PeerIndexResult] = []
             for petname in petnames {
-                group.addTask {
+                group.addTask(priority: .background) {
                     await self.logger.log(
                         "Indexing peer",
                         metadata: [
