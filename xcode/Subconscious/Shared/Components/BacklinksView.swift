@@ -30,7 +30,7 @@ struct BacklinksView: View {
                             .buttonStyle(RelatedNoteButtonStyle(color: entry.color))
                         }
                         .tint(
-                            entry.headers.themeColor?.toHighlightColor()
+                            entry.highlightColor
                         )
                     }
                 }
