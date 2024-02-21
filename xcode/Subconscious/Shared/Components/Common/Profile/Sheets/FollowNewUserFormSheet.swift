@@ -72,16 +72,15 @@ struct FollowNewUserFormSheetView: View {
                                     store.send(.requestFollowSuggestion(suggestion))
                                 },
                                 label: {
-                                    VStack(alignment: .leading) {
-                                        PetnameView(
-                                            name: .unknown(
-                                                suggestion.address,
-                                                suggestion.name
-                                            ),
-                                            aliases: []
+                                    HStack(spacing: AppTheme.unit2) {
+                                        ProfilePic(
+                                            pfp: .generated(suggestion.identity),
+                                            size: .small
                                         )
-                                        Text("\(suggestion.identity.description)")
-                                            .font(.caption.monospaced())
+                                        
+                                        Text("\(suggestion.name.description)")
+                                            .italic()
+                                            .fontWeight(.medium)
                                     }
                                 }
                             )
