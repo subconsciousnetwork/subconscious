@@ -262,7 +262,6 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .form(.didField(.reset)),
                     .form(.didField(.setValue(input: content)))
                 ],
                 environment: environment
@@ -326,8 +325,6 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .form(.didField(.reset)),
-                    .form(.petnameField(.reset)),
                     .form(.didField(.setValue(input: neighbor.identity.description))),
                     .form(.petnameField(.setValue(input: neighbor.name.description)))
                 ],
