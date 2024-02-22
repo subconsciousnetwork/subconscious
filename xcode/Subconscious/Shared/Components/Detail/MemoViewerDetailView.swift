@@ -39,31 +39,36 @@ struct MemoViewerDetailView: View {
     }
     
     var body: some View {
-        VStack {
-            switch store.state.loadingState {
-            case .loading:
-                MemoViewerDetailLoadingView(
-                    notify: notify
-                )
+        ZStack {
+            VStack { }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .loaded:
-                MemoViewerDetailLoadedView(
-                    store: store,
-                    address: description.address,
-                    notify: notify
-                )
-            case .notFound:
-                MemoViewerDetailNotFoundView(
-                    backlinks: store.state.backlinks,
-                    notify: notify
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .modifier(AppThemeBackgroundViewModifier())
+            
+            VStack {
+                switch store.state.loadingState {
+                case .loading:
+                    MemoViewerDetailLoadingView(
+                        notify: notify
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                case .loaded:
+                    MemoViewerDetailLoadedView(
+                        store: store,
+                        address: description.address,
+                        notify: notify
+                    )
+                case .notFound:
+                    MemoViewerDetailNotFoundView(
+                        backlinks: store.state.backlinks,
+                        notify: notify
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
         }
         .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .modifier(AppThemeBackgroundViewModifier())
         .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
@@ -76,7 +81,9 @@ struct MemoViewerDetailView: View {
             )
         })
         .onAppear {
-            store.send(.appear(description))
+            Task {
+                store.send(.appear(description))
+            }
         }
         .onReceive(
             store.actions.compactMap(MemoViewerDetailNotification.from),

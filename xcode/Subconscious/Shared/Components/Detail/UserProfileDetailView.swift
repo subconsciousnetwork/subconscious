@@ -34,32 +34,48 @@ struct UserProfileDetailView: View {
     var notify: (UserProfileDetailNotification) -> Void
     
     var body: some View {
-        UserProfileView(
-            app: app,
-            store: store,
-            notify: notify
-        )
-        .onAppear {
-            // When an editor is presented, refresh if stale.
-            // This covers the case where the editor might have been in the
-            // background for a while, and the content changed in another tab.
-            store.send(
-                UserProfileDetailAction.appear(
-                    description.address,
-                    description.initialTabIndex
-                )
+        ZStack {
+            VStack { }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .modifier(AppThemeBackgroundViewModifier())
+            
+            UserProfileView(
+                app: app,
+                store: store,
+                notify: notify
             )
+            .onAppear {
+                // When an editor is presented, refresh if stale.
+                // This covers the case where the editor might have been in the
+                // background for a while, and the content changed in another tab.
+                Task {
+                    store.send(
+                        UserProfileDetailAction.appear(
+                            description.address,
+                            description.initialTabIndex
+                        )
+                    )
+                }
+            }
+            .onReceive(
+                store.actions.compactMap(UserProfileDetailAction.toAppAction),
+                perform: { action in
+                    Task {
+                        app.send(action)
+                    }
+                }
+            )
+            .onReceive(
+                app.actions.compactMap(UserProfileDetailAction.from),
+                perform: { action in
+                    Task {
+                        store.send(action)
+                    }
+                }
+            )
+            .modifier(AppThemeToolbarViewModifier())
         }
-        .onReceive(
-            store.actions.compactMap(UserProfileDetailAction.toAppAction),
-            perform: app.send
-        )
-        .onReceive(
-            app.actions.compactMap(UserProfileDetailAction.from),
-            perform: store.send
-        )
-        .modifier(AppThemeBackgroundViewModifier())
-        .modifier(AppThemeToolbarViewModifier())
+       
     }
 }
 

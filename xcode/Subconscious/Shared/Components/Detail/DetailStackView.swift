@@ -23,9 +23,14 @@ struct DetailStackView<Root: View>: View {
                 tag: DetailStackAction.setDetails
             )
         ) {
-            root()
+            ZStack {
+                VStack { }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .modifier(AppThemeBackgroundViewModifier())
+                
+                root()
+            }
                 .modifier(AppThemeToolbarViewModifier())
-                .modifier(AppThemeBackgroundViewModifier())
                 .navigationDestination(
                     for: MemoDetailDescription.self
                 ) { detail in
