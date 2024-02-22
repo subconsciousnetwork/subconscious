@@ -1357,4 +1357,41 @@ class Tests_DatabaseService: XCTestCase {
         XCTAssertEqual(lastActivity.message, "test_message")
         XCTAssertEqual(lastActivity.metadata, TestMetadata(foo: "bar"))
     }
+    
+    func testWriteNeighbor() throws {
+        let peer = PeerRecord(petname: Petname.dummyData(), identity: Did.dummyData())
+        
+        let neighbor = NeighborRecord(
+            petname: Petname.dummyData(),
+            identity: Did.dummyData(),
+            address: Slashlink.dummyData(),
+            peer: peer.petname,
+            since: Cid.dummyDataShort()
+        )
+        let neighbor2 = NeighborRecord(
+            petname: Petname.dummyData(),
+            identity: Did.dummyData(),
+            address: Slashlink.dummyData(),
+            peer: peer.petname,
+            since: Cid.dummyDataShort()
+        )
+        
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        try service.writePeer(peer)
+        try service.writeNeighbor(neighbor)
+        try service.writeNeighbor(neighbor2)
+        
+        let results = try service.listNeighbors()
+        XCTAssertEqual(results.count, 2)
+        
+        try service.removeNeighbor(
+            neighbor: neighbor.petname,
+            peer: neighbor.peer
+        )
+        
+        let results2 = try service.listNeighbors()
+        XCTAssertEqual(results2.count, 1)
+    }
 }

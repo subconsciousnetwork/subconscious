@@ -137,6 +137,7 @@ actor DataService {
         // Get changes since the last time we indexed this peer,
         // or get all changes if this is the first time we've tried to index.
         let changes = try await sphere.changes(since: peer?.since)
+        let peerChanges = try await sphere.getPeerChanges(since: peer?.since)
         logger.log(
             "Indexing peer",
             metadata: [
@@ -144,7 +145,8 @@ actor DataService {
                 "identity": identity.description,
                 "version": version,
                 "since": peer?.since ?? "nil",
-                "changes": changes.count.description
+                "changes": changes.count.description,
+                "peerChanges": peerChanges.count.description,
             ]
         )
         
@@ -152,6 +154,7 @@ actor DataService {
         try database.savepoint(savepoint)
         
         do {
+            // Memos
             for change in changes {
                 let slashlink = Slashlink(slug: change)
                 // If memo does exist, write it to database.
@@ -186,6 +189,34 @@ actor DataService {
                     )
                 }
             }
+            
+            for change in peerChanges {
+                switch change {
+                case .remove:
+                    // We ignore removals for neighbors so that we can form a maximal
+                    // set of known contacts over all history to power discovery features.
+                    continue
+                case let .update(neighbor):
+                    if let address = petname.join(petname: neighbor.petname) {
+                        guard let sphere = try? await noosphere.traverse(petname: address) else {
+                            continue
+                        }
+                        let profile = await userProfile.readProfileMemo(sphere: sphere)
+                        
+                        let neighbor = NeighborRecord(
+                            petname: neighbor.petname,
+                            identity: neighbor.identity,
+                            address: Slashlink(petname: address),
+                            nickname: Petname.Name(profile?.nickname ?? ""),
+                            bio: UserProfileBio(profile?.bio ?? ""),
+                            peer: petname,
+                            since: neighbor.version
+                        )
+                        try database.writeNeighbor(neighbor)
+                    }
+                }
+            }
+            
             try database.writePeer(
                 PeerRecord(
                     petname: petname,
