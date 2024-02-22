@@ -166,24 +166,6 @@ struct SubtextAttributedStringRenderer {
         
         return markup
     }
-    
-    /// Render string to new-style SwiftUI AttributedString
-    /// You can use this to produce strings which can be rendered in
-    /// `Text` blocks.
-    func render(_ block: Subtext.Block) -> AttributedString {
-        var markup = AttributedString(block.span)
-        markup.font = .body
-        
-        renderAttributesOf(attributedString: &markup, block: block)
-        for inline in block.inline {
-            renderAttributesOf(
-                attributedString: &markup,
-                inline: inline
-            )
-        }
-        
-        return markup
-    }
 
     func renderAttributesOf(
         attributedString: inout AttributedString,
