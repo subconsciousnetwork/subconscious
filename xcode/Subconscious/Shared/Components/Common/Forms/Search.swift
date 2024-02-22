@@ -223,7 +223,7 @@ struct SearchModel: ModelProtocol {
 
         var model = state
         model.query = query
-        return Update(state: model, fx: fx)
+        return Update(state: model, fx: fx).animation(.default)
     }
 
     /// Handle suggestion tapped
@@ -316,7 +316,11 @@ struct SearchView: View {
                     placeholder: store.state.placeholder,
                     text: Binding(
                         get: { store.state.query },
-                        send: store.send,
+                        send: { action in
+                            Task {
+                                store.send(action)
+                            }
+                        },
                         tag: SearchAction.setQuery
                     ),
                     autofocus: true

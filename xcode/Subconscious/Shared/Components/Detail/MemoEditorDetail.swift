@@ -100,11 +100,13 @@ struct MemoEditorDetailView: View {
             )
         })
         .onAppear {
-            // When an editor is presented, refresh if stale.
-            // This covers the case where the editor might have been in the
-            // background for a while, and the content changed in another tab.
-            store.send(MemoEditorDetailAction.appear(description))
-            blockEditorStore.send(.appear(description))
+            Task {
+                // When an editor is presented, refresh if stale.
+                // This covers the case where the editor might have been in the
+                // background for a while, and the content changed in another tab.
+                store.send(MemoEditorDetailAction.appear(description))
+                blockEditorStore.send(.appear(description))
+            }
         }
         .onDisappear {
             store.send(MemoEditorDetailAction.disappear)
@@ -141,16 +143,24 @@ struct MemoEditorDetailView: View {
         .onReceive(
             store.actions.compactMap(MemoEditorDetailNotification.from)
         ) { action in
-            notify(action)
+            Task {
+                notify(action)
+            }
         }
         .onReceive(
             app.actions.compactMap(MemoEditorDetailAction.fromAppAction),
-            perform: store.send
+            perform: { action in
+                Task {
+                    store.send(action)
+                }
+            }
         )
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
-                send: store.send,
+                send: { action in
+                    Task { store.send(action )}
+                },
                 tag: MemoEditorDetailAction.presentMetaSheet
             )
         ) {
@@ -164,7 +174,9 @@ struct MemoEditorDetailView: View {
         .sheet(
             isPresented: Binding(
                 get: { store.state.isLinkSheetPresented },
-                send: store.send,
+                send: { action in
+                    Task { store.send(action )}
+                },
                 tag: MemoEditorDetailAction.setLinkSheetPresented
             )
         ) {
@@ -173,7 +185,9 @@ struct MemoEditorDetailView: View {
                 suggestions: store.state.linkSuggestions,
                 text: Binding(
                     get: { store.state.linkSearchText },
-                    send: store.send,
+                    send: { action in
+                        Task { store.send(action )}
+                    },
                     tag: MemoEditorDetailAction.setLinkSearch
                 ),
                 onCancel: {

@@ -13,7 +13,8 @@ struct AppThemeBackgroundViewModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
-                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
+                DeckTheme.darkBg
+//                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
             )
     }
 }

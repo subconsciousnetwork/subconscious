@@ -161,7 +161,9 @@ struct SettingsView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                app.send(.refreshSphereVersion)
+                Task {
+                    app.send(.refreshSphereVersion)
+                }
             }
         }
     }

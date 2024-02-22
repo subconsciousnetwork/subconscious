@@ -40,7 +40,9 @@ struct DeckView: View {
             PinTrailingBottom(
                 content: FABView(
                     action: {
-                        store.send(.setSearchPresented(true))
+                        Task {
+                            store.send(.setSearchPresented(true))
+                        }
                     }
                 )
                 .padding()
@@ -59,7 +61,9 @@ struct DeckView: View {
             .zIndex(3)
         }
         .onAppear {
-            store.send(.appear)
+            Task {
+                store.send(.appear)
+            }
         }
         .frame(maxWidth: .infinity)
         /// Replay some app actions on deck store

@@ -110,7 +110,9 @@ struct HomeProfileView: View {
             .zIndex(3)
         }
         .onAppear {
-            store.send(.appear)
+            Task {
+                store.send(.appear)
+            }
         }
         /// Replay some app actions on store
         .onReceive(

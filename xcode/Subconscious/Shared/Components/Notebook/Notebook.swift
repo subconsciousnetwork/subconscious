@@ -78,17 +78,27 @@ struct NotebookView: View {
             .zIndex(3)
         }
         .onAppear {
-            store.send(.appear)
+            Task {
+                store.send(.appear)
+            }
         }
         /// Replay some app actions on notebook store
         .onReceive(
             app.actions.compactMap(NotebookAction.from),
-            perform: store.send
+            perform: { action in
+                Task {
+                    store.send(action)
+                }
+            }
         )
         /// Replay select notebook actions on app
         .onReceive(
             store.actions.compactMap(AppAction.from),
-            perform: app.send
+            perform: { action in
+                Task {
+                    app.send(action)
+                }
+            }
         )
     }
 }
@@ -343,6 +353,8 @@ struct NotebookModel: ModelProtocol {
     var isDatabaseReady = false
     var isFabShowing = true
     
+    var loading = false
+    
     /// Search HUD
     var isSearchPresented = false
     var search = SearchModel(
@@ -451,7 +463,8 @@ struct NotebookModel: ModelProtocol {
         case let .setRecent(entries):
             var model = state
             model.recent = entries
-            return Update(state: model)
+            model.loading = false
+            return Update(state: model).animation(.default)
         case let .listRecentFailure(error):
             logger.warning(
                 "Failed to list recent entries: \(error)"
@@ -584,9 +597,9 @@ struct NotebookModel: ModelProtocol {
         
         return update(
             state: state,
-            action: .refreshLists,
+            actions: [],
             environment: environment
-        )
+        ).animation(.default)
     }
     
     /// View is ready
@@ -598,7 +611,7 @@ struct NotebookModel: ModelProtocol {
             state: state,
             action: .refreshLists,
             environment: environment
-        )
+        ).animation(.default)
     }
     
     /// Handle database state changes
@@ -640,8 +653,15 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
+        if state.loading {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.loading = true
+        
         return NotebookModel.update(
-            state: state,
+            state: model,
             actions: [
                 .search(.refreshSuggestions),
                 .countEntries,
@@ -649,7 +669,7 @@ struct NotebookModel: ModelProtocol {
                 .listRecent
             ],
             environment: environment
-        )
+        ).animation(.default)
     }
     
     /// Read entry count from db
@@ -666,7 +686,7 @@ struct NotebookModel: ModelProtocol {
                 NotebookAction.failEntryCount(error.localizedDescription)
             })
             .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        return Update(state: state, fx: fx).animation(.default)
     }
     
     /// Set entry count
@@ -677,7 +697,7 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         var model = state
         model.entryCount = count
-        return Update(state: model)
+        return Update(state: model).animation(.default)
     }
     
     static func listRecent(
@@ -696,7 +716,7 @@ struct NotebookModel: ModelProtocol {
                 )
             })
             .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        return Update(state: state, fx: fx).animation(.default)
     }
     
     static func confirmDelete(
@@ -942,7 +962,7 @@ struct NotebookModel: ModelProtocol {
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
         .eraseToAnyPublisher()
         
-        return update.mergeFx(fx)
+        return update.mergeFx(fx).animation(.default)
     }
     
     static func requestNotebookRoot(
@@ -958,7 +978,7 @@ struct NotebookModel: ModelProtocol {
             state: state,
             action: .setDetails([]),
             environment: environment
-        )
+        ).animation(.default)
     }
     
     static func refreshLikes(
@@ -974,7 +994,7 @@ struct NotebookModel: ModelProtocol {
         }
         .eraseToAnyPublisher()
         
-        return Update(state: state, fx: fx)
+        return Update(state: state, fx: fx).animation(.default)
     }
     
     static func succeedRefreshLikes(
