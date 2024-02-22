@@ -77,6 +77,11 @@ struct SubtextView: View {
                         block: renderable.block
                     ) {
                         Text(
+                            // TODO: this is extremely inefficient
+                            // We have already parsed the whole document as Subtext but
+                            // as part of rendering we will re-parse each block again.
+                            
+                            // This has a significant cost in list views.
                             Self.renderer.render(renderable.block.description)
                         )
                         .expandAlignedLeading()
