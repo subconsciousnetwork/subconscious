@@ -24,16 +24,17 @@ struct DetailStackView<Root: View>: View {
             )
         ) {
             ZStack {
-                VStack { }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .modifier(AppThemeBackgroundViewModifier())
+                AppThemeBackgroundView()
                 
                 root()
             }
-                .modifier(AppThemeToolbarViewModifier())
-                .navigationDestination(
-                    for: MemoDetailDescription.self
-                ) { detail in
+            .modifier(AppThemeToolbarViewModifier())
+            .navigationDestination(
+                for: MemoDetailDescription.self
+            ) { detail in
+                ZStack {
+                    AppThemeBackgroundView()
+                    
                     switch detail {
                     case .editor(let description):
                         MemoEditorDetailView(
@@ -64,6 +65,7 @@ struct DetailStackView<Root: View>: View {
                         )
                     }
                 }
+            }
         }
     }
 }

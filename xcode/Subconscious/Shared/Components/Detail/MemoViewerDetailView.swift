@@ -39,8 +39,6 @@ struct MemoViewerDetailView: View {
     }
     
     var body: some View {
-        ZStack {
-            VStack { }
         VStack {
             switch store.state.loadingState {
             case .loading, .initial:
@@ -60,7 +58,6 @@ struct MemoViewerDetailView: View {
                     notify: notify
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .modifier(AppThemeBackgroundViewModifier())
             }
         }
         .tint(store.state.themeColor?.toHighlightColor())
