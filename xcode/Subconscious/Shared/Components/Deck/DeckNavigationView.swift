@@ -57,7 +57,7 @@ struct DeckNavigationView: View {
         DetailStackView(app: app, store: detailStack) {
             VStack(alignment: .leading) {
                 switch store.state.loadingStatus {
-                case .loading:
+                case .loading, .initial:
                     VStack(alignment: .center) {
                         Spacer()
                         CardShuffleView()

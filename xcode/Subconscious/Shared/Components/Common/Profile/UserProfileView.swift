@@ -206,7 +206,7 @@ struct UserProfileView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 switch state.loadingState {
-                case .loading, .loaded:
+                case .loading, .loaded, .initial:
                     if let user = state.user {
                         UserProfileHeaderView(
                             user: user,

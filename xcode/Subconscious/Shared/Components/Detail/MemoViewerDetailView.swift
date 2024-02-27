@@ -41,29 +41,26 @@ struct MemoViewerDetailView: View {
     var body: some View {
         ZStack {
             VStack { }
+        VStack {
+            switch store.state.loadingState {
+            case .loading, .initial:
+                MemoViewerDetailLoadingView(
+                    notify: notify
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .loaded:
+                MemoViewerDetailLoadedView(
+                    store: store,
+                    address: description.address,
+                    notify: notify
+                )
+            case .notFound:
+                MemoViewerDetailNotFoundView(
+                    backlinks: store.state.backlinks,
+                    notify: notify
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .modifier(AppThemeBackgroundViewModifier())
-            
-            VStack {
-                switch store.state.loadingState {
-                case .loading:
-                    MemoViewerDetailLoadingView(
-                        notify: notify
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                case .loaded:
-                    MemoViewerDetailLoadedView(
-                        store: store,
-                        address: description.address,
-                        notify: notify
-                    )
-                case .notFound:
-                    MemoViewerDetailNotFoundView(
-                        backlinks: store.state.backlinks,
-                        notify: notify
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
             }
         }
         .tint(store.state.themeColor?.toHighlightColor())

@@ -654,6 +654,7 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
         if state.loading {
+            logger.log("Already refreshing, skip.")
             return Update(state: state)
         }
         

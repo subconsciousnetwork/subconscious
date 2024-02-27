@@ -267,7 +267,7 @@ struct DeckModel: ModelProtocol {
     
     var detailStack = DetailStackModel()
     
-    var loadingStatus: LoadingState = .loading
+    var loadingStatus: LoadingState = .initial
     
     /// Search HUD
     var isSearchPresented = false
@@ -515,6 +515,11 @@ struct DeckModel: ModelProtocol {
             state: Self,
             environment: Environment
         ) -> Update<Self> {
+            if state.loadingStatus == .loading {
+                logger.log("Already refreshing, skip.")
+                return Update(state: state)
+            }
+            
             var model = state
             model.loadingStatus = .loading
             
