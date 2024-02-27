@@ -84,10 +84,23 @@ struct Tape {
     /// Peek forward, and consume if substrings match
     mutating func consumeMatch(_ subsequence: Substring) -> Bool {
         if let endIndex = offset(by: subsequence.count) {
-            if rest[currentIndex..<endIndex] == subsequence {
-                self.currentIndex = endIndex
-                return true
-            }
+            var idxA = currentIndex
+            var idxB = subsequence.startIndex
+            
+            // iterating through both indices is MUCH faster than constructing and comparing
+            // a substring slice, especially since we get early exist on the first mismatched
+            // character.
+            repeat {
+                if rest[idxA] != subsequence[idxB] {
+                    return false
+                }
+                
+                idxA = rest.index(after: idxA)
+                idxB = subsequence.index(after: idxB)
+            } while idxB < subsequence.endIndex
+            
+            self.currentIndex = endIndex
+            return true
         }
         return false
     }
