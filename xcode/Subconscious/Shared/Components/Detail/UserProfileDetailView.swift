@@ -51,20 +51,20 @@ struct UserProfileDetailView: View {
                     )
                 )
             }
-            .onReceive(
-                store.actions.compactMap(UserProfileDetailAction.toAppAction),
-                perform: { action in
-                    Task {
-                        app.send(action)
-                    }
+        }
+        .onReceive(
+            store.actions.compactMap(UserProfileDetailAction.toAppAction),
+            perform: { action in
+                Task {
+                    app.send(action)
                 }
-            )
-            .onReceive(
-                app.actions.compactMap(UserProfileDetailAction.from),
-                perform: { action in
-                    Task {
-                        store.send(action)
-                    }
+            }
+        )
+        .onReceive(
+            app.actions.compactMap(UserProfileDetailAction.from),
+            perform: { action in
+                Task {
+                    store.send(action)
                 }
             }
         )

@@ -86,8 +86,10 @@ struct NotebookView: View {
         .onReceive(
             app.actions.compactMap(NotebookAction.from),
             perform: { action in
-                Task {
-                    store.send(action)
+                if app.state.selectedAppTab == .notebook || action == .ready {
+                    Task {
+                        store.send(action)
+                    }
                 }
             }
         )

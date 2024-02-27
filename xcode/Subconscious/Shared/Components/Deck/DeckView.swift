@@ -69,7 +69,11 @@ struct DeckView: View {
         /// Replay some app actions on deck store
         .onReceive(
             app.actions.compactMap(DeckAction.from),
-            perform: store.send
+            perform: { action in
+                if app.state.selectedAppTab == .deck {
+                    store.send(action)
+                }
+            }
         )
         /// Replay some deck actions on app store
         .onReceive(
