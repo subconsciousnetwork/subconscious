@@ -156,12 +156,10 @@ actor DataService {
         do {
             var toUpdate: [(Slug, Memo)] = []
             var toRemove: [Slug] = []
-            // Memos
+            
+            // MARK: Memo changes
             for change in changes {
                 let slashlink = Slashlink(slug: change)
-                // If memo does exist, write it to database.
-                // If memo does not exist, that means change was a remove.
-                
                 if let memo = try? await sphere.read(
                     slashlink: slashlink
                 ).toMemo() {
@@ -171,17 +169,23 @@ actor DataService {
                 }
             }
             
+            // MARK: MemoRecord Construction
+            // attempt parallelization of MemoRecord construction (Subtext parsing)
             let records = try await withThrowingTaskGroup(of: MemoRecord.self) { group in
                 var records = [MemoRecord]()
                 
                 for (slug, memo) in toUpdate {
                     group.addTask(priority: .background) {
-                        // Each task attempts to instantiate a MemoRecord
-                        return try MemoRecord(did: identity, petname: petname, slug: slug, memo: memo)
+                        // Each record parses subtext in the init()
+                        return try MemoRecord(
+                            did: identity,
+                            petname: petname,
+                            slug: slug,
+                            memo: memo
+                        )
                     }
                 }
                 
-                // Collect the results
                 for try await record in group {
                     records.append(record)
                 }
@@ -215,6 +219,7 @@ actor DataService {
                 )
             }
             
+            // MARK: Peer Changes
             for change in peerChanges {
                 switch change {
                 case .remove:
@@ -244,6 +249,7 @@ actor DataService {
                 await Task.yield()
             }
             
+            // MARK: Write Peer
             try database.writePeer(
                 PeerRecord(
                     petname: petname,
