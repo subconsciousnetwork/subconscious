@@ -100,7 +100,12 @@ struct PeerIndexError: Error, Hashable {
     let petname: Petname
 }
 
-typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
+struct PeerIndexSuccess: Hashable {
+    let changeCount: Int
+    let peer: PeerRecord
+}
+
+typealias PeerIndexResult = Result<PeerIndexSuccess, PeerIndexError>
 
 // MARK: Action
 enum AppAction: Hashable {
@@ -546,6 +551,12 @@ enum FirstRunStep: Hashable {
     case done
 }
 
+enum JobStatus {
+    case initial
+    case running
+    case finished
+}
+
 // MARK: Model
 struct AppModel: ModelProtocol {
     /// Has first run completed?
@@ -579,6 +590,7 @@ struct AppModel: ModelProtocol {
     var databaseMigrationStatus = ResourceStatus.initial
     var localSyncStatus = ResourceStatus.initial
     var sphereSyncStatus = ResourceStatus.initial
+    var indexingStatus = JobStatus.initial
     
     var isSyncAllResolved: Bool {
         databaseMigrationStatus.isResolved &&
@@ -2430,6 +2442,12 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         petnames: [Petname]
     ) -> Update<Self> {
+        if state.indexingStatus == .running {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.indexingStatus = .running
         
         let fx: Fx<Action> = Future.detached(priority: .background) {
             let results = await environment.data.indexPeers(petnames: petnames)
@@ -2437,7 +2455,7 @@ struct AppModel: ModelProtocol {
         }
         .eraseToAnyPublisher()
         
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
     
     static func completeIndexPeers(
@@ -2447,13 +2465,13 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         for result in results {
             switch (result) {
-            case .success(let peer):
+            case .success(let result):
                 logger.log(
                     "Indexed peer",
                     metadata: [
-                        "petname": peer.petname.description,
-                        "identity": peer.identity.description,
-                        "since": peer.since ?? "nil"
+                        "petname": result.peer.petname.description,
+                        "identity": result.peer.identity.description,
+                        "since": result.peer.since ?? "nil"
                     ]
                 )
                 break
@@ -2469,7 +2487,10 @@ struct AppModel: ModelProtocol {
             }
         }
         
-        return Update(state: state)
+        var model = state
+        model.indexingStatus = .finished
+        
+        return Update(state: model)
     }
     
     static func purgePeer(
