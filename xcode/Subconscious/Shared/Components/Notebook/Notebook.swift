@@ -348,7 +348,7 @@ struct NotebookModel: ModelProtocol {
     var isDatabaseReady = false
     var isFabShowing = true
     
-    var loading = false
+    var loadingStatus: LoadingState = .initial
     
     /// Search HUD
     var isSearchPresented = false
@@ -458,7 +458,7 @@ struct NotebookModel: ModelProtocol {
         case let .setRecent(entries):
             var model = state
             model.recent = entries
-            model.loading = false
+            model.loadingStatus = .loaded
             return Update(state: model).animation(.default)
         case let .listRecentFailure(error):
             logger.warning(
@@ -648,13 +648,13 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        if state.loading {
+        if state.loadingStatus == .loading {
             logger.log("Already refreshing, skip.")
             return Update(state: state)
         }
         
         var model = state
-        model.loading = true
+        model.loadingStatus = .loading
         
         return NotebookModel.update(
             state: model,
