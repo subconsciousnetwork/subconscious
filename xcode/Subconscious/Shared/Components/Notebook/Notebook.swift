@@ -592,7 +592,7 @@ struct NotebookModel: ModelProtocol {
         
         return update(
             state: state,
-            actions: [],
+            action: .refreshLists,
             environment: environment
         ).animation(.default)
     }
