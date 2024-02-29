@@ -82,12 +82,13 @@ struct NotebookView: View {
         }
         /// Replay some app actions on notebook store
         .onReceive(
-            app.actions.compactMap(NotebookAction.from),
-            perform: { action in
-                if app.state.selectedAppTab == .notebook || action == .ready {
-                    store.send(action)
-                }
-            }
+            app.actions
+                .compactMap(NotebookAction.from)
+                .filter { action in
+                    action == .ready
+                        || app.state.selectedAppTab == .notebook
+                },
+            perform: store.send
         )
         /// Replay select notebook actions on app
         .onReceive(

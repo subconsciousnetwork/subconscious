@@ -64,12 +64,10 @@ struct DeckView: View {
         .frame(maxWidth: .infinity)
         /// Replay some app actions on deck store
         .onReceive(
-            app.actions.compactMap(DeckAction.from),
-            perform: { action in
-                if app.state.selectedAppTab == .deck {
-                    store.send(action)
-                }
-            }
+            app.actions
+                .compactMap(DeckAction.from)
+                .filter({ _ in app.state.selectedAppTab == .deck }),
+            perform: store.send
         )
         /// Replay some deck actions on app store
         .onReceive(
