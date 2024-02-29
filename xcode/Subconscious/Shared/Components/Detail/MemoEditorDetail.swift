@@ -190,6 +190,7 @@ struct MemoEditorDetailView: View {
                 withExtension: "html",
                 subdirectory: "Assets/editor"
             ),
+            javaScript: #"alert('hello')"#,
             receiveMessage: { message in },
             showsHorizontalScrollIndicator: false,
             showsVerticalScrollIndicator: false,

@@ -75,6 +75,9 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
     /// is allowed to be loaded from. If you leave this empty, it will default
     /// to the parent directory of `url`.
     var origin: URL?
+    /// JavaScript to run in the context of the WebView.
+    /// You can use this to send data down.
+    var javaScript = ""
     /// Closure to receive post messages from JavaScript land
     var receiveMessage: (String) -> Void
     var showsHorizontalScrollIndicator = true
@@ -110,27 +113,8 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
         return webView
     }
 
-    @discardableResult
-    func load(webView: WKWebView, url: URL?) -> WKNavigation? {
-        guard let url = url else {
-            Self.logger.debug("No URL")
-            return nil
-        }
-        guard url.isFileURL else {
-            Self.logger.debug("Not a file URL. Use `WebViewRepresentable` to load remote resources")
-            return nil
-        }
-        let request = URLRequest(url: url)
-        Self.logger.info("Loading \(url)")
-        return webView.loadFileRequest(
-            request,
-            // Allow access to origin URL, or parent directory by default
-            allowingReadAccessTo: origin ?? url.deletingLastPathComponent()
-        )
-    }
-
     func updateUIView(_ webView: WKWebView, context: Context) {
-        load(webView: webView, url: url)
+        context.coordinator.update(webView)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -138,9 +122,18 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
     }
 
     class Coordinator: NSObject, WKScriptMessageHandler {
-        var view: LocalWebViewRepresentable
+        private static let logger = Logger(
+            subsystem: Config.default.rdns,
+            category: "LocalWebViewRepresentableCoordinator"
+        )
 
-        init(_ view: LocalWebViewRepresentable) {
+        var view: LocalWebViewRepresentable
+        private var url: URL?
+        private var javaScript = ""
+
+        init(
+            _ view: LocalWebViewRepresentable
+        ) {
             self.view = view
         }
         
@@ -148,6 +141,50 @@ struct LocalWebViewRepresentable: UIViewRepresentable {
             fatalError("init(coder:) has not been implemented")
         }
         
+        func update(_ webView: WKWebView) {
+            loadIfNeeded(webView: webView)
+            evaluateJavaScriptIfNeeded(webView: webView)
+        }
+
+        @discardableResult
+        func loadIfNeeded(webView: WKWebView) -> WKNavigation? {
+            // Already loaded. Skip.
+            guard self.url != self.view.url else {
+                Self.logger.debug("URL already loaded. Skipping")
+                return nil
+            }
+            guard let url = view.url else {
+                Self.logger.debug("No URL")
+                return nil
+            }
+            guard url.isFileURL else {
+                Self.logger.debug("Not a file URL. Use `WebViewRepresentable` to load remote resources")
+                return nil
+            }
+            // Update coordinator state
+            self.url = url
+            let request = URLRequest(url: url)
+            Self.logger.info("Loading \(url)")
+            return webView.loadFileRequest(
+                request,
+                // Allow access to origin URL, or parent directory by default
+                allowingReadAccessTo:
+                    view.origin ?? url.deletingLastPathComponent()
+            )
+        }
+
+        func evaluateJavaScriptIfNeeded(webView: WKWebView) {
+            guard self.view.javaScript != "" else {
+                return
+            }
+            guard self.javaScript != self.view.javaScript else {
+                return
+            }
+            self.javaScript = self.view.javaScript
+            webView.evaluateJavaScript(self.javaScript)
+            Self.logger.info("Evaluated JavaScript")
+        }
+
         func userContentController(
             _ userContentController: WKUserContentController,
             didReceive message: WKScriptMessage
