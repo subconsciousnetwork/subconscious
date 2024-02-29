@@ -23,11 +23,7 @@ struct AppTabView: View {
         TabView(
             selection: Binding(
                 get: { store.state.selectedAppTab },
-                send: { action in
-                    Task {
-                        store.send(action)
-                    }
-                },
+                send: store.send,
                 tag: AppAction.setSelectedAppTab
             )
         ) {

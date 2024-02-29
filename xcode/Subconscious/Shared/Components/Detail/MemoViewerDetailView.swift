@@ -75,9 +75,7 @@ struct MemoViewerDetailView: View {
             )
         })
         .onAppear {
-            Task {
-                store.send(.appear(description))
-            }
+            store.send(.appear(description))
         }
         .onReceive(
             store.actions.compactMap(MemoViewerDetailNotification.from),

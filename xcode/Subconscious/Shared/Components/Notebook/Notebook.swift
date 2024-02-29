@@ -78,29 +78,21 @@ struct NotebookView: View {
             .zIndex(3)
         }
         .onAppear {
-            Task {
-                store.send(.appear)
-            }
+            store.send(.appear)
         }
         /// Replay some app actions on notebook store
         .onReceive(
             app.actions.compactMap(NotebookAction.from),
             perform: { action in
                 if app.state.selectedAppTab == .notebook || action == .ready {
-                    Task {
-                        store.send(action)
-                    }
+                    store.send(action)
                 }
             }
         )
         /// Replay select notebook actions on app
         .onReceive(
             store.actions.compactMap(AppAction.from),
-            perform: { action in
-                Task {
-                    app.send(action)
-                }
-            }
+            perform: app.send
         )
     }
 }

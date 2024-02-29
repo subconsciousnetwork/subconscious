@@ -165,9 +165,7 @@ struct AuthorizationSettingsView: View {
         }
         .navigationTitle("Authorization Settings")
         .onAppear {
-            Task {
-                app.send(.authorization(.appear))
-            }
+            app.send(.authorization(.appear))
         }
         .onReceive(app.actions) { action in
             switch action {

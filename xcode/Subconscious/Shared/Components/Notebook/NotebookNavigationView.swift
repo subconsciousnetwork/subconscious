@@ -86,9 +86,7 @@ struct NotebookNavigationView: View {
                         "Are you sure you want to delete this note?",
                         isPresented: Binding(
                             get: { store.state.isConfirmDeleteShowing },
-                            send: { action in
-                                Task { store.send(action )}
-                            },
+                            send: store.send,
                             tag: NotebookAction.setConfirmDeleteShowing
                         ),
                         titleVisibility: .visible,

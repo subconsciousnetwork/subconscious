@@ -43,30 +43,20 @@ struct UserProfileDetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            Task {
-                store.send(
-                    UserProfileDetailAction.appear(
-                        description.address,
-                        description.initialTabIndex
-                    )
+            store.send(
+                UserProfileDetailAction.appear(
+                    description.address,
+                    description.initialTabIndex
                 )
-            }
+            )
         }
         .onReceive(
             store.actions.compactMap(UserProfileDetailAction.toAppAction),
-            perform: { action in
-                Task {
-                    app.send(action)
-                }
-            }
+            perform: app.send
         )
         .onReceive(
             app.actions.compactMap(UserProfileDetailAction.from),
-            perform: { action in
-                Task {
-                    store.send(action)
-                }
-            }
+            perform: store.send
         )
         .modifier(AppThemeToolbarViewModifier())
     }

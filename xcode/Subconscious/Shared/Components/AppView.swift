@@ -35,9 +35,7 @@ struct AppView: View {
                 AppUpgradeView(
                     state: store.state.appUpgrade,
                     send: Address.forward(
-                        send: { action in
-                            Task { store.send(action )}
-                        },
+                        send: store.send,
                         tag: AppUpgradeCursor.tag
                     )
                 )
@@ -58,9 +56,7 @@ struct AppView: View {
         .sheet(
             isPresented: Binding(
                 get: { store.state.isSettingsSheetPresented },
-                send: { action in
-                    Task { store.send(action )}
-                },
+                send: store.send,
                 tag: AppAction.presentSettingsSheet
             )
         ) {
@@ -81,19 +77,15 @@ struct AppView: View {
             )
         }
         .onAppear {
-            Task {
-                SentryIntegration.start()
-                store.send(.appear)
-            }
+            SentryIntegration.start()
+            store.send(.appear)
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
         // 2023-02-16 Gordon Brander
         .onChange(of: self.scenePhase) { phase in
-            Task {
-                store.send(.scenePhaseChange(phase))
-            }
+            store.send(.scenePhaseChange(phase))
         }
     }
 }
