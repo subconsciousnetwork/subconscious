@@ -332,10 +332,11 @@ final class DatabaseService {
     }
     
     /// List all peers in database
-    func listNeighbors() throws -> [NeighborRecord] {
+    func listNeighbors(owner: Did) throws -> [NeighborRecord] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
+        let dids = [owner.description]
         return try database.execute(
             sql: """
             SELECT n.petname, n.did, n.address, n.nickname, n.bio, n.peer, n.since
@@ -343,9 +344,11 @@ final class DatabaseService {
             LEFT JOIN peer p ON n.did = p.did
             WHERE p.did IS NULL
             AND n.since IS NOT NULL
+            AND n.did NOT IN (SELECT value FROM json_each(?))
             GROUP BY n.did
             ORDER BY count(*) DESC;
-            """
+            """,
+            parameters: [.json(dids, or: "[]")]
         ).map({ row in
             guard let petname = row.col(0)?.toString()?.toPetname() else {
                 throw CodingError.decodingError(

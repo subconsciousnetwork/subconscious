@@ -453,7 +453,8 @@ struct DiscoverModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
-            let neighbors = try environment.database.listNeighbors()
+            let identity = try await environment.noosphere.identity()
+            let neighbors = try environment.database.listNeighbors(owner: identity)
             
             return .succeedRefreshSuggestions(try neighbors.map { suggestion in
                 let followedBy = try environment.database.listPeersFollowingNeighbor(
