@@ -1359,6 +1359,7 @@ class Tests_DatabaseService: XCTestCase {
     }
     
     func testWriteNeighbor() throws {
+        let identity = Did.dummyData()
         let peer = PeerRecord(petname: Petname.dummyData(), identity: Did.dummyData())
         
         let neighbor = NeighborRecord(
@@ -1383,7 +1384,7 @@ class Tests_DatabaseService: XCTestCase {
         try service.writeNeighbor(neighbor)
         try service.writeNeighbor(neighbor2)
         
-        let results = try service.listNeighbors()
+        let results = try service.listNeighbors(owner: identity)
         XCTAssertEqual(results.count, 2)
         
         try service.removeNeighbor(
@@ -1391,7 +1392,40 @@ class Tests_DatabaseService: XCTestCase {
             peer: neighbor.peer
         )
         
-        let results2 = try service.listNeighbors()
+        let results2 = try service.listNeighbors(owner: identity)
         XCTAssertEqual(results2.count, 1)
+    }
+    
+    func testExcludesSelfFromNeighbors() throws {
+        let identity = Did.dummyData()
+        let peer = PeerRecord(petname: Petname.dummyData(), identity: Did.dummyData())
+        
+        let neighbor = NeighborRecord(
+            petname: Petname.dummyData(),
+            identity: Did.dummyData(),
+            address: Slashlink.dummyData(),
+            peer: peer.petname,
+            since: Cid.dummyDataShort()
+        )
+        let neighbor2 = NeighborRecord(
+            petname: Petname.dummyData(),
+            identity: identity,
+            address: Slashlink.dummyData(),
+            peer: peer.petname,
+            since: Cid.dummyDataShort()
+        )
+        
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        try service.writePeer(peer)
+        try service.writeNeighbor(neighbor)
+        try service.writeNeighbor(neighbor2)
+        
+        let results = try service.listNeighbors(owner: identity)
+        XCTAssertEqual(results.count, 1)
+        
+        let results2 = try service.listNeighbors(owner: Did.dummyData())
+        XCTAssertEqual(results2.count, 2)
     }
 }

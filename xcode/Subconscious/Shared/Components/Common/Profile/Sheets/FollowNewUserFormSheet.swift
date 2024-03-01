@@ -338,7 +338,8 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         let fx: Fx<Action> = Future.detached {
-            let suggestions = try environment.database.listNeighbors()
+            let identity = try await environment.noosphere.identity()
+            let suggestions = try environment.database.listNeighbors(owner: identity)
             return .succeedRefreshSuggestions(suggestions)
         }
         .recover { error in
