@@ -15,7 +15,7 @@ struct Item: Identifiable {
     init(title: String) {
         self.title = title
         self.id = UUID()
-        self.color = [Color.red, Color.blue, Color.green].randomElement()!
+        self.color = ThemeColor.allCases.map { c in c.toColor() }.randomElement()!
     }
 }
 
@@ -116,6 +116,7 @@ struct CustomModalView: View {
                     TestCardEditView(item: item, text: item.title)
                 }
             }
+            .toolbarBackground(item.color, for: .navigationBar)
             .padding(AppTheme.padding)
             .padding(.top, DeckTheme.cardPadding)
             .frame(minHeight: 128, maxHeight: maximize ? .infinity : 256, alignment: .top)
@@ -125,49 +126,51 @@ struct CustomModalView: View {
             .gesture(
                 DragGesture()
                     .onChanged { gesture in
+                        dragAmount = gesture.translation.height
+                    }
+                    .onEnded { _ in
                         // Check if the drag distance exceeds the threshold
-                        if gesture.translation.height < -dragThreshold {
+                        if dragAmount < -dragThreshold {
                             // Toggle the Boolean value
                             maximize = true
                         }
                         
-                        if gesture.translation.height > 2 * dragThreshold {
+                        if dragAmount > 2 * dragThreshold {
                             if !maximize {
                                 showModal = false
                             }
                         }
                         
-                        if gesture.translation.height > dragThreshold {
+                        if dragAmount > dragThreshold {
                             if maximize {
                                 // Toggle the Boolean value
                                 maximize = false
-                            } 
+                            }
                         }
                         
-                        dragAmount = gesture.translation.height
-                    }
-                    .onEnded { _ in
                         dragAmount = 0
                     }
             )
             .offset(y: dragAmount / 4.0)
+            .transition(.scale)
+            .shadow(
+                color: DeckTheme.cardShadow.opacity(
+                    maximize ? 0 : 0.25
+                ),
+                radius: 2.5,
+                x: 0,
+                y: 1.5
+            )
         }
         .frame(maxHeight: .infinity)
         .background(maximize ? item.color : .primary.opacity(0.1))
         .onTapGesture {
             showModal = false
         }
-        .animation(.easeOutCubic(), value: showModal)
-        .animation(.easeOutCubic(), value: maximize)
+        .animation(DeckTheme.reboundSpring, value: showModal)
+        .animation(DeckTheme.reboundSpring, value: maximize)
         .animation(.easeOutCubic(), value: dragAmount)
-        .shadow(
-            color: DeckTheme.cardShadow.opacity(
-                0.25
-            ),
-            radius: 2.5,
-            x: 0,
-            y: 1.5
-        )
+        
     }
 }
 
