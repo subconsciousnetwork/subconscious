@@ -1748,7 +1748,9 @@ struct MemoEditorDetailModel: ModelProtocol {
             )
         }
         
-        guard let entry = state.snapshotEntry() else {
+        // Ensure we have something to actually save
+        guard let entry = state.snapshotEntry(),
+              state.saveState != .saved else {
             return Update(state: state)
         }
         
