@@ -106,6 +106,9 @@ struct MemoEditorDetailView: View {
             store.send(MemoEditorDetailAction.appear(description))
             blockEditorStore.send(.appear(description))
         }
+        .onDisappear {
+            store.send(MemoEditorDetailAction.disappear)
+        }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
@@ -413,6 +416,8 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
+    case disappear
+    case poll
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -731,6 +736,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     var comments: [String] = []
     
+    var isPolling = false
+    
     /// Is editor saved?
     var saveState = SaveState.saved
     
@@ -809,6 +816,16 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
+            )
+        case .disappear:
+            return disappear(
+                state: state,
+                environment: environment
+            )
+        case .poll:
+            return poll(
+                state: state,
+                environment: environment
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -1187,10 +1204,47 @@ struct MemoEditorDetailModel: ModelProtocol {
         state: MemoEditorDetailModel,
         environment: AppEnvironment
     ) -> Update<MemoEditorDetailModel> {
-        let pollFx = AppEnvironment.poll(every: Config.default.pollingInterval)
-            .map({ _ in MemoEditorDetailAction.autosave })
+        var model = state
+        model.isPolling = true
+
+        let pollFx: Fx<Action> = Just(Action.poll).delay(
+            for: .seconds(Config.default.pollingInterval),
+            scheduler: DispatchQueue.main
+        ).eraseToAnyPublisher()
+
+        return Update(state: model, fx: pollFx)
+    }
+    
+    static func disappear(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<Self> {
+        var model = state
+        model.isPolling = false
+        
+        return Update(state: model)
+    }
+    
+    static func poll(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<MemoEditorDetailModel> {
+        guard state.isPolling else {
+            return Update(state: state)
+        }
+        
+        let pollFx: Fx<Action> = Just(Action.poll).delay(
+            for: .seconds(Config.default.pollingInterval),
+            scheduler: DispatchQueue.main
+        ).eraseToAnyPublisher()
+
+        let autosaveFx: Fx<Action> = Just(Action.autosave)
             .eraseToAnyPublisher()
-        return Update(state: state, fx: pollFx)
+
+        return Update(
+            state: state,
+            fx: pollFx.merge(with: autosaveFx).eraseToAnyPublisher()
+        )
     }
     
     /// Handle scene phase change
@@ -1808,8 +1862,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         environment: AppEnvironment,
         entry: MemoEntry
     ) -> Update<MemoEditorDetailModel> {
-        // If editor dom is already saved, noop
-        guard state.saveState != .saved else {
+        // If editor dom is already saved or saving, noop
+        guard state.saveState == .unsaved else {
             return Update(state: state)
         }
         
