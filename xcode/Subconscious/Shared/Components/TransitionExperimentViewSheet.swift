@@ -35,7 +35,7 @@ struct TransitionContentView2: View {
                         }
                 }
             }
-            .sheet(isPresented: $showModal, content: {
+            .fullScreenCover(isPresented: $showModal, content: {
                 if let selectedItem = selectedItem {
                     CustomModalView2(item: selectedItem, showModal: $showModal, namespace: namespace)
                 }
@@ -53,19 +53,17 @@ struct CustomModalView2: View {
     var body: some View {
         VStack {
             ScrollView {
-                TestCardEditView(item: item, text: item.title)
+                TestCardEditView(item: item, text: item.title, autofocus: true)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .matchedGeometryEffect(id: item.id, in: namespace)
                 //            .transition(.push(from: .bottom))
             }
+            .padding(DeckTheme.cardPadding)
             .background(item.color)
         }
         .background(.primary.opacity(0.1))
-        .onTapGesture {
-            showModal = false
-        }
         .animation(.easeOutCubic(), value: showModal)
-        .presentationDetents([.height(128), .medium])
+        .presentationDetents([.large])
     }
 }
 

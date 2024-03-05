@@ -36,18 +36,24 @@ struct TestCardView: View {
 struct TestCardEditView: View {
     var item: Item
     @State var text: String
+    var autofocus = true
     @FocusState var focusState: Bool
     
     var body: some View {
         VStack {
             TextField(text: $text, label: { })
+                .id("editor")
                 .focused($focusState)
         }
-        .padding(AppTheme.padding)
         .frame(maxWidth: .infinity)
         .background(item.color)
         .onAppear {
-            focusState.toggle()
+            if autofocus {
+                focusState.toggle()
+            }
+        }
+        .onDisappear {
+            focusState = false
         }
     }
 }
@@ -117,8 +123,7 @@ struct CustomModalView: View {
                 }
             }
             .toolbarBackground(item.color, for: .navigationBar)
-            .padding(AppTheme.padding)
-            .padding(.top, DeckTheme.cardPadding)
+            .padding(DeckTheme.cardPadding)
             .frame(minHeight: 128, maxHeight: maximize ? .infinity : 256, alignment: .top)
             .background(item.color)
             .cornerRadius(maximize ? 0 : 32, corners: [.topLeft, .topRight])
@@ -126,9 +131,12 @@ struct CustomModalView: View {
             .gesture(
                 DragGesture()
                     .onChanged { gesture in
-                        dragAmount = gesture.translation.height
+                        withAnimation(.interactiveSpring()) {
+                            dragAmount = gesture.translation.height
+                        }
                     }
                     .onEnded { _ in
+                        withAnimation(.interactiveSpring()) {
                         // Check if the drag distance exceeds the threshold
                         if dragAmount < -dragThreshold {
                             // Toggle the Boolean value
@@ -148,10 +156,11 @@ struct CustomModalView: View {
                             }
                         }
                         
-                        dragAmount = 0
+                            dragAmount = 0
+                        }
                     }
             )
-            .offset(y: dragAmount / 4.0)
+            .offset(y: dragAmount)
             .transition(.scale)
             .shadow(
                 color: DeckTheme.cardShadow.opacity(
@@ -167,8 +176,8 @@ struct CustomModalView: View {
         .onTapGesture {
             showModal = false
         }
-        .animation(DeckTheme.reboundSpring, value: showModal)
-        .animation(DeckTheme.reboundSpring, value: maximize)
+        .animation(.interactiveSpring(), value: showModal)
+        .animation(.interactiveSpring(), value: maximize)
         .animation(.easeOutCubic(), value: dragAmount)
         
     }
