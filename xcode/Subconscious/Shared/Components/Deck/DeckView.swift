@@ -274,6 +274,7 @@ struct DeckModel: ModelProtocol {
     )
     
     var deck: Array<CardModel> = []
+    var buffer: [CardModel] = []
     
     // The set of cards to avoid drawing again, if possible
     var seen: Set<EntryStub> = []
@@ -782,7 +783,7 @@ struct DeckModel: ModelProtocol {
             let address: String
         }
         
-        func shuffleInBacklinks(message: String, address: Slashlink, backlinks: Set<EntryStub>) -> Update<Self> {
+        func shuffleInBacklinks(card: CardModel, message: String, address: Slashlink, backlinks: Set<EntryStub>) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 
@@ -825,21 +826,23 @@ struct DeckModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
             
+            var model = state
+            model.buffer.append(card)
+            
             return update(
-                state: state,
+                state: model,
                 action: .nextCard,
                 environment: environment
-            ).mergeFx(fx)
+            ).mergeFx(fx).animation(.easeOutCubic())
         }
 
         func chooseCard(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.impactOccurred()
-            
             switch card.card {
             case let .entry(entry, _, related):
-                return shuffleInBacklinks(message: "", address: entry.address, backlinks: related)
+                return shuffleInBacklinks(card: card, message: "", address: entry.address, backlinks: related)
             case let .prompt(message, entry, _, related):
-                return shuffleInBacklinks(message: message, address: entry.address, backlinks: related)
+                return shuffleInBacklinks(card: card, message: message, address: entry.address, backlinks: related)
             case .action(let msg):
                 logger.log("Action: \(msg)")
                 return update(
