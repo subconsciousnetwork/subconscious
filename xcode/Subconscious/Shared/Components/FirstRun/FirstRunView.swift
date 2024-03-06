@@ -15,7 +15,7 @@ struct FirstRunView: View {
         NavigationStack(
             path: Binding(
                 get: { app.state.firstRunPath },
-                send: app.send,
+                transact: app.transact,
                 tag: AppAction.setFirstRunPath
             )
         ) {

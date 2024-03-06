@@ -144,7 +144,7 @@ struct MemoEditorDetailView: View {
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
-                send: store.send,
+                transact: store.transact,
                 tag: MemoEditorDetailAction.presentMetaSheet
             )
         ) {
@@ -158,7 +158,7 @@ struct MemoEditorDetailView: View {
         .sheet(
             isPresented: Binding(
                 get: { store.state.isLinkSheetPresented },
-                send: store.send,
+                transact: store.transact,
                 tag: MemoEditorDetailAction.setLinkSheetPresented
             )
         ) {
@@ -167,7 +167,7 @@ struct MemoEditorDetailView: View {
                 suggestions: store.state.linkSuggestions,
                 text: Binding(
                     get: { store.state.linkSearchText },
-                    send: store.send,
+                    transact: store.transact,
                     tag: MemoEditorDetailAction.setLinkSearch
                 ),
                 onCancel: {
@@ -292,7 +292,7 @@ struct MemoEditorDetailView: View {
                     DetailKeyboardToolbarView(
                         isSheetPresented: Binding(
                             get: { store.state.isLinkSheetPresented },
-                            send: store.send,
+                            transact: store.transact,
                             tag: MemoEditorDetailAction.setLinkSheetPresented
                         ),
                         selectedShortlink: store.state.selectedShortlink,

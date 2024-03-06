@@ -88,7 +88,7 @@ struct MemoViewerDetailView: View {
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
-                send: store.send,
+                transact: store.transact,
                 tag: MemoViewerDetailAction.presentMetaSheet
             )
         ) {

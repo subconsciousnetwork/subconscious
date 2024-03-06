@@ -19,7 +19,7 @@ struct DetailStackView<Root: View>: View {
         NavigationStack(
             path: Binding(
                 get: { store.state.details },
-                send: store.send,
+                transact: store.transact,
                 tag: DetailStackAction.setDetails
             )
         ) {

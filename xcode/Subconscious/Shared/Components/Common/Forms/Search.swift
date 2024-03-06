@@ -316,7 +316,7 @@ struct SearchView: View {
                     placeholder: store.state.placeholder,
                     text: Binding(
                         get: { store.state.query },
-                        send: store.send,
+                        transact: store.transact,
                         tag: SearchAction.setQuery
                     ),
                     autofocus: true
