@@ -89,7 +89,7 @@ struct SummoningCircleView: View {
     var radius: CGFloat = 64
     var speed: CGFloat = 1
     var namespace: Namespace.ID
-    @Binding var cards: [CardModel]
+    var cards: [CardModel]
     @State var playedCards: [CardModel] = []
     
     func delta(_ idx: Int) -> Double {
@@ -132,8 +132,8 @@ struct SummoningCircleView: View {
 }
 
 struct MiniCardStackView: View {
-    @Binding var cards: [CardModel]
-    @Binding var mode: MiniCardStackViewMode
+    var cards: [CardModel]
+    var mode: MiniCardStackViewMode
     @Namespace var namespace
     
     var body: some View {
@@ -162,10 +162,12 @@ struct MiniCardStackView: View {
     //                height: 16
     //            )
                 
-                Text("\(cards.count)").contentTransition(.numericText())
-                    .font(.caption)
-                    .bold()
-                    .foregroundColor(.secondary)
+                if !cards.isEmpty {
+                    Text("\(cards.count)").contentTransition(.numericText())
+                        .font(.caption)
+                        .bold()
+                        .foregroundColor(.secondary)
+                }
             }
             .animation(.interactiveSpring(), value: cards)
         case .ring:
@@ -173,7 +175,7 @@ struct MiniCardStackView: View {
                 radius: 64,
                 speed: 1,
                 namespace: namespace,
-                cards: $cards
+                cards: cards
             )
         case .combine:
             ZStack {
@@ -216,8 +218,8 @@ struct MiniCardStackView_Previews: PreviewProvider {
                 Spacer()
                 
                 MiniCardStackView(
-                    cards: $cards,
-                    mode: $mode
+                    cards: cards,
+                    mode: mode
                 )
                 
                 Spacer()

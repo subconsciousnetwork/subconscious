@@ -110,6 +110,11 @@ struct DeckNavigationView: View {
                     )
                     .offset(y: -AppTheme.unit * 8)
                     
+                    MiniCardStackView(
+                        cards: store.state.buffer,
+                        mode: .stack
+                    )
+                    
                 case .notFound:
                     HStack {
                         Spacer()
@@ -149,6 +154,16 @@ struct DeckNavigationView: View {
                 MainToolbar(
                     app: app
                 )
+            }
+            .alert(
+                isPresented: store.binding(
+                    get: \.aiPromptPresented,
+                    tag: DeckAction.setAiPromptPresented
+                )
+            ){
+                Alert(title: Text("Prompt"),
+                      message: Text(store.state.aiPrompt),
+                      dismissButton: .default(Text("OK")))
             }
         }
     }

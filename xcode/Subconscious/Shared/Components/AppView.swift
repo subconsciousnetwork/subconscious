@@ -127,7 +127,7 @@ enum AppAction: Hashable {
     case appear
 
     case setAppUpgraded(_ isUpgraded: Bool)
-
+    
     /// Set sphere/user nickname
     /// Sets form field, and persists if needed.
     case setNickname(_ nickname: String)
@@ -3321,6 +3321,9 @@ struct AppEnvironment {
     
     var gatewayProvisioningService: GatewayProvisioningService
     
+    var openAiService: OpenAIService
+    var keychainService: KeychainService
+    
     var pasteboard = UIPasteboard.general
 
     /// Service for generating creative prompts and oblique strategies
@@ -3427,6 +3430,8 @@ struct AppEnvironment {
             userProfile: userProfile
         )
         
+        self.keychainService = KeychainService()
+        self.openAiService = OpenAIService(keychain: self.keychainService)
     }
 }
 

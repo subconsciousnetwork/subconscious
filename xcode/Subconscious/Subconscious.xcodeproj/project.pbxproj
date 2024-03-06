@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		8804D2552A4242E300D45E83 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 8804D2542A4242E300D45E83 /* Sentry */; };
 		B50512542B97F43A00EA1FCB /* MiniCardStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50512532B97F43A00EA1FCB /* MiniCardStackView.swift */; };
+		B50512562B9850EF00EA1FCB /* OpenAiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50512552B9850EF00EA1FCB /* OpenAiService.swift */; };
+		B50512592B98512C00EA1FCB /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B50512582B98512C00EA1FCB /* KeychainSwift */; };
+		B505125B2B98524D00EA1FCB /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B505125A2B98524D00EA1FCB /* KeychainService.swift */; };
 		B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956D29E7862A0048106B /* Tests_AddressBookService.swift */; };
 		B508957029E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B508957129E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
@@ -585,6 +588,8 @@
 
 /* Begin PBXFileReference section */
 		B50512532B97F43A00EA1FCB /* MiniCardStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCardStackView.swift; sourceTree = "<group>"; };
+		B50512552B9850EF00EA1FCB /* OpenAiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAiService.swift; sourceTree = "<group>"; };
+		B505125A2B98524D00EA1FCB /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		B508956D29E7862A0048106B /* Tests_AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AddressBookService.swift; sourceTree = "<group>"; };
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FirstRun.swift; sourceTree = "<group>"; };
@@ -1009,6 +1014,7 @@
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				8804D2552A4242E300D45E83 /* Sentry in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
+				B50512592B98512C00EA1FCB /* KeychainSwift in Frameworks */,
 				B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1394,6 +1400,8 @@
 				B50B045A2A04B61000AA584B /* TranscludeService.swift */,
 				B508956F29E79BE70048106B /* UserProfileService.swift */,
 				B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */,
+				B50512552B9850EF00EA1FCB /* OpenAiService.swift */,
+				B505125A2B98524D00EA1FCB /* KeychainService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1878,6 +1886,7 @@
 				B57D63BF29B574C3008BBB62 /* CodeScanner */,
 				8804D2542A4242E300D45E83 /* Sentry */,
 				B596B34B2B68B160001C3EB6 /* SentrySwiftUI */,
+				B50512582B98512C00EA1FCB /* KeychainSwift */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -1981,6 +1990,7 @@
 				B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */,
 				B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */,
 				8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				B50512572B98512C00EA1FCB /* XCRemoteSwiftPackageReference "keychain-swift" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -2183,6 +2193,7 @@
 				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
 				B88A76D429E09B51005F3422 /* PasteboardService.swift in Sources */,
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
+				B505125B2B98524D00EA1FCB /* KeychainService.swift in Sources */,
 				B5CA6F432B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B563ACC72B70C22000068BC1 /* RelatedNoteButtonStyle.swift in Sources */,
@@ -2275,6 +2286,7 @@
 				B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */,
+				B50512562B9850EF00EA1FCB /* OpenAiService.swift in Sources */,
 				B57C0AE929D2782C00D352E3 /* PetnameView.swift in Sources */,
 				B542EF772AF495F200BE29F1 /* FollowNewUserSheetModifier.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
@@ -3142,6 +3154,14 @@
 				minimumVersion = 8.0.0;
 			};
 		};
+		B50512572B98512C00EA1FCB /* XCRemoteSwiftPackageReference "keychain-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/evgenyneu/keychain-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 21.0.0;
+			};
+		};
 		B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/twostraws/CodeScanner";
@@ -3181,6 +3201,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
+		};
+		B50512582B98512C00EA1FCB /* KeychainSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B50512572B98512C00EA1FCB /* XCRemoteSwiftPackageReference "keychain-swift" */;
+			productName = KeychainSwift;
 		};
 		B57D63BF29B574C3008BBB62 /* CodeScanner */ = {
 			isa = XCSwiftPackageProductDependency;

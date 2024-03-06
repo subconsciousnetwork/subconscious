@@ -10,6 +10,7 @@ import ObservableStore
 
 struct DeveloperSettingsView: View {
     @ObservedObject var app: Store<AppModel>
+    @State private var apiKey: String = ""
 
     var body: some View {
         Form {
@@ -62,8 +63,29 @@ struct DeveloperSettingsView: View {
                 }
                 .pickerStyle(DefaultPickerStyle())
             }
+            
+            Section(header: Text("OpenAI API Key")) {
+                SecureField("API Key", text: $apiKey)
+                    .disableAutocorrection(true)
+                Button("Save", action: {
+                    Task { await saveApiKey() }
+                })
+            }
         }
         .navigationTitle("Developer")
+        .task {
+            await loadApiKey()
+        }
+    }
+    
+    private func loadApiKey() async {
+        let keychainManager = KeychainService()
+        apiKey = await keychainManager.getApiKey() ?? ""
+    }
+
+    private func saveApiKey() async {
+        let keychainManager = KeychainService()
+        await keychainManager.setApiKey(apiKey)
     }
 }
 
