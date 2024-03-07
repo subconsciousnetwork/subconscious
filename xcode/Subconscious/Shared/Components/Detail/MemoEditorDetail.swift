@@ -184,17 +184,9 @@ struct MemoEditorDetailView: View {
     }
     
     private func blockEditor() -> some View {
-        LocalWebViewRepresentable(
-            url: Bundle.main.url(
-                forResource: "index",
-                withExtension: "html",
-                subdirectory: "Assets/editor"
-            ),
-            javaScript: #"alert('hello')"#,
-            receiveMessage: { message in },
-            showsHorizontalScrollIndicator: false,
-            showsVerticalScrollIndicator: false,
-            isBackgroundClear: true
+        BlockEditorWebViewRepresentable(
+            url: Config.default.editorUrl,
+            javaScript: ""
         )
         .padding(.bottom, AppTheme.unit4)
         .padding(.top, AppTheme.unit2)
