@@ -31,6 +31,8 @@ struct AppView: View {
         ZStack {
             AppTabView(store: store)
                 .zIndex(0)
+                .disabled(store.state.editingEntryInSheet != nil)
+                .allowsHitTesting(store.state.editingEntryInSheet == nil)
             
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
@@ -697,6 +699,7 @@ struct AppModel: ModelProtocol {
     
     var editingEntryInSheet: EntryStub? = nil
     var namespace: Namespace.ID? = nil
+    var feedback = UIImpactFeedbackGenerator()
     var selectionFeedback = UISelectionFeedbackGenerator()
     
     // Logger for actions
@@ -3119,8 +3122,8 @@ struct AppModel: ModelProtocol {
             }
             .eraseToAnyPublisher()
             
-            state.selectionFeedback.prepare()
-            state.selectionFeedback.selectionChanged()
+            state.feedback.prepare()
+            state.feedback.impactOccurred()
             
             // MUST be dispatched as an fx so that it will appear on the `store.actions` stream
             // Which is consumed and replayed on the FeedStore and NotebookStore etc.
@@ -3130,6 +3133,8 @@ struct AppModel: ModelProtocol {
         var model = state
         model.selectedAppTab = tab
         AppDefaults.standard.selectedAppTab = tab.rawValue
+        state.selectionFeedback.prepare()
+        state.selectionFeedback.selectionChanged()
         
         return Update(state: model)
     }

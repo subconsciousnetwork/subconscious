@@ -110,10 +110,10 @@ struct CustomModalView2: View {
                         }
                         .onEnded { _ in
                             if dragAmount > dragThreshold {
-                                dismiss()
+                              dragAmount = 0
                                 
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                  dragAmount = 0
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+                                dismiss()
                                 }
                             } else {
                                 dragAmount = 0
@@ -131,7 +131,7 @@ struct CustomModalView2: View {
         }
         .background(item.color)
         .offset(y: dragAmount)
-        .matchedGeometryEffect(id: item.id, in: namespace)
+        .matchedGeometryEffect(id: item.id, in: namespace, isSource: false)
         .animation(.interactiveSpring(), value: dragAmount)
         .onDisappear {
             dragAmount = 0
