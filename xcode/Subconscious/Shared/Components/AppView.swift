@@ -25,6 +25,7 @@ struct AppView: View {
         )
     )
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
+    @Namespace var namespace
 
     var body: some View {
         ZStack {
@@ -52,6 +53,17 @@ struct AppView: View {
                     )
                     .zIndex(1)
             }
+            
+            if let entry = store.state.editingEntryInSheet,
+               let namespace = store.state.namespace {
+                CustomModalView2(item: entry, namespace: namespace, dismiss: {
+                    store.send(.dismissEditorSheet)
+                })
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.top, 44)
+                .ignoresSafeArea(.all)
+                .zIndex(999)
+            }
         }
         .sheet(
             isPresented: Binding(
@@ -78,7 +90,7 @@ struct AppView: View {
         }
         .onAppear {
             SentryIntegration.start()
-            store.send(.appear)
+            store.send(.appear(namespace: namespace))
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
@@ -124,7 +136,7 @@ enum AppAction: Hashable {
     case scenePhaseChange(ScenePhase)
 
     /// On view appear
-    case appear
+    case appear(namespace: Namespace.ID)
 
     case setAppUpgraded(_ isUpgraded: Bool)
     
@@ -348,6 +360,9 @@ enum AppAction: Hashable {
     
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
+    
+    case editEntryInSheet(entry: EntryStub)
+    case dismissEditorSheet
     
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
@@ -680,6 +695,10 @@ struct AppModel: ModelProtocol {
     
     var selectedAppTab: AppTab = .notebook
     
+    var editingEntryInSheet: EntryStub? = nil
+    var namespace: Namespace.ID? = nil
+    var selectionFeedback = UISelectionFeedbackGenerator()
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -753,10 +772,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 scenePhase: scenePhase
             )
-        case .appear:
+        case let .appear(namespace):
             return appear(
                 state: state,
-                environment: environment
+                environment: environment,
+                namespace: namespace
             )
         case let .setFirstRunPath(path):
             return setFirstRunPath(
@@ -1431,6 +1451,18 @@ struct AppModel: ModelProtocol {
                    """,
                 notification: "Could not update status"
             )
+        case let .editEntryInSheet(entry):
+            var model = state
+            model.editingEntryInSheet = entry
+            model.selectionFeedback.prepare()
+            model.selectionFeedback.selectionChanged()
+            return Update(state: model).animation(DeckTheme.friendlySpring)
+        case .dismissEditorSheet:
+            var model = state
+            model.editingEntryInSheet = nil
+            model.selectionFeedback.prepare()
+            model.selectionFeedback.selectionChanged()
+            return Update(state: model).animation(DeckTheme.friendlySpring)
         }
     }
     
@@ -1520,7 +1552,8 @@ struct AppModel: ModelProtocol {
     
     static func appear(
         state: AppModel,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        namespace: Namespace.ID
     ) -> Update<AppModel> {
         let sphereIdentity = state.sphereIdentity?.description ?? "nil"
         logger.debug(
@@ -1531,8 +1564,12 @@ struct AppModel: ModelProtocol {
                 "sphereIdentity": sphereIdentity
             ]
         )
+        
+        var model = state
+        model.namespace = namespace
+        
         return update(
-            state: state,
+            state: model,
             actions: [
                 .migrateDatabase,
                 .refreshSphereVersion,
@@ -3081,6 +3118,9 @@ struct AppModel: ModelProtocol {
                 return action
             }
             .eraseToAnyPublisher()
+            
+            state.selectionFeedback.prepare()
+            state.selectionFeedback.selectionChanged()
             
             // MUST be dispatched as an fx so that it will appear on the `store.actions` stream
             // Which is consumed and replayed on the FeedStore and NotebookStore etc.

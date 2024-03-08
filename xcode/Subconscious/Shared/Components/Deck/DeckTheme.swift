@@ -14,6 +14,11 @@ extension DeckTheme {
         dampingFraction: 0.5,
         blendDuration: 0
     )
+    static let friendlySpring: Animation = .spring(
+        response: 0.3,
+        dampingFraction: 0.85,
+        blendDuration: 0.1
+    )
     
     static let dragTargetSize = CGSize(width: 16, height: 380)
     

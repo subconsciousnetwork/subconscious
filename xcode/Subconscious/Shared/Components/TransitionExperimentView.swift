@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Item: Identifiable {
+struct Item: Identifiable, Equatable {
     var id = UUID()
     var title: String
     var color: Color
@@ -20,29 +20,42 @@ struct Item: Identifiable {
 }
 
 struct TestCardView: View {
-    var item: Item
+    var item: EntryStub
     
     var body: some View {
         VStack {
-            Text(item.title)
+            Button(
+                action: {
+                }
+            ) {
+                EntryRow(
+                    entry: item,
+                    liked: false,
+                    highlight: item.highlightColor,
+                    onLink: { _ in }
+                )
+            }
+            .buttonStyle(
+                EntryListRowButtonStyle(
+                    color: item.color
+                )
+            )
         }
-        .padding(AppTheme.padding)
         .frame(maxWidth: .infinity)
-        .background(item.color)
-        .cornerRadius(8, corners: .allCorners)
     }
 }
 
 struct TestCardEditView: View {
-    var item: Item
+    var item: EntryStub
     @State var text: String
-    var autofocus = true
+    var autofocus = false
     @FocusState var focusState: Bool
     
     var body: some View {
         VStack {
-            TextField(text: $text, label: { })
+            TextField(text: $text, axis: .vertical, label: { })
                 .id("editor")
+                .lineLimit(2...)
                 .focused($focusState)
         }
         .frame(maxWidth: .infinity)
@@ -60,16 +73,16 @@ struct TestCardEditView: View {
 
 struct TransitionContentView: View {
     @Namespace private var namespace
-    @State private var selectedItem: Item? = nil
+    @State private var selectedItem: EntryStub? = nil
     @State private var showModal = false
     
     @State var items = [
-        Item(title: "Item 1"),
-        Item(title: "Item 2"),
-        Item(title: "Item 3"),
-        Item(title: "Item 4"),
-        Item(title: "Item 5"),
-        Item(title: "Item 6"),
+        EntryStub.dummyData(),
+        EntryStub.dummyData(),
+        EntryStub.dummyData(),
+        EntryStub.dummyData(),
+        EntryStub.dummyData(),
+        EntryStub.dummyData(),
     ]
     
     var body: some View {
@@ -99,7 +112,7 @@ struct TransitionContentView: View {
 }
 
 struct CustomModalView: View {
-    var item: Item
+    var item: EntryStub
     @Binding var showModal: Bool
     var namespace: Namespace.ID
     @State var maximize: Bool = false
@@ -119,7 +132,7 @@ struct CustomModalView: View {
             
             VStack {
                 ScrollView {
-                    TestCardEditView(item: item, text: item.title)
+                    TestCardEditView(item: item, text: item.address.description)
                 }
             }
             .toolbarBackground(item.color, for: .navigationBar)
