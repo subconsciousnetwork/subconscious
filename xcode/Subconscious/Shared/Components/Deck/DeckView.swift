@@ -842,11 +842,13 @@ struct DeckModel: ModelProtocol {
             var model = state
             model.buffer.append(card)
             
-            if model.buffer.count >= 5 {
+            if model.buffer.count >= 4 {
                 let entries = model.buffer.compactMap { card in card.entry }
                 let openAiFx = Future.detached {
                     let result = await environment.openAiService.sendTextToOpenAI(
-                        entries: entries)
+                        entries: entries,
+                        prompt: [OpenAIService.contemplate, OpenAIService.poem, OpenAIService.question, OpenAIService.summarize].randomElement()!
+                    )
                     
                     switch result {
                     case .success(let msg):

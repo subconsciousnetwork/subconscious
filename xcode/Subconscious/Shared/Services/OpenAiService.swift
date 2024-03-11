@@ -33,8 +33,72 @@ extension OpenAIError {
     }
 }
 
+struct Prompt {
+    public let system: String
+    public let instruction: String
+}
+
 actor OpenAIService {
     let keychain: KeychainService
+    public static let question = Prompt(
+        system:
+            """
+            Your task is to take a list of notes and extract any cross-cutting themes or interesting patterns about the set as a whole. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. \n\nAs part of your summary you should include any particularly relevant links that did not appear in the input set. Respond with 10 questions based on your analysis with at most 6 words in each and up to 10 addresses of recommended notes that do not appear in the input set.
+            """,
+        instruction:
+            """
+            Summarize your analysis into one incisive question, phrased to be thought provoking to a user, keep it at a maximum of 8 words.
+            """
+    )
+    
+    public static let summarize = Prompt(
+        system:
+            """
+            Your task is to take a list of notes and summarize the key ideas in 3 short dot points. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
+            """,
+        instruction:
+            """
+            Summarize your analysis into 3 dot points, each at most 6 words long. For example:
+            
+            - In a random world intelligence is useless
+            - Typescript is a typed superset of JavaScript
+            - A monad is like a burrito
+            
+            Your dot points:
+            """
+    )
+    
+    public static let poem = Prompt(
+        system:
+            """
+            Your task is to take a list of notes and summarize the key ideas in a 3 line haiku poem. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
+            """,
+        instruction:
+            """
+            Summarize your analysis in a haiku. For example:
+            
+            in a random world,
+            monad is not burrito,
+            life is made of toys
+            
+            Your haiku:
+            """
+    )
+    
+    public static let contemplate = Prompt(
+        system:
+            """
+            Your task is to take a list of notes, reflect on them and respond with a question that makes you curious. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
+            """,
+        instruction:
+            """
+            Respond with a single question that these notes make you want to ask. For example:
+            
+            When should we prefer imagination over measurement?
+            
+            Your question:
+            """
+    )
     
     init(keychain: KeychainService) {
         self.keychain = keychain
@@ -42,9 +106,9 @@ actor OpenAIService {
     
     let apiUrl = "https://api.openai.com/v1/chat/completions"
     
-    private func formatNotes(entries: [EntryStub]) -> String {
+    private func formatNotes(entries: [EntryStub], prompt: Prompt) -> String {
         return """
-        Please analyze these notes:
+        Here are the notes to analyze:
         
         \(entries.map { entry in
             """
@@ -57,12 +121,13 @@ actor OpenAIService {
         
         ---
         
-        Summarize your analysis into one incisive question, phrased to be thought provoking to a user, keep it at a maximum of 8 words.
+        \(prompt.instruction)
         """
     }
 
     func sendTextToOpenAI(
-        entries: [EntryStub]
+        entries: [EntryStub],
+        prompt: Prompt
     ) async -> Result<String, OpenAIError> {
         guard let url = URL(string: apiUrl) else {
             return .failure(OpenAIError.invalidAPIUrl)
@@ -79,8 +144,8 @@ actor OpenAIService {
         let requestBody: [String: Any] = [
             "model": "gpt-4-1106-preview",
             "messages": [
-                ["role": "system", "content": "Your task is to take a list of notes and extract any cross-cutting themes or interesting patterns about the set as a whole. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. \n\nAs part of your summary you should include any particularly relevant links that did not appear in the input set. Respond with 10 questions based on your analysis with at most 6 words in each and up to 10 addresses of recommended notes that do not appear in the input set."],
-                ["role": "user", "content": formatNotes(entries: entries)]
+                ["role": "system", "content": prompt.system],
+                ["role": "user", "content": formatNotes(entries: entries, prompt: prompt)]
             ],
             "max_tokens": 1280,
             "temperature": 1,

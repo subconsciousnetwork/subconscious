@@ -140,15 +140,16 @@ struct MiniCardStackView: View {
         switch mode {
         case .stack:
             ZStack {
-                ForEach(cards.indices, id: \.self) { idx in
+                ForEach(cards.indices.reversed(), id: \.self) { idx in
                     let card = cards[idx]
+                    let t = cards.count - idx
                     if let entry = card.entry {
                         MiniCardView(color: entry.color)
                             .matchedGeometryEffect(id: entry.id, in: namespace)
-                            .rotationEffect(.degrees(Double(-8 + 12 * sqrt(Double(idx)))))
-//                            .offset(x: 0, y: CGFloat(idx * 1))
-                            .zIndex(Double(-idx))
-                            .opacity(1 - Double(idx) * 0.33)
+                            .rotationEffect(.degrees(Double(-8 + 5 * Double(idx))))
+                            .offset(x: 0, y: CGFloat(t * 2))
+                            .zIndex(Double(idx))
+                            .opacity(1 - Double(t) * 0.2)
                     }
                 }
     //
@@ -163,13 +164,30 @@ struct MiniCardStackView: View {
     //            )
                 
                 if !cards.isEmpty {
-                    Text("\(cards.count)").contentTransition(.numericText())
-                        .font(.caption)
-                        .bold()
-                        .foregroundColor(.secondary)
+                    HStack(alignment: .bottom, spacing: 1) {
+                        Text("\(cards.count)").contentTransition(.numericText())
+                            .bold()
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .offset(x: -0.5, y: -2)
+                        Text("/")
+                            .font(.system(size: 10.0))
+                            .foregroundColor(.secondary)
+                            .bold()
+                            .opacity(0.25)
+                            .offset(x: 0.5, y: 0.5)
+                        Text("4")
+                            .font(.system(size: 8.0))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .opacity(0.75)
+                            .offset(x: 1, y: 4.5)
+                    }
+                    .zIndex(Double(cards.count))
+                    .offset(x: 1.5, y: 0.5)
                 }
             }
-            .animation(.interactiveSpring(), value: cards)
+            .animation(DeckTheme.reboundSpring, value: cards)
         case .ring:
             SummoningCircleView(
                 radius: 64,
