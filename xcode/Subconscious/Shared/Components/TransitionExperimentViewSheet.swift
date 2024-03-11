@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ObservableStore
 
 struct TransitionContentView2: View {
     @Namespace private var namespace
@@ -67,21 +68,23 @@ struct TransitionContentView2: View {
             
             
             if let selectedItem = selectedItem, showModal {
-                CustomModalView2(item: selectedItem, namespace: namespace, dismiss: {
-                    showModal = false
-                    })
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.top, 44)
-                    .ignoresSafeArea(.all)
-                    .transition(.push(from: .bottom))
-                    .zIndex(999)
+//                EditorModalSheetView(app: app, item: selectedItem, namespace: namespace, dismiss: {
+//                    showModal = false
+//                    })
+//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+//                    .padding(.top, 44)
+//                    .ignoresSafeArea(.all)
+//                    .cornerRadius(8, corners: .allCorners)
+//                    .transition(.push(from: .bottom))
+//                    .zIndex(999)
             }
         }
         .animation(DeckTheme.friendlySpring, value: showModal)
     }
 }
 
-struct CustomModalView2: View {
+struct EditorModalSheetView: View {
+    @ObservedObject var app: Store<AppModel>
     var item: EntryStub
     var namespace: Namespace.ID
     @State var dragAmount: CGFloat = 0
@@ -96,12 +99,14 @@ struct CustomModalView2: View {
                 
                 OmniboxView(
                     address: item.address,
-                    defaultAudience: .public
+                    defaultAudience: .public,
+                    color: item.highlightColor
                 )
                 
                 Spacer()
             }
                 .padding(AppTheme.padding)
+                .foregroundStyle(item.highlightColor)
                 .background(item.color)
                 .gesture(
                     DragGesture()
@@ -121,13 +126,7 @@ struct CustomModalView2: View {
                         }
                 )
                 
-            ScrollView {
-                TestCardEditView(item: item, text: item.excerpt.description)
-                    .frame(maxHeight: .infinity, alignment: .top)
-                //            .transition(.push(from: .bottom))
-            }
-            .padding(DeckTheme.cardPadding)
-            .background(item.color)
+            MemoEditorDetailView(app: app, description: MemoEditorDetailDescription(address: item.address), notify: { _ in })
         }
         .background(item.color)
         .offset(y: dragAmount)

@@ -225,7 +225,7 @@ struct MemoEditorDetailView: View {
                             )
                             .insets(
                                 EdgeInsets(
-                                    top: AppTheme.padding,
+                                    top: 0,
                                     leading: AppTheme.padding,
                                     bottom: AppTheme.padding,
                                     trailing: AppTheme.padding
@@ -252,7 +252,7 @@ struct MemoEditorDetailView: View {
                                     )
                                 }
                                 .padding(EdgeInsets(
-                                    top: 0,
+                                    top: DeckTheme.cardPadding,
                                     leading: DeckTheme.cardPadding,
                                     bottom: DeckTheme.cardPadding,
                                     trailing: DeckTheme.cardPadding
@@ -260,30 +260,28 @@ struct MemoEditorDetailView: View {
                             }
                         }
                         .background(background)
-                        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
-                        .shadow(style: .transclude)
                         .padding(.bottom, AppTheme.unit4)
                         .padding(.top, AppTheme.unit2)
                         
-                        AICommentsView(
-                            comments: store.state.comments,
-                            onRefresh: {
-                                store.send(.refreshComments)
-                            },
-                            onRespond: { comment in
-                                if let address = store.state.address {
-                                    notify(.requestQuoteInNewDetail(address, comment: comment))
-                                }
-                            },
-                            background: background ?? .secondary
-                        )
-                        
-                        BacklinksView(
-                            backlinks: store.state.backlinks,
-                            onLink: { link in
-                                notify(.requestFindLinkDetail(link))
-                            }
-                        )
+//                        AICommentsView(
+//                            comments: store.state.comments,
+//                            onRefresh: {
+//                                store.send(.refreshComments)
+//                            },
+//                            onRespond: { comment in
+//                                if let address = store.state.address {
+//                                    notify(.requestQuoteInNewDetail(address, comment: comment))
+//                                }
+//                            },
+//                            background: background ?? .secondary
+//                        )
+//                        
+//                        BacklinksView(
+//                            backlinks: store.state.backlinks,
+//                            onLink: { link in
+//                                notify(.requestFindLinkDetail(link))
+//                            }
+//                        )
                     }
                 }
                 .tint(highlight)

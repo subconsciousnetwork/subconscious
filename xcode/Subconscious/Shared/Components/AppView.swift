@@ -58,11 +58,11 @@ struct AppView: View {
             
             if let entry = store.state.editingEntryInSheet,
                let namespace = store.state.namespace {
-                CustomModalView2(item: entry, namespace: namespace, dismiss: {
+                EditorModalSheetView(app: store, item: entry, namespace: namespace, dismiss: {
                     store.send(.dismissEditorSheet)
                 })
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, 44)
+                .padding(.top, 56)
                 .ignoresSafeArea(.all)
                 .zIndex(999)
             }
