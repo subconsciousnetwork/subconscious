@@ -15,7 +15,7 @@ jobs:
       matrix:
         include:
           - xcode: "15.1"
-            ios:   "17.0"
+            ios:   "17.0.1"
 
     name: Test iOS ${{ matrix.ios }}
     steps:
