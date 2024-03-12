@@ -18,6 +18,9 @@ struct DetailKeyboardToolbarView: View {
     var onInsertItalic: () -> Void
     var onInsertCode: () -> Void
     var onDoneEditing: () -> Void
+    
+    var background = Color.background
+    var color = Color.accentColor
 
     private var entryLinks: [EntryLink] {
         suggestions.compactMap({ suggestion in
@@ -32,7 +35,6 @@ struct DetailKeyboardToolbarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Divider()
             HStack(alignment: .center, spacing: AppTheme.unit4) {
                 Button(
                     action: {
@@ -77,7 +79,9 @@ struct DetailKeyboardToolbarView: View {
             .frame(height: AppTheme.icon, alignment: .center)
             .padding(.horizontal, AppTheme.padding)
             .padding(.vertical, AppTheme.tightPadding)
-            .background(Color.background)
+            .background(background)
+            .foregroundStyle(color)
+            .tint(color)
         }
     }
 }

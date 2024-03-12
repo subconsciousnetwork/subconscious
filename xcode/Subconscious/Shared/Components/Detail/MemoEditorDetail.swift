@@ -312,7 +312,9 @@ struct MemoEditorDetailView: View {
                         },
                         onDoneEditing: {
                             store.send(.doneEditing)
-                        }
+                        },
+                        background: store.state.themeColor?.toColor() ?? store.state.address?.themeColor.toColor() ?? .background,
+                        color: store.state.themeColor?.toHighlightColor() ?? store.state.address?.themeColor.toHighlightColor() ?? .accentColor
                     )
                     .transition(
                         .asymmetric(
