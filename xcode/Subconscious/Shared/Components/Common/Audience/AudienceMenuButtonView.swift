@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AudienceMenuButtonView: View {
     @ScaledMetric(relativeTo: .caption)
-    private var width: CGFloat = 140
+    private var width: CGFloat = 100
     
     @Binding var audience: Audience
 

@@ -80,19 +80,19 @@ struct MemoEditorDetailView: View {
                 plainEditor()
             }
         }
-        .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
-        .modifier(AppThemeToolbarViewModifier())
-        .toolbar(content: {
-            DetailToolbarContent(
-                address: store.state.address,
-                defaultAudience: store.state.defaultAudience,
-                onTapOmnibox: {
-                    store.send(.presentMetaSheet(true))
-                },
-                status: store.state.loadingState
-            )
-        })
+//        .navigationTitle(navigationTitle)
+//        .navigationBarTitleDisplayMode(.inline)
+//        .modifier(AppThemeToolbarViewModifier())
+//        .toolbar(content: {
+//            DetailToolbarContent(
+//                address: store.state.address,
+//                defaultAudience: store.state.defaultAudience,
+//                onTapOmnibox: {
+//                    store.send(.presentMetaSheet(true))
+//                },
+//                status: store.state.loadingState
+//            )
+//        })
         .onAppear {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
@@ -234,54 +234,10 @@ struct MemoEditorDetailView: View {
                             .frame(
                                 minHeight: UIFont.appTextMono.lineHeight * 8
                             )
-                            
-                            if let address = store.state.address {
-                                HStack {
-                                    Spacer()
-                                    
-                                    LikeButtonView(
-                                        liked: store.state.liked,
-                                        action: {
-                                            notify(
-                                                .requestUpdateLikeStatus(
-                                                    address,
-                                                    liked: !store.state.liked
-                                                )
-                                            )
-                                        }
-                                    )
-                                }
-                                .padding(EdgeInsets(
-                                    top: DeckTheme.cardPadding,
-                                    leading: DeckTheme.cardPadding,
-                                    bottom: DeckTheme.cardPadding,
-                                    trailing: DeckTheme.cardPadding
-                                ))
-                            }
                         }
                         .background(background)
                         .padding(.bottom, AppTheme.unit4)
                         .padding(.top, AppTheme.unit2)
-                        
-//                        AICommentsView(
-//                            comments: store.state.comments,
-//                            onRefresh: {
-//                                store.send(.refreshComments)
-//                            },
-//                            onRespond: { comment in
-//                                if let address = store.state.address {
-//                                    notify(.requestQuoteInNewDetail(address, comment: comment))
-//                                }
-//                            },
-//                            background: background ?? .secondary
-//                        )
-//                        
-//                        BacklinksView(
-//                            backlinks: store.state.backlinks,
-//                            onLink: { link in
-//                                notify(.requestFindLinkDetail(link))
-//                            }
-//                        )
                     }
                 }
                 .tint(highlight)

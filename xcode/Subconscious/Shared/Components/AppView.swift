@@ -132,6 +132,7 @@ enum AppAction: Hashable {
     case gatewayURLField(GatewayUrlFormField.Action)
     case recoveryMode(RecoveryModeModel.Action)
     case toastStack(ToastStackAction)
+    case editorSheet(EditorModalSheetAction)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -556,6 +557,28 @@ struct ToastStackCursor: CursorProtocol {
     }
 }
 
+struct EditorModalSheetCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = EditorModalSheetModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.editorSheet
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.editorSheet = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .editorSheet(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -591,7 +614,8 @@ struct AppModel: ModelProtocol {
     var isFirstRunComplete = false
     var firstRunPath: [FirstRunStep] = []
     
-    var toastStack: ToastStackModel = ToastStackModel()
+    var toastStack = ToastStackModel()
+    var editorSheet = EditorModalSheetModel()
 
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
@@ -765,6 +789,12 @@ struct AppModel: ModelProtocol {
             )
         case .toastStack(let action):
             return ToastStackCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .editorSheet(let action):
+            return EditorModalSheetCursor.update(
                 state: state,
                 action: action,
                 environment: environment
