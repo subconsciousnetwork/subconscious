@@ -185,11 +185,14 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         /// Handle link taps
         func textView(
             _ textView: UITextView,
-            shouldInteractWith url: URL,
-            in characterRange: NSRange,
-            interaction: UITextItemInteraction
-        ) -> Bool {
-            representable.onLink(url)
+            primaryActionFor textItem: UITextItem,
+            defaultAction: UIAction
+        ) -> UIAction? {
+            if case .link(let url) = textItem.content {
+                let shouldDeferToDefault = representable.onLink(url)
+                return shouldDeferToDefault ? defaultAction : .none
+            }
+            return defaultAction
         }
 
         /// Render user changes to textview
