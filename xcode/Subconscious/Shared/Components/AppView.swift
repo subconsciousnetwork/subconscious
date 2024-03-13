@@ -84,7 +84,7 @@ struct AppView: View {
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
         // 2023-02-16 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
+        .onChange(of: self.scenePhase) { _, phase in
             store.send(.scenePhaseChange(phase))
         }
         .sentryTrace("AppView")

@@ -48,11 +48,11 @@ struct ValidatedFormField<Output: Equatable>: View {
                     axis: axis
                 )
                 .focused($focused)
-                .onChange(of: focused) { focused in
+                .onChange(of: focused) { _, focused in
                     field.send(.focusChange(focused: focused))
                     onFocusChanged(focused)
                 }
-                .onChange(of: innerText) { innerText in
+                .onChange(of: innerText) { _, innerText in
                     var text = innerText
                     let isSubstring = text.contains(field.state.value) || field.state.value.contains(text)
                     let lengthDelta = abs(text.count - field.state.value.count)
@@ -64,7 +64,7 @@ struct ValidatedFormField<Output: Equatable>: View {
                     
                     field.send(.setValue(input: text))
                 }
-                .onChange(of: field.state) { field in
+                .onChange(of: field.state) { _, field in
                     // The store value has been reset via side-effect
                     // we must re-sync our inner value
                     if !field.touched && innerText != field.value {
