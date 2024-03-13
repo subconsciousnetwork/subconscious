@@ -39,12 +39,15 @@ struct MemoEditorDetailView: View {
     )
     
     @StateObject private var blockEditorStore = Store(
-        state: BlockEditor.Model.draft(),
+        state: BlockEditorModel(
+            url: Config.default.editorUrl,
+            javaScript: ""
+        ),
         environment: AppEnvironment.default,
         loggingEnabled: true,
         logger: blockEditorStoreLogger
     )
-    
+
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
@@ -185,8 +188,7 @@ struct MemoEditorDetailView: View {
     
     private func blockEditor() -> some View {
         BlockEditorWebViewRepresentable(
-            url: Config.default.editorUrl,
-            javaScript: ""
+            store: blockEditorStore
         )
         .padding(.bottom, AppTheme.unit4)
         .padding(.top, AppTheme.unit2)

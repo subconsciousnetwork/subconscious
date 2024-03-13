@@ -58,8 +58,8 @@ struct BlockEditorModel: ModelProtocol {
             return Update(state: state)
         case let .setLoadingState(loadingState):
             return setLoadingState(
-                state: Self,
-                loadingState
+                state: state,
+                loadingState: loadingState
             )
         case .sendMessage(_):
             return Update(state: state)
@@ -68,7 +68,7 @@ struct BlockEditorModel: ModelProtocol {
         }
     }
 
-    private func setLoadingState(
+    private static func setLoadingState(
         state: Self,
         loadingState: LoadingState
     ) -> Update<Self> {
@@ -76,7 +76,7 @@ struct BlockEditorModel: ModelProtocol {
         model.loadingState = loadingState
         if case .loaded = loadingState {
             let fx: Fx<Self.Action> = Future.detached {
-                .sendMessage(self.toJSON())
+                .sendMessage(model.toJSON())
             }.eraseToAnyPublisher()
 
             return UpdateType(state: model, fx: fx)
