@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum LoadingState: Hashable {
+enum LoadingState: Hashable, Codable {
     case loading
     case loaded
     case notFound

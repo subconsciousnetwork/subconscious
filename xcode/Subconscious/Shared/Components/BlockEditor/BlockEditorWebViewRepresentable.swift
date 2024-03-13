@@ -11,14 +11,94 @@ import os
 import Combine
 import ObservableStore
 
+enum BlockEditorAction: Hashable {
+    case appear(MemoEditorDetailDescription)
+    case scenePhaseChange(ScenePhase)
+    case setLoadingState(LoadingState)
+    case sendMessage(String)
+    case receiveMessage(String)
+    case autosave
+}
+
+struct BlockEditorModel: ModelProtocol {
+    private static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "BlockEditorModel"
+    )
+    typealias Action = BlockEditorAction
+    typealias Environment = AppEnvironment
+
+    var loadingState: LoadingState = .loading
+    var url: URL
+    var javaScript: String
+
+    init(
+        url: URL,
+        javaScript: String
+    ) {
+        self.url = url
+        self.javaScript = javaScript
+    }
+
+    private func toJSON() -> String {
+        return "{}"
+    }
+
+    static func update(
+        state: Self,
+        action: Action,
+        environment: AppEnvironment
+    ) -> Update<Self> {
+        switch action {
+        case .appear(_):
+            return Update(state: state)
+        case .scenePhaseChange:
+            return Update(state: state)
+        case .autosave:
+            return Update(state: state)
+        case let .setLoadingState(loadingState):
+            return setLoadingState(
+                state: Self,
+                loadingState
+            )
+        case .sendMessage(_):
+            return Update(state: state)
+        case .receiveMessage(_):
+            return Update(state: state)
+        }
+    }
+
+    private func setLoadingState(
+        state: Self,
+        loadingState: LoadingState
+    ) -> Update<Self> {
+        var model = state
+        model.loadingState = loadingState
+        if case .loaded = loadingState {
+            let fx: Fx<Self.Action> = Future.detached {
+                .sendMessage(self.toJSON())
+            }.eraseToAnyPublisher()
+
+            return UpdateType(state: model, fx: fx)
+        }
+        return Update(state: state)
+    }
+}
+
 struct BlockEditorWebViewRepresentable: UIViewRepresentable {
     private static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "BlockEditorWebViewRepresentable"
     )
 
-    var url: URL
-    var javaScript: String
+    private var storeDidChangeCancellable: AnyCancellable? = nil
+
+    typealias Store = ObservableStore.Store<BlockEditorModel>
+    var store: Store
+
+    init(store: Store) {
+        self.store = store
+    }
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration.forLocalFiles()
@@ -37,12 +117,13 @@ struct BlockEditorWebViewRepresentable: UIViewRepresentable {
         return webView
     }
 
+    @MainActor
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.update(webView)
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(self.store)
     }
 
     class Coordinator: NSObject {
@@ -51,24 +132,24 @@ struct BlockEditorWebViewRepresentable: UIViewRepresentable {
             category: "BlockEditorWebViewRepresentableCoordinator"
         )
 
-        private var view: BlockEditorWebViewRepresentable
-
-        var url: URL? = nil
-        var javaScript: String = ""
+        private var store: Store
+        private var url: URL? = nil
 
         init(
-            _ view: BlockEditorWebViewRepresentable
+            _ store: Store
         ) {
-            self.view = view
+            self.store = store
         }
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
 
+        @MainActor
         func update(_ webView: WKWebView) {
-            if (url != view.url) {
-                let url = view.url
+            Self.logger.debug("Update")
+            let url = store.state.url
+            if (self.url != url) {
                 self.url = url
                 webView.load(URLRequest(url: url))
             }
@@ -81,6 +162,11 @@ extension BlockEditorWebViewRepresentable.Coordinator: WKScriptMessageHandler {
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
+        if let json = message.body as? String {
+            Task { @MainActor in
+                store.send(.receiveMessage(json))
+            }
+        }
     }
 }
 
@@ -88,11 +174,7 @@ extension BlockEditorWebViewRepresentable.Coordinator: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         Self.logger.info("Navigation finished \(self.url?.description ?? "")")
         Task { @MainActor in
-            do {
-                try await webView.evaluateJavaScriptAsync(javaScript)
-            } catch {
-                Self.logger.info("Script evaluation failed: \(error.localizedDescription)")
-            }
+            store.send(.setLoadingState(.loaded))
         }
     }
 
@@ -102,6 +184,9 @@ extension BlockEditorWebViewRepresentable.Coordinator: WKNavigationDelegate {
         withError error: Error
     ) {
         Self.logger.info("Navigation failed: \(error.localizedDescription)")
+        Task { @MainActor in
+            store.send(.setLoadingState(.notFound))
+        }
     }
 
     func webView(
@@ -110,5 +195,8 @@ extension BlockEditorWebViewRepresentable.Coordinator: WKNavigationDelegate {
         withError error: Error
     ) {
         Self.logger.info("Provisional navigation failed: \(error.localizedDescription)")
+        Task { @MainActor in
+            store.send(.setLoadingState(.notFound))
+        }
     }
 }
