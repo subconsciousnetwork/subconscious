@@ -14,7 +14,7 @@ final class Tests_SphereFile: XCTestCase {
         let globalStorageURL = tmp.appending(path: "noosphere")
         let sphereStorageURL = tmp.appending(path: "sphere")
         let gatewayURL = "https://fake.website.example.com"
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
             gatewayURL: gatewayURL
@@ -25,7 +25,7 @@ final class Tests_SphereFile: XCTestCase {
     func testVersion() async throws {
         let noosphere = try await createNoosphere()
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: receipt.identity
         )
@@ -43,7 +43,7 @@ final class Tests_SphereFile: XCTestCase {
     func testReadHeaderValueFirst() async throws {
         let noosphere = try await createNoosphere()
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: receipt.identity
         )
@@ -64,7 +64,7 @@ final class Tests_SphereFile: XCTestCase {
     func testReadHeaderNames() async throws {
         let noosphere = try await createNoosphere()
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: receipt.identity
         )
@@ -85,7 +85,7 @@ final class Tests_SphereFile: XCTestCase {
     func testConsume() async throws {
         let noosphere = try await createNoosphere()
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: receipt.identity
         )
@@ -105,7 +105,7 @@ final class Tests_SphereFile: XCTestCase {
     func testUseAfterConsumeThrows() async throws {
         let noosphere = try await createNoosphere()
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: receipt.identity
         )
@@ -134,7 +134,7 @@ final class Tests_SphereFile: XCTestCase {
     func testUseAfterConsumeThrows2() async throws {
         let noosphere = try await createNoosphere()
         let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: receipt.identity
         )

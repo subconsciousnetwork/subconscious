@@ -221,7 +221,8 @@ enum SphereError: Error, LocalizedError {
 
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
-public actor Sphere: SphereProtocol, SpherePublisherProtocol {
+@NoosphereActor
+public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "Sphere"
@@ -350,7 +351,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         guard let file = try? await readFile(slashlink: slashlink) else {
             return nil
         }
-        return try? await file.readHeaderValueFirst(name: name)
+        return try? file.readHeaderValueFirst(name: name)
     }
     
     /// Read first header value for memo at slashlink
@@ -372,7 +373,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         guard let file = try? await readFile(slashlink: slashlink) else {
             return nil
         }
-        return try? await file.version()
+        return try? file.version()
     }
     
     /// Get the base64-encoded CID v1 string for the memo that refers to the
@@ -415,7 +416,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     public func read(slashlink: Slashlink) async throws -> MemoData {
         let file = try await readFile(slashlink: slashlink)
 
-        guard let contentType = try? await file.readHeaderValueFirst(
+        guard let contentType = try? file.readHeaderValueFirst(
             name: "Content-Type"
         ) else {
             throw SphereError.contentTypeMissing(slashlink.description)
@@ -428,7 +429,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             guard name != "Content-Type" else {
                 continue
             }
-            guard let value = try await file.readHeaderValueFirst(
+            guard let value = try file.readHeaderValueFirst(
                 name: name
             ) else {
                 continue

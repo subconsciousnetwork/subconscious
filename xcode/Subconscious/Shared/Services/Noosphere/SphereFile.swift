@@ -28,7 +28,8 @@ enum SphereFileError: Error {
 
 /// Wrapper for sphere file.
 /// Will automatically free sphere file pointer when class de-initializes.
-actor SphereFile: SphereFileProtocol {
+@NoosphereActor
+public final class SphereFile: SphereFileProtocol {
     private var isConsumed = false
     private let noosphere: Noosphere
     let file: OpaquePointer
