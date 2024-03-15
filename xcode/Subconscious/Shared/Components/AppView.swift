@@ -56,7 +56,7 @@ struct AppView: View {
         .sheet(
             isPresented: Binding(
                 get: { store.state.isSettingsSheetPresented },
-                transact: store.transact,
+                send: store.send,
                 tag: AppAction.presentSettingsSheet
             )
         ) {
