@@ -30,8 +30,6 @@ extension EntryLink {
 
 extension EntryStub {
     init(_ entry: MemoEntry, did: Did) {
-        let excerpt = entry.contents.excerpt()
-        
         self.address = entry.address
         self.excerpt = Subtext(markup: entry.contents.excerpt())
         self.did = did

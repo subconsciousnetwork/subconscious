@@ -1687,7 +1687,7 @@ extension BlockEditor.Model: ModelProtocol {
             logger.info("Could not parse URL as SubSlashlinkURL \(url)")
             return Update(state: state)
         }
-        guard let owner = state.ownerSphere else {
+        guard state.ownerSphere != nil else {
             logger.info("Owner sphere identity is unknown. Doing nothing.")
             return Update(state: state)
         }
