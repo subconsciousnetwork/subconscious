@@ -10,6 +10,7 @@ import Noosphere
 @testable import Subconscious
 
 final class Tests_Noosphere: XCTestCase {
+    @NoosphereActor
     func testCallWithError() throws {
         let noosphere = ns_initialize("/tmp/foo", "/tmp/bar", nil, nil)
         defer {

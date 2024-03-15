@@ -55,11 +55,17 @@ public struct SphereReceipt:
     }
 }
 
+@globalActor
+public actor NoosphereActor {
+    public static let shared = NoosphereActor()
+}
+
 /// Create a Noosphere instance.
 ///
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
-public actor Noosphere {
+@NoosphereActor
+public final class Noosphere {
     /// Wraps `NS_NOOSPHERE_LOG_*` constants
     enum NoosphereLogLevel: UInt32, CaseIterable {
         /// Equivalent to minimal format / INFO filter

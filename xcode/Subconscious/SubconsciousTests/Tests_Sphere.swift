@@ -31,7 +31,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -41,7 +41,7 @@ final class Tests_Sphere: XCTestCase {
         )
         
         do {
-            let sphere = try Sphere(
+            let sphere = try await Sphere(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -60,7 +60,7 @@ final class Tests_Sphere: XCTestCase {
         
         // Re-open sphere
         do {
-            let sphere = try Sphere(
+            let sphere = try await Sphere(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -78,7 +78,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -87,7 +87,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
         
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -131,7 +131,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -140,7 +140,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
         
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -187,7 +187,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -196,7 +196,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
         
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -255,7 +255,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -264,7 +264,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
         
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -304,7 +304,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -313,7 +313,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
         
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -352,7 +352,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath,
             gatewayURL: "http://fake-gateway.fake"
@@ -362,7 +362,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
         
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -403,7 +403,7 @@ final class Tests_Sphere: XCTestCase {
         let startVersion: String
         let endVersion: String
         do {
-            let noosphere = try Noosphere(
+            let noosphere = try await Noosphere(
                 globalStoragePath: globalStoragePath,
                 sphereStoragePath: sphereStoragePath
             )
@@ -414,7 +414,7 @@ final class Tests_Sphere: XCTestCase {
             
             sphereIdentity = sphereReceipt.identity
             
-            let sphere = try Sphere(
+            let sphere = try await Sphere(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -433,12 +433,12 @@ final class Tests_Sphere: XCTestCase {
         }
         
         do {
-            let noosphere = try Noosphere(
+            let noosphere = try await Noosphere(
                 globalStoragePath: globalStoragePath,
                 sphereStoragePath: sphereStoragePath
             )
             
-            let sphere = try Sphere(
+            let sphere = try await Sphere(
                 noosphere: noosphere,
                 identity: sphereIdentity
             )
@@ -457,7 +457,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -466,7 +466,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
         
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -490,7 +490,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -499,7 +499,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
                 
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -524,7 +524,7 @@ final class Tests_Sphere: XCTestCase {
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
@@ -533,7 +533,7 @@ final class Tests_Sphere: XCTestCase {
             ownerKeyName: "bob"
         )
                 
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
