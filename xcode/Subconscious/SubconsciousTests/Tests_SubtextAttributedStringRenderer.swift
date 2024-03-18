@@ -70,6 +70,36 @@ final class Tests_SubtextAttributedStringRenderer: XCTestCase {
         XCTAssertEqual(link.fallback, "Lo and behold")
     }
     
+    func testAlternativeSignatures() {
+        let subtext = Subtext(
+            markup: """
+                     Related: [[Sara Walker]], [[Stuart Kauffman]] [[SFI]], [[Assembly Theory]], [[Emergence comes from alphabets]], [[Alphabet]]
+                     
+                     # Mentioned Papers
+                     
+                     - Intelligence as a planetary scale process by Adam Frank, David Grinspoon & [[Sara Walker]]
+                     - [[The Algorithmic Origins of Life]] by Sara Imari Walker & Paul C. W. Davies
+                     """
+        )
+        
+        let renderer = SubtextAttributedStringRenderer()
+        let a = renderer.render(subtext)
+        let b = renderer.render(subtext.description)
+        
+        var joined = AttributedString()
+        for block in a {
+            joined.append(block.renderedSubstring)
+            if block != a.last {
+                joined.append(AttributedString("\n"))
+            }
+        }
+        
+        XCTAssertEqual(
+            joined.characters.map { String($0) }.joined(separator: ""),
+            b.characters.map { String($0) }.joined(separator: "")
+        )
+    }
+    
     func testPerformance() throws {
         let renderer = SubtextAttributedStringRenderer()
         let attributedString = NSMutableAttributedString(

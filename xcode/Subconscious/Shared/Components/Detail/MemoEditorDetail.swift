@@ -73,17 +73,11 @@ struct MemoEditorDetailView: View {
     }
     
     var body: some View {
-        ZStack {
-            VStack { }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .modifier(AppThemeBackgroundViewModifier())
-            
-            VStack {
-                if app.state.isBlockEditorEnabled {
-                    blockEditor()
-                } else {
-                    plainEditor()
-                }
+        VStack {
+            if app.state.isBlockEditorEnabled {
+                blockEditor()
+            } else {
+                plainEditor()
             }
         }
         .navigationTitle(navigationTitle)

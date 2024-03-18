@@ -87,7 +87,6 @@ struct AppView: View {
         .onChange(of: self.scenePhase) { phase in
             store.send(.scenePhaseChange(phase))
         }
-        .sentryTrace("AppView")
     }
 }
 

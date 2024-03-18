@@ -64,7 +64,9 @@ struct DeckView: View {
         .frame(maxWidth: .infinity)
         /// Replay some app actions on deck store
         .onReceive(
-            app.actions.compactMap(DeckAction.from),
+            app.actions
+                .compactMap(DeckAction.from)
+                .filter({ _ in app.state.selectedAppTab == .deck }),
             perform: store.send
         )
         /// Replay some deck actions on app store
@@ -263,7 +265,7 @@ struct DeckModel: ModelProtocol {
     
     var detailStack = DetailStackModel()
     
-    var loadingStatus: LoadingState = .loading
+    var loadingStatus: LoadingState = .initial
     
     /// Search HUD
     var isSearchPresented = false
@@ -511,6 +513,11 @@ struct DeckModel: ModelProtocol {
             state: Self,
             environment: Environment
         ) -> Update<Self> {
+            if state.loadingStatus == .loading {
+                logger.log("Already refreshing, skip.")
+                return Update(state: state)
+            }
+            
             var model = state
             model.loadingStatus = .loading
             

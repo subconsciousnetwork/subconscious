@@ -26,7 +26,7 @@ struct DiscoverNavigationView: View {
             ScrollView {
                 VStack {
                     switch store.state.loadingStatus {
-                    case .loading:
+                    case .loading, .initial:
                         Spacer()
                         ProgressView()
                         Spacer()

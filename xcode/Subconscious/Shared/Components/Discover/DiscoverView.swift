@@ -71,7 +71,9 @@ struct DiscoverView: View {
         .frame(maxWidth: .infinity)
         /// Replay some app actions on discover store
         .onReceive(
-            app.actions.compactMap(DiscoverAction.from),
+            app.actions
+                .compactMap(DiscoverAction.from)
+                .filter { _ in app.state.selectedAppTab == .discover },
             perform: store.send
         )
         /// Replay some discover actions on app store

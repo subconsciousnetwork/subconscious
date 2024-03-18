@@ -41,7 +41,7 @@ struct MemoViewerDetailView: View {
     var body: some View {
         VStack {
             switch store.state.loadingState {
-            case .loading:
+            case .loading, .initial:
                 MemoViewerDetailLoadingView(
                     notify: notify
                 )
@@ -63,7 +63,6 @@ struct MemoViewerDetailView: View {
         .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .modifier(AppThemeBackgroundViewModifier())
         .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(

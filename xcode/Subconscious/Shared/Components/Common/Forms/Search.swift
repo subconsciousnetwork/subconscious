@@ -223,7 +223,7 @@ struct SearchModel: ModelProtocol {
 
         var model = state
         model.query = query
-        return Update(state: model, fx: fx)
+        return Update(state: model, fx: fx).animation(.default)
     }
 
     /// Handle suggestion tapped

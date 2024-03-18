@@ -114,7 +114,9 @@ struct HomeProfileView: View {
         }
         /// Replay some app actions on store
         .onReceive(
-            app.actions.compactMap(HomeProfileAction.from),
+            app.actions
+                .compactMap(HomeProfileAction.from)
+                .filter({ _ in app.state.selectedAppTab == .profile }),
             perform: store.send
         )
         /// Replay some store actions on app
