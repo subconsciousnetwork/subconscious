@@ -35,7 +35,7 @@ struct SubtextView: View {
     }
     
     var blocks: [RenderableBlock] {
-        Self.renderer.render(subtext, blocks: subtext.blocks)
+        Self.renderer.render(subtext)
             .compactMap { rendered in
                 guard !rendered.block.isEmpty else {
                     return nil
