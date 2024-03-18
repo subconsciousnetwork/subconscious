@@ -614,6 +614,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .setDom(dom),
+                .metaSheet(.setShareableText(entry.contents.description)),
                 .refreshLikedStatus
             ],
             environment: environment
