@@ -44,6 +44,11 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
 
     /// Empty document
     static let empty = Subtext(markup: "")
+    
+    struct RenderedBlock: Equatable, Hashable {
+        let block: Subtext.Block
+        let renderedSubstring: AttributedSubstring
+    }
 
     enum Block: Hashable, Equatable, CustomStringConvertible {
         case text(span: Substring, inline: [Inline])

@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct RenderableBlock: Hashable {
-    var block: Subtext.Block
+struct RenderableBlock: Equatable, Hashable {
+    var block: Subtext.RenderedBlock
     var entries: [EntryStub]
 }
 
@@ -35,18 +35,19 @@ struct SubtextView: View {
     }
     
     var blocks: [RenderableBlock] {
-        subtext.blocks.compactMap { block in
-            guard !block.isEmpty else {
-                return nil
+        Self.renderer.render(subtext, blocks: subtext.blocks)
+            .compactMap { rendered in
+                guard !rendered.block.isEmpty else {
+                    return nil
+                }
+                
+                return RenderableBlock(
+                    block: rendered,
+                    entries: self.entries(for: rendered.block)
+                )
             }
-            
-            return RenderableBlock(
-                block: block,
-                entries: self.entries(for: block)
-            )
-        }
     }
-    
+
     func shouldReplaceBlockWithTransclude(block: Subtext.Block) -> Bool {
         if transcludePreviews.count == 0 {
             return false
@@ -74,15 +75,10 @@ struct SubtextView: View {
             ForEach(blocks, id: \.self) { renderable in
                 VStack(spacing: AppTheme.tightPadding) {
                     if !shouldReplaceBlockWithTransclude(
-                        block: renderable.block
+                        block: renderable.block.block
                     ) {
                         Text(
-                            // TODO: this is extremely inefficient
-                            // We have already parsed the whole document as Subtext but
-                            // as part of rendering we will re-parse each block again.
-                            
-                            // This has a significant cost in list views.
-                            Self.renderer.render(renderable.block.description)
+                            AttributedString(renderable.block.renderedSubstring)
                         )
                         .expandAlignedLeading()
                         .fixedSize(horizontal: false, vertical: true)
