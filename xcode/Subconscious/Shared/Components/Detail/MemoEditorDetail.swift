@@ -107,7 +107,7 @@ struct MemoEditorDetailView: View {
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
         // 2022-02-08 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
+        .onChange(of: self.scenePhase) { _, phase in
             store.send(.scenePhaseChange(phase))
             blockEditorStore.send(.scenePhaseChange(phase))
         }
@@ -117,7 +117,7 @@ struct MemoEditorDetailView: View {
         // we never receive the save-succeeded action.
         // Reacting to isPresented is soon enough.
         // 2023-02-14
-        .onChange(of: self.isPresented) { isPresented in
+        .onChange(of: self.isPresented) { _, isPresented in
             if !isPresented {
                 store.send(.autosave)
                 blockEditorStore.send(.autosave)
