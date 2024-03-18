@@ -28,6 +28,16 @@ struct NotebookView: View {
         )
     )
     @Environment (\.colorScheme) var colorScheme
+    
+    private var replayableAppActions: AnyPublisher<NotebookAction, Never> {
+        app.actions
+            .compactMap(NotebookAction.from)
+            .filter { action in
+                action == .ready
+                    || app.state.selectedAppTab == .notebook
+            }
+            .eraseToAnyPublisher()
+    }
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.
@@ -82,12 +92,7 @@ struct NotebookView: View {
         }
         /// Replay some app actions on notebook store
         .onReceive(
-            app.actions
-                .compactMap(NotebookAction.from)
-                .filter { action in
-                    action == .ready
-                        || app.state.selectedAppTab == .notebook
-                },
+            replayableAppActions,
             perform: store.send
         )
         /// Replay select notebook actions on app
