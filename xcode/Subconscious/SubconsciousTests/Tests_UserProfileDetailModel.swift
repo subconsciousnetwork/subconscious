@@ -68,7 +68,7 @@ class Tests_UserProfileDetailModel: XCTestCase {
         
         XCTAssertEqual(
             UserProfileDetailAction.from(
-                .succeedFollowPeer(petname)
+                .succeedFollowPeer(did, petname)
             ),
             .succeedFollow(petname)
         )

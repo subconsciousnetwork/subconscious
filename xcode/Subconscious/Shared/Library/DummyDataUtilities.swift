@@ -37,6 +37,15 @@ extension Slug: DummyData {
     }
 }
 
+extension Slashlink: DummyData {
+    static func dummyData() -> Slashlink {
+        let slug = Slug.dummyData()
+        let petname = Petname.dummyData()
+        
+        return Slashlink(petname: petname, slug: slug)
+    }
+}
+
 extension Petname.Name: DummyData {
     static func dummyData() -> Petname.Name {
         let options = [
@@ -176,7 +185,6 @@ extension EntryStub: DummyData {
         let slashlink = Slashlink(petname: petname, slug: slug)
         let address = slashlink
         let excerpt = Subtext(markup: String.dummyDataLong())
-        let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(
             did: Did.dummyData(),

@@ -76,17 +76,11 @@ struct MemoEditorDetailView: View {
     }
     
     var body: some View {
-        ZStack {
-            VStack { }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .modifier(AppThemeBackgroundViewModifier())
-            
-            VStack {
-                if app.state.isBlockEditorEnabled {
-                    blockEditor()
-                } else {
-                    plainEditor()
-                }
+        VStack {
+            if app.state.isBlockEditorEnabled {
+                blockEditor()
+            } else {
+                plainEditor()
             }
         }
         .navigationTitle(navigationTitle)
@@ -109,11 +103,14 @@ struct MemoEditorDetailView: View {
             store.send(MemoEditorDetailAction.appear(description))
             blockEditorStore.send(.appear(description))
         }
+        .onDisappear {
+            store.send(MemoEditorDetailAction.disappear)
+        }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
         // 2022-02-08 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
+        .onChange(of: self.scenePhase) { _, phase in
             store.send(.scenePhaseChange(phase))
             blockEditorStore.send(.scenePhaseChange(phase))
         }
@@ -123,7 +120,7 @@ struct MemoEditorDetailView: View {
         // we never receive the save-succeeded action.
         // Reacting to isPresented is soon enough.
         // 2023-02-14
-        .onChange(of: self.isPresented) { isPresented in
+        .onChange(of: self.isPresented) { _, isPresented in
             if !isPresented {
                 store.send(.autosave)
                 blockEditorStore.send(.autosave)
@@ -253,7 +250,12 @@ struct MemoEditorDetailView: View {
                                         }
                                     )
                                 }
-                                .padding(AppTheme.padding)
+                                .padding(EdgeInsets(
+                                    top: 0,
+                                    leading: DeckTheme.cardPadding,
+                                    bottom: DeckTheme.cardPadding,
+                                    trailing: DeckTheme.cardPadding
+                                ))
                             }
                         }
                         .background(background)
@@ -271,7 +273,8 @@ struct MemoEditorDetailView: View {
                                 if let address = store.state.address {
                                     notify(.requestQuoteInNewDetail(address, comment: comment))
                                 }
-                            }
+                            },
+                            background: background ?? .secondary
                         )
                         
                         BacklinksView(
@@ -406,6 +409,8 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
+    case disappear
+    case poll
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -724,6 +729,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     
     var comments: [String] = []
     
+    var isPolling = false
+    
     /// Is editor saved?
     var saveState = SaveState.saved
     
@@ -802,6 +809,16 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
+            )
+        case .disappear:
+            return disappear(
+                state: state,
+                environment: environment
+            )
+        case .poll:
+            return poll(
+                state: state,
+                environment: environment
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -1180,10 +1197,47 @@ struct MemoEditorDetailModel: ModelProtocol {
         state: MemoEditorDetailModel,
         environment: AppEnvironment
     ) -> Update<MemoEditorDetailModel> {
-        let pollFx = AppEnvironment.poll(every: Config.default.pollingInterval)
-            .map({ _ in MemoEditorDetailAction.autosave })
+        var model = state
+        model.isPolling = true
+
+        let pollFx: Fx<Action> = Just(Action.poll).delay(
+            for: .seconds(Config.default.pollingInterval),
+            scheduler: DispatchQueue.main
+        ).eraseToAnyPublisher()
+
+        return Update(state: model, fx: pollFx)
+    }
+    
+    static func disappear(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<Self> {
+        var model = state
+        model.isPolling = false
+        
+        return Update(state: model)
+    }
+    
+    static func poll(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<MemoEditorDetailModel> {
+        guard state.isPolling else {
+            return Update(state: state)
+        }
+        
+        let pollFx: Fx<Action> = Just(Action.poll).delay(
+            for: .seconds(Config.default.pollingInterval),
+            scheduler: DispatchQueue.main
+        ).eraseToAnyPublisher()
+
+        let autosaveFx: Fx<Action> = Just(Action.autosave)
             .eraseToAnyPublisher()
-        return Update(state: state, fx: pollFx)
+
+        return Update(
+            state: state,
+            fx: pollFx.merge(with: autosaveFx).eraseToAnyPublisher()
+        )
     }
     
     /// Handle scene phase change
@@ -1741,7 +1795,9 @@ struct MemoEditorDetailModel: ModelProtocol {
             )
         }
         
-        guard let entry = state.snapshotEntry() else {
+        // Ensure we have something to actually save
+        guard let entry = state.snapshotEntry(),
+              state.saveState != .saved else {
             return Update(state: state)
         }
         
@@ -1799,8 +1855,8 @@ struct MemoEditorDetailModel: ModelProtocol {
         environment: AppEnvironment,
         entry: MemoEntry
     ) -> Update<MemoEditorDetailModel> {
-        // If editor dom is already saved, noop
-        guard state.saveState != .saved else {
+        // If editor dom is already saved or saving, noop
+        guard state.saveState == .unsaved else {
             return Update(state: state)
         }
         

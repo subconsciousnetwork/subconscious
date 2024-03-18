@@ -173,6 +173,8 @@ extension MemoRecord {
         memo: Memo,
         size: Int? = nil
     ) throws {
+        let dom = Subtext.excerpt(markup: memo.body)
+        
         try self.init(
             did: did,
             petname: petname,
@@ -180,13 +182,13 @@ extension MemoRecord {
             contentType: memo.contentType,
             created: memo.created,
             modified: memo.modified,
-            title: memo.title(),
+            title: dom.title(),
             fileExtension: memo.fileExtension,
             headers: memo.headers,
             body: memo.body,
             description: memo.plain(),
-            excerpt: memo.excerpt(),
-            links: memo.slugs(),
+            excerpt: dom.description,
+            links: dom.slugs,
             size: size
         )
     }

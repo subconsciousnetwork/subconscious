@@ -72,7 +72,7 @@ struct SyncStatusView: View {
                 showLabel = true
             }
         }
-        .onChange(of: status) { nextStatus in
+        .onChange(of: status) { _, nextStatus in
             withAnimation {
                 switch nextStatus {
                 case .succeeded:

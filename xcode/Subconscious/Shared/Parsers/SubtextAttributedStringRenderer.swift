@@ -166,7 +166,44 @@ struct SubtextAttributedStringRenderer {
         
         return markup
     }
-
+    
+    // Convenience method to re-use parsed Subtext and return each block rendered independently.
+    // This is a peformance optimization for SubtextView.
+    func render(_ subtext: Subtext) -> [Subtext.RenderedBlock] {
+        // Initial contiguous AttributedString creation with all attributes applied
+        var markup = AttributedString(subtext.base)
+        markup.font = .body
+        
+        for block in subtext.blocks {
+            renderAttributesOf(attributedString: &markup, block: block)
+            for inline in block.inline {
+                renderAttributesOf(
+                    attributedString: &markup,
+                    inline: inline
+                )
+            }
+        }
+        
+        // Array to hold AttributedStrings for each block
+        var attributedStringsForBlocks: [Subtext.RenderedBlock] = []
+        
+        // Extract and append AttributedString for each block
+        for block in subtext.blocks {
+            guard let blockRange = block.span.range.within(attributedString: markup) else {
+                continue
+            }
+            let attributedSubstring = markup[blockRange]
+            attributedStringsForBlocks.append(
+                Subtext.RenderedBlock(
+                    block: block,
+                    renderedSubstring: attributedSubstring
+                )
+            )
+        }
+        
+        return attributedStringsForBlocks
+    }
+    
     func renderAttributesOf(
         attributedString: inout AttributedString,
         block: Subtext.Block

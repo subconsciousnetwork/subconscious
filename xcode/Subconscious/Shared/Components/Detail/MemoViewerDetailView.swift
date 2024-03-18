@@ -41,7 +41,7 @@ struct MemoViewerDetailView: View {
     var body: some View {
         VStack {
             switch store.state.loadingState {
-            case .loading:
+            case .loading, .initial:
                 MemoViewerDetailLoadingView(
                     notify: notify
                 )
@@ -63,7 +63,6 @@ struct MemoViewerDetailView: View {
         .tint(store.state.themeColor?.toHighlightColor())
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .modifier(AppThemeBackgroundViewModifier())
         .modifier(AppThemeToolbarViewModifier())
         .toolbar(content: {
             DetailToolbarContent(
@@ -137,10 +136,46 @@ struct MemoViewerDetailLoadedView: View {
         category: "MemoViewerDetailLoadedView"
     )
     
+    var background: Color? {
+        store.state.themeColor?.toColor()
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    if let author = store.state.owner,
+                       let name = author.toNameVariant() {
+                        Button(
+                            action: {
+                                store.send(.requestAuthorDetail(author))
+                            },
+                            label: {
+                                HStack(
+                                    alignment: .center,
+                                    spacing: AppTheme.unit3
+                                ) {
+                                    ProfilePic(
+                                        pfp: author.pfp,
+                                        size: .large
+                                    )
+                                    
+                                    PetnameView(
+                                        name: name,
+                                        aliases: [],
+                                        showMaybePrefix: false
+                                    )
+                                }
+                                .transition(
+                                    .push(
+                                        from: .bottom
+                                    )
+                                )
+                            }
+                        )
+                        .padding(AppTheme.padding)
+                        
+                    }
                     VStack {
                         SubtextView(
                             peer: store.state.owner?.address.peer,
@@ -177,7 +212,7 @@ struct MemoViewerDetailLoadedView: View {
                     .frame(
                         minHeight: UIFont.appTextMono.lineHeight * 8
                     )
-                    .background(store.state.themeColor?.toColor())
+                    .background(background)
                     .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
                     .shadow(style: .transclude)
                     .padding(.bottom, AppTheme.unit4)
@@ -190,7 +225,8 @@ struct MemoViewerDetailLoadedView: View {
                         },
                         onRespond: { comment in
                             notify(.requestQuoteInNewDetail(address, comment: comment))
-                        }
+                        },
+                        background: background ?? .secondary
                     )
                     
                     BacklinksView(
@@ -519,6 +555,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             // Set meta sheet address as well
             actions: [
                 .setMetaSheetAddress(description.address),
+                .refreshComments,
                 .refreshAll
             ],
             environment: environment
@@ -546,8 +583,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             state: model,
             actions: [
                 .fetchOwnerProfile,
-                .refreshBacklinks,
-                .refreshComments
+                .refreshBacklinks
             ],
             environment: environment
         ).mergeFx(fx)

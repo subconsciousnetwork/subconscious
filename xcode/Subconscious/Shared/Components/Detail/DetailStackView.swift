@@ -23,12 +23,18 @@ struct DetailStackView<Root: View>: View {
                 tag: DetailStackAction.setDetails
             )
         ) {
-            root()
-                .modifier(AppThemeToolbarViewModifier())
-                .modifier(AppThemeBackgroundViewModifier())
-                .navigationDestination(
-                    for: MemoDetailDescription.self
-                ) { detail in
+            ZStack {
+                AppThemeBackgroundView()
+                
+                root()
+            }
+            .modifier(AppThemeToolbarViewModifier())
+            .navigationDestination(
+                for: MemoDetailDescription.self
+            ) { detail in
+                ZStack {
+                    AppThemeBackgroundView()
+                    
                     switch detail {
                     case .editor(let description):
                         MemoEditorDetailView(
@@ -59,6 +65,7 @@ struct DetailStackView<Root: View>: View {
                         )
                     }
                 }
+            }
         }
     }
 }

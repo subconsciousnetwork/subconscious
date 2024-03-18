@@ -77,16 +77,16 @@ struct AppView: View {
             )
         }
         .onAppear {
+            SentryIntegration.start()
             store.send(.appear)
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
         // 2023-02-16 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
+        .onChange(of: self.scenePhase) { _, phase in
             store.send(.scenePhaseChange(phase))
         }
-        .sentryTrace("AppView")
     }
 }
 
@@ -99,7 +99,12 @@ struct PeerIndexError: Error, Hashable {
     let petname: Petname
 }
 
-typealias PeerIndexResult = Result<PeerRecord, PeerIndexError>
+struct PeerIndexSuccess: Hashable {
+    let changeCount: Int
+    let peer: PeerRecord
+}
+
+typealias PeerIndexResult = Result<PeerIndexSuccess, PeerIndexError>
 
 // MARK: Action
 enum AppAction: Hashable {
@@ -277,7 +282,7 @@ enum AppAction: Hashable {
     // Addressbook Management Actions
     case followPeer(identity: Did, petname: Petname)
     case failFollowPeer(error: String)
-    case succeedFollowPeer(_ petname: Petname)
+    case succeedFollowPeer(_ identity: Did, _ petname: Petname)
     
     case renamePeer(from: Petname, to: Petname)
     case failRenamePeer(error: String)
@@ -335,6 +340,7 @@ enum AppAction: Hashable {
     case requestNotebookRoot
     case requestProfileRoot
     case requestDeckRoot
+    case requestDiscoverRoot
     
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
@@ -544,6 +550,12 @@ enum FirstRunStep: Hashable {
     case done
 }
 
+enum JobStatus {
+    case initial
+    case running
+    case finished
+}
+
 // MARK: Model
 struct AppModel: ModelProtocol {
     /// Has first run completed?
@@ -577,6 +589,7 @@ struct AppModel: ModelProtocol {
     var databaseMigrationStatus = ResourceStatus.initial
     var localSyncStatus = ResourceStatus.initial
     var sphereSyncStatus = ResourceStatus.initial
+    var indexingStatus = JobStatus.initial
     
     var isSyncAllResolved: Bool {
         databaseMigrationStatus.isResolved &&
@@ -1140,10 +1153,11 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .succeedFollowPeer(let petname):
+        case let .succeedFollowPeer(did, petname):
             return succeedFollowPeer(
                 state: state,
                 environment: environment,
+                identity: did,
                 petname: petname
             )
         case .renamePeer(let from, let to):
@@ -1212,7 +1226,10 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 tab: tab
             )
-        case .requestNotebookRoot, .requestProfileRoot, .requestDeckRoot:
+        case .requestNotebookRoot,
+                .requestProfileRoot,
+                .requestDeckRoot,
+                .requestDiscoverRoot:
             return Update(state: state)
         case .checkRecoveryStatus:
             return checkRecoveryStatus(
@@ -2424,6 +2441,12 @@ struct AppModel: ModelProtocol {
         environment: Environment,
         petnames: [Petname]
     ) -> Update<Self> {
+        if state.indexingStatus == .running {
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.indexingStatus = .running
         
         let fx: Fx<Action> = Future.detached(priority: .background) {
             let results = await environment.data.indexPeers(petnames: petnames)
@@ -2431,7 +2454,7 @@ struct AppModel: ModelProtocol {
         }
         .eraseToAnyPublisher()
         
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
     
     static func completeIndexPeers(
@@ -2441,13 +2464,13 @@ struct AppModel: ModelProtocol {
     ) -> Update<Self> {
         for result in results {
             switch (result) {
-            case .success(let peer):
+            case .success(let result):
                 logger.log(
                     "Indexed peer",
                     metadata: [
-                        "petname": peer.petname.description,
-                        "identity": peer.identity.description,
-                        "since": peer.since ?? "nil"
+                        "petname": result.peer.petname.description,
+                        "identity": result.peer.identity.description,
+                        "since": result.peer.since ?? "nil"
                     ]
                 )
                 break
@@ -2463,7 +2486,10 @@ struct AppModel: ModelProtocol {
             }
         }
         
-        return Update(state: state)
+        var model = state
+        model.indexingStatus = .finished
+        
+        return Update(state: model)
     }
     
     static func purgePeer(
@@ -2737,7 +2763,7 @@ struct AppModel: ModelProtocol {
                     preventOverwrite: true
                 )
                 .map({ _ in
-                    .succeedFollowPeer(petname)
+                    .succeedFollowPeer(identity, petname)
                 })
                 .recover { error in
                     .failFollowPeer(
@@ -2765,6 +2791,7 @@ struct AppModel: ModelProtocol {
     static func succeedFollowPeer(
         state: AppModel,
         environment: AppEnvironment,
+        identity: Did,
         petname: Petname
     ) -> Update<AppModel> {
         logger.log(
@@ -2958,6 +2985,8 @@ struct AppModel: ModelProtocol {
                     return AppAction.requestDeckRoot
                 case .notebook:
                     return AppAction.requestNotebookRoot
+                case .discover:
+                    return AppAction.requestDiscoverRoot
                 case .profile:
                     return AppAction.requestProfileRoot
                 }

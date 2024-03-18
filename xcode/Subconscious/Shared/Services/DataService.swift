@@ -137,6 +137,7 @@ actor DataService {
         // Get changes since the last time we indexed this peer,
         // or get all changes if this is the first time we've tried to index.
         let changes = try await sphere.changes(since: peer?.since)
+        let peerChanges = try await sphere.getPeerChanges(since: peer?.since)
         logger.log(
             "Indexing peer",
             metadata: [
@@ -144,7 +145,8 @@ actor DataService {
                 "identity": identity.description,
                 "version": version,
                 "since": peer?.since ?? "nil",
-                "changes": changes.count.description
+                "changes": changes.count.description,
+                "peerChanges": peerChanges.count.description,
             ]
         )
         
@@ -152,40 +154,102 @@ actor DataService {
         try database.savepoint(savepoint)
         
         do {
+            var toUpdate: [(Slug, Memo)] = []
+            var toRemove: [Slug] = []
+            
+            // MARK: Memo changes
             for change in changes {
                 let slashlink = Slashlink(slug: change)
-                // If memo does exist, write it to database.
-                // If memo does not exist, that means change was a remove.
                 if let memo = try? await sphere.read(
                     slashlink: slashlink
                 ).toMemo() {
-                    try database.writeMemo(
-                        MemoRecord(
-                            did: identity,
-                            petname: petname,
-                            slug: change,
-                            memo: memo
-                        )
-                    )
-                    logger.log(
-                        "Indexed memo \(slashlink)",
-                        metadata: [
-                            "slashlink": slashlink.description
-                        ]
-                    )
+                    toUpdate.append((change, memo))
                 } else {
-                    logger.log(
-                        "Removed indexed memo \(slashlink)",
-                        metadata: [
-                            "slashlink": slashlink.description
-                        ]
-                    )
-                    try database.removeMemo(
-                        did: identity,
-                        slug: change
-                    )
+                    toRemove.append(change)
                 }
             }
+            
+            // MARK: MemoRecord Construction
+            // attempt parallelization of MemoRecord construction (Subtext parsing)
+            let records = try await withThrowingTaskGroup(of: MemoRecord.self) { group in
+                var records = [MemoRecord]()
+                
+                for (slug, memo) in toUpdate {
+                    group.addTask(priority: .background) {
+                        // Each record parses subtext in the init()
+                        return try MemoRecord(
+                            did: identity,
+                            petname: petname,
+                            slug: slug,
+                            memo: memo
+                        )
+                    }
+                }
+                
+                for try await record in group {
+                    records.append(record)
+                }
+                
+                return records
+            }
+            
+            await Task.yield()
+            
+            for record in records {
+                try database.writeMemo(record)
+                logger.log(
+                    "Indexed memo \(record.slug)",
+                    metadata: [
+                        "slug": record.slug.description
+                    ]
+                )
+            }
+            
+            for slug in toRemove {
+                let slashlink = Slashlink(slug: slug)
+                try database.removeMemo(
+                    did: identity,
+                    slug: slug
+                )
+                logger.log(
+                    "Removed indexed memo \(slashlink)",
+                    metadata: [
+                        "slashlink": slashlink.description
+                    ]
+                )
+            }
+            
+            // MARK: Peer Changes
+            for change in peerChanges {
+                switch change {
+                case .remove:
+                    // We ignore removals for neighbors so that we can form a maximal
+                    // set of known contacts over all history to power discovery features.
+                    continue
+                case let .update(neighbor):
+                    if let address = petname.join(petname: neighbor.petname) {
+                        guard let sphere = try? await noosphere.traverse(petname: address) else {
+                            continue
+                        }
+                        let profile = await userProfile.readProfileMemo(sphere: sphere)
+                        
+                        let neighbor = NeighborRecord(
+                            petname: neighbor.petname,
+                            identity: neighbor.identity,
+                            address: Slashlink(petname: address),
+                            nickname: Petname.Name(profile?.nickname ?? ""),
+                            bio: UserProfileBio(profile?.bio ?? ""),
+                            peer: petname,
+                            since: neighbor.version
+                        )
+                        try database.writeNeighbor(neighbor)
+                    }
+                }
+                
+                await Task.yield()
+            }
+            
+            // MARK: Write Peer
             try database.writePeer(
                 PeerRecord(
                     petname: petname,
@@ -234,48 +298,62 @@ actor DataService {
     }
     
     func indexPeers(petnames: [Petname]) async -> [PeerIndexResult] {
-        var results: [PeerIndexResult] = []
-        
-        for petname in petnames {
-            logger.log(
-                "Indexing peer",
-                metadata: [
-                    "petname": petname.description
-                ]
-            )
+        let results = await withTaskGroup(of: PeerIndexResult.self) { group in
+            var results: [PeerIndexResult] = []
+            for petname in petnames {
+                group.addTask(priority: .background) {
+                    await self.logger.log(
+                        "Indexing peer",
+                        metadata: [
+                            "petname": petname.description
+                        ]
+                    )
+                    do {
+                        let (changeCount, peer) = try await self.indexPeer(
+                            petname: petname
+                        )
+                        return .success(
+                            PeerIndexSuccess(
+                                changeCount: changeCount,
+                                peer: peer
+                            )
+                        )
+                    } catch {
+                        return .failure(
+                            PeerIndexError(
+                                error: error.localizedDescription,
+                                petname: petname
+                            )
+                        )
+                    }
+                }
+            }
             
-            do {
-                let (changeCount, peer) = try await self.indexPeer(
-                    petname: petname
-                )
-                
-                results.append(.success(peer))
-                
-                try database.writeActivity(
+            // Collect the results
+            for await result in group {
+                results.append(result)
+            }
+            
+            return results
+        }
+        
+        for result in results {
+            switch result {
+            case let .success(result):
+                try? database.writeActivity(
                     event: ActivityEvent(
                         category: .system,
                         event: SucceedIndexPeerActivityEvent.event,
-                        message: "Found \(changeCount) updates from \(petname.markup)",
+                        message: "Found \(result.changeCount) updates from \(result.peer.petname.markup)",
                         metadata: SucceedIndexPeerActivityEvent(
-                            did: peer.identity.description,
-                            petname: petname.description,
-                            changes: changeCount
+                            did: result.peer.identity.description,
+                            petname: result.peer.petname.description,
+                            changes: result.changeCount
                         )
                     )
                 )
-                
-                // Give other tasks a chance to use noosphere, indexing many peers
-                // can take a long time and potentially block user actions
-                await Task.yield()
-            } catch {
-                results.append(
-                    PeerIndexResult.failure(
-                        PeerIndexError(
-                            error: error.localizedDescription,
-                            petname: petname
-                        )
-                    )
-                )
+            default:
+                break
             }
         }
         
@@ -745,51 +823,9 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
-    func listFeed() async throws -> [EntryStub] {
+    func listAll(limit: Int = 1000) async throws -> [EntryStub] {
         let identity = try await noosphere.identity()
-        return try self.database.listFeed(owner: identity)
-    }
-    
-    nonisolated func listFeedPublisher() -> AnyPublisher<[StoryEntry], Error> {
-        Future.detached {
-            let entries = try await self.listFeed()
-            let likes = try await self.userLikes.readOurLikes()
-            var authors: [Did:UserProfile] = [:]
-            var stories: [StoryEntry] = []
-            
-            for entry in entries {
-                let liked = likes.contains(where: { like in like == entry.address })
-                // Have we already found the author for this post?
-                if let author = authors[entry.did] {
-                    stories.append(
-                        StoryEntry(
-                            entry: entry,
-                            author: author,
-                            liked: liked
-                        )
-                    )
-                    continue
-                }
-                
-                let user = try await self.userProfile.identifyUser(
-                    did: entry.did,
-                    address: entry.address,
-                    context: nil
-                )
-                
-                authors.updateValue(user, forKey: entry.did)
-                stories.append(
-                    StoryEntry(
-                        entry: entry,
-                        author: user,
-                        liked: liked
-                    )
-                )
-            }
-            
-            return stories
-        }
-        .eraseToAnyPublisher()
+        return try self.database.listAll(owner: identity, limit: limit)
     }
     
     func countMemos() async throws -> Int {

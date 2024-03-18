@@ -61,6 +61,8 @@
 		B5432B8329F8BAED003BBB23 /* Tests_UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */; };
 		B54930B12A2F0FE300958F12 /* StoryPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54930B02A2F0FE300958F12 /* StoryPlaceholderView.swift */; };
 		B549B16B2A0CDAC10070C6AD /* FirstRunRecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */; };
+		B54BC3C12B83160400D6C76D /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54BC3C02B83160400D6C76D /* DiscoverView.swift */; };
+		B54BC3C32B83171900D6C76D /* DiscoverNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54BC3C22B83171900D6C76D /* DiscoverNavigationView.swift */; };
 		B550E04029AF219100050F19 /* Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D30029AF1F9B0011D820 /* Did.swift */; };
 		B5604DAE2A6A263E004C9590 /* Tests_Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5604DAD2A6A263E004C9590 /* Tests_Config.swift */; };
 		B56139A12B1EF9FE005F1A32 /* EntryListRowButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56139A02B1EF9FE005F1A32 /* EntryListRowButtonStyle.swift */; };
@@ -118,6 +120,8 @@
 		B597C7372B4E34DB003F4342 /* ActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B597C7362B4E34DA003F4342 /* ActivityEvent.swift */; };
 		B59850B52B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
 		B59850B62B328E6800FF8E65 /* NoosphereLogProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */; };
+		B59CA6642B84523E00838A3E /* DiscoverUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CA6632B84523E00838A3E /* DiscoverUserView.swift */; };
+		B59CA6662B84590700838A3E /* DiscoverActionButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CA6652B84590700838A3E /* DiscoverActionButtonStyle.swift */; };
 		B59D556329BBFF56007915E2 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59D556229BBFF56007915E2 /* FormField.swift */; };
 		B59E4E572B3BA781000A2B49 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E562B3BA781000A2B49 /* CardView.swift */; };
 		B59E4E592B3BA8E7000A2B49 /* EntryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */; };
@@ -152,6 +156,7 @@
 		B5D71D1A2A32B2AF000E058A /* NotFoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D71D182A32B2AF000E058A /* NotFoundView.swift */; };
 		B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
 		B5D769CC29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
+		B5D7826A2B7F3AC500B230F9 /* NeighborRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D782692B7F3AC500B230F9 /* NeighborRecord.swift */; };
 		B5D8FEB72AAC426C002CBF00 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */; };
 		B5D8FEB82AAC426C002CBF00 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */; };
 		B5E07B322B0337A100F302EA /* Tests_UserProfileDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E07B312B0337A100F302EA /* Tests_UserProfileDetailModel.swift */; };
@@ -625,6 +630,8 @@
 		B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserProfileService.swift; sourceTree = "<group>"; };
 		B54930B02A2F0FE300958F12 /* StoryPlaceholderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryPlaceholderView.swift; sourceTree = "<group>"; };
 		B549B16A2A0CDAC10070C6AD /* FirstRunRecoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunRecoveryView.swift; sourceTree = "<group>"; };
+		B54BC3C02B83160400D6C76D /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
+		B54BC3C22B83171900D6C76D /* DiscoverNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverNavigationView.swift; sourceTree = "<group>"; };
 		B5604DAD2A6A263E004C9590 /* Tests_Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Config.swift; sourceTree = "<group>"; };
 		B56139A02B1EF9FE005F1A32 /* EntryListRowButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListRowButtonStyle.swift; sourceTree = "<group>"; };
 		B563ACC02B705FC800068BC1 /* AppThemeToolbarViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeToolbarViewModifier.swift; sourceTree = "<group>"; };
@@ -668,6 +675,8 @@
 		B5908BEA29DAB05B00225B1A /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		B597C7362B4E34DA003F4342 /* ActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEvent.swift; sourceTree = "<group>"; };
 		B59850B42B328E6800FF8E65 /* NoosphereLogProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoosphereLogProxy.swift; sourceTree = "<group>"; };
+		B59CA6632B84523E00838A3E /* DiscoverUserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverUserView.swift; sourceTree = "<group>"; };
+		B59CA6652B84590700838A3E /* DiscoverActionButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverActionButtonStyle.swift; sourceTree = "<group>"; };
 		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B59E4E562B3BA781000A2B49 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCardView.swift; sourceTree = "<group>"; };
@@ -694,6 +703,7 @@
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
 		B5D71D182A32B2AF000E058A /* NotFoundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotFoundView.swift; sourceTree = "<group>"; };
 		B5D769CA29F770440015385A /* GenerativeProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerativeProfilePic.swift; sourceTree = "<group>"; };
+		B5D782692B7F3AC500B230F9 /* NeighborRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeighborRecord.swift; sourceTree = "<group>"; };
 		B5D8D30029AF1F9B0011D820 /* Did.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Did.swift; sourceTree = "<group>"; };
 		B5D8FEB62AAC426C002CBF00 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		B5E07B312B0337A100F302EA /* Tests_UserProfileDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserProfileDetailModel.swift; sourceTree = "<group>"; };
@@ -1086,6 +1096,17 @@
 				B542EF792AF4963700BE29F1 /* UserProfileDetialMetaSheetModifier.swift */,
 			);
 			path = Sheets;
+			sourceTree = "<group>";
+		};
+		B54BC3BF2B8315F800D6C76D /* Discover */ = {
+			isa = PBXGroup;
+			children = (
+				B54BC3C02B83160400D6C76D /* DiscoverView.swift */,
+				B54BC3C22B83171900D6C76D /* DiscoverNavigationView.swift */,
+				B59CA6632B84523E00838A3E /* DiscoverUserView.swift */,
+				B59CA6652B84590700838A3E /* DiscoverActionButtonStyle.swift */,
+			);
+			path = Discover;
 			sourceTree = "<group>";
 		};
 		B57339562AEF7FF200D43333 /* Toast */ = {
@@ -1513,6 +1534,7 @@
 				B8E1A94A2A14198400B757A5 /* OurSphereRecord.swift */,
 				B8C80F0029FC201000BAC84D /* Peer.swift */,
 				B8E1A9562A16E98D00B757A5 /* PeerRecord.swift */,
+				B5D782692B7F3AC500B230F9 /* NeighborRecord.swift */,
 				B8E2B02829AD0E23004A78B3 /* Petname.swift */,
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
 				B5CA6F402B5A5D5000877B0D /* AppendLinkSuggestion.swift */,
@@ -1716,6 +1738,7 @@
 			isa = PBXGroup;
 			children = (
 				B8C28C772B923215003CA696 /* BlockEditor */,
+				B54BC3BF2B8315F800D6C76D /* Discover */,
 				B53DC52F2B7B2B0E00D20CCB /* AICommentsView.swift */,
 				B82F053628D60EE60025A8B5 /* AppTabView.swift */,
 				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
@@ -2237,6 +2260,7 @@
 				B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */,
 				B8C80F0129FC201000BAC84D /* Peer.swift in Sources */,
 				B8C3AA922B33B5DA00E7B44D /* BlockEditorModelUpdate.swift in Sources */,
+				B59CA6642B84523E00838A3E /* DiscoverUserView.swift in Sources */,
 				B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */,
 				B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */,
 				B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */,
@@ -2248,6 +2272,7 @@
 				B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
 				B8AB08C12A9D508500998099 /* BlockEditorViewController.swift in Sources */,
+				B54BC3C12B83160400D6C76D /* DiscoverView.swift in Sources */,
 				B8B3EE79297AF6E500779B7F /* FirstRunProfileView.swift in Sources */,
 				B549B16B2A0CDAC10070C6AD /* FirstRunRecoveryView.swift in Sources */,
 				B58FD6712A4E4BF000826548 /* GatewayProvisioningSettingsSection.swift in Sources */,
@@ -2370,6 +2395,7 @@
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
 				B8B9640E2B692EBB00A96165 /* Tracery.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
+				B54BC3C32B83171900D6C76D /* DiscoverNavigationView.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B58CC8E32B0DCFEE004CFFEA /* CardModel.swift in Sources */,
 				B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */,
@@ -2391,6 +2417,7 @@
 				B542EF712AF4949B00BE29F1 /* EditProfileSheetModifier.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */,
+				B59CA6662B84590700838A3E /* DiscoverActionButtonStyle.swift in Sources */,
 				B59E4E5F2B3BA91D000A2B49 /* CardContentView.swift in Sources */,
 				B8D328B729A671DA00850A37 /* TranscludeView.swift in Sources */,
 				B81A1A6F29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift in Sources */,
@@ -2482,6 +2509,7 @@
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */,
+				B5D7826A2B7F3AC500B230F9 /* NeighborRecord.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2688,7 +2716,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LA8RNJ2LQP;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.SubconsciousTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2708,7 +2736,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LA8RNJ2LQP;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.SubconsciousTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2773,7 +2801,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2828,7 +2856,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -2860,12 +2888,12 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.18;
+				MARKETING_VERSION = 0.0.19;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
@@ -2902,12 +2930,12 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.18;
+				MARKETING_VERSION = 0.0.19;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;

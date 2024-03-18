@@ -8,6 +8,7 @@
 import Foundation
 
 enum LoadingState: Hashable, Codable {
+    case initial
     case loading
     case loaded
     case notFound

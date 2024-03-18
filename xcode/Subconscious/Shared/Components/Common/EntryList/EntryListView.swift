@@ -28,11 +28,7 @@ struct EntryListView: View {
     static let resetScrollTargetId: Int = 0
     
     private func liked(_ entry: EntryStub) -> Bool {
-        likes?.contains(
-            where: {
-                like in like == entry.address
-            })
-            ?? false
+        likes?.contains(entry.address) ?? false
     }
 
     var body: some View {

@@ -7,13 +7,10 @@
 
 import SwiftUI
 
-struct AppThemeBackgroundViewModifier: ViewModifier {
+struct AppThemeBackgroundView: View {
     @Environment(\.colorScheme) var colorScheme
-    
-    func body(content: Content) -> some View {
-        content
-            .background(
-                colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg
-            )
+    var body: some View {
+        (colorScheme == .dark ? DeckTheme.darkBg : DeckTheme.lightBg)
+            .ignoresSafeArea()
     }
 }

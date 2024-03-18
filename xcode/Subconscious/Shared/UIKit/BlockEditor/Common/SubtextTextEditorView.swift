@@ -102,7 +102,7 @@ extension SubtextTextEditorView: UITextViewDelegate {
         }
         return true
     }
-    
+
     func textViewDidChange(_ textView: UITextView) {
         UIView.performWithoutAnimation {
             self.invalidateIntrinsicContentSize()
@@ -111,7 +111,7 @@ extension SubtextTextEditorView: UITextViewDelegate {
             .textDidChange(dom: dom, selection: selectedRange)
         )
     }
-    
+
     func textViewDidChangeSelection(_ textView: UITextView) {
         self.send(
             .selectionDidChange(
@@ -119,23 +119,25 @@ extension SubtextTextEditorView: UITextViewDelegate {
             )
         )
     }
-    
+
     func textViewDidBeginEditing(_ textView: UITextView) {
         self.send(.didBeginEditing)
     }
-    
+
     func textViewDidEndEditing(_ textView: UITextView) {
         self.send(.didEndEditing)
     }
-    
+
     /// Handle link taps
     func textView(
         _ textView: UITextView,
-        shouldInteractWith url: URL,
-        in characterRange: NSRange,
-        interaction: UITextItemInteraction
-    ) -> Bool {
-        self.send(.activateLink(url))
-        return false
+        primaryActionFor textItem: UITextItem,
+        defaultAction: UIAction
+    ) -> UIAction? {
+        if case .link(let url) = textItem.content {
+            self.send(.activateLink(url))
+            return .none
+        }
+        return defaultAction
     }
 }

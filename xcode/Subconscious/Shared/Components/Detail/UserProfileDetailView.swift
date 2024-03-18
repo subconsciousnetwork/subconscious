@@ -58,7 +58,6 @@ struct UserProfileDetailView: View {
             app.actions.compactMap(UserProfileDetailAction.from),
             perform: store.send
         )
-        .modifier(AppThemeBackgroundViewModifier())
         .modifier(AppThemeToolbarViewModifier())
     }
 }
@@ -134,7 +133,7 @@ extension UserProfileDetailAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedUpdateAudience(receipt):
             return .succeedUpdateAudience(receipt)
-        case let .succeedFollowPeer(petname):
+        case let .succeedFollowPeer(_, petname):
             return .succeedFollow(petname)
         case let .succeedUnfollowPeer(identity, petname):
             return .succeedUnfollow(identity: identity, petname: petname)
@@ -1192,7 +1191,7 @@ struct UserProfileDetailModel: ModelProtocol {
         // Check if we're in the list of successfully indexed peers
         let shouldRefresh = results.contains(where: { result in
             switch (result) {
-            case .success(let peer) where peer.identity == state.user?.did:
+            case .success(let result) where result.peer.identity == state.user?.did:
                 return true
             default:
                 return false

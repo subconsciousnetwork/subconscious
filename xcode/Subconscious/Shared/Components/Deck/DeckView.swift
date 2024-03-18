@@ -64,7 +64,9 @@ struct DeckView: View {
         .frame(maxWidth: .infinity)
         /// Replay some app actions on deck store
         .onReceive(
-            app.actions.compactMap(DeckAction.from),
+            app.actions
+                .compactMap(DeckAction.from)
+                .filter({ _ in app.state.selectedAppTab == .deck }),
             perform: store.send
         )
         /// Replay some deck actions on app store
@@ -263,7 +265,7 @@ struct DeckModel: ModelProtocol {
     
     var detailStack = DetailStackModel()
     
-    var loadingStatus: LoadingState = .loading
+    var loadingStatus: LoadingState = .initial
     
     /// Search HUD
     var isSearchPresented = false
@@ -511,6 +513,11 @@ struct DeckModel: ModelProtocol {
             state: Self,
             environment: Environment
         ) -> Update<Self> {
+            if state.loadingStatus == .loading {
+                logger.log("Already refreshing, skip.")
+                return Update(state: state)
+            }
+            
             var model = state
             model.loadingStatus = .loading
             
@@ -518,20 +525,17 @@ struct DeckModel: ModelProtocol {
                 try? await Task.sleep(for: .seconds(Duration.loading))
                 
                 let us = try await environment.noosphere.identity()
-                let recent = try environment.database.listFeed(owner: us)
+                let recent = try environment.database.listAll(owner: us, limit: 5)
                 let likes = try await environment.userLikes.readOurLikes()
                 
-                var initialDraw = Array(recent
-                    .prefix(10) // take the 10 most recent posts
-                    .shuffled() // shuffle
-                    .prefix(3)) // take 3
-                
-                // Draw 2 random cards to keep it surprising
-                for _ in 0..<2 {
-                    guard let entry = environment.database.readRandomEntry(owner: us) else {
-                        continue
-                    }
-                    
+                var initialDraw = Array(
+                    recent
+                        .prefix(5)
+                        .shuffled()
+                        .prefix(2)
+                )
+            
+                if let entry = environment.database.readRandomEntry(owner: us) {
                     initialDraw.append(entry)
                 }
                 

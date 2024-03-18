@@ -573,10 +573,13 @@ actor UserProfileService {
                 continue
             }
             
-            let did = try await sphere.resolve(peer: link.peer)
-            let memo = try await sphere.read(slashlink: link)
+            // This might fail if the slug has been deleted or peer is unresolvable etc.
+            // We want to skip this like and load the rest.
+            let did = try? await sphere.resolve(peer: link.peer)
+            let memo = try? await sphere.read(slashlink: link)
             
-            guard let memo = memo.toMemo() else {
+            guard let did = did,
+                  let memo = memo?.toMemo() else {
                 continue
             }
             

@@ -9,6 +9,7 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 import os
+import Combine
 
 struct FollowNewUserFormSheetView: View {
     var store: ViewStore<FollowNewUserFormSheetModel>
@@ -64,6 +65,28 @@ struct FollowNewUserFormSheetView: View {
                         )
                     }
                     
+                    Section(header: Text("Suggestions")) {
+                        ForEach(store.state.suggestions, id: \.identity) { suggestion in
+                            Button(
+                                action: {
+                                    store.send(.requestFollowSuggestion(suggestion))
+                                },
+                                label: {
+                                    HStack(spacing: AppTheme.unit2) {
+                                        ProfilePic(
+                                            pfp: .generated(suggestion.identity),
+                                            size: .small
+                                        )
+                                        
+                                        Text("\(suggestion.name.description)")
+                                            .italic()
+                                            .fontWeight(.medium)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    
                     if let did = store.state.did {
                         Section(header: Text("Your DID")) {
                             DidView(did: did)
@@ -73,6 +96,7 @@ struct FollowNewUserFormSheetView: View {
                             ShareableDidQrCodeView(did: did, color: Color.gray)
                         }
                     }
+                    
                 }
                 .navigationTitle("Follow User")
                 .toolbar {
@@ -132,6 +156,12 @@ enum FollowNewUserFormSheetAction: Equatable {
     
     case attemptFollow
     case dismissSheet
+    
+    case requestFollowSuggestion(_ neighbor: NeighborRecord)
+    
+    case refreshSuggestions
+    case succeedRefreshSuggestions(_ suggestions: [NeighborRecord])
+    case failRefreshSuggestions(_ error: String)
 }
 
 typealias FollowNewUserFormSheetEnvironment = AppEnvironment
@@ -195,6 +225,7 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
     
     var did: Did? = nil
     var isQrCodeScannerPresented = false
+    var suggestions: [NeighborRecord] = []
     
     var form: FollowUserFormModel = FollowUserFormModel()
     
@@ -216,7 +247,11 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         case .populate(let did):
             var model = state
             model.did = did
-            return Update(state: model)
+            return update(
+                state: model,
+                action: .refreshSuggestions,
+                environment: environment
+            )
         case .presentQRCodeScanner(let isPresented):
             var model = state
             model.failQRCodeScanErrorMessage = nil
@@ -227,7 +262,6 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .form(.didField(.reset)),
                     .form(.didField(.setValue(input: content)))
                 ],
                 environment: environment
@@ -273,6 +307,56 @@ struct FollowNewUserFormSheetModel: ModelProtocol {
         case .attemptFollow:
             // Handled by FollowNewUserFormSheetCursor.tag
             return Update(state: state)
+        case .refreshSuggestions:
+            return refreshSuggestions(
+                state: state,
+                environment: environment
+            )
+        case let .succeedRefreshSuggestions(suggestions):
+            return succeedRefreshSuggestions(
+                state: state,
+                environment: environment,
+                suggestions: suggestions
+            )
+        case let .failRefreshSuggestions(error):
+            logger.warning("Failed to refresh suggestions: \(error)")
+            return Update(state: state)
+        case let .requestFollowSuggestion(neighbor):
+            return update(
+                state: state,
+                actions: [
+                    .form(.didField(.setValue(input: neighbor.identity.description))),
+                    .form(.petnameField(.setValue(input: neighbor.name.description)))
+                ],
+                environment: environment
+            )
         }
+    }
+    
+    static func refreshSuggestions(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        let fx: Fx<Action> = Future.detached {
+            let identity = try await environment.noosphere.identity()
+            let suggestions = try environment.database.listNeighbors(owner: identity)
+            return .succeedRefreshSuggestions(suggestions)
+        }
+        .recover { error in
+            .failRefreshSuggestions(error.localizedDescription)
+        }
+        .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedRefreshSuggestions(
+        state: Self,
+        environment: Environment,
+        suggestions: [NeighborRecord]
+    ) -> Update<Self> {
+        var model = state
+        model.suggestions = suggestions
+        return Update(state: model)
     }
 }

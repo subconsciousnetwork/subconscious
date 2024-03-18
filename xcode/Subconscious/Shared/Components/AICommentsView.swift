@@ -11,6 +11,7 @@ struct AICommentsView: View {
     var comments: [String]
     var onRefresh: () -> Void
     var onRespond: (_ comment: String) -> Void
+    var background: Color
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
@@ -43,7 +44,7 @@ struct AICommentsView: View {
                         .padding(.horizontal, AppTheme.unit3)
                         .padding(.vertical, AppTheme.unit2)
                         .foregroundStyle(.primary)
-                        .background(comment.themeColor.toColor())
+                        .background(background)
                         .cornerRadius(AppTheme.cornerRadiusLg, corners: .allCorners)
                         .shadow(style: .transclude)
                     }
@@ -64,7 +65,8 @@ struct AICommentsView_Previews: PreviewProvider {
                     "This is another comment"
                 ],
                 onRefresh: { },
-                onRespond: { _ in }
+                onRespond: { _ in },
+                background: .red
             )
         }
     }

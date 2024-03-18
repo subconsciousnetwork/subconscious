@@ -205,12 +205,12 @@ actor NoosphereService:
     }
     
     /// Gets or creates memoized Noosphere singleton instance
-    private func noosphere() throws -> Noosphere {
+    private func noosphere() async throws -> Noosphere {
         if let noosphere = self._noosphere {
             return noosphere
         }
         logger.log("Initializing Noosphere")
-        let noosphere = try Noosphere(
+        let noosphere = try await Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
             gatewayURL: gatewayURL?.absoluteString,
@@ -222,7 +222,7 @@ actor NoosphereService:
     }
     
     /// Get or open default Sphere.
-    private func sphere() throws -> Sphere {
+    private func sphere() async throws -> Sphere {
         if let sphere = self._sphere {
             return sphere
         }
@@ -230,9 +230,9 @@ actor NoosphereService:
             throw NoosphereServiceError.defaultSphereNotFound
         }
         
-        let noosphere = try noosphere()
+        let noosphere = try await noosphere()
         logger.log("Initializing Sphere with identity: \(identity)")
-        let sphere = try Sphere(
+        let sphere = try await Sphere(
             noosphere: noosphere,
             identity: identity
         )
@@ -584,11 +584,11 @@ actor NoosphereService:
         switch address.peer {
         case .none:
             return try await errorLoggingService.capturing {
-                try self.sphere()
+                try await self.sphere()
             }
         case .did(let did) where did == identity:
             return try await errorLoggingService.capturing {
-                try self.sphere()
+                try await self.sphere()
             }
         case .petname(let petname):
             return try await self.traverse(petname: petname)

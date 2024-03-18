@@ -12,7 +12,7 @@ struct AppendLinkSuggestionLabelView: View, Equatable {
 
     var body: some View {
         switch suggestion {
-        case let .append(address, target):
+        case let .append(_, target):
             Label(
                 title: {
                     TitleGroupView(
