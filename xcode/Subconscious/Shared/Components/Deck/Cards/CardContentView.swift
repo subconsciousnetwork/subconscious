@@ -69,9 +69,9 @@ struct CardContentView: View {
         // Opacity allows blendMode to show through
         .foregroundStyle(.primary.opacity(0.8))
         .accentColor(highlight)
+        .padding(DeckTheme.cardPadding)
         .frame(height: DeckTheme.cardContentSize.height, alignment: .topLeading)
         .truncateWithGradient(maxHeight: DeckTheme.cardContentSize.height)
-        .padding(DeckTheme.cardPadding)
        
         Spacer()
         

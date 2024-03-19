@@ -31,10 +31,10 @@ struct DeckNavigationView: View {
             store.send(.cardPickedUp)
         case .swipeAbandoned:
             store.send(.cardReleased)
+        case .cardDetailRequested(let card):
+            store.send(.cardDetailRequested(card))
         case let .entry(entryNotification):
             switch entryNotification {
-            case let .requestDetail(entry):
-                store.send(.cardDetailRequested(entry))
             case let .requestLinkDetail(link):
                 store.send(
                     .detailStack(.findAndPushLinkDetail(link))
@@ -45,7 +45,7 @@ struct DeckNavigationView: View {
                 store.send(.requestUpdateLikeStatus(address, liked: true))
             case let .unlike(address):
                 store.send(.requestUpdateLikeStatus(address, liked: false))
-            case .delete:
+            case .delete, .requestDetail:
                 break
             }
         }

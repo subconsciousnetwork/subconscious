@@ -19,8 +19,8 @@ extension DeckTheme {
     
     static let cardPadding = AppTheme.unit * 5
     static let cornerRadius: CGFloat = 32.0
-    static let cardSize = CGSize(width: 374, height: 380)
-    static let cardContentSize = CGSize(width: 374, height: AppTheme.unit * 70)
+    static let cardSize = CGSize(width: 350, height: 380)
+    static let cardContentSize = CGSize(width: 374, height: AppTheme.unit * 80)
     
     static let cardShadow = Color(red: 0.19, green: 0.09, blue: 0.33)
     

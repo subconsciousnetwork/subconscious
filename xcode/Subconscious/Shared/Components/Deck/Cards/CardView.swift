@@ -60,8 +60,8 @@ struct CardView: View {
                     related: related,
                     notify: notify
                 )
-            case let .action(message):
-                ActionCardView(message: message)
+            case let .reward(message):
+                RewardCardView(message: message)
             }
         }
     }

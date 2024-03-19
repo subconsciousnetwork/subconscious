@@ -92,12 +92,13 @@ enum DeckAction: Hashable {
     
     case cardPickedUp
     case cardReleased
-    case cardDetailRequested(EntryStub)
+    case cardDetailRequested(CardModel)
     
     case chooseCard(CardModel)
     case skipCard(CardModel)
     
     case appendCards([CardModel])
+    case prependCards([CardModel])
     case shuffleCardsUpNext([CardModel])
     
     case topupDeck
@@ -353,10 +354,10 @@ struct DeckModel: ModelProtocol {
             return cardPickedUp(state: state)
         case .cardReleased:
             return cardReleased(state: state)
-        case let .cardDetailRequested(entry):
+        case let .cardDetailRequested(card):
             return cardDetailRequested(
                 state: state,
-                entry: entry,
+                card: card,
                 environment: environment
             )
         case let .chooseCard(card):
@@ -369,6 +370,11 @@ struct DeckModel: ModelProtocol {
             return skipCard(state: state, environment: environment)
         case let .shuffleCardsUpNext(entries):
             return shuffleCardsUpNext(
+                state: state,
+                entries: entries
+            )
+        case let .prependCards(entries):
+            return prependCards(
                 state: state,
                 entries: entries
             )
@@ -771,22 +777,36 @@ struct DeckModel: ModelProtocol {
             return Update(state: state)
         }
 
-        func cardDetailRequested(state: Self, entry: EntryStub, environment: Environment) -> Update<Self> {
+        func cardDetailRequested(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.prepare()
             state.feedback.impactOccurred()
-        
-            return update(
-                state: state,
-                action: .detailStack(
-                    .pushDetail(
-                        MemoDetailDescription.from(
-                            address: entry.address,
-                            fallback: entry.excerpt.description
+            
+            switch card.card {
+            case .reward(let message):
+                return update(
+                    state: state,
+                    action: .detailStack(
+                        .pushDetail(
+                            .editor(MemoEditorDetailDescription(fallback: message))
                         )
-                    )
-                ),
-                environment: environment
-            )
+                    ),
+                    environment: environment
+                )
+            case let .entry(entry, _, _),
+                let .prompt(_, entry, _, _):
+                return update(
+                    state: state,
+                    action: .detailStack(
+                        .pushDetail(
+                            MemoDetailDescription.from(
+                                address: entry.address,
+                                fallback: entry.excerpt.description
+                            )
+                        )
+                    ),
+                    environment: environment
+                )
+            }
         }
        
         
@@ -852,7 +872,7 @@ struct DeckModel: ModelProtocol {
                     
                     switch result {
                     case .success(let msg):
-                        return DeckAction.setAiPrompt(msg)
+                        return DeckAction.prependCards([CardModel(card: .reward(msg), liked: false)])
                     case .failure(let error):
                         logger.error("OpenAI: \(error)")
                         return DeckAction.setAiPrompt("error")
@@ -863,7 +883,7 @@ struct DeckModel: ModelProtocol {
                 model.buffer.removeAll()
                 return update(
                     state: model,
-                    actions: [.nextCard, .setAiPromptPresented(true), .setAiPrompt("loading...")],
+                    actions: [.nextCard],
                     environment: environment
                 ).mergeFx(fx).mergeFx(openAiFx).animation(.easeOutCubic())
             }
@@ -882,7 +902,7 @@ struct DeckModel: ModelProtocol {
                 return shuffleInBacklinks(card: card, message: "", address: entry.address, backlinks: related)
             case let .prompt(message, entry, _, related):
                 return shuffleInBacklinks(card: card, message: message, address: entry.address, backlinks: related)
-            case .action(let msg):
+            case .reward(let msg):
                 logger.log("Action: \(msg)")
                 return update(
                     state: state,
@@ -948,6 +968,23 @@ struct DeckModel: ModelProtocol {
             return Update(state: model)
         }
 
+        func prependCards(state: Self, entries: [CardModel]) -> Update<Self> {
+            var model = state
+            for entry in entries {
+                model.deck.insert(entry, at: state.pointer)
+                
+                switch entry.card {
+                case let .entry(entry, _, _):
+                    model.seen.insert(entry)
+                    break
+                default:
+                    break
+                }
+            }
+            
+            return Update(state: model).animation(.easeOutCubic())
+        }
+        
         func appendCards(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
             for entry in entries {
@@ -962,7 +999,7 @@ struct DeckModel: ModelProtocol {
                 }
             }
             
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         }
         
         func requestDeckRoot(
