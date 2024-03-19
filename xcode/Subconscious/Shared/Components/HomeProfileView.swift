@@ -219,6 +219,8 @@ extension HomeProfileAction {
             return .succeedUpdateAudience(receipt)
         case let .succeedAssignNoteColor(address, color):
             return .succeedAssignNoteColor(address, color)
+        case let .succeedAppendToEntry(address):
+            return .succeedAppendToEntry(address)
         case let .succeedUpdateLikeStatus(address, liked):
             return .succeedUpdateLikeStatus(address, liked: liked)
         default:
