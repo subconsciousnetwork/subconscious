@@ -18,13 +18,14 @@ enum AppTab: String, Hashable {
 
 struct AppTabView: View {
     @ObservedObject var store: Store<AppModel>
-    // For performance purposes we proxy this state through to the store
-    // in the background. This is a stop-gap solution until we find a
-    // general approach to fine-grained reactivity.
-    @State var selectedTab: AppTab = .notebook
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(
+            selection: store.binding(
+                get: \.selectedAppTab,
+                tag: AppAction.setSelectedAppTab
+            )
+        ) {
             DeckView(app: store)
                 .tabItem {
                     Label("Deck", systemImage: "square.stack.3d.up.fill")
@@ -48,12 +49,6 @@ struct AppTabView: View {
                     Label("Profile", systemImage: "person.crop.circle")
                 }
                 .tag(AppTab.profile)
-        }
-        .onAppear {
-            selectedTab = store.state.selectedAppTab
-        }
-        .onChange(of: selectedTab) { v in
-            store.send(.setSelectedAppTab(selectedTab))
         }
     }
 }
