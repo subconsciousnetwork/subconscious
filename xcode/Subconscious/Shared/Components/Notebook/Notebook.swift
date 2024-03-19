@@ -314,6 +314,8 @@ extension AppAction {
             return .updateAudience(address: address, audience: audience)
         case let .requestAssignNoteColor(address, color):
             return .assignColor(address: address, color: color)
+        case let .requestAppendToEntry(address, append):
+            return .appendToEntry(address: address, append: append)
         case let .requestUpdateLikeStatus(address, liked):
             return .setLiked(address: address, liked: liked)
         default:
