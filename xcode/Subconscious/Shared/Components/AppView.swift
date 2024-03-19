@@ -169,6 +169,7 @@ enum AppAction: Hashable {
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
     case persistNoosphereLogLevel(Noosphere.NoosphereLogLevel)
+    case persistAiFeaturesEnabled(Bool)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -580,6 +581,7 @@ struct AppModel: ModelProtocol {
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
     var noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic
+    var areAiFeaturesEnabled = false
 
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
@@ -910,6 +912,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isBlockEditorEnabled: isBlockEditorEnabled
+            )
+        case let .persistAiFeaturesEnabled(areAiFeaturesEnabled):
+            return persistAiFeaturesEnabled(
+                state: state,
+                environment: environment,
+                areAiFeaturesEnabled: areAiFeaturesEnabled
             )
         case let .persistNoosphereLogLevel(level):
             return persistNoosphereLogLevel(
@@ -1819,6 +1827,18 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.isBlockEditorEnabled = isBlockEditorEnabled
         var model = state
         model.isBlockEditorEnabled = isBlockEditorEnabled
+        return Update(state: model)
+    }
+    
+    static func persistAiFeaturesEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        areAiFeaturesEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.areAiFeaturesEnabled = areAiFeaturesEnabled
+        var model = state
+        model.areAiFeaturesEnabled = areAiFeaturesEnabled
         return Update(state: model)
     }
     

@@ -860,32 +860,40 @@ struct DeckModel: ModelProtocol {
             .eraseToAnyPublisher()
             
             var model = state
-            model.buffer.append(card)
             
-            if model.buffer.count >= 4 {
-                let entries = model.buffer.compactMap { card in card.entry }
-                let openAiFx = Future.detached {
-                    let result = await environment.openAiService.sendTextToOpenAI(
-                        entries: entries,
-                        prompt: [OpenAIService.contemplate, OpenAIService.poem, OpenAIService.question, OpenAIService.summarize].randomElement()!
-                    )
-                    
-                    switch result {
-                    case .success(let msg):
-                        return DeckAction.prependCards([CardModel(card: .reward(msg), liked: false)])
-                    case .failure(let error):
-                        logger.error("OpenAI: \(error)")
-                        return DeckAction.setAiPrompt("error")
-                    }
-                }
-                .eraseToAnyPublisher()
+            if AppDefaults.standard.areAiFeaturesEnabled {
+                model.buffer.append(card)
                 
-                model.buffer.removeAll()
-                return update(
-                    state: model,
-                    actions: [.nextCard],
-                    environment: environment
-                ).mergeFx(fx).mergeFx(openAiFx).animation(.easeOutCubic())
+                if model.buffer.count >= 4 {
+                    let entries = model.buffer.compactMap { card in card.entry }
+                    let openAiFx = Future.detached {
+                        let result = await environment.openAiService.sendTextToOpenAI(
+                            entries: entries,
+                            prompt: [
+                                OpenAIService.contemplate,
+                                OpenAIService.poem,
+                                OpenAIService.question,
+                                OpenAIService.summarize
+                            ].randomElement()!
+                        )
+                        
+                        switch result {
+                        case .success(let msg):
+                            return DeckAction.prependCards([CardModel(card: .reward(msg), liked: false)])
+                        case .failure(let error):
+                            logger.error("OpenAI: \(error)")
+                            return DeckAction.setAiPrompt("error")
+                        }
+                    }
+                        .eraseToAnyPublisher()
+                    
+                    model.buffer.removeAll()
+                    return update(
+                        state: model,
+                        actions: [.nextCard],
+                        environment: environment
+                    ).mergeFx(fx).mergeFx(openAiFx).animation(.easeOutCubic())
+                }
             }
             
             return update(

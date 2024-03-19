@@ -64,12 +64,24 @@ struct DeveloperSettingsView: View {
                 .pickerStyle(DefaultPickerStyle())
             }
             
-            Section(header: Text("OpenAI API Key")) {
-                SecureField("API Key", text: $apiKey)
-                    .disableAutocorrection(true)
-                Button("Save", action: {
-                    Task { await saveApiKey() }
-                })
+            Section(header: Text("AI Features")) {
+                Toggle(
+                    isOn: app.binding(
+                        get: \.areAiFeaturesEnabled,
+                        tag: AppAction.persistAiFeaturesEnabled
+                    ),
+                    label: {
+                        Text("Enable AI Features")
+                    }
+                )
+                
+                if app.state.areAiFeaturesEnabled {
+                    SecureField("Open AI API Key", text: $apiKey)
+                        .disableAutocorrection(true)
+                    Button("Save", action: {
+                        Task { await saveApiKey() }
+                    })
+                }
             }
         }
         .navigationTitle("Developer")
