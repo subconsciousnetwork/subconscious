@@ -696,16 +696,15 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         
-        // Exclude any local-only notes from the feed
-        let ignoredDids = [Did.local.description]
+        let ignoredDids: [Did] = []
         
         let results = try database.execute(
             sql: """
-            SELECT did, slashlink, excerpt, headers
-            FROM memo
-            WHERE did NOT IN (SELECT value FROM json_each(?))
-                AND substr(slug, 1, 1) != '_'
-            ORDER BY modified DESC
+            SELECT memo.did, peer.petname, memo.slug, memo.excerpt, memo.headers FROM memo
+            LEFT JOIN peer ON memo.did = peer.did
+            WHERE memo.did NOT IN (SELECT value FROM json_each(?))
+                AND substr(memo.slug, 1, 1) != '_'
+            ORDER BY memo.modified DESC
             LIMIT ?
             """,
             parameters: [
@@ -716,20 +715,22 @@ final class DatabaseService {
         return try results.compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
-                let slashlink = row.col(1)?
+                let slug = row.col(2)?
                     .toString()?
-                    .toSlashlink()?
-                    .relativizeIfNeeded(did: owner)
+                    .toSlug()
             else {
                 return nil
             }
+                
+            let petname = row.col(1)?.toString()?.toPetname()
+            let address = bestAddress(did: did, slug: slug, petname: petname, owner: owner)
             
-            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
-            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
-                address: slashlink,
+                address: address,
                 excerpt: excerpt,
                 headers: headers
             )
@@ -1429,35 +1430,45 @@ final class DatabaseService {
         .first
     }
     
-    func readRandomUnseenEntry(owner: Did?, seen: [Slashlink]) -> EntryStub? {
+    func readRandomUnseenEntry(
+        owner: Did?,
+        seen: [Slashlink],
+        minimumBodyLength: Int = 0
+    ) -> EntryStub? {
         guard self.state == .ready else {
             return nil
         }
 
         return try? database.execute(
             sql: """
-            SELECT did, slashlink, excerpt, headers
-            FROM memo
+            SELECT memo.did, peer.petname, memo.slug, memo.excerpt, memo.headers FROM memo
+            LEFT JOIN peer ON memo.did = peer.did
             WHERE substr(memo.slug, 1, 1) != '_'
-            AND length(excerpt) > 64
-            AND slashlink NOT IN (SELECT value FROM json_each(?))
+            AND length(memo.excerpt) > ?
+            AND memo.slashlink NOT IN (SELECT value FROM json_each(?))
             ORDER BY RANDOM()
             LIMIT 1
             """,
-            parameters: [.json(seen.map { s in s.description }, or: "[]")]
+            parameters: [
+                .integer(minimumBodyLength),
+                .json(seen.map { s in s.description }, or: "[]")
+            ]
         )
         .compactMap({ row in
             guard
                 let did = row.col(0)?.toString()?.toDid(),
-                let address = row.col(1)?
+                let slug = row.col(2)?
                     .toString()?
-                    .toSlashlink()
+                    .toSlug()
             else {
                 return nil
             }
+                
+            let petname = row.col(1)?.toString()?.toPetname()
+            let address = bestAddress(did: did, slug: slug, petname: petname, owner: owner)
             
-            let excerpt = Subtext(markup: row.col(2)?.toString() ?? "")
-            let headers = try parseHeadersJson(json: row.col(3)?.toString() ?? "")
+            let excerpt = Subtext(markup: row.col(3)?.toString() ?? "")
+            let headers = try parseHeadersJson(json: row.col(4)?.toString() ?? "")
             
             return EntryStub(
                 did: did,
@@ -1467,6 +1478,18 @@ final class DatabaseService {
             )
         })
         .first
+    }
+    
+    func bestAddress(did: Did, slug: Slug, petname: Petname?, owner: Did?) -> Slashlink {
+        switch petname {
+        case .some(let name):
+            return Slashlink(petname: name, slug: slug)
+        case .none:
+            return Slashlink(
+                peer: .did(did),
+                slug: slug
+            ).relativizeIfNeeded(did: owner)
+        }
     }
 
     /// Select a random entry
