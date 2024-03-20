@@ -39,8 +39,8 @@ struct MemoViewerDetailMetaSheetView: View {
             ScrollView {
                 VStack(spacing: AppTheme.unit4) {
                     MetaTableView {
-                        MetaTableItemShareLinkView(
-                            label: "Share link",
+                        MetaTableCopyItemView(
+                            label: "Copy link",
                             item: store.state.shareableLink ?? ""
                         )
                         .disabled(store.state.shareableLink == nil)
@@ -48,7 +48,7 @@ struct MemoViewerDetailMetaSheetView: View {
                         Divider()
 
                         MetaTableItemShareLinkView(
-                            label: "Share text",
+                            label: "Share",
                             item: store.state.shareableText ?? ""
                         )
                         .disabled(store.state.shareableText == nil)
@@ -108,7 +108,7 @@ struct MemoViewerDetailMetaSheetView: View {
                             },
                             label: {
                                 Label(
-                                    "Append to note",
+                                    "Add to note",
                                     systemImage: "link.badge.plus"
                                 )
                             }
@@ -124,7 +124,7 @@ struct MemoViewerDetailMetaSheetView: View {
                                 },
                                 label: {
                                     Label(
-                                        "View Author Profile",
+                                        "Author",
                                         systemImage: "person"
                                     )
                                 }

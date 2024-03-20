@@ -70,6 +70,45 @@ struct MetaTableItemShareLinkView: View {
     }
 }
 
+struct MetaTableCopyItemView: View {
+    var label: String
+    var item: String
+    
+    @State var copied = false
+    var feedback: UIImpactFeedbackGenerator = Self.feedbackGenerator()
+    
+    private static func feedbackGenerator() -> UIImpactFeedbackGenerator {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.prepare()
+        return generator
+    }
+    
+    var body: some View {
+        Button(
+            action: {
+                guard !copied else {
+                    return
+                }
+                
+                Task {
+                    UIPasteboard.general.string = item
+                    feedback.impactOccurred()
+                    copied = true
+                    
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    
+                    copied = false
+                    feedback.prepare()
+                }
+            }
+        ) {
+            Label(copied ? "Copied!" : label , systemImage: copied ? "checkmark" : "link")
+        }
+        .buttonStyle(RowButtonStyle(color: copied ? .secondary : .primaryButtonText))
+        .animation(.easeOutCubic(), value: copied)
+    }
+}
+
 struct MetaTableItemButtonView: View {
     var label: String
     var systemImage: String
