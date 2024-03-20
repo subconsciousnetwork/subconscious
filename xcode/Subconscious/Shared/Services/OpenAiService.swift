@@ -33,14 +33,25 @@ extension OpenAIError {
     }
 }
 
-struct Prompt {
+struct LlmPrompt {
     public let system: String
     public let instruction: String
 }
 
 actor OpenAIService {
+    public static let supportedModels = [
+        "gpt-4",
+        "gpt-4-32k",
+        "gpt-3.5-turbo",
+        "gpt-3.5-turbo-0125",
+        "gpt-3.5-turbo-16k",
+        "gpt-4-0125-preview",
+        "gpt-4-turbo-preview",
+        "gpt-4-1106-preview"
+    ]
+    
     let keychain: KeychainService
-    public static let question = Prompt(
+    public static let question = LlmPrompt(
         system:
             """
             Your task is to take a list of notes and extract any cross-cutting themes or interesting patterns about the set as a whole. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. \n\nAs part of your summary you should include any particularly relevant links that did not appear in the input set. Respond with 10 questions based on your analysis with at most 6 words in each and up to 10 addresses of recommended notes that do not appear in the input set.
@@ -51,7 +62,7 @@ actor OpenAIService {
             """
     )
     
-    public static let summarize = Prompt(
+    public static let summarize = LlmPrompt(
         system:
             """
             Your task is to take a list of notes and summarize the key ideas in 3 short dot points. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
@@ -68,7 +79,7 @@ actor OpenAIService {
             """
     )
     
-    public static let poem = Prompt(
+    public static let poem = LlmPrompt(
         system:
             """
             Your task is to take a list of notes and summarize the key ideas in a 3 line haiku poem. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
@@ -85,7 +96,7 @@ actor OpenAIService {
             """
     )
     
-    public static let contemplate = Prompt(
+    public static let contemplate = LlmPrompt(
         system:
             """
             Your task is to take a list of notes, reflect on them and respond with a question that makes you curious. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
@@ -106,7 +117,7 @@ actor OpenAIService {
     
     let apiUrl = "https://api.openai.com/v1/chat/completions"
     
-    private func formatNotes(entries: [EntryStub], prompt: Prompt) -> String {
+    private func formatNotes(entries: [EntryStub], prompt: LlmPrompt) -> String {
         return """
         Here are the notes to analyze:
         
@@ -127,7 +138,7 @@ actor OpenAIService {
 
     func sendTextToOpenAI(
         entries: [EntryStub],
-        prompt: Prompt
+        prompt: LlmPrompt
     ) async -> Result<String, OpenAIError> {
         guard let url = URL(string: apiUrl) else {
             return .failure(OpenAIError.invalidAPIUrl)
@@ -142,17 +153,20 @@ actor OpenAIService {
         request.httpMethod = "POST"
 
         let requestBody: [String: Any] = [
-            "model": "gpt-4-1106-preview",
+            "model": AppDefaults.standard.preferredLlm,
             "messages": [
                 ["role": "system", "content": prompt.system],
                 ["role": "user", "content": formatNotes(entries: entries, prompt: prompt)]
             ],
-            "max_tokens": 1280,
+            "max_tokens": 512,
             "temperature": 1,
         ]
 
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody, options: .prettyPrinted)
+            request.httpBody = try JSONSerialization.data(
+                withJSONObject: requestBody,
+                options: .prettyPrinted
+            )
         } catch {
             return .failure(OpenAIError.malformedRequestBody)
         }

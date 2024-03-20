@@ -76,6 +76,16 @@ struct DeveloperSettingsView: View {
                 )
                 
                 if app.state.areAiFeaturesEnabled {
+                    Picker("Preferred Model", selection: app.binding(
+                        get: \.preferredLlm,
+                        tag: AppAction.persistPreferredLlm
+                    )) {
+                        ForEach(OpenAIService.supportedModels, id: \.self) { model in
+                            Text(model.description).tag(model)
+                        }
+                    }
+                    .pickerStyle(DefaultPickerStyle())
+                    
                     SecureField("Open AI API Key", text: $apiKey)
                         .disableAutocorrection(true)
                     Button("Save", action: {

@@ -170,6 +170,7 @@ enum AppAction: Hashable {
     case persistBlockEditorEnabled(Bool)
     case persistNoosphereLogLevel(Noosphere.NoosphereLogLevel)
     case persistAiFeaturesEnabled(Bool)
+    case persistPreferredLlm(String)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -582,6 +583,7 @@ struct AppModel: ModelProtocol {
     var isBlockEditorEnabled = false
     var noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic
     var areAiFeaturesEnabled = false
+    var preferredLlm: String = AppDefaults.standard.preferredLlm
 
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
@@ -1450,6 +1452,8 @@ struct AppModel: ModelProtocol {
         model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
         model.noosphereLogLevel = Noosphere.NoosphereLogLevel(description: AppDefaults.standard.noosphereLogLevel)
         model.isBlockEditorEnabled = AppDefaults.standard.isBlockEditorEnabled
+        model.areAiFeaturesEnabled = AppDefaults.standard.areAiFeaturesEnabled
+        model.preferredLlm = AppDefaults.standard.preferredLlm
         
         // Update model from app defaults
         return update(
@@ -1839,6 +1843,17 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.areAiFeaturesEnabled = areAiFeaturesEnabled
         var model = state
         model.areAiFeaturesEnabled = areAiFeaturesEnabled
+        return Update(state: model)
+    }
+    
+    static func persistPreferredLlm(
+        state: AppModel,
+        environment: AppEnvironment,
+        llm: String
+    ) -> Update<AppModel> {
+        AppDefaults.standard.preferredLlm = llm
+        var model = state
+        model.preferredLlm = llm
         return Update(state: model)
     }
     

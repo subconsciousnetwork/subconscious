@@ -32,6 +32,9 @@ struct AppDefaults {
     
     @UserDefaultsProperty(forKey: "aiFeatures")
     var areAiFeaturesEnabled: Bool = false
+    
+    @UserDefaultsProperty(forKey: "preferredLlm")
+    var preferredLlm: String = "gpt-4"
 
     @UserDefaultsProperty(forKey: "selectedAppTab")
     // default to the notebook on first run because there will be nothing in the feed
