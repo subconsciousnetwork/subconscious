@@ -113,9 +113,6 @@ enum DeckAction: Hashable {
     case succeedRefreshLikes([Slashlink])
     case failRefreshLikes(String)
     
-    case setAiPrompt(_ prompt: String)
-    case setAiPromptPresented(_ presented: Bool)
-    
     /// Note lifecycle events.
     /// `request`s are passed up to the app root
     /// `succeed`s are passed down from the app root
@@ -279,8 +276,6 @@ struct DeckModel: ModelProtocol {
     
     var deck: Array<CardModel> = []
     var buffer: [CardModel] = []
-    var aiPrompt: String = ""
-    var aiPromptPresented: Bool = false
     
     // The set of cards to avoid drawing again, if possible
     var seen: Set<EntryStub> = []
@@ -320,10 +315,6 @@ struct DeckModel: ModelProtocol {
         case let .setSearchPresented(presented):
             var model = state
             model.isSearchPresented = presented
-            return Update(state: model)
-        case let .setAiPromptPresented(presented):
-            var model = state
-            model.aiPromptPresented = presented
             return Update(state: model)
         case let .activatedSuggestion(suggestion):
             return DeckDetailStackCursor.update(
@@ -504,10 +495,6 @@ struct DeckModel: ModelProtocol {
                 address: address,
                 liked: liked
             )
-        case .setAiPrompt(let prompt):
-            var model = state
-            model.aiPrompt = prompt
-            return Update(state: model)
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestAssignNoteColor,
                 .requestAppendToEntry, .requestUpdateLikeStatus:
@@ -882,10 +869,10 @@ struct DeckModel: ModelProtocol {
                             return DeckAction.prependCards([CardModel(card: .reward(msg), liked: false)])
                         case .failure(let error):
                             logger.error("OpenAI: \(error)")
-                            return DeckAction.setAiPrompt("error")
+                            return DeckAction.topupDeck
                         }
                     }
-                        .eraseToAnyPublisher()
+                    .eraseToAnyPublisher()
                     
                     model.buffer.removeAll()
                     return update(

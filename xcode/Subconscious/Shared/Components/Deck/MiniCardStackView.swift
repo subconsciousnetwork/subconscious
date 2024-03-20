@@ -22,66 +22,9 @@ struct MiniCardView: View {
     }
 }
 
-struct CircleSliceView: View {
-    var startAngle: Angle
-    var endAngle: Angle
-    var color: Color
-    
-    var body: some View {
-        GeometryReader { geometry in
-            Path { path in
-                let width: CGFloat = min(geometry.size.width, geometry.size.height)
-                let height = width
-                
-                let center = CGPoint(x: width * 0.5, y: height * 0.5)
-                
-                path.move(to: center)
-                
-                path.addArc(
-                    center: center,
-                    radius: width * 0.5,
-                    startAngle: Angle(degrees: -90.0) + startAngle,
-                    endAngle: Angle(degrees: -90.0) + endAngle,
-                    clockwise: false)
-                
-            }
-            .fill(color)
-        }
-        .aspectRatio(1, contentMode: .fit)
-    }
-}
-
 extension Angle {
     static func percent(_ percent: Double) -> Angle {
         Angle(degrees: percent * 360)
-    }
-}
-
-enum MiniCardStackViewMode {
-    case stack
-    case ring
-    case combine
-    case present
-}
-
-struct BouncySpringScaleEffectView: View {
-    @State private var scale: CGFloat = 0 // Initial scale is set to 0
-    
-    var body: some View {
-        VStack {
-            Text("Presented content!")
-        }
-        .frame(width: 320, height: 128)
-        .background(ThemeColor.b.toColor())
-        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
-        .scaleEffect(scale) // Apply the scale effect
-        .onAppear {
-            // Trigger the animation to its final state when the view appears
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.5, blendDuration: 0)) {
-                scale = 1 // Final scale is set to 1
-            }
-        }
-        .shadow(style: .transclude)
     }
 }
 
@@ -117,7 +60,7 @@ struct SummoningCircleView: View {
                 try? await Task.sleep(nanoseconds: 50_000_000)
             }
         }
-        .onChange(of: cards) { _ in
+        .onChange(of: cards) { _, _ in
             while cards.count > playedCards.count {
                 playedCards.append(cards[playedCards.count])
             }
@@ -133,112 +76,60 @@ struct SummoningCircleView: View {
 
 struct MiniCardStackView: View {
     var cards: [CardModel]
-    var mode: MiniCardStackViewMode
     @Namespace var namespace
     
     var body: some View {
-        switch mode {
-        case .stack:
-            ZStack {
-                ForEach(cards.indices.reversed(), id: \.self) { idx in
-                    let card = cards[idx]
-                    let t = cards.count - idx
-                    if let entry = card.entry {
-                        MiniCardView(color: entry.color)
-                            .matchedGeometryEffect(id: entry.id, in: namespace)
-                            .rotationEffect(.degrees(Double(-8 + 5 * Double(idx))))
-                            .offset(x: 0, y: CGFloat(t * 2))
-                            .zIndex(Double(idx))
-                            .opacity(1 - Double(t) * 0.2)
-                    }
-                }
-    //
-    //            CircleSliceView(
-    //                startAngle: .degrees(0),
-    //                endAngle: .percent(Double(cards.count) / 5.0),
-    //                color: cards.first?.entry?.highlightColor ?? .secondary
-    //            )
-    //            .frame(
-    //                width: 16,
-    //                height: 16
-    //            )
-                
-                if !cards.isEmpty {
-                    HStack(alignment: .bottom, spacing: 1) {
-                        Text("\(cards.count)").contentTransition(.numericText())
-                            .bold()
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .offset(x: -0.5, y: -2)
-                        Text("/")
-                            .font(.system(size: 10.0))
-                            .foregroundColor(.secondary)
-                            .bold()
-                            .opacity(0.25)
-                            .offset(x: 0.5, y: 0.5)
-                        Text("4")
-                            .font(.system(size: 8.0))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .opacity(0.75)
-                            .offset(x: 1, y: 4.5)
-                    }
-                    .zIndex(Double(cards.count))
-                    .offset(x: 1.5, y: 0.5)
+        ZStack {
+            ForEach(cards.indices.reversed(), id: \.self) { idx in
+                let card = cards[idx]
+                let t = cards.count - idx
+                if let entry = card.entry {
+                    MiniCardView(color: entry.color)
+                        .matchedGeometryEffect(id: entry.id, in: namespace)
+                        .rotationEffect(.degrees(Double(-8 + 5 * Double(idx))))
+                        .offset(x: 0, y: CGFloat(t * 2))
+                        .zIndex(Double(idx))
+                        .opacity(1 - Double(t) * 0.2)
                 }
             }
-            .animation(DeckTheme.reboundSpring, value: cards)
-        case .ring:
-            SummoningCircleView(
-                radius: 64,
-                speed: 1,
-                namespace: namespace,
-                cards: cards
-            )
-        case .combine:
-            ZStack {
-                ForEach(cards.indices, id: \.self) { idx in
-                    let card = cards[idx]
-                    if let entry = card.entry {
-                        MiniCardView(color: entry.color)
-                            .matchedGeometryEffect(id: entry.id, in: namespace)
-                            .rotationEffect(.degrees(Double(-8 + 12 * sqrt(Double(idx)))))
-                            .offset(x: 0, y: CGFloat(idx * 1))
-                            .zIndex(Double(-idx))
-                            .opacity(0)
-                    }
+            
+            if !cards.isEmpty {
+                HStack(alignment: .bottom, spacing: 1) {
+                    Text("\(cards.count)").contentTransition(.numericText())
+                        .bold()
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .offset(x: -0.5, y: -2)
+                    Text("/")
+                        .font(.system(size: 10.0))
+                        .foregroundColor(.secondary)
+                        .bold()
+                        .opacity(0.25)
+                        .offset(x: 0.5, y: 0.5)
+                    Text("4")
+                        .font(.system(size: 8.0))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .opacity(0.75)
+                        .offset(x: 1, y: 4.5)
                 }
+                .zIndex(Double(cards.count))
+                .offset(x: 1.5, y: 0.5)
             }
-            .animation(.interactiveSpring(), value: cards)
-            .animation(.interactiveSpring(), value: mode)
-        case .present:
-            ZStack {
-//                Rectangle()
-//                    .frame(width: 320, height: 128)
-//                    .background(.red)
-//                    .transition(.push(from: .bottom))
-                
-                BouncySpringScaleEffectView()
-            }
-            .animation(.interactiveSpring(), value: mode)
         }
-        
+        .animation(DeckTheme.reboundSpring, value: cards)
     }
 }
 
 struct MiniCardStackView_Previews: PreviewProvider {
     struct TestView: View {
         @State var cards: [CardModel] = []
-        @State var mode: MiniCardStackViewMode = .stack
         
         var body: some View {
             VStack {
                 Spacer()
                 
-                MiniCardStackView(
-                    cards: cards,
-                    mode: mode
-                )
+                MiniCardStackView(cards: cards)
                 
                 Spacer()
                 
@@ -264,48 +155,6 @@ struct MiniCardStackView_Previews: PreviewProvider {
                 },
                        label: {
                     Text("Remove Card")
-                })
-                
-                Button(action: {
-                    withAnimation(.interactiveSpring) {
-                        mode = .ring
-                    }
-                },
-                       label: {
-                    Text("Splay")
-                })
-                
-                Button(action: {
-                    withAnimation(.interactiveSpring) {
-                        mode = .stack
-                    }
-                },
-                       label: {
-                    Text("Stack")
-                })
-                
-                Button(action: {
-                    Task {
-                        withAnimation(.interactiveSpring) {
-                            mode = .ring
-                        }
-                        
-                        try? await Task.sleep(nanoseconds: 500_000_000)
-                        
-                        withAnimation(.interactiveSpring) {
-                            mode = .combine
-                        }
-                        
-                        try? await Task.sleep(nanoseconds: 100_000_000)
-                        
-                        withAnimation(.interactiveSpring) {
-                            mode = .present
-                            cards.removeAll()
-                        }
-                    }
-                },
-                       label: {
-                    Text("Combine")
                 })
                 
                 Spacer()
