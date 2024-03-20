@@ -826,7 +826,7 @@ struct DeckModel: ModelProtocol {
             if model.buffer.count >= DeckModel.maxRewardCardBufferSize {
                 let entries = model.buffer.compactMap { card in card.entry }
                 let openAiFx = Future.detached {
-                    let result = await environment.openAiService.sendTextToOpenAI(
+                    let result = await environment.openAiService.sendRequest(
                         entries: entries,
                         prompt: [
                             OpenAIService.contemplate,

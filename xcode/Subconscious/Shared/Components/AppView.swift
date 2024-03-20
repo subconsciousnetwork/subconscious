@@ -921,6 +921,12 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 areAiFeaturesEnabled: areAiFeaturesEnabled
             )
+        case let .persistPreferredLlm(llm):
+            return persistPreferredLlm(
+                state: state,
+                environment: environment,
+                llm: llm
+            )
         case let .persistNoosphereLogLevel(level):
             return persistNoosphereLogLevel(
                 state: state,

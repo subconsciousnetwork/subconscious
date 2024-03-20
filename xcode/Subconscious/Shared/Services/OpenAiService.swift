@@ -136,7 +136,7 @@ actor OpenAIService {
         """
     }
 
-    func sendTextToOpenAI(
+    func sendRequest(
         entries: [EntryStub],
         prompt: LlmPrompt
     ) async -> Result<String, OpenAIError> {
