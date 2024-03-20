@@ -258,6 +258,231 @@ class Tests_DatabaseService: XCTestCase {
         )
     }
     
+    func testListAllMemos() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
+        )
+        
+        
+        let did = Did("did:key:abc123")!
+        let did2 = Did("did:key:def456")!
+        try service.writePeer(PeerRecord(petname: Petname("abc")!, identity: did))
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: Petname("abc")!,
+                slug: Slug("bar")!,
+                memo: bar
+            )
+        )
+        
+        let qux = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Qux"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did2,
+                petname: nil,
+                slug: Slug("qux")!,
+                memo: qux,
+                size: qux.toHeaderSubtext().size()!
+            )
+        )
+
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("baz")!,
+                memo: baz,
+                size: baz.toHeaderSubtext().size()!
+            )
+        )
+
+        let recent = try service.listAll(owner: did, limit: 3)
+        
+        XCTAssertEqual(recent.count, 3)
+        
+        XCTAssertEqual(recent[0].did, Did.local)
+        XCTAssertEqual(recent[1].did, did)
+        XCTAssertEqual(recent[2].did, did2)
+        
+        let slashlinks = Set(
+            recent.compactMap({ stub in
+                stub.address
+            })
+        )
+        XCTAssertEqual(slashlinks.count, 3)
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(did2),
+                    slug: Slug("qux")!
+                )
+            )
+        )
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(Did.local),
+                    slug: Slug("foo")!
+                )
+            )
+        )
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    petname: Petname("abc")!,
+                    slug: Slug("bar")!
+                )
+            )
+        )
+    }
+    
+    func testListUnseen() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("foo")!,
+                memo: foo,
+                size: foo.toHeaderSubtext().size()!
+            )
+        )
+        
+        
+        let did = Did("did:key:abc123")!
+        let did2 = Did("did:key:def456")!
+        try service.writePeer(PeerRecord(petname: Petname("abc")!, identity: did))
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did,
+                petname: Petname("abc")!,
+                slug: Slug("bar")!,
+                memo: bar
+            )
+        )
+        
+        let qux = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Qux"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: did2,
+                petname: nil,
+                slug: Slug("qux")!,
+                memo: qux,
+                size: qux.toHeaderSubtext().size()!
+            )
+        )
+
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            MemoRecord(
+                did: Did.local,
+                petname: nil,
+                slug: Slug("baz")!,
+                memo: baz,
+                size: baz.toHeaderSubtext().size()!
+            )
+        )
+
+        let recent = service.readRandomUnseenEntry(
+            owner: did,
+            seen: [
+                Slashlink(
+                    slug: Slug("baz")!
+                ),
+                Slashlink(
+                   slug: Slug("foo")!
+                ),
+                Slashlink(
+                    petname: Petname("abc")!,
+                    slug: Slug("foo")!
+                )
+            ]
+        )
+        
+        XCTAssert(recent?.address.slug == Slug("qux"))
+    }
+    
     func testReadRandomEntryInDateRange() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()

@@ -858,7 +858,8 @@ struct DeckModel: ModelProtocol {
                 
                 guard let entry = environment.database.readRandomUnseenEntry(
                     owner: us,
-                    seen: state.seen.map { entry in entry.address }
+                    seen: state.seen.map { entry in entry.address },
+                    minimumBodyLength: 64
                 ) else {
                     return .topupDeck
                 }

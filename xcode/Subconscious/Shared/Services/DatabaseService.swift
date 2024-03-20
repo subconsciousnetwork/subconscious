@@ -1430,7 +1430,11 @@ final class DatabaseService {
         .first
     }
     
-    func readRandomUnseenEntry(owner: Did?, seen: [Slashlink]) -> EntryStub? {
+    func readRandomUnseenEntry(
+        owner: Did?,
+        seen: [Slashlink],
+        minimumBodyLength: Int = 0
+    ) -> EntryStub? {
         guard self.state == .ready else {
             return nil
         }
@@ -1440,12 +1444,15 @@ final class DatabaseService {
             SELECT memo.did, peer.petname, memo.slug, memo.excerpt, memo.headers FROM memo
             LEFT JOIN peer ON memo.did = peer.did
             WHERE substr(memo.slug, 1, 1) != '_'
-            AND length(memo.excerpt) > 64
+            AND length(memo.excerpt) > ?
             AND memo.slashlink NOT IN (SELECT value FROM json_each(?))
             ORDER BY RANDOM()
             LIMIT 1
             """,
-            parameters: [.json(seen.map { s in s.description }, or: "[]")]
+            parameters: [
+                .integer(minimumBodyLength),
+                .json(seen.map { s in s.description }, or: "[]")
+            ]
         )
         .compactMap({ row in
             guard
