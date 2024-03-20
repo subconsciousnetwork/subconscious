@@ -922,7 +922,9 @@ struct DeckModel: ModelProtocol {
             
             
             if AppDefaults.standard.areAiFeaturesEnabled {
-                return generateRewardCard(state: state).mergeFx(fx)
+                var model = state
+                model.buffer.append(card)
+                return generateRewardCard(state: model).mergeFx(fx)
             }
             
             return update(
