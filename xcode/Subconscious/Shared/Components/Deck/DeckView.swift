@@ -255,6 +255,7 @@ struct DeckDetailStackCursor: CursorProtocol {
 // MARK: Model
 struct DeckModel: ModelProtocol {
     public static let backlinksToDraw = 1
+    public static let maxRewardCardBufferSize = 4
     
     typealias Action = DeckAction
     typealias Environment = DeckEnvironment
@@ -795,48 +796,121 @@ struct DeckModel: ModelProtocol {
                 )
             }
         }
-       
         
         struct ChooseCardActivityEvent: Codable {
             public static let event: String = "choose_card"
-            
             let address: String
         }
         
-        func shuffleInBacklinks(card: CardModel, message: String, address: Slashlink, backlinks: Set<EntryStub>) -> Update<Self> {
+        func writeCardChoiceActivity(
+            message: String,
+            address: Slashlink,
+            environment: Environment
+        ) throws {
+            try environment.database.writeActivity(
+                event: ActivityEvent(
+                    category: .deck,
+                    event: ChooseCardActivityEvent.event,
+                    message: message,
+                    metadata: ChooseCardActivityEvent(
+                        address: address.description
+                    )
+                )
+            )
+        }
+        
+        // Turn the notes held in the "buffer" into a reward card, pushed on top of the deck
+        func generateRewardCard(state: Self) -> Update<Self> {
+            var model = state
+            
+            if model.buffer.count >= DeckModel.maxRewardCardBufferSize {
+                let entries = model.buffer.compactMap { card in card.entry }
+                let openAiFx = Future.detached {
+                    let result = await environment.openAiService.sendTextToOpenAI(
+                        entries: entries,
+                        prompt: [
+                            OpenAIService.contemplate,
+                            OpenAIService.poem,
+                            OpenAIService.question,
+                            OpenAIService.summarize
+                        ].randomElement()!
+                    )
+                    
+                    switch result {
+                    case .success(let msg):
+                        return DeckAction.prependCards([
+                            CardModel(
+                                card: .reward(msg),
+                                liked: false
+                            )
+                        ])
+                    case .failure(let error):
+                        logger.error("Card generation failed: \(error)")
+                        return DeckAction.topupDeck
+                    }
+                }
+                .eraseToAnyPublisher()
+                
+                model.buffer.removeAll()
+                return update(
+                    state: model,
+                    actions: [.nextCard],
+                    environment: environment
+                ).mergeFx(openAiFx).animation(.easeOutCubic())
+            }
+            
+            return update(
+                state: model,
+                actions: [.nextCard],
+                environment: environment
+            )
+        }
+        
+        // Filter the passed set of related notes down to a candidate set to place into the deck.
+        func drawBacklinks(identity: Did, backlinks: Set<EntryStub>) async throws -> [CardModel] {
+            let backlinks = backlinks
+                .filter({ backlink in !isSeen(entry: backlink) })
+                .shuffled()
+            
+            if backlinks.count == 0 {
+                return []
+            }
+            
+            var draw: [CardModel] = []
+            for entry in backlinks.prefix(backlinksToDraw) {
+                let card = try await toCard(
+                    entry: entry,
+                    ourIdentity: identity,
+                    environment: environment,
+                    liked: state.likes.contains(where: { like in like == entry.address })
+                )
+                
+                draw.append(card)
+            }
+            return draw
+        }
+        
+        func shuffleInBacklinks(
+            card: CardModel,
+            message: String,
+            address: Slashlink,
+            backlinks: Set<EntryStub>
+        ) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 
-                try environment.database.writeActivity(
-                    event: ActivityEvent(
-                        category: .deck,
-                        event: ChooseCardActivityEvent.event,
-                        message: message,
-                        metadata: ChooseCardActivityEvent(
-                            address: address.description
-                        )
-                    )
+                try writeCardChoiceActivity(
+                    message: message,
+                    address: address,
+                    environment: environment
                 )
                 
-                // Filter to valid backlinks
-                let backlinks = backlinks
-                    .filter({ backlink in !isSeen(entry: backlink) })
-                    .shuffled()
-                
-                if backlinks.count == 0 {
+                let draw = try await drawBacklinks(
+                    identity: us,
+                    backlinks: backlinks
+                )
+                guard !draw.isEmpty else {
                     return .topupDeck
-                }
-                
-                var draw: [CardModel] = []
-                for entry in backlinks.prefix(backlinksToDraw) {
-                    let card = try await toCard(
-                        entry: entry,
-                        ourIdentity: us,
-                        environment: environment,
-                        liked: state.likes.contains(where: { like in like == entry.address })
-                    )
-                    
-                    draw.append(card)
                 }
                 
                 return .shuffleCardsUpNext(draw)
@@ -846,59 +920,36 @@ struct DeckModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
             
-            var model = state
             
             if AppDefaults.standard.areAiFeaturesEnabled {
-                model.buffer.append(card)
-                
-                if model.buffer.count >= 4 {
-                    let entries = model.buffer.compactMap { card in card.entry }
-                    let openAiFx = Future.detached {
-                        let result = await environment.openAiService.sendTextToOpenAI(
-                            entries: entries,
-                            prompt: [
-                                OpenAIService.contemplate,
-                                OpenAIService.poem,
-                                OpenAIService.question,
-                                OpenAIService.summarize
-                            ].randomElement()!
-                        )
-                        
-                        switch result {
-                        case .success(let msg):
-                            return DeckAction.prependCards([CardModel(card: .reward(msg), liked: false)])
-                        case .failure(let error):
-                            logger.error("OpenAI: \(error)")
-                            return DeckAction.topupDeck
-                        }
-                    }
-                    .eraseToAnyPublisher()
-                    
-                    model.buffer.removeAll()
-                    return update(
-                        state: model,
-                        actions: [.nextCard],
-                        environment: environment
-                    ).mergeFx(fx).mergeFx(openAiFx).animation(.easeOutCubic())
-                }
+                return generateRewardCard(state: state).mergeFx(fx)
             }
             
             return update(
-                state: model,
+                state: state,
                 action: .nextCard,
                 environment: environment
             ).mergeFx(fx).animation(.easeOutCubic())
         }
-
+        
         func chooseCard(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.impactOccurred()
             switch card.card {
             case let .entry(entry, _, related):
-                return shuffleInBacklinks(card: card, message: "", address: entry.address, backlinks: related)
+                return shuffleInBacklinks(
+                    card: card,
+                    message: "",
+                    address: entry.address,
+                    backlinks: related
+                )
             case let .prompt(message, entry, _, related):
-                return shuffleInBacklinks(card: card, message: message, address: entry.address, backlinks: related)
+                return shuffleInBacklinks(
+                    card: card,
+                    message: message,
+                    address: entry.address,
+                    backlinks: related
+                )
             case .reward(let msg):
-                logger.log("Action: \(msg)")
                 return update(
                     state: state,
                     action: .nextCard,

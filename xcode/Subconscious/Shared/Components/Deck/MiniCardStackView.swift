@@ -16,67 +16,13 @@ struct MiniCardView: View {
           .frame(width: 32, height: 44)
           .background(color)
           .cornerRadius(4)
-          .shadow(color: Color(red: 0.19, green: 0.09, blue: 0.33).opacity(0.2), radius: 1.5, x: 0, y: 1.5)
-          .rotationEffect(Angle(degrees: 0))
+          .shadow(style: .transclude)
           .transition(.push(from: .bottom))
-    }
-}
-
-extension Angle {
-    static func percent(_ percent: Double) -> Angle {
-        Angle(degrees: percent * 360)
-    }
-}
-
-struct SummoningCircleView: View {
-    var radius: CGFloat = 64
-    var speed: CGFloat = 1
-    var namespace: Namespace.ID
-    var cards: [CardModel]
-    @State var playedCards: [CardModel] = []
-    
-    func delta(_ idx: Int) -> Double {
-        (Double(cards.count - 1) / 2.0) - Double(idx)
-    }
-    
-    var body: some View {
-        HStack(spacing: AppTheme.unit2) {
-            ForEach(playedCards.indices, id: \.self) { index in
-                let card = playedCards[index]
-                if let entry = card.entry {
-                    MiniCardView(color: entry.color)
-                        .scaleEffect(x: 1.5, y: 1.5)
-                        .matchedGeometryEffect(id: entry.id, in: namespace)
-                        .rotationEffect(.degrees(delta(index) * -4))
-                        .offset(y: abs(delta(index)) * 2)
-                        .animation(.interactiveSpring(), value: cards)
-                }
-            }
-        }
-        .task {
-            playedCards.removeAll()
-            for card in cards {
-                playedCards.append(card)
-                try? await Task.sleep(nanoseconds: 50_000_000)
-            }
-        }
-        .onChange(of: cards) { _, _ in
-            while cards.count > playedCards.count {
-                playedCards.append(cards[playedCards.count])
-            }
-            
-            while cards.count < playedCards.count {
-                playedCards.removeLast()
-            }
-        }
-        .animation(.interactiveSpring(), value: playedCards)
-        .animation(.interactiveSpring(), value: cards)
     }
 }
 
 struct MiniCardStackView: View {
     var cards: [CardModel]
-    @Namespace var namespace
     
     var body: some View {
         ZStack {
@@ -85,7 +31,6 @@ struct MiniCardStackView: View {
                 let t = cards.count - idx
                 if let entry = card.entry {
                     MiniCardView(color: entry.color)
-                        .matchedGeometryEffect(id: entry.id, in: namespace)
                         .rotationEffect(.degrees(Double(-8 + 5 * Double(idx))))
                         .offset(x: 0, y: CGFloat(t * 2))
                         .zIndex(Double(idx))
@@ -106,7 +51,7 @@ struct MiniCardStackView: View {
                         .bold()
                         .opacity(0.25)
                         .offset(x: 0.5, y: 0.5)
-                    Text("4")
+                    Text("\(DeckModel.maxRewardCardBufferSize)")
                         .font(.system(size: 8.0))
                         .font(.caption)
                         .foregroundColor(.secondary)

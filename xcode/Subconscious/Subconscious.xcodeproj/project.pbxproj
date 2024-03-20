@@ -138,6 +138,8 @@
 		B5A7AD332A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
 		B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */; };
 		B5AD5C902AA7FF1900FC5BC5 /* Tests_DetailStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */; };
+		B5AEFA2A2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */; };
+		B5AEFA2B2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */; };
 		B5BC3D2A2B731A3000DB8A49 /* UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */; };
 		B5BC3D2B2B731A3000DB8A49 /* UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */; };
 		B5C019B42B75ADF4005B59DF /* Tests_UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C019B32B75ADF4005B59DF /* Tests_UserLikesService.swift */; };
@@ -686,6 +688,7 @@
 		B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailStackView.swift; sourceTree = "<group>"; };
 		B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DetailStack.swift; sourceTree = "<group>"; };
+		B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleUtilities.swift; sourceTree = "<group>"; };
 		B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLikesService.swift; sourceTree = "<group>"; };
 		B5C019B32B75ADF4005B59DF /* Tests_UserLikesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserLikesService.swift; sourceTree = "<group>"; };
 		B5C818D52AF380A7001F65BE /* CardStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStackView.swift; sourceTree = "<group>"; };
@@ -1741,6 +1744,7 @@
 			isa = PBXGroup;
 			children = (
 				B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */,
+				B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */,
 				B8AB08D92A9D534500998099 /* ArrayFirstIndexWhereID.swift */,
 				B58CC8E62B0DE8D1004CFFEA /* ArrayUtilities.swift */,
 				B8CA8F2328908D65005F8802 /* BundleUtilities.swift */,
@@ -2440,6 +2444,7 @@
 				B58CC8E82B0DEC10004CFFEA /* ArrayUtilities.swift in Sources */,
 				B8AB08C32A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift in Sources */,
 				B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */,
+				B5AEFA2A2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */,
 				B8B6BCB529CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B8AB08B92A9D501600998099 /* TextBlockCell.swift in Sources */,
 				B515E9D92ACA93D00067A329 /* FirstRunOrbitEffectView.swift in Sources */,
@@ -2551,6 +2556,7 @@
 				B8E00A312992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8E00A2B29928DD2003B40C1 /* AppDefaults.swift in Sources */,
+				B5AEFA2B2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */,
 				B542EF682AF48F2100BE29F1 /* StoreUtilities.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8B4251C28FE1DA60081B8D5 /* Entry.swift in Sources */,
