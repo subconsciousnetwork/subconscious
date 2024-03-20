@@ -826,14 +826,14 @@ struct DeckModel: ModelProtocol {
             if model.buffer.count >= DeckModel.maxRewardCardBufferSize {
                 let entries = model.buffer.compactMap { card in card.entry }
                 let openAiFx = Future.detached {
+                    let prompt = OpenAIService.prompts.randomElement()
+                    guard let prompt = prompt else {
+                        return DeckAction.topupDeck
+                    }
+                    
                     let result = await environment.openAiService.sendRequest(
                         entries: entries,
-                        prompt: [
-                            OpenAIService.contemplate,
-                            OpenAIService.poem,
-                            OpenAIService.question,
-                            OpenAIService.summarize
-                        ].randomElement()!
+                        prompt: prompt
                     )
                     
                     switch result {

@@ -54,7 +54,6 @@ actor OpenAIService {
         "gpt-4-1106-preview"
     ]
     
-    let keychain: KeychainService
     public static let question = LLMPrompt(
         system:
             """
@@ -114,6 +113,15 @@ actor OpenAIService {
             Your question:
             """
     )
+    
+    public static let prompts = [
+        OpenAIService.contemplate,
+        OpenAIService.poem,
+        OpenAIService.question,
+        OpenAIService.summarize
+    ]
+    
+    let keychain: KeychainService
     
     init(keychain: KeychainService) {
         self.keychain = keychain
