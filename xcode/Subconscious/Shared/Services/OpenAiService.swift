@@ -33,7 +33,11 @@ extension OpenAIError {
     }
 }
 
-struct LlmPrompt {
+struct OpenAIKey: Equatable, Hashable {
+    @Redacted var key: String
+}
+
+struct LLMPrompt {
     public let system: String
     public let instruction: String
 }
@@ -51,7 +55,7 @@ actor OpenAIService {
     ]
     
     let keychain: KeychainService
-    public static let question = LlmPrompt(
+    public static let question = LLMPrompt(
         system:
             """
             Your task is to take a list of notes and extract any cross-cutting themes or interesting patterns about the set as a whole. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. \n\nAs part of your summary you should include any particularly relevant links that did not appear in the input set. Respond with 10 questions based on your analysis with at most 6 words in each and up to 10 addresses of recommended notes that do not appear in the input set.
@@ -62,7 +66,7 @@ actor OpenAIService {
             """
     )
     
-    public static let summarize = LlmPrompt(
+    public static let summarize = LLMPrompt(
         system:
             """
             Your task is to take a list of notes and summarize the key ideas in 3 short dot points. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
@@ -79,7 +83,7 @@ actor OpenAIService {
             """
     )
     
-    public static let poem = LlmPrompt(
+    public static let poem = LLMPrompt(
         system:
             """
             Your task is to take a list of notes and summarize the key ideas in a 3 line haiku poem. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
@@ -96,7 +100,7 @@ actor OpenAIService {
             """
     )
     
-    public static let contemplate = LlmPrompt(
+    public static let contemplate = LLMPrompt(
         system:
             """
             Your task is to take a list of notes, reflect on them and respond with a question that makes you curious. These notes have been selected by a user while browsing a large network of notes. These notes each have an address of the format @username/path-to-note (or /path-to-note for our own notes) and may reference one another using this naming scheme. Ensure you mention any named entities, dates, or other important details.
@@ -117,7 +121,7 @@ actor OpenAIService {
     
     let apiUrl = "https://api.openai.com/v1/chat/completions"
     
-    private func formatNotes(entries: [EntryStub], prompt: LlmPrompt) -> String {
+    private func formatNotes(entries: [EntryStub], prompt: LLMPrompt) -> String {
         return """
         Here are the notes to analyze:
         
@@ -138,7 +142,7 @@ actor OpenAIService {
 
     func sendRequest(
         entries: [EntryStub],
-        prompt: LlmPrompt
+        prompt: LLMPrompt
     ) async -> Result<String, OpenAIError> {
         guard let url = URL(string: apiUrl) else {
             return .failure(OpenAIError.invalidAPIUrl)
