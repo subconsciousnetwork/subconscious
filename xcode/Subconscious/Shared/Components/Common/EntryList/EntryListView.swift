@@ -60,7 +60,12 @@ struct EntryListView: View {
                                 color: entry.color
                             )
                         )
-                        .matchedGeometryEffect(id: entry.id, in: namespace, anchor: .center, isSource: !editingInSheet)
+                        .matchedGeometryEffect(
+                            id: entry.id,
+                            in: namespace,
+                            anchor: .center,
+                            isSource: !editingInSheet
+                        )
                         .modifier(RowViewModifier())
                         .swipeActions(
                             edge: .trailing,

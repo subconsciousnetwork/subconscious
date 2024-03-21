@@ -17,7 +17,7 @@ struct NotebookNavigationView: View {
     func notify(_ notification: EntryNotification) -> Void {
         switch notification {
         case let .requestDetail(entry):
-            app.send(.editEntryInSheet(entry: entry))
+            app.send(.editorSheet(.editEntry(entry)))
 //            store.send(
 //                .pushDetail(
 //                    MemoEditorDetailDescription(
@@ -83,7 +83,7 @@ struct NotebookNavigationView: View {
                         },
                         notify: self.notify,
                         namespace: app.state.namespace ?? namespace,
-                        editingInSheet: app.state.editingEntryInSheet != nil
+                        editingInSheet: app.state.editorSheet.item != nil
                     )
                     .ignoresSafeArea(.keyboard, edges: .bottom)
                     .confirmationDialog(

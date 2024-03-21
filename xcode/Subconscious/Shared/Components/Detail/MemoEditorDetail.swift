@@ -310,6 +310,27 @@ enum MemoEditorDetailNotification: Hashable {
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
 }
 
+extension AppAction {
+    static func from(_ notification: MemoEditorDetailNotification) -> Self? {
+        switch notification {
+        case let .requestSaveEntry(entry):
+            return .saveEntry(entry)
+        case let .requestDelete(address):
+            return .deleteEntry(address)
+        case let .requestMoveEntry(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .updateAudience(address: address, audience: audience)
+        case let .requestAssignNoteColor(address, color):
+            return .assignColor(address: address, color: color)
+        default:
+            return nil
+        }
+    }
+}
+
 extension MemoEditorDetailNotification {
     static func from(_ action: MemoEditorDetailAction) -> Self? {
         switch action {
@@ -366,6 +387,7 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
+    case editorDismissed
     case disappear
     case poll
 
@@ -568,7 +590,13 @@ extension MemoEditorDetailAction {
             return .succeedAssignNoteColor(address, color)
         case let .succeedUpdateLikeStatus(address, liked):
             return .succeedUpdateLikeStatus(address, liked: liked)
-            
+        case let .editorSheet(editorAction):
+            switch editorAction {
+            case .dismiss:
+                return .editorDismissed
+            default:
+                return nil
+            }
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
             return .refreshBacklinks
@@ -766,6 +794,11 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
+            )
+        case .editorDismissed:
+            return editorDismissed(
+                state: state,
+                environment: environment
             )
         case .disappear:
             return disappear(
@@ -1170,9 +1203,29 @@ struct MemoEditorDetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<Self> {
         var model = state
-        model.isPolling = false
         
-        return Update(state: model)
+        return Update(
+            state: model
+        )
+    }
+    
+    static func editorDismissed(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<Self> {
+        var model = state
+        model.isPolling = false
+        let autosaveFx: Fx<Action> = Just(Action.autosave)
+            .eraseToAnyPublisher()
+        
+        return update(
+            state: model,
+            actions: [
+                .editor(.setEditable(false)),
+                .editor(.requestFocus(false))
+            ],
+            environment: environment
+        ).mergeFx(autosaveFx)
     }
     
     static func poll(

@@ -31,8 +31,9 @@ struct AppView: View {
         ZStack {
             AppTabView(store: store)
                 .zIndex(0)
-                .disabled(store.state.editingEntryInSheet != nil)
-                .allowsHitTesting(store.state.editingEntryInSheet == nil)
+                .disabled(store.state.editorSheet.presented)
+                .allowsHitTesting(!store.state.editorSheet.presented)
+                .offset(y: store.state.editorSheet.presented ? 16 : 0)
             
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
@@ -56,15 +57,14 @@ struct AppView: View {
                     .zIndex(1)
             }
             
-            if let entry = store.state.editingEntryInSheet,
+            if let _ = store.state.editorSheet.item,
                let namespace = store.state.namespace {
-                EditorModalSheetView(app: store, item: entry, namespace: namespace, dismiss: {
-                    store.send(.dismissEditorSheet)
-                })
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, 56)
-                .ignoresSafeArea(.all)
-                .zIndex(999)
+                EditorModalSheetView(app: store, namespace: namespace)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.top, 56)
+                    .ignoresSafeArea(.all)
+                    .transition(.push(from: .bottom))
+                    .zIndex(999)
             }
         }
         .sheet(
@@ -363,9 +363,6 @@ enum AppAction: Hashable {
     
     /// Used as a notification that recovery completed
     case succeedRecoverOurSphere
-    
-    case editEntryInSheet(entry: EntryStub)
-    case dismissEditorSheet
     
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: RecoveryPhrase?) -> AppAction {
@@ -721,7 +718,6 @@ struct AppModel: ModelProtocol {
     
     var selectedAppTab: AppTab = .notebook
     
-    var editingEntryInSheet: EntryStub? = nil
     var namespace: Namespace.ID? = nil
     var feedback = UIImpactFeedbackGenerator()
     var selectionFeedback = UISelectionFeedbackGenerator()
@@ -1484,18 +1480,7 @@ struct AppModel: ModelProtocol {
                    """,
                 notification: "Could not update status"
             )
-        case let .editEntryInSheet(entry):
-            var model = state
-            model.editingEntryInSheet = entry
-            model.selectionFeedback.prepare()
-            model.selectionFeedback.selectionChanged()
-            return Update(state: model).animation(DeckTheme.friendlySpring)
-        case .dismissEditorSheet:
-            var model = state
-            model.editingEntryInSheet = nil
-            model.selectionFeedback.prepare()
-            model.selectionFeedback.selectionChanged()
-            return Update(state: model).animation(DeckTheme.friendlySpring)
+        
         }
     }
     
