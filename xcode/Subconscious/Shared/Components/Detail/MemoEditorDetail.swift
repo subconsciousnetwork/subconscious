@@ -80,19 +80,19 @@ struct MemoEditorDetailView: View {
                 plainEditor()
             }
         }
-//        .navigationTitle(navigationTitle)
-//        .navigationBarTitleDisplayMode(.inline)
-//        .modifier(AppThemeToolbarViewModifier())
-//        .toolbar(content: {
-//            DetailToolbarContent(
-//                address: store.state.address,
-//                defaultAudience: store.state.defaultAudience,
-//                onTapOmnibox: {
-//                    store.send(.presentMetaSheet(true))
-//                },
-//                status: store.state.loadingState
-//            )
-//        })
+        .navigationTitle(navigationTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .modifier(AppThemeToolbarViewModifier())
+        .toolbar(content: {
+            DetailToolbarContent(
+                address: store.state.address,
+                defaultAudience: store.state.defaultAudience,
+                onTapOmnibox: {
+                    store.send(.presentMetaSheet(true))
+                },
+                status: store.state.loadingState
+            )
+        })
         .onAppear {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
@@ -225,7 +225,7 @@ struct MemoEditorDetailView: View {
                             )
                             .insets(
                                 EdgeInsets(
-                                    top: 0,
+                                    top: AppTheme.padding,
                                     leading: AppTheme.padding,
                                     bottom: AppTheme.padding,
                                     trailing: AppTheme.padding
@@ -234,10 +234,56 @@ struct MemoEditorDetailView: View {
                             .frame(
                                 minHeight: UIFont.appTextMono.lineHeight * 8
                             )
+                            
+                            if let address = store.state.address {
+                                HStack {
+                                    Spacer()
+                                    
+                                    LikeButtonView(
+                                        liked: store.state.liked,
+                                        action: {
+                                            notify(
+                                                .requestUpdateLikeStatus(
+                                                    address,
+                                                    liked: !store.state.liked
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
+                                .padding(EdgeInsets(
+                                    top: 0,
+                                    leading: DeckTheme.cardPadding,
+                                    bottom: DeckTheme.cardPadding,
+                                    trailing: DeckTheme.cardPadding
+                                ))
+                            }
                         }
                         .background(background)
+                        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+                        .shadow(style: .transclude)
                         .padding(.bottom, AppTheme.unit4)
                         .padding(.top, AppTheme.unit2)
+                        
+                        AICommentsView(
+                            comments: store.state.comments,
+                            onRefresh: {
+                                store.send(.refreshComments)
+                            },
+                            onRespond: { comment in
+                                if let address = store.state.address {
+                                    notify(.requestQuoteInNewDetail(address, comment: comment))
+                                }
+                            },
+                            background: background ?? .secondary
+                        )
+                        
+                        BacklinksView(
+                            backlinks: store.state.backlinks,
+                            onLink: { link in
+                                notify(.requestFindLinkDetail(link))
+                            }
+                        )
                     }
                 }
                 .tint(highlight)
@@ -268,9 +314,7 @@ struct MemoEditorDetailView: View {
                         },
                         onDoneEditing: {
                             store.send(.doneEditing)
-                        },
-                        background: store.state.themeColor?.toColor() ?? store.state.address?.themeColor.toColor() ?? .background,
-                        color: store.state.themeColor?.toHighlightColor() ?? store.state.address?.themeColor.toHighlightColor() ?? .accentColor
+                        }
                     )
                     .transition(
                         .asymmetric(
@@ -308,27 +352,6 @@ enum MemoEditorDetailNotification: Hashable {
     case requestQuoteInNewDetail(_ address: Slashlink, comment: String? = nil)
     case requestUpdateLikeStatus(_ address: Slashlink, liked: Bool)
     case selectAppendLinkSearchSuggestion(AppendLinkSuggestion)
-}
-
-extension AppAction {
-    static func from(_ notification: MemoEditorDetailNotification) -> Self? {
-        switch notification {
-        case let .requestSaveEntry(entry):
-            return .saveEntry(entry)
-        case let .requestDelete(address):
-            return .deleteEntry(address)
-        case let .requestMoveEntry(from, to):
-            return .moveEntry(from: from, to: to)
-        case let .requestMergeEntry(parent, child):
-            return .mergeEntry(parent: parent, child: child)
-        case let .requestUpdateAudience(address, audience):
-            return .updateAudience(address: address, audience: audience)
-        case let .requestAssignNoteColor(address, color):
-            return .assignColor(address: address, color: color)
-        default:
-            return nil
-        }
-    }
 }
 
 extension MemoEditorDetailNotification {
@@ -387,7 +410,6 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
-    case editorDismissed
     case disappear
     case poll
 
@@ -590,13 +612,7 @@ extension MemoEditorDetailAction {
             return .succeedAssignNoteColor(address, color)
         case let .succeedUpdateLikeStatus(address, liked):
             return .succeedUpdateLikeStatus(address, liked: liked)
-        case let .editorSheet(editorAction):
-            switch editorAction {
-            case .dismiss:
-                return .editorDismissed
-            default:
-                return nil
-            }
+            
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
             return .refreshBacklinks
@@ -794,11 +810,6 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
-            )
-        case .editorDismissed:
-            return editorDismissed(
-                state: state,
-                environment: environment
             )
         case .disappear:
             return disappear(
@@ -1203,29 +1214,9 @@ struct MemoEditorDetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<Self> {
         var model = state
-        
-        return Update(
-            state: model
-        )
-    }
-    
-    static func editorDismissed(
-        state: MemoEditorDetailModel,
-        environment: AppEnvironment
-    ) -> Update<Self> {
-        var model = state
         model.isPolling = false
-        let autosaveFx: Fx<Action> = Just(Action.autosave)
-            .eraseToAnyPublisher()
         
-        return update(
-            state: model,
-            actions: [
-                .editor(.setEditable(false)),
-                .editor(.requestFocus(false))
-            ],
-            environment: environment
-        ).mergeFx(autosaveFx)
+        return Update(state: model)
     }
     
     static func poll(

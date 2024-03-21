@@ -136,6 +136,7 @@
 		B59E9E1B2AB8FA29008E3543 /* HomeProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E9E192AB8FA29008E3543 /* HomeProfileView.swift */; };
 		B5A7AD322A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
 		B5A7AD332A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
+		B5A947A22BABC88700565BDC /* MemoEditorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A947A12BABC88700565BDC /* MemoEditorDetail.swift */; };
 		B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */; };
 		B5AD5C902AA7FF1900FC5BC5 /* Tests_DetailStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */; };
 		B5AEFA2A2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */; };
@@ -328,8 +329,8 @@
 		B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */; };
 		B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */; };
-		B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */; };
-		B8879EAD26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */; };
+		B8879EAC26F944DA00A0B4FF /* ModalMemoEditorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* ModalMemoEditorDetail.swift */; };
+		B8879EAD26F944DA00A0B4FF /* ModalMemoEditorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* ModalMemoEditorDetail.swift */; };
 		B8895CAC2B1FB25300F7DE8D /* SubtextUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8895CAB2B1FB25300F7DE8D /* SubtextUtilities.swift */; };
 		B8895CAD2B1FB25300F7DE8D /* SubtextUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8895CAB2B1FB25300F7DE8D /* SubtextUtilities.swift */; };
 		B88A76D429E09B51005F3422 /* PasteboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88A76D329E09B51005F3422 /* PasteboardService.swift */; };
@@ -688,6 +689,7 @@
 		B59E4E5E2B3BA91D000A2B49 /* CardContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentView.swift; sourceTree = "<group>"; };
 		B59E9E192AB8FA29008E3543 /* HomeProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeProfileView.swift; sourceTree = "<group>"; };
 		B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		B5A947A12BABC88700565BDC /* MemoEditorDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetail.swift; sourceTree = "<group>"; };
 		B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailStackView.swift; sourceTree = "<group>"; };
 		B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DetailStack.swift; sourceTree = "<group>"; };
 		B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleUtilities.swift; sourceTree = "<group>"; };
@@ -825,7 +827,7 @@
 		B884565229D2102D00DBCD39 /* Tests_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_App.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
-		B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetail.swift; sourceTree = "<group>"; };
+		B8879EAB26F944DA00A0B4FF /* ModalMemoEditorDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalMemoEditorDetail.swift; sourceTree = "<group>"; };
 		B8895CAB2B1FB25300F7DE8D /* SubtextUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextUtilities.swift; sourceTree = "<group>"; };
 		B88A76D329E09B51005F3422 /* PasteboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardService.swift; sourceTree = "<group>"; };
 		B88A76D629E0AA44005F3422 /* Tests_MemoViewerDetailMetaSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MemoViewerDetailMetaSheet.swift; sourceTree = "<group>"; };
@@ -1376,7 +1378,8 @@
 				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
 				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */,
-				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
+				B5A947A12BABC88700565BDC /* MemoEditorDetail.swift */,
+				B8879EAB26F944DA00A0B4FF /* ModalMemoEditorDetail.swift */,
 				B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */,
 				B81A1A6E29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift */,
 				B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */,
@@ -2321,7 +2324,7 @@
 				B87288DE299AB02400EF7E07 /* Sphere.swift in Sources */,
 				B81A1A6D29DF267200B4CD1C /* LoadingState.swift in Sources */,
 				B5CA448929D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */,
-				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
+				B8879EAC26F944DA00A0B4FF /* ModalMemoEditorDetail.swift in Sources */,
 				B8E1A94B2A14198400B757A5 /* OurSphereRecord.swift in Sources */,
 				B88A91A12A4C9C0100422ABF /* EntryListEmptyView.swift in Sources */,
 				B58FD6732A4E4C0E00826548 /* InviteCodeSettingsSection.swift in Sources */,
@@ -2477,6 +2480,7 @@
 				B57339582AEF800300D43333 /* ToastView.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
 				B542EF7A2AF4963700BE29F1 /* UserProfileDetialMetaSheetModifier.swift in Sources */,
+				B5A947A22BABC88700565BDC /* MemoEditorDetail.swift in Sources */,
 				B89DBDE02AF440C6003D2CE3 /* UIHostingView.swift in Sources */,
 				B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */,
 				B83E91D727692EC600045C6A /* FAB.swift in Sources */,
@@ -2540,7 +2544,7 @@
 				B8AE34B7276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8E1A9472A12F69E00B757A5 /* LogFmt.swift in Sources */,
 				B5D8FEB82AAC426C002CBF00 /* MainToolbar.swift in Sources */,
-				B8879EAD26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
+				B8879EAD26F944DA00A0B4FF /* ModalMemoEditorDetail.swift in Sources */,
 				B8D7F04027A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B542EF752AF494E100BE29F1 /* FollowNewUserFormSheet.swift in Sources */,
 				B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */,

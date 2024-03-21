@@ -33,7 +33,6 @@ struct AppView: View {
                 .zIndex(0)
                 .disabled(store.state.editorSheet.presented)
                 .allowsHitTesting(!store.state.editorSheet.presented)
-                .offset(y: store.state.editorSheet.presented ? 16 : 0)
             
             if !store.state.isAppUpgraded {
                 AppUpgradeView(

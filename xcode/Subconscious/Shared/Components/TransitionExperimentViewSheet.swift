@@ -19,6 +19,27 @@ enum EditorModalSheetAction: Equatable, Hashable {
     case editLinkSheetPresented(_ presented: Bool)
 }
 
+extension AppAction {
+    static func from(_ notification: MemoEditorDetailNotification) -> Self? {
+        switch notification {
+        case let .requestSaveEntry(entry):
+            return .saveEntry(entry)
+        case let .requestDelete(address):
+            return .deleteEntry(address)
+        case let .requestMoveEntry(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .requestMergeEntry(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .requestUpdateAudience(address, audience):
+            return .updateAudience(address: address, audience: audience)
+        case let .requestAssignNoteColor(address, color):
+            return .assignColor(address: address, color: color)
+        default:
+            return nil
+        }
+    }
+}
+
 struct EditorModalSheetModel: ModelProtocol, Equatable {
     typealias Action = EditorModalSheetAction
     typealias Environment = AppEnvironment
@@ -90,6 +111,24 @@ struct RedMenu: MenuStyle {
 
 struct EditorModalSheetView: View {
     @ObservedObject var app: Store<AppModel>
+    private static let modalMemoEditorDetailStoreLogger = Logger(
+        subsystem: Config.default.rdns,
+        category: "ModalMemoEditorDetailStore"
+    )
+    
+    /// Detail keeps a separate internal store for editor state that does not
+    /// need to be surfaced in higher level views.
+    ///
+    /// This gives us a pretty big efficiency win, since keystrokes will only
+    /// rerender this view, and not whole app view tree.
+    @StateObject private var editor = Store(
+        state: MemoEditorDetailModel(),
+        action: .start,
+        environment: AppEnvironment.default,
+        loggingEnabled: true,
+        logger: modalMemoEditorDetailStoreLogger
+    )
+    
     var store: ViewStore<EditorModalSheetModel> {
         app.viewStore(
             get: \.editorSheet,
@@ -151,8 +190,9 @@ struct EditorModalSheetView: View {
                     // Heinous workaround for a bug with keyboard toolbars in ZStacks
                     // https://stackoverflow.com/questions/71206502/keyboard-toolbar-buttons-not-showing
                     NavigationStack {
-                        MemoEditorDetailView(
+                        ModalMemoEditorDetailView(
                             app: app,
+                            store: editor,
                             description: MemoEditorDetailDescription(
                                 address: item.address
                             ),
