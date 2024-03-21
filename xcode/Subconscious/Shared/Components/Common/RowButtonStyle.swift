@@ -24,15 +24,16 @@ struct RowLabelStyle: LabelStyle {
 /// Underlays a fill on tap when active, much like a UITableView row.
 struct RowButtonStyle: ButtonStyle {
     var insets: EdgeInsets = AppTheme.defaultRowButtonInsets
+    var color: Color = .primaryButtonText
 
     func makeBody(configuration: Configuration) -> some View {
         HStack {
             configuration.label
                 .labelStyle(RowLabelStyle())
                 .foregroundColor(
-                    configuration.role == .destructive ?
-                    Color.red :
-                    Color.primaryButtonText
+                    configuration.role == .destructive
+                        ? Color.red
+                        : color
                 )
         }
         .padding(insets)

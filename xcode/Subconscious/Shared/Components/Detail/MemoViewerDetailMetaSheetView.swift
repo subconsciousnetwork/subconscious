@@ -39,11 +39,19 @@ struct MemoViewerDetailMetaSheetView: View {
             ScrollView {
                 VStack(spacing: AppTheme.unit4) {
                     MetaTableView {
-                        MetaTableItemShareLinkView(
-                            label: "Share link",
+                        MetaTableCopyItemView(
+                            label: "Copy link",
                             item: store.state.shareableLink ?? ""
                         )
                         .disabled(store.state.shareableLink == nil)
+                        
+                        Divider()
+
+                        MetaTableItemShareLinkView(
+                            label: "Share",
+                            item: store.state.shareableText ?? ""
+                        )
+                        .disabled(store.state.shareableText == nil)
                         
                         Divider()
                         
@@ -100,7 +108,7 @@ struct MemoViewerDetailMetaSheetView: View {
                             },
                             label: {
                                 Label(
-                                    "Append to note",
+                                    "Add to note",
                                     systemImage: "link.badge.plus"
                                 )
                             }
@@ -116,7 +124,7 @@ struct MemoViewerDetailMetaSheetView: View {
                                 },
                                 label: {
                                     Label(
-                                        "View Author Profile",
+                                        "Author",
                                         systemImage: "person"
                                     )
                                 }
@@ -148,6 +156,7 @@ struct MemoViewerDetailMetaSheetView: View {
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
     case setAddress(_ address: Slashlink)
+    case setShareableText(_ text: String)
     case setAuthor(_ author: UserProfile)
     case setLiked(_ liked: Bool)
     case requestDismiss
@@ -205,6 +214,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     
     var author: UserProfile?
     var address: Slashlink?
+    var shareableText: String?
     var memoVersion: String?
     var noteVersion: String?
     var authorKey: String?
@@ -231,6 +241,12 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 address: address
+            )
+        case let .setShareableText(text):
+            return setShareableText(
+                state: state,
+                environment: environment,
+                text: text
             )
         case let .setAuthor(author):
             return setAuthor(
@@ -277,6 +293,16 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.address = address
+        return Update(state: model)
+    }
+    
+    static func setShareableText(
+        state: Self,
+        environment: Environment,
+        text: String
+    ) -> Update<Self> {
+        var model = state
+        model.shareableText = text
         return Update(state: model)
     }
     
