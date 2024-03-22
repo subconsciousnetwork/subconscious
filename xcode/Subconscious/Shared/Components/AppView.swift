@@ -720,9 +720,7 @@ struct AppModel: ModelProtocol {
     }
     
     var selectedAppTab: AppTab = .notebook
-    
     var namespace: Namespace.ID? = nil
-    
     
     // Logger for actions
     static let logger = Logger(
