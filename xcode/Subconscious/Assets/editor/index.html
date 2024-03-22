@@ -5,10 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title></title>
   <link rel="stylesheet" href="assets/main.css">
-  <script type="module" src="bundle/main.js"></script>
+  <script type="module">
+    import * as BlockEditor from  './bundle/main.js'
+
+    const seconds = ms => ms * 1000
+
+    const AUTOSAVE_POLL_TIMEOUT = seconds(15)
+
+    const editor = document.querySelector('x-editor')
+
+    setInterval(
+      () => {
+        const json = JSON.stringify(editor.state)
+        window.webkit.messageHandlers.native.postMessage(json)
+      },
+      AUTOSAVE_POLL_TIMEOUT
+    )
+  </script>
 </head>
 <body class="theme">
-  <x-editor>
-  </x-editor>
+  <x-editor></x-editor>
 </body>
 </html>

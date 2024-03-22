@@ -263,6 +263,7 @@
 		B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */; };
 		B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */; };
 		B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */; };
+		B84BD35E2BA8AC8D000497BE /* Arboreal in Frameworks */ = {isa = PBXBuildFile; productRef = B84BD35D2BA8AC8D000497BE /* Arboreal */; };
 		B85319EA2AAA3D8A0085044A /* UIViewPreviewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85319E92AAA3D890085044A /* UIViewPreviewRepresentable.swift */; };
 		B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */; };
 		B8545F0B296F8FB700BC4EA1 /* OmniboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */; };
@@ -1015,6 +1016,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B84BD35E2BA8AC8D000497BE /* Arboreal in Frameworks */,
 				B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */,
 				B596B34C2B68B160001C3EB6 /* SentrySwiftUI in Frameworks */,
 				B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */,
@@ -1911,6 +1913,7 @@
 				B57D63BF29B574C3008BBB62 /* CodeScanner */,
 				8804D2542A4242E300D45E83 /* Sentry */,
 				B596B34B2B68B160001C3EB6 /* SentrySwiftUI */,
+				B84BD35D2BA8AC8D000497BE /* Arboreal */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -2014,6 +2017,7 @@
 				B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */,
 				B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */,
 				8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				B84BD35C2BA8AC8D000497BE /* XCRemoteSwiftPackageReference "arboreal" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -3206,6 +3210,14 @@
 				minimumVersion = 1.0.3;
 			};
 		};
+		B84BD35C2BA8AC8D000497BE /* XCRemoteSwiftPackageReference "arboreal" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/subconsciousnetwork/arboreal.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.0.2;
+			};
+		};
 		B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
@@ -3246,6 +3258,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = OrderedCollections;
+		};
+		B84BD35D2BA8AC8D000497BE /* Arboreal */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B84BD35C2BA8AC8D000497BE /* XCRemoteSwiftPackageReference "arboreal" */;
+			productName = Arboreal;
 		};
 		B8579B6627C5620800D8B4BC /* Collections */ = {
 			isa = XCSwiftPackageProductDependency;

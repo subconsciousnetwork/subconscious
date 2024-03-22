@@ -1,5 +1,15 @@
 {
+  "originHash" : "30ff785db7d87f975a3810bc31f9df56905cd63f6ee268406d24b4ede7912b27",
   "pins" : [
+    {
+      "identity" : "arboreal",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/subconsciousnetwork/arboreal.git",
+      "state" : {
+        "revision" : "1156e2f0031d54817dcfda1f69a7fe700c5120c2",
+        "version" : "0.0.2"
+      }
+    },
     {
       "identity" : "codescanner",
       "kind" : "remoteSourceControl",
@@ -46,5 +56,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
