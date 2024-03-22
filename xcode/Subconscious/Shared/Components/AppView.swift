@@ -60,10 +60,10 @@ struct AppView: View {
                    let namespace = store.state.namespace {
                     EditorModalSheetView(app: store, namespace: namespace)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding(.top, 56)
+                        .padding(.top, AppTheme.comfortableTouchSize)
                         .ignoresSafeArea(.all)
-                        .zIndex(999)
                         .shadow(style: .editorSheet)
+                        .zIndex(3)
                 }
             }
         }

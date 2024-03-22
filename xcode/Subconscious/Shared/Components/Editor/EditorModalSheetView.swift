@@ -106,7 +106,9 @@ struct EditorModalSheetView: View {
     var namespace: Namespace.ID
     @State var dragAmount: CGFloat = 0
     private static let dragThreshold: CGFloat = 64
-    
+    private static let discardThrowDistance: CGFloat = 1024
+    private static let discardThrowDelay: CGFloat = 0.15
+
     func onDismiss() {
         store.send(.dismiss)
     }
@@ -140,7 +142,7 @@ struct EditorModalSheetView: View {
                     }
                 }
                 .padding(AppTheme.padding)
-                .frame(height: 44)
+                .frame(height: AppTheme.minTouchSize)
                 .foregroundStyle(editor.state.highlight)
                 .tint(editor.state.highlight)
                 .background(editor.state.background)
@@ -151,8 +153,8 @@ struct EditorModalSheetView: View {
                         }
                         .onEnded { _ in
                             if dragAmount > Self.dragThreshold {
-                                dragAmount = 1024
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                dragAmount = Self.discardThrowDistance
+                                DispatchQueue.main.asyncAfter(deadline: .now() + Self.discardThrowDelay) {
                                     onDismiss()
                                 }
                             } else {
@@ -165,7 +167,7 @@ struct EditorModalSheetView: View {
                     // Heinous workaround for a bug with keyboard toolbars in ZStacks
                     // https://stackoverflow.com/questions/71206502/keyboard-toolbar-buttons-not-showing
                     NavigationStack {
-                        ModalMemoEditorDetailView(
+                        EditorModalSheetDetailView(
                             app: app,
                             store: editor,
                             description: MemoEditorDetailDescription(
@@ -191,17 +193,14 @@ struct EditorModalSheetView: View {
                             .allowsHitTesting(false)
                         
                         ZStack(alignment: .bottom) {
+                            // Gradient background for the bottom toolbar
                             Rectangle()
                                 .foregroundStyle(editor.state.background)
-                                .frame(maxHeight: 56*2)
+                                .frame(maxHeight: AppTheme.minGradientMaskSize)
                                 .mask(
                                     LinearGradient(
                                         gradient: Gradient(
-                                            colors: [
-                                                .clear,
-                                                .black,
-                                                .black,
-                                            ]
+                                            colors: [.clear, .black, .black]
                                         ),
                                         startPoint: .top,
                                         endPoint: .bottom
@@ -224,7 +223,7 @@ struct EditorModalSheetView: View {
                                                 .fontWeight(.medium)
                                                 .font(.caption)
                                         }
-                                        .frame(maxWidth: 192, alignment: .leading)
+                                        .frame(alignment: .leading)
                                     }
                                 )
                                 
@@ -255,7 +254,7 @@ struct EditorModalSheetView: View {
                 }
             }
             .background(editor.state.background)
-            .cornerRadius(16, corners: [.topLeft, .topRight])
+            .cornerRadius(AppTheme.cornerRadiusLg, corners: [.topLeft, .topRight])
             .offset(y: dragAmount)
             .matchedGeometryEffect(id: item.id, in: namespace, isSource: false)
             .animation(.interactiveSpring(), value: dragAmount)

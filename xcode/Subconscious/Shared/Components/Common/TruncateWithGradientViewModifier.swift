@@ -11,7 +11,7 @@ import SwiftUI
 struct TruncateWithGradientViewModifier: ViewModifier {
     var maxHeight: CGFloat
     
-    private static let maxGradientHeight: CGFloat = 80
+    private static let maxGradientHeight: CGFloat = AppTheme.minGradientMaskSize
     
     func body(content: Content) -> some View {
         content
