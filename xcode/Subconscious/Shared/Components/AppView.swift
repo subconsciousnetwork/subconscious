@@ -31,8 +31,7 @@ struct AppView: View {
         ZStack {
             AppTabView(store: store)
                 .zIndex(0)
-                .disabled(store.state.editorSheet.presented)
-                .allowsHitTesting(!store.state.editorSheet.presented)
+                .disabled(store.state.editorSheet.item != nil)
             
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
@@ -62,8 +61,8 @@ struct AppView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(.top, 56)
                     .ignoresSafeArea(.all)
-                    .transition(.push(from: .bottom))
                     .zIndex(999)
+                    .shadow(style: .editorSheet)
             }
         }
         .sheet(

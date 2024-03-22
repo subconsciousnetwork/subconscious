@@ -148,7 +148,8 @@ extension String {
 
 extension Slashlink {
     var themeColor: ThemeColor {
-        description.themeColor
+        // by using the slug we ensure colors match across namespaces (AKA users)
+        slug.description.themeColor
     }
 }
 

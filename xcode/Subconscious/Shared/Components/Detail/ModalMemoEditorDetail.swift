@@ -131,17 +131,7 @@ struct ModalMemoEditorDetailView: View {
         }
     }
     
-    var highlight: Color? {
-        store.state.themeColor?.toHighlightColor()
-            ?? store.state.address?.themeColor.toHighlightColor()
-            ?? ThemeColor.a.toHighlightColor()
-    }
     
-    var background: Color? {
-        store.state.themeColor?.toColor()
-            ?? store.state.address?.themeColor.toColor()
-            ?? ThemeColor.a.toColor()
-    }
 
     /// Constructs a plain text editor for the view
     private func plainEditor() -> some View {
@@ -167,16 +157,11 @@ struct ModalMemoEditorDetailView: View {
                                     trailing: AppTheme.padding
                                 )
                             )
-                            .frame(
-                                minHeight: UIFont.appTextMono.lineHeight * 8
-                            )
                         }
-                        .background(background)
-                        .padding(.bottom, AppTheme.unit4)
-                        .padding(.top, AppTheme.unit2)
                     }
                 }
-                .tint(highlight)
+                .background(store.state.background)
+                .tint(store.state.highlight)
                 
                 if store.state.editor.focus {
                     DetailKeyboardToolbarView(
@@ -205,8 +190,12 @@ struct ModalMemoEditorDetailView: View {
                         onDoneEditing: {
                             store.send(.doneEditing)
                         },
-                        background: store.state.themeColor?.toColor() ?? store.state.address?.themeColor.toColor() ?? .background,
-                        color: store.state.themeColor?.toHighlightColor() ?? store.state.address?.themeColor.toHighlightColor() ?? .accentColor
+                        background: store.state.themeColor?.toColor() 
+                            ?? store.state.address?.themeColor.toColor()
+                            ?? .background,
+                        color: store.state.themeColor?.toHighlightColor()
+                            ?? store.state.address?.themeColor.toHighlightColor()
+                            ?? .accentColor
                     )
                     .transition(
                         .asymmetric(

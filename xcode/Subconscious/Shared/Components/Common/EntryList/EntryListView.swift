@@ -63,7 +63,6 @@ struct EntryListView: View {
                         .matchedGeometryEffect(
                             id: entry.id,
                             in: namespace,
-                            anchor: .center,
                             isSource: !editingInSheet
                         )
                         .modifier(RowViewModifier())

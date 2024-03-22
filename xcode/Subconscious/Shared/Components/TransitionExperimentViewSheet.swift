@@ -11,12 +11,10 @@ import os
 
 enum EditorModalSheetAction: Equatable, Hashable {
     case editEntry(EntryStub)
+    case postPublicly
     case dismiss
     case setPresented(Bool)
-    case requestUpdateAudience(Audience)
-    case requestAssignNoteColor(ThemeColor)
-    case colorSheetPresented(_ presented: Bool)
-    case editLinkSheetPresented(_ presented: Bool)
+    case metaSheetPresented(_ presented: Bool)
 }
 
 extension AppAction {
@@ -45,10 +43,7 @@ struct EditorModalSheetModel: ModelProtocol, Equatable {
     typealias Environment = AppEnvironment
     
     var item: EntryStub? = nil
-    var audience: Audience = .local
-    var themeColor: ThemeColor = ThemeColor.a
-    var colorSheetIsPresented = false
-    var editLinkSheetIsPresented = false
+    var metaSheetPresented = false
     var presented = false
     
     var selectionFeedback = UISelectionFeedbackGenerator()
@@ -63,21 +58,9 @@ struct EditorModalSheetModel: ModelProtocol, Equatable {
             var model = state
             model.presented = presented
             return Update(state: model).animation(.easeOutCubic())
-        case let .requestUpdateAudience(audience):
+        case let .metaSheetPresented(presented):
             var model = state
-            model.audience = audience
-            return Update(state: model)
-        case let .requestAssignNoteColor(color):
-            var model = state
-            model.themeColor = color
-            return Update(state: model)
-        case let .colorSheetPresented(presented):
-            var model = state
-            model.colorSheetIsPresented = presented
-            return Update(state: model)
-        case let .editLinkSheetPresented(presented):
-            var model = state
-            model.editLinkSheetIsPresented = presented
+            model.metaSheetPresented = presented
             return Update(state: model)
         case let .editEntry(entry):
             var model = state
@@ -97,7 +80,11 @@ struct EditorModalSheetModel: ModelProtocol, Equatable {
                     false
                 ),
                 environment: environment
-            ).animation(.easeOutCubic())
+            ).animation(.easeOutCubic(duration: 0.3))
+        case .postPublicly:
+            return update(state: state, actions: [
+                .dismiss
+            ], environment: environment)
         }
     }
 }
@@ -115,12 +102,14 @@ struct EditorModalSheetView: View {
         subsystem: Config.default.rdns,
         category: "ModalMemoEditorDetailStore"
     )
+    var store: ViewStore<EditorModalSheetModel> {
+        app.viewStore(
+            get: \.editorSheet,
+            tag: AppAction.editorSheet
+        )
+    }
     
-    /// Detail keeps a separate internal store for editor state that does not
-    /// need to be surfaced in higher level views.
-    ///
-    /// This gives us a pretty big efficiency win, since keystrokes will only
-    /// rerender this view, and not whole app view tree.
+    /// Once we are ready to migrate to the modal sheet version of the editor we can simplify this model
     @StateObject private var editor = Store(
         state: MemoEditorDetailModel(),
         action: .start,
@@ -128,13 +117,6 @@ struct EditorModalSheetView: View {
         loggingEnabled: true,
         logger: modalMemoEditorDetailStoreLogger
     )
-    
-    var store: ViewStore<EditorModalSheetModel> {
-        app.viewStore(
-            get: \.editorSheet,
-            tag: AppAction.editorSheet
-        )
-    }
     
     var namespace: Namespace.ID
     @State var dragAmount: CGFloat = 0
@@ -144,31 +126,39 @@ struct EditorModalSheetView: View {
         store.send(.dismiss)
     }
     
+    func onPost() {
+        editor.send(.requestUpdateAudience(.public))
+        store.send(.postPublicly)
+    }
+    
     var body: some View {
         if let item = store.state.item {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     Button(
                         action: onDismiss,
-                        label: {
-                            Image(systemName: "multiply")
-                                .bold()
-                        }
+                        label: { Image(systemName: "multiply").bold() }
                     )
-                    Spacer(minLength: 0)
-                    Button(
-                        action: onDismiss,
-                        label: {
-                            Text(
-                                "Post"
-                            ).bold()
-                        }
-                    )
+                    
+                    Spacer()
+                    
+                    if editor.state.audience == .local {
+                        Button(
+                            action: onPost,
+                            label: { Text(String(localized: "Post")).bold() }
+                        )
+                    } else if editor.state.saveState == .unsaved {
+                        Button(
+                            action: onDismiss,
+                            label: { Text(String(localized: "Save")).bold() }
+                        )
+                    }
                 }
-                .padding(AppTheme.tightPadding)
-                .foregroundStyle(item.highlightColor)
-                .tint(item.highlightColor)
-                .background(item.color)
+                .padding(AppTheme.padding)
+                .frame(height: 44)
+                .foregroundStyle(editor.state.highlight)
+                .tint(editor.state.highlight)
+                .background(editor.state.background)
                 .gesture(
                     DragGesture()
                         .onChanged { gesture in
@@ -176,9 +166,9 @@ struct EditorModalSheetView: View {
                         }
                         .onEnded { _ in
                             if dragAmount > Self.dragThreshold {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                dragAmount = 1024
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                                     onDismiss()
-                                    dragAmount = 0
                                 }
                             } else {
                                 dragAmount = 0
@@ -205,7 +195,7 @@ struct EditorModalSheetView: View {
                             }
                         )
                         .padding(0)
-                        .background(item.color)
+                        .background(editor.state.background)
                         .frame(maxHeight: .infinity)
                         .disabled(!store.state.presented)
                         .allowsHitTesting(store.state.presented)
@@ -217,7 +207,7 @@ struct EditorModalSheetView: View {
                         
                         ZStack(alignment: .bottom) {
                             Rectangle()
-                                .foregroundStyle(item.color)
+                                .foregroundStyle(editor.state.background)
                                 .frame(maxHeight: 56*2)
                                 .mask(
                                     LinearGradient(
@@ -236,19 +226,18 @@ struct EditorModalSheetView: View {
                             HStack(spacing: 0) {
                                 Button(
                                     action: {
-                                        store.send(.colorSheetPresented(true))
+                                        editor.send(.presentMetaSheet(true))
                                     },
                                     label: {
                                         HStack(spacing: AppTheme.unit2) {
-                                            Image(systemName: "link")
+                                            Image(audience: editor.state.audience)
                                                 .fontWeight(.medium)
                                                 .font(.caption)
                                             
-                                            Text("\(item.address.markup)")
+                                            Text("\(editor.state.address?.markup ?? "-")")
                                                 .lineLimit(1)
                                                 .fontWeight(.medium)
                                                 .font(.caption)
-                                                .foregroundStyle(item.highlightColor)
                                         }
                                         .frame(maxWidth: 192, alignment: .leading)
                                     }
@@ -258,7 +247,7 @@ struct EditorModalSheetView: View {
                                 
                                 Button(
                                     action: {
-                                        store.send(.colorSheetPresented(true))
+                                        editor.send(.presentMetaSheet(true))
                                     },
                                     label: {
                                         Image(
@@ -267,7 +256,7 @@ struct EditorModalSheetView: View {
                                     }
                                 )
                             }
-                            .foregroundColor(item.highlightColor)
+                            .foregroundColor(editor.state.highlight)
                             .padding(
                                 EdgeInsets(
                                     top: DeckTheme.cardPadding,
@@ -280,59 +269,84 @@ struct EditorModalSheetView: View {
                     }
                 }
             }
-            .background(item.color)
+            .background(editor.state.background)
             .cornerRadius(16, corners: [.topLeft, .topRight])
             .offset(y: dragAmount)
-            .matchedGeometryEffect(id: item.id, in: namespace, anchor: .center, isSource: false)
+            .matchedGeometryEffect(id: item.id, in: namespace, isSource: false)
             .animation(.interactiveSpring(), value: dragAmount)
-            .onDisappear {
-                dragAmount = 0
-            }
             .task {
-                store.send(.setPresented(false))
-                try? await Task.sleep(for: .seconds(0.1))
                 store.send(.setPresented(true))
             }
             .sheet(
                 isPresented: store.binding(
-                    get: \.colorSheetIsPresented,
-                    tag: EditorModalSheetAction.colorSheetPresented
+                    get: \.metaSheetPresented,
+                    tag: EditorModalSheetAction.metaSheetPresented
                 )
             ) {
-                HStack(spacing: AppTheme.padding) {
-                    let themeColors = ThemeColor.allCases
-                    
-                    ForEach(themeColors, id: \.self) { themeColor in
-                        Button(
-                            action: {
-                                store.send(.requestAssignNoteColor(themeColor))
-                            }
-                        ) {
-                            ZStack {
-                                Circle()
-                                    .fill(themeColor.toColor())
-                                Circle()
-                                    .stroke(Color.separator)
-                                if themeColor == store.state.themeColor {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .frame(width: 32, height: 32)
+                VStack {
+                    Picker(
+                        "Audience",
+                        selection: editor.binding(
+                            get: \.audience,
+                            tag: MemoEditorDetailAction.requestUpdateAudience
+                        )
+                    ) {
+                        ForEach(Audience.allCases, id: \.self) {
+                            Text("\($0)".capitalized)
                         }
                     }
+                    .pickerStyle(.segmented)
+                    
+                    HStack(spacing: AppTheme.padding) {
+                        let themeColors = ThemeColor.allCases
+                        
+                        ForEach(themeColors, id: \.self) { themeColor in
+                            Button(
+                                action: {
+                                    editor.send(.requestAssignNoteColor(themeColor))
+                                }
+                            ) {
+                                ZStack {
+                                    Circle()
+                                        .fill(themeColor.toColor())
+                                    Circle()
+                                        .stroke(Color.separator)
+                                    if themeColor == editor.state.themeColor {
+                                        Image(systemName: "checkmark")
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .frame(width: 32, height: 32)
+                            }
+                        }
+                    }
+                    
+                    MetaTableView {
+                        Button(
+                            action: {
+                                store.send(.metaSheetPresented(false))
+                                
+                                Task {
+                                    try? await Task.sleep(for: .seconds(0.01))
+                                    editor.send(.presentMetaSheet(true))
+                                    try? await Task.sleep(for: .seconds(0.01))
+                                    editor.send(.metaSheet(.presentRenameSheetFor(editor.state.address)))
+                                }
+                            }
+                        ) {
+                            Label(
+                                "Edit link",
+                                systemImage: "link"
+                            )
+                        }
+                        .buttonStyle(RowButtonStyle())
+                        
+//                        Divider()
+                    }
+                    
+                    Spacer()
                 }
-                .presentationDetents([.height(256)])
-            }
-            .sheet(
-                isPresented: store.binding(
-                    get: \.editLinkSheetIsPresented,
-                    tag: EditorModalSheetAction.editLinkSheetPresented
-                )
-            ) {
-                HStack(spacing: AppTheme.padding) {
-                    Text("todo")
-                }
+                .padding(AppTheme.padding)
                 .presentationDetents([.height(256)])
             }
         }
