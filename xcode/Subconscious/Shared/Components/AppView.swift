@@ -55,14 +55,16 @@ struct AppView: View {
                     .zIndex(1)
             }
             
-            if let _ = store.state.editorSheet.item,
-               let namespace = store.state.namespace {
-                EditorModalSheetView(app: store, namespace: namespace)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.top, 56)
-                    .ignoresSafeArea(.all)
-                    .zIndex(999)
-                    .shadow(style: .editorSheet)
+            if store.state.isModalEditorEnabled {
+                if let _ = store.state.editorSheet.item,
+                   let namespace = store.state.namespace {
+                    EditorModalSheetView(app: store, namespace: namespace)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.top, 56)
+                        .ignoresSafeArea(.all)
+                        .zIndex(999)
+                        .shadow(style: .editorSheet)
+                }
             }
         }
         .sheet(
@@ -181,6 +183,8 @@ enum AppAction: Hashable {
 
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
+    /// Set and persist experimental modal editor sheet enabled
+    case persistModalEditorEnabled(Bool)
     case persistNoosphereLogLevel(Noosphere.NoosphereLogLevel)
     case persistAiFeaturesEnabled(Bool)
     case persistPreferredLlm(String)
@@ -619,6 +623,7 @@ struct AppModel: ModelProtocol {
     
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
+    var isModalEditorEnabled = false
     var noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic
     var areAiFeaturesEnabled = false
     var openAiApiKey = OpenAIKey(key: "sk-")
@@ -988,6 +993,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 llm: llm
+            )
+        case let .persistModalEditorEnabled(isModalEditorEnabled):
+            return persistModalEditorEnabled(
+                state: state,
+                environment: environment,
+                isModalEditorEnabled: isModalEditorEnabled
             )
         case let .persistNoosphereLogLevel(level):
             return persistNoosphereLogLevel(
@@ -1529,6 +1540,8 @@ struct AppModel: ModelProtocol {
             return .loadOpenAIKey(OpenAIKey(key: key))
         }.eraseToAnyPublisher()
         
+        model.isModalEditorEnabled = AppDefaults.standard.isModalEditorEnabled
+
         // Update model from app defaults
         return update(
             state: model,
@@ -1958,6 +1971,18 @@ struct AppModel: ModelProtocol {
         }.eraseToAnyPublisher()
         
         return Update(state: state).mergeFx(fx)
+    }
+    
+    static func persistModalEditorEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isModalEditorEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.isModalEditorEnabled = isModalEditorEnabled
+        var model = state
+        model.isModalEditorEnabled = isModalEditorEnabled
+        return Update(state: model)
     }
     
     static func persistNoosphereLogLevel(

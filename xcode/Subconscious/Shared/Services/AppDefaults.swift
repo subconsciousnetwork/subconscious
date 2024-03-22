@@ -36,6 +36,9 @@ struct AppDefaults {
     @UserDefaultsProperty(forKey: "preferredLlm")
     var preferredLlm: String = "gpt-4"
 
+    @UserDefaultsProperty(forKey: "modalEditor")
+    var isModalEditorEnabled: Bool = false
+    
     @UserDefaultsProperty(forKey: "selectedAppTab")
     // default to the notebook on first run because there will be nothing in the feed
     // enums must be serialized when stored as AppDefaults:

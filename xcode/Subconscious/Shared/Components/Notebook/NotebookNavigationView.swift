@@ -17,15 +17,18 @@ struct NotebookNavigationView: View {
     func notify(_ notification: EntryNotification) -> Void {
         switch notification {
         case let .requestDetail(entry):
-            app.send(.editorSheet(.editEntry(entry)))
-//            store.send(
-//                .pushDetail(
-//                    MemoEditorDetailDescription(
-//                        address: entry.address,
-//                        fallback: entry.excerpt.description
-//                    )
-//                )
-//            )
+            if app.state.isModalEditorEnabled {
+                app.send(.editorSheet(.editEntry(entry)))
+            } else {
+                store.send(
+                    .pushDetail(
+                        MemoEditorDetailDescription(
+                            address: entry.address,
+                            fallback: entry.excerpt.description
+                        )
+                    )
+                )
+            }
         case let .delete(address):
             store.send(
                 .confirmDelete(
