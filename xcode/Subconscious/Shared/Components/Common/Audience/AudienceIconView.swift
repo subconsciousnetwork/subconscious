@@ -18,15 +18,6 @@ extension Image {
     }
 }
 
-extension Label where Title == Text, Icon == Image {
-    init<S>(_ title: S, audience: Audience) where S : StringProtocol {
-        self.init(
-            title: { Text(title) },
-            icon: { Image(audience: audience) }
-        )
-    }
-}
-
 struct AudienceIconView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {

@@ -86,7 +86,7 @@ struct NotebookNavigationView: View {
                         },
                         notify: self.notify,
                         namespace: app.state.namespace ?? namespace,
-                        editingInSheet: app.state.editorSheet.item != nil
+                        editingInSheet: app.state.editorSheet.presented
                     )
                     .ignoresSafeArea(.keyboard, edges: .bottom)
                     .confirmationDialog(

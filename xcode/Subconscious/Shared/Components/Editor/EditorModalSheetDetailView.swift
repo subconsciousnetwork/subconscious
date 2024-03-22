@@ -11,7 +11,7 @@ import ObservableStore
 import Combine
 
 // MARK: View
-struct ModalMemoEditorDetailView: View {
+struct EditorModalSheetDetailView: View {
     typealias Action = MemoEditorDetailAction
     @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<MemoEditorDetailModel>

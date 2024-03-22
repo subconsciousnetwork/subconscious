@@ -31,7 +31,7 @@ struct AppView: View {
         ZStack {
             AppTabView(store: store)
                 .zIndex(0)
-                .disabled(store.state.editorSheet.item != nil)
+                .disabled(store.state.editorSheet.presented)
             
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
@@ -722,8 +722,7 @@ struct AppModel: ModelProtocol {
     var selectedAppTab: AppTab = .notebook
     
     var namespace: Namespace.ID? = nil
-    var feedback = UIImpactFeedbackGenerator()
-    var selectionFeedback = UISelectionFeedbackGenerator()
+    
     
     // Logger for actions
     static let logger = Logger(
@@ -1489,7 +1488,6 @@ struct AppModel: ModelProtocol {
                    """,
                 notification: "Could not update status"
             )
-        
         }
     }
     
@@ -3160,8 +3158,8 @@ struct AppModel: ModelProtocol {
             }
             .eraseToAnyPublisher()
             
-            state.feedback.prepare()
-            state.feedback.impactOccurred()
+            environment.feedback.prepare()
+            environment.feedback.impactOccurred()
             
             // MUST be dispatched as an fx so that it will appear on the `store.actions` stream
             // Which is consumed and replayed on the FeedStore and NotebookStore etc.
@@ -3171,8 +3169,8 @@ struct AppModel: ModelProtocol {
         var model = state
         model.selectedAppTab = tab
         AppDefaults.standard.selectedAppTab = tab.rawValue
-        state.selectionFeedback.prepare()
-        state.selectionFeedback.selectionChanged()
+        environment.selectionFeedback.prepare()
+        environment.selectionFeedback.selectionChanged()
         
         return Update(state: model)
     }
@@ -3496,6 +3494,9 @@ struct AppEnvironment {
 
     /// Service for generating creative prompts and oblique strategies
     var prompt = PromptService.default
+    
+    var feedback = UIImpactFeedbackGenerator()
+    var selectionFeedback = UISelectionFeedbackGenerator()
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {

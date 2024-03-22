@@ -1,5 +1,5 @@
 //
-//  TransitionExperimentview.swift
+//  EditorModalSheetView.swift
 //  Subconscious
 //
 //  Created by Ben Follington on 4/3/2024.
@@ -14,7 +14,6 @@ enum EditorModalSheetAction: Equatable, Hashable {
     case postPublicly
     case dismiss
     case setPresented(Bool)
-    case metaSheetPresented(_ presented: Bool)
 }
 
 extension AppAction {
@@ -43,10 +42,7 @@ struct EditorModalSheetModel: ModelProtocol, Equatable {
     typealias Environment = AppEnvironment
     
     var item: EntryStub? = nil
-    var metaSheetPresented = false
     var presented = false
-    
-    var selectionFeedback = UISelectionFeedbackGenerator()
     
     static func update(
         state: Self,
@@ -58,22 +54,18 @@ struct EditorModalSheetModel: ModelProtocol, Equatable {
             var model = state
             model.presented = presented
             return Update(state: model).animation(.easeOutCubic())
-        case let .metaSheetPresented(presented):
-            var model = state
-            model.metaSheetPresented = presented
-            return Update(state: model)
         case let .editEntry(entry):
             var model = state
             model.item = entry
-            model.presented = false
-            model.selectionFeedback.prepare()
-            model.selectionFeedback.selectionChanged()
+            model.presented = true
+            environment.selectionFeedback.prepare()
+            environment.selectionFeedback.selectionChanged()
             return Update(state: model).animation(DeckTheme.friendlySpring)
         case .dismiss:
             var model = state
             model.item = nil
-            model.selectionFeedback.prepare()
-            model.selectionFeedback.selectionChanged()
+            environment.selectionFeedback.prepare()
+            environment.selectionFeedback.selectionChanged()
             return update(
                 state: model,
                 action: .setPresented(
@@ -86,13 +78,6 @@ struct EditorModalSheetModel: ModelProtocol, Equatable {
                 .dismiss
             ], environment: environment)
         }
-    }
-}
-
-struct RedMenu: MenuStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        Menu(configuration)
-            .foregroundColor(.red)
     }
 }
 
@@ -274,81 +259,6 @@ struct EditorModalSheetView: View {
             .offset(y: dragAmount)
             .matchedGeometryEffect(id: item.id, in: namespace, isSource: false)
             .animation(.interactiveSpring(), value: dragAmount)
-            .task {
-                store.send(.setPresented(true))
-            }
-            .sheet(
-                isPresented: store.binding(
-                    get: \.metaSheetPresented,
-                    tag: EditorModalSheetAction.metaSheetPresented
-                )
-            ) {
-                VStack {
-                    Picker(
-                        "Audience",
-                        selection: editor.binding(
-                            get: \.audience,
-                            tag: MemoEditorDetailAction.requestUpdateAudience
-                        )
-                    ) {
-                        ForEach(Audience.allCases, id: \.self) {
-                            Text("\($0)".capitalized)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    
-                    HStack(spacing: AppTheme.padding) {
-                        let themeColors = ThemeColor.allCases
-                        
-                        ForEach(themeColors, id: \.self) { themeColor in
-                            Button(
-                                action: {
-                                    editor.send(.requestAssignNoteColor(themeColor))
-                                }
-                            ) {
-                                ZStack {
-                                    Circle()
-                                        .fill(themeColor.toColor())
-                                    Circle()
-                                        .stroke(Color.separator)
-                                    if themeColor == editor.state.themeColor {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                .frame(width: 32, height: 32)
-                            }
-                        }
-                    }
-                    
-                    MetaTableView {
-                        Button(
-                            action: {
-                                store.send(.metaSheetPresented(false))
-                                
-                                Task {
-                                    try? await Task.sleep(for: .seconds(0.01))
-                                    editor.send(.presentMetaSheet(true))
-                                    try? await Task.sleep(for: .seconds(0.01))
-                                    editor.send(.metaSheet(.presentRenameSheetFor(editor.state.address)))
-                                }
-                            }
-                        ) {
-                            Label(
-                                "Edit link",
-                                systemImage: "link"
-                            )
-                        }
-                        .buttonStyle(RowButtonStyle())
-                        
-//                        Divider()
-                    }
-                    
-                    Spacer()
-                }
-                .padding(AppTheme.padding)
-                .presentationDetents([.height(256)])
-            }
         }
     }
 }
