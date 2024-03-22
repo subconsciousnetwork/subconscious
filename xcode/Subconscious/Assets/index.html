@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title></title>
+  <script type="module">
+      document.body.style.backgroundColor = 'dodgerblue'
+      const params = new URLSearchParams(window.location.search)
+      const doc = params.get('doc')
+      const docEl = document.querySelector('#doc')
+      docEl.innerText = doc
+
+      window.webkit.messageHandlers.native.postMessage("Hello from JavaScript land!")
+  </script>
+</head>
+<body>
+  Hello world!
+  <div id="doc"></div>
+</body>
+</html>

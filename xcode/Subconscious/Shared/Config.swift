@@ -49,6 +49,12 @@ struct Config: Equatable, Codable {
         string: Bundle.main.object(forInfoDictionaryKey: "CLOUDCTL_URL") as! String
     )!
     
+    var editorUrl: URL = Bundle.main.url(
+        forResource: "index",
+        withExtension: "html",
+        subdirectory: "Assets/editor"
+    )!
+
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
     

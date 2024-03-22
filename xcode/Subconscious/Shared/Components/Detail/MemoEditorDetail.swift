@@ -8,6 +8,7 @@
 import SwiftUI
 import os
 import ObservableStore
+import Arboreal
 import Combine
 
 // MARK: View
@@ -23,14 +24,14 @@ struct MemoEditorDetailView: View {
     )
 
     typealias Action = MemoEditorDetailAction
-    @ObservedObject var app: Store<AppModel>
-    
+    @ObservedObject var app: ObservableStore.Store<AppModel>
+
     /// Detail keeps a separate internal store for editor state that does not
     /// need to be surfaced in higher level views.
     ///
     /// This gives us a pretty big efficiency win, since keystrokes will only
     /// rerender this view, and not whole app view tree.
-    @StateObject private var store = Store(
+    @StateObject private var store = ObservableStore.Store(
         state: MemoEditorDetailModel(),
         action: .start,
         environment: AppEnvironment.default,
@@ -38,13 +39,13 @@ struct MemoEditorDetailView: View {
         logger: memoEditorDetailStoreLogger
     )
     
-    @StateObject private var blockEditorStore = Store(
-        state: BlockEditor.Model.draft(),
+    @State private var blockEditorStore = Arboreal.Store(
+        state: BlockEditorModel(doc: BlockEditorDoc()),
         environment: AppEnvironment.default,
-        loggingEnabled: true,
+        isLoggingEnabled: true,
         logger: blockEditorStoreLogger
     )
-    
+
     /// Is this view presented? Used to detect when back button is pressed.
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
@@ -181,18 +182,15 @@ struct MemoEditorDetailView: View {
     }
     
     private func blockEditor() -> some View {
-        BlockEditor.Representable(
-            store: blockEditorStore
+        BlockEditorWebViewRepresentable(
+            store: blockEditorStore,
+            url: Config.default.editorUrl
         )
-        .frame(
-            minHeight: UIFont.appTextMono.lineHeight * 8
-        )
-        .onReceive(
-            blockEditorStore.actions.compactMap(
-                MemoEditorDetailNotification.from
-            ),
-            perform: notify
-        )
+        .padding(.bottom, AppTheme.unit4)
+        .padding(.top, AppTheme.unit2)
+        .background(background)
+        .cornerRadius(DeckTheme.cornerRadius, corners: .allCorners)
+        .shadow(style: .transclude)
     }
     
     var highlight: Color? {
@@ -702,6 +700,8 @@ struct MemoEditorDetailMetaSheetCursor: CursorProtocol {
 
 // MARK: Model
 struct MemoEditorDetailModel: ModelProtocol {
+    typealias Fx<Action> = AnyPublisher<Action, Never>
+
     var address: Slashlink?
     var defaultAudience = Audience.local
     var audience: Audience {
