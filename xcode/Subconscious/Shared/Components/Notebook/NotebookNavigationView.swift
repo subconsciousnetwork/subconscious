@@ -12,18 +12,23 @@ struct NotebookNavigationView: View {
     @ObservedObject var store: Store<NotebookModel>
     
     @Environment (\.colorScheme) var colorScheme
+    @Namespace var namespace
     
     func notify(_ notification: EntryNotification) -> Void {
         switch notification {
         case let .requestDetail(entry):
-            store.send(
-                .pushDetail(
-                    MemoEditorDetailDescription(
-                        address: entry.address,
-                        fallback: entry.excerpt.description
+            if app.state.isModalEditorEnabled {
+                app.send(.editorSheet(.editEntry(entry)))
+            } else {
+                store.send(
+                    .pushDetail(
+                        MemoEditorDetailDescription(
+                            address: entry.address,
+                            fallback: entry.excerpt.description
+                        )
                     )
                 )
-            )
+            }
         case let .delete(address):
             store.send(
                 .confirmDelete(
@@ -79,7 +84,9 @@ struct NotebookNavigationView: View {
                         onRefresh: {
                             app.send(.syncAll)
                         },
-                        notify: self.notify
+                        notify: self.notify,
+                        namespace: app.state.namespace ?? namespace,
+                        editingInSheet: app.state.editorSheet.presented
                     )
                     .ignoresSafeArea(.keyboard, edges: .bottom)
                     .confirmationDialog(

@@ -76,6 +76,7 @@ struct NotebookView: View {
             )
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
+            
             VStack {
                 ToastStackView(
                     store: app.viewStore(
@@ -576,6 +577,7 @@ struct NotebookModel: ModelProtocol {
         case let .failRefreshLikes(error):
             logger.warning("Failed to refresh likes: \(error)")
             return Update(state: state)
+        
         case .requestDeleteEntry, .requestSaveEntry, .requestMoveEntry,
                 .requestMergeEntry, .requestUpdateAudience, .requestScrollToTop,
                 .requestAssignNoteColor, .requestAppendToEntry, .requestUpdateLikeStatus:

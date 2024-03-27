@@ -410,6 +410,7 @@ enum MemoEditorDetailAction: Hashable {
     case editor(SubtextTextAction)
 
     case appear(MemoEditorDetailDescription)
+    case editorDismissed
     case disappear
     case poll
 
@@ -612,6 +613,13 @@ extension MemoEditorDetailAction {
             return .succeedAssignNoteColor(address, color)
         case let .succeedUpdateLikeStatus(address, liked):
             return .succeedUpdateLikeStatus(address, liked: liked)
+        case let .editorSheet(editorAction):
+            switch editorAction {
+            case .dismiss:
+                return .editorDismissed
+            default:
+                return nil
+            }
             
         case .succeedIndexOurSphere(_),
              .completeIndexPeers:
@@ -724,6 +732,18 @@ struct MemoEditorDetailModel: ModelProtocol {
     var themeColor: ThemeColor? = nil
     var liked: Bool = false
     
+    var highlight: Color {
+        themeColor?.toHighlightColor()
+            ?? address?.themeColor.toHighlightColor()
+            ?? .accentColor
+    }
+    
+    var background: Color {
+        themeColor?.toColor()
+            ?? address?.themeColor.toColor()
+            ?? .background
+    }
+    
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
     var backlinks: [EntryStub] = []
@@ -810,6 +830,11 @@ struct MemoEditorDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 info: info
+            )
+        case .editorDismissed:
+            return editorDismissed(
+                state: state,
+                environment: environment
             )
         case .disappear:
             return disappear(
@@ -1209,14 +1234,30 @@ struct MemoEditorDetailModel: ModelProtocol {
         return Update(state: model, fx: pollFx)
     }
     
-    static func disappear(
+    static func editorDismissed(
         state: MemoEditorDetailModel,
         environment: AppEnvironment
     ) -> Update<Self> {
         var model = state
         model.isPolling = false
+        let autosaveFx: Fx<Action> = Just(Action.autosave)
+            .eraseToAnyPublisher()
         
-        return Update(state: model)
+        return update(
+            state: model,
+            actions: [
+                .editor(.setEditable(false)),
+                .editor(.requestFocus(false))
+            ],
+            environment: environment
+        ).mergeFx(autosaveFx)
+    }
+    
+    static func disappear(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<Self> {
+        return Update(state: state)
     }
     
     static func poll(
@@ -1742,7 +1783,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             // Forward success down to meta sheet
             action: .metaSheet(.succeedUpdateAudience(receipt)),
             environment: environment
-        )
+        ).animation(.easeOutCubic())
     }
 
     static func requestDelete(
@@ -1899,7 +1940,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             model.saveState = .saved
         }
         
-        return Update(state: model)
+        return Update(state: model).animation(.easeOutCubic())
     }
     
     static func presentMetaSheet(
@@ -2213,7 +2254,7 @@ struct MemoEditorDetailModel: ModelProtocol {
             // Forward success down to meta sheet
             action: .metaSheet(.succeedAssignNoteColor(color)),
             environment: environment
-        )
+        ).animation(.easeOutCubic())
     }
     
     /// Insert wikilink markup into editor, begining at previous range

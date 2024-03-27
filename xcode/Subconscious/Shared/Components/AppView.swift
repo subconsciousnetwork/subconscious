@@ -25,11 +25,13 @@ struct AppView: View {
         )
     )
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
+    @Namespace var namespace
 
     var body: some View {
         ZStack {
             AppTabView(store: store)
                 .zIndex(0)
+                .disabled(store.state.editorSheet.presented)
             
             if !store.state.isAppUpgraded {
                 AppUpgradeView(
@@ -51,6 +53,18 @@ struct AppView: View {
                         value: store.state.shouldPresentFirstRun
                     )
                     .zIndex(1)
+            }
+            
+            if store.state.isModalEditorEnabled {
+                if let _ = store.state.editorSheet.item,
+                   let namespace = store.state.namespace {
+                    EditorModalSheetView(app: store, namespace: namespace)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.top, AppTheme.comfortableTouchSize)
+                        .ignoresSafeArea(.all)
+                        .shadow(style: .editorSheet)
+                        .zIndex(3)
+                }
             }
         }
         .sheet(
@@ -78,7 +92,7 @@ struct AppView: View {
         }
         .onAppear {
             SentryIntegration.start()
-            store.send(.appear)
+            store.send(.appear(namespace: namespace))
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
@@ -118,13 +132,14 @@ enum AppAction: Hashable {
     case gatewayURLField(GatewayUrlFormField.Action)
     case recoveryMode(RecoveryModeModel.Action)
     case toastStack(ToastStackAction)
+    case editorSheet(EditorModalSheetAction)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
     case scenePhaseChange(ScenePhase)
 
     /// On view appear
-    case appear
+    case appear(namespace: Namespace.ID)
 
     case setAppUpgraded(_ isUpgraded: Bool)
     
@@ -168,6 +183,8 @@ enum AppAction: Hashable {
 
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
+    /// Set and persist experimental modal editor sheet enabled
+    case persistModalEditorEnabled(Bool)
     case persistNoosphereLogLevel(Noosphere.NoosphereLogLevel)
     case persistAiFeaturesEnabled(Bool)
     case persistPreferredLlm(String)
@@ -539,6 +556,28 @@ struct ToastStackCursor: CursorProtocol {
     }
 }
 
+struct EditorModalSheetCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = EditorModalSheetModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.editorSheet
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.editorSheet = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        default:
+            return .editorSheet(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -574,7 +613,8 @@ struct AppModel: ModelProtocol {
     var isFirstRunComplete = false
     var firstRunPath: [FirstRunStep] = []
     
-    var toastStack: ToastStackModel = ToastStackModel()
+    var toastStack = ToastStackModel()
+    var editorSheet = EditorModalSheetModel()
 
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
@@ -583,6 +623,7 @@ struct AppModel: ModelProtocol {
     
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
+    var isModalEditorEnabled = false
     var noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic
     var areAiFeaturesEnabled = false
     var openAiApiKey = OpenAIKey(key: "sk-")
@@ -679,6 +720,7 @@ struct AppModel: ModelProtocol {
     }
     
     var selectedAppTab: AppTab = .notebook
+    var namespace: Namespace.ID? = nil
     
     // Logger for actions
     static let logger = Logger(
@@ -747,16 +789,23 @@ struct AppModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
+        case .editorSheet(let action):
+            return EditorModalSheetCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
                 state: state,
                 environment: environment,
                 scenePhase: scenePhase
             )
-        case .appear:
+        case let .appear(namespace):
             return appear(
                 state: state,
-                environment: environment
+                environment: environment,
+                namespace: namespace
             )
         case let .setFirstRunPath(path):
             return setFirstRunPath(
@@ -941,6 +990,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 llm: llm
+            )
+        case let .persistModalEditorEnabled(isModalEditorEnabled):
+            return persistModalEditorEnabled(
+                state: state,
+                environment: environment,
+                isModalEditorEnabled: isModalEditorEnabled
             )
         case let .persistNoosphereLogLevel(level):
             return persistNoosphereLogLevel(
@@ -1481,6 +1536,8 @@ struct AppModel: ModelProtocol {
             return .loadOpenAIKey(OpenAIKey(key: key))
         }.eraseToAnyPublisher()
         
+        model.isModalEditorEnabled = AppDefaults.standard.isModalEditorEnabled
+
         // Update model from app defaults
         return update(
             state: model,
@@ -1520,7 +1577,8 @@ struct AppModel: ModelProtocol {
     
     static func appear(
         state: AppModel,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        namespace: Namespace.ID
     ) -> Update<AppModel> {
         let sphereIdentity = state.sphereIdentity?.description ?? "nil"
         logger.debug(
@@ -1531,8 +1589,12 @@ struct AppModel: ModelProtocol {
                 "sphereIdentity": sphereIdentity
             ]
         )
+        
+        var model = state
+        model.namespace = namespace
+        
         return update(
-            state: state,
+            state: model,
             actions: [
                 .migrateDatabase,
                 .refreshSphereVersion,
@@ -1905,6 +1967,18 @@ struct AppModel: ModelProtocol {
         }.eraseToAnyPublisher()
         
         return Update(state: state).mergeFx(fx)
+    }
+    
+    static func persistModalEditorEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isModalEditorEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.isModalEditorEnabled = isModalEditorEnabled
+        var model = state
+        model.isModalEditorEnabled = isModalEditorEnabled
+        return Update(state: model)
     }
     
     static func persistNoosphereLogLevel(
@@ -3082,6 +3156,9 @@ struct AppModel: ModelProtocol {
             }
             .eraseToAnyPublisher()
             
+            environment.feedback.prepare()
+            environment.feedback.impactOccurred()
+            
             // MUST be dispatched as an fx so that it will appear on the `store.actions` stream
             // Which is consumed and replayed on the FeedStore and NotebookStore etc.
             return Update(state: state, fx: fx)
@@ -3090,6 +3167,8 @@ struct AppModel: ModelProtocol {
         var model = state
         model.selectedAppTab = tab
         AppDefaults.standard.selectedAppTab = tab.rawValue
+        environment.selectionFeedback.prepare()
+        environment.selectionFeedback.selectionChanged()
         
         return Update(state: model)
     }
@@ -3413,6 +3492,9 @@ struct AppEnvironment {
 
     /// Service for generating creative prompts and oblique strategies
     var prompt = PromptService.default
+    
+    var feedback = UIImpactFeedbackGenerator()
+    var selectionFeedback = UISelectionFeedbackGenerator()
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {

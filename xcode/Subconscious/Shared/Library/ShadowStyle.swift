@@ -29,6 +29,13 @@ extension ShadowStyle {
         x: 0,
         y: 1.5
     )
+    
+    static let editorSheet = ShadowStyle(
+        color: DeckTheme.cardShadow.opacity(0.05),
+        radius: 2,
+        x: 0,
+        y: -0.5
+    )
 }
 
 extension View {

@@ -30,7 +30,6 @@ struct MenuButtonView<Icon: View>: View {
                 .font(.system(size: iconSize))
                 .foregroundColor(Color.secondary)
         }
-        .foregroundColor(Color.accentColor)
         .lineLimit(1)
         .frame(height: height)
         .padding(

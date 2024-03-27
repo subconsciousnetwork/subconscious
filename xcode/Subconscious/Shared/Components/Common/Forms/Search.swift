@@ -307,7 +307,7 @@ struct SearchModel: ModelProtocol {
 // MARK: View
 struct SearchView: View {
     var store: ViewStore<SearchModel>
-    var suggestionHeight: CGFloat = 56
+    var suggestionHeight: CGFloat = AppTheme.comfortableTouchSize
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

@@ -40,7 +40,7 @@ struct DeveloperSettingsView: View {
                 }
             )
             
-            Section(footer: Text("The block editor is an experimental feature that is currently in-development. Not everything will work correctly.")) {
+            Section(footer: Text("These editors are experimental features, currently in-development. Not everything will work correctly.")) {
                 Toggle(
                     isOn: app.binding(
                         get: \.isBlockEditorEnabled,
@@ -48,6 +48,16 @@ struct DeveloperSettingsView: View {
                     ),
                     label: {
                         Text("Enable Block Editor")
+                    }
+                )
+                
+                Toggle(
+                    isOn: app.binding(
+                        get: \.isModalEditorEnabled,
+                        tag: AppAction.persistModalEditorEnabled
+                    ),
+                    label: {
+                        Text("Enable Modal Editor")
                     }
                 )
             }

@@ -23,6 +23,8 @@ struct EntryListView: View {
     var onRefresh: () -> Void
     
     var notify: (EntryNotification) -> Void
+    var namespace: Namespace.ID
+    var editingInSheet: Bool = false
     
     @Environment(\.colorScheme) var colorScheme
     static let resetScrollTargetId: Int = 0
@@ -57,6 +59,11 @@ struct EntryListView: View {
                             EntryListRowButtonStyle(
                                 color: entry.color
                             )
+                        )
+                        .matchedGeometryEffect(
+                            id: entry.id,
+                            in: namespace,
+                            isSource: !editingInSheet
                         )
                         .modifier(RowViewModifier())
                         .swipeActions(
@@ -174,7 +181,8 @@ struct EntryListView_Previews: PreviewProvider {
                 )
             ],
             onRefresh: {},
-            notify: { _ in }
+            notify: { _ in },
+            namespace: Namespace().wrappedValue
         )
     }
 }
