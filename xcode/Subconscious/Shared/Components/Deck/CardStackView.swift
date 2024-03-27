@@ -133,6 +133,7 @@ enum CardStackNotification {
     case swipeLeft(CardModel)
     case swipeStarted
     case swipeAbandoned
+    case cardDetailRequested(CardModel)
     
     case entry(EntryNotification)
 }
@@ -227,9 +228,7 @@ struct CardStack: View {
         CardGestureModifier(
             offsets: $offsets,
             onTapped: {
-                if let entry = card.entry {
-                    notify(.entry(.requestDetail(entry)))
-                }
+                notify(.cardDetailRequested(card))
             },
             onSwipeStart: { notify(.swipeStarted) },
             onSwipeChanged: { translation in

@@ -30,6 +30,12 @@ struct AppDefaults {
     @UserDefaultsProperty(forKey: "blockEditor")
     var isBlockEditorEnabled: Bool = false
     
+    @UserDefaultsProperty(forKey: "aiFeatures")
+    var areAiFeaturesEnabled: Bool = false
+    
+    @UserDefaultsProperty(forKey: "preferredLlm")
+    var preferredLlm: String = "gpt-4"
+
     @UserDefaultsProperty(forKey: "selectedAppTab")
     // default to the notebook on first run because there will be nothing in the feed
     // enums must be serialized when stored as AppDefaults:

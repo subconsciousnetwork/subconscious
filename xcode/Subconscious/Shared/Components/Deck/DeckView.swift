@@ -92,12 +92,13 @@ enum DeckAction: Hashable {
     
     case cardPickedUp
     case cardReleased
-    case cardDetailRequested(EntryStub)
+    case cardDetailRequested(CardModel)
     
     case chooseCard(CardModel)
     case skipCard(CardModel)
     
     case appendCards([CardModel])
+    case prependCards([CardModel])
     case shuffleCardsUpNext([CardModel])
     
     case topupDeck
@@ -254,6 +255,7 @@ struct DeckDetailStackCursor: CursorProtocol {
 // MARK: Model
 struct DeckModel: ModelProtocol {
     public static let backlinksToDraw = 1
+    public static let maxRewardCardBufferSize = 4
     
     typealias Action = DeckAction
     typealias Environment = DeckEnvironment
@@ -274,6 +276,7 @@ struct DeckModel: ModelProtocol {
     )
     
     var deck: Array<CardModel> = []
+    var buffer: [CardModel] = []
     
     // The set of cards to avoid drawing again, if possible
     var seen: Set<EntryStub> = []
@@ -343,10 +346,10 @@ struct DeckModel: ModelProtocol {
             return cardPickedUp(state: state)
         case .cardReleased:
             return cardReleased(state: state)
-        case let .cardDetailRequested(entry):
+        case let .cardDetailRequested(card):
             return cardDetailRequested(
                 state: state,
-                entry: entry,
+                card: card,
                 environment: environment
             )
         case let .chooseCard(card):
@@ -359,6 +362,11 @@ struct DeckModel: ModelProtocol {
             return skipCard(state: state, environment: environment)
         case let .shuffleCardsUpNext(entries):
             return shuffleCardsUpNext(
+                state: state,
+                entries: entries
+            )
+        case let .prependCards(entries):
+            return prependCards(
                 state: state,
                 entries: entries
             )
@@ -757,65 +765,152 @@ struct DeckModel: ModelProtocol {
             return Update(state: state)
         }
 
-        func cardDetailRequested(state: Self, entry: EntryStub, environment: Environment) -> Update<Self> {
+        func cardDetailRequested(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.prepare()
             state.feedback.impactOccurred()
-        
-            return update(
-                state: state,
-                action: .detailStack(
-                    .pushDetail(
-                        MemoDetailDescription.from(
-                            address: entry.address,
-                            fallback: entry.excerpt.description
+            
+            switch card.card {
+            case .reward(let message):
+                return update(
+                    state: state,
+                    action: .detailStack(
+                        .pushDetail(
+                            .editor(MemoEditorDetailDescription(fallback: message))
                         )
-                    )
-                ),
-                environment: environment
-            )
+                    ),
+                    environment: environment
+                )
+            case let .entry(entry, _, _),
+                let .prompt(_, entry, _, _):
+                return update(
+                    state: state,
+                    action: .detailStack(
+                        .pushDetail(
+                            MemoDetailDescription.from(
+                                address: entry.address,
+                                fallback: entry.excerpt.description
+                            )
+                        )
+                    ),
+                    environment: environment
+                )
+            }
         }
-       
         
         struct ChooseCardActivityEvent: Codable {
             public static let event: String = "choose_card"
-            
             let address: String
         }
         
-        func shuffleInBacklinks(message: String, address: Slashlink, backlinks: Set<EntryStub>) -> Update<Self> {
+        func writeCardChoiceActivity(
+            message: String,
+            address: Slashlink,
+            environment: Environment
+        ) throws {
+            try environment.database.writeActivity(
+                event: ActivityEvent(
+                    category: .deck,
+                    event: ChooseCardActivityEvent.event,
+                    message: message,
+                    metadata: ChooseCardActivityEvent(
+                        address: address.description
+                    )
+                )
+            )
+        }
+        
+        // Turn the notes held in the "buffer" into a reward card, pushed on top of the deck
+        func generateRewardCard(state: Self) -> Update<Self> {
+            var model = state
+            
+            if model.buffer.count >= DeckModel.maxRewardCardBufferSize {
+                let entries = model.buffer.compactMap { card in card.entry }
+                let openAiFx = Future.detached {
+                    let prompt = OpenAIService.prompts.randomElement()
+                    guard let prompt = prompt else {
+                        return DeckAction.topupDeck
+                    }
+                    
+                    let result = await environment.openAiService.sendRequest(
+                        entries: entries,
+                        prompt: prompt
+                    )
+                    
+                    switch result {
+                    case .success(let msg):
+                        return DeckAction.prependCards([
+                            CardModel(
+                                card: .reward(msg),
+                                liked: false
+                            )
+                        ])
+                    case .failure(let error):
+                        logger.error("Card generation failed: \(error)")
+                        return DeckAction.topupDeck
+                    }
+                }
+                .eraseToAnyPublisher()
+                
+                model.buffer.removeAll()
+                return update(
+                    state: model,
+                    actions: [.nextCard],
+                    environment: environment
+                ).mergeFx(openAiFx).animation(.easeOutCubic())
+            }
+            
+            return update(
+                state: model,
+                actions: [.nextCard],
+                environment: environment
+            )
+        }
+        
+        // Filter the passed set of related notes down to a candidate set to place into the deck.
+        func drawBacklinks(identity: Did, backlinks: Set<EntryStub>) async throws -> [CardModel] {
+            let backlinks = backlinks
+                .filter({ backlink in !isSeen(entry: backlink) })
+                .shuffled()
+            
+            if backlinks.count == 0 {
+                return []
+            }
+            
+            var draw: [CardModel] = []
+            for entry in backlinks.prefix(backlinksToDraw) {
+                let card = try await toCard(
+                    entry: entry,
+                    ourIdentity: identity,
+                    environment: environment,
+                    liked: state.likes.contains(where: { like in like == entry.address })
+                )
+                
+                draw.append(card)
+            }
+            return draw
+        }
+        
+        func shuffleInBacklinks(
+            card: CardModel,
+            message: String,
+            address: Slashlink,
+            backlinks: Set<EntryStub>
+        ) -> Update<Self> {
             let fx: Fx<DeckAction> = Future.detached {
                 let us = try await environment.noosphere.identity()
                 
-                try environment.database.writeActivity(
-                    event: ActivityEvent(
-                        category: .deck,
-                        event: ChooseCardActivityEvent.event,
-                        message: message,
-                        metadata: ChooseCardActivityEvent(
-                            address: address.description
-                        )
-                    )
+                try writeCardChoiceActivity(
+                    message: message,
+                    address: address,
+                    environment: environment
                 )
                 
-                // Filter to valid backlinks
-                let backlinks = backlinks
-                    .filter({ backlink in !isSeen(entry: backlink) })
-                    .shuffled()
-                
-                if backlinks.count == 0 {
+                let draw = try await drawBacklinks(
+                    identity: us,
+                    backlinks: backlinks
+                )
+                guard !draw.isEmpty else {
                     return .topupDeck
-                }
-                
-                var draw: [CardModel] = []
-                for entry in backlinks.prefix(backlinksToDraw) {
-                    let card = try await toCard(
-                        entry: entry,
-                        ourIdentity: us,
-                        environment: environment,
-                        liked: state.likes.contains(where: { like in like == entry.address })
-                    )
-                    
-                    draw.append(card)
                 }
                 
                 return .shuffleCardsUpNext(draw)
@@ -825,23 +920,38 @@ struct DeckModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
             
+            
+            if AppDefaults.standard.areAiFeaturesEnabled {
+                var model = state
+                model.buffer.append(card)
+                return generateRewardCard(state: model).mergeFx(fx)
+            }
+            
             return update(
                 state: state,
                 action: .nextCard,
                 environment: environment
-            ).mergeFx(fx)
+            ).mergeFx(fx).animation(.easeOutCubic())
         }
-
+        
         func chooseCard(state: Self, card: CardModel, environment: Environment) -> Update<Self> {
             state.feedback.impactOccurred()
-            
             switch card.card {
             case let .entry(entry, _, related):
-                return shuffleInBacklinks(message: "", address: entry.address, backlinks: related)
+                return shuffleInBacklinks(
+                    card: card,
+                    message: "",
+                    address: entry.address,
+                    backlinks: related
+                )
             case let .prompt(message, entry, _, related):
-                return shuffleInBacklinks(message: message, address: entry.address, backlinks: related)
-            case .action(let msg):
-                logger.log("Action: \(msg)")
+                return shuffleInBacklinks(
+                    card: card,
+                    message: message,
+                    address: entry.address,
+                    backlinks: related
+                )
+            case .reward(let msg):
                 return update(
                     state: state,
                     action: .nextCard,
@@ -907,6 +1017,23 @@ struct DeckModel: ModelProtocol {
             return Update(state: model)
         }
 
+        func prependCards(state: Self, entries: [CardModel]) -> Update<Self> {
+            var model = state
+            for entry in entries {
+                model.deck.insert(entry, at: state.pointer)
+                
+                switch entry.card {
+                case let .entry(entry, _, _):
+                    model.seen.insert(entry)
+                    break
+                default:
+                    break
+                }
+            }
+            
+            return Update(state: model).animation(.easeOutCubic())
+        }
+        
         func appendCards(state: Self, entries: [CardModel]) -> Update<Self> {
             var model = state
             for entry in entries {
@@ -921,7 +1048,7 @@ struct DeckModel: ModelProtocol {
                 }
             }
             
-            return Update(state: model)
+            return Update(state: model).animation(.easeOutCubic())
         }
         
         func requestDeckRoot(

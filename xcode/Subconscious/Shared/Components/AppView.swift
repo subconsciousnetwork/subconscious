@@ -127,7 +127,7 @@ enum AppAction: Hashable {
     case appear
 
     case setAppUpgraded(_ isUpgraded: Bool)
-
+    
     /// Set sphere/user nickname
     /// Sets form field, and persists if needed.
     case setNickname(_ nickname: String)
@@ -169,6 +169,10 @@ enum AppAction: Hashable {
     /// Set and persist experimental block editor enabled
     case persistBlockEditorEnabled(Bool)
     case persistNoosphereLogLevel(Noosphere.NoosphereLogLevel)
+    case persistAiFeaturesEnabled(Bool)
+    case persistPreferredLlm(String)
+    case loadOpenAIKey(OpenAIKey)
+    case persistOpenAIKey(OpenAIKey)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -580,6 +584,9 @@ struct AppModel: ModelProtocol {
     /// Is experimental block editor enabled?
     var isBlockEditorEnabled = false
     var noosphereLogLevel: Noosphere.NoosphereLogLevel = .basic
+    var areAiFeaturesEnabled = false
+    var openAiApiKey = OpenAIKey(key: "sk-")
+    var preferredLlm: String = AppDefaults.standard.preferredLlm
 
     /// Should recovery mode be presented?
     var isRecoveryModePresented = false
@@ -910,6 +917,30 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isBlockEditorEnabled: isBlockEditorEnabled
+            )
+        case let .persistAiFeaturesEnabled(areAiFeaturesEnabled):
+            return persistAiFeaturesEnabled(
+                state: state,
+                environment: environment,
+                areAiFeaturesEnabled: areAiFeaturesEnabled
+            )
+        case let .loadOpenAIKey(key):
+            return loadOpenAIKey(
+                state: state,
+                environment: environment,
+                key: key
+            )
+        case let .persistOpenAIKey(key):
+            return persistOpenAIKey(
+                state: state,
+                environment: environment,
+                key: key
+            )
+        case let .persistPreferredLlm(llm):
+            return persistPreferredLlm(
+                state: state,
+                environment: environment,
+                llm: llm
             )
         case let .persistNoosphereLogLevel(level):
             return persistNoosphereLogLevel(
@@ -1442,6 +1473,13 @@ struct AppModel: ModelProtocol {
         model.selectedAppTab = AppTab(rawValue: AppDefaults.standard.selectedAppTab) ?? state.selectedAppTab
         model.noosphereLogLevel = Noosphere.NoosphereLogLevel(description: AppDefaults.standard.noosphereLogLevel)
         model.isBlockEditorEnabled = AppDefaults.standard.isBlockEditorEnabled
+        model.areAiFeaturesEnabled = AppDefaults.standard.areAiFeaturesEnabled
+        model.preferredLlm = AppDefaults.standard.preferredLlm
+        
+        let fx: Fx<AppAction> = Future.detached {
+            let key = await environment.keychainService.getApiKey() ?? ""
+            return .loadOpenAIKey(OpenAIKey(key: key))
+        }.eraseToAnyPublisher()
         
         // Update model from app defaults
         return update(
@@ -1459,7 +1497,7 @@ struct AppModel: ModelProtocol {
                 )
             ],
             environment: environment
-        )
+        ).mergeFx(fx)
     }
     
     /// Handle scene phase change
@@ -1820,6 +1858,53 @@ struct AppModel: ModelProtocol {
         var model = state
         model.isBlockEditorEnabled = isBlockEditorEnabled
         return Update(state: model)
+    }
+    
+    static func persistAiFeaturesEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        areAiFeaturesEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.areAiFeaturesEnabled = areAiFeaturesEnabled
+        var model = state
+        model.areAiFeaturesEnabled = areAiFeaturesEnabled
+        return Update(state: model)
+    }
+    
+    static func persistPreferredLlm(
+        state: AppModel,
+        environment: AppEnvironment,
+        llm: String
+    ) -> Update<AppModel> {
+        AppDefaults.standard.preferredLlm = llm
+        var model = state
+        model.preferredLlm = llm
+        return Update(state: model)
+    }
+    
+    static func loadOpenAIKey(
+        state: AppModel,
+        environment: AppEnvironment,
+        key: OpenAIKey
+    ) -> Update<AppModel> {
+        var model = state
+        model.openAiApiKey = key
+        
+        return Update(state: model)
+    }
+    
+    static func persistOpenAIKey(
+        state: AppModel,
+        environment: AppEnvironment,
+        key: OpenAIKey
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = Future.detached {
+            await environment.keychainService.setApiKey(key.key)
+            return .loadOpenAIKey(key)
+        }.eraseToAnyPublisher()
+        
+        return Update(state: state).mergeFx(fx)
     }
     
     static func persistNoosphereLogLevel(
@@ -3321,6 +3406,9 @@ struct AppEnvironment {
     
     var gatewayProvisioningService: GatewayProvisioningService
     
+    var openAiService: OpenAIService
+    var keychainService: KeychainService
+    
     var pasteboard = UIPasteboard.general
 
     /// Service for generating creative prompts and oblique strategies
@@ -3427,6 +3515,8 @@ struct AppEnvironment {
             userProfile: userProfile
         )
         
+        self.keychainService = KeychainService()
+        self.openAiService = OpenAIService(keychain: self.keychainService)
     }
 }
 

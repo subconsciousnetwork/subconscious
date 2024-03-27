@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		8804D2552A4242E300D45E83 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 8804D2542A4242E300D45E83 /* Sentry */; };
+		B50512542B97F43A00EA1FCB /* MiniCardStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50512532B97F43A00EA1FCB /* MiniCardStackView.swift */; };
+		B50512562B9850EF00EA1FCB /* OpenAiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50512552B9850EF00EA1FCB /* OpenAiService.swift */; };
+		B50512592B98512C00EA1FCB /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B50512582B98512C00EA1FCB /* KeychainSwift */; };
+		B505125B2B98524D00EA1FCB /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B505125A2B98524D00EA1FCB /* KeychainService.swift */; };
 		B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956D29E7862A0048106B /* Tests_AddressBookService.swift */; };
 		B508957029E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B508957129E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
@@ -126,7 +130,7 @@
 		B59E4E572B3BA781000A2B49 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E562B3BA781000A2B49 /* CardView.swift */; };
 		B59E4E592B3BA8E7000A2B49 /* EntryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */; };
 		B59E4E5B2B3BA8ED000A2B49 /* PromptCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E5A2B3BA8ED000A2B49 /* PromptCardView.swift */; };
-		B59E4E5D2B3BA8F6000A2B49 /* ActionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E5C2B3BA8F6000A2B49 /* ActionCardView.swift */; };
+		B59E4E5D2B3BA8F6000A2B49 /* RewardCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E5C2B3BA8F6000A2B49 /* RewardCardView.swift */; };
 		B59E4E5F2B3BA91D000A2B49 /* CardContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E4E5E2B3BA91D000A2B49 /* CardContentView.swift */; };
 		B59E9E1A2AB8FA29008E3543 /* HomeProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E9E192AB8FA29008E3543 /* HomeProfileView.swift */; };
 		B59E9E1B2AB8FA29008E3543 /* HomeProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E9E192AB8FA29008E3543 /* HomeProfileView.swift */; };
@@ -134,6 +138,8 @@
 		B5A7AD332A0D0B0E007C3535 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */; };
 		B5AD5C8E2AA6C37900FC5BC5 /* DetailStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */; };
 		B5AD5C902AA7FF1900FC5BC5 /* Tests_DetailStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */; };
+		B5AEFA2A2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */; };
+		B5AEFA2B2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */; };
 		B5BC3D2A2B731A3000DB8A49 /* UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */; };
 		B5BC3D2B2B731A3000DB8A49 /* UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */; };
 		B5C019B42B75ADF4005B59DF /* Tests_UserLikesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C019B32B75ADF4005B59DF /* Tests_UserLikesService.swift */; };
@@ -583,6 +589,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B50512532B97F43A00EA1FCB /* MiniCardStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCardStackView.swift; sourceTree = "<group>"; };
+		B50512552B9850EF00EA1FCB /* OpenAiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAiService.swift; sourceTree = "<group>"; };
+		B505125A2B98524D00EA1FCB /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		B508956D29E7862A0048106B /* Tests_AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AddressBookService.swift; sourceTree = "<group>"; };
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		B509612F2A4CEFCF008E9EDB /* Tests_FirstRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FirstRun.swift; sourceTree = "<group>"; };
@@ -673,12 +682,13 @@
 		B59E4E562B3BA781000A2B49 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCardView.swift; sourceTree = "<group>"; };
 		B59E4E5A2B3BA8ED000A2B49 /* PromptCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptCardView.swift; sourceTree = "<group>"; };
-		B59E4E5C2B3BA8F6000A2B49 /* ActionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCardView.swift; sourceTree = "<group>"; };
+		B59E4E5C2B3BA8F6000A2B49 /* RewardCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardCardView.swift; sourceTree = "<group>"; };
 		B59E4E5E2B3BA91D000A2B49 /* CardContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentView.swift; sourceTree = "<group>"; };
 		B59E9E192AB8FA29008E3543 /* HomeProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeProfileView.swift; sourceTree = "<group>"; };
 		B5A7AD312A0D0B0E007C3535 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		B5AD5C8D2AA6C37900FC5BC5 /* DetailStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailStackView.swift; sourceTree = "<group>"; };
 		B5AD5C8F2AA7FF1900FC5BC5 /* Tests_DetailStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DetailStack.swift; sourceTree = "<group>"; };
+		B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleUtilities.swift; sourceTree = "<group>"; };
 		B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLikesService.swift; sourceTree = "<group>"; };
 		B5C019B32B75ADF4005B59DF /* Tests_UserLikesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserLikesService.swift; sourceTree = "<group>"; };
 		B5C818D52AF380A7001F65BE /* CardStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStackView.swift; sourceTree = "<group>"; };
@@ -1007,6 +1017,7 @@
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				8804D2552A4242E300D45E83 /* Sentry in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
+				B50512592B98512C00EA1FCB /* KeychainSwift in Frameworks */,
 				B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1146,6 +1157,7 @@
 				B58CC8E22B0DCFEE004CFFEA /* CardModel.swift */,
 				B5C818D52AF380A7001F65BE /* CardStackView.swift */,
 				B53B600B2B47CA9B007BF747 /* ShuffleProgressView.swift */,
+				B50512532B97F43A00EA1FCB /* MiniCardStackView.swift */,
 			);
 			path = Deck;
 			sourceTree = "<group>";
@@ -1163,7 +1175,7 @@
 				B59E4E562B3BA781000A2B49 /* CardView.swift */,
 				B59E4E582B3BA8E7000A2B49 /* EntryCardView.swift */,
 				B59E4E5A2B3BA8ED000A2B49 /* PromptCardView.swift */,
-				B59E4E5C2B3BA8F6000A2B49 /* ActionCardView.swift */,
+				B59E4E5C2B3BA8F6000A2B49 /* RewardCardView.swift */,
 				B59E4E5E2B3BA91D000A2B49 /* CardContentView.swift */,
 			);
 			path = Cards;
@@ -1391,6 +1403,8 @@
 				B50B045A2A04B61000AA584B /* TranscludeService.swift */,
 				B508956F29E79BE70048106B /* UserProfileService.swift */,
 				B5BC3D292B731A3000DB8A49 /* UserLikesService.swift */,
+				B50512552B9850EF00EA1FCB /* OpenAiService.swift */,
+				B505125A2B98524D00EA1FCB /* KeychainService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1730,6 +1744,7 @@
 			isa = PBXGroup;
 			children = (
 				B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */,
+				B5AEFA292BAA9AF70086BAEC /* AngleUtilities.swift */,
 				B8AB08D92A9D534500998099 /* ArrayFirstIndexWhereID.swift */,
 				B58CC8E62B0DE8D1004CFFEA /* ArrayUtilities.swift */,
 				B8CA8F2328908D65005F8802 /* BundleUtilities.swift */,
@@ -1875,6 +1890,7 @@
 				B57D63BF29B574C3008BBB62 /* CodeScanner */,
 				8804D2542A4242E300D45E83 /* Sentry */,
 				B596B34B2B68B160001C3EB6 /* SentrySwiftUI */,
+				B50512582B98512C00EA1FCB /* KeychainSwift */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -1978,6 +1994,7 @@
 				B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */,
 				B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */,
 				8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				B50512572B98512C00EA1FCB /* XCRemoteSwiftPackageReference "keychain-swift" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -2180,6 +2197,7 @@
 				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
 				B88A76D429E09B51005F3422 /* PasteboardService.swift in Sources */,
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
+				B505125B2B98524D00EA1FCB /* KeychainService.swift in Sources */,
 				B5CA6F432B5A5E7800877B0D /* AppendLinkSuggestionLabelView.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B563ACC72B70C22000068BC1 /* RelatedNoteButtonStyle.swift in Sources */,
@@ -2246,6 +2264,7 @@
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */,
 				B828F0AA2B029C9F00FDE4AE /* BlockEditorTranscludeListView.swift in Sources */,
+				B50512542B97F43A00EA1FCB /* MiniCardStackView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
 				B53DC5302B7B2B0E00D20CCB /* AICommentsView.swift in Sources */,
 				B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
@@ -2271,6 +2290,7 @@
 				B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */,
+				B50512562B9850EF00EA1FCB /* OpenAiService.swift in Sources */,
 				B57C0AE929D2782C00D352E3 /* PetnameView.swift in Sources */,
 				B542EF772AF495F200BE29F1 /* FollowNewUserSheetModifier.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
@@ -2402,7 +2422,7 @@
 				B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B85DF78C29B660C60042D725 /* Prose.swift in Sources */,
 				B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
-				B59E4E5D2B3BA8F6000A2B49 /* ActionCardView.swift in Sources */,
+				B59E4E5D2B3BA8F6000A2B49 /* RewardCardView.swift in Sources */,
 				B51359262AC113F9004385A7 /* RecoveryModeFormPanelView.swift in Sources */,
 				B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */,
 				B81D063B29F1821E00593BBA /* SphereFile.swift in Sources */,
@@ -2424,6 +2444,7 @@
 				B58CC8E82B0DEC10004CFFEA /* ArrayUtilities.swift in Sources */,
 				B8AB08C32A9D509F00998099 /* BlockEditorSubtextEditorMarkup.swift in Sources */,
 				B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */,
+				B5AEFA2A2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */,
 				B8B6BCB529CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B8AB08B92A9D501600998099 /* TextBlockCell.swift in Sources */,
 				B515E9D92ACA93D00067A329 /* FirstRunOrbitEffectView.swift in Sources */,
@@ -2535,6 +2556,7 @@
 				B8E00A312992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8E00A2B29928DD2003B40C1 /* AppDefaults.swift in Sources */,
+				B5AEFA2B2BAA9AF70086BAEC /* AngleUtilities.swift in Sources */,
 				B542EF682AF48F2100BE29F1 /* StoreUtilities.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8B4251C28FE1DA60081B8D5 /* Entry.swift in Sources */,
@@ -3138,6 +3160,14 @@
 				minimumVersion = 8.0.0;
 			};
 		};
+		B50512572B98512C00EA1FCB /* XCRemoteSwiftPackageReference "keychain-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/evgenyneu/keychain-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 21.0.0;
+			};
+		};
 		B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/twostraws/CodeScanner";
@@ -3177,6 +3207,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8804D2532A4242E300D45E83 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
+		};
+		B50512582B98512C00EA1FCB /* KeychainSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B50512572B98512C00EA1FCB /* XCRemoteSwiftPackageReference "keychain-swift" */;
+			productName = KeychainSwift;
 		};
 		B57D63BF29B574C3008BBB62 /* CodeScanner */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -62,6 +62,39 @@ struct DeveloperSettingsView: View {
                 }
                 .pickerStyle(DefaultPickerStyle())
             }
+            
+            Section(header: Text("AI Features")) {
+                Toggle(
+                    isOn: app.binding(
+                        get: \.areAiFeaturesEnabled,
+                        tag: AppAction.persistAiFeaturesEnabled
+                    ),
+                    label: {
+                        Text("Enable AI Features")
+                    }
+                )
+                
+                if app.state.areAiFeaturesEnabled {
+                    Picker("Preferred Model", selection: app.binding(
+                        get: \.preferredLlm,
+                        tag: AppAction.persistPreferredLlm
+                    )) {
+                        ForEach(OpenAIService.supportedModels, id: \.self) { model in
+                            Text(model.description).tag(model)
+                        }
+                    }
+                    .pickerStyle(DefaultPickerStyle())
+                    
+                    SecureField(
+                        "Open AI API Key",
+                        text: app.binding(
+                            get: \.openAiApiKey.key,
+                            tag: { key in AppAction.persistOpenAIKey(OpenAIKey(key: key)) }
+                        )
+                    )
+                    .disableAutocorrection(true)
+                }
+            }
         }
         .navigationTitle("Developer")
     }

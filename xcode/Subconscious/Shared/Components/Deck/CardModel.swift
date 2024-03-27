@@ -14,7 +14,7 @@ enum CardType: Equatable, Hashable {
         author: UserProfile,
         related: Set<EntryStub>
     )
-    case action(_ message: String)
+    case reward(_ message: String)
     case prompt(
         message: String,
         entry: EntryStub,
@@ -59,7 +59,7 @@ extension CardModel {
     
     func update(entry: EntryStub, liked: Bool) -> Self {
         switch card {
-        case .action(_):
+        case .reward(_):
             return self
         case let .entry(_, author, related):
             return CardModel(
